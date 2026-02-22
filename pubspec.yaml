@@ -1,0 +1,38 @@
+name: app_crm
+description: "App de GS1 para CRM"
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  sqflite: ^2.4.2
+  dio: ^5.9.1
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.8
+  google_sign_in: ^7.2.0
+  geolocator: ^14.0.2
+  device_info_plus: ^12.3.0
+  network_info_plus: ^7.0.0
+  geocoding: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+   - assets/
+   - assets/images/
+   - assets/icons/

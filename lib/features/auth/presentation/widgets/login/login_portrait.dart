@@ -1,7 +1,7 @@
 // lib/features/auth/presentation/widgets/login_portrait_card.dart
 
+import 'package:app_crm/core/constants/app_images.dart';
 import 'package:app_crm/core/presentation/widgets/buttons/custom_google_button.dart';
-import 'package:app_crm/core/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_breakpoints.dart';
 import 'package:app_crm/core/constants/app_icons.dart';
@@ -12,6 +12,7 @@ import 'package:app_crm/core/presentation/widgets/buttons/custom_text_button.dar
 import 'package:app_crm/core/presentation/widgets/inputs/custom_password_field.dart';
 import 'package:app_crm/core/presentation/widgets/inputs/custom_text_field.dart';
 import 'package:app_crm/features/auth/presentation/controllers/login_form_controller.dart';
+import 'package:flutter_svg/svg.dart';
 
 /// Card de login para orientación **portrait** (vertical).
 ///
@@ -42,18 +43,18 @@ class LoginPortrait extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isLandscape = size.width > size.height;
-    final isSmallHeight = size.height < 500;
-    final compact = isLandscape && isSmallHeight;
 
-    final double imageHeight = compact
-        ? size.width * 0.20
-        : ResponsiveHelper.getValue(
-            context,
-            mobile: size.width * 0.45,
-            tablet: size.width * 0.35,
-            desktop: size.width * 0.28,
-          );
+    // El panel izquierdo ocupa flex 4 de (4 + flex_derecho)
+    // Asumiendo que el lado del form tiene flex 5 → total 9
+    // Ajustá el denominador si tu flex derecho es diferente
+    const double leftFlex = 4;
+    const double totalFlex = 9;
+    final double leftPanelWidth = size.width * (leftFlex / totalFlex);
+    final double availableWidth = leftPanelWidth - (AppSpacing.xl * 2);
+
+    // Máximo proporcional al dispositivo, no hardcodeado
+    final double logoMax = size.shortestSide * 0.38;
+    final double logoSize = (availableWidth * 0.80).clamp(80.0, logoMax);
 
     return Card(
       elevation: AppSizing.elevationHigh,
@@ -68,21 +69,18 @@ class LoginPortrait extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Image.asset(
-                'assets/images/logo_gs1.png',
-                height: imageHeight,
-                fit: BoxFit.contain,
+              SizedBox(
+                width: logoSize,
+                height: logoSize,
+                child: SvgPicture.asset(
+                  AppImages.logoTheme(context),
+                  fit: BoxFit.contain,
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               const Text(
                 'Iniciar Sesión',
                 style: AppTextStyles.headlineMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'Ingresa tus credenciales',
-                style: AppTextStyles.bodyMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.md),

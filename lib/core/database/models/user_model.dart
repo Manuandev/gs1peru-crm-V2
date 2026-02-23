@@ -6,56 +6,74 @@
 // Lo usan todos los features que necesiten datos del usuario.
 // ============================================================
 
+import 'package:app_crm/core/constants/app_constants.dart';
+
 class UserModel {
   final String userId;
-  final String username;
   final String token;
   final String codUser;
   final String userApe;
-  final String tipoUser;
-  final String cargUser;
   final String correoUser;
   final String telefono;
-  final String anexo;
   final String celular;
-  final String disponibilidad;
-  final String idTipouser;
 
   const UserModel({
     required this.userId,
-    required this.username,
     required this.token,
     required this.codUser,
     required this.userApe,
-    required this.tipoUser,
-    required this.cargUser,
     required this.correoUser,
     required this.telefono,
-    required this.anexo,
     required this.celular,
-    required this.disponibilidad,
-    required this.idTipouser,
   });
 
-  // Todo: ajusta los keys según la respuesta real de tu API
-  factory UserModel.fromJson(Map<String, dynamic> json) {
+  factory UserModel.fromRawString(String raw) {
+    final sections = raw.split(AppConstants.sepListas);
+
+    // Todo: reactivar cuando el API tenga formato fijo
+    // if (sections.length != 3) {
+    //   throw FormatException(
+    //     'UserModel.fromRawString: se esperaban 3 secciones, '
+    //     'se recibieron ${sections.length}.',
+    //   );
+    // }
+
+    // Si no hay secciones suficientes, la cadena es solo el token o está vacía
+    final token = sections.isNotEmpty ? sections[0] : '';
+    final data = sections.length > 1 ? sections[1].trim() : '';
+    final status = sections.length > 2 ? sections[2] : '';
+
+    // Todo: reactivar cuando el servidor sea consistente con el status
+    if (status != 'OK') {
+      throw FormatException(data);
+    }
+
+    final fields = data.isNotEmpty
+        ? data.split(AppConstants.sepCampos)
+        : <String>[];
+
+    // Todo: reactivar cuando los campos del API sean estables
+    // if (fields.length < AppConstants.apiFieldCount) {
+    //   throw FormatException(
+    //     'UserModel.fromRawString: se esperaban ${AppConstants.apiFieldCount} '
+    //     'campos, se recibieron ${fields.length}.',
+    //   );
+    // }
+
+    // Helper: devuelve el campo o '' si el índice no existe
+    String f(int i) => i < fields.length ? fields[i].trim() : '';
+
     return UserModel(
-      userId: json['IdUsuario']?.toString() ?? '',
-      username: json['COD_USER']?.toString() ?? '',
-      token: json['Token']?.toString() ?? '',
-      codUser: json['CodUser']?.toString() ?? '',
-      userApe: json['USER_APE']?.toString() ?? '',
-      tipoUser: json['TIPO_USER']?.toString() ?? '',
-      cargUser: json['CARGUSER']?.toString() ?? '',
-      correoUser: json['CORREO_USER']?.toString() ?? '',
-      telefono: json['TELEFONO']?.toString() ?? '',
-      anexo: json['ANEXO']?.toString() ?? '',
-      celular: json['CELULAR']?.toString() ?? '',
-      disponibilidad: json['DISPONIBILIDAD']?.toString() ?? '',
-      idTipouser: json['ID_TIPOUSER']?.toString() ?? '',
+      token: token,
+      userId: token,
+      codUser: f(0),
+      userApe: f(1),
+      telefono: f(2),
+      correoUser: f(3),
+      celular: f(4),
     );
   }
 
   // Helper de UI — nombre completo para mostrar en pantalla
-  String get fullName => '$username $userApe'.trim();
+  String get fullName => userApe.trim();
 }

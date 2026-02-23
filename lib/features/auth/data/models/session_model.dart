@@ -11,7 +11,7 @@ class SessionModel {
 
   const SessionModel({
     required this.loginType,
-    required this.expiresAt,
+    required this.expiresAt, 
     this.username,
     this.password,
     this.email,

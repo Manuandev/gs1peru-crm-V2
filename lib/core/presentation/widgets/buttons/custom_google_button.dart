@@ -2,10 +2,12 @@
 
 // ignore_for_file: deprecated_member_use
 
+import 'package:app_crm/core/constants/app_images.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/core/constants/app_breakpoints.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
+import 'package:flutter_svg/svg.dart';
 
 /// CustomGoogleButton — Botón de autenticación con Google.
 ///
@@ -38,28 +40,15 @@ class CustomGoogleButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.of(context).size;
 
+    final String label = size.shortestSide < 400
+        ? 'Con Google'
+        : 'Ingresar con Google';
+
     final bool enabled = !isLoading && onPressed != null;
-
-    final isLandscape = size.width > size.height;
-    final isSmallHeight = size.height < 500;
-    final isTablet = size.width > 600;
-
-    final compact = isLandscape && isSmallHeight;
-
-    final double buttonHeight =
-        height ??
-        (compact
-            ? 44
-            : isTablet
-            ? 56
-            : 48);
-
-    // 🔥 Logo proporcional
-    final double logoSize = buttonHeight * 0.45;
 
     return SizedBox(
       width: width ?? double.infinity,
-      height: buttonHeight,
+      height: height,
       child: OutlinedButton(
         onPressed: enabled ? onPressed : null,
         style: OutlinedButton.styleFrom(
@@ -78,8 +67,8 @@ class CustomGoogleButton extends StatelessWidget {
         ),
         child: isLoading
             ? SizedBox(
-                height: logoSize,
-                width: logoSize,
+                height: 24,
+                width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: colorScheme.primary,
@@ -88,15 +77,17 @@ class CustomGoogleButton extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo SVG de Google como imagen asset
-                  Image.asset(
-                    'assets/icons/google_logo.png',
-                    height: logoSize,
-                    width: logoSize,
+                  SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: SvgPicture.asset(
+                      AppImages.logoGoogle,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'Continuar con Google',
+                    label,
                     style: AppTextStyles.button.copyWith(
                       color: enabled
                           ? colorScheme.onSurface

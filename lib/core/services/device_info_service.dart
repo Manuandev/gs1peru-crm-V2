@@ -47,6 +47,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'package:app_crm/core/constants/app_constants.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -314,7 +315,6 @@ class DeviceInfoService {
     }
   }
 
-
   /// true si el build es físico (no emulador).
   Future<bool> esDispositivoFisico() async {
     try {
@@ -507,11 +507,12 @@ class DeviceInfoService {
         '¦${info['ip_local']}'
         '¦${info['coordenadas']}'
         '¦${info['navegador']}'
-        '¦${info['tipo_dispositivo']}'
         '¦${info['modelo']}'
+        '¦${info['so_version']}'
         '¦${info['pais_codigo']}'
         '¦${info['region']}'
         '¦${info['ciudad']}'
-        '¦${info['so_version']}';
+        '¦${AppConstants.version}';
+    // '¦${info['so_version']}';
   }
 }

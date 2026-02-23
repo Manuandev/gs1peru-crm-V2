@@ -32,7 +32,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
 
     emit(
       DrawerLoaded(
-        userName: user.username,
+        userName: user.codUser,
         userApe: user.userApe,
         userSubtitle: user.correoUser,
         correoUser: user.correoUser,

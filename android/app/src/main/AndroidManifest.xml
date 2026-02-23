@@ -1,8 +1,29 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- ========================= -->
+    <!-- PERMISOS DE UBICACIÓN -->
+    <!-- ========================= -->
+    <!-- GPS Preciso -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Ubicación aproximada -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Solo si algún día usas ubicación en background -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <!-- ========================= -->
+    <!-- RED Y WIFI -->
+    <!-- ========================= -->
+    <!-- Estado de red -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Información WiFi (IP local) -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <!-- Permite internet (MUY IMPORTANTE) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="GS1 Peru - CRM"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
+        android:largeHeap="true"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

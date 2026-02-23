@@ -13,7 +13,7 @@ class ApiConstants {
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // ========== SEGURIDAD ==========
-  static const String login = 'Seguridad/ValidarLogin';
+  static const String login = 'Seguridad/ValidarLoginApp';
   static const String loginGoogle = 'Seguridad/ValidarLogin';
 
   // ========== LEADS ==========

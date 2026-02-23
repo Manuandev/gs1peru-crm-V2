@@ -1,5 +1,6 @@
 // lib/features/home/presentation/pages/base_page.dart
 
+import 'package:app_crm/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_menu_items.dart';
 import 'package:app_crm/core/constants/app_spacing.dart';
@@ -249,7 +250,7 @@ class _FooterPages extends StatelessWidget {
         ),
       ),
       child: Text(
-        'v1.0.0 — Mi App',
+        '${AppConstants.nombreApp} - v${AppConstants.version}',
         style: AppTextStyles.labelSmall,
         textAlign: TextAlign.center,
       ),

@@ -1,5 +1,6 @@
 // lib/features/auth/presentation/widgets/login_landscape_card.dart
 
+import 'package:app_crm/core/constants/app_images.dart';
 import 'package:app_crm/core/presentation/widgets/buttons/custom_google_button.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_breakpoints.dart';
@@ -10,6 +11,7 @@ import 'package:app_crm/core/presentation/widgets/buttons/custom_primary_button.
 import 'package:app_crm/core/presentation/widgets/inputs/custom_password_field.dart';
 import 'package:app_crm/core/presentation/widgets/inputs/custom_text_field.dart';
 import 'package:app_crm/features/auth/presentation/controllers/login_form_controller.dart';
+import 'package:flutter_svg/svg.dart';
 
 /// Layout completo de login para orientación **landscape** (horizontal).
 ///
@@ -44,21 +46,20 @@ class LoginLandscape extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     final colorScheme = Theme.of(context).colorScheme;
+    final size = MediaQuery.of(context).size;
 
     // El panel izquierdo ocupa flex 4 de (4 + flex_derecho)
     // Asumiendo que el lado del form tiene flex 5 → total 9
     // Ajustá el denominador si tu flex derecho es diferente
     const double leftFlex = 4;
-    const double totalFlex = 9; // 4 izq + 5 der → cambialo según tu Row
+    const double totalFlex = 9;
     final double leftPanelWidth = size.width * (leftFlex / totalFlex);
-
-    // Descuenta el padding horizontal (AppSpacing.xl * 2)
     final double availableWidth = leftPanelWidth - (AppSpacing.xl * 2);
 
-    // El logo crece hasta el 80% del panel, nunca más de 280px
-    final double logoSize = (availableWidth * 0.80).clamp(80.0, 280.0);
+    // Máximo proporcional al dispositivo, no hardcodeado
+    final double logoMax = size.shortestSide * 0.38;
+    final double logoSize = (availableWidth * 0.80).clamp(80.0, logoMax);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -77,29 +78,17 @@ class LoginLandscape extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/images/logo_gs1.png',
+                  SizedBox(
                     width: logoSize,
                     height: logoSize,
-                    fit: BoxFit.contain,
+                    child: SvgPicture.asset(
+                      AppImages.logoTheme(context),
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                  // Icon(
-                  //   AppIcons.lock,
-                  //   size: AppSizing.iconXxl,
-                  //   color: colorScheme.onPrimary,
-                  // ),
-                  // const SizedBox(height: AppSpacing.md),
                   Text(
                     'Iniciar Sesión',
                     style: AppTextStyles.headlineMedium.copyWith(
-                      color: colorScheme.onPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Ingresa tus credenciales',
-                    style: AppTextStyles.bodyMedium.copyWith(
                       color: colorScheme.onPrimary,
                     ),
                     textAlign: TextAlign.center,

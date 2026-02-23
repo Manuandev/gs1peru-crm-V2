@@ -8,6 +8,7 @@
 // ============================================================
 
 import 'package:app_crm/core/database/models/user_model.dart';
+import 'package:app_crm/core/network/api_client.dart';
 import 'package:app_crm/features/auth/data/datasources/local/auth_local_datasource.dart';
 import 'package:app_crm/features/auth/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:app_crm/features/auth/data/models/session_model.dart';
@@ -23,8 +24,8 @@ class AuthRepository implements IAuthRepository {
   AuthRepository({
     required AuthLocalDatasource local,
     required AuthRemoteDatasource remote,
-  })  : _local = local,
-        _remote = remote;
+  }) : _local = local,
+       _remote = remote;
 
   @override
   UserModel? get currentUser => _currentUser;
@@ -39,13 +40,14 @@ class AuthRepository implements IAuthRepository {
   }) async {
     final user = await _remote.login(username: username, password: password);
     _currentUser = user;
+    ApiClient().setToken(user.token);
 
     if (rememberSession) {
       await _local.saveSession(
         SessionModel(
           loginType: LoginType.credentials,
-          username:  username,
-          password:  password,
+          username: username,
+          password: password,
           expiresAt: DateTime.now().add(const Duration(days: 30)),
         ),
       );
@@ -60,12 +62,13 @@ class AuthRepository implements IAuthRepository {
   Future<UserModel> loginWithGoogle({required String email}) async {
     final user = await _remote.loginWithGoogle(email: email);
     _currentUser = user;
+    ApiClient().setToken(user.token);
 
     // Google siempre guarda en SQLite sin importar el checkbox
     await _local.saveSession(
       SessionModel(
         loginType: LoginType.google,
-        email:     email,
+        email: email,
         expiresAt: DateTime.now().add(const Duration(days: 30)),
       ),
     );
@@ -93,8 +96,8 @@ class AuthRepository implements IAuthRepository {
       return loginWithGoogle(email: entity.email!);
     } else {
       return login(
-        username:        entity.username!,
-        password:        entity.password!,
+        username: entity.username!,
+        password: entity.password!,
         rememberSession: true,
       );
     }
@@ -105,6 +108,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<void> logout() async {
     _currentUser = null;
+    ApiClient().clearToken();
     await _local.clearSession();
   }
 }

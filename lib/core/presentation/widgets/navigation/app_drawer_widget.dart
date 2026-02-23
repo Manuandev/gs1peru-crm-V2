@@ -283,7 +283,7 @@ class _DrawerHeader extends StatelessWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
-                    loaded.userName,
+                    loaded.userApe,
                     style: AppTextStyles.titleMedium.copyWith(
                       color: colorScheme.onPrimary,
                     ),
@@ -298,7 +298,7 @@ class _DrawerHeader extends StatelessWidget {
                 avatar(imageUrl: loaded.userAvatarUrl),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  loaded.userName,
+                  loaded.userApe,
                   style: AppTextStyles.titleMedium.copyWith(
                     color: colorScheme.onPrimary,
                   ),

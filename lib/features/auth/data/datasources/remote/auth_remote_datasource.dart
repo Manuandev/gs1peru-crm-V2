@@ -22,49 +22,43 @@ class AuthRemoteDatasource {
       password: password,
     );
 
-    final response = await _api.postJsonString(
+    final String raw = await _api.postJsonGetText(
       ApiConstants.urlLogin,
-      json.encode(body),
+      body,
       headers: {'Token': 'fcff'},
     );
 
-    if (response == null) {
+    if (raw.isEmpty) {
       throw const NetworkException(
         'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
       );
     }
 
-    if (response['Token'] != null) {
-      return UserModel.fromJson(response);
+    try {
+      return UserModel.fromRawString(raw);
+    } on FormatException catch (e) {
+      throw AuthException(e.message);
     }
-
-    throw AuthException(
-      response['Mensaje']?.toString() ??
-          response['message']?.toString() ??
-          'Usuario o contraseña incorrectos',
-    );
   }
 
   Future<UserModel> loginWithGoogle({required String email}) async {
-    final response = await _api.postJsonString(
+    final String raw = await _api.postJsonGetText(
       ApiConstants.urlLoginGoogle, // Todo: agrega esta constante
       json.encode(email),
       headers: {'Token': 'fcff'},
     );
 
-    if (response == null) {
+    if (raw.isEmpty) {
       throw const NetworkException(
         'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
       );
     }
 
-    if (response['Token'] != null) {
-      return UserModel.fromJson(response);
+    try {
+      return UserModel.fromRawString(raw);
+    } on FormatException catch (e) {
+      throw AuthException(e.message);
     }
-
-    throw AuthException(
-      response['Mensaje']?.toString() ?? 'Correo no autorizado',
-    );
   }
 }
 

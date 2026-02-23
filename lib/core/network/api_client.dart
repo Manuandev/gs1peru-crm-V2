@@ -35,6 +35,8 @@ class ApiClient {
     _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true),
     );
+    // Al final de ApiClient._internal()
+    _dio.interceptors.add(_CleanResponseInterceptor());
   }
 
   void setToken(String token) => _token = token;
@@ -270,5 +272,16 @@ class _TokenBodyInterceptor extends Interceptor {
       options.data = json.encode(withToken);
     }
     handler.next(options);
+  }
+}
+
+// Interceptor que limpia las comillas que mete ASP.NET
+class _CleanResponseInterceptor extends Interceptor {
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (response.data is String) {
+      response.data = (response.data as String).replaceAll('"', '').trim();
+    }
+    handler.next(response);
   }
 }

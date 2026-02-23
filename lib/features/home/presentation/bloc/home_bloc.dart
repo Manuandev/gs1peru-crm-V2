@@ -28,6 +28,7 @@
 // - IHomeRepository → (cuando exista) para cargar datos del home
 // ============================================================
 
+import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'home_event.dart';
 import 'home_state.dart';
@@ -102,21 +103,20 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     // ── OPCIÓN B: CARGAR DESDE API ──────────────────────────
     // Todo: descomentar cuando tengas tu API implementada
-    /*
-    final data = await _homeRepository.getHomeData();
-    emit(HomeLoaded(
-      userName: data.userName,
-      userSubtitle: data.email,
-      userAvatarUrl: data.avatarUrl,
-      unreadChats: data.unreadChats,
-      pendingRecordatorios: data.pendingRecordatorios,
-      newLeads: data.newLeads,
-    ));
-    */
+    
+    // final data = await _homeRepository.getHomeData();
+    // emit(HomeLoaded(
+    //   userName: data.userName,
+    //   userSubtitle: data.email,
+    //   userAvatarUrl: data.avatarUrl,
+    //   unreadChats: data.unreadChats,
+    //   pendingRecordatorios: data.pendingRecordatorios,
+    //   newLeads: data.newLeads,
+    // ));
 
     // ── MOCK TEMPORAL ───────────────────────────────────────
     // Todo: eliminar cuando implementes OPCIÓN A o OPCIÓN B
-    await Future.delayed(const Duration(milliseconds: 300));
+    // await Future.delayed(const Duration(milliseconds: 300));
 
     emit(const HomeLoaded(
       userName: 'Admin',

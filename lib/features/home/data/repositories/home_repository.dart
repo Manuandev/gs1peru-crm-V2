@@ -25,7 +25,7 @@ class AuthRepository implements IAuthRepository {
     required AuthLocalDatasource local,
     required AuthRemoteDatasource remote,
   }) : _local = local,
-       _remote = remote; 
+       _remote = remote;
 
   @override
   UserModel? get currentUser => _currentUser;

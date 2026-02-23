@@ -68,8 +68,8 @@ class UserModel {
       userId: token,
       codUser: f(0),
       userApe: f(1),
-      telefono: f(2),
-      correoUser: f(3),
+      correoUser: f(2),
+      telefono: f(3),
       celular: f(4),
     );
   }

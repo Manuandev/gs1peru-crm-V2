@@ -54,7 +54,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
       DrawerLoaded(
         userName: current.userName,
         userApe: current.userApe,
-        userSubtitle: current.userSubtitle,
+        userSubtitle: current.correoUser,
         correoUser: current.correoUser,
         userAvatarUrl: current.userAvatarUrl,
         unreadChats: event.unreadChats,

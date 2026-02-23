@@ -44,7 +44,21 @@ class LoginLandscape extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     final colorScheme = Theme.of(context).colorScheme;
+
+    // El panel izquierdo ocupa flex 4 de (4 + flex_derecho)
+    // Asumiendo que el lado del form tiene flex 5 → total 9
+    // Ajustá el denominador si tu flex derecho es diferente
+    const double leftFlex = 4;
+    const double totalFlex = 9; // 4 izq + 5 der → cambialo según tu Row
+    final double leftPanelWidth = size.width * (leftFlex / totalFlex);
+
+    // Descuenta el padding horizontal (AppSpacing.xl * 2)
+    final double availableWidth = leftPanelWidth - (AppSpacing.xl * 2);
+
+    // El logo crece hasta el 80% del panel, nunca más de 280px
+    final double logoSize = (availableWidth * 0.80).clamp(80.0, 280.0);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -63,6 +77,12 @@ class LoginLandscape extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Image.asset(
+                    'assets/images/logo_gs1.png',
+                    width: logoSize,
+                    height: logoSize,
+                    fit: BoxFit.contain,
+                  ),
                   // Icon(
                   //   AppIcons.lock,
                   //   size: AppSizing.iconXxl,

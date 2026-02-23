@@ -27,7 +27,6 @@ import 'package:app_crm/config/router/navigation_extensions.dart';
 import 'package:app_crm/features/auth/presentation/widgets/splash/splash_landscape.dart';
 import 'package:app_crm/features/auth/presentation/widgets/splash/splash_portrait.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_crm/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:app_crm/features/auth/presentation/bloc/splash/splash_bloc.dart';

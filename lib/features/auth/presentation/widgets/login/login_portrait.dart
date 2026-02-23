@@ -1,6 +1,7 @@
 // lib/features/auth/presentation/widgets/login_portrait_card.dart
 
 import 'package:app_crm/core/presentation/widgets/buttons/custom_google_button.dart';
+import 'package:app_crm/core/utils/responsive_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_breakpoints.dart';
 import 'package:app_crm/core/constants/app_icons.dart';
@@ -41,18 +42,18 @@ class LoginPortrait extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     final isLandscape = size.width > size.height;
     final isSmallHeight = size.height < 500;
-    final isTablet = size.width > 900;
-
     final compact = isLandscape && isSmallHeight;
 
     final double imageHeight = compact
-        ? size.height * 0.25
-        : isTablet
-        ? size.height * 0.45
-        : size.height * 0.35;
+        ? size.width * 0.20
+        : ResponsiveHelper.getValue(
+            context,
+            mobile: size.width * 0.45,
+            tablet: size.width * 0.35,
+            desktop: size.width * 0.28,
+          );
 
     return Card(
       elevation: AppSizing.elevationHigh,

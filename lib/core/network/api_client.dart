@@ -240,7 +240,7 @@ class ApiClient {
         options: Options(
           contentType: 'application/json',
           responseType: ResponseType.plain,
-          headers: headers,
+          headers: headers ?? {'Token': _token},
         ),
       );
       return response.data?.toString() ?? '';

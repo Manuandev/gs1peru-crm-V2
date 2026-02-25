@@ -1,5 +1,6 @@
 // lib/core/presentation/widgets/inputs/custom_email_field.dart
 
+import 'package:app_crm/core/utils/string/string_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_icons.dart';
 import 'custom_text_field.dart';
@@ -66,20 +67,6 @@ class CustomEmailField extends StatelessWidget {
     this.enabled = true,
     this.focusNode,
   });
-
-  /// Validador de email por defecto.
-  ///
-  /// Verifica:
-  /// 1. Que no esté vacío
-  /// 2. Que tenga formato válido: usuario@dominio.ext
-  static String? defaultValidator(String? value) {
-    if (value == null || value.trim().isEmpty) return 'El email es requerido';
-    final emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
-    if (!emailRegex.hasMatch(value.trim())) return 'Ingresa un email válido';
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -21,6 +21,9 @@
 // SplashBloc, LoginBloc, HomeBloc se crean en su propia Page.
 // ============================================================
 
+import 'package:app_crm/features/home/data/datasources/remote/home_remote_datasource.dart';
+import 'package:app_crm/features/home/data/repositories/home_repository.dart';
+import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/config/router/navigation_extensions.dart';
 import 'package:app_crm/features/auth/data/datasources/local/auth_local_datasource.dart';
@@ -52,9 +55,14 @@ class AppWidget extends StatelessWidget {
           ),
         ),
 
-        // RepositoryProvider<IAuthRepository>(
-        //   create: (_) => HomeRepository(),
-        // ),
+        // ── HOME REPOSITORY ──────────────────────────────────  
+        RepositoryProvider<IHomeRepository>(
+          create: (context) => HomeRepository(
+            remote: HomeRemoteDatasource(
+              authRepository: context.read<IAuthRepository>(),
+            ),
+          ),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [

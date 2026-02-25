@@ -25,7 +25,6 @@ class AuthRemoteDatasource {
     final String raw = await _api.postJsonGetText(
       ApiConstants.urlLogin,
       body,
-      headers: {'Token': 'fcff'},
     );
 
     if (raw.isEmpty) {
@@ -45,7 +44,6 @@ class AuthRemoteDatasource {
     final String raw = await _api.postJsonGetText(
       ApiConstants.urlLoginGoogle, // Todo: agrega esta constante
       json.encode(email),
-      headers: {'Token': 'fcff'},
     );
 
     if (raw.isEmpty) {

@@ -135,13 +135,25 @@ class _HomeBody extends StatelessWidget {
           // ── SALUDO ──────────────────────────────────────────────
           // ✅ headlineSmall SIN color → hereda del tema (dark/light automático)
           Text(
-            'Hola, ${state.userName} 👋',
+            'Hola, ${state.usuario.userApe} 👋',
             style: AppTextStyles.headlineSmall,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text('Aquí está el resumen de hoy', style: AppTextStyles.bodyMedium),
           const SizedBox(height: AppSpacing.xl),
-          // Todo: widgets reales del home
+
+          ...state.leads.map(
+            (lead) => Card(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: ListTile(
+                title: Text(lead.userCreacion),
+                subtitle: Text(
+                  '${lead.dia} ${lead.numDia} de ${lead.mes} ${lead.anho} - ${lead.hora}',
+                ),
+                trailing: Text(lead.dni.isEmpty ? 'Sin DNI' : lead.dni),
+              ),
+            ),
+          ),
         ],
       ),
     );

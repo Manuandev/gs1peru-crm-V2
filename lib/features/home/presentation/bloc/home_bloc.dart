@@ -28,102 +28,51 @@
 // - IHomeRepository → (cuando exista) para cargar datos del home
 // ============================================================
 
+import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  // ── DEPENDENCIAS ─────────────────────────────────────────
-  // Todo: agrega tus repositorios cuando estén listos
-  // final IHomeRepository _homeRepository;
+  final IHomeRepository _homeRepository;
+  final IAuthRepository _authRepository; 
 
-  HomeBloc() : super(const HomeInitial()) {
-    // Todo: con dependencias sería:
-    // HomeBloc({required IHomeRepository homeRepository})
-    //     : _homeRepository = homeRepository,
-    //       super(const HomeInitial()) {
-
+  HomeBloc({
+    required IHomeRepository homeRepository,
+    required IAuthRepository authRepository, 
+  })  : _homeRepository = homeRepository,
+        _authRepository = authRepository,
+      super(const HomeInitial()) {
     on<HomeStarted>(_onHomeStarted);
     on<HomeRefreshRequested>(_onHomeRefreshRequested);
   }
-
-  // ── MANEJADORES ─────────────────────────────────────────────
 
   Future<void> _onHomeStarted(
     HomeStarted event,
     Emitter<HomeState> emit,
   ) async {
     emit(const HomeLoading());
-
-    try {
-      await _loadData(emit);
-    } catch (e, stackTrace) {
-      addError(e, stackTrace);
-      emit(HomeError('Error al cargar: ${e.toString()}'));
-    }
+    await _loadData(emit);
   }
 
   Future<void> _onHomeRefreshRequested(
     HomeRefreshRequested event,
     Emitter<HomeState> emit,
   ) async {
-    // No emite HomeLoading para no hacer parpadear la UI al refrescar
-    // Si quieres un indicador sutil de refresh, puedes agregar
-    // un estado HomeRefreshing que la UI muestre diferente a HomeLoading
-    try {
-      await _loadData(emit);
-    } catch (e, stackTrace) {
-      addError(e, stackTrace);
-      emit(HomeError('Error al refrescar: ${e.toString()}'));
-    }
+    await _loadData(emit);
   }
 
-  /// Carga los datos del Home desde BD o API.
-  /// Método privado compartido entre HomeStarted y HomeRefreshRequested.
   Future<void> _loadData(Emitter<HomeState> emit) async {
-    // ── OPCIÓN A: CARGAR DESDE SQLITE ──────────────────────
-    // Todo: descomentar cuando tengas tu BD implementada
-    /*
-    final session = await _homeRepository.getSession();
-    final results = await Future.wait([
-      _homeRepository.getUnreadChatsCount(),
-      _homeRepository.getPendingRecordatoriosCount(),
-      _homeRepository.getNewLeadsCount(),
-    ]);
+    try {
+      final leads = await _homeRepository.listarLeads();
+      final user = _authRepository.currentUser!; 
 
-    emit(HomeLoaded(
-      userName: session.username,
-      userSubtitle: session.email,
-      unreadChats: results[0],
-      pendingRecordatorios: results[1],
-      newLeads: results[2],
-    ));
-    */
+      emit(HomeLoaded(leads: leads,usuario: user));
+    } catch (e, stackTrace) {
+      addError(e, stackTrace);
 
-    // ── OPCIÓN B: CARGAR DESDE API ──────────────────────────
-    // Todo: descomentar cuando tengas tu API implementada
-    
-    // final data = await _homeRepository.getHomeData();
-    // emit(HomeLoaded(
-    //   userName: data.userName,
-    //   userSubtitle: data.email,
-    //   userAvatarUrl: data.avatarUrl,
-    //   unreadChats: data.unreadChats,
-    //   pendingRecordatorios: data.pendingRecordatorios,
-    //   newLeads: data.newLeads,
-    // ));
-
-    // ── MOCK TEMPORAL ───────────────────────────────────────
-    // Todo: eliminar cuando implementes OPCIÓN A o OPCIÓN B
-    // await Future.delayed(const Duration(milliseconds: 300));
-
-    emit(const HomeLoaded(
-      userName: 'Admin',
-      userSubtitle: 'admin@empresa.com',
-      unreadChats: 3,
-      pendingRecordatorios: 1,
-      newLeads: 0,
-    ));
+      emit(HomeError(e.toString()));
+    }
   }
 }

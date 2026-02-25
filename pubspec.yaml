@@ -22,6 +22,9 @@ dependencies:
   network_info_plus: ^7.0.0
   geocoding: ^4.0.0
   flutter_svg: ^2.2.3
+  signalr_netcore: ^1.4.4
+  connectivity_plus: ^7.0.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

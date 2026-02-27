@@ -29,21 +29,27 @@
 // ============================================================
 
 import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:app_crm/features/home/data/models/lead_model.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
+import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final IHomeRepository _homeRepository;
-  final IAuthRepository _authRepository; 
+  final IAuthRepository _authRepository;
+  final IRecordatoriosRepository _recordatoriosRepository;
 
   HomeBloc({
     required IHomeRepository homeRepository,
-    required IAuthRepository authRepository, 
-  })  : _homeRepository = homeRepository,
-        _authRepository = authRepository,
-      super(const HomeInitial()) {
+    required IAuthRepository authRepository,
+    required IRecordatoriosRepository recordatoriosRepository,
+  }) : _homeRepository = homeRepository,
+       _authRepository = authRepository,
+       _recordatoriosRepository = recordatoriosRepository,
+       super(const HomeInitial()) {
     on<HomeStarted>(_onHomeStarted);
     on<HomeRefreshRequested>(_onHomeRefreshRequested);
   }
@@ -60,15 +66,27 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     HomeRefreshRequested event,
     Emitter<HomeState> emit,
   ) async {
+    emit(const HomeLoading());
     await _loadData(emit);
   }
 
   Future<void> _loadData(Emitter<HomeState> emit) async {
     try {
-      final leads = await _homeRepository.listarLeads();
-      final user = _authRepository.currentUser!; 
+      // Lanzamos ambas en paralelo
+      final leadsF = _homeRepository.listarLeads();
+      final recordatoriosF = _recordatoriosRepository.listarRecordatorios();
 
-      emit(HomeLoaded(leads: leads,usuario: user));
+      // Esperamos ambas de forma independiente
+      final leads = await leadsF.catchError((_) => <LeadItem>[]);
+      final recordatorios = await recordatoriosF.catchError(
+        (_) => <RecordatorioItem>[],
+      );
+
+      final user = _authRepository.currentUser!;
+
+      emit(
+        HomeLoaded(leads: leads, recordatorios: recordatorios, usuario: user),
+      );
     } catch (e, stackTrace) {
       addError(e, stackTrace);
 

@@ -58,8 +58,8 @@ class AppTextStyles {
   // ============================================================
   // ESTILOS BASE — SIN COLOR
   // El color lo inyecta AppTheme automáticamente según el modo.
-  // dark mode  → AppColors.textOnDark (blanco)
-  // light mode → AppColors.textPrimary (negro)
+  // dark mode  → colorScheme.onSurface (blanco)
+  // light mode → colorScheme.textPrimary (negro)
   // ============================================================
 
   // --- Display ---
@@ -116,7 +116,7 @@ class AppTextStyles {
     fontWeight: weightRegular,
   );
 
-  // bodySmall lleva color secundario — pero usa AppColors que es consistente
+  // bodySmall lleva color secundario — pero usa colorScheme que es consistente
   static const TextStyle bodySmall = TextStyle(
     fontSize: sizeSm,
     fontWeight: weightRegular,

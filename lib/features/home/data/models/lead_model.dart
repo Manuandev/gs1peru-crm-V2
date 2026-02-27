@@ -1,10 +1,4 @@
 // lib\features\home\data\models\lead_model.dart
-// ============================================================
-// USER MODEL — Global para toda la app.
-// Vive solo en MEMORIA mientras la app está activa.
-// Nunca se persiste en SQLite.
-// Lo usan todos los features que necesiten datos del usuario.
-// ============================================================
 
 import 'package:app_crm/core/constants/app_constants.dart';
 

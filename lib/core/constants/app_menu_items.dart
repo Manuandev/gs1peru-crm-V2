@@ -1,5 +1,6 @@
 // lib/core/constants/app_menu_items.dart
 
+import 'package:app_crm/core/constants/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/config/router/app_routes.dart';
 import 'package:app_crm/core/presentation/widgets/navigation/drawer_item_model.dart';
@@ -26,7 +27,7 @@ class AppMenuItems {
 
   static const DrawerItemModel home = DrawerItemModel(
     id: AppRoutes.home,
-    icon: Icons.home_outlined,
+    icon: AppIcons.homeFilled,
     label: 'Inicio',
     route: AppRoutes.home,
     showDividerAfter: true,
@@ -34,7 +35,7 @@ class AppMenuItems {
 
   static const DrawerItemModel leads = DrawerItemModel(
     id: AppRoutes.leads,
-    icon: Icons.people_outline,
+    icon: AppIcons.userFilled,
     label: 'Leads',
     route: AppRoutes.leads,
     // showDividerAfter: true, // separador visual después de leads
@@ -42,21 +43,21 @@ class AppMenuItems {
 
   static const DrawerItemModel recordatorios = DrawerItemModel(
     id: AppRoutes.recordatorios,
-    icon: Icons.alarm_outlined,
+    icon: AppIcons.time,
     label: 'Recordatorios',
     route: AppRoutes.recordatorios,
   );
 
   static const DrawerItemModel chats = DrawerItemModel(
     id: AppRoutes.chats,
-    icon: Icons.chat_bubble_outline,
+    icon: AppIcons.chat,
     label: 'Chats',
     route: AppRoutes.chats,
   );
 
   static const DrawerItemModel cobranza = DrawerItemModel(
     id: AppRoutes.cobranza,
-    icon: Icons.payments_outlined,
+    icon: AppIcons.payment,
     label: 'Cobranza',
     route: AppRoutes.cobranza,
   );

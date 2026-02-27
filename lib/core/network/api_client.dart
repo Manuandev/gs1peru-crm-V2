@@ -9,10 +9,11 @@
 // - Se agrega postJsonWithToken para peticiones con header Token
 // ============================================================
 
-import 'dart:convert';
-import 'dart:io';
+import 'package:app_crm/core/network/interceptors/error_interceptor.dart';
+import 'package:app_crm/core/network/interceptors/log_interceptor.dart';
+import 'package:app_crm/core/network/interceptors/token_interceptor.dart';
 import 'package:dio/dio.dart';
-import 'package:app_crm/core/network/api_result.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -20,23 +21,22 @@ class ApiClient {
 
   late final Dio _dio;
   String _token = '';
+  String get token => _token;
 
   ApiClient._internal() {
     _dio = Dio(
       BaseOptions(
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 15),
       ),
     );
 
-    // ✅ Interceptor que inyecta el token en el body automáticamente
-    _dio.interceptors.add(_TokenBodyInterceptor(this));
-    // Log en debug — quitar en producción si quieres
-    _dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true),
-    );
-    // Al final de ApiClient._internal()
-    _dio.interceptors.add(_CleanResponseInterceptor());
+    _dio.interceptors.addAll([
+      TokenBodyInterceptor(this),
+      CleanResponseInterceptor(),
+      ErrorInterceptor(),
+      if (kDebugMode) LogInterceptor(requestBody: true, responseBody: true),
+    ]);
   }
 
   void setToken(String token) => _token = token;
@@ -46,23 +46,15 @@ class ApiClient {
   // 1. POST TEXTO (Tu formato actual con respuestas pipe ¯)
   // ============================================================
   Future<String> postText(String url, String body) async {
-    try {
-      final response = await _dio.post(
-        url,
-        data: body,
-        options: Options(
-          contentType: 'text/plain',
-          responseType: ResponseType.plain,
-        ),
-      );
-      return response.data?.toString() ?? '';
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionError ||
-          e.error is SocketException) {
-        throw const SocketException('Sin conexión a internet');
-      }
-      return '';
-    }
+    final response = await _dio.post(
+      url,
+      data: body,
+      options: Options(
+        contentType: 'text/plain',
+        responseType: ResponseType.plain,
+      ),
+    );
+    return response.data?.toString() ?? '';
   }
 
   // ============================================================
@@ -75,32 +67,20 @@ class ApiClient {
     String body, {
     Map<String, dynamic>? headers,
   }) async {
-    try {
-      final response = await _dio.post(
-        url,
-        data: body, // Dio lo serializa como JSON string → "PER¦..."
-        options: Options(
-          contentType: 'application/json',
-          responseType: ResponseType.json,
-          headers: headers,
-        ),
-      );
+    final response = await _dio.post(
+      url,
+      data: body, // Dio lo serializa como JSON string → "PER¦..."
+      options: Options(
+        contentType: 'application/json',
+        responseType: ResponseType.json,
+        headers: headers,
+      ),
+    );
 
-      if (response.data is Map<String, dynamic>) {
-        return response.data as Map<String, dynamic>;
-      }
-      return null;
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionError ||
-          e.error is SocketException) {
-        throw const SocketException('Sin conexión a internet');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw const SocketException('Tiempo de espera agotado');
-      }
-      return null;
+    if (response.data is Map<String, dynamic>) {
+      return response.data as Map<String, dynamic>;
     }
+    return null;
   }
 
   Future<Map<String, dynamic>?> postJson(
@@ -108,32 +88,20 @@ class ApiClient {
     Map<String, dynamic> data, {
     Map<String, dynamic>? headers,
   }) async {
-    try {
-      final response = await _dio.post(
-        url,
-        data: data,
-        options: Options(
-          contentType: 'application/json',
-          responseType: ResponseType.json,
-          headers: headers,
-        ),
-      );
+    final response = await _dio.post(
+      url,
+      data: data,
+      options: Options(
+        contentType: 'application/json',
+        responseType: ResponseType.json,
+        headers: headers,
+      ),
+    );
 
-      if (response.data is Map<String, dynamic>) {
-        return response.data as Map<String, dynamic>;
-      }
-      return null;
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionError ||
-          e.error is SocketException) {
-        throw const SocketException('Sin conexión a internet');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw const SocketException('Tiempo de espera agotado');
-      }
-      return null;
+    if (response.data is Map<String, dynamic>) {
+      return response.data as Map<String, dynamic>;
     }
+    return null;
   }
 
   // ============================================================
@@ -152,23 +120,15 @@ class ApiClient {
   // 4. GET JSON
   // ============================================================
   Future<dynamic> getJson(String url, {Map<String, dynamic>? params}) async {
-    try {
-      final response = await _dio.get(
-        url,
-        queryParameters: params,
-        options: Options(
-          contentType: 'application/json',
-          responseType: ResponseType.json,
-        ),
-      );
-      return response.data;
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionError ||
-          e.error is SocketException) {
-        throw const SocketException('Sin conexión a internet');
-      }
-      return null;
-    }
+    final response = await _dio.get(
+      url,
+      queryParameters: params,
+      options: Options(
+        contentType: 'application/json',
+        responseType: ResponseType.json,
+      ),
+    );
+    return response.data;
   }
 
   // ============================================================
@@ -182,106 +142,37 @@ class ApiClient {
     required String fileName,
     Map<String, String>? headers,
   }) async {
-    try {
-      final formData = FormData.fromMap(fields);
+    final formData = FormData.fromMap(fields);
 
-      if (fileBytes.isNotEmpty && fileName.isNotEmpty) {
-        formData.files.add(
-          MapEntry(
-            fileFieldName,
-            MultipartFile.fromBytes(fileBytes, filename: fileName),
-          ),
-        );
-      }
-
-      final response = await _dio.post(
-        url,
-        data: formData,
-        options: Options(headers: headers, contentType: 'multipart/form-data'),
-      );
-
-      return response.data?.toString() ?? '';
-    } catch (e) {
-      return '';
-    }
-  }
-
-  // ============================================================
-  // 6. PROCESAR RESPUESTA TEXTO (Tu formato con ¯)
-  // ============================================================
-  ApiResult processApiResponse(String response) {
-    if (response.isEmpty) {
-      return ApiResult(ok: false, code: 'ERR', message: 'Error de conexión');
-    }
-
-    final partes = response.split('¯');
-
-    if (partes.length > 1) {
-      return ApiResult(
-        ok: partes[0] == 'OK',
-        code: partes[0],
-        message: partes[1],
+    if (fileBytes.isNotEmpty && fileName.isNotEmpty) {
+      formData.files.add(
+        MapEntry(
+          fileFieldName,
+          MultipartFile.fromBytes(fileBytes, filename: fileName),
+        ),
       );
     }
 
-    return ApiResult(ok: false, code: 'ERR', message: 'Error desconocido');
+    final response = await _dio.post(
+      url,
+      data: formData,
+      options: Options(headers: headers, contentType: 'multipart/form-data'),
+    );
+
+    return response.data?.toString() ?? '';
   }
 
   // En ApiClient — envía JSON, recibe cadena cruda
-  Future<String> postJsonGetText(
-    String url,
-    String body, {
-    Map<String, dynamic>? headers,
-  }) async {
-    try {
-      final response = await _dio.post(
-        url,
-        data: body,
-        options: Options(
-          contentType: 'application/json',
-          responseType: ResponseType.plain,
-          headers: headers ?? {'Token': _token},
-        ),
-      );
-      return response.data?.toString() ?? '';
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionError ||
-          e.error is SocketException) {
-        throw const SocketException('Sin conexión a internet');
-      }
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw const SocketException('Tiempo de espera agotado');
-      }
-      return '';
-    }
-  }
-}
-
-// La clase — puede ir al final del mismo archivo
-class _TokenBodyInterceptor extends Interceptor {
-  final ApiClient _client;
-  _TokenBodyInterceptor(this._client);
-
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (options.data is String) {
-      // 1. Agrega el token al string plano
-      final withToken = '${_client._token}¯${options.data}';
-      // 2. Ahora lo convierte a JSON string (agrega las comillas)
-      options.data = json.encode(withToken);
-    }
-    handler.next(options);
-  }
-}
-
-// Interceptor que limpia las comillas que mete ASP.NET
-class _CleanResponseInterceptor extends Interceptor {
-  @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (response.data is String) {
-      response.data = (response.data as String).replaceAll('"', '').trim();
-    }
-    handler.next(response);
+  Future<String> postJsonGetText(String url, String body) async {
+    final response = await _dio.post(
+      url,
+      data: body,
+      options: Options(
+        contentType: 'application/json',
+        responseType: ResponseType.plain,
+        headers: {'Token': _token},
+      ),
+    );
+    return response.data?.toString() ?? '';
   }
 }

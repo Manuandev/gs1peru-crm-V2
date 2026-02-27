@@ -9,4 +9,5 @@ class HomeRepository implements IHomeRepository {
 
   @override
   Future<List<LeadItem>> listarLeads() => _remote.listarLeads();
+
 }

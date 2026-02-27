@@ -13,7 +13,6 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 /// - Soporta ícono opcional a la izquierda del texto
 ///
 /// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
-/// - Colores     → [AppColors.primary], [AppColors.textOnDark], [AppColors.grey300]
 /// - Espaciado   → [AppSpacing.buttonPaddingHorizontal/Vertical]
 /// - Tamaños     → [AppSizing.buttonHeight], [AppSizing.radiusMd], [AppSizing.elevationMedium]
 /// - Tipografía  → [AppTextStyles.button]
@@ -39,7 +38,7 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 /// ```dart
 /// CustomPrimaryButton(
 ///   text: 'SUBIR ARCHIVO',
-///   icon: Icon(AppIcons.upload, color: AppColors.textOnDark),
+///   icon: Icon(AppIcons.upload, color: colorScheme.onSurface),
 ///   onPressed: _uploadFile,
 /// )
 /// ```

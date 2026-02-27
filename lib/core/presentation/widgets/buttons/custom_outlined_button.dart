@@ -13,7 +13,6 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 /// - Maneja estados: habilitado, deshabilitado, cargando
 ///
 /// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
-/// - Colores     → [AppColors.primary], [AppColors.grey300], [AppColors.grey500]
 /// - Espaciado   → [AppSpacing.buttonPaddingHorizontal/Vertical]
 /// - Tamaños     → [AppSizing.buttonHeight], [AppSizing.radiusMd]
 /// - Tipografía  → [AppTextStyles.buttonSecondary]
@@ -35,8 +34,8 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 /// ```dart
 /// CustomOutlinedButton(
 ///   text: 'ELIMINAR',
-///   borderColor: AppColors.error,
-///   textColor: AppColors.error,
+///   borderColor: colorScheme.error,
+///   textColor: colorScheme.error,
 ///   onPressed: _confirmDelete,
 /// )
 /// ```

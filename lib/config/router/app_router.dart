@@ -1,9 +1,12 @@
 // lib/config/router/app_router.dart
 
+import 'package:app_crm/config/router/navigation_extensions.dart';
+import 'package:app_crm/core/constants/app_icons.dart';
 import 'package:app_crm/features/auth/presentation/pages/login_page.dart';
 import 'package:app_crm/features/auth/presentation/pages/splash_page.dart';
 import 'package:app_crm/core/constants/app_colors.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
+import 'package:app_crm/features/recordatorios/presentation/pages/recordatorios_page.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/features/home/presentation/pages/home_page.dart';
 
@@ -93,6 +96,7 @@ class AppRouter {
 
   static final Map<String, WidgetBuilder> _mainRoutes = {
     AppRoutes.home: (_) => const HomePage(),
+    AppRoutes.recordatorios: (_) => const RecordatoriosPage(),
   };
 
   // ============================================================
@@ -212,18 +216,29 @@ class AppRouter {
   /// Página de error 404
   static Route<dynamic> _buildErrorRoute() {
     return MaterialPageRoute(
-      builder: (_) => Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: AppColors.error),
-              SizedBox(height: 16),
-              Text('404', style: AppTextStyles.displayMedium),
-              SizedBox(height: 8),
-              Text('Página no encontrada'),
-            ],
+      builder: (_) => PopScope(
+        // ← envuelve con PopScope
+        canPop: false, // ← bloquea el back
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) {
+            // Mandarlo al home en lugar de salir de la app
+            NavigationService.navigatorKey.currentState
+                ?.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(title: const Text('Error')),
+          body: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(AppIcons.error, size: 64, color: AppColors.error),
+                SizedBox(height: 16),
+                Text('404', style: AppTextStyles.displayMedium),
+                SizedBox(height: 8),
+                Text('Página no encontrada'),
+              ],
+            ),
           ),
         ),
       ),

@@ -21,9 +21,14 @@
 // SplashBloc, LoginBloc, HomeBloc se crean en su propia Page.
 // ============================================================
 
+import 'package:app_crm/core/presentation/bloc/drawer/drawer_bloc.dart';
+import 'package:app_crm/core/presentation/bloc/drawer/drawer_event.dart';
 import 'package:app_crm/features/home/data/datasources/remote/home_remote_datasource.dart';
 import 'package:app_crm/features/home/data/repositories/home_repository.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
+import 'package:app_crm/features/recordatorios/data/datasources/remote/recordatorios_remote_datasource.dart';
+import 'package:app_crm/features/recordatorios/data/repositories/recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/config/router/navigation_extensions.dart';
 import 'package:app_crm/features/auth/data/datasources/local/auth_local_datasource.dart';
@@ -55,10 +60,26 @@ class AppWidget extends StatelessWidget {
           ),
         ),
 
-        // ── HOME REPOSITORY ──────────────────────────────────  
+        // ── DRAWER BLOC — global para que los badges funcionen desde cualquier pantalla
+        BlocProvider<DrawerBloc>(
+          create: (context) =>
+              DrawerBloc(authRepository: context.read<IAuthRepository>())
+                ..add(DrawerStarted()),
+        ),
+
+        // ── HOME REPOSITORY ──────────────────────────────────
         RepositoryProvider<IHomeRepository>(
           create: (context) => HomeRepository(
             remote: HomeRemoteDatasource(
+              authRepository: context.read<IAuthRepository>(),
+            ),
+          ),
+        ),
+
+        // ── RECORDATORIOS REPOSITORY ──────────────────────────────────
+        RepositoryProvider<IRecordatoriosRepository>(
+          create: (context) => RecordatoriosRepository(
+            remote: RecordatoriosRemoteDatasource(
               authRepository: context.read<IAuthRepository>(),
             ),
           ),
@@ -86,6 +107,7 @@ class AppWidget extends StatelessWidget {
             // El router limpia el stack completo en ambos casos.
             // Ninguna pantalla necesita saber cómo navegar post-auth.
             if (state is AuthAuthenticated) {
+              context.read<DrawerBloc>().add(DrawerStarted());
               context.goToHome();
             } else if (state is AuthUnauthenticated) {
               context.goToLogin();

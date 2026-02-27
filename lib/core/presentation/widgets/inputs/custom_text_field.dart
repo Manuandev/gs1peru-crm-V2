@@ -14,7 +14,6 @@ import 'package:app_crm/core/constants/app_spacing.dart';
 /// - Expone solo las propiedades que necesitan variar entre instancias
 ///
 /// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
-/// - Colores   → [AppColors.border], [AppColors.borderFocused], [AppColors.borderError]
 /// - Espaciado → [AppSpacing.md] para contentPadding
 /// - Radios    → [AppSizing.radiusMd] para bordes redondeados
 /// - Tipografía→ [AppTextStyles.inputText] para el texto que escribe el usuario

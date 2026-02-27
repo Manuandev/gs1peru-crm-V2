@@ -192,7 +192,8 @@ class BasePage extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isSmallHeight = constraints.maxHeight < 500;
+            final orientation = MediaQuery.of(context).orientation;
+            final isLandscape = orientation == Orientation.landscape;
 
             return Column(
               children: [
@@ -204,7 +205,10 @@ class BasePage extends StatelessWidget {
                 ),
 
                 // Footer automático pero RESPONSIVE
-                if (!isSmallHeight) (footer ?? const _FooterPages()),
+                if (!isLandscape)
+                  footer ?? const _FooterPages()
+                else
+                  _FooterCompact(),
               ],
             );
           },
@@ -242,6 +246,32 @@ class _FooterPages extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        border: Border(
+          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        ),
+      ),
+      child: Text(
+        '${AppConstants.nombreApp} - v${AppConstants.version}',
+        style: AppTextStyles.labelSmall,
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+class _FooterCompact extends StatelessWidget {
+  const _FooterCompact();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: 4, // más chico que AppSpacing.sm
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,

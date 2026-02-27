@@ -14,7 +14,6 @@ import 'custom_text_field.dart';
 ///
 /// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
 /// - Íconos → [AppIcons.lock], [AppIcons.visibility], [AppIcons.visibilityOff]
-/// - Colores → [AppColors.grey600] para íconos en estado normal
 ///
 /// USO BÁSICO:
 /// ```dart

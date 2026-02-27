@@ -12,7 +12,6 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 /// - Permite personalizar color, tamaño y peso sin romper el sistema
 ///
 /// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
-/// - Colores     → [AppColors.primary]
 /// - Espaciado   → [AppSpacing.sm], [AppSpacing.xs]
 /// - Tipografía  → [AppTextStyles.buttonSmall] como base
 ///
@@ -28,7 +27,6 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 /// ```dart
 /// CustomTextButton(
 ///   text: 'Reintentar',
-///   textColor: AppColors.error,
 ///   onPressed: _retry,
 /// )
 /// ```
@@ -46,7 +44,7 @@ class CustomTextButton extends StatelessWidget {
   final String text;
   // Callback al presionar. null = deshabilita el botón.
   final VoidCallback? onPressed;
-  // Color del texto e ícono. null = usa [AppColors.primary]
+  // Color del texto e ícono. 
   final Color? textColor;
   // Tamaño de fuente custom. null = usa el de [AppTextStyles.buttonSmall]
   final double? fontSize;

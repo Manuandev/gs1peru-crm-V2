@@ -22,6 +22,7 @@
 
 import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
+import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/config/router/navigation_extensions.dart';
@@ -41,6 +42,7 @@ class HomePage extends StatelessWidget {
               // IAuthRepository viene del RepositoryProvider registrado en AppWidget
               homeRepository: context.read<IHomeRepository>(),
               authRepository: context.read<IAuthRepository>(),
+              recordatoriosRepository: context.read<IRecordatoriosRepository>(),
             )
             // Todo: con dependencias sería:
             // create: (context) => HomeBloc(

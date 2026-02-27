@@ -11,9 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_breakpoints.dart';
 import 'package:app_crm/core/constants/app_icons.dart';
 import 'package:app_crm/core/presentation/bloc/drawer/drawer_bloc.dart';
-import 'package:app_crm/core/presentation/bloc/drawer/drawer_event.dart';
 import 'package:app_crm/core/presentation/bloc/drawer/drawer_state.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:app_crm/features/auth/presentation/bloc/auth/auth_bloc.dart';
 import 'package:app_crm/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,18 +47,13 @@ class AppDrawerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // El drawer crea y alimenta su propio BLoC — nadie de afuera interviene
-    return BlocProvider(
-      create: (_) =>
-          DrawerBloc(authRepository: context.read<IAuthRepository>())
-            ..add(DrawerStarted()),
-      child: _DrawerContent(
-        items: items,
-        onLogout: onLogout,
-        onSettings: onSettings,
-        showSettings: showSettings,
-        showLogout: showLogout,
-      ),
+    // ✅ Dejar solo esto
+    return _DrawerContent(
+      items: items,
+      onLogout: onLogout,
+      onSettings: onSettings,
+      showSettings: showSettings,
+      showLogout: showLogout,
     );
   }
 }
@@ -218,53 +211,8 @@ class _DrawerHeader extends StatelessWidget {
     }
 
     // Mientras carga → skeleton simple
-    if (state is DrawerLoading || state is DrawerInitial) {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          verticalPadding,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
-        color: colorScheme.primary,
-        child: compact
-            ? Row(
-                children: [
-                  avatar(),
-                  const SizedBox(width: AppSpacing.md),
-                  const Expanded(child: _SkeletonLine(width: 120)),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  avatar(),
-                  const SizedBox(height: AppSpacing.md),
-                  const _SkeletonLine(width: 120),
-                  const SizedBox(height: AppSpacing.xs),
-                  const _SkeletonLine(width: 160),
-                ],
-              ),
-      );
-    }
+    if (state is! DrawerLoaded) return const SizedBox.shrink();
 
-    // Error → header mínimo sin datos
-    if (state is DrawerError) {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          verticalPadding,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
-        color: colorScheme.primary,
-        child: avatar(),
-      );
-    }
-
-    // Cargado → datos reales del usuario
     final loaded = state as DrawerLoaded;
 
     return Container(
@@ -407,18 +355,21 @@ class _DrawerItem extends StatelessWidget {
   }
 
   void _handleTap(BuildContext context) {
+    // Cerrar drawer siempre primero
+    Navigator.of(context).pop();
+
+    // Si tiene acción custom, ejecutarla
     if (item.onTap != null) {
-      Navigator.of(context).pop();
       item.onTap!();
       return;
     }
-    if (isActive) {
-      Navigator.of(context).pop();
-      return;
-    }
+
+    // Si ya estamos aquí, no navegar
+    if (isActive) return;
+
+    // ✅ Usa clearStackAndNavigateTo — limpia el stack completo
     if (item.route != null) {
-      Navigator.of(context).pop();
-      Navigator.of(context).pushReplacementNamed(item.route!);
+      context.clearStackAndNavigateTo(item.route!);
     }
   }
 }
@@ -448,31 +399,6 @@ class _Badge extends StatelessWidget {
           color: colorScheme.onPrimary,
           fontSize: AppTextStyles.sizeXs,
         ),
-      ),
-    );
-  }
-}
-
-// ============================================================
-// Skeleton para el header mientras carga
-// ============================================================
-
-class _SkeletonLine extends StatelessWidget {
-  final double width;
-  const _SkeletonLine({required this.width});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      width: width,
-      height: 12,
-      decoration: BoxDecoration(
-        // ignore: deprecated_member_use
-        color: colorScheme.onPrimary.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(AppSizing.radiusXs),
       ),
     );
   }

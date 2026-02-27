@@ -1,5 +1,6 @@
 // lib/config/router/navigation_extensions.dart
 
+import 'package:app_crm/core/constants/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/config/router/app_routes.dart';
 import 'package:app_crm/core/constants/app_colors.dart';
@@ -50,11 +51,17 @@ extension NavigationExtensions on BuildContext {
   // MÓDULOS PRINCIPALES
   // ============================================================
 
-  Future<void> goToLeads() => navigateTo(AppRoutes.leads);
-  Future<void> goToRecordatorios() => navigateTo(AppRoutes.recordatorios);
-  Future<void> goToChats() => navigateTo(AppRoutes.chats);
-  Future<void> goToCobranza() => navigateTo(AppRoutes.cobranza);
-  Future<void> goToChangePassword() => navigateTo(AppRoutes.changePassword);
+  Future<void> goToLeads() => clearStackAndNavigateTo(AppRoutes.leads);
+  Future<void> goToRecordatorios() =>
+      clearStackAndNavigateTo(AppRoutes.recordatorios);
+  Future<void> goToChats() => clearStackAndNavigateTo(AppRoutes.chats);
+  Future<void> goToCobranza() => clearStackAndNavigateTo(AppRoutes.cobranza);
+  Future<void> goToChangePassword() =>
+      clearStackAndNavigateTo(AppRoutes.changePassword);
+
+  // ============================================================
+  // MÓDULOS SECUNDARIOS
+  // ============================================================
 
   Future<void> goToLeadInfo({required dynamic idLead}) {
     return navigateTo(AppRoutes.leadInfo, arguments: {'id_lead': idLead});
@@ -121,7 +128,7 @@ extension NavigationExtensions on BuildContext {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: AppColors.onError),
+            const Icon(AppIcons.error, color: AppColors.onError),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
@@ -137,7 +144,7 @@ extension NavigationExtensions on BuildContext {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: AppColors.onSuccess),
+            const Icon(AppIcons.checkCircle, color: AppColors.onSuccess),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
@@ -153,10 +160,7 @@ extension NavigationExtensions on BuildContext {
       SnackBar(
         content: Row(
           children: [
-            const Icon(
-              Icons.warning_amber_outlined,
-              color: AppColors.onWarning,
-            ),
+            const Icon(AppIcons.warning, color: AppColors.onWarning),
             const SizedBox(width: 12),
             Expanded(
               child: Text(message, style: AppTextStyles.snackWarningText),
@@ -174,7 +178,7 @@ extension NavigationExtensions on BuildContext {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.info_outline, color: AppColors.onInfo),
+            const Icon(AppIcons.infoCircle, color: AppColors.onInfo),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],

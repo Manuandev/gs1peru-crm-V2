@@ -1,22 +1,17 @@
-// lib/features/home/presentation/bloc/drawer/drawer_state.dart
-
 abstract class DrawerState {
   const DrawerState();
 }
 
-class DrawerInitial extends DrawerState {
-  const DrawerInitial();
+// Estado antes de que el usuario haga login — drawer vacío
+class DrawerIdle extends DrawerState {
+  const DrawerIdle();
 }
 
-class DrawerLoading extends DrawerState {
-  const DrawerLoading();
-}
-
+// Estado normal — drawer con datos listos
 class DrawerLoaded extends DrawerState {
   final String userName;
-  final String userApe;       // ← descomentar
+  final String userApe;
   final String? userSubtitle;
-  final String? correoUser;   // ← descomentar
   final String? userAvatarUrl;
   final int unreadChats;
   final int pendingRecordatorios;
@@ -24,9 +19,8 @@ class DrawerLoaded extends DrawerState {
 
   const DrawerLoaded({
     required this.userName,
-    required this.userApe,     // ← descomentar
+    required this.userApe,
     this.userSubtitle,
-    this.correoUser,           // ← descomentar
     this.userAvatarUrl,
     this.unreadChats = 0,
     this.pendingRecordatorios = 0,
@@ -35,9 +29,21 @@ class DrawerLoaded extends DrawerState {
 
   bool get hasBadges =>
       unreadChats > 0 || pendingRecordatorios > 0 || newLeads > 0;
-}
 
-class DrawerError extends DrawerState {
-  final String message;
-  const DrawerError(this.message);
+  // Para actualizar solo los badges sin repetir todos los campos
+  DrawerLoaded copyWithBadges({
+    required int unreadChats,
+    required int pendingRecordatorios,
+    required int newLeads,
+  }) {
+    return DrawerLoaded(
+      userName: userName,
+      userApe: userApe,
+      userSubtitle: userSubtitle,
+      userAvatarUrl: userAvatarUrl,
+      unreadChats: unreadChats,
+      pendingRecordatorios: pendingRecordatorios,
+      newLeads: newLeads,
+    );
+  }
 }

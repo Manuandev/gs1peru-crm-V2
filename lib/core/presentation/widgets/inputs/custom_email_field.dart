@@ -14,7 +14,6 @@ import 'custom_text_field.dart';
 ///
 /// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
 /// - Íconos → [AppIcons.email]
-/// - Colores → [AppColors.grey600]
 ///
 /// USO CON VALIDADOR POR DEFECTO:
 /// ```dart

@@ -28,7 +28,7 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 /// ```dart
 /// CustomSecondaryButton(
 ///   text: 'EXPORTAR PDF',
-///   icon: Icon(AppIcons.pdf, color: AppColors.textOnDark),
+///   icon: Icon(AppIcons.pdf, color: colorScheme.onSurface),
 ///   onPressed: _exportToPdf,
 /// )
 /// ```

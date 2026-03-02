@@ -22,140 +22,73 @@ import 'app_routes.dart';
 class AppRouter {
   AppRouter._();
 
-  /// Generador principal de rutas
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     final String? routeName = settings.name;
-
-    if (routeName == null) {
-      return _buildErrorRoute();
-    }
+    if (routeName == null) return _buildErrorRoute();
 
     final WidgetBuilder? builder = _findRouteBuilder(routeName);
+    if (builder == null) return _buildErrorRoute();
 
-    if (builder == null) {
-      return _buildErrorRoute();
-    }
-
-    return _buildRoute(
-      builder: builder,
-      settings: settings,
-      routeName: routeName,
-    );
+    return _buildRoute(builder: builder, settings: settings, routeName: routeName);
   }
 
-  /// Buscar el builder de la ruta
   static WidgetBuilder? _findRouteBuilder(String routeName) {
-    // Rutas de autenticación
-    if (_authRoutes.containsKey(routeName)) {
-      return _authRoutes[routeName];
-    }
-
-    // Rutas principales
-    if (_mainRoutes.containsKey(routeName)) {
-      return _mainRoutes[routeName];
-    }
-
-    // Rutas de leads
-    if (routeName.startsWith('/leads/')) {
-      return _leadsRoutes[routeName];
-    }
-
-    // Rutas de recordatorios
-    if (routeName.startsWith('/recordatorios/')) {
-      return _recordatoriosRoutes[routeName];
-    }
-
-    // Rutas de chats
-    if (routeName.startsWith('/chats/')) {
-      return _chatsRoutes[routeName];
-    }
-
-    // // Rutas de cobranzas
-    // if (routeName.startsWith('/cobranza/')) {
-    //   return _cobranzaRoutes[routeName];
-    // }
-
+    if (_authRoutes.containsKey(routeName)) return _authRoutes[routeName];
+    if (_mainRoutes.containsKey(routeName)) return _mainRoutes[routeName];
+    if (routeName.startsWith('/leads/')) return _leadsRoutes[routeName];
+    if (routeName.startsWith('/recordatorios/')) return _recordatoriosRoutes[routeName];
+    if (routeName.startsWith('/chats/')) return _chatsRoutes[routeName];
     return null;
   }
 
-  // ============================================================
-  // RUTAS DE AUTENTICACIÓN
-  // ============================================================
-
+  // ── AUTH ──────────────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _authRoutes = {
     AppRoutes.splash: (_) => const SplashPage(),
-
     AppRoutes.login: (_) => const LoginPage(),
-
     AppRoutes.changePassword: (_) =>
         const Scaffold(body: Center(child: Text('Cambiar Contraseña'))),
   };
 
-  // ============================================================
-  // RUTAS PRINCIPALES
-  // ============================================================
-
+  // ── PRINCIPALES ───────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _mainRoutes = {
     AppRoutes.home: (_) => const HomePage(),
     AppRoutes.recordatorios: (_) => const RecordatoriosPage(),
     AppRoutes.chats: (_) => const ChatsPage(),
   };
 
-  // ============================================================
-  // RUTAS DE LEADS
-  // ============================================================
-
+  // ── LEADS ─────────────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _leadsRoutes = {
     AppRoutes.leadInfo: (context) {
       final args = _getArgs<Map<String, dynamic>>(context);
-      final idLead = args['idLead'];
-
-      return Scaffold(body: Center(child: Text('Id Lead: $idLead')));
-    },
-    AppRoutes.leadInfos: (context) {
-      final args = _getArgs<Map<String, dynamic>>(context);
-      final idLead = args['idLead'];
-
-      return Scaffold(
-        body: Center(child: Text('Id Leadsssssssssssssss: $idLead')),
-      );
+      final idLead = args['id_lead'];
+      return Scaffold(body: Center(child: Text('Lead: $idLead')));
     },
   };
 
-  static final Map<String, WidgetBuilder> _recordatoriosRoutes = {
-    AppRoutes.leadInfo: (context) {
-      final args = _getArgs<Map<String, dynamic>>(context);
-      final idLead = args['idLead'];
+  // ── RECORDATORIOS ─────────────────────────────────────────────
+  static final Map<String, WidgetBuilder> _recordatoriosRoutes = {};
 
-      return Scaffold(body: Center(child: Text('Id Lead: $idLead')));
-    },
-  };
-
+  // ── CHATS ─────────────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _chatsRoutes = {
-    AppRoutes.leadInfo: (context) {
+    AppRoutes.detalleChat: (context) {
       final args = _getArgs<Map<String, dynamic>>(context);
-      final idLead = args['idLead'];
-
-      return Scaffold(body: Center(child: Text('Id Lead: $idLead')));
+      final chat = args['chat'];
+      // return DetalleChatPage(chat: chat);
+      return Scaffold(body: Center(child: Text('Lead: $chat')));
     },
   };
 
-  // ============================================================
-  // HELPERS
-  // ============================================================
-
-  /// Obtener argumentos de forma segura
+  // ── HELPERS ───────────────────────────────────────────────────
   static T _getArgs<T>(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args == null) {
       throw Exception(
-        'Argumentos esperados pero no recibidos en ${ModalRoute.of(context)?.settings.name}',
+        'Argumentos faltantes en ${ModalRoute.of(context)?.settings.name}',
       );
     }
     return args as T;
   }
 
-  /// Construir ruta con transición
   static Route<dynamic> _buildRoute({
     required WidgetBuilder builder,
     required RouteSettings settings,
@@ -177,27 +110,17 @@ class AppRouter {
     );
   }
 
-  /// Determinar tipo de transición según ruta
   static TransitionType _getTransitionType(String routeName) {
-    // Splash y Login: Fade
     if (routeName == AppRoutes.splash || routeName == AppRoutes.login) {
       return TransitionType.fade;
     }
-
-    // Rutas de escaneo/QR: Slide desde abajo
-    if (routeName.contains('/escanear') || routeName.contains('/qr')) {
-      return TransitionType.slideUp;
-    }
-
-    // Rutas de información: Slide desde derecha
-    if (routeName.contains('/informacion')) {
+    // Detalle de chat: entra desde la derecha
+    if (routeName.contains('/detalle') || routeName.contains('/informacion')) {
       return TransitionType.slideRight;
     }
-
     return TransitionType.material;
   }
 
-  /// Construir animación de transición
   static Widget _buildTransition(
     TransitionType type,
     Animation<double> animation,
@@ -206,42 +129,25 @@ class AppRouter {
     switch (type) {
       case TransitionType.fade:
         return FadeTransition(opacity: animation, child: child);
-
       case TransitionType.slideRight:
         return SlideTransition(
-          position:
-              Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-              ),
-          child: child,
-        );
-
-      case TransitionType.slideUp:
-        return SlideTransition(
           position: Tween<Offset>(
-            begin: const Offset(0.0, 1.0),
+            begin: const Offset(1.0, 0.0),
             end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut)),
           child: child,
         );
-
       default:
         return child;
     }
   }
 
-  /// Página de error 404
   static Route<dynamic> _buildErrorRoute() {
     return MaterialPageRoute(
       builder: (_) => PopScope(
-        // ← envuelve con PopScope
-        canPop: false, // ← bloquea el back
-        onPopInvokedWithResult: (didPop, result) {
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
           if (!didPop) {
-            // Mandarlo al home en lugar de salir de la app
             NavigationService.navigatorKey.currentState
                 ?.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
           }
@@ -266,5 +172,4 @@ class AppRouter {
   }
 }
 
-/// Tipos de transición
 enum TransitionType { material, fade, slideRight, slideUp }

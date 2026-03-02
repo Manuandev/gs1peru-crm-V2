@@ -60,11 +60,24 @@ extension NavigationExtensions on BuildContext {
       clearStackAndNavigateTo(AppRoutes.changePassword);
 
   // ============================================================
-  // MÓDULOS SECUNDARIOS
+  // MÓDULOS SECUNDARIOS - LEADS
   // ============================================================
 
   Future<void> goToLeadInfo({required dynamic idLead}) {
     return navigateTo(AppRoutes.leadInfo, arguments: {'id_lead': idLead});
+  }
+
+  // ============================================================
+  // MÓDULOS SECUNDARIOS - CHATS
+  // ============================================================
+
+  Future<void> goToDetalleChat({required dynamic chat}) {
+    return navigateTo(AppRoutes.detalleChat, arguments: {'chat': chat});
+  }
+
+  Future<void> goToDetalleChatDesdeHome({required int idChat}) async {
+    await clearStackAndNavigateTo(AppRoutes.chats);
+    await navigateTo(AppRoutes.detalleChat, arguments: {'id_chat': idChat});
   }
 
   // ============================================================

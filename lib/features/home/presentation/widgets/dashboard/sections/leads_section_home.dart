@@ -2,13 +2,13 @@
 
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/recordatorio_tile.dart';
-import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/home/data/models/lead_model.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/lead_tile_home.dart';
 import 'package:flutter/material.dart';
 
-class RecordatoriosSection extends StatelessWidget {
-  final List<RecordatorioItem> recordatorios;
-  const RecordatoriosSection({super.key, required this.recordatorios});
+class LeadsSection extends StatelessWidget {
+  final List<LeadItem> leads;
+  const LeadsSection({super.key, required this.leads});
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +24,10 @@ class RecordatoriosSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Nuevos recordatorios', style: AppTextStyles.titleMedium),
-                if (recordatorios.isNotEmpty)
+                Text('Nuevos leads', style: AppTextStyles.titleMedium),
+                if (leads.isNotEmpty)
                   Text(
-                    '${recordatorios.length}',
+                    '${leads.length}',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -37,17 +37,39 @@ class RecordatoriosSection extends StatelessWidget {
             const Divider(),
 
             // ── LISTA O VACÍO ─────────────────────────────────
-            if (recordatorios.isEmpty)
-              const _EmptySection(message: 'No tienes recordatorios pendientes')
+            if (leads.isEmpty)
+              const _EmptySection(message: 'No tienes leads pendientes')
             else
-              // altura fija + scroll interno del card
-              SizedBox(
-                height: 100,
-                child: ListView.separated(
-                  physics: const ClampingScrollPhysics(),
-                  itemCount: recordatorios.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) => RecordatorioTile(recordatorio: recordatorios[index]),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final visibleItems = leads.take(5).toList(); // ← máximo 5
+                  final height = (constraints.maxWidth * 0.45).clamp(
+                    120.0,
+                    280.0,
+                  );
+
+                  return SizedBox(
+                    height: height,
+                    child: ListView.separated(
+                      physics: const ClampingScrollPhysics(),
+                      itemCount: visibleItems.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) =>
+                          LeadTileHome(lead: visibleItems[index]),
+                    ),
+                  );
+                },
+              ),
+
+            // Si hay más de 5, mostrar "Ver todos"
+            if (leads.length > 5)
+              TextButton(
+                onPressed: () {}, // navegar a la pantalla completa
+                child: Text(
+                  'Ver todos (${leads.length})',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
           ],

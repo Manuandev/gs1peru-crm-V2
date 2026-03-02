@@ -20,6 +20,9 @@ class ChatsLoaded extends ChatsState {
   final List<ChatItem> chats;
 
   const ChatsLoaded({required this.chats});
+
+  @override
+  List<Object?> get props => [chats];
 }
 
 class ChatsError extends ChatsState {

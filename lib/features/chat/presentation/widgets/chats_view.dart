@@ -1,5 +1,3 @@
-
-import 'package:app_crm/core/constants/app_colors.dart';
 import 'package:app_crm/core/constants/app_icons.dart';
 import 'package:app_crm/core/utils/responsive_helper.dart';
 import 'package:app_crm/features/chat/presentation/bloc/chats_bloc.dart';
@@ -17,18 +15,33 @@ class ChatsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return BasePage(
       title: 'Chats',
       drawerSide: DrawerSide.left,
-      appBarTrailingButtons: [
-        IconButton(
-          icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
-          onPressed: () {
-            context.read<ChatsBloc>().add(ChatsRefreshRequested());
-          },
+      onSearch: (query) {
+        context.read<ChatsBloc>().add(ChatsSearchRequested(query));
+      },
+      appBarPopupItems: const [
+        AppBarPopupItem(
+          value: 'refresh',
+          icon: AppIcons.refresh,
+          label: 'Actualizar',
         ),
       ],
+      onPopupSelected: (value) {
+        switch (value) {
+          case 'refresh':
+            context.read<ChatsBloc>().add(ChatsRefreshRequested());
+        }
+      },
+      // appBarTrailingButtons: [
+      //   IconButton(
+      //     icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
+      //     onPressed: () {
+      //       context.read<ChatsBloc>().add(ChatsRefreshRequested());
+      //     },
+      //   ),
+      // ],
       body: BlocBuilder<ChatsBloc, ChatsState>(
         builder: (context, state) {
           if (state is ChatsLoading || state is ChatsInitial) {

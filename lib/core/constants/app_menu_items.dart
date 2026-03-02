@@ -33,47 +33,12 @@ class AppMenuItems {
     showDividerAfter: true,
   );
 
-  static const DrawerItemModel leads = DrawerItemModel(
-    id: AppRoutes.leads,
-    icon: AppIcons.userFilled,
-    label: 'Leads',
-    route: AppRoutes.leads,
-    // showDividerAfter: true, // separador visual después de leads
-  );
-
-  static const DrawerItemModel recordatorios = DrawerItemModel(
-    id: AppRoutes.recordatorios,
-    icon: AppIcons.time,
-    label: 'Recordatorios',
-    route: AppRoutes.recordatorios,
-  );
-
-  static const DrawerItemModel chats = DrawerItemModel(
-    id: AppRoutes.chats,
-    icon: AppIcons.chat,
-    label: 'Chats',
-    route: AppRoutes.chats,
-  );
-
-  static const DrawerItemModel cobranza = DrawerItemModel(
-    id: AppRoutes.cobranza,
-    icon: AppIcons.payment,
-    label: 'Cobranza',
-    route: AppRoutes.cobranza,
-  );
-
   // ============================================================
   // LISTA COMPLETA EN ORDEN
   // Úsala cuando quieras mostrar todos los módulos
   // ============================================================
 
-  static const List<DrawerItemModel> mainItems = [
-    home,
-    leads,
-    recordatorios,
-    chats,
-    cobranza,
-  ];
+  static const List<DrawerItemModel> mainItems = [home];
 
   // ============================================================
   // CON BADGES DINÁMICOS
@@ -100,7 +65,6 @@ class AppMenuItems {
         label: 'Leads',
         route: AppRoutes.leads,
         badge: leadsBadge,
-        showDividerAfter: true,
       ),
       DrawerItemModel(
         id: AppRoutes.recordatorios,

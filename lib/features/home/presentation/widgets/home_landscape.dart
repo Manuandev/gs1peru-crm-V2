@@ -1,9 +1,9 @@
 // lib/features/home/presentation/widgets/home_landscape.dart
 
 import 'package:app_crm/features/home/presentation/widgets/dashboard/home_menu_cards.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/chats_section.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/leads_section.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/recordatorios_section.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/chats_section_home.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/leads_section_home.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/recordatorios_section_home.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/features/home/presentation/bloc/home_state.dart';

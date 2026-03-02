@@ -6,22 +6,28 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
   final _session = SessionService();
 
-  DrawerBloc()
-      : super(const DrawerIdle()) {
+  DrawerBloc() : super(const DrawerIdle()) {
     on<DrawerStarted>(_onDrawerStarted);
     on<DrawerBadgesUpdated>(_onDrawerBadgesUpdated);
   }
 
   void _onDrawerStarted(DrawerStarted event, Emitter<DrawerState> emit) {
     // Sin async, sin Loading — los datos están en memoria, es instantáneo
-    final user = _session.user;
-    if (user == null) return; // No debería pasar nunca post-login
+    final user = _session.user!;
 
-    emit(DrawerLoaded(
-      userName: user.codUser,
-      userApe: user.userApe,
-      userSubtitle: user.correoUser,
-    ));
+    // Preservar badges si ya había un estado cargado
+    final previous = state is DrawerLoaded ? state as DrawerLoaded : null;
+
+    emit(
+      DrawerLoaded(
+        userName: user.codUser,
+        userApe: user.userApe,
+        userSubtitle: user.correoUser,
+        unreadChats: previous?.unreadChats ?? 0,
+        pendingRecordatorios: previous?.pendingRecordatorios ?? 0,
+        newLeads: previous?.newLeads ?? 0,
+      ),
+    );
   }
 
   void _onDrawerBadgesUpdated(
@@ -32,10 +38,12 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
     if (current is! DrawerLoaded) return;
 
     // copyWithBadges — no repetimos todos los campos
-    emit(current.copyWithBadges(
-      unreadChats: event.unreadChats,
-      pendingRecordatorios: event.pendingRecordatorios,
-      newLeads: event.newLeads,
-    ));
+    emit(
+      current.copyWithBadges(
+        unreadChats: event.unreadChats,
+        pendingRecordatorios: event.pendingRecordatorios,
+        newLeads: event.newLeads,
+      ),
+    );
   }
 }

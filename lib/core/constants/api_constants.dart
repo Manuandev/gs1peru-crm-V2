@@ -13,18 +13,17 @@ class ApiConstants {
   static const Duration receiveTimeout = Duration(seconds: 30);
 
   // ========== SEGURIDAD ==========
-  static const String login = 'Seguridad/ValidarLoginApp';
-  static const String loginGoogle = 'Seguridad/ValidarLogin';
+  static const String login = 'Seguridad/ValidarLoginAppCRM';
+  static const String loginGoogle = 'Seguridad/ValidarLoginGoogleAppCRM';
 
   // ========== LEADS ==========
-  static const String leads = 'Lead/SPLead';
+  static const String lstleads = 'Lead/SPLeadLSTApp';
 
   // ========== RECORDATORIOS ==========
-  static const String recordatorios = 'Recordatorio/SPRecordatorio';
-  
+  static const String lstRecordatorios = 'Recordatorio/SPRecordatorioLSTApp';
 
   // ========== WHATSAPP ==========
-  static const String chats = 'Wsp/SPWhatsapp';
+  static const String lstChats = 'Wsp/SPWhatsappLSTApp';
   static const String listarChats = 'Wsp/ObtenerChats';
   static const String detalleChat = 'Wsp/ObtenerMensajes';
   static const String actualizarFavorito = 'Wsp/ActualizarFavorito';
@@ -36,9 +35,9 @@ class ApiConstants {
   // URLs completas (helpers)
   static String get urlLogin => '$baseUrl$login';
   static String get urlLoginGoogle => '$baseUrl$loginGoogle';
-  static String get urlLeads => '$baseUrl$leads';
-  static String get urlRecordatorios => '$baseUrl$recordatorios';
-  static String get urlChats => '$baseUrl$chats';
+  static String get urlLeadsLst => '$baseUrl$lstleads';
+  static String get urlRecordatoriosLst => '$baseUrl$lstRecordatorios';
+  static String get urlChatsLst => '$baseUrl$lstChats';
 
   static String get urlListarChats => '$baseUrl$listarChats';
   static String get urlDetalleChat => '$baseUrl$detalleChat';

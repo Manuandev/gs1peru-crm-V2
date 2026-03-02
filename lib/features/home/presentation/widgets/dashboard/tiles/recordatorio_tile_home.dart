@@ -6,9 +6,9 @@ import 'package:app_crm/core/constants/app_text_styles.dart';
 import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
 import 'package:flutter/material.dart';
 
-class RecordatorioTile extends StatelessWidget {
+class RecordatorioTileHome extends StatelessWidget {
   final RecordatorioItem recordatorio;
-  const RecordatorioTile({super.key, required this.recordatorio});
+  const RecordatorioTileHome({super.key, required this.recordatorio});
 
   @override
   Widget build(BuildContext context) {

@@ -15,7 +15,7 @@ class HomeRemoteDatasource {
   Future<List<LeadItem>> listarLeads() async {
     final String body = '${_session.codUser}¯L';
 
-    final String raw = await _api.postJsonGetText(ApiConstants.urlLeads, body);
+    final String raw = await _api.postJsonGetText(ApiConstants.urlLeadsLst, body);
 
     if (raw.isEmpty) {
       throw HomeException(

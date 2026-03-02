@@ -57,6 +57,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeRefreshRequested>(_onHomeRefreshRequested);
   }
 
+  // ✅ Helper tipado explícito — evita el bug de inferencia de catchError
+  Future<T> _safe<T>(Future<T> future, T fallback) async {
+    try {
+      return await future;
+    } catch (e) {
+      // Puedes loggear aquí si quieres: debugPrint('_safe error: $e');
+      return fallback;
+    }
+  }
+
   Future<void> _onHomeStarted(
     HomeStarted event,
     Emitter<HomeState> emit,
@@ -75,32 +85,30 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   Future<void> _loadData(Emitter<HomeState> emit) async {
     try {
-      // Lanzamos ambas en paralelo
-      final leadsF = _homeRepository.listarLeads();
-      final recordatoriosF = _recordatoriosRepository.listarRecordatorios();
-      final chatsF = _chatsRepository.listarChats();
+      final results = await Future.wait([
+        _safe<List<LeadItem>>(_homeRepository.listarLeads(), []),
+        _safe<List<RecordatorioItem>>(
+          _recordatoriosRepository.listarRecordatorios(),
+          [],
+        ),
+        _safe<List<ChatItem>>(_chatsRepository.listarChats(), []),
+      ]);
 
-      // Esperamos ambas de forma independiente
-      final leads = await leadsF.catchError((_) => <LeadItem>[]);
-      final recordatorios = await recordatoriosF.catchError(
-        (_) => <RecordatorioItem>[],
-      );
-
-      final chats = await chatsF.catchError((_) => <ChatItem>[]);
-
-      final user = _session.user!;
+      final leads = results[0] as List<LeadItem>;
+      final recordatorios = results[1] as List<RecordatorioItem>;
+      final chats = results[2] as List<ChatItem>;
 
       emit(
         HomeLoaded(
           leads: leads,
           recordatorios: recordatorios,
           chats: chats,
-          usuario: user,
+          usuario: _session.user!,
         ),
       );
     } catch (e, stackTrace) {
+      // Solo llega aquí si _session.user! es null u otro error crítico
       addError(e, stackTrace);
-
       emit(HomeError(e.toString()));
     }
   }

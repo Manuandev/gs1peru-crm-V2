@@ -14,7 +14,7 @@ class ChatsRemoteDatasource {
     final String body = '${_session.codUser}¯L';
 
     final String raw = await _api.postJsonGetText(
-      ApiConstants.urlChats,
+      ApiConstants.urlChatsLst,
       body,
     );
 

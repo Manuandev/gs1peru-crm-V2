@@ -32,18 +32,18 @@ class DrawerLoaded extends DrawerState {
 
   // Para actualizar solo los badges sin repetir todos los campos
   DrawerLoaded copyWithBadges({
-    required int unreadChats,
-    required int pendingRecordatorios,
-    required int newLeads,
+    int? unreadChats,
+    int? pendingRecordatorios,
+    int? newLeads,
   }) {
     return DrawerLoaded(
       userName: userName,
       userApe: userApe,
       userSubtitle: userSubtitle,
       userAvatarUrl: userAvatarUrl,
-      unreadChats: unreadChats,
-      pendingRecordatorios: pendingRecordatorios,
-      newLeads: newLeads,
+      unreadChats: unreadChats ?? this.unreadChats,
+      pendingRecordatorios: pendingRecordatorios ?? this.pendingRecordatorios,
+      newLeads: newLeads ?? this.newLeads,
     );
   }
 }

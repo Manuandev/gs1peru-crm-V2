@@ -20,6 +20,8 @@
 //               └── HomeView
 // ============================================================
 
+import 'package:app_crm/core/extensions/badge_extensions.dart';
+import 'package:app_crm/core/presentation/widgets/exit_on_back_wrapper.dart';
 import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
 import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
@@ -36,25 +38,27 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          HomeBloc(
-              homeRepository: context.read<IHomeRepository>(),
-              recordatoriosRepository: context.read<IRecordatoriosRepository>(),
-              chatsRepository: context.read<IChatsRepository>(),
-            )
-            // Todo: con dependencias sería:
-            // create: (context) => HomeBloc(
-            //   homeRepository: context.read<IHomeRepository>(),
-            // )
-            ..add(const HomeStarted()),
-      child: BlocListener<HomeBloc, HomeState>(
-        // Solo escucha errores para mostrar snackbar
-        listenWhen: (_, current) => current is HomeError,
-        listener: (context, state) {
-          context.showErrorSnack((state as HomeError).message);
-        },
-        child: const HomeView(),
+    return ExitOnBackWrapper(
+      child: BlocProvider(
+        create: (context) => HomeBloc(
+          homeRepository: context.read<IHomeRepository>(),
+          recordatoriosRepository: context.read<IRecordatoriosRepository>(),
+          chatsRepository: context.read<IChatsRepository>(),
+        )..add(const HomeStarted()),
+        child: BlocListener<HomeBloc, HomeState>(
+          listener: (context, state) {
+            if (state is HomeError) {
+              context.showErrorSnack(state.message);
+            } else if (state is HomeLoaded) {
+              context.updateBadge(
+                leads: state.leads.length,
+                chats: state.chats.length,
+                recordatorios: state.recordatorios.length,
+              );
+            }
+          },
+          child: const HomeView(),
+        ),
       ),
     );
   }

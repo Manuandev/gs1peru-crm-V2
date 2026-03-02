@@ -20,6 +20,7 @@
 //               └── HomeView
 // ============================================================
 
+import 'package:app_crm/core/extensions/badge_extensions.dart';
 import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,16 +36,16 @@ class RecordatoriosPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          RecordatoriosBloc(
-              recordatoriosRepository: context.read<IRecordatoriosRepository>(),
-            )
-            ..add(const RecordatoriosStarted()),
+      create: (context) => RecordatoriosBloc(
+        recordatoriosRepository: context.read<IRecordatoriosRepository>(),
+      )..add(const RecordatoriosStarted()),
       child: BlocListener<RecordatoriosBloc, RecordatoriosState>(
-        // Solo escucha errores para mostrar snackbar
-        listenWhen: (_, current) => current is RecordatoriosError,
         listener: (context, state) {
-          context.showErrorSnack((state as RecordatoriosError).message);
+          if (state is RecordatoriosError) {
+            context.showErrorSnack(state.message);
+          } else if (state is RecordatoriosLoaded) {
+            context.updateBadge(recordatorios: state.recordatorios.length);
+          }
         },
         child: const RecordatoriosView(),
       ),

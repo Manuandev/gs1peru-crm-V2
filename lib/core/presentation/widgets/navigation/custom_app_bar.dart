@@ -31,33 +31,21 @@ import 'drawer_item_model.dart';
 ///   ],
 ///   onPopupSelected: (value) { ... },
 /// )
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  /// Título como texto
+// lib/core/presentation/widgets/navigation/custom_app_bar.dart
+
+class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String? title;
-
-  /// Título como widget custom (tiene prioridad sobre [title])
   final Widget? titleWidget;
-
-  /// Lado del drawer. [DrawerSide.none] para no mostrar el toggle.
   final DrawerSide drawerSide;
-
-  /// Botones en el lado izquierdo (solo si drawerSide != left)
   final List<Widget>? leadingButtons;
-
-  /// Botones en el lado derecho (antes del popup)
   final List<Widget>? trailingButtons;
-
-  /// Ítems del menú de 3 puntitos. Si está vacío, no se muestra el ícono.
   final List<AppBarPopupItem>? popupItems;
-
-  /// Callback cuando se selecciona un ítem del popup
   final void Function(String value)? onPopupSelected;
-
-  /// Mostrar/ocultar sombra del AppBar
   final bool showElevation;
-
-  /// Color de fondo custom
   final Color? backgroundColor;
+
+  // ✅ Nuevo — si no es null, aparece el ícono de búsqueda
+  final void Function(String query)? onSearch;
 
   const CustomAppBar({
     super.key,
@@ -70,6 +58,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onPopupSelected,
     this.showElevation = false,
     this.backgroundColor,
+    this.onSearch,
   }) : assert(
          title != null || titleWidget != null,
          'CustomAppBar necesita title o titleWidget',
@@ -79,78 +68,170 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
+  State<CustomAppBar> createState() => _CustomAppBarState();
+}
+
+class _CustomAppBarState extends State<CustomAppBar> {
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _startSearch() => setState(() => _isSearching = true);
+
+  void _stopSearch() {
+    setState(() => _isSearching = false);
+    _searchController.clear();
+    widget.onSearch?.call(''); // limpia resultados
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return AppBar(
-      backgroundColor: backgroundColor ?? colorScheme.primary,
+      backgroundColor: widget.backgroundColor ?? colorScheme.primary,
       foregroundColor: colorScheme.onPrimary,
-      elevation: showElevation ? 4 : 0,
+      elevation: widget.showElevation ? 4 : 0,
       centerTitle: false,
+      automaticallyImplyLeading: widget.drawerSide == DrawerSide.left,
+      leading: _isSearching ? _buildBackButton() : _buildLeading(context),
 
-      // ── TÍTULO ──────────────────────────────────────────────
-      title:
-          titleWidget ??
-          Text(
-            title!,
-            style: AppTextStyles.titleLarge.copyWith(
-              color: colorScheme.onPrimary,
-            ),
-          ),
+      // ── TÍTULO o CAMPO DE BÚSQUEDA ───────────────────────────
+      title: _isSearching
+          ? Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Buscar...',
+                        hintStyle: TextStyle(
+                          // ignore: deprecated_member_use
+                          color: colorScheme.onSurface.withOpacity(0.5),
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                      ),
+                      onChanged: widget.onSearch,
+                    ),
+                  ),
+                  // ✅ X dentro del container
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (_, value, _) {
+                      if (value.text.isEmpty) return const SizedBox(width: 8);
+                      return GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                          widget.onSearch?.call('');
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(
+                            Icons.close,
+                            size: 18,
+                            // ignore: deprecated_member_use
+                            color: colorScheme.onSurface.withOpacity(0.5),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            )
+          : widget.titleWidget ??
+                Text(
+                  widget.title!,
+                  style: AppTextStyles.titleLarge.copyWith(
+                    color: colorScheme.onPrimary,
+                  ),
+                ),
 
-      // ── LEADING (izquierda) ──────────────────────────────────
-      // Si el drawer está a la IZQUIERDA → Flutter pone el ícono automáticamente
-      // Si no hay drawer a la izquierda → podemos poner nuestros leadingButtons
-      automaticallyImplyLeading: drawerSide == DrawerSide.left,
-      leading: _buildLeading(context),
-
-      // ── ACTIONS (derecha) ────────────────────────────────────
-      actions: _buildActions(context),
+      actions: _isSearching ? null : _buildActions(context),
     );
   }
 
-  /// Construir el lado izquierdo del AppBar
+  // ── Botón back cuando está buscando ─────────────────────────
+  Widget _buildBackButton() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return IconButton(
+      icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
+      onPressed: _stopSearch,
+    );
+  }
+
+  // ── Botón X para limpiar texto ───────────────────────────────
+  // Widget _buildClearButton() {
+  //   final colorScheme = Theme.of(context).colorScheme;
+  //   return IconButton(
+  //     icon: Icon(Icons.close, color: colorScheme.onPrimary),
+  //     onPressed: () {
+  //       _searchController.clear();
+  //       widget.onSearch?.call('');
+  //     },
+  //   );
+  // }
+
   Widget? _buildLeading(BuildContext context) {
-    // Si hay drawer a la izquierda, Flutter lo maneja solo → no interferir
-    if (drawerSide == DrawerSide.left) return null;
-
-    // Si hay drawer a la derecha, ponemos los leadingButtons normalmente
-    // Si no hay drawer, ídem
-    final buttons = leadingButtons ?? [];
+    if (widget.drawerSide == DrawerSide.left) return null;
+    final buttons = widget.leadingButtons ?? [];
     if (buttons.isEmpty) return null;
-
     if (buttons.length == 1) return buttons.first;
-
-    // Múltiples botones en leading → Row
     return Row(mainAxisSize: MainAxisSize.min, children: buttons);
   }
 
-  /// Construir el lado derecho del AppBar
   List<Widget>? _buildActions(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+    final colorScheme = Theme.of(context).colorScheme;
     final actions = <Widget>[];
 
-    // Botones custom de la derecha
-    if (trailingButtons != null) {
-      actions.addAll(trailingButtons!);
+    // ✅ Ícono de búsqueda — solo si onSearch está definido
+    if (widget.onSearch != null) {
+      actions.add(
+        IconButton(
+          icon: Icon(Icons.search, color: colorScheme.onPrimary),
+          onPressed: _startSearch,
+        ),
+      );
     }
 
-    // 3 puntitos (solo si hay ítems)
-    if (popupItems != null && popupItems!.isNotEmpty) {
+    if (widget.trailingButtons != null) {
+      actions.addAll(widget.trailingButtons!);
+    }
+
+    if (widget.popupItems != null && widget.popupItems!.isNotEmpty) {
       actions.add(_buildPopupMenu(context));
     }
 
-    // Drawer a la DERECHA → el ícono va al final de actions
-    if (drawerSide == DrawerSide.right) {
+    if (widget.drawerSide == DrawerSide.right) {
       actions.add(
         Builder(
           builder: (ctx) => IconButton(
             icon: Icon(AppIcons.menu, color: colorScheme.onPrimary),
             onPressed: () => Scaffold.of(ctx).openEndDrawer(),
-            tooltip: 'Menú',
           ),
         ),
       );
@@ -159,19 +240,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return actions.isEmpty ? null : actions;
   }
 
-  /// Construir el menú de 3 puntitos
   Widget _buildPopupMenu(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+    final colorScheme = Theme.of(context).colorScheme;
     return PopupMenuButton<String>(
       icon: Icon(AppIcons.more, color: colorScheme.onPrimary),
       tooltip: 'Más opciones',
-      onSelected: onPopupSelected,
+      onSelected: widget.onPopupSelected,
       itemBuilder: (context) {
         final items = <PopupMenuEntry<String>>[];
-
-        for (final item in popupItems!) {
+        for (final item in widget.popupItems!) {
           items.add(
             PopupMenuItem<String>(
               value: item.value,
@@ -184,12 +261,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
           );
-
-          if (item.showDividerAfter) {
-            items.add(const PopupMenuDivider());
-          }
+          if (item.showDividerAfter) items.add(const PopupMenuDivider());
         }
-
         return items;
       },
     );

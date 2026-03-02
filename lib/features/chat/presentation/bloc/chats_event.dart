@@ -25,3 +25,8 @@ class ChatsStarted extends ChatsEvent {
 class ChatsRefreshRequested extends ChatsEvent {
   const ChatsRefreshRequested();
 }
+
+class ChatsSearchRequested extends ChatsEvent {
+  final String query;
+  const ChatsSearchRequested(this.query);
+}

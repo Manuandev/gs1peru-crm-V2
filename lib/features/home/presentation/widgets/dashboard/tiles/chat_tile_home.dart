@@ -5,9 +5,9 @@ import 'package:app_crm/core/utils/date/date_formats.dart';
 import 'package:app_crm/features/chat/data/models/chat_model.dart';
 import 'package:flutter/material.dart';
 
-class ChatTile extends StatelessWidget {
+class ChatTileHome extends StatelessWidget {
   final ChatItem chat;
-  const ChatTile({super.key, required this.chat});
+  const ChatTileHome({super.key, required this.chat});
 
   @override
   Widget build(BuildContext context) {

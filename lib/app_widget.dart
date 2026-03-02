@@ -63,13 +63,6 @@ class AppWidget extends StatelessWidget {
           ),
         ),
 
-        // ── DRAWER BLOC — global para que los badges funcionen desde cualquier pantalla
-        BlocProvider<DrawerBloc>(
-          create: (context) =>
-              DrawerBloc()
-                ..add(DrawerStarted()),
-        ),
-
         // ── HOME REPOSITORY ──────────────────────────────────
         RepositoryProvider<IHomeRepository>(
           create: (context) => HomeRepository(remote: HomeRemoteDatasource()),
@@ -96,6 +89,9 @@ class AppWidget extends StatelessWidget {
             create: (context) => AuthBloc(
               logoutUsecase: LogoutUsecase(context.read<IAuthRepository>()),
             ),
+          ), // ✅ DrawerBloc va aquí
+          BlocProvider<DrawerBloc>(
+            create: (context) => DrawerBloc()..add(DrawerStarted()),
           ),
         ],
         child: BlocListener<AuthBloc, AuthState>(

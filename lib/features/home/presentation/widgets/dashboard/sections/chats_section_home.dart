@@ -1,7 +1,7 @@
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
 import 'package:app_crm/features/chat/data/models/chat_model.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/chat_tile.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/chat_tile_home.dart';
 import 'package:flutter/material.dart';
 
 class ChatsSection extends StatelessWidget {
@@ -53,7 +53,7 @@ class ChatsSection extends StatelessWidget {
                       itemCount: visibleItems.length,
                       separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, index) =>
-                          ChatTile(chat: visibleItems[index]),
+                          ChatTileHome(chat: visibleItems[index]),
                     ),
                   );
                 },

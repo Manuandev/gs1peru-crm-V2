@@ -13,7 +13,7 @@ class RecordatoriosRemoteDatasource {
     final String body = '${_session.codUser}¯L';
 
     final String raw = await _api.postJsonGetText(
-      ApiConstants.urlRecordatorios,
+      ApiConstants.urlRecordatoriosLst,
       body,
     );
 

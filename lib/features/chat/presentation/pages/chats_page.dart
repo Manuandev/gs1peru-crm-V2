@@ -1,5 +1,4 @@
-
-
+import 'package:app_crm/core/extensions/badge_extensions.dart';
 import 'package:app_crm/features/chat/data/datasources/remote/chats_remote_datasource.dart';
 import 'package:app_crm/features/chat/data/repositories/chats_repository.dart';
 import 'package:app_crm/features/chat/domain/usecases/get_chats_usecase.dart';
@@ -17,23 +16,20 @@ class ChatsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          ChatsBloc(
-              getChatsUsecase: GetChatsUsecase(
-    repository: ChatsRepository(
-      remote: ChatsRemoteDatasource(),
-    ),
-  ),
-            )
-            ..add(const ChatsStarted()),
+      create: (context) => ChatsBloc(
+        getChatsUsecase: GetChatsUsecase(
+          repository: ChatsRepository(remote: ChatsRemoteDatasource()),
+        ),
+      )..add(const ChatsStarted()),
       child: BlocListener<ChatsBloc, ChatsState>(
-        // Solo escucha errores para mostrar snackbar
-        listenWhen: (_, current) => current is ChatsError,
         listener: (context, state) {
-          context.showErrorSnack((state as ChatsError).message);
+          if (state is ChatsError) {
+            context.showErrorSnack(state.message);
+          } else if (state is ChatsLoaded) {
+            context.updateBadge(chats: state.chats.length);
+          }
         },
-        child: const ChatsView (),
-        // child: const RecordatoriosView(),
+        child: const ChatsView(),
       ),
     );
   }

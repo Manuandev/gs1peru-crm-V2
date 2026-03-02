@@ -2,7 +2,6 @@
 
 import 'package:app_crm/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_menu_items.dart';
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
 import 'package:app_crm/core/presentation/widgets/navigation/app_drawer_widget.dart';
@@ -120,6 +119,8 @@ class BasePage extends StatelessWidget {
 
   /// Padding del body. null para sin padding.
   final EdgeInsetsGeometry? bodyPadding;
+  // BasePage — añade el parámetro
+  final void Function(String query)? onSearch;
 
   const BasePage({
     super.key,
@@ -147,6 +148,7 @@ class BasePage extends StatelessWidget {
     this.floatingActionButtonLocation,
     this.backgroundColor,
     this.bodyPadding,
+    this.onSearch,
   }) : assert(
          title != null || titleWidget != null,
          'BasePage necesita title o titleWidget',
@@ -157,7 +159,7 @@ class BasePage extends StatelessWidget {
     // Construir el drawer (solo si drawerSide != none)
     final Widget? drawer = drawerSide != DrawerSide.none
         ? AppDrawerWidget(
-            items: drawerItems ?? AppMenuItems.mainItems,
+            items: drawerItems,
             // onLogout: onLogout,
             onSettings: onSettings,
             showSettings: showDrawerSettings,
@@ -179,6 +181,7 @@ class BasePage extends StatelessWidget {
         onPopupSelected: onPopupSelected,
         showElevation: showAppBarElevation,
         backgroundColor: appBarBackgroundColor,
+        onSearch: onSearch,
       ),
 
       // ── DRAWER ─────────────────────────────────────────────

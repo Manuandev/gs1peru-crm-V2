@@ -1,6 +1,7 @@
 // lib/features/home/presentation/widgets/home_portrait.dart
 
 import 'package:app_crm/features/home/presentation/widgets/dashboard/home_menu_cards.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/chats_section.dart';
 import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/leads_section.dart';
 import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/recordatorios_section.dart';
 import 'package:flutter/material.dart';
@@ -32,15 +33,19 @@ class HomePortrait extends StatelessWidget {
         children: [
           // ── MENU CARDS ──────────────────────────────────────
           HomeMenuCards(
-            inboxCount: state.leads.length,
+            inboxCount: state.chats.length,
+            leadsCount: state.leads.length,
             recordatoriosCount: state.recordatorios.length,
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
           // ── RECORDATORIOS ───────────────────────────────────
           RecordatoriosSection(recordatorios: state.recordatorios),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
           // ── NUEVOS LEADS ────────────────────────────────────
           LeadsSection(leads: state.leads),
+          const SizedBox(height: AppSpacing.lg),
+          // ── NUEVOS CHATS ────────────────────────────────────
+          ChatsSection(chats: state.chats),
         ],
       ),
     );

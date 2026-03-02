@@ -6,7 +6,8 @@ import 'package:app_crm/features/auth/presentation/pages/login_page.dart';
 import 'package:app_crm/features/auth/presentation/pages/splash_page.dart';
 import 'package:app_crm/core/constants/app_colors.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/recordatorios/presentation/pages/recordatorios_page.dart';
+import 'package:app_crm/features/chat/presentation/pages/chats_page.dart';
+import 'package:app_crm/features/recordatorio/presentation/pages/recordatorios_page.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/features/home/presentation/pages/home_page.dart';
 
@@ -59,15 +60,15 @@ class AppRouter {
       return _leadsRoutes[routeName];
     }
 
-    // // Rutas de recordatorios
-    // if (routeName.startsWith('/recordatorios/')) {
-    //   return _recordatoriosRoutes[routeName];
-    // }
+    // Rutas de recordatorios
+    if (routeName.startsWith('/recordatorios/')) {
+      return _recordatoriosRoutes[routeName];
+    }
 
-    // // Rutas de chats
-    // if (routeName.startsWith('/chats/')) {
-    //   return _chatsRoutes[routeName];
-    // }
+    // Rutas de chats
+    if (routeName.startsWith('/chats/')) {
+      return _chatsRoutes[routeName];
+    }
 
     // // Rutas de cobranzas
     // if (routeName.startsWith('/cobranza/')) {
@@ -97,6 +98,7 @@ class AppRouter {
   static final Map<String, WidgetBuilder> _mainRoutes = {
     AppRoutes.home: (_) => const HomePage(),
     AppRoutes.recordatorios: (_) => const RecordatoriosPage(),
+    AppRoutes.chats: (_) => const ChatsPage(),
   };
 
   // ============================================================
@@ -117,6 +119,24 @@ class AppRouter {
       return Scaffold(
         body: Center(child: Text('Id Leadsssssssssssssss: $idLead')),
       );
+    },
+  };
+
+  static final Map<String, WidgetBuilder> _recordatoriosRoutes = {
+    AppRoutes.leadInfo: (context) {
+      final args = _getArgs<Map<String, dynamic>>(context);
+      final idLead = args['idLead'];
+
+      return Scaffold(body: Center(child: Text('Id Lead: $idLead')));
+    },
+  };
+
+  static final Map<String, WidgetBuilder> _chatsRoutes = {
+    AppRoutes.leadInfo: (context) {
+      final args = _getArgs<Map<String, dynamic>>(context);
+      final idLead = args['idLead'];
+
+      return Scaffold(body: Center(child: Text('Id Lead: $idLead')));
     },
   };
 

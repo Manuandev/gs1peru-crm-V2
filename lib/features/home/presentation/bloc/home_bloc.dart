@@ -28,27 +28,30 @@
 // - IHomeRepository → (cuando exista) para cargar datos del home
 // ============================================================
 
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:app_crm/core/services/session_service.dart';
+import 'package:app_crm/features/chat/data/models/chat_model.dart';
+import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
 import 'package:app_crm/features/home/data/models/lead_model.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
-import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
-import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final IHomeRepository _homeRepository;
-  final IAuthRepository _authRepository;
   final IRecordatoriosRepository _recordatoriosRepository;
+  final IChatsRepository _chatsRepository;
+  final _session = SessionService(); // ✅
 
   HomeBloc({
     required IHomeRepository homeRepository,
-    required IAuthRepository authRepository,
     required IRecordatoriosRepository recordatoriosRepository,
+    required IChatsRepository chatsRepository,
   }) : _homeRepository = homeRepository,
-       _authRepository = authRepository,
        _recordatoriosRepository = recordatoriosRepository,
+       _chatsRepository = chatsRepository,
        super(const HomeInitial()) {
     on<HomeStarted>(_onHomeStarted);
     on<HomeRefreshRequested>(_onHomeRefreshRequested);
@@ -75,6 +78,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       // Lanzamos ambas en paralelo
       final leadsF = _homeRepository.listarLeads();
       final recordatoriosF = _recordatoriosRepository.listarRecordatorios();
+      final chatsF = _chatsRepository.listarChats();
 
       // Esperamos ambas de forma independiente
       final leads = await leadsF.catchError((_) => <LeadItem>[]);
@@ -82,10 +86,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         (_) => <RecordatorioItem>[],
       );
 
-      final user = _authRepository.currentUser!;
+      final chats = await chatsF.catchError((_) => <ChatItem>[]);
+
+      final user = _session.user!;
 
       emit(
-        HomeLoaded(leads: leads, recordatorios: recordatorios, usuario: user),
+        HomeLoaded(
+          leads: leads,
+          recordatorios: recordatorios,
+          chats: chats,
+          usuario: user,
+        ),
       );
     } catch (e, stackTrace) {
       addError(e, stackTrace);

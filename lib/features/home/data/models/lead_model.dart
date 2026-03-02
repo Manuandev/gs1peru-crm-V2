@@ -42,7 +42,7 @@ class LeadItem {
     );
   }
 
-  static List<LeadItem> parseLeadList(String rawResponse) {
+  static List<LeadItem> parseLeadItemList(String rawResponse) {
     return rawResponse
         .split(AppConstants.sepRegistros) // '¬' separa cada lead
         .where((r) => r.trim().isNotEmpty)

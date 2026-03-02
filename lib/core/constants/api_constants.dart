@@ -17,14 +17,14 @@ class ApiConstants {
   static const String loginGoogle = 'Seguridad/ValidarLogin';
 
   // ========== LEADS ==========
-  // static const String leads = 'Leads/ListarLeads';
-  // static const String recordatorios = 'Leads/ListarRecordatorios';
-  // static const String detalleLeads = 'Leads/TraerLead';
   static const String leads = 'Lead/SPLead';
+
+  // ========== RECORDATORIOS ==========
   static const String recordatorios = 'Recordatorio/SPRecordatorio';
   
 
   // ========== WHATSAPP ==========
+  static const String chats = 'Wsp/SPWhatsapp';
   static const String listarChats = 'Wsp/ObtenerChats';
   static const String detalleChat = 'Wsp/ObtenerMensajes';
   static const String actualizarFavorito = 'Wsp/ActualizarFavorito';
@@ -38,6 +38,7 @@ class ApiConstants {
   static String get urlLoginGoogle => '$baseUrl$loginGoogle';
   static String get urlLeads => '$baseUrl$leads';
   static String get urlRecordatorios => '$baseUrl$recordatorios';
+  static String get urlChats => '$baseUrl$chats';
 
   static String get urlListarChats => '$baseUrl$listarChats';
   static String get urlDetalleChat => '$baseUrl$detalleChat';

@@ -1,6 +1,7 @@
 // lib/features/home/presentation/widgets/home_landscape.dart
 
 import 'package:app_crm/features/home/presentation/widgets/dashboard/home_menu_cards.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/chats_section.dart';
 import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/leads_section.dart';
 import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/recordatorios_section.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,8 @@ class HomeLandscape extends StatelessWidget {
             physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: HomeMenuCards(
-              inboxCount: state.leads.length,
+              inboxCount: state.chats.length,
+              leadsCount: state.leads.length,
               recordatoriosCount: state.recordatorios.length,
             ),
           ),
@@ -53,8 +55,10 @@ class HomeLandscape extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 RecordatoriosSection(recordatorios: state.recordatorios),
-                const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.lg),
                 LeadsSection(leads: state.leads),
+                const SizedBox(height: AppSpacing.lg),
+                ChatsSection(chats: state.chats),
               ],
             ),
           ),

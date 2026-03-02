@@ -23,12 +23,15 @@
 
 import 'package:app_crm/core/presentation/bloc/drawer/drawer_bloc.dart';
 import 'package:app_crm/core/presentation/bloc/drawer/drawer_event.dart';
+import 'package:app_crm/features/chat/data/datasources/remote/chats_remote_datasource.dart';
+import 'package:app_crm/features/chat/data/repositories/chats_repository.dart';
+import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
 import 'package:app_crm/features/home/data/datasources/remote/home_remote_datasource.dart';
 import 'package:app_crm/features/home/data/repositories/home_repository.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
-import 'package:app_crm/features/recordatorios/data/datasources/remote/recordatorios_remote_datasource.dart';
-import 'package:app_crm/features/recordatorios/data/repositories/recordatorios_repository.dart';
-import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorio/data/datasources/remote/recordatorios_remote_datasource.dart';
+import 'package:app_crm/features/recordatorio/data/repositories/recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/config/router/navigation_extensions.dart';
 import 'package:app_crm/features/auth/data/datasources/local/auth_local_datasource.dart';
@@ -63,28 +66,27 @@ class AppWidget extends StatelessWidget {
         // ── DRAWER BLOC — global para que los badges funcionen desde cualquier pantalla
         BlocProvider<DrawerBloc>(
           create: (context) =>
-              DrawerBloc(authRepository: context.read<IAuthRepository>())
+              DrawerBloc()
                 ..add(DrawerStarted()),
         ),
 
         // ── HOME REPOSITORY ──────────────────────────────────
         RepositoryProvider<IHomeRepository>(
-          create: (context) => HomeRepository(
-            remote: HomeRemoteDatasource(
-              authRepository: context.read<IAuthRepository>(),
-            ),
-          ),
+          create: (context) => HomeRepository(remote: HomeRemoteDatasource()),
         ),
 
         // ── RECORDATORIOS REPOSITORY ──────────────────────────────────
         RepositoryProvider<IRecordatoriosRepository>(
-          create: (context) => RecordatoriosRepository(
-            remote: RecordatoriosRemoteDatasource(
-              authRepository: context.read<IAuthRepository>(),
-            ),
-          ),
+          create: (context) =>
+              RecordatoriosRepository(remote: RecordatoriosRemoteDatasource()),
+        ),
+
+        // ── CHATS REPOSITORY ──────────────────────────────────
+        RepositoryProvider<IChatsRepository>(
+          create: (context) => ChatsRepository(remote: ChatsRemoteDatasource()),
         ),
       ],
+
       child: MultiBlocProvider(
         providers: [
           // ── AUTH BLOC — global, vive toda la app ──────────

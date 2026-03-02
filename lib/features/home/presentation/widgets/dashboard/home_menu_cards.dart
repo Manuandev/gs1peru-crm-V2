@@ -10,11 +10,13 @@ import 'package:app_crm/core/constants/app_spacing.dart';
 
 class HomeMenuCards extends StatelessWidget {
   final int inboxCount;
+  final int leadsCount;
   final int recordatoriosCount;
 
   const HomeMenuCards({
     super.key,
     required this.inboxCount,
+    required this.leadsCount,
     required this.recordatoriosCount,
   });
 
@@ -23,15 +25,18 @@ class HomeMenuCards extends StatelessWidget {
     return ResponsiveBuilder(
       mobile: (context) => _MobileCards(
         inboxCount: inboxCount,
+        leadsCount: leadsCount,
         recordatoriosCount: recordatoriosCount,
       ),
       tablet: (context) => _GridCards(
         inboxCount: inboxCount,
+        leadsCount: leadsCount,
         recordatoriosCount: recordatoriosCount,
         crossAxisCount: 3,
       ),
       desktop: (context) => _GridCards(
         inboxCount: inboxCount,
+        leadsCount: leadsCount,
         recordatoriosCount: recordatoriosCount,
         crossAxisCount: 4,
       ),
@@ -41,10 +46,12 @@ class HomeMenuCards extends StatelessWidget {
 
 class _MobileCards extends StatelessWidget {
   final int inboxCount;
+  final int leadsCount;
   final int recordatoriosCount;
 
   const _MobileCards({
     required this.inboxCount,
+    required this.leadsCount,
     required this.recordatoriosCount,
   });
 
@@ -73,7 +80,7 @@ class _MobileCards extends StatelessWidget {
                       icon: Icons.chat_bubble_outline,
                       color: Colors.blue,
                       badge: inboxCount,
-                      onTap: () {},
+                      onTap: context.goToChats,
                     ),
                   ),
                   SizedBox(width: AppSpacing.xs),
@@ -83,7 +90,8 @@ class _MobileCards extends StatelessWidget {
                       label: 'Mis leads',
                       icon: Icons.person_outline,
                       color: Colors.deepOrange,
-                      onTap: () {},
+                      badge: leadsCount,
+                      onTap: context.goToLeads,
                     ),
                   ),
                 ],
@@ -127,11 +135,13 @@ class _MobileCards extends StatelessWidget {
 
 class _GridCards extends StatelessWidget {
   final int inboxCount;
+  final int leadsCount;
   final int recordatoriosCount;
   final int crossAxisCount;
 
   const _GridCards({
     required this.inboxCount,
+    required this.leadsCount,
     required this.recordatoriosCount,
     required this.crossAxisCount,
   });
@@ -145,8 +155,7 @@ class _GridCards extends StatelessWidget {
         Colors.blue,
         badge: inboxCount,
       ),
-      _CardData('Mis Leads', Icons.person, Colors.orange),
-      _CardData('Leads', Icons.person_outline, Colors.deepOrange),
+      _CardData('Mis Leads', Icons.person, Colors.orange, badge: leadsCount),
       _CardData(
         'Recordatorios',
         Icons.access_time,

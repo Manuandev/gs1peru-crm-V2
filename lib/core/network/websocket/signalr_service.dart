@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:app_crm/core/constants/api_constants.dart';
+import 'package:app_crm/core/services/session_service.dart';
 import 'package:app_crm/core/utils/string/string_utils.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
 
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
@@ -35,14 +35,7 @@ class SignalRService implements ISignalRService {
   SignalRService._();
   static final SignalRService instance = SignalRService._();
 
-  // ─── Dependencias ─────────────────────────────────────────────────────────
-
-  late IAuthRepository _authRepository;
-
-  /// Llama esto una sola vez al arrancar la app, antes de usar el servicio.
-  void init(IAuthRepository authRepository) {
-    _authRepository = authRepository;
-  }
+  final _session = SessionService(); // ✅ sin IAuthRepository
 
   // ─── Streams ──────────────────────────────────────────────────────────────
 
@@ -91,7 +84,6 @@ class SignalRService implements ISignalRService {
   @override
   Future<void> connect() async {
     // Guards de seguridad antes de conectar
-    if (_authRepository.currentUser?.token == null) return;
     if (_isConnecting) return;
     if (_currentState == WebSocketConnectionState.manuallyClosed) return;
     if (!_hasInternet) return;
@@ -230,7 +222,7 @@ class SignalRService implements ISignalRService {
   // ─── Construcción de conexión ─────────────────────────────────────────────
 
   HubConnection _buildConnection() {
-    final user = _authRepository.currentUser!;
+    final user = _session.user!;
 
     final connectionUrl =
         '${ApiConstants.urlWebSocket}'

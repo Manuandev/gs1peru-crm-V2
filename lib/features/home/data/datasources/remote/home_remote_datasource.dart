@@ -5,25 +5,15 @@
 
 import 'package:app_crm/core/constants/api_constants.dart';
 import 'package:app_crm/core/network/api_client.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
+import 'package:app_crm/core/services/session_service.dart';
 import 'package:app_crm/features/home/data/models/lead_model.dart';
 
 class HomeRemoteDatasource {
   final ApiClient _api = ApiClient();
-  final IAuthRepository _authRepository;
-
-  HomeRemoteDatasource({required IAuthRepository authRepository})
-    : _authRepository = authRepository;
+  final _session = SessionService();
 
   Future<List<LeadItem>> listarLeads() async {
-    // ✅ Tomas el codUser del usuario en sesión
-    final codUser = _authRepository.currentUser?.codUser ?? '';
-
-    if (codUser.isEmpty) {
-      throw HomeException('No hay sesión activa.');
-    }
-
-    final String body = '$codUser¯L';
+    final String body = '${_session.codUser}¯L';
 
     final String raw = await _api.postJsonGetText(ApiConstants.urlLeads, body);
 
@@ -34,7 +24,7 @@ class HomeRemoteDatasource {
     }
 
     try {
-      return LeadItem.parseLeadList(raw);
+      return LeadItem.parseLeadItemList(raw);
     } on FormatException catch (e) {
       throw HomeException(e.message);
     }

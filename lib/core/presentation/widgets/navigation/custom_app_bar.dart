@@ -56,7 +56,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Mostrar/ocultar sombra del AppBar
   final bool showElevation;
 
-  /// Color de fondo custom 
+  /// Color de fondo custom
   final Color? backgroundColor;
 
   const CustomAppBar({
@@ -177,7 +177,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               value: item.value,
               child: Row(
                 children: [
-                  Icon(item.icon, size: 20),
+                  Icon(item.icon, size: 20, color: colorScheme.onSurface),
                   const SizedBox(width: AppSpacing.sm),
                   Text(item.label, style: AppTextStyles.bodyMedium),
                 ],

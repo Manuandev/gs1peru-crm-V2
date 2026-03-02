@@ -1,14 +1,12 @@
-// leads_section.dart — mismo patrón para recordatorios y prioridad
-
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/recordatorio_tile.dart';
-import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/chat/data/models/chat_model.dart';
+import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/chat_tile.dart';
 import 'package:flutter/material.dart';
 
-class RecordatoriosSection extends StatelessWidget {
-  final List<RecordatorioItem> recordatorios;
-  const RecordatoriosSection({super.key, required this.recordatorios});
+class ChatsSection extends StatelessWidget {
+  final List<ChatItem> chats;
+  const ChatsSection({super.key, required this.chats});
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +22,10 @@ class RecordatoriosSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Nuevos recordatorios', style: AppTextStyles.titleMedium),
-                if (recordatorios.isNotEmpty)
+                Text('Nuevos chats', style: AppTextStyles.titleMedium),
+                if (chats.isNotEmpty)
                   Text(
-                    '${recordatorios.length}',
+                    '${chats.length}',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                     ),
@@ -37,17 +35,39 @@ class RecordatoriosSection extends StatelessWidget {
             const Divider(),
 
             // ── LISTA O VACÍO ─────────────────────────────────
-            if (recordatorios.isEmpty)
-              const _EmptySection(message: 'No tienes recordatorios pendientes')
+            if (chats.isEmpty)
+              const _EmptySection(message: 'No tienes chats pendientes')
             else
-              // altura fija + scroll interno del card
-              SizedBox(
-                height: 100,
-                child: ListView.separated(
-                  physics: const ClampingScrollPhysics(),
-                  itemCount: recordatorios.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) => RecordatorioTile(recordatorio: recordatorios[index]),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final visibleItems = chats.take(5).toList(); // ← máximo 5
+                  final height = (constraints.maxWidth * 0.45).clamp(
+                    120.0,
+                    280.0,
+                  );
+
+                  return SizedBox(
+                    height: height,
+                    child: ListView.separated(
+                      physics: const ClampingScrollPhysics(),
+                      itemCount: visibleItems.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) =>
+                          ChatTile(chat: visibleItems[index]),
+                    ),
+                  );
+                },
+              ),
+
+            // Si hay más de 5, mostrar "Ver todos"
+            if (chats.length > 5)
+              TextButton(
+                onPressed: () {}, // navegar a la pantalla completa
+                child: Text(
+                  'Ver todos (${chats.length})',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
           ],

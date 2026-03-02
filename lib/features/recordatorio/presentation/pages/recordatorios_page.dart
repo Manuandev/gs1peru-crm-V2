@@ -20,41 +20,33 @@
 //               └── HomeView
 // ============================================================
 
-import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
-import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
 import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/config/router/navigation_extensions.dart';
-import '../bloc/home_bloc.dart';
-import '../bloc/home_event.dart';
-import '../bloc/home_state.dart';
-import '../widgets/home_view.dart';
+import '../bloc/recordatorios_bloc.dart';
+import '../bloc/recordatorios_event.dart';
+import '../bloc/recordatorios_state.dart';
+import '../widgets/recordatorios_view.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class RecordatoriosPage extends StatelessWidget {
+  const RecordatoriosPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          HomeBloc(
-              homeRepository: context.read<IHomeRepository>(),
+          RecordatoriosBloc(
               recordatoriosRepository: context.read<IRecordatoriosRepository>(),
-              chatsRepository: context.read<IChatsRepository>(),
             )
-            // Todo: con dependencias sería:
-            // create: (context) => HomeBloc(
-            //   homeRepository: context.read<IHomeRepository>(),
-            // )
-            ..add(const HomeStarted()),
-      child: BlocListener<HomeBloc, HomeState>(
+            ..add(const RecordatoriosStarted()),
+      child: BlocListener<RecordatoriosBloc, RecordatoriosState>(
         // Solo escucha errores para mostrar snackbar
-        listenWhen: (_, current) => current is HomeError,
+        listenWhen: (_, current) => current is RecordatoriosError,
         listener: (context, state) {
-          context.showErrorSnack((state as HomeError).message);
+          context.showErrorSnack((state as RecordatoriosError).message);
         },
-        child: const HomeView(),
+        child: const RecordatoriosView(),
       ),
     );
   }

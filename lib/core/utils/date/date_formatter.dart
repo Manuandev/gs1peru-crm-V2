@@ -63,3 +63,35 @@ class DateFormatter {
     }
   }
 }
+
+
+// EJEMPLOS
+// const fecha = "2025-03-27 01:07:41.677";
+
+// // ⏰ Solo hora y minuto
+// fecha.formatDate(AppDateFormat.hourMinute);
+// // → "01:07"
+
+// // ⏱️ Hora, minuto y segundo
+// fecha.formatDate(AppDateFormat.hourMinuteSecond);
+// // → "01:07:41"
+
+// // 📅 Fecha corta
+// fecha.formatDate(AppDateFormat.shortDate);
+// // → "27/03/2025"
+
+// // 📆 Fecha larga
+// fecha.formatDate(AppDateFormat.longDate);
+// // → "27 de marzo 2025"
+
+// // 📋 Fecha completa en texto
+// fecha.formatDate(AppDateFormat.fullTextDate);
+// // → "jueves 27 de marzo del 2025"
+
+// // 📌 Solo día de la semana
+// fecha.formatDate(AppDateFormat.weekdayOnly);
+// // → "jueves"
+
+// // 🗓️ Solo mes
+// fecha.formatDate(AppDateFormat.monthOnly);
+// // → "marzo"

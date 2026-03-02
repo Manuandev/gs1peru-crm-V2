@@ -3,7 +3,7 @@
 import 'package:app_crm/core/constants/app_icons.dart';
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
 import 'package:flutter/material.dart';
 
 class RecordatorioTile extends StatelessWidget {
@@ -13,12 +13,13 @@ class RecordatorioTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Color del ícono según acción
-    final iconColor = recordatorio.accion.toLowerCase().contains('Enviar WhatsApp')
+    final iconColor =
+        recordatorio.accion.toLowerCase().contains('enviar whatsapp')
         ? Colors.green
         : Colors.blue;
 
-    final icon = recordatorio.accion.toLowerCase().contains('Enviar WhatsApp')
-        ? AppIcons.chat // o tu ícono de whatsapp
+    final icon = recordatorio.accion.toLowerCase().contains('enviar whatsapp')
+        ? AppIcons.chat
         : AppIcons.phone;
 
     return Padding(

@@ -1,7 +1,7 @@
 // lib/features/recordatorios/presentation/widgets/home_landscape.dart
 
 import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/recordatorio/presentation/bloc/recordatorios_state.dart';
+import 'package:app_crm/features/recordatorios/presentation/bloc/recordatorios_state.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/constants/app_spacing.dart';
 

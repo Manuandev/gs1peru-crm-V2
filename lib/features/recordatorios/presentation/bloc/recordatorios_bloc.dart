@@ -1,9 +1,9 @@
 // lib/features/recordatorios/presentation/bloc/recordatorios_bloc.dart
 
 
-import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
-import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
-import 'package:app_crm/features/recordatorio/presentation/bloc/recordatorios_event.dart';
+import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorios/presentation/bloc/recordatorios_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'recordatorios_state.dart';
 

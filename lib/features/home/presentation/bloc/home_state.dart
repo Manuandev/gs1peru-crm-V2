@@ -11,7 +11,7 @@
 import 'package:app_crm/core/database/models/user_model.dart';
 import 'package:app_crm/features/chat/data/models/chat_model.dart';
 import 'package:app_crm/features/home/data/models/lead_model.dart';
-import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class HomeState extends Equatable {

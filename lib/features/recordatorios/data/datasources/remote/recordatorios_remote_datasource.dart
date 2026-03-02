@@ -3,7 +3,7 @@
 import 'package:app_crm/core/constants/api_constants.dart';
 import 'package:app_crm/core/network/api_client.dart';
 import 'package:app_crm/core/services/session_service.dart';
-import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
 
 class RecordatoriosRemoteDatasource {
   final ApiClient _api = ApiClient();

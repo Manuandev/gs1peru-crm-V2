@@ -29,9 +29,9 @@ import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dar
 import 'package:app_crm/features/home/data/datasources/remote/home_remote_datasource.dart';
 import 'package:app_crm/features/home/data/repositories/home_repository.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
-import 'package:app_crm/features/recordatorio/data/datasources/remote/recordatorios_remote_datasource.dart';
-import 'package:app_crm/features/recordatorio/data/repositories/recordatorios_repository.dart';
-import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorios/data/datasources/remote/recordatorios_remote_datasource.dart';
+import 'package:app_crm/features/recordatorios/data/repositories/recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/config/router/navigation_extensions.dart';
 import 'package:app_crm/features/auth/data/datasources/local/auth_local_datasource.dart';

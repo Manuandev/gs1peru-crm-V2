@@ -7,7 +7,7 @@ import 'package:app_crm/features/auth/presentation/pages/splash_page.dart';
 import 'package:app_crm/core/constants/app_colors.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
 import 'package:app_crm/features/chat/presentation/pages/chats_page.dart';
-import 'package:app_crm/features/recordatorio/presentation/pages/recordatorios_page.dart';
+import 'package:app_crm/features/recordatorios/presentation/pages/recordatorios_page.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/features/home/presentation/pages/home_page.dart';
 

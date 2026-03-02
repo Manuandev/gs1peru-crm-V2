@@ -24,7 +24,7 @@ import 'package:app_crm/core/extensions/badge_extensions.dart';
 import 'package:app_crm/core/presentation/widgets/exit_on_back_wrapper.dart';
 import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
 import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
-import 'package:app_crm/features/recordatorio/domain/repositories/i_recordatorios_repository.dart';
+import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/config/router/navigation_extensions.dart';

@@ -3,7 +3,7 @@
 import 'package:app_crm/core/constants/app_spacing.dart';
 import 'package:app_crm/core/constants/app_text_styles.dart';
 import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/recordatorio_tile_home.dart';
-import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
 import 'package:flutter/material.dart';
 
 class RecordatoriosSection extends StatelessWidget {

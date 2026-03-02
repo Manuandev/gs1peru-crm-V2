@@ -8,7 +8,7 @@
 //                          └→ RecordatoriosError (botón reintentar)
 // ============================================================
 
-import 'package:app_crm/features/recordatorio/data/models/recordatorio_model.dart';
+import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class RecordatoriosState extends Equatable {

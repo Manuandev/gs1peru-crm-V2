@@ -1,10 +1,7 @@
 // lib/features/auth/presentation/widgets/login_portrait_card.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_icons.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
 
 class SplashPortrait extends StatelessWidget {
   const SplashPortrait({super.key});

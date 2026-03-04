@@ -2,11 +2,8 @@
 
 // ignore_for_file: deprecated_member_use
 
-import 'package:app_crm/core/constants/app_images.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
 import 'package:flutter_svg/svg.dart';
 
 /// CustomGoogleButton — Botón de autenticación con Google.

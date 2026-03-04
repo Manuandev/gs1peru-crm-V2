@@ -14,7 +14,7 @@ class DrawerLoaded extends DrawerState {
   final String? userSubtitle;
   final String? userAvatarUrl;
   final int unreadChats;
-  final int pendingRecordatorios;
+  final int pendingReminders;
   final int newLeads;
 
   const DrawerLoaded({
@@ -23,17 +23,17 @@ class DrawerLoaded extends DrawerState {
     this.userSubtitle,
     this.userAvatarUrl,
     this.unreadChats = 0,
-    this.pendingRecordatorios = 0,
+    this.pendingReminders = 0,
     this.newLeads = 0,
   });
 
   bool get hasBadges =>
-      unreadChats > 0 || pendingRecordatorios > 0 || newLeads > 0;
+      unreadChats > 0 || pendingReminders > 0 || newLeads > 0;
 
   // Para actualizar solo los badges sin repetir todos los campos
   DrawerLoaded copyWithBadges({
     int? unreadChats,
-    int? pendingRecordatorios,
+    int? pendingReminders,
     int? newLeads,
   }) {
     return DrawerLoaded(
@@ -42,7 +42,7 @@ class DrawerLoaded extends DrawerState {
       userSubtitle: userSubtitle,
       userAvatarUrl: userAvatarUrl,
       unreadChats: unreadChats ?? this.unreadChats,
-      pendingRecordatorios: pendingRecordatorios ?? this.pendingRecordatorios,
+      pendingReminders: pendingReminders ?? this.pendingReminders,
       newLeads: newLeads ?? this.newLeads,
     );
   }

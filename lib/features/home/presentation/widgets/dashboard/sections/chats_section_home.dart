@@ -1,11 +1,13 @@
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/chat/data/models/chat_model.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/chat_tile_home.dart';
+
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/home/index_home.dart';
+
 import 'package:flutter/material.dart';
 
 class ChatsSection extends StatelessWidget {
-  final List<ChatItem> chats;
+  final List<Chat> chats;
   const ChatsSection({super.key, required this.chats});
 
   @override

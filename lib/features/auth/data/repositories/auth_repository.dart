@@ -7,14 +7,9 @@
 // LOGOUT                        → limpia memoria + SQLite
 // ============================================================
 
-import 'package:app_crm/core/database/models/user_model.dart';
-import 'package:app_crm/core/network/api_client.dart';
-import 'package:app_crm/core/services/session_service.dart';
-import 'package:app_crm/features/auth/data/datasources/local/auth_local_datasource.dart';
-import 'package:app_crm/features/auth/data/datasources/remote/auth_remote_datasource.dart';
-import 'package:app_crm/features/auth/data/models/session_model.dart';
-import 'package:app_crm/features/auth/domain/entities/session_entity.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 
 class AuthRepository implements IAuthRepository {
   final AuthLocalDatasource _local;

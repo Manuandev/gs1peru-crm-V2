@@ -1,7 +1,7 @@
-import 'package:app_crm/core/presentation/bloc/drawer/drawer_event.dart';
-import 'package:app_crm/core/presentation/bloc/drawer/drawer_state.dart';
-import 'package:app_crm/core/services/session_service.dart';
+// lib\core\presentation\bloc\drawer\drawer_bloc.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/core/index_core.dart';
 
 class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
   final _session = SessionService();
@@ -24,7 +24,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
         userApe: user.userApe,
         userSubtitle: user.correoUser,
         unreadChats: previous?.unreadChats ?? 0,
-        pendingRecordatorios: previous?.pendingRecordatorios ?? 0,
+        pendingReminders: previous?.pendingReminders ?? 0,
         newLeads: previous?.newLeads ?? 0,
       ),
     );
@@ -41,7 +41,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
     emit(
       current.copyWithBadges(
         unreadChats: event.unreadChats,
-        pendingRecordatorios: event.pendingRecordatorios,
+        pendingReminders: event.pendingReminders,
         newLeads: event.newLeads,
       ),
     );

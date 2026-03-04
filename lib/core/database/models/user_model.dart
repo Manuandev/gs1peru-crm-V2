@@ -6,7 +6,7 @@
 // Lo usan todos los features que necesiten datos del usuario.
 // ============================================================
 
-import 'package:app_crm/core/constants/app_constants.dart';
+import 'package:app_crm/core/index_core.dart';
 
 class UserModel {
   final String userId;

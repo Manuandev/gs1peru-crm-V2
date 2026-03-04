@@ -1,7 +1,7 @@
 import 'dart:io';
-
-import 'package:app_crm/features/auth/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:dio/dio.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class ErrorInterceptor extends Interceptor {
   @override
@@ -11,7 +11,7 @@ class ErrorInterceptor extends Interceptor {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return handler.reject(
-          _wrap(err, const NetworkException('Tiempo de espera agotado.')),
+          _wrap(err, const AppException('Tiempo de espera agotado.')),
         );
 
       case DioExceptionType.connectionError:
@@ -22,7 +22,7 @@ class ErrorInterceptor extends Interceptor {
       case DioExceptionType.badResponse:
         final status = err.response?.statusCode;
         return handler.reject(
-          _wrap(err, NetworkException('Error del servidor ($status).')),
+          _wrap(err, AppException('Error del servidor ($status).')),
         );
 
       case DioExceptionType.unknown:
@@ -32,7 +32,7 @@ class ErrorInterceptor extends Interceptor {
           );
         }
         return handler.reject(
-          _wrap(err, NetworkException('Error inesperado: ${err.message}')),
+          _wrap(err, AppException('Error inesperado: ${err.message}')),
         );
 
       default:

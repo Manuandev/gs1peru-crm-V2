@@ -1,17 +1,11 @@
+// lib\core\network\websocket\signalr_service.dart
+
 import 'dart:async';
-
-import 'package:app_crm/core/constants/api_constants.dart';
-import 'package:app_crm/core/services/session_service.dart';
-import 'package:app_crm/core/utils/string/string_utils.dart';
-
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-import 'i_signalr_service.dart';
-import 'websocket_connection_state.dart';
-import 'websocket_message.dart';
-import 'websocket_message_parser.dart';
+import 'package:app_crm/core/index_core.dart';
 
 /// Implementación del servicio SignalR.
 ///

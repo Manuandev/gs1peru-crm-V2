@@ -47,7 +47,7 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'package:app_crm/core/constants/app_constants.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';

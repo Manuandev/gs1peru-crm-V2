@@ -1,8 +1,7 @@
 // lib/core/presentation/widgets/inputs/custom_email_field.dart
 
-import 'package:app_crm/core/utils/string/string_validators.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_icons.dart';
 import 'custom_text_field.dart';
 
 /// CustomEmailField — Input de email con validación de formato incluida

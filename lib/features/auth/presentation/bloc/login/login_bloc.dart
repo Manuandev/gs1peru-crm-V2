@@ -4,12 +4,10 @@
 // ============================================================
 
 import 'dart:io';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/features/auth/data/datasources/remote/auth_remote_datasource.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'login_event.dart';
-import 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final IAuthRepository _authRepository;
@@ -39,7 +37,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       );
 
       emit(LoginSuccess(userId: session.userId, username: session.fullName));
-    } on AuthException catch (e) {
+    } on AppException catch (e) {
       // ❌ La API rechazó las credenciales
       emit(LoginFailure(e.message));
     } on SocketException {
@@ -49,9 +47,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
         ),
       );
-    } on NetworkException catch (e) {
-      // ❌ Timeout o error HTTP
-      emit(LoginFailure(e.message));
     } catch (e, stackTrace) {
       // ❌ Error inesperado — queda registrado en BlocObserver
       addError(e, stackTrace);
@@ -94,9 +89,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       emit(
         LoginFailure('Error de Google: ${e.description ?? e.code.toString()}'),
       );
-    } on AuthException catch (e) {
-      emit(LoginFailure(e.message)); // ← posicional
-    } on NetworkException catch (e) {
+    } on AppException catch (e) {
       emit(LoginFailure(e.message)); // ← posicional
     } catch (e, stackTrace) {
       addError(e, stackTrace);

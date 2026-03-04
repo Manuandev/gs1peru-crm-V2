@@ -7,8 +7,9 @@
 // Usa LocalDatabase (singleton) que ya está en core/database.
 // ============================================================
 
-import 'package:app_crm/core/database/local_database.dart';
-import 'package:app_crm/features/auth/data/models/session_model.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 
 class AuthLocalDatasource {
   // Usa el singleton de LocalDatabase — no necesita inyección

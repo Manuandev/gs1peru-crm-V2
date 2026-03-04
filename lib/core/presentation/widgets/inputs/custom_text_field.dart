@@ -1,10 +1,9 @@
 // lib/core/presentation/widgets/inputs/custom_text_field.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
 
 /// CustomTextField — Input de texto base reutilizable
 ///

@@ -1,8 +1,7 @@
 // lib/core/presentation/widgets/buttons/custom_text_button.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
 
 /// CustomTextButton — Botón de texto sin fondo ni borde
 ///

@@ -21,30 +21,16 @@
 // SplashBloc, LoginBloc, HomeBloc se crean en su propia Page.
 // ============================================================
 
-import 'package:app_crm/core/presentation/bloc/drawer/drawer_bloc.dart';
-import 'package:app_crm/core/presentation/bloc/drawer/drawer_event.dart';
-import 'package:app_crm/features/chat/data/datasources/remote/chats_remote_datasource.dart';
-import 'package:app_crm/features/chat/data/repositories/chats_repository.dart';
-import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
-import 'package:app_crm/features/home/data/datasources/remote/home_remote_datasource.dart';
-import 'package:app_crm/features/home/data/repositories/home_repository.dart';
-import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
-import 'package:app_crm/features/recordatorios/data/datasources/remote/recordatorios_remote_datasource.dart';
-import 'package:app_crm/features/recordatorios/data/repositories/recordatorios_repository.dart';
-import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
+// DEPENDENCIAS
 import 'package:flutter/material.dart';
-import 'package:app_crm/config/router/navigation_extensions.dart';
-import 'package:app_crm/features/auth/data/datasources/local/auth_local_datasource.dart';
-import 'package:app_crm/features/auth/data/datasources/remote/auth_remote_datasource.dart';
-import 'package:app_crm/features/auth/data/repositories/auth_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/config/router/app_router.dart';
-import 'package:app_crm/config/router/app_routes.dart';
-import 'package:app_crm/core/theme/app_theme.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
-import 'package:app_crm/features/auth/domain/usecases/logout_usecase.dart';
-import 'package:app_crm/features/auth/presentation/bloc/auth/auth_bloc.dart';
-import 'package:app_crm/features/auth/presentation/bloc/auth/auth_state.dart';
+
+import 'core/index_core.dart';
+import 'features/chat/index_chat.dart';
+import 'features/reminder/index_reminder.dart';
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class AppWidget extends StatelessWidget {
   const AppWidget({super.key});
@@ -63,20 +49,25 @@ class AppWidget extends StatelessWidget {
           ),
         ),
 
+        // // ── HOME REPOSITORY ──────────────────────────────────
+        // RepositoryProvider<IHomeRepository>(
+        //   create: (context) => HomeRepository(remote: HomeRemoteDatasource()),
+        // ),
+
         // ── HOME REPOSITORY ──────────────────────────────────
-        RepositoryProvider<IHomeRepository>(
-          create: (context) => HomeRepository(remote: HomeRemoteDatasource()),
+        RepositoryProvider<LeadRepository>(
+          create: (context) => LeadRepositoryImpl(LeadRemoteDatasource()),
         ),
 
-        // ── RECORDATORIOS REPOSITORY ──────────────────────────────────
-        RepositoryProvider<IRecordatoriosRepository>(
+        // ── REMINDERS REPOSITORY ──────────────────────────────────
+        RepositoryProvider<ReminderRepository>(
           create: (context) =>
-              RecordatoriosRepository(remote: RecordatoriosRemoteDatasource()),
+              ReminderRepositoryImpl(ReminderRemoteDatasource()),
         ),
 
         // ── CHATS REPOSITORY ──────────────────────────────────
-        RepositoryProvider<IChatsRepository>(
-          create: (context) => ChatsRepository(remote: ChatsRemoteDatasource()),
+        RepositoryProvider<ChatRepository>(
+          create: (context) => ChatRepositoryImpl(ChatRemoteDatasource()),
         ),
       ],
 

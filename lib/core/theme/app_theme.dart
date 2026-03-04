@@ -1,10 +1,7 @@
 // lib/core/theme/app_theme.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_colors.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
 
 /// Tema de la Aplicación
 ///

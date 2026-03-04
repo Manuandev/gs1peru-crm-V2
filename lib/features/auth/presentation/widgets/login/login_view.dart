@@ -1,15 +1,8 @@
+import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/config/router/navigation_extensions.dart';
-import 'package:app_crm/core/utils/responsive_helper.dart';
-import 'package:app_crm/features/auth/presentation/bloc/auth/auth_bloc.dart';
-import 'package:app_crm/features/auth/presentation/bloc/auth/auth_event.dart';
-import 'package:app_crm/features/auth/presentation/bloc/login/login_bloc.dart';
-import 'package:app_crm/features/auth/presentation/bloc/login/login_event.dart';
-import 'package:app_crm/features/auth/presentation/bloc/login/login_state.dart';
-import 'package:app_crm/features/auth/presentation/controllers/login_form_controller.dart';
-import 'package:app_crm/features/auth/presentation/widgets/login/login_landscape.dart';
-import 'package:app_crm/features/auth/presentation/widgets/login/login_portrait.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 
 /// LoginView — StatefulWidget que:
 /// 1. Posee el LoginFormController (ciclo de vida controlado aquí).

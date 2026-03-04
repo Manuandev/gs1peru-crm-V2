@@ -28,33 +28,31 @@
 // - IHomeRepository → (cuando exista) para cargar datos del home
 // ============================================================
 
-import 'package:app_crm/core/services/session_service.dart';
-import 'package:app_crm/features/chat/data/models/chat_model.dart';
-import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
-import 'package:app_crm/features/home/data/models/lead_model.dart';
-import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
-import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
-import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  final IHomeRepository _homeRepository;
-  final IRecordatoriosRepository _recordatoriosRepository;
-  final IChatsRepository _chatsRepository;
-  final _session = SessionService(); // ✅
+  final GetLeadsUseCase _getLeads;
+  final GetRemindersUseCase _getReminders;
+  final GetChatsUseCase _getChats;
+  final _session = SessionService();
 
   HomeBloc({
-    required IHomeRepository homeRepository,
-    required IRecordatoriosRepository recordatoriosRepository,
-    required IChatsRepository chatsRepository,
-  }) : _homeRepository = homeRepository,
-       _recordatoriosRepository = recordatoriosRepository,
-       _chatsRepository = chatsRepository,
+    required GetLeadsUseCase getLeads,
+    required GetRemindersUseCase getReminders,
+    required GetChatsUseCase getChats,
+  }) : _getLeads = getLeads,
+       _getReminders = getReminders,
+       _getChats = getChats,
        super(const HomeInitial()) {
-    on<HomeStarted>(_onHomeStarted);
-    on<HomeRefreshRequested>(_onHomeRefreshRequested);
+    on<HomeStarted>(_onStarted);
+    on<HomeRefresh>(_onRefresh);
   }
 
   // ✅ Helper tipado explícito — evita el bug de inferencia de catchError
@@ -67,7 +65,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     }
   }
 
-  Future<void> _onHomeStarted(
+  Future<void> _onStarted(
     HomeStarted event,
     Emitter<HomeState> emit,
   ) async {
@@ -75,8 +73,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     await _loadData(emit);
   }
 
-  Future<void> _onHomeRefreshRequested(
-    HomeRefreshRequested event,
+  Future<void> _onRefresh(
+    HomeRefresh event,
     Emitter<HomeState> emit,
   ) async {
     emit(const HomeLoading());
@@ -86,22 +84,19 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _loadData(Emitter<HomeState> emit) async {
     try {
       final results = await Future.wait([
-        _safe<List<LeadItem>>(_homeRepository.listarLeads(), []),
-        _safe<List<RecordatorioItem>>(
-          _recordatoriosRepository.listarRecordatorios(),
-          [],
-        ),
-        _safe<List<ChatItem>>(_chatsRepository.listarChats(), []),
+        _safe<List<Lead>>(_getLeads(), []),
+        _safe<List<Reminder>>(_getReminders(), []),
+        _safe<List<Chat>>(_getChats(), []),
       ]);
 
-      final leads = results[0] as List<LeadItem>;
-      final recordatorios = results[1] as List<RecordatorioItem>;
-      final chats = results[2] as List<ChatItem>;
+      final leads = results[0] as List<Lead>;
+      final reminders = results[1] as List<Reminder>;
+      final chats = results[2] as List<Chat>;
 
       emit(
         HomeLoaded(
           leads: leads,
-          recordatorios: recordatorios,
+          reminders: reminders,
           chats: chats,
           usuario: _session.user!,
         ),

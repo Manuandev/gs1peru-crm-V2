@@ -10,7 +10,7 @@ class EnvConfig {
   static String get baseUrl {
     switch (current) {
       case Environment.dev:
-        return 'https://0b63-161-132-10-146.ngrok-free.app/'; // URL DE DEV
+        return 'https://405b-38-253-147-129.ngrok-free.app/'; // URL DE DEV
       case Environment.qa:
         return 'https://natcodee.net:40805/gs1pe_interfaz/'; // URL DE QA
       case Environment.prod:

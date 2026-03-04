@@ -1,13 +1,13 @@
 // leads_section.dart — mismo patrón para recordatorios y prioridad
 
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/home/data/models/lead_model.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/tiles/lead_tile_home.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/home/index_home.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:flutter/material.dart';
 
 class LeadsSection extends StatelessWidget {
-  final List<LeadItem> leads;
+  final List<Lead> leads;
   const LeadsSection({super.key, required this.leads});
 
   @override

@@ -1,12 +1,9 @@
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/core/utils/date/date_extensions.dart';
-import 'package:app_crm/core/utils/date/date_formats.dart';
-import 'package:app_crm/features/chat/data/models/chat_model.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
 
 class ChatTileHome extends StatelessWidget {
-  final ChatItem chat;
+  final Chat chat;
   const ChatTileHome({super.key, required this.chat});
 
   @override

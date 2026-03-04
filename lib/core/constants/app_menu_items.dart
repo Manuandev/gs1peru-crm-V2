@@ -1,9 +1,8 @@
 // lib/core/constants/app_menu_items.dart
 
-import 'package:app_crm/core/constants/app_icons.dart';
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/config/router/app_routes.dart';
-import 'package:app_crm/core/presentation/widgets/navigation/drawer_item_model.dart';
 
 /// Ítems del menú principal (Drawer)
 ///
@@ -53,7 +52,7 @@ class AppMenuItems {
 
   static List<DrawerItemModel> withBadges({
     int? chatsBadge,
-    int? recordatoriosBadge,
+    int? remindersBadge,
     int? leadsBadge,
     int? cobranzaBadge,
   }) {
@@ -71,7 +70,7 @@ class AppMenuItems {
         icon: Icons.alarm_outlined,
         label: 'Recordatorios',
         route: AppRoutes.recordatorios,
-        badge: recordatoriosBadge,
+        badge: remindersBadge,
       ),
       DrawerItemModel(
         id: AppRoutes.chats,

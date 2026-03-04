@@ -1,11 +1,10 @@
-import 'package:app_crm/features/chat/data/models/chat_model.dart';
-import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
+// lib\features\chat\domain\usecases\get_chats_usecase.dart
 
-class GetChatsUsecase {
-  final IChatsRepository _repository;
+import 'package:app_crm/features/chat/index_chat.dart';
 
-  const GetChatsUsecase({required IChatsRepository repository})
-      : _repository = repository;
+class GetChatsUseCase {
+  final ChatRepository repository;
+  const GetChatsUseCase(this.repository);
 
-  Future<List<ChatItem>> execute() => _repository.listarChats();
+  Future<List<Chat>> call() => repository.getChats();
 }

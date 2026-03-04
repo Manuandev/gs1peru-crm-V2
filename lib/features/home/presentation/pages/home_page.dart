@@ -20,18 +20,15 @@
 //               └── HomeView
 // ============================================================
 
-import 'package:app_crm/core/extensions/badge_extensions.dart';
-import 'package:app_crm/core/presentation/widgets/exit_on_back_wrapper.dart';
-import 'package:app_crm/features/chat/domain/repositories/i_chats_repository.dart';
-import 'package:app_crm/features/home/domain/repositories/i_home_repository.dart';
-import 'package:app_crm/features/recordatorios/domain/repositories/i_recordatorios_repository.dart';
+
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/home/index_home.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/config/router/navigation_extensions.dart';
-import '../bloc/home_bloc.dart';
-import '../bloc/home_event.dart';
-import '../bloc/home_state.dart';
-import '../widgets/home_view.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -41,9 +38,9 @@ class HomePage extends StatelessWidget {
     return ExitOnBackWrapper(
       child: BlocProvider(
         create: (context) => HomeBloc(
-          homeRepository: context.read<IHomeRepository>(),
-          recordatoriosRepository: context.read<IRecordatoriosRepository>(),
-          chatsRepository: context.read<IChatsRepository>(),
+          getLeads: GetLeadsUseCase(context.read<LeadRepository>()),
+          getReminders: GetRemindersUseCase(context.read<ReminderRepository>()),
+          getChats: GetChatsUseCase(context.read<ChatRepository>()),
         )..add(const HomeStarted()),
         child: BlocListener<HomeBloc, HomeState>(
           listener: (context, state) {
@@ -53,7 +50,7 @@ class HomePage extends StatelessWidget {
               context.updateBadge(
                 leads: state.leads.length,
                 chats: state.chats.length,
-                recordatorios: state.recordatorios.length,
+                reminders: state.reminders.length,
               );
             }
           },

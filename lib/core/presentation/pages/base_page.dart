@@ -1,12 +1,7 @@
 // lib/features/home/presentation/pages/base_page.dart
 
-import 'package:app_crm/core/constants/app_constants.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/core/presentation/widgets/navigation/app_drawer_widget.dart';
-import 'package:app_crm/core/presentation/widgets/navigation/custom_app_bar.dart';
-import 'package:app_crm/core/presentation/widgets/navigation/drawer_item_model.dart';
 
 /// BasePage — Página base para todas las pantallas del home
 ///

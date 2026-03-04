@@ -1,6 +1,7 @@
 // lib/features/auth/data/models/session_model.dart
 
-import 'package:app_crm/features/auth/domain/entities/session_entity.dart';
+
+import 'package:app_crm/features/auth/index_auth.dart';
 
 class SessionModel {
   final LoginType loginType;

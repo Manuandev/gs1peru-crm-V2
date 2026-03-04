@@ -1,6 +1,7 @@
 // lib/features/auth/domain/repositories/i_auth_repository.dart
 
-import 'package:app_crm/core/database/models/user_model.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 abstract class IAuthRepository {
   /// Usuario activo en memoria. Null si no hay sesión.

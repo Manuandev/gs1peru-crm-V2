@@ -8,10 +8,10 @@
 //                          └→ HomeError (botón reintentar)
 // ============================================================
 
-import 'package:app_crm/core/database/models/user_model.dart';
-import 'package:app_crm/features/chat/data/models/chat_model.dart';
-import 'package:app_crm/features/home/data/models/lead_model.dart';
-import 'package:app_crm/features/recordatorios/data/models/recordatorio_model.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class HomeState extends Equatable {
@@ -30,14 +30,14 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  final List<LeadItem> leads;
-  final List<RecordatorioItem> recordatorios;
-  final List<ChatItem> chats;
+  final List<Lead> leads;
+  final List<Reminder> reminders;
+  final List<Chat> chats;
   final UserModel usuario;
 
   const HomeLoaded({
     required this.leads,
-    required this.recordatorios,
+    required this.reminders,
     required this.chats,
     required this.usuario,
   });

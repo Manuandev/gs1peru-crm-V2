@@ -7,20 +7,11 @@
 //   - ítems del menú (default: AppMenuItems.mainItems)
 //   - callbacks de logout/settings si se quieren pisar
 
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_icons.dart';
-import 'package:app_crm/core/presentation/bloc/drawer/drawer_bloc.dart';
-import 'package:app_crm/core/presentation/bloc/drawer/drawer_state.dart';
-import 'package:app_crm/features/auth/presentation/bloc/auth/auth_bloc.dart';
-import 'package:app_crm/features/auth/presentation/bloc/auth/auth_event.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/config/router/app_routes.dart';
-import 'package:app_crm/config/router/navigation_extensions.dart';
-import 'package:app_crm/core/constants/app_menu_items.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'drawer_item_model.dart';
 
 class AppDrawerWidget extends StatelessWidget {
   /// Ítems del menú. Por default usa AppMenuItems.mainItems.
@@ -164,7 +155,7 @@ class _DrawerContent extends StatelessWidget {
     if (state is DrawerLoaded && state.hasBadges) {
       return AppMenuItems.withBadges(
         chatsBadge: state.unreadChats,
-        recordatoriosBadge: state.pendingRecordatorios,
+        remindersBadge: state.pendingReminders,
         leadsBadge: state.newLeads,
       );
     }

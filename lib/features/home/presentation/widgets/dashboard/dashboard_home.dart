@@ -1,7 +1,7 @@
 // lib/features/home/presentation/widgets/dashboard/dashboard_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
+import 'package:app_crm/core/index_core.dart';
 
 class DashboardCard extends StatelessWidget {
   final String label;

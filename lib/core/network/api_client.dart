@@ -9,9 +9,7 @@
 // - Se agrega postJsonWithToken para peticiones con header Token
 // ============================================================
 
-import 'package:app_crm/core/network/interceptors/error_interceptor.dart';
-import 'package:app_crm/core/network/interceptors/log_interceptor.dart';
-import 'package:app_crm/core/network/interceptors/token_interceptor.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 

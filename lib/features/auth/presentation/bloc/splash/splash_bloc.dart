@@ -5,10 +5,8 @@
 
 import 'dart:io';
 
+import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
-import 'splash_event.dart';
-import 'splash_state.dart';
 
 class SplashBloc extends Bloc<SplashEvent, SplashState> {
   final IAuthRepository _authRepository;

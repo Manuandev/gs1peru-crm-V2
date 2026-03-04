@@ -1,12 +1,11 @@
 // lead_tile.dart
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/home/data/models/lead_model.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:flutter/material.dart';
 
 class LeadTileHome extends StatelessWidget {
-  final LeadItem lead;
+  final Lead lead;
   const LeadTileHome({super.key, required this.lead});
 
   String _mesNumero(String mes) {

@@ -18,12 +18,9 @@
 //         └── SplashView
 // ============================================================
 
+import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/features/auth/domain/repositories/i_auth_repository.dart';
-import 'package:app_crm/features/auth/presentation/bloc/splash/splash_bloc.dart';
-import 'package:app_crm/features/auth/presentation/bloc/splash/splash_event.dart';
-import 'package:app_crm/features/auth/presentation/widgets/splash/splash_view.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});

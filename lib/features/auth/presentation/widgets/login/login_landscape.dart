@@ -1,16 +1,8 @@
 // lib/features/auth/presentation/widgets/login_landscape_card.dart
 
-import 'package:app_crm/core/constants/app_images.dart';
-import 'package:app_crm/core/presentation/widgets/buttons/custom_google_button.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_icons.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/core/presentation/widgets/buttons/custom_primary_button.dart';
-import 'package:app_crm/core/presentation/widgets/inputs/custom_password_field.dart';
-import 'package:app_crm/core/presentation/widgets/inputs/custom_text_field.dart';
-import 'package:app_crm/features/auth/presentation/controllers/login_form_controller.dart';
 import 'package:flutter_svg/svg.dart';
 
 /// Layout completo de login para orientación **landscape** (horizontal).

@@ -1,6 +1,6 @@
 // lib\core\constants\api_constants.dart
 
-import 'package:app_crm/config/env/env_config.dart';
+import 'package:app_crm/config/index_config.dart';
 
 class ApiConstants {
   // Base URLs

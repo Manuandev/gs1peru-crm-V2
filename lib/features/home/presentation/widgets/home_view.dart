@@ -1,19 +1,10 @@
 // lib/features/home/presentation/widgets/home_view.dart
 
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_colors.dart';
-import 'package:app_crm/core/constants/app_icons.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
-import 'package:app_crm/features/home/presentation/widgets/home_Portrait.dart';
-import 'package:app_crm/features/home/presentation/widgets/home_landscape.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/home/index_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/core/presentation/pages/base_page.dart';
-import 'package:app_crm/core/presentation/widgets/navigation/drawer_item_model.dart';
-import '../bloc/home_bloc.dart';
-import '../bloc/home_event.dart';
-import '../bloc/home_state.dart';
 
 /// HomeView — Vista principal del Home
 ///
@@ -43,8 +34,6 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return BasePage(
       titleWidget: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
@@ -64,7 +53,7 @@ class HomeView extends StatelessWidget {
         IconButton(
           icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
           onPressed: () {
-            context.read<HomeBloc>().add(HomeRefreshRequested());
+            context.read<HomeBloc>().add(HomeRefresh());
           },
         ),
       ],
@@ -88,30 +77,14 @@ class HomeView extends StatelessWidget {
       // },
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
-          if (state is HomeLoading || state is HomeInitial) {
-            return const Center(child: CircularProgressIndicator());
+          if (state is HomeInitial || state is HomeLoading) {
+            return const AppLoadingView();
           }
 
           if (state is HomeError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    AppIcons.error,
-                    size: AppSizing.iconXl,
-                    color: colorScheme.error,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text('Error al cargar', style: AppTextStyles.titleMedium),
-                  const SizedBox(height: AppSpacing.sm),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<HomeBloc>().add(HomeRefreshRequested()),
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
+            return AppErrorView(
+              message: state.message,
+              onRetry: () => context.read<HomeBloc>().add(HomeRefresh()),
             );
           }
 
@@ -141,7 +114,6 @@ class HomeView extends StatelessWidget {
 ///
 /// Recibe el [HomeLoaded] para mostrar datos del usuario.
 /// Espacio reservado para los widgets reales del home (cards, estadísticas, etc.)
-
 // ============================================================
 // Footer fijo del Home
 // ============================================================

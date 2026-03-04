@@ -4,10 +4,8 @@
 // ============================================================
 
 import 'dart:convert';
-import 'package:app_crm/core/constants/api_constants.dart';
-import 'package:app_crm/core/database/models/user_model.dart';
-import 'package:app_crm/core/network/api_client.dart';
-import 'package:app_crm/core/services/device_info_service.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class AuthRemoteDatasource {
   final ApiClient _api = ApiClient();
@@ -28,7 +26,7 @@ class AuthRemoteDatasource {
     );
 
     if (raw.isEmpty) {
-      throw const NetworkException(
+      throw const AppException(
         'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
       );
     }
@@ -36,7 +34,7 @@ class AuthRemoteDatasource {
     try {
       return UserModel.fromRawString(raw);
     } on FormatException catch (e) {
-      throw AuthException(e.message);
+      throw AppException(e.message);
     }
   }
 
@@ -47,7 +45,7 @@ class AuthRemoteDatasource {
     );
 
     if (raw.isEmpty) {
-      throw const NetworkException(
+      throw const AppException(
         'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
       );
     }
@@ -55,23 +53,8 @@ class AuthRemoteDatasource {
     try {
       return UserModel.fromRawString(raw);
     } on FormatException catch (e) {
-      throw AuthException(e.message);
+      throw AppException(e.message);
     }
   }
 }
 
-class AuthException implements Exception {
-  final String message;
-  const AuthException(this.message);
-
-  @override
-  String toString() => message;
-}
-
-class NetworkException implements Exception {
-  final String message;
-  const NetworkException(this.message);
-
-  @override
-  String toString() => message;
-}

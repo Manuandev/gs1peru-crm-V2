@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'package:app_crm/core/network/api_client.dart';
 import 'package:dio/dio.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// Inyecta el token en el body antes de enviar la request.
 /// Formato: "TOKEN¯datos" → json.encode() → "\"TOKEN¯datos\""

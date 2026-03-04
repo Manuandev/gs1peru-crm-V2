@@ -1,10 +1,9 @@
 // lib/features/home/presentation/widgets/dashboard/home_menu_cards.dart
 
-import 'package:app_crm/config/router/navigation_extensions.dart';
-import 'package:app_crm/core/utils/responsive_helper.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/dashboard_home.dart';
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/home/index_home.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
 
 // lib/features/home/presentation/widgets/dashboard/home_menu_cards.dart
 

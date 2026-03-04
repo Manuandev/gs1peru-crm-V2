@@ -22,8 +22,8 @@ class HomeStarted extends HomeEvent {
 /// El usuario pidió actualizar los datos.
 /// Disparado por: popup "Actualizar" o pull-to-refresh.
 /// No muestra spinner completo para no parpadear la UI.
-class HomeRefreshRequested extends HomeEvent {
-  const HomeRefreshRequested();
+class HomeRefresh extends HomeEvent {
+  const HomeRefresh();
 }
 
 // ── NOTA SOBRE LOGOUT ───────────────────────────────────────

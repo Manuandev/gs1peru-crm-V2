@@ -1,12 +1,9 @@
 // lib/features/home/presentation/widgets/home_landscape.dart
 
-import 'package:app_crm/features/home/presentation/widgets/dashboard/home_menu_cards.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/chats_section_home.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/leads_section_home.dart';
-import 'package:app_crm/features/home/presentation/widgets/dashboard/sections/recordatorios_section_home.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/home/index_home.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/features/home/presentation/bloc/home_state.dart';
 
 /// Layout del Home para orientación landscape (horizontal)
 ///
@@ -35,7 +32,7 @@ class HomeLandscape extends StatelessWidget {
             child: HomeMenuCards(
               inboxCount: state.chats.length,
               leadsCount: state.leads.length,
-              recordatoriosCount: state.recordatorios.length,
+              recordatoriosCount: state.reminders.length,
             ),
           ),
         ),
@@ -54,7 +51,7 @@ class HomeLandscape extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                RecordatoriosSection(recordatorios: state.recordatorios),
+                RemindersSection(reminders: state.reminders),
                 const SizedBox(height: AppSpacing.lg),
                 LeadsSection(leads: state.leads),
                 const SizedBox(height: AppSpacing.lg),

@@ -1,9 +1,7 @@
 // lib/core/presentation/widgets/buttons/custom_primary_button.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
 
 /// CustomPrimaryButton — Botón principal de acción de la app
 ///

@@ -1,9 +1,7 @@
 // lib/core/presentation/widgets/buttons/custom_outlined_button.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/core/constants/app_breakpoints.dart';
-import 'package:app_crm/core/constants/app_spacing.dart';
-import 'package:app_crm/core/constants/app_text_styles.dart';
 
 /// CustomOutlinedButton — Botón con borde visible y sin relleno
 ///

@@ -14,7 +14,6 @@ class ChatMessageModel extends ChatMessage {
     required super.estado,
     required super.nomArchivo,
     required super.extArchivo,
-    required super.abierto,
   });
 
   factory ChatMessageModel.fromRawString(String raw) {
@@ -30,7 +29,6 @@ class ChatMessageModel extends ChatMessage {
       estado: f(5),
       nomArchivo: f(6),
       extArchivo: f(7),
-      abierto: f(8),
     );
   }
 

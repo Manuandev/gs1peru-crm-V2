@@ -5,8 +5,8 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ChatsPage extends StatelessWidget {
-  const ChatsPage({super.key});
+class ChatListPage extends StatelessWidget {
+  const ChatListPage({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -50,7 +50,7 @@ class AppRouter {
   static final Map<String, WidgetBuilder> _mainRoutes = {
     AppRoutes.home: (_) => const HomePage(),
     AppRoutes.recordatorios: (_) => const ReminderListPage(),
-    AppRoutes.chats: (_) => const ChatsPage(),
+    AppRoutes.chats: (_) => const ChatListPage(),
   };
 
   // ── LEADS ─────────────────────────────────────────────────────

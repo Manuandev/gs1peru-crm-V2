@@ -19,6 +19,11 @@ export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';
 export 'presentation/bloc/chat_list/chat_list_state.dart';
 
+
+export 'presentation/bloc/chat_detail/chat_detail_bloc.dart';
+export 'presentation/bloc/chat_detail/chat_detail_event.dart';
+export 'presentation/bloc/chat_detail/chat_detail_state.dart';
+
 export 'presentation/pages/chat_list_page.dart';
 
 export 'presentation/widgets/chat_list/chat_list_landscape.dart';

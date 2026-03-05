@@ -9,7 +9,6 @@ class ChatMessage {
   final String estado; // 05 - ESTADO
   final String nomArchivo; // 06 - ARCHIVO_NOMBRE
   final String extArchivo; // 07 - ARCHIVO_EXT
-  final String abierto; // 08 - ARCHIVO_EXT
 
   const ChatMessage({
     required this.idMensaje,
@@ -20,6 +19,5 @@ class ChatMessage {
     required this.estado,
     required this.nomArchivo,
     required this.extArchivo,
-    required this.abierto,
   });
 }

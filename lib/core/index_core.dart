@@ -69,6 +69,7 @@ export 'services/session_service.dart';
 export 'services/device_info_service.dart';
 
 export 'theme/app_theme.dart';
+export 'theme/theme_cubit.dart';
 
 // #region utils
 export 'utils/responsive_helper.dart';

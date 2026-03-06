@@ -102,7 +102,7 @@ class _DrawerContent extends StatelessWidget {
                       id: AppRoutes.changePassword,
                       icon: Icons.settings_outlined,
                       label: 'Configuración',
-                      onTap: onSettings ?? () => context.goToChangePassword(),
+                      onTap: () => context.goToSettings(),
                     ),
                     isActive: currentRoute == AppRoutes.changePassword,
                   ),

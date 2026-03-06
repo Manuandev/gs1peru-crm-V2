@@ -11,6 +11,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String home = '/home';
   static const String changePassword = '/cambiar-contrasena';
+  static const String settings = '/settings';
 
   // ============================================================
   // MÓDULOS

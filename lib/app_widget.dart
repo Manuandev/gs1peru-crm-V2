@@ -22,6 +22,7 @@
 // ============================================================
 
 // DEPENDENCIAS
+import 'package:app_crm/core/theme/theme_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,7 +34,9 @@ import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class AppWidget extends StatelessWidget {
-  const AppWidget({super.key});
+  final ThemeCubit themeCubit; // ✅ nuevo
+
+  const AppWidget({super.key, required this.themeCubit});
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +76,7 @@ class AppWidget extends StatelessWidget {
 
       child: MultiBlocProvider(
         providers: [
+          BlocProvider<ThemeCubit>.value(value: themeCubit),
           // ── AUTH BLOC — global, vive toda la app ──────────
           // Es el árbitro de la sesión.
           // Cualquier parte de la app puede leerlo con context.read<AuthBloc>()
@@ -103,22 +107,27 @@ class AppWidget extends StatelessWidget {
             }
           },
 
-          child: MaterialApp(
-            title: 'GS1 Peru - CRM',
-            debugShowCheckedModeBanner: false,
+          child: BlocBuilder<ThemeCubit, ThemeMode>(
+            builder: (context, themeMode) {
+              return MaterialApp(
+                title: 'GS1 Peru - CRM',
+                debugShowCheckedModeBanner: false,
 
-            // ── ROUTER ──────────────────────────────────────
-            // NavigatorKey permite navegar sin context (desde servicios, blocs, etc.)
-            navigatorKey: NavigationService.navigatorKey,
-            initialRoute: AppRoutes.splash,
-            onGenerateRoute: AppRouter.onGenerateRoute,
+                // ── ROUTER ──────────────────────────────────────
+                // NavigatorKey permite navegar sin context (desde servicios, blocs, etc.)
+                navigatorKey: NavigationService.navigatorKey,
+                initialRoute: AppRoutes.splash,
+                onGenerateRoute: AppRouter.onGenerateRoute,
 
-            // ── TEMA ────────────────────────────────────────
-            // Todo: personaliza AppTheme.lightTheme y AppTheme.darkTheme
-            //       en lib/core/theme/app_theme.dart
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.system,
+                // ── TEMA ────────────────────────────────────────
+                // Todo: personaliza AppTheme.lightTheme y AppTheme.darkTheme
+                //       en lib/core/theme/app_theme.dart
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                // themeMode: ThemeMode.system,
+                themeMode: themeMode, // ✅ ahora es dinámico
+              );
+            },
           ),
         ),
       ),

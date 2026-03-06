@@ -20,6 +20,12 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
     android:maxSdkVersion="29"/>
+
+
+    <!-- ✅ Agregar estos -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="GS1 Peru - CRM"
         android:name="${applicationName}"

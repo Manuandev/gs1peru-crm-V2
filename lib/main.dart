@@ -10,7 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DateFormatter.initialize(locale: 'es');
 
-  // ── INICIALIZAR SQLITE ───────────────────────────────────
+  // ── INICIALIZAR SQLITE ───────────────────────────────────  
   // Crea app_crm.db y las tablas si no existen.
   // Si ya existen, no hace nada.
   await LocalDatabase().init();

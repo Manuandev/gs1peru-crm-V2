@@ -93,7 +93,7 @@ class _DateSeparator extends StatelessWidget {
     if (diferencia == 0) return 'Hoy';
     if (diferencia == 1) return 'Ayer';
     if (diferencia < 7) return fecha.formatDate(AppDateFormat.weekdayOnly);
-    return fecha.formatDate(AppDateFormat.shortDate);
+    return fecha.formatDate(AppDateFormat.longDate);
   }
 
   @override

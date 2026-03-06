@@ -46,7 +46,6 @@ extension NavigationExtensions on BuildContext {
 
   Future<void> goToLogin() => clearStackAndNavigateTo(AppRoutes.login);
   Future<void> goToHome() => clearStackAndNavigateTo(AppRoutes.home);
-  Future<void> logout() => clearStackAndNavigateTo(AppRoutes.login);
 
   // ============================================================
   // MÓDULOS PRINCIPALES
@@ -65,9 +64,6 @@ extension NavigationExtensions on BuildContext {
   // MÓDULOS SECUNDARIOS - LEADS
   // ============================================================
 
-  Future<void> goToLeadInfo({required dynamic idLead}) {
-    return navigateTo(AppRoutes.leadInfo, arguments: {'id_lead': idLead});
-  }
 
   // ============================================================
   // MÓDULOS SECUNDARIOS - CHATS

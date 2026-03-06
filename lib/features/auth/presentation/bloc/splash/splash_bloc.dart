@@ -9,10 +9,10 @@ import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SplashBloc extends Bloc<SplashEvent, SplashState> {
-  final IAuthRepository _authRepository;
+  final RestoreSessionUsecase _restoreSessionUsecase;
 
-  SplashBloc({required IAuthRepository authRepository})
-    : _authRepository = authRepository,
+  SplashBloc({required RestoreSessionUsecase restoreSessionUsecase})
+    : _restoreSessionUsecase = restoreSessionUsecase,
       super(const SplashInitial()) {
     on<SplashCheckSessionRequested>(_onCheckSessionRequested);
   }
@@ -24,13 +24,8 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
     emit(const SplashLoading());
 
     try {
-      // tryRestoreSession hace todo:
-      // 1. Revisa si hay credenciales en SQLite
-      // 2. Verifica si expiraron
-      // 3. Re-login a la API automáticamente
-      // 4. Llena _currentUser en memoria
-      // Retorna null si no hay sesión o expiró
-      final user = await _authRepository.tryRestoreSession();
+      // ✅ Usa el usecase, no el repositorio directamente
+      final user = await _restoreSessionUsecase();
 
       if (user == null) {
         emit(const SplashSessionNotFound());
@@ -39,15 +34,6 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
 
       emit(SplashSessionFound(userId: user.userId, username: user.fullName));
     } on SocketException {
-      // Sin internet → usa la sesión local guardada
-      // final local = await _authRepository.getStoredSession();
-      // if (local != null && local.userId.isNotEmpty) {
-      //   emit(
-      //     SplashSessionFound(userId: local.userId, username: local.fullName),
-      //   );
-      // } else {
-      //   emit(const SplashSessionNotFound());
-      // }
       emit(
         const SplashSessionNotFound(
           message:
@@ -55,8 +41,9 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
         ),
       );
     } catch (e, stackTrace) {
+      // ✅ FIX: ahora usa SplashError correctamente en vez de SplashSessionNotFound
       addError(e, stackTrace);
-      emit(const SplashSessionNotFound());
+      emit(SplashError(message: e.toString()));
     }
   }
 }

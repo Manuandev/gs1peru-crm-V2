@@ -1,6 +1,6 @@
 // lib/features/auth/domain/usecases/logout_usecase.dart
 
-import '../repositories/i_auth_repository.dart';
+import '../repositories/auth_repository.dart';
 
 /// Caso de uso: Cerrar sesión.
 ///
@@ -15,7 +15,7 @@ import '../repositories/i_auth_repository.dart';
 /// - Invalidar el token con la API (si aplica)
 /// ============================================================
 class LogoutUsecase {
-  final IAuthRepository _repository;
+  final AuthRepository _repository;
 
   const LogoutUsecase(this._repository);
 

@@ -10,10 +10,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
-  final IAuthRepository _authRepository;
+  final LoginUsecase _loginUsecase;
+  final AuthRepository _authRepository;
 
-  LoginBloc({required IAuthRepository authRepository})
-    : _authRepository = authRepository,
+  LoginBloc({
+    required LoginUsecase loginUsecase,required AuthRepository authRepository})
+    :  _loginUsecase = loginUsecase,
+        _authRepository = authRepository,
       super(const LoginInitial()) {
     on<LoginSubmitted>(_onLoginSubmitted);
     on<LoginWithGoogleSubmitted>(_onLoginWithGoogleSubmitted);
@@ -26,17 +29,14 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(const LoginLoading());
 
     try {
-      // ── LLAMADA REAL ────────────────────────────────────
-      // 1. AuthRepository.login() → llama a la API con Dio
-      // 2. Si ok → guarda en SharedPreferences automáticamente
-      // 3. Retorna SessionEntity
-      final session = await _authRepository.login(
+       // ✅ Usa el usecase, no el repositorio directamente
+      final user = await _loginUsecase(
         username: event.username,
         password: event.password,
         rememberSession: event.rememberSession,
       );
 
-      emit(LoginSuccess(userId: session.userId, username: session.fullName));
+      emit(LoginSuccess(userId: user.userId, username: user.fullName));
     } on AppException catch (e) {
       // ❌ La API rechazó las credenciales
       emit(LoginFailure(e.message));

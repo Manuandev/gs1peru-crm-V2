@@ -29,8 +29,7 @@ class SplashPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => SplashBloc(
-        // IAuthRepository viene del RepositoryProvider registrado en AppWidget
-        authRepository: context.read<IAuthRepository>(),
+        restoreSessionUsecase: RestoreSessionUsecase(context.read<AuthRepository>()),
       )..add(const SplashCheckSessionRequested()),
       child: const SplashView(),
     );

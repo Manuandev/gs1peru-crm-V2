@@ -28,7 +28,7 @@ class ChatTile extends StatelessWidget {
   if (diferencia == 0) return fechaHora.formatDate(AppDateFormat.hourMinute);
   if (diferencia == 1) return 'Ayer';
   if (diferencia < 7) return fechaHora.formatDate(AppDateFormat.weekdayOnly);
-  return fechaHora.formatDate( .longDate);
+  return fechaHora.formatDate( AppDateFormat.shortDate);
 }
 
   // ─── Iniciales del nombre ──────────────────────────────────────

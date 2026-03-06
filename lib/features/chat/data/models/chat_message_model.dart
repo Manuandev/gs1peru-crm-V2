@@ -26,7 +26,7 @@ class ChatMessageModel extends ChatMessage {
       idMensaje: f(0),
       fecha: f(1),
       isEnviado: f(2) == '0',
-      mensaje: f(3).replaceAll('\\n', '\n'),
+      mensaje: f(3),
       tipo: f(4),
       estado: f(5),
       idChatDetArc: f(6),

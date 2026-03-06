@@ -1,29 +1,24 @@
 // lib/core/presentation/widgets/navigation/app_drawer_widget.dart
 //
-// EL DRAWER ES AUTÓNOMO.
-// Nadie le pasa nombre, email, avatar ni badges desde afuera.
-// Él crea su propio DrawerBloc y carga todo solo.
-// Solo se le pasa lo que es VARIABLE por pantalla:
-//   - ítems del menú (default: AppMenuItems.mainItems)
-//   - callbacks de logout/settings si se quieren pisar
+// ✅ FIX: Ya NO importa nada de features/auth.
+//    El logout se resuelve con el callback onLogout que
+//    cada page pasa desde su propio contexto.
+//    core → auth  ❌  (eliminado)
+//    page → auth  ✅  (la page conoce AuthBloc, no el drawer)
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AppDrawerWidget extends StatelessWidget {
-  /// Ítems del menú. Por default usa AppMenuItems.mainItems.
-  /// Solo pásalo si esta pantalla necesita un menú diferente.
   final List<DrawerItemModel>? items;
 
-  /// Callback custom para logout. Por default navega a Login.
+  /// ✅ Callback de logout — lo pasa cada page que usa BasePage.
+  /// La lógica de AuthBloc vive en la page, no aquí.
   final VoidCallback? onLogout;
 
-  /// Callback custom para configuración. Por default navega a changePassword.
   final VoidCallback? onSettings;
-
   final bool showSettings;
   final bool showLogout;
 
@@ -38,7 +33,6 @@ class AppDrawerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Dejar solo esto
     return _DrawerContent(
       items: items,
       onLogout: onLogout,
@@ -48,10 +42,6 @@ class AppDrawerWidget extends StatelessWidget {
     );
   }
 }
-
-// ============================================================
-// Contenido interno del drawer — lee del DrawerBloc
-// ============================================================
 
 class _DrawerContent extends StatelessWidget {
   final List<DrawerItemModel>? items;
@@ -75,8 +65,6 @@ class _DrawerContent extends StatelessWidget {
         if (state is! DrawerLoaded) return const SizedBox.shrink();
 
         final String? currentRoute = ModalRoute.of(context)?.settings.name;
-
-        // Ítems con badges si los hay, o los simples si no
         final List<DrawerItemModel> menuItems = _resolveItems(state);
 
         return Drawer(
@@ -84,60 +72,38 @@ class _DrawerContent extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // ── HEADER ──────────────────────────────────────
                 _DrawerHeader(state: state),
                 const SizedBox(height: AppSpacing.xs),
-                // ── ÍTEMS ────────────────────────────────────────
                 ...menuItems.map(
                   (item) => _DrawerItem(
                     item: item,
                     isActive: item.id == currentRoute,
                   ),
                 ),
-                // ── DEFAULTS (configuración + logout) ────────────
                 const Divider(height: 1),
                 if (showSettings)
                   _DrawerItem(
                     item: DrawerItemModel(
-                      id: AppRoutes.changePassword,
+                      id: AppRoutes.settings,
                       icon: Icons.settings_outlined,
                       label: 'Configuración',
-                      onTap: () => context.goToSettings(),
+                      onTap: onSettings ?? () => context.goToSettings(),
                     ),
-                    isActive: currentRoute == AppRoutes.changePassword,
+                    isActive: currentRoute == AppRoutes.settings,
                   ),
-
                 if (showLogout)
                   _DrawerItem(
                     item: DrawerItemModel(
                       id: '__logout__',
                       icon: Icons.logout,
                       label: 'Cerrar sesión',
-                      // onTap:
-                      //     onLogout ??
-                      //     () => context.logoutWithConfirmation(context),
-                      onTap:
-                          onLogout ??
-                          () async {
-                            // NO cierres el drawer aquí — el dialog necesita el contexto
-                            final confirmed = await context.showConfirmDialog(
-                              title: 'Cerrar Sesión',
-                              message: '¿Estás seguro que deseas salir?',
-                              confirmText: 'Salir',
-                              cancelText: 'Cancelar',
-                            );
-                            if (confirmed) {
-                              // Usa navigatorKey directamente — no depende del context del drawer
-                              NavigationService.navigatorKey.currentContext!
-                                  .read<AuthBloc>()
-                                  .add(const AuthLogoutRequested());
-                            }
-                          },
+                      // ✅ Solo ejecuta el callback que viene de la page.
+                      // Quien sabe de AuthBloc es la page, no el drawer.
+                      onTap: onLogout ?? () {},
                     ),
                     isActive: false,
                     isDestructive: true,
                   ),
-
                 const SizedBox(height: AppSpacing.sm),
               ],
             ),
@@ -148,10 +114,7 @@ class _DrawerContent extends StatelessWidget {
   }
 
   List<DrawerItemModel> _resolveItems(DrawerState state) {
-    // Si el caller pasó ítems custom, usarlos
     if (items != null) return items!;
-
-    // Si el BLoC cargó datos y hay badges, ítems con badges
     if (state is DrawerLoaded && state.hasBadges) {
       return AppMenuItems.withBadges(
         chatsBadge: state.unreadChats,
@@ -159,14 +122,12 @@ class _DrawerContent extends StatelessWidget {
         leadsBadge: state.newLeads,
       );
     }
-
-    // Default: ítems sin badges
     return AppMenuItems.mainItems;
   }
 }
 
 // ============================================================
-// Header del drawer — muestra estado de carga o datos reales
+// Header del drawer
 // ============================================================
 
 class _DrawerHeader extends StatelessWidget {
@@ -175,36 +136,30 @@ class _DrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.of(context).size;
 
-    final isLandscape = size.width > size.height;
-    final isSmallHeight = size.height < 500;
-    final compact = isLandscape && isSmallHeight;
-
+    final compact = size.width > size.height && size.height < 500;
     final avatarRadius = compact ? 20.0 : 30.0;
     final verticalPadding = compact ? AppSpacing.md : AppSpacing.xl;
 
-    Widget avatar({String? imageUrl}) {
-      return CircleAvatar(
-        radius: avatarRadius,
-        backgroundColor: colorScheme.onPrimary,
-        backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
-        child: imageUrl == null
-            ? Icon(
-                AppIcons.user,
-                size: compact ? AppSizing.iconMd : AppSizing.iconLg,
-                color: colorScheme.primary,
-              )
-            : null,
-      );
-    }
-
-    // Mientras carga → skeleton simple
     if (state is! DrawerLoaded) return const SizedBox.shrink();
-
     final loaded = state as DrawerLoaded;
+
+    Widget avatar() => CircleAvatar(
+      radius: avatarRadius,
+      backgroundColor: colorScheme.onPrimary,
+      backgroundImage: loaded.userAvatarUrl != null
+          ? NetworkImage(loaded.userAvatarUrl!)
+          : null,
+      child: loaded.userAvatarUrl == null
+          ? Icon(
+              AppIcons.user,
+              size: compact ? AppSizing.iconMd : AppSizing.iconLg,
+              color: colorScheme.primary,
+            )
+          : null,
+    );
 
     return Container(
       width: double.infinity,
@@ -218,7 +173,7 @@ class _DrawerHeader extends StatelessWidget {
       child: compact
           ? Row(
               children: [
-                avatar(imageUrl: loaded.userAvatarUrl),
+                avatar(),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
@@ -234,7 +189,7 @@ class _DrawerHeader extends StatelessWidget {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                avatar(imageUrl: loaded.userAvatarUrl),
+                avatar(),
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   loaded.userApe,
@@ -259,7 +214,7 @@ class _DrawerHeader extends StatelessWidget {
 }
 
 // ============================================================
-// Cada fila del drawer
+// Ítem del drawer
 // ============================================================
 
 class _DrawerItem extends StatelessWidget {
@@ -277,19 +232,20 @@ class _DrawerItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final Color iconColor = isDestructive
+    final iconColor = isDestructive
         ? colorScheme.error
         : isActive
         ? colorScheme.primary
         : colorScheme.onSurfaceVariant;
 
-    final Color textColor = isDestructive
+    final textColor = isDestructive
         ? colorScheme.error
         : isActive
         ? colorScheme.primary
         : colorScheme.onSurface;
 
-    final Color bgColor = isActive
+    // ignore: deprecated_member_use
+    final bgColor = isActive
         // ignore: deprecated_member_use
         ? colorScheme.primary.withOpacity(0.12)
         : Colors.transparent;
@@ -346,22 +302,19 @@ class _DrawerItem extends StatelessWidget {
   }
 
   void _handleTap(BuildContext context) {
-    // Cerrar drawer siempre primero
-    Navigator.of(context).pop();
+    // El logout maneja su propio cierre — no hacer pop aquí
+    if (item.id == '__logout__') {
+      item.onTap?.call();
+      return;
+    }
 
-    // Si tiene acción custom, ejecutarla
+    Navigator.of(context).pop();
     if (item.onTap != null) {
       item.onTap!();
       return;
     }
-
-    // Si ya estamos aquí, no navegar
     if (isActive) return;
-
-    // ✅ Usa clearStackAndNavigateTo — limpia el stack completo
-    if (item.route != null) {
-      context.clearStackAndNavigateTo(item.route!);
-    }
+    if (item.route != null) context.clearStackAndNavigateTo(item.route!);
   }
 }
 
@@ -375,9 +328,7 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(

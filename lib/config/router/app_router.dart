@@ -60,13 +60,7 @@ class AppRouter {
   };
 
   // ── LEADS ─────────────────────────────────────────────────────
-  static final Map<String, WidgetBuilder> _leadsRoutes = {
-    AppRoutes.leadInfo: (context) {
-      final args = _getArgs<Map<String, dynamic>>(context);
-      final idLead = args['id_lead'];
-      return Scaffold(body: Center(child: Text('Lead: $idLead')));
-    },
-  };
+  static final Map<String, WidgetBuilder> _leadsRoutes = {};
 
   // ── RECORDATORIOS ─────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _recordatoriosRoutes = {};
@@ -178,4 +172,4 @@ class AppRouter {
   }
 }
 
-enum TransitionType { material, fade, slideRight, slideUp }
+enum TransitionType { material, fade, slideRight }

@@ -43,12 +43,13 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     try {
       final messages = await _getChatMessages(idLead);
       emit(ChatDetailSuccess(messages: messages, hasMore: messages.isNotEmpty));
-    } on AppException {
-      // Demo: sin API aún → chat vacío en lugar de error
-      emit(const ChatDetailSuccess(messages: [], hasMore: false));
+    } on AppException catch (e) {
+      // ✅ FIX: error real → estado de error, no éxito vacío
+      emit(ChatDetailFailure(e.message));
     } catch (e, stackTrace) {
       addError(e, stackTrace);
-      emit(const ChatDetailSuccess(messages: [], hasMore: false));
+      // ✅ FIX: error inesperado → estado de error
+      emit(const ChatDetailFailure('Ocurrió un error inesperado.'));
     }
   }
 
@@ -71,10 +72,12 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         idUltimoMensaje: event.idUltimoMensaje,
       );
 
-      emit(ChatDetailSuccess(
-        messages: [...newMessages, ...currentState.messages],
-        hasMore: newMessages.isNotEmpty, // ← false si servidor devolvió vacío
-      ));
+      emit(
+        ChatDetailSuccess(
+          messages: [...newMessages, ...currentState.messages],
+          hasMore: newMessages.isNotEmpty, // ← false si servidor devolvió vacío
+        ),
+      );
     } catch (_) {
       // Falla silenciosa — no mostrar error, bloquear futuros intentos
       emit(currentState.copyWith(hasMore: false));
@@ -105,9 +108,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       idChatDet: '',
     );
 
-    emit((state as ChatDetailSuccess).copyWith(
-      messages: [...currentMessages, newMessage],
-    ));
+    emit(
+      (state as ChatDetailSuccess).copyWith(
+        messages: [...currentMessages, newMessage],
+      ),
+    );
   }
 
   void _onAudioMessageSent(
@@ -131,9 +136,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       idChatDet: '',
     );
 
-    emit((state as ChatDetailSuccess).copyWith(
-      messages: [...currentMessages, newMessage],
-    ));
+    emit(
+      (state as ChatDetailSuccess).copyWith(
+        messages: [...currentMessages, newMessage],
+      ),
+    );
   }
 
   void _onFileMessageSent(
@@ -157,8 +164,10 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       idChatDet: '',
     );
 
-    emit((state as ChatDetailSuccess).copyWith(
-      messages: [...currentMessages, newMessage],
-    ));
+    emit(
+      (state as ChatDetailSuccess).copyWith(
+        messages: [...currentMessages, newMessage],
+      ),
+    );
   }
 }

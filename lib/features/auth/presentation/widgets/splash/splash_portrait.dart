@@ -20,7 +20,8 @@ class SplashPortrait extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xl),
         Text(
-          'MI APP',
+          textAlign: TextAlign.center,
+          AppConstants.nombreApp,
           style: AppTextStyles.displayLarge.copyWith(
             color: colorScheme.onPrimary,
             letterSpacing: 4,

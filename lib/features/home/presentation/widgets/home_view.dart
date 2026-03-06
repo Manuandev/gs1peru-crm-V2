@@ -1,6 +1,6 @@
 // lib/features/home/presentation/widgets/home_view.dart
 
-
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +35,7 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
+      onLogout: () => context.logoutWithConfirmation(context),
       titleWidget: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeLoaded) {

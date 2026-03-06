@@ -10,6 +10,7 @@ class ChatListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
+      onLogout: () => context.logoutWithConfirmation(context),
       title: 'Chats',
       drawerSide: DrawerSide.left,
       onSearch: (query) {

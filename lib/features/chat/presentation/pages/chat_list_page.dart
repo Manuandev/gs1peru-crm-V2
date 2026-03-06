@@ -11,9 +11,9 @@ class ChatListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ChatListBloc(
-        GetChatsUseCase(ChatRepositoryImpl(ChatRemoteDatasource())),
-      )..add(const ChatListStarted()),
+      create: (context) =>
+          ChatListBloc(GetChatsUseCase(context.read<ChatRepository>()))
+            ..add(const ChatListStarted()),
       child: BlocListener<ChatListBloc, ChatListState>(
         listener: (context, state) {
           if (state is ChatListSuccess) {

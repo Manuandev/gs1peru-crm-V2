@@ -1,6 +1,8 @@
 // lib\features\chat\domain\entities\chat_message.dart
 
-class ChatMessage {
+import 'package:equatable/equatable.dart';
+
+class ChatMessage extends Equatable {
   final String idMensaje; // 00 - ID_MENSAJE
   final String fecha; // 01 - FCH_REGISTRO
   final bool isEnviado; // 02 - FLG_ENTRADA
@@ -26,4 +28,19 @@ class ChatMessage {
     required this.idChatCab,
     required this.idChatDet,
   });
+
+  @override
+  List<Object?> get props => [
+    idMensaje,
+    fecha,
+    isEnviado,
+    mensaje,
+    tipo,
+    estado,
+    idChatDetArc,
+    nomArchivo,
+    extArchivo,
+    idChatCab,
+    idChatDet,
+  ];
 }

@@ -1,6 +1,7 @@
 // lib\features\reminder\presentation\widgets\reminder_list_view.dart
 
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ class ReminderListView extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return BasePage(
+      onLogout: () => context.logoutWithConfirmation(context),
       title: 'Recordatorios',
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [

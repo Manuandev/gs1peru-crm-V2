@@ -22,7 +22,6 @@
 // ============================================================
 
 // DEPENDENCIAS
-import 'package:app_crm/core/theme/theme_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -45,17 +44,12 @@ class AppWidget extends StatelessWidget {
         // ── AUTH REPOSITORY ──────────────────────────────────
         // AuthRemoteDatasource → Dio → API
         // AuthLocalDatasource  → SharedPreferences
-        RepositoryProvider<IAuthRepository>(
-          create: (_) => AuthRepository(
+        RepositoryProvider<AuthRepository>(
+          create: (_) => AuthRepositoryImpl(
             local: AuthLocalDatasource(),
             remote: AuthRemoteDatasource(),
           ),
         ),
-
-        // // ── HOME REPOSITORY ──────────────────────────────────
-        // RepositoryProvider<IHomeRepository>(
-        //   create: (context) => HomeRepository(remote: HomeRemoteDatasource()),
-        // ),
 
         // ── HOME REPOSITORY ──────────────────────────────────
         RepositoryProvider<LeadRepository>(
@@ -82,7 +76,7 @@ class AppWidget extends StatelessWidget {
           // Cualquier parte de la app puede leerlo con context.read<AuthBloc>()
           BlocProvider<AuthBloc>(
             create: (context) => AuthBloc(
-              logoutUsecase: LogoutUsecase(context.read<IAuthRepository>()),
+              logoutUsecase: LogoutUsecase(context.read<AuthRepository>()),
             ),
           ), // ✅ DrawerBloc va aquí
           BlocProvider<DrawerBloc>(

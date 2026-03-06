@@ -16,7 +16,7 @@ export 'constants/app_spacing.dart';
 export 'database/i_local_database.dart';
 export 'database/local_database.dart';
 
-export 'database/models/user_model.dart';
+export 'models/user_model.dart';
 // #endregion database
 
 export 'errors/app_exception.dart';
@@ -30,7 +30,7 @@ export 'network/api_client.dart';
 
 export 'network/interceptors/error_interceptor.dart';
 export 'network/interceptors/interceptors.dart';
-export 'network/interceptors/log_interceptor.dart';
+export 'network/interceptors/clean_response_interceptor.dart';
 export 'network/interceptors/token_interceptor.dart';
 
 export 'network/websocket/i_signalr_service.dart';
@@ -62,7 +62,7 @@ export 'presentation/widgets/navigation/app_drawer_widget.dart';
 export 'presentation/widgets/navigation/custom_app_bar.dart';
 export 'presentation/widgets/navigation/drawer_item_model.dart';
 
-export 'presentation/widgets/exit_on_back_wrapper.dart';
+export 'presentation/widgets/navigation/exit_on_back_wrapper.dart';
 // #endregion presentation
 
 export 'services/session_service.dart';
@@ -83,7 +83,7 @@ export 'utils/string/string_validators.dart';
 // #endregion utils
 
 // #region widgets
-export 'widgets/app_error_view.dart';
-export 'widgets/app_loading_view.dart';
-export 'widgets/app_empty_view.dart';
+export 'presentation/widgets/app_error_view.dart';
+export 'presentation/widgets/app_loading_view.dart';
+export 'presentation/widgets/app_empty_view.dart';
 // #endregion widgets

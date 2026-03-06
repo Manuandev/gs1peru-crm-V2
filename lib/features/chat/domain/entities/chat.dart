@@ -1,6 +1,8 @@
 // lib\features\chat\domain\entities\chat.dart
 
-class Chat {
+import 'package:equatable/equatable.dart';
+
+class Chat extends Equatable {
   final String idLead; // 00 - ID_LEAD
   final String idChatCab; // 01 - ID_CHAT_CAB
   final String nombreApe; // 02 - B.NOMBRE + ' ' + B.APELLIDOS
@@ -22,4 +24,17 @@ class Chat {
     required this.isEnviado,
     required this.isBloqueado,
   });
+
+  @override
+  List<Object?> get props => [
+    idLead,
+    idChatCab,
+    nombreApe,
+    telefono,
+    mensaje,
+    fechaHora,
+    isFavorito,
+    isEnviado,
+    isBloqueado,
+  ];
 }

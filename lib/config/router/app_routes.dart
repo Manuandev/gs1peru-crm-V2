@@ -24,8 +24,6 @@ class AppRoutes {
   // ============================================================
   // SUB-RUTAS LEADS
   // ============================================================
-  static const String leadInfo = '/leads/informacion';
-  static const String leadInfos = '/leads/nose';
 
   // ============================================================
   // SUB-RUTAS CHATS

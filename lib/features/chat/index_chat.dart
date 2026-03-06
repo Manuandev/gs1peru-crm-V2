@@ -41,5 +41,6 @@ export 'presentation/widgets/chat_detail/audio_recorder_widget.dart';
 export 'presentation/widgets/chat_detail/chat_input_bar.dart';
 export 'presentation/widgets/chat_detail/message_bubble.dart';
 export 'presentation/widgets/chat_detail/message_list.dart';
+export 'presentation/widgets/chat_detail/message_parser.dart';
 export 'presentation/widgets/chat_detail/audio_controller.dart';
 export 'presentation/widgets/chat_detail/message_url_helper.dart';

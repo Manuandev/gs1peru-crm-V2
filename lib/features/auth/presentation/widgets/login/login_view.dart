@@ -1,7 +1,6 @@
 import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
 /// LoginView — StatefulWidget que:
@@ -95,51 +94,12 @@ class _LoginViewState extends State<LoginView> {
             child: SafeArea(
               child: OrientationBuilder(
                 builder: (context, orientation) {
-                  if (orientation == Orientation.landscape) {
-                    /// HORIZONTAL
-                    return Center(
-                      child: LoginLandscape(
-                        formController: _formController,
-                        isLoading: isLoading,
-                        onSubmit: _handleLogin,
-                        onForgotPassword: _handleForgotPassword,
-                                  onGoogleSignIn: _handleGoogleLogin,
-                      ),
-                    );
-                  }
-
-                  /// VERTICAL
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        // Solo scrollea si el contenido es más grande que la pantalla
-                        // (cuando el teclado sube y empuja el contenido)
-                        physics: const ClampingScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            // Mínimo ocupa toda la pantalla → card siempre centrado
-                            // Máximo crece si el teclado empuja → permite scroll
-                            minHeight: constraints.maxHeight,
-                          ),
-                          child: IntrinsicHeight(
-                            child: Center(
-                              child: Padding(
-                                padding: ResponsiveHelper.screenPadding(
-                                  context,
-                                ),
-                                child: LoginPortrait(
-                                  formController: _formController,
-                                  isLoading: isLoading,
-                                  onSubmit: _handleLogin,
-                                  onForgotPassword: _handleForgotPassword,
-                                  onGoogleSignIn: _handleGoogleLogin,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                  return LoginLayout(
+                    formController: _formController,
+                    isLoading: isLoading,
+                    onSubmit: _handleLogin,
+                    onForgotPassword: _handleForgotPassword,
+                    onGoogleSignIn: _handleGoogleLogin,
                   );
                 },
               ),

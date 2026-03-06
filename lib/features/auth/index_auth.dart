@@ -5,13 +5,15 @@ export 'data/datasources/remote/auth_remote_datasource.dart';
 
 export 'data/models/session_model.dart';
 
-export 'data/repositories/auth_repository.dart';
+export 'data/repositories/auth_repository_impl.dart';
 
 export 'domain/entities/session_entity.dart';
 
-export 'domain/repositories/i_auth_repository.dart';
+export 'domain/repositories/auth_repository.dart';
 
+export 'domain/usecases/login_usecase.dart';
 export 'domain/usecases/logout_usecase.dart';
+export 'domain/usecases/restore_session_usecase.dart';
 
 // #region presentation/bloc
 export 'presentation/bloc/auth/auth_bloc.dart';
@@ -33,9 +35,10 @@ export 'presentation/pages/login_page.dart';
 export 'presentation/pages/splash_page.dart';
 
 // #region presentation/widgets
-export 'presentation/widgets/login/login_landscape.dart';
-export 'presentation/widgets/login/login_portrait.dart';
+// export 'presentation/widgets/login/login_landscape.dart';
+// export 'presentation/widgets/login/login_portrait.dart';
 export 'presentation/widgets/login/login_view.dart';
+export 'presentation/widgets/login/login_layout.dart';
 
 export 'presentation/widgets/splash/splash_landscape.dart';
 export 'presentation/widgets/splash/splash_portrait.dart';

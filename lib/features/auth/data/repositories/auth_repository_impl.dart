@@ -1,4 +1,4 @@
-// lib/features/auth/data/repositories/auth_repository.dart
+// lib/features/auth/data/repositories/auth_repository_impl.dart
 // ============================================================
 // LOGIN NORMAL (recordarme ✅)  → memoria + SQLite (user+pass)
 // LOGIN NORMAL (recordarme ☐)  → memoria solo
@@ -11,13 +11,13 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
-class AuthRepository implements IAuthRepository {
+class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDatasource _local;
   final AuthRemoteDatasource _remote;
 
   UserModel? _currentUser;
 
-  AuthRepository({
+  AuthRepositoryImpl({
     required AuthLocalDatasource local,
     required AuthRemoteDatasource remote,
   }) : _local = local,

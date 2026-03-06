@@ -1,5 +1,6 @@
 // lib/features/settings/presentation/pages/settings_page.dart
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -25,6 +26,7 @@ class _SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
+      onLogout: () => context.logoutWithConfirmation(context),
       title: 'Configuración',
       drawerSide: DrawerSide.left,
       body: ListView(

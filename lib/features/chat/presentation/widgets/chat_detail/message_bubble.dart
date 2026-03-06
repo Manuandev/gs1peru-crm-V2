@@ -1,7 +1,6 @@
 // lib\features\chat\presentation\widgets\chat_detail\message_bubble.dart
 
 import 'dart:io';
-
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
@@ -148,9 +147,13 @@ class MessageBubble extends StatelessWidget {
       default:
         return Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-          child: Text(
-            message.mensaje,
-            style: TextStyle(fontSize: 14, color: textColor, height: 1.4),
+
+          // child: Text(
+          //   message.mensaje,
+          //   style: TextStyle(fontSize: 14, color: textColor, height: 1.4),
+          // ),
+          child: RichText(
+            text: TextSpan(children: parseMensaje(message.mensaje, textColor)),
           ),
         );
     }
@@ -608,9 +611,12 @@ class _TemplateContent extends StatelessWidget {
       children: [
         // Texto del template
         if (message.mensaje.isNotEmpty)
-          Text(
-            message.mensaje,
-            style: TextStyle(fontSize: 14, color: textColor, height: 1.4),
+          // Text(
+          //   message.mensaje,
+          //   style: TextStyle(fontSize: 14, color: textColor, height: 1.4),
+          // ),
+          RichText(
+            text: TextSpan(children: parseMensaje(message.mensaje, textColor)),
           ),
 
         // Imagen del template

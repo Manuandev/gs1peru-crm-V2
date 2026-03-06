@@ -22,7 +22,7 @@ class SplashLandscape extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'MI APP',
+              AppConstants.nombreApp,
               style: AppTextStyles.displayLarge.copyWith(
                 color: colorScheme.onPrimary,
                 letterSpacing: 4,

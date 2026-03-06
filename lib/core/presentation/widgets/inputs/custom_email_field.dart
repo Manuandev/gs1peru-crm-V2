@@ -43,7 +43,7 @@ class CustomEmailField extends StatelessWidget {
   final String? hint;
   // Controlador del texto
   final TextEditingController? controller;
-  // Función de validación — si null, usa [defaultValidator]
+  // Función de validación — si null, usa [emailValidator]
   final String? Function(String?)? validator;
   // Callback al cambiar el texto
   final void Function(String)? onChanged;
@@ -72,7 +72,7 @@ class CustomEmailField extends StatelessWidget {
       label: label ?? 'Email',
       hint: hint ?? 'ejemplo@correo.com',
       controller: controller,
-      validator: validator ?? defaultValidator,
+      validator: validator ?? emailValidator,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       enabled: enabled,

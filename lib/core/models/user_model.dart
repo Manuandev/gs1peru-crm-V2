@@ -1,4 +1,4 @@
-// lib/core/database/models/user_model.dart
+// lib\core\models\user_model.dart
 // ============================================================
 // USER MODEL — Global para toda la app.
 // Vive solo en MEMORIA mientras la app está activa.

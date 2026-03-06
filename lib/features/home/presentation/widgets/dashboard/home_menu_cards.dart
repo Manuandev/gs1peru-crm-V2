@@ -153,15 +153,23 @@ class _GridCards extends StatelessWidget {
         Icons.chat_bubble_outline,
         Colors.blue,
         badge: inboxCount,
+        onTap: context.goToChats,
       ),
-      _CardData('Mis Leads', Icons.person, Colors.orange, badge: leadsCount),
+      _CardData(
+        'Mis Leads',
+        Icons.person,
+        Colors.orange,
+        badge: leadsCount,
+        onTap: context.goToLeads,
+      ),
       _CardData(
         'Recordatorios',
         Icons.access_time,
         Colors.green,
         badge: recordatoriosCount,
+        onTap: context.goToRecordatorios,
       ),
-      _CardData('Cobranza', Icons.attach_money, Colors.purple),
+      _CardData('Cobranza', Icons.attach_money, Colors.purple, onTap: () {}),
     ];
 
     return GridView.builder(
@@ -198,5 +206,6 @@ class _CardData {
   final IconData icon;
   final Color color;
   final int? badge;
-  _CardData(this.label, this.icon, this.color, {this.badge});
+  final VoidCallback? onTap;
+  _CardData(this.label, this.icon, this.color, {this.badge, this.onTap});
 }

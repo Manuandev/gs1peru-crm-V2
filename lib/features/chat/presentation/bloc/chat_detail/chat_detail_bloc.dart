@@ -3,84 +3,162 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+// ignore: depend_on_referenced_packages
+import 'package:uuid/uuid.dart';
 
 class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
-  final GetMessagesUseCase _getMessages;
+  final GetChatMessagesUseCase _getChatMessages;
 
-  List<ChatMessage> _allMessages = [];
-  String _idLead = '';
-  String? _idUltimoMensaje; // null = primera carga
-
-  ChatDetailBloc(this._getMessages) : super(const ChatDetailInitial()) {
+  ChatDetailBloc(this._getChatMessages) : super(const ChatDetailInitial()) {
     on<ChatDetailStarted>(_onStarted);
     on<ChatDetailRefreshed>(_onRefreshed);
-    on<ChatDetailLoadMore>(_onLoadMore);
+    on<ChatDetailMoreMessagesLoaded>(_onMoreMessagesLoaded);
+    on<ChatDetailTextMessageSent>(_onTextMessageSent);
+    on<ChatDetailAudioMessageSent>(_onAudioMessageSent);
+    on<ChatDetailFileMessageSent>(_onFileMessageSent);
   }
+
+  // ── Carga inicial ──────────────────────────────────────────────────────────
 
   Future<void> _onStarted(
     ChatDetailStarted event,
     Emitter<ChatDetailState> emit,
   ) async {
-    _idLead = event.idLead;
-    _allMessages = [];
-    _idUltimoMensaje = null;
-
     emit(const ChatDetailLoading());
-    await _loadData(emit);
+    await _loadMessages(event.idLead, emit);
   }
 
   Future<void> _onRefreshed(
     ChatDetailRefreshed event,
     Emitter<ChatDetailState> emit,
   ) async {
-    _allMessages = [];
-    _idUltimoMensaje = null;
     emit(const ChatDetailLoading());
-    await _loadData(emit);
+    await _loadMessages(event.idLead, emit);
   }
 
-  Future<void> _onLoadMore(
-    ChatDetailLoadMore event,
+  Future<void> _loadMessages(
+    String idLead,
+    Emitter<ChatDetailState> emit,
+  ) async {
+    try {
+      final messages = await _getChatMessages(idLead);
+      emit(ChatDetailSuccess(messages: messages, hasMore: messages.isNotEmpty));
+    } on AppException {
+      // Demo: sin API aún → chat vacío en lugar de error
+      emit(const ChatDetailSuccess(messages: [], hasMore: false));
+    } catch (e, stackTrace) {
+      addError(e, stackTrace);
+      emit(const ChatDetailSuccess(messages: [], hasMore: false));
+    }
+  }
+
+  // ── Paginación (scroll hacia arriba) ──────────────────────────────────────
+
+  Future<void> _onMoreMessagesLoaded(
+    ChatDetailMoreMessagesLoaded event,
     Emitter<ChatDetailState> emit,
   ) async {
     if (state is! ChatDetailSuccess) return;
-    if (!(state as ChatDetailSuccess).hasMore) return;
 
-    emit(ChatDetailLoadingMore(messages: _allMessages));
-    await _loadData(emit, isLoadMore: true);
+    final currentState = state as ChatDetailSuccess;
+    if (!currentState.hasMore) return; // ← ya no hay más, ignorar
+
+    emit(ChatDetailLoadingMore(messages: currentState.messages));
+
+    try {
+      final newMessages = await _getChatMessages(
+        event.idLead,
+        idUltimoMensaje: event.idUltimoMensaje,
+      );
+
+      emit(ChatDetailSuccess(
+        messages: [...newMessages, ...currentState.messages],
+        hasMore: newMessages.isNotEmpty, // ← false si servidor devolvió vacío
+      ));
+    } catch (_) {
+      // Falla silenciosa — no mostrar error, bloquear futuros intentos
+      emit(currentState.copyWith(hasMore: false));
+    }
   }
 
-  Future<void> _loadData(
-    Emitter<ChatDetailState> emit, {
-    bool isLoadMore = false,
-  }) async {
-    try {
-      final newMessages = await _getMessages(
-        idLead: _idLead,
-        idUltimoMensaje: _idUltimoMensaje,
-      );
+  // ── Envío local (sin API aún) ──────────────────────────────────────────────
 
-      if (newMessages.isNotEmpty) {
-        // Guardamos el ID del mensaje más antiguo para la siguiente paginación
-        _idUltimoMensaje = newMessages.first.idMensaje;
+  void _onTextMessageSent(
+    ChatDetailTextMessageSent event,
+    Emitter<ChatDetailState> emit,
+  ) {
+    if (state is! ChatDetailSuccess) return;
+    if (event.mensaje.trim().isEmpty) return;
 
-        // Si es paginación, los nuevos van ANTES (son más antiguos)
-        _allMessages = isLoadMore
-            ? [...newMessages, ..._allMessages]
-            : newMessages;
-      }
+    final currentMessages = (state as ChatDetailSuccess).messages;
+    final newMessage = ChatMessage(
+      idMensaje: const Uuid().v4(),
+      fecha: DateTime.now().toIso8601String(),
+      isEnviado: true,
+      mensaje: event.mensaje.trim(),
+      tipo: 'text',
+      estado: 'wait',
+      idChatDetArc: '',
+      nomArchivo: '',
+      extArchivo: '',
+      idChatCab: '',
+      idChatDet: '',
+    );
 
-      emit(
-        ChatDetailSuccess(
-          messages: _allMessages,
-          hasMore: newMessages.isNotEmpty,
-        ),
-      );
-    } on AppException catch (e) {
-      emit(ChatDetailFailure(e.message));
-    } catch (e, stackTrace) {
-      addError(e, stackTrace);
-      emit(const ChatDetailFailure('Ocurrió un error inesperado.'));
-    }
+    emit((state as ChatDetailSuccess).copyWith(
+      messages: [...currentMessages, newMessage],
+    ));
+  }
+
+  void _onAudioMessageSent(
+    ChatDetailAudioMessageSent event,
+    Emitter<ChatDetailState> emit,
+  ) {
+    if (state is! ChatDetailSuccess) return;
+
+    final currentMessages = (state as ChatDetailSuccess).messages;
+    final newMessage = ChatMessage(
+      idMensaje: const Uuid().v4(),
+      fecha: DateTime.now().toIso8601String(),
+      isEnviado: true,
+      mensaje: event.audioPath,
+      tipo: 'audio',
+      estado: 'wait',
+      idChatDetArc: '',
+      nomArchivo: 'audio_${DateTime.now().millisecondsSinceEpoch}',
+      extArchivo: 'm4a',
+      idChatCab: '',
+      idChatDet: '',
+    );
+
+    emit((state as ChatDetailSuccess).copyWith(
+      messages: [...currentMessages, newMessage],
+    ));
+  }
+
+  void _onFileMessageSent(
+    ChatDetailFileMessageSent event,
+    Emitter<ChatDetailState> emit,
+  ) {
+    if (state is! ChatDetailSuccess) return;
+
+    final currentMessages = (state as ChatDetailSuccess).messages;
+    final newMessage = ChatMessage(
+      idMensaje: const Uuid().v4(),
+      fecha: DateTime.now().toIso8601String(),
+      isEnviado: true,
+      mensaje: event.filePath,
+      tipo: event.tipo,
+      estado: 'wait',
+      idChatDetArc: '',
+      nomArchivo: event.fileName,
+      extArchivo: event.fileExt,
+      idChatCab: '',
+      idChatDet: '',
+    );
+
+    emit((state as ChatDetailSuccess).copyWith(
+      messages: [...currentMessages, newMessage],
+    ));
   }
 }

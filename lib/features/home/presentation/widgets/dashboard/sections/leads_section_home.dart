@@ -1,6 +1,7 @@
 // leads_section.dart — mismo patrón para recordatorios y prioridad
 
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -38,7 +39,7 @@ class LeadsSection extends StatelessWidget {
 
             // ── LISTA O VACÍO ─────────────────────────────────
             if (leads.isEmpty)
-              const _EmptySection(message: 'No tienes leads pendientes')
+              const AppEmptyView(message: 'No tienes leads pendientes')
             else
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -64,7 +65,7 @@ class LeadsSection extends StatelessWidget {
             // Si hay más de 5, mostrar "Ver todos"
             if (leads.length > 5)
               TextButton(
-                onPressed: () {}, // navegar a la pantalla completa
+                onPressed: context.goToLeads, // navegar a la pantalla completa
                 child: Text(
                   'Ver todos (${leads.length})',
                   style: AppTextStyles.labelSmall.copyWith(
@@ -74,29 +75,6 @@ class LeadsSection extends StatelessWidget {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Widget reutilizable para cuando no hay datos
-class _EmptySection extends StatelessWidget {
-  final String message;
-  const _EmptySection({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      child: Row(
-        children: [
-          Icon(
-            Icons.info_outline,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(message, style: AppTextStyles.bodyMedium),
-        ],
       ),
     );
   }

@@ -13,7 +13,9 @@ extension NavigationExtensions on BuildContext {
   // ============================================================
 
   Future<T?> navigateTo<T>(String routeName, {Object? arguments}) {
-    return Navigator.of(this).pushNamed<T>(routeName, arguments: arguments);
+    final state = NavigationService.navigatorKey.currentState;
+    if (state == null) return Future.value(null);
+    return state.pushNamed<T>(routeName, arguments: arguments);
   }
 
   void goBack<T>([T? result]) {
@@ -29,12 +31,13 @@ extension NavigationExtensions on BuildContext {
   }
 
   Future<T?> clearStackAndNavigateTo<T>(String routeName, {Object? arguments}) {
-    return NavigationService.navigatorKey.currentState!
-        .pushNamedAndRemoveUntil<T>(
-          routeName,
-          (route) => false,
-          arguments: arguments,
-        );
+    final state = NavigationService.navigatorKey.currentState;
+    if (state == null) return Future.value(null);
+    return state.pushNamedAndRemoveUntil<T>(
+      routeName,
+      (route) => false,
+      arguments: arguments,
+    );
   }
 
   // ============================================================
@@ -73,9 +76,17 @@ extension NavigationExtensions on BuildContext {
     return navigateTo(AppRoutes.detalleChat, arguments: {'chat': chat});
   }
 
-  Future<void> goToDetalleChatDesdeHome({required int idChat}) async {
-    await clearStackAndNavigateTo(AppRoutes.chats);
-    await navigateTo(AppRoutes.detalleChat, arguments: {'id_chat': idChat});
+  Future<void> goToDetalleChatDesdeHome({required dynamic chat}) {
+    final state = NavigationService.navigatorKey.currentState;
+    if (state == null) return Future.value();
+
+    // 1. Limpia todo y pone ChatList como base
+    state.pushNamedAndRemoveUntil(AppRoutes.chats, (route) => false);
+
+    // 2. Inmediatamente apila ChatDetail encima
+    state.pushNamed(AppRoutes.detalleChat, arguments: {'chat': chat});
+
+    return Future.value();
   }
 
   // ============================================================

@@ -1,5 +1,6 @@
 // lib/features/chats/presentation/widgets/chats_portrait.dart
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
@@ -15,7 +16,10 @@ class ChatListPortrait extends StatelessWidget {
       itemCount: state.chats.length,
       itemBuilder: (context, index) {
         final chat = state.chats[index];
-        return ChatTile(chat: chat, onTap: () {});
+        return ChatTile(
+          chat: chat,
+          onTap: () => context.goToDetalleChat(chat: chat),
+        );
       },
     );
   }

@@ -19,14 +19,27 @@ export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';
 export 'presentation/bloc/chat_list/chat_list_state.dart';
 
-
 export 'presentation/bloc/chat_detail/chat_detail_bloc.dart';
 export 'presentation/bloc/chat_detail/chat_detail_event.dart';
 export 'presentation/bloc/chat_detail/chat_detail_state.dart';
 
 export 'presentation/pages/chat_list_page.dart';
+export 'presentation/pages/chat_detail_page.dart';
+export 'presentation/pages/media_viewer_page.dart';
 
 export 'presentation/widgets/chat_list/chat_list_landscape.dart';
 export 'presentation/widgets/chat_list/chat_list_portrait.dart';
 export 'presentation/widgets/chat_list/chat_list_view.dart';
 export 'presentation/widgets/chat_list/chat_tile.dart';
+
+
+export 'presentation/widgets/chat_detail/chat_detail_view.dart';
+
+export 'presentation/widgets/chat_detail/attachment_picker_widget.dart';
+export 'presentation/widgets/chat_detail/audio_player_widget.dart';
+export 'presentation/widgets/chat_detail/audio_recorder_widget.dart';
+export 'presentation/widgets/chat_detail/chat_input_bar.dart';
+export 'presentation/widgets/chat_detail/message_bubble.dart';
+export 'presentation/widgets/chat_detail/message_list.dart';
+export 'presentation/widgets/chat_detail/audio_controller.dart';
+export 'presentation/widgets/chat_detail/message_url_helper.dart';

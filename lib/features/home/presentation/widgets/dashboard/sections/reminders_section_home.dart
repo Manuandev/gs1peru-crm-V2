@@ -39,7 +39,7 @@ class RemindersSection extends StatelessWidget {
 
             // ── LISTA O VACÍO ─────────────────────────────────
             if (reminders.isEmpty)
-              const _EmptySection(message: 'No tienes recordatorios pendientes')
+              const AppEmptyView(message: 'No tienes recordatorios pendientes')
             else
               // altura fija + scroll interno del card
               SizedBox(
@@ -54,29 +54,6 @@ class RemindersSection extends StatelessWidget {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Widget reutilizable para cuando no hay datos
-class _EmptySection extends StatelessWidget {
-  final String message;
-  const _EmptySection({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      child: Row(
-        children: [
-          Icon(
-            Icons.info_outline,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(message, style: AppTextStyles.bodyMedium),
-        ],
       ),
     );
   }

@@ -1,7 +1,5 @@
 // lib/config/router/app_router.dart
 
-
-
 // Importa tus páginas aquí
 
 import 'package:app_crm/config/index_config.dart';
@@ -26,14 +24,19 @@ class AppRouter {
     final WidgetBuilder? builder = _findRouteBuilder(routeName);
     if (builder == null) return _buildErrorRoute();
 
-    return _buildRoute(builder: builder, settings: settings, routeName: routeName);
+    return _buildRoute(
+      builder: builder,
+      settings: settings,
+      routeName: routeName,
+    );
   }
 
   static WidgetBuilder? _findRouteBuilder(String routeName) {
     if (_authRoutes.containsKey(routeName)) return _authRoutes[routeName];
     if (_mainRoutes.containsKey(routeName)) return _mainRoutes[routeName];
     if (routeName.startsWith('/leads/')) return _leadsRoutes[routeName];
-    if (routeName.startsWith('/recordatorios/')) return _recordatoriosRoutes[routeName];
+    if (routeName.startsWith('/recordatorios/'))
+      return _recordatoriosRoutes[routeName];
     if (routeName.startsWith('/chats/')) return _chatsRoutes[routeName];
     return null;
   }
@@ -69,9 +72,9 @@ class AppRouter {
   static final Map<String, WidgetBuilder> _chatsRoutes = {
     AppRoutes.detalleChat: (context) {
       final args = _getArgs<Map<String, dynamic>>(context);
-      final chat = args['chat'];
-      // return DetalleChatPage(chat: chat);
-      return Scaffold(body: Center(child: Text('Lead: $chat')));
+      final chat = args['chat'] as Chat;
+
+      return ChatDetailPage(chat: chat);
     },
   };
 
@@ -128,10 +131,13 @@ class AppRouter {
         return FadeTransition(opacity: animation, child: child);
       case TransitionType.slideRight:
         return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1.0, 0.0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOut)),
+          position:
+              Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+              ),
           child: child,
         );
       default:

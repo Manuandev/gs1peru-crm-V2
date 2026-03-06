@@ -33,7 +33,7 @@ class ChatRemoteDatasource {
     String? idUltimoMensaje, // null = primera carga
   }) async {
     final String body =
-        '${_session.codUser}¯$idLead¦${idUltimoMensaje ?? ''}¯LD';
+        '$idLead¦${idUltimoMensaje ?? ''}¯LD';
 
     final String raw = await _api.postJsonGetText(
       ApiConstants.urlChatsLst,

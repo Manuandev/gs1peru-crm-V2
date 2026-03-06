@@ -16,28 +16,20 @@ class ChatTile extends StatelessWidget {
   // <7 días → "miércoles"
   // Resto   → "26/03/2025"
   String _formatFecha(String fechaHora) {
-    if (fechaHora.isEmpty) return '';
-    try {
-      final fecha = DateTime.parse(fechaHora);
-      final ahora = DateTime.now();
-      final hoy = DateTime(ahora.year, ahora.month, ahora.day);
-      final diaFecha = DateTime(fecha.year, fecha.month, fecha.day);
-      final diferencia = hoy.difference(diaFecha).inDays;
+  if (fechaHora.isEmpty) return '';
+  final fecha = DateFormatter.parseDate(fechaHora);
+  if (fecha == null) return '';
 
-      if (diferencia == 0) {
-        return fechaHora.formatDate(AppDateFormat.hourMinute);
-      }
-      if (diferencia == 1) return 'Ayer';
+  final ahora = DateTime.now();
+  final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+  final diaFecha = DateTime(fecha.year, fecha.month, fecha.day);
+  final diferencia = hoy.difference(diaFecha).inDays;
 
-      if (diferencia < 7) {
-        return fechaHora.formatDate(AppDateFormat.weekdayOnly);
-      }
-
-      return fechaHora.formatDate(AppDateFormat.shortDate);
-    } catch (_) {
-      return '';
-    }
-  }
+  if (diferencia == 0) return fechaHora.formatDate(AppDateFormat.hourMinute);
+  if (diferencia == 1) return 'Ayer';
+  if (diferencia < 7) return fechaHora.formatDate(AppDateFormat.weekdayOnly);
+  return fechaHora.formatDate( .longDate);
+}
 
   // ─── Iniciales del nombre ──────────────────────────────────────
   String _initials(String nombre) {
@@ -177,22 +169,7 @@ class ChatTile extends StatelessWidget {
                       const SizedBox(height: 3),
 
                       // Fila: Mensaje | Badge
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              chat.mensaje,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: mensajeSize,
-                                color: Colors.grey.shade500,
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildPreview(chat, mensajeSize, colorScheme),
                     ],
                   ),
                 ),
@@ -213,4 +190,65 @@ class ChatTile extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildPreview(Chat chat, double mensajeSize, ColorScheme colorScheme) {
+    final preview = _previewText(chat);
+    final hasIcon = preview.icon != null;
+
+    return Row(
+      children: [
+        if (hasIcon) ...[
+          Icon(
+            preview.icon,
+            size: mensajeSize + 1,
+            color: Colors.grey.shade500,
+          ),
+          const SizedBox(width: 4),
+        ],
+        Expanded(
+          child: Text(
+            preview.text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: mensajeSize,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  _PreviewData _previewText(Chat chat) {
+    final msg = chat.mensaje.toLowerCase();
+
+    // El backend puede mandar el tipo en el mensaje cuando es archivo
+    if (msg.startsWith('🎵') || msg.contains('[audio]')) {
+      return _PreviewData(Icons.mic_rounded, 'Audio');
+    }
+    if (msg.startsWith('📷') ||
+        msg.contains('[imagen]') ||
+        msg.contains('[foto]')) {
+      return _PreviewData(Icons.photo_rounded, 'Foto');
+    }
+    if (msg.startsWith('🎥') || msg.contains('[video]')) {
+      return _PreviewData(Icons.videocam_rounded, 'Video');
+    }
+    if (msg.startsWith('📄') ||
+        msg.contains('[archivo]') ||
+        msg.contains('[documento]')) {
+      return _PreviewData(Icons.insert_drive_file_rounded, 'Archivo');
+    }
+
+    // Texto normal
+    return _PreviewData(null, chat.mensaje);
+  }
+}
+
+class _PreviewData {
+  final IconData? icon;
+  final String text;
+  const _PreviewData(this.icon, this.text);
 }

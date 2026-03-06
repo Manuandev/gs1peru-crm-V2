@@ -17,6 +17,9 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <!-- Permite internet (MUY IMPORTANTE) -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    android:maxSdkVersion="29"/>
     <application
         android:label="GS1 Peru - CRM"
         android:name="${applicationName}"

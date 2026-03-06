@@ -2,12 +2,10 @@
 
 import 'package:app_crm/features/chat/index_chat.dart';
 
-class GetMessagesUseCase {
+class GetChatMessagesUseCase {
   final ChatRepository repository;
-  const GetMessagesUseCase(this.repository);
+  const GetChatMessagesUseCase(this.repository);
 
-  Future<List<ChatMessage>> call({
-    required String idLead,
-    String? idUltimoMensaje,
-  }) => repository.getChatMessages(idLead, idUltimoMensaje: idUltimoMensaje);
+  Future<List<ChatMessage>> call(String idLead, {String? idUltimoMensaje}) =>
+      repository.getChatMessages(idLead, idUltimoMensaje: idUltimoMensaje);
 }

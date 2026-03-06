@@ -1,5 +1,6 @@
 
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/home/index_home.dart';
@@ -38,7 +39,7 @@ class ChatsSection extends StatelessWidget {
 
             // ── LISTA O VACÍO ─────────────────────────────────
             if (chats.isEmpty)
-              const _EmptySection(message: 'No tienes chats pendientes')
+              const AppEmptyView(message: 'No tienes chats pendientes')
             else
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -64,7 +65,7 @@ class ChatsSection extends StatelessWidget {
             // Si hay más de 5, mostrar "Ver todos"
             if (chats.length > 5)
               TextButton(
-                onPressed: () {}, // navegar a la pantalla completa
+                onPressed: context.goToChats, // navegar a la pantalla completa
                 child: Text(
                   'Ver todos (${chats.length})',
                   style: AppTextStyles.labelSmall.copyWith(
@@ -74,29 +75,6 @@ class ChatsSection extends StatelessWidget {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Widget reutilizable para cuando no hay datos
-class _EmptySection extends StatelessWidget {
-  final String message;
-  const _EmptySection({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-      child: Row(
-        children: [
-          Icon(
-            Icons.info_outline,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(message, style: AppTextStyles.bodyMedium),
-        ],
       ),
     );
   }

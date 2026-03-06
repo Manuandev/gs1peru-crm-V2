@@ -3,7 +3,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'date_formats.dart';
 
 class DateFormatter {
-
   static bool _initialized = false;
 
   /// Inicializa locales una sola vez
@@ -31,11 +30,28 @@ class DateFormatter {
     String locale = 'es',
   }) {
     try {
-      final date = DateTime.parse(dateString);
+      final date = parseDate(dateString.trim());
+      if (date == null) return '';
       return format(date: date, format: dateFormat, locale: locale);
     } catch (_) {
       return '';
     }
+  }
+
+  // Agrega este método privado:
+  static DateTime? parseDate(String dateString) {
+    // Formato estándar: "2025-02-04 16:49:17.000"
+    try {
+      return DateTime.parse(dateString);
+    } catch (_) {}
+
+    // Formato SQL Server: "Mar 29 2025 11:39AM" o "Mar 27 2025  1:07AM"
+    try {
+      final cleaned = dateString.replaceAll(RegExp(r'\s+'), ' ').trim();
+      return DateFormat('MMM d yyyy h:mma', 'en').parse(cleaned);
+    } catch (_) {}
+
+    return null;
   }
 
   static String _resolvePattern(AppDateFormat format) {

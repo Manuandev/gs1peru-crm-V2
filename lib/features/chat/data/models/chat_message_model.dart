@@ -1,6 +1,5 @@
 // lib\features\chat\data\models\chat_message_model.dart
 
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
@@ -12,8 +11,11 @@ class ChatMessageModel extends ChatMessage {
     required super.mensaje,
     required super.tipo,
     required super.estado,
+    required super.idChatDetArc,
     required super.nomArchivo,
     required super.extArchivo,
+    required super.idChatCab,
+    required super.idChatDet,
   });
 
   factory ChatMessageModel.fromRawString(String raw) {
@@ -23,12 +25,15 @@ class ChatMessageModel extends ChatMessage {
     return ChatMessageModel(
       idMensaje: f(0),
       fecha: f(1),
-      isEnviado: f(2) == '1',
-      mensaje: f(3),
+      isEnviado: f(2) == '0',
+      mensaje: f(3).replaceAll('\\n', '\n'),
       tipo: f(4),
       estado: f(5),
-      nomArchivo: f(6),
-      extArchivo: f(7),
+      idChatDetArc: f(6),
+      nomArchivo: f(7),
+      extArchivo: f(8),
+      idChatCab: f(9),
+      idChatDet: f(10),
     );
   }
 

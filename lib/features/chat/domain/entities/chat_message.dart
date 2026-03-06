@@ -7,8 +7,11 @@ class ChatMessage {
   final String mensaje; // 03 - MENSAJE
   final String tipo; // 04 - TIPO_MENSAJE
   final String estado; // 05 - ESTADO
-  final String nomArchivo; // 06 - ARCHIVO_NOMBRE
-  final String extArchivo; // 07 - ARCHIVO_EXT
+  final String idChatDetArc; // 06 - ID_CHAT_DET_ARCHIVO
+  final String nomArchivo; // 07 - ARCHIVO_NOMBRE
+  final String extArchivo; // 08 - ARCHIVO_EXT
+  final String idChatCab; // 09 - ID_CHAT_CAB
+  final String idChatDet; // 10 - ID_CHAT_DET
 
   const ChatMessage({
     required this.idMensaje,
@@ -17,7 +20,10 @@ class ChatMessage {
     required this.mensaje,
     required this.tipo,
     required this.estado,
+    required this.idChatDetArc,
     required this.nomArchivo,
     required this.extArchivo,
+    required this.idChatCab,
+    required this.idChatDet,
   });
 }

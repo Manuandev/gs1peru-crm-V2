@@ -1,49 +1,4 @@
 // lib/core/services/device_info_service.dart
-// ============================================================
-// DEVICE INFO SERVICE
-// ============================================================
-//
-// RESPONSABILIDAD:
-// Obtener información del dispositivo en tiempo real.
-// Cada getter llama directo al hardware/SO — sin caché.
-//
-// DEPENDENCIAS (agregar en pubspec.yaml):
-//   device_info_plus: ^10.1.2
-//   geolocator: ^13.0.4
-//   network_info_plus: ^6.1.1
-//   package_info_plus: ^8.3.0
-//   connectivity_plus: ^6.1.4
-//
-// PERMISOS (agregar según plataforma):
-//
-// Android → android/app/src/main/AndroidManifest.xml:
-//   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-//   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-//   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-//   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-//
-// iOS → ios/Runner/Info.plist:
-//   <key>NSLocationWhenInUseUsageDescription</key>
-//   <string>Necesitamos tu ubicación para registrar tu acceso.</string>
-//
-// USO BÁSICO:
-//   final service = DeviceInfoService();
-//
-//   // Individual — en tiempo real
-//   final ip     = await service.getLocalIp();
-//   final coords = await service.getCoordinates();
-//   final model  = await service.getDeviceModel();
-//
-//   // Todo junto — para el body del login u otra petición
-//   final info = await service.getAllDeviceInfo();
-//   print(info['ip_local']);       // 192.168.1.10
-//   print(info['latitud']);        // -12.0464
-//   print(info['longitud']);       // -77.0428
-//   print(info['modelo']);         // Samsung Galaxy S23
-//   print(info['so_version']);     // Android 13
-//   print(info['app_version']);    // 1.0.0+1
-//
-// ============================================================
 
 import 'dart:async';
 import 'dart:io';
@@ -138,6 +93,85 @@ class DeviceInfoService {
   // Singletons internos — se crean una vez, no se instancian de nuevo
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final NetworkInfo _networkInfo = NetworkInfo();
+  CoordinatesResult? _cachedCoords;
+
+  // ── CACHE ESTÁTICO — compartido entre todas las instancias ──
+  static Future<Map<String, String>>? _backgroundFuture;
+  static Map<String, String>? _cachedInfo;
+
+  static void precargarEnBackground() {
+    _backgroundFuture ??= DeviceInfoService()._cargarTodoInterno();
+  }
+
+  static Future<Map<String, String>> getInfoConTimeout() async {
+    // Ya tenemos el resultado completo — instantáneo
+    if (_cachedInfo != null) return _cachedInfo!;
+
+    // Si por alguna razón no se llamó precargarEnBackground, lo lanzamos ahora
+    _backgroundFuture ??= DeviceInfoService()._cargarTodoInterno();
+
+    try {
+      _cachedInfo = await _backgroundFuture!.timeout(
+        const Duration(seconds: 3),
+      );
+      return _cachedInfo!;
+    } catch (_) {
+      // Timeout o error — retorna valores por defecto para no bloquear el login
+      return _defaultInfo();
+    }
+  }
+
+  /// Valores por defecto si el GPS no respondió a tiempo
+  static Map<String, String> _defaultInfo() => {
+    'ip_local': '0.0.0.0',
+    'so_version': 'Desconocido',
+    'modelo': 'Desconocido',
+    'tipo_dispositivo': 'Mobile',
+    'so': 'Android',
+    'es_fisico': 'true',
+    'coordenadas': '0.0,0.0',
+    'pais': '',
+    'pais_codigo': 'PE',
+    'region': '',
+    'provincia': '',
+    'ciudad': '',
+    'navegador': 'Flutter App',
+  };
+
+  /// Método interno — lo llama precargarEnBackground()
+  Future<Map<String, String>> _cargarTodoInterno() async {
+    // Resuelve GPS una sola vez antes del Future.wait
+    await getCoordinates();
+
+    final results = await Future.wait([
+      getLocalIp(),
+      getVersionSO(),
+      getDeviceModel(),
+      getTipoDispositivo(),
+      getSistemaOperativo(),
+      getCoordenadasString(),
+      getUbicacionCompleta(),
+    ]);
+
+    final esFisico = (await esDispositivoFisico()).toString();
+    final ubic = results[6] as UbicacionResult;
+
+    return {
+      'ip_local': results[0] as String,
+      'so_version': results[1] as String,
+      'modelo': results[2] as String,
+      'tipo_dispositivo': results[3] as String,
+      'so': results[4] as String,
+      'es_fisico': esFisico,
+      'coordenadas': results[5] as String,
+      'pais': ubic.pais,
+      'pais_codigo': ubic.paisCodigo.isNotEmpty ? ubic.paisCodigo : 'PE',
+      'region': ubic.region,
+      'provincia': ubic.provincia,
+      'ciudad': ubic.ciudad,
+      'navegador': 'Flutter App',
+    };
+  }
 
   // ============================================================
   // ① RED — IP y CONECTIVIDAD
@@ -160,8 +194,6 @@ class DeviceInfoService {
   // ② UBICACIÓN — GPS
   // ============================================================
 
-  /// Solicita permiso de ubicación si no fue otorgado.
-  /// Retorna true si el permiso fue concedido o ya estaba activo.
   Future<bool> solicitarPermisoUbicacion() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -178,60 +210,53 @@ class DeviceInfoService {
     }
   }
 
-  /// Coordenadas GPS actuales del dispositivo.
-  /// Maneja permisos denegados y GPS apagado automáticamente.
-  ///
-  /// Retorna CoordinatesResult — siempre seguro, nunca lanza excepción.
-  ///
-  /// Ejemplo:
-  ///   final coords = await service.getCoordinates();
-  ///   print(coords.latitud);       // -12.0464
-  ///   print(coords.longitud);      // -77.0428
-  ///   print(coords.hasLocation);   // true
   Future<CoordinatesResult> getCoordinates() async {
+    // ✅ Si ya lo obtuvimos, retorna el cache
+    if (_cachedCoords != null) return _cachedCoords!;
+
     try {
       final tienePermiso = await solicitarPermisoUbicacion();
       if (!tienePermiso) {
-        return const CoordinatesResult(error: 'Permiso de ubicación denegado');
+        _cachedCoords = const CoordinatesResult(
+          error: 'Permiso de ubicación denegado',
+        );
+        return _cachedCoords!;
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
-      );
+      // ✅ Double timeout: LocationSettings + .timeout() como respaldo
+      final position =
+          await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 10),
+            ),
+          ).timeout(
+            const Duration(seconds: 12), // margen extra
+            onTimeout: () => throw TimeoutException('GPS timeout'),
+          );
 
-      return CoordinatesResult(
+      _cachedCoords = CoordinatesResult(
         latitud: position.latitude,
         longitud: position.longitude,
         altitud: position.altitude,
         precision: position.accuracy,
         hasLocation: true,
       );
+      return _cachedCoords!;
     } on LocationServiceDisabledException {
-      return const CoordinatesResult(
+      _cachedCoords = const CoordinatesResult(
         error: 'GPS desactivado en el dispositivo',
       );
+      return _cachedCoords!;
     } on TimeoutException {
-      return const CoordinatesResult(
+      _cachedCoords = const CoordinatesResult(
         error: 'Tiempo de espera agotado para obtener GPS',
       );
+      return _cachedCoords!;
     } catch (e) {
-      return CoordinatesResult(error: e.toString());
+      _cachedCoords = CoordinatesResult(error: e.toString());
+      return _cachedCoords!;
     }
-  }
-
-  /// Latitud como String. Retorna '0.0' si no hay permiso o GPS.
-  Future<String> getLatitud() async {
-    final coords = await getCoordinates();
-    return coords.latitud?.toString() ?? '0.0';
-  }
-
-  /// Longitud como String. Retorna '0.0' si no hay permiso o GPS.
-  Future<String> getLongitud() async {
-    final coords = await getCoordinates();
-    return coords.longitud?.toString() ?? '0.0';
   }
 
   /// Coordenadas como string combinado: "latitud,longitud"
@@ -245,10 +270,6 @@ class DeviceInfoService {
   // ③ DISPOSITIVO — Hardware y SO
   // ============================================================
 
-  /// Modelo del dispositivo.
-  ///
-  /// Android → 'samsung SM-G991B'
-  /// iOS     → 'iPhone 15 Pro'
   Future<String> getDeviceModel() async {
     try {
       if (Platform.isAndroid) {
@@ -335,36 +356,22 @@ class DeviceInfoService {
   // ⑤ GEOCODIFICACIÓN INVERSA — Dirección desde coordenadas GPS
   // ============================================================
 
-  /// Obtiene la dirección completa del dispositivo a partir de sus
-  /// coordenadas GPS. Incluye país, región, provincia, ciudad,
-  /// distrito, calle, número y código postal.
-  ///
-  /// REQUIERE: permiso de ubicación + paquete geocoding.
-  ///
-  /// Ejemplo de resultado:
-  ///   ubicacion.pais         → 'Perú'
-  ///   ubicacion.paisCodigo   → 'PE'
-  ///   ubicacion.region       → 'Lima'
-  ///   ubicacion.provincia    → 'Lima Province'
-  ///   ubicacion.ciudad       → 'Lima'
-  ///   ubicacion.distrito     → 'Miraflores'
-  ///   ubicacion.calle        → 'Av. Larco'
-  ///   ubicacion.numero       → '345'
-  ///   ubicacion.codigoPostal → '15074'
-  ///   ubicacion.direccionCompleta → 'Av. Larco 345, Miraflores, Lima, Perú'
   Future<UbicacionResult> getUbicacionCompleta() async {
     try {
-      // 1. Obtener coordenadas GPS
-      final coords = await getCoordinates();
+      final coords = await getCoordinates(); // ✅ usa el cache
       if (!coords.hasLocation) {
         return UbicacionResult(error: coords.error);
       }
 
-      // 2. Geocodificación inversa: coordenadas → lista de Placemark
-      final placemarks = await placemarkFromCoordinates(
-        coords.latitud!,
-        coords.longitud!,
-      );
+      // ✅ Timeout en geocodificación inversa
+      final placemarks =
+          await placemarkFromCoordinates(
+            coords.latitud!,
+            coords.longitud!,
+          ).timeout(
+            const Duration(seconds: 8),
+            onTimeout: () => [], // retorna lista vacía en vez de colgarse
+          );
 
       if (placemarks.isEmpty) {
         return const UbicacionResult(
@@ -372,19 +379,10 @@ class DeviceInfoService {
         );
       }
 
-      // El primer Placemark es el más preciso
       final place = placemarks.first;
-
       return UbicacionResult(
-        // País
         pais: place.country ?? '',
         paisCodigo: place.isoCountryCode ?? '',
-
-        // División administrativa
-        // administrativeArea   → departamento/estado: 'Lima'
-        // subAdministrativeArea → provincia: 'Lima Province'
-        // locality             → ciudad/distrito: 'Miraflores'
-        // subLocality          → barrio/urbanización
         region: place.administrativeArea ?? '',
         provincia: place.subAdministrativeArea ?? '',
         ciudad: place.locality ?? '',
@@ -392,14 +390,9 @@ class DeviceInfoService {
             ? place.subLocality!
             : (place.locality ?? ''),
         subLocality: place.subLocality ?? '',
-
-        // Calle y número
         calle: place.thoroughfare ?? '',
         numero: place.subThoroughfare ?? '',
-
-        // Código postal
         codigoPostal: place.postalCode ?? '',
-
         hasData: true,
       );
     } catch (e) {
@@ -411,40 +404,16 @@ class DeviceInfoService {
   // ⑥ Todo junto — El método estrella
   // ============================================================
 
-  /// Obtiene TODA la información del dispositivo en un solo Map.
-  ///
-  /// Hace todas las llamadas en paralelo (Future.wait) para ser
-  /// lo más rápido posible. Ideal para el body del login o
-  /// cualquier petición que necesite datos del dispositivo.
-  ///
-  // ignore: unintended_html_in_doc_comment
-  /// Retorna un Map<String, String> con todas las claves.
-  ///
-  /// EJEMPLO DE USO:
-  /// ```dart
-  /// final info = await DeviceInfoService().getAllDeviceInfo();
-  ///
-  /// final body = 'PER¦$user¦$pass'
-  ///   '¦${info['ip_local']}'
-  ///   '¦${info['coordenadas']}'
-  ///   '¦${info['navegador']}'
-  ///   '¦${info['tipo_dispositivo']}'
-  ///   '¦${info['dispositivo']}'
-  ///   '¦${info['pais_codigo']}'
-  ///   '¦${info['region']}'
-  ///   '¦${info['ciudad']}'
-  ///   '¦${info['so_version']}';
-  /// ```
   Future<Map<String, String>> getAllDeviceInfo() async {
     // Ejecutar en paralelo — mucho más rápido que await uno por uno
     final results = await Future.wait([
-      getLocalIp(), // [0]
-      getVersionSO(), // [1]
-      getDeviceModel(), // [2]
-      getTipoDispositivo(), // [3]
-      getSistemaOperativo(), // [4]
-      getCoordenadasString(), // [5]
-      getUbicacionCompleta(), // [6]
+      getLocalIp(),
+      getVersionSO(),
+      getDeviceModel(),
+      getTipoDispositivo(),
+      getSistemaOperativo(),
+      getCoordenadasString(), // ✅ usa cache
+      getUbicacionCompleta(), // ✅ usa cache
     ]);
 
     final esFisico = (await esDispositivoFisico()).toString();
@@ -482,24 +451,12 @@ class DeviceInfoService {
   // ⑦ HELPER — Construir el body del Login directamente
   // ============================================================
 
-  /// Construye el body en el formato de tu API:
-  /// "PER¦{user}¦{pass}¦{ip}¦{lat,lon}¦{navegador}¦{tipo}¦{dispositivo}¦{pais}¦{region}¦{ciudad}¦{so}"
-  ///
-  /// Reemplaza los valores hardcodeados del auth_remote_datasource.dart.
-  ///
-  /// EJEMPLO:
-  /// ```dart
-  /// final body = await DeviceInfoService().buildLoginBody(
-  ///   username: 'JPEREZ',
-  ///   password: 'mi_clave',
-  /// );
-  /// // body = "PER¦JPEREZ¦mi_clave¦192.168.1.10¦-12.0464,-77.0428¦Flutter App¦Mobile¦SM-G991B¦PE¦Lima Province¦Lima¦Android 13"
-  /// ```
   Future<String> buildLoginBody({
     required String username,
     required String password,
   }) async {
-    final info = await getAllDeviceInfo();
+    // ✅ Usa el cache estático — no bloquea el login
+    final info = await DeviceInfoService.getInfoConTimeout();
 
     return 'PER'
         '¦$username'
@@ -513,6 +470,5 @@ class DeviceInfoService {
         '¦${info['region']}'
         '¦${info['ciudad']}'
         '¦${AppConstants.version}';
-    // '¦${info['so_version']}';
   }
 }

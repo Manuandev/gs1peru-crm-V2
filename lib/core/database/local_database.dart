@@ -65,38 +65,16 @@ class LocalDatabase implements ILocalDatabase {
         expires_at TEXT NOT NULL
       )
     ''');
-    // await db.execute('''
-    //   CREATE TABLE session (
-    //     id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    //     user_id        TEXT NOT NULL,
-    //     username       TEXT NOT NULL,
-    //     token          TEXT NOT NULL,
-    //     raw_user       TEXT,
-    //     raw_pass       TEXT,
-    //     cod_user       TEXT,
-    //     user_ape       TEXT,
-    //     tipo_user      TEXT,
-    //     carg_user      TEXT,
-    //     correo_user    TEXT,
-    //     telefono       TEXT,
-    //     anexo          TEXT,
-    //     celular        TEXT,
-    //     disponibilidad TEXT,
-    //     id_tipouser    TEXT,
-    //     expires_at     TEXT NOT NULL
-    //   )
-    // ''');
 
-    // Todo: agrega más tablas aquí cuando las necesites
-    // Ejemplo:
-    // await db.execute('''
-    //   CREATE TABLE leads (
-    //     id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    //     id_lead   TEXT NOT NULL,
-    //     nombre    TEXT,
-    //     ...
-    //   )
-    // ''');
+    // ── TABLA: settings ──────────────────────────────────
+    // Clave-valor genérico para preferencias de la app.
+    // Ejemplo: key='theme', value='dark'
+    await db.execute('''
+      CREATE TABLE settings (
+        key   TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''');
   }
 
   /// Migración cuando sube la versión de la BD.
@@ -172,5 +150,29 @@ class LocalDatabase implements ILocalDatabase {
     List<dynamic>? args,
   ]) async {
     return _db.rawQuery(sql, args);
+  }
+
+  // ── SETTINGS HELPERS ─────────────────────────────────────
+
+  /// Guarda o actualiza una preferencia.
+  /// Ejemplo: await db.setSetting('theme', 'dark');
+  Future<void> setSetting(String key, String value) async {
+    await _db.insert('settings', {
+      'key': key,
+      'value': value,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// Obtiene una preferencia por clave.
+  /// Retorna null si no existe.
+  Future<String?> getSetting(String key) async {
+    final results = await _db.query(
+      'settings',
+      where: 'key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (results.isEmpty) return null;
+    return results.first['value'] as String?;
   }
 }

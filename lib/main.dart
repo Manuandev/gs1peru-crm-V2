@@ -21,5 +21,13 @@ void main() async {
         '1090773672718-buupi5ospput8t9dv861eqfchvthh9rs.apps.googleusercontent.com',
   );
 
-  runApp(const AppWidget());
+  // ✅ Cargar tema guardado antes de renderizar
+  final themeCubit = ThemeCubit();
+  await themeCubit.loadSavedTheme();
+
+  // ✅ Empieza a recolectar info del dispositivo en segundo plano
+  // SIN await — no bloquea nada, corre mientras el usuario ve el splash/login
+  DeviceInfoService.precargarEnBackground();
+
+  runApp(AppWidget(themeCubit: themeCubit));
 }

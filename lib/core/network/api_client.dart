@@ -10,6 +10,7 @@
 // ============================================================
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/core/network/api_result.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -80,5 +81,28 @@ class ApiClient {
       ),
     );
     return response.data?.toString() ?? '';
+  }
+
+  // Agrega esto en api_client.dart — debajo de postJsonGetText
+  Future<ApiResult<String>> postSafe(String url, String body) async {
+    try {
+      final response = await _dio.post(
+        url,
+        data: body,
+        options: Options(
+          contentType: 'application/json',
+          responseType: ResponseType.plain,
+          headers: {'Token': _token},
+        ),
+      );
+
+      final raw = response.data?.toString() ?? '';
+      if (raw.isEmpty) return const ApiEmpty();
+      return ApiSuccess(raw);
+    } on DioException catch (e) {
+      final inner = e.error;
+      if (inner is AppException) return ApiError(inner.message);
+      return ApiError(e.message ?? 'Error desconocido');
+    }
   }
 }

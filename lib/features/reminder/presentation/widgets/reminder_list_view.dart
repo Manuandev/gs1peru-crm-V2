@@ -40,6 +40,8 @@ class ReminderListView extends StatelessWidget {
           }
 
           if (state is ReminderListLoaded) {
+            if (state.reminders.isEmpty) return const AppEmptyView(message: 'No hay recordatorios disponibles.',);
+
             return OrientationBuilder(
               builder: (context, orientation) {
                 if (orientation == Orientation.landscape) {

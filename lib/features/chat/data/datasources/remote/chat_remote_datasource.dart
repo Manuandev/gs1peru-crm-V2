@@ -1,6 +1,7 @@
 //lib\features\chat\data\datasources\remote\chat_remote_datasource.dart
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/core/network/api_result.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatRemoteDatasource {
@@ -10,46 +11,34 @@ class ChatRemoteDatasource {
   Future<List<ChatModel>> getChats() async {
     final String body = '${_session.codUser}¯L';
 
-    final String raw = await _api.postJsonGetText(
+
+    final result = await _api.postSafe(
       ApiConstants.urlChatsLst,
       body,
     );
 
-    if (raw.isEmpty) {
-      throw AppException(
-        'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
-      );
-    }
-
-    try {
-      return ChatModel.parseList(raw);
-    } on FormatException catch (e) {
-      throw AppException(e.message);
-    }
+    return switch (result) {
+      ApiSuccess(:final data) => ChatModel.parseList(data),
+      ApiEmpty()              => [],
+      ApiNoInternet()         => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
   }
 
   Future<List<ChatMessageModel>> getChatMessages(
     String idLead, {
     String? idUltimoMensaje, // null = primera carga
   }) async {
-    final String body =
-        '$idLead¦${idUltimoMensaje ?? ''}¯LD';
-
-    final String raw = await _api.postJsonGetText(
+    final result = await _api.postSafe(
       ApiConstants.urlChatsLst,
-      body,
+      '$idLead¦${idUltimoMensaje ?? ''}¯LD',
     );
 
-    if (raw.isEmpty) {
-      throw AppException(
-        'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
-      );
-    }
-
-    try {
-      return ChatMessageModel.parseList(raw);
-    } on FormatException catch (e) {
-      throw AppException(e.message);
-    }
+    return switch (result) {
+      ApiSuccess(:final data) => ChatMessageModel.parseList(data),
+      ApiEmpty()              => [],
+      ApiNoInternet()         => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
   }
 }

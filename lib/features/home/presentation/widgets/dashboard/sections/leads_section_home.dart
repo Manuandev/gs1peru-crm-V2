@@ -7,7 +7,7 @@ import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:flutter/material.dart';
 
-class LeadsSection extends StatelessWidget {
+class LeadsSection extends StatelessWidget { 
   final List<Lead> leads;
   const LeadsSection({super.key, required this.leads});
 

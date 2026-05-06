@@ -16,7 +16,7 @@ class ErrorInterceptor extends Interceptor {
 
       case DioExceptionType.connectionError:
         return handler.reject(
-          _wrap(err, const SocketException('Sin conexión a internet.')),
+          _wrap(err, const AppException('Sin conexión a internet.')),
         );
 
       case DioExceptionType.badResponse:
@@ -28,7 +28,7 @@ class ErrorInterceptor extends Interceptor {
       case DioExceptionType.unknown:
         if (err.error is SocketException) {
           return handler.reject(
-            _wrap(err, const SocketException('Sin conexión a internet.')),
+            _wrap(err, const AppException('Sin conexión a internet.')),
           );
         }
         return handler.reject(

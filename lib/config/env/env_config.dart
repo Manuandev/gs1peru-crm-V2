@@ -2,15 +2,15 @@
 
 enum Environment { dev, qa, prod }
 
-class EnvConfig {
+class EnvConfig { 
   // Entorno actual (cámbialo según necesites)
-  static const Environment current = Environment.dev;
+  static const Environment current = Environment.qa;
 
   // Configuración según entorno
   static String get baseUrl {
     switch (current) {
       case Environment.dev:
-        return 'https://c4d0-161-132-10-146.ngrok-free.app/'; // URL DE DEV
+        return 'https://c9f8-161-132-10-146.ngrok-free.app/'; // URL DE DEV
       case Environment.qa:
         return 'https://natcodee.net:40805/gs1pe_interfaz/'; // URL DE QA
       case Environment.prod:

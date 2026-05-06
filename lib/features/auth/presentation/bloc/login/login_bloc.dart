@@ -3,7 +3,6 @@
 // LOGIN BLOC — CONEXIÓN REAL CON DIO
 // ============================================================
 
-import 'dart:io';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,10 +13,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final AuthRepository _authRepository;
 
   LoginBloc({
-    required LoginUsecase loginUsecase,required AuthRepository authRepository})
-    :  _loginUsecase = loginUsecase,
-        _authRepository = authRepository,
-      super(const LoginInitial()) {
+    required LoginUsecase loginUsecase,
+    required AuthRepository authRepository,
+  }) : _loginUsecase = loginUsecase,
+       _authRepository = authRepository,
+       super(const LoginInitial()) {
     on<LoginSubmitted>(_onLoginSubmitted);
     on<LoginWithGoogleSubmitted>(_onLoginWithGoogleSubmitted);
   }
@@ -29,7 +29,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(const LoginLoading());
 
     try {
-       // ✅ Usa el usecase, no el repositorio directamente
       final user = await _loginUsecase(
         username: event.username,
         password: event.password,
@@ -38,17 +37,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       emit(LoginSuccess(userId: user.userId, username: user.fullName));
     } on AppException catch (e) {
-      // ❌ La API rechazó las credenciales
       emit(LoginFailure(e.message));
-    } on SocketException {
-      // ❌ Sin conexión a internet
-      emit(
-        const LoginFailure(
-          'No se pudo conectar al servidor. Verifica tu conexión a Internet.',
-        ),
-      );
     } catch (e, stackTrace) {
-      // ❌ Error inesperado — queda registrado en BlocObserver
       addError(e, stackTrace);
       emit(LoginFailure('Error inesperado: ${e.toString()}'));
     }

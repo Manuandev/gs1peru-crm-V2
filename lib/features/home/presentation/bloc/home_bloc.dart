@@ -28,7 +28,6 @@
 // - IHomeRepository → (cuando exista) para cargar datos del home
 // ============================================================
 
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -59,24 +58,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<T> _safe<T>(Future<T> future, T fallback) async {
     try {
       return await future;
-    } catch (e) {
-      // Puedes loggear aquí si quieres: debugPrint('_safe error: $e');
-      return fallback;
+    } catch (_) {
+      return fallback; // ← solo errores inesperados usan fallback
     }
   }
 
-  Future<void> _onStarted(
-    HomeStarted event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit) async {
     emit(const HomeLoading());
     await _loadData(emit);
   }
 
-  Future<void> _onRefresh(
-    HomeRefresh event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onRefresh(HomeRefresh event, Emitter<HomeState> emit) async {
     emit(const HomeLoading());
     await _loadData(emit);
   }
@@ -101,8 +93,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           usuario: _session.user!,
         ),
       );
+    } on AppException catch (e) {
+      emit(HomeError(e.message)); // ← sin internet muestra error real
     } catch (e, stackTrace) {
-      // Solo llega aquí si _session.user! es null u otro error crítico
       addError(e, stackTrace);
       emit(HomeError(e.toString()));
     }

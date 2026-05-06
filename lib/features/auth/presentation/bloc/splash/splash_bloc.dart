@@ -3,8 +3,7 @@
 // SPLASH BLOC — CON REPOSITORIO REAL
 // ============================================================
 
-import 'dart:io';
-
+import 'package:app_crm/core/errors/app_exception.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,15 +32,9 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
       }
 
       emit(SplashSessionFound(userId: user.userId, username: user.fullName));
-    } on SocketException {
-      emit(
-        const SplashSessionNotFound(
-          message:
-              'Sin conexión a internet. Por favor inicia sesión nuevamente.',
-        ),
-      );
+    } on AppException catch (e) {
+      emit(SplashSessionNotFound(message: e.message));
     } catch (e, stackTrace) {
-      // ✅ FIX: ahora usa SplashError correctamente en vez de SplashSessionNotFound
       addError(e, stackTrace);
       emit(SplashError(message: e.toString()));
     }

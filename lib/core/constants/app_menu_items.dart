@@ -37,7 +37,35 @@ class AppMenuItems {
   // Úsala cuando quieras mostrar todos los módulos
   // ============================================================
 
-  static const List<DrawerItemModel> mainItems = [home];
+  // static const List<DrawerItemModel> mainItems = [home];
+
+  static const List<DrawerItemModel> mainItems = [
+    home,
+    DrawerItemModel(
+      id: AppRoutes.leads,
+      icon: Icons.people_outline,
+      label: 'Leads',
+      route: AppRoutes.leads,
+    ),
+    DrawerItemModel(
+      id: AppRoutes.recordatorios,
+      icon: Icons.alarm_outlined,
+      label: 'Recordatorios',
+      route: AppRoutes.recordatorios,
+    ),
+    DrawerItemModel(
+      id: AppRoutes.chats,
+      icon: Icons.chat_bubble_outline,
+      label: 'Chats',
+      route: AppRoutes.chats,
+    ),
+    DrawerItemModel(
+      id: AppRoutes.cobranza,
+      icon: Icons.payments_outlined,
+      label: 'Cobranza',
+      route: AppRoutes.cobranza,
+    ),
+  ];
 
   // ============================================================
   // CON BADGES DINÁMICOS

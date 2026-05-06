@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 ///     └── LeadsSection
 /// ```
 class HomePortrait extends StatelessWidget {
-  final HomeLoaded state;
+  final HomeLoaded state; 
 
   const HomePortrait({super.key, required this.state});
 

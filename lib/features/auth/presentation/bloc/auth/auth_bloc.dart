@@ -26,6 +26,7 @@
 // - LogoutUsecase → limpia la sesión al hacer logout
 // ============================================================
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/features/auth/domain/usecases/logout_usecase.dart';
 import 'auth_event.dart';
@@ -48,6 +49,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   /// Splash encontró sesión válida → marcar como autenticado
   void _onSessionRestored(AuthSessionRestored event, Emitter<AuthState> emit) {
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
+    SignalRService.instance.connect();
   }
 
   /// Splash no encontró sesión → marcar como no autenticado
@@ -58,6 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   /// Login exitoso → marcar como autenticado
   void _onLoginSuccess(AuthLoginSuccess event, Emitter<AuthState> emit) {
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
+    SignalRService.instance.connect();
   }
 
   /// Logout solicitado → limpiar sesión → marcar como no autenticado
@@ -71,6 +74,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // LogoutUsecase → IAuthRepository.logout()
     // → AuthLocalDatasource.clearSession()  (limpia SQLite/SharedPrefs)
     // → AuthRemoteDatasource.logout()       (invalida token en API, si aplica)
+    await SignalRService.instance.close();
     await _logoutUsecase();
 
     emit(const AuthUnauthenticated());

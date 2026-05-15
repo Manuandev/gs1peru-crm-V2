@@ -99,7 +99,8 @@ class _DrawerContent extends StatelessWidget {
                       label: 'Cerrar sesión',
                       // ✅ Solo ejecuta el callback que viene de la page.
                       // Quien sabe de AuthBloc es la page, no el drawer.
-                      onTap: onLogout ?? () {},
+                      // onTap: onLogout ?? () {},
+                      onTap: () => context.logoutWithConfirmation(context),
                     ),
                     isActive: false,
                     isDestructive: true,
@@ -114,15 +115,15 @@ class _DrawerContent extends StatelessWidget {
   }
 
   List<DrawerItemModel> _resolveItems(DrawerState state) {
-  if (items != null) return items!;
-  if (state is! DrawerLoaded) return AppMenuItems.mainItems;
-  
-  return AppMenuItems.withBadges(
-    chatsBadge: state.unreadChats,
-    remindersBadge: state.pendingReminders,
-    leadsBadge: state.newLeads,
-  );
-}
+    if (items != null) return items!;
+    if (state is! DrawerLoaded) return AppMenuItems.mainItems;
+
+    return AppMenuItems.withBadges(
+      chatsBadge: state.unreadChats,
+      remindersBadge: state.pendingReminders,
+      leadsBadge: state.newLeads,
+    );
+  }
 }
 
 // ============================================================

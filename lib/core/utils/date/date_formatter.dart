@@ -54,6 +54,40 @@ class DateFormatter {
     return null;
   }
 
+  // ─── Nuevo método público ──────────────────────────────────────
+  /// Formato estilo WhatsApp:
+  /// Hoy     → "20:24"
+  /// Ayer    → "Ayer"
+  /// <7 días → "miércoles"
+  /// Resto   → "26/03/2025"
+  static String formatWhatsApp(String dateString, {String locale = 'es'}) {
+    if (dateString.isEmpty) return '';
+    final fecha = parseDate(dateString.trim());
+    if (fecha == null) return '';
+
+    final ahora = DateTime.now();
+    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+    final diaFecha = DateTime(fecha.year, fecha.month, fecha.day);
+    final diferencia = hoy.difference(diaFecha).inDays;
+
+    if (diferencia == 0) {
+      return format(
+        date: fecha,
+        format: AppDateFormat.hourMinute,
+        locale: locale,
+      );
+    }
+    if (diferencia == 1) return 'Ayer';
+    if (diferencia < 7) {
+      return format(
+        date: fecha,
+        format: AppDateFormat.weekdayOnly,
+        locale: locale,
+      );
+    }
+    return format(date: fecha, format: AppDateFormat.shortDate, locale: locale);
+  }
+
   static String _resolvePattern(AppDateFormat format) {
     switch (format) {
       case AppDateFormat.hourMinute:
@@ -76,6 +110,8 @@ class DateFormatter {
 
       case AppDateFormat.monthOnly:
         return 'MMMM';
+      case AppDateFormat.whatsapp:
+        return '';
     }
   }
 }

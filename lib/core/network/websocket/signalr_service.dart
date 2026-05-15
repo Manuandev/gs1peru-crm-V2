@@ -1,11 +1,12 @@
 // lib\core\network\websocket\signalr_service.dart
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-
 import 'package:app_crm/core/index_core.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// Implementación del servicio SignalR.
 ///
@@ -58,11 +59,13 @@ class SignalRService implements ISignalRService {
       WebSocketConnectionState.disconnected;
 
   int _reconnectAttempts = 0;
+
   bool _isConnecting = false;
   bool _hasInternet = true;
+  bool _isStopping = false;
 
   static const Duration _heartbeatInterval = Duration(seconds: 15);
-  static const Duration _pingTimeout = Duration(seconds: 3);
+  static const Duration _pingTimeout = Duration(seconds: 8);
 
   // ─── Getters públicos ─────────────────────────────────────────────────────
 
@@ -98,6 +101,13 @@ class SignalRService implements ISignalRService {
         _hubConnection = _buildConnection();
         _registerHubHandlers();
 
+        debugPrint(
+          'Intentando conectar a SignalR (intento ${currentAttempt + 1})...',
+        );
+        debugPrint(
+          'Intentando conectar a SignalR URL: ${_hubConnection?.baseUrl}',
+        );
+
         final timeout = currentAttempt == 0
             ? const Duration(seconds: 3)
             : const Duration(seconds: 5);
@@ -116,6 +126,7 @@ class SignalRService implements ISignalRService {
         _reconnectAttempts = 0;
         _isConnecting = false;
         _emitState(WebSocketConnectionState.connected);
+        WakelockPlus.enable();
         _startHeartbeat();
         _startConnectivityMonitoring();
         return;
@@ -180,6 +191,7 @@ class SignalRService implements ISignalRService {
     _connectivitySubscription = null;
 
     await _stopCurrentConnection();
+    WakelockPlus.disable();
   }
 
   @override
@@ -218,18 +230,24 @@ class SignalRService implements ISignalRService {
   HubConnection _buildConnection() {
     final user = _session.user!;
 
+    // https://natcodee.net:9003/socket/?token=${$config.token}&tipoCliente=web&coduser=${$global.user.coduser}
     final connectionUrl =
         '${ApiConstants.urlWebSocket}'
-        '?clientType=mobile'
-        '&token=${user.token}'
-        '&client=${convertStringToHex(user.codUser)}';
+        '?token=${user.token}'
+        '&tipoCliente=mobile'
+        '&coduser=${user.codUser}';
 
-    return HubConnectionBuilder().withUrl(connectionUrl).build();
+    return HubConnectionBuilder().withUrl(connectionUrl).build()
+      ..serverTimeoutInMilliseconds =
+          60000 // ← 60s antes de considerar caída
+      ..keepAliveIntervalInMilliseconds = 10000; // ← ping nativo cada 10s
   }
 
   void _registerHubHandlers() {
     // Callback al cerrar la conexión inesperadamente
     _hubConnection!.onclose(({Exception? error}) async {
+      // FIX: si el cierre fue intencional, no reconectar
+      if (_isStopping) return;
       if (_currentState == WebSocketConnectionState.manuallyClosed) return;
 
       _stopHeartbeat();
@@ -245,6 +263,7 @@ class SignalRService implements ISignalRService {
     // Este handler solo parsea y emite al stream.
     // La lógica de negocio vive en los handlers de cada feature.
     _hubConnection!.on('broadcastMessage', (rawMessage) {
+      debugPrint('Mensaje recibido: $rawMessage');
       _handleIncomingMessage(rawMessage);
     });
   }
@@ -252,6 +271,8 @@ class SignalRService implements ISignalRService {
   // ─── Manejo de mensajes ───────────────────────────────────────────────────
 
   void _handleIncomingMessage(dynamic rawMessage) {
+    debugPrint('Mensaje recibido: $rawMessage');
+
     // Si llegó un mensaje, la conexión está viva
     if (!isConnected && _isHubConnected()) {
       _emitState(WebSocketConnectionState.connected);
@@ -362,8 +383,13 @@ class SignalRService implements ISignalRService {
   }
 
   Future<void> _stopCurrentConnection() async {
+    _isStopping = true;
+
     if (_hubConnection != null) {
       try {
+        // FIX: evita que stop() dispare onclose y programe una reconexión no deseada
+        _isStopping = true;
+        _hubConnection!.onclose(({Exception? error}) {});
         if (_hubConnection!.state == HubConnectionState.Connected ||
             _hubConnection!.state == HubConnectionState.Connecting) {
           await _hubConnection!.stop().timeout(
@@ -374,6 +400,7 @@ class SignalRService implements ISignalRService {
       } catch (_) {
       } finally {
         _hubConnection = null;
+        _isStopping = false;
       }
     }
   }
@@ -381,6 +408,10 @@ class SignalRService implements ISignalRService {
   void _onUnexpectedDisconnect() {
     _emitState(WebSocketConnectionState.disconnected);
     _stopHeartbeat();
+
+    // FIX: cancelar timer pendiente para evitar dos flujos de reconexión en paralelo
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
 
     if (_hasInternet &&
         _currentState != WebSocketConnectionState.manuallyClosed &&

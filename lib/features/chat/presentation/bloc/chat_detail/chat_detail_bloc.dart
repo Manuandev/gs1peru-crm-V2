@@ -42,7 +42,10 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   ) async {
     try {
       final messages = await _getChatMessages(idLead);
-      emit(ChatDetailSuccess(messages: messages, hasMore: messages.isNotEmpty));
+
+      final sorted = [...messages]..sort((a, b) => a.fecha.compareTo(b.fecha));
+
+      emit(ChatDetailSuccess(messages: sorted, hasMore: messages.isNotEmpty));
     } on AppException catch (e) {
       // ✅ FIX: error real → estado de error, no éxito vacío
       emit(ChatDetailFailure(e.message));
@@ -72,9 +75,13 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         idUltimoMensaje: event.idUltimoMensaje,
       );
 
+      // ✅ Merge y ordena ASC por fecha
+      final merged = [...newMessages, ...currentState.messages];
+      merged.sort((a, b) => a.fecha.compareTo(b.fecha));
+
       emit(
         ChatDetailSuccess(
-          messages: [...newMessages, ...currentState.messages],
+          messages: merged,
           hasMore: newMessages.isNotEmpty, // ← false si servidor devolvió vacío
         ),
       );

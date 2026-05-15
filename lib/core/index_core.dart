@@ -35,7 +35,6 @@ export 'network/interceptors/token_interceptor.dart';
 
 export 'network/websocket/i_signalr_service.dart';
 export 'network/websocket/signalr_service.dart';
-export 'network/websocket/websocket.dart';
 export 'network/websocket/websocket_connection_state.dart';
 export 'network/websocket/websocket_message.dart';
 export 'network/websocket/websocket_message_parser.dart';
@@ -80,6 +79,10 @@ export 'utils/date/date_formatter.dart';
 
 export 'utils/string/string_utils.dart';
 export 'utils/string/string_validators.dart';
+// ui
+export 'utils/ui/avatar_utils.dart';
+export 'utils/ui/avatar_extensions.dart';
+
 // #endregion utils
 
 // #region widgets

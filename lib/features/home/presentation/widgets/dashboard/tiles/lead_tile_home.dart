@@ -1,5 +1,3 @@
-// lead_tile.dart
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:flutter/material.dart';
@@ -8,92 +6,146 @@ class LeadTileHome extends StatelessWidget {
   final Lead lead;
   const LeadTileHome({super.key, required this.lead});
 
-  String _mesNumero(String mes) {
-    const meses = {
-      'Enero': '01',
-      'Febrero': '02',
-      'Marzo': '03',
-      'Abril': '04',
-      'Mayo': '05',
-      'Junio': '06',
-      'Julio': '07',
-      'Agosto': '08',
-      'Septiembre': '09',
-      'Octubre': '10',
-      'Noviembre': '11',
-      'Diciembre': '12',
-    };
-    return meses[mes] ?? '00';
+  bool _esHoy(Lead lead) {
+    final hoy = DateTime.now();
+    return lead.numDia == hoy.day.toString().padLeft(2, '0') &&
+        lead.anho == hoy.year.toString() &&
+        lead.mes == _mesNombre(hoy.month);
+  }
+
+  String _mesNombre(int mes) {
+    const nombres = [
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+    return nombres[mes];
   }
 
   @override
   Widget build(BuildContext context) {
-    final hoy = DateTime.now();
-    final diaHoy = hoy.day.toString().padLeft(2, '0');
-    final mesHoy = hoy.month.toString().padLeft(2, '0');
-    final anhoHoy = hoy.year.toString();
+    final colorScheme = Theme.of(context).colorScheme;
+    final esHoy = _esHoy(lead);
+    final fechaLabel = esHoy ? 'Hoy' : '${lead.numDia} ${lead.mes}';
+    final fuente = lead.dni.isEmpty ? 'Sin documento' : lead.dni;
 
-    final esHoy =
-        lead.numDia == diaHoy &&
-        lead.anho == anhoHoy &&
-        _mesNumero(lead.mes) == mesHoy;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.sm,
-        horizontal: AppSpacing.xs,
-      ),
-      child: Row(
-        children: [
-          // ── FECHA/HORA ────────────────────────────────────
-          Text(
-            '${esHoy ? "Hoy" : "${lead.numDia} ${lead.mes}"} ${lead.hora}',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-
-          // ── BADGE NUEVO ───────────────────────────────────
-          if (esHoy)
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.xs,
+        ),
+        child: Row(
+          children: [
+            // ── ICONO / INDICADOR ─────────────────────────────
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: Colors.amber.shade100,
-                borderRadius: BorderRadius.circular(AppSizing.radiusXs),
+                color: esHoy
+                    ? colorScheme.primaryContainer
+                    : colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                '↑Nuevo!',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: Colors.orange.shade800,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Icon(
+                esHoy ? Icons.person_add_rounded : Icons.person_outline_rounded,
+                size: 20,
+                color: esHoy
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurfaceVariant,
               ),
             ),
+            const SizedBox(width: AppSpacing.sm),
 
-          const SizedBox(width: AppSpacing.sm),
-
-          // ── ID + FUENTE ───────────────────────────────────
-          Expanded(
-            child: RichText(
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+            // ── CONTENIDO CENTRAL ─────────────────────────────
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextSpan(
-                    text: 'Lead ${lead.idLead}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      Text(
+                        'Lead ${lead.idLead}',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      if (esHoy) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Nuevo',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  TextSpan(
-                    text: ' — ${lead.dni.isEmpty ? "Sin fuente" : lead.dni}',
+                  const SizedBox(height: 2),
+                  Text(
+                    fuente,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: AppSpacing.sm),
+
+            // ── FECHA + HORA ──────────────────────────────────
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  fechaLabel,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: esHoy
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                    fontWeight: esHoy ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 11,
+                  ),
+                ),
+                Text(
+                  lead.hora,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

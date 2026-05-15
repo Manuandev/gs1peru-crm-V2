@@ -9,9 +9,13 @@ class ChatTileHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final initials = chat.nombreApe.initials;
+    final avatarBg = chat.nombreApe.avatarColor;
+
     return InkWell(
       onTap: () => context.goToDetalleChatDesdeHome(chat: chat),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           vertical: AppSpacing.sm,
@@ -19,32 +23,59 @@ class ChatTileHome extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // ── FECHA/HORA ────────────────────────────────────
-            Text(
-              chat.nombreApe,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            // ── AVATAR ────────────────────────────────────────
+            CircleAvatar(
+              radius: 22,
+              // ignore: deprecated_member_use
+              backgroundColor: avatarBg.withOpacity(0.15),
+              child: Text(
+                initials,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: avatarBg,
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            // ── ID + FUENTE ───────────────────────────────────
+
+            // ── CONTENIDO CENTRAL ─────────────────────────────
             Expanded(
-              child: RichText(
-                overflow: TextOverflow.ellipsis,
-                text: TextSpan(
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Nombre
+                  Text(
+                    chat.nombreApe,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  children: [
-                    TextSpan(
-                      text: chat.mensaje,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 2),
+                  // Mensaje preview
+                  Text(
+                    chat.mensaje,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                    TextSpan(
-                      text: chat.fechaHora.formatDate(AppDateFormat.shortDate),
-                    ),
-                  ],
-                ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+
+            // ── FECHA ─────────────────────────────────────────
+            Text(
+              chat.fechaHora.formatWhatsApp(),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 11,
               ),
             ),
           ],

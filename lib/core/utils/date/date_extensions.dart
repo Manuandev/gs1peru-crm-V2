@@ -5,11 +5,18 @@ extension DateTimeFormatting on DateTime {
   String format(AppDateFormat format) {
     return DateFormatter.format(date: this, format: format);
   }
+
+  String formatWhatsApp() {
+    return DateFormatter.formatWhatsApp(toIso8601String());
+  }
 }
 
 extension StringDateFormatting on String {
   String formatDate(AppDateFormat format) {
     return DateFormatter.formatFromString(dateString: this, dateFormat: format);
   }
-}
 
+  String formatWhatsApp() {
+    return DateFormatter.formatWhatsApp(this);
+  }
+}

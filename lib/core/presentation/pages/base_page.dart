@@ -251,10 +251,23 @@ class _FooterPages extends StatelessWidget {
           top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
         ),
       ),
-      child: Text(
-        '${AppConstants.nombreApp} - v${AppConstants.version}',
-        style: AppTextStyles.labelSmall,
-        textAlign: TextAlign.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '${AppConstants.nombreApp} - v${AppConstants.version}',
+            style: AppTextStyles.labelSmall,
+          ),
+          const SizedBox(width: 8),
+          StreamBuilder<WebSocketConnectionState>(
+            stream: SignalRService.instance.connectionStateStream,
+            initialData: SignalRService.instance.currentState,
+            builder: (context, snapshot) {
+              final state = snapshot.data!;
+              return _SocketChip(state: state);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -277,11 +290,48 @@ class _FooterCompact extends StatelessWidget {
           top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
         ),
       ),
-      child: Text(
-        '${AppConstants.nombreApp} - v${AppConstants.version}',
-        style: AppTextStyles.labelSmall,
-        textAlign: TextAlign.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '${AppConstants.nombreApp} - v${AppConstants.version}',
+            style: AppTextStyles.labelSmall,
+          ),
+          const SizedBox(width: 8),
+          StreamBuilder<WebSocketConnectionState>(
+            stream: SignalRService.instance.connectionStateStream,
+            initialData: SignalRService.instance.currentState,
+            builder: (context, snapshot) {
+              final state = snapshot.data!;
+              return _SocketChip(state: state);
+            },
+          ),
+        ],
       ),
     );
+  }
+}
+
+class _SocketChip extends StatelessWidget {
+  final WebSocketConnectionState state;
+  const _SocketChip({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (state) {
+      WebSocketConnectionState.connected => ('● En línea', Colors.green),
+      WebSocketConnectionState.connecting => ('● Conectando', Colors.orange),
+      WebSocketConnectionState.reconnecting => (
+        '● Reconectando',
+        Colors.orange,
+      ),
+      WebSocketConnectionState.disconnected => ('● Sin conexión', Colors.red),
+      WebSocketConnectionState.noInternet => ('● Sin internet', Colors.red),
+      WebSocketConnectionState.manuallyClosed => ('', Colors.transparent),
+    };
+
+    if (label.isEmpty) return const SizedBox.shrink();
+
+    return Text(label, style: AppTextStyles.labelSmall.copyWith(color: color));
   }
 }

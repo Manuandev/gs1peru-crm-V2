@@ -110,7 +110,7 @@ class _MobileCards extends StatelessWidget {
                       icon: Icons.access_time,
                       color: Colors.green,
                       badge: recordatoriosCount,
-                      onTap: context.goToRecordatorios,
+                      onTap: context.goToReminders,
                     ),
                   ),
                   SizedBox(width: AppSpacing.xs),
@@ -167,7 +167,7 @@ class _GridCards extends StatelessWidget {
         Icons.access_time,
         Colors.green,
         badge: recordatoriosCount,
-        onTap: context.goToRecordatorios,
+        onTap: context.goToReminders,
       ),
       _CardData('Cobranza', Icons.attach_money, Colors.purple, onTap: () {}),
     ];

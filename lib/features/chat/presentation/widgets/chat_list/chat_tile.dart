@@ -10,52 +10,6 @@ class ChatTile extends StatelessWidget {
 
   const ChatTile({super.key, required this.chat, this.onTap});
 
-  // ─── Fecha estilo WhatsApp ─────────────────────────────────────
-  // Hoy     → "20:24"
-  // Ayer    → "Ayer"
-  // <7 días → "miércoles"
-  // Resto   → "26/03/2025"
-  String _formatFecha(String fechaHora) {
-  if (fechaHora.isEmpty) return '';
-  final fecha = DateFormatter.parseDate(fechaHora);
-  if (fecha == null) return '';
-
-  final ahora = DateTime.now();
-  final hoy = DateTime(ahora.year, ahora.month, ahora.day);
-  final diaFecha = DateTime(fecha.year, fecha.month, fecha.day);
-  final diferencia = hoy.difference(diaFecha).inDays;
-
-  if (diferencia == 0) return fechaHora.formatDate(AppDateFormat.hourMinute);
-  if (diferencia == 1) return 'Ayer';
-  if (diferencia < 7) return fechaHora.formatDate(AppDateFormat.weekdayOnly);
-  return fechaHora.formatDate( AppDateFormat.shortDate);
-}
-
-  // ─── Iniciales del nombre ──────────────────────────────────────
-  String _initials(String nombre) {
-    final partes = nombre.trim().split(' ');
-    if (partes.length >= 2) {
-      return '${partes[0][0]}${partes[1][0]}'.toUpperCase();
-    }
-    return nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
-  }
-
-  // ─── Color dinámico por nombre ────────────────────────────────
-  Color _avatarColor(String nombre) {
-    const colores = [
-      Color(0xFF1976D2),
-      Color(0xFF388E3C),
-      Color(0xFFD32F2F),
-      Color(0xFF7B1FA2),
-      Color(0xFFF57C00),
-      Color(0xFF0097A7),
-      Color(0xFF5D4037),
-      Color(0xFF455A64),
-    ];
-    final index = nombre.isNotEmpty ? nombre.codeUnitAt(0) % colores.length : 0;
-    return colores[index];
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -120,9 +74,9 @@ class ChatTile extends StatelessWidget {
                 // ─── Avatar ───────────────────────────────────────
                 CircleAvatar(
                   radius: avatarRadius,
-                  backgroundColor: _avatarColor(chat.nombreApe),
+                  backgroundColor: AvatarUtils.color(chat.nombreApe),
                   child: Text(
-                    _initials(chat.nombreApe),
+                    AvatarUtils.initials(chat.nombreApe),
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -156,7 +110,7 @@ class ChatTile extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _formatFecha(chat.fechaHora),
+                            chat.fechaHora.formatWhatsApp(),
                             style: TextStyle(
                               fontSize: fechaSize,
                               color: Colors.grey.shade500,

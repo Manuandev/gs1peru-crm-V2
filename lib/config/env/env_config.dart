@@ -10,7 +10,7 @@ class EnvConfig {
   static String get baseUrl {
     switch (current) {
       case Environment.dev:
-        return 'https://c9f8-161-132-10-146.ngrok-free.app/'; // URL DE DEV
+        return 'https://3ad3-161-132-10-146.ngrok-free.app/'; // URL DE DEV
       case Environment.qa:
         return 'https://natcodee.net:40805/gs1pe_interfaz/'; // URL DE QA
       case Environment.prod:
@@ -32,11 +32,11 @@ class EnvConfig {
   static String get urlWebSocket {
     switch (current) {
       case Environment.dev:
-        return 'wss://natcodee.net:9002/'; // URL DE DEV
+        return ''; // URL DE DEV
       case Environment.qa:
-        return 'wss://natcodee.net:9002/'; // URL DE QA
+        return 'https://natcodee.net:9002/socket/'; // URL DE QA
       case Environment.prod:
-        return 'wss://intranet.gs1pe.org.pe:9005/'; // URL DE PRODUCCION
+        return ''; // URL DE PRODUCCION
     }
   }
 

@@ -6,4 +6,5 @@ enum AppDateFormat {
   fullTextDate,
   weekdayOnly,
   monthOnly,
+  whatsapp, // 👈 nuevo
 }

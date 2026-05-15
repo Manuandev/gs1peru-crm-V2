@@ -20,6 +20,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   bool _isLoadingMore = false;
   bool _isInitialLoad = true;
   bool _showScrollDown = false;
+  DateTime? _lastLoadMoreTime;
 
   @override
   void initState() {
@@ -55,6 +56,15 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     if (state is! ChatDetailSuccess) return;
     if (!state.hasMore) return;
     if (_isLoadingMore) return;
+
+    // ✅ Debounce: evita múltiples disparos en menos de 500ms
+    final now = DateTime.now();
+    if (_lastLoadMoreTime != null &&
+        now.difference(_lastLoadMoreTime!) <
+            const Duration(milliseconds: 500)) {
+      return;
+    }
+    _lastLoadMoreTime = now;
 
     _isLoadingMore = true;
     context.read<ChatDetailBloc>().add(
@@ -113,6 +123,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                         _isInitialLoad = false;
                         _scrollToBottom(animated: false);
                       }
+                      // ✅ Reset aquí, no antes
+                      _isLoadingMore = false;
                       _isLoadingMore = false;
                     }
                     if (state is ChatDetailFailure) {

@@ -7,8 +7,9 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/home/index_home.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/reminder/index_reminder.dart';
-import 'package:app_crm/features/settings/presentation/pages/settings_page.dart';
+import 'package:app_crm/features/settings/index_settings.dart';
 import 'package:flutter/material.dart';
 
 /// Sistema de routing principal
@@ -54,6 +55,7 @@ class AppRouter {
   // ── PRINCIPALES ───────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _mainRoutes = {
     AppRoutes.home: (_) => const HomePage(),
+    AppRoutes.leads: (_) => const LeadListPage(),
     AppRoutes.recordatorios: (_) => const ReminderListPage(),
     AppRoutes.chats: (_) => const ChatListPage(),
     AppRoutes.settings: (_) => const SettingsPage(),

@@ -1,7 +1,8 @@
-// lib/core/presentation/widgets/exit_on_back_wrapper.dart
+// lib/features/home/presentation/widgets/exit_on_back_wrapper.dart
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/config/router/navigation_extensions.dart';
+import 'package:flutter/services.dart'; // SystemNavigator
 
 class ExitOnBackWrapper extends StatelessWidget {
   final Widget child;
@@ -21,9 +22,9 @@ class ExitOnBackWrapper extends StatelessWidget {
           cancelText: 'Cancelar',
         );
 
-        if (confirmed) {
-          // ignore: use_build_context_synchronously
-          Navigator.of(context).pop();
+        if (confirmed == true) {
+          // ✅ Cierra la app de verdad — sin pantalla negra
+          SystemNavigator.pop();
         }
       },
       child: child,

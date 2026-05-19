@@ -48,9 +48,14 @@ class HomePage extends StatelessWidget {
               context.showErrorSnack(state.message);
             } else if (state is HomeLoaded) {
               context.updateBadge(
-                leads: state.leads.length,
-                chats: state.chats.length,
-                reminders: state.reminders.length,
+                conversaciones: state.chats.length,
+                // prospectos: state.prospectos.length,
+                // propuestas: state.propuestas.length,
+                // cobranzas: state.cobranzas.length,
+
+                // leads: state.leads.length,
+                // chats: state.chats.length,
+                // reminders: state.reminders.length,
               );
             }
           },

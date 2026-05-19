@@ -23,9 +23,10 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
         userName: user.codUser,
         userApe: user.userApe,
         userSubtitle: user.correoUser,
-        unreadChats: previous?.unreadChats ?? 0,
-        pendingReminders: previous?.pendingReminders ?? 0,
-        newLeads: previous?.newLeads ?? 0,
+        conversaciones: previous?.conversaciones ?? 0,
+        prospectos: previous?.prospectos ?? 0,
+        propuestas: previous?.propuestas ?? 0,
+        cobranzas: previous?.cobranzas ?? 0,
       ),
     );
   }
@@ -40,9 +41,12 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
     // copyWithBadges — no repetimos todos los campos
     emit(
       current.copyWithBadges(
-        unreadChats: event.unreadChats,
-        pendingReminders: event.pendingReminders,
-        newLeads: event.newLeads,
+        conversaciones: event.conversaciones,
+        // pendingReminders: event.prospectos,
+        // newLeads: event.propuestas,
+        prospectos: event.prospectos,
+        propuestas: event.propuestas,
+        cobranzas: event.cobranzas,
       ),
     );
   }

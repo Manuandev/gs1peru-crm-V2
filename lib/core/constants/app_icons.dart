@@ -143,7 +143,9 @@ class AppIcons {
   // ARCHIVOS Y DOCUMENTOS
   // ============================================================
   /// Archivo genérico outline
-  static const IconData file = Icons.insert_drive_file_outlined;
+  static const IconData file = Icons.insert_drive_file;
+
+  static const IconData fileOutlined = Icons.insert_drive_file_outlined;
 
   /// Carpeta outline — directorio
   static const IconData folder = Icons.folder_outlined;
@@ -228,6 +230,9 @@ class AppIcons {
   // ============================================================
   /// Carrito de compras outline
   static const IconData cart = Icons.shopping_cart_outlined;
+
+  /// Carrito de compras outline
+  static const IconData moneda = Icons.monetization_on_outlined;
 
   /// Pago — método de pago
   static const IconData payment = Icons.payment_outlined;

@@ -21,7 +21,7 @@
 // ============================================================
 
 import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/core/index_core.dart';
+// import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,7 +40,7 @@ class ReminderListPage extends StatelessWidget {
           if (state is ReminderListError) {
             context.showErrorSnack(state.message);
           } else if (state is ReminderListLoaded) {
-            context.updateBadge(reminders: state.reminders.length);
+            // context.updateBadge(reminders: state.reminders.length);
           }
         },
         child: const ReminderListView(),

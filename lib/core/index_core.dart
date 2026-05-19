@@ -15,8 +15,6 @@ export 'constants/app_spacing.dart';
 // #region database
 export 'database/i_local_database.dart';
 export 'database/local_database.dart';
-
-export 'models/user_model.dart';
 // #endregion database
 
 export 'errors/app_exception.dart';
@@ -24,6 +22,12 @@ export 'errors/app_exception.dart';
 export 'extensions/badge_extensions.dart';
 
 export 'mixins/double_back_to_exit_mixin.dart';
+
+
+// #region models
+export 'models/combo_item.dart';
+export 'models/user_model.dart';
+// #endregion models
 
 // #region network
 export 'network/api_client.dart';
@@ -56,6 +60,10 @@ export 'presentation/widgets/buttons/custom_text_button.dart';
 export 'presentation/widgets/inputs/custom_email_field.dart';
 export 'presentation/widgets/inputs/custom_password_field.dart';
 export 'presentation/widgets/inputs/custom_text_field.dart';
+
+export 'presentation/widgets/inputs/custom_combo_field.dart';
+export 'presentation/widgets/inputs/custom_combo_search_field.dart';
+export 'presentation/widgets/inputs/custom_combo_multi_search_field.dart';
 
 export 'presentation/widgets/navigation/app_drawer_widget.dart';
 export 'presentation/widgets/navigation/custom_app_bar.dart';

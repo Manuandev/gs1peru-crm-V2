@@ -2,7 +2,6 @@
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:flutter/material.dart';
 
 /// Ítems del menú principal (Drawer)
 ///
@@ -26,7 +25,7 @@ class AppMenuItems {
 
   static const DrawerItemModel home = DrawerItemModel(
     id: AppRoutes.home,
-    icon: AppIcons.homeFilled,
+    icon: AppIcons.home,
     label: 'Inicio',
     route: AppRoutes.home,
     showDividerAfter: true,
@@ -41,27 +40,39 @@ class AppMenuItems {
 
   static const List<DrawerItemModel> mainItems = [
     home,
+    // DrawerItemModel(
+    //   id: AppRoutes.leads,
+    //   icon: Icons.people_outline,
+    //   label: 'Leads',
+    //   route: AppRoutes.leads,
+    // ),
+    // DrawerItemModel(
+    //   id: AppRoutes.recordatorios,
+    //   icon: Icons.alarm_outlined,
+    //   label: 'Recordatorios',
+    //   route: AppRoutes.recordatorios,
+    // ),
     DrawerItemModel(
-      id: AppRoutes.leads,
-      icon: Icons.people_outline,
-      label: 'Leads',
-      route: AppRoutes.leads,
-    ),
-    DrawerItemModel(
-      id: AppRoutes.recordatorios,
-      icon: Icons.alarm_outlined,
-      label: 'Recordatorios',
-      route: AppRoutes.recordatorios,
+      id: AppRoutes.chats,
+      icon: AppIcons.message,
+      label: 'Conversaciones',
+      route: AppRoutes.chats,
     ),
     DrawerItemModel(
       id: AppRoutes.chats,
-      icon: Icons.chat_bubble_outline,
-      label: 'Chats',
+      icon: AppIcons.user,
+      label: 'Prospectos',
+      route: AppRoutes.chats,
+    ),
+    DrawerItemModel(
+      id: AppRoutes.chats,
+      icon: AppIcons.fileOutlined,
+      label: 'Propuestas',
       route: AppRoutes.chats,
     ),
     DrawerItemModel(
       id: AppRoutes.cobranza,
-      icon: Icons.payments_outlined,
+      icon: AppIcons.moneda,
       label: 'Cobranza',
       route: AppRoutes.cobranza,
     ),
@@ -79,40 +90,54 @@ class AppMenuItems {
   // ============================================================
 
   static List<DrawerItemModel> withBadges({
-    int? chatsBadge,
-    int? remindersBadge,
-    int? leadsBadge,
-    int? cobranzaBadge,
+    int? conversacionesBadge,
+    int? prospectosBadge,
+    int? propuestasBadge,
+    int? cobranzasBadge,
   }) {
     return [
       home,
+      // DrawerItemModel(
+      //   id: AppRoutes.leads,
+      //   icon: Icons.people_outline,
+      //   label: 'Leads',
+      //   route: AppRoutes.leads,
+      //   badge: leadsBadge,
+      // ),
+      // DrawerItemModel(
+      //   id: AppRoutes.recordatorios,
+      //   icon: Icons.alarm_outlined,
+      //   label: 'Recordatorios',
+      //   route: AppRoutes.recordatorios,
+      //   badge: remindersBadge,
+      // ),
       DrawerItemModel(
-        id: AppRoutes.leads,
-        icon: Icons.people_outline,
-        label: 'Leads',
-        route: AppRoutes.leads,
-        badge: leadsBadge,
-      ),
-      DrawerItemModel(
-        id: AppRoutes.recordatorios,
-        icon: Icons.alarm_outlined,
-        label: 'Recordatorios',
-        route: AppRoutes.recordatorios,
-        badge: remindersBadge,
+        id: AppRoutes.chats,
+        icon: AppIcons.message,
+        label: 'Conversaciones',
+        route: AppRoutes.chats,
+        badge: conversacionesBadge,
       ),
       DrawerItemModel(
         id: AppRoutes.chats,
-        icon: Icons.chat_bubble_outline,
-        label: 'Chats',
+        icon: AppIcons.user,
+        label: 'Prospectos',
         route: AppRoutes.chats,
-        badge: chatsBadge,
+        badge: prospectosBadge,
+      ),
+      DrawerItemModel(
+        id: AppRoutes.chats,
+        icon: AppIcons.fileOutlined,
+        label: 'Propuestas',
+        route: AppRoutes.chats,
+        badge: propuestasBadge,
       ),
       DrawerItemModel(
         id: AppRoutes.cobranza,
-        icon: Icons.payments_outlined,
+        icon: AppIcons.moneda,
         label: 'Cobranza',
         route: AppRoutes.cobranza,
-        badge: cobranzaBadge,
+        badge: cobranzasBadge,
       ),
     ];
   }

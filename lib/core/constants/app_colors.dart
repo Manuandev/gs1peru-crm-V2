@@ -20,10 +20,10 @@ class AppColors {
   // ============================================================
 
   /// Color principal de la marca - Azul corporativo GS1
-  static const Color primary = Color(0xFF005DAA);
+  static const Color primary = Color(0xFF002C6C);
 
   /// Color secundario - Naranja corporativo GS1
-  static const Color secondary = Color(0xFFF58220);
+  static const Color secondary = Color(0xFFF26334);
 
   /// Color de acento si lo crees necesario
   //static const Color accent = Color(0xFFF58220);

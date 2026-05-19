@@ -13,37 +13,41 @@ class DrawerLoaded extends DrawerState {
   final String userApe;
   final String? userSubtitle;
   final String? userAvatarUrl;
-  final int unreadChats;
-  final int pendingReminders;
-  final int newLeads;
+  final int conversaciones;
+  final int prospectos;
+  final int propuestas;
+  final int cobranzas;
 
   const DrawerLoaded({
     required this.userName,
     required this.userApe,
     this.userSubtitle,
     this.userAvatarUrl,
-    this.unreadChats = 0,
-    this.pendingReminders = 0,
-    this.newLeads = 0,
+    this.conversaciones = 0,
+    this.prospectos = 0,
+    this.propuestas = 0,
+    this.cobranzas = 0,
   });
 
   bool get hasBadges =>
-      unreadChats > 0 || pendingReminders > 0 || newLeads > 0;
+      conversaciones > 0 || prospectos > 0 || propuestas > 0 || cobranzas > 0;
 
   // Para actualizar solo los badges sin repetir todos los campos
   DrawerLoaded copyWithBadges({
-    int? unreadChats,
-    int? pendingReminders,
-    int? newLeads,
+    int? conversaciones,
+    int? prospectos,
+    int? propuestas,
+    int? cobranzas,
   }) {
     return DrawerLoaded(
       userName: userName,
       userApe: userApe,
       userSubtitle: userSubtitle,
       userAvatarUrl: userAvatarUrl,
-      unreadChats: unreadChats ?? this.unreadChats,
-      pendingReminders: pendingReminders ?? this.pendingReminders,
-      newLeads: newLeads ?? this.newLeads,
+      conversaciones: conversaciones ?? this.conversaciones,
+      prospectos: prospectos ?? this.prospectos,
+      propuestas: propuestas ?? this.propuestas,
+      cobranzas: cobranzas ?? this.cobranzas,
     );
   }
 }

@@ -119,9 +119,10 @@ class _DrawerContent extends StatelessWidget {
     if (state is! DrawerLoaded) return AppMenuItems.mainItems;
 
     return AppMenuItems.withBadges(
-      chatsBadge: state.unreadChats,
-      remindersBadge: state.pendingReminders,
-      leadsBadge: state.newLeads,
+      conversacionesBadge: state.conversaciones,
+      prospectosBadge: state.prospectos,
+      propuestasBadge: state.propuestas,
+      cobranzasBadge: state.cobranzas,
     );
   }
 }

@@ -21,7 +21,7 @@
 // ============================================================
 
 import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/core/index_core.dart';
+// import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,7 +40,7 @@ class LeadListPage extends StatelessWidget {
           if (state is LeadListError) {
             context.showErrorSnack(state.message);
           } else if (state is LeadListLoaded) {
-            context.updateBadge(leads: state.leads.length);
+            // context.updateBadge(leads: state.leads.length);
           }
         },
         child: const LeadListView(),

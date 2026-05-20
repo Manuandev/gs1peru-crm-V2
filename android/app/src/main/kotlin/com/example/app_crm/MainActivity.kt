@@ -1,4 +1,4 @@
-package com.gs1peru.app_crm
+package com.gs1peru.crm
 
 import io.flutter.embedding.android.FlutterActivity
 

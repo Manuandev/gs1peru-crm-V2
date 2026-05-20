@@ -12,7 +12,7 @@ import 'websocket_message.dart';
 ///   ¦  →  separa campos dentro de un registro
 class WebSocketMessageParser {
   // Separadores del protocolo — centralizado aquí para fácil mantenimiento
-  static const String _processSeparator = '¯';
+  static const String _processSeparator = '±';
   static const String _recordSeparator = '¬';
   static const String _fieldSeparator = '¦';
 

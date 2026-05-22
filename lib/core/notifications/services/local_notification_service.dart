@@ -1,7 +1,7 @@
 // lib/core/notifications/services/local_notification_service.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:app_crm/core/notifications/index_notifications.dart';
 
 const AndroidNotificationChannel _channel = AndroidNotificationChannel(
   'app_crm_channel',
@@ -48,6 +48,39 @@ class LocalNotificationService {
         ?.requestNotificationsPermission();
 
     _initialized = true;
+  }
+
+  Future<void> initBackground() async {
+    if (_initialized) return;
+
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    await flutterLocalNotificationsPlugin.initialize(
+      settings: const InitializationSettings(android: android),
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        if (response.payload == null || response.payload!.isEmpty) return;
+        final notif = AppNotification.fromPayloadString(response.payload!);
+        NotificationNavigator.instance.navigate(notif);
+      },
+      onDidReceiveBackgroundNotificationResponse: _onBackgroundTap,
+    );
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(_channel);
+
+    _initialized = true;
+  }
+
+  /// Separado — pide permiso con UI ya visible
+  Future<void> requestPermissions() async {
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
   }
 
   Future<void> show(AppNotification notif) async {

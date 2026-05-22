@@ -1,16 +1,51 @@
 // lib/core/notifications/handlers/notification_handler.dart
 
 import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/core/network/websocket/websocket_message.dart';
-import 'package:app_crm/core/notifications/index_notifications.dart';
+import 'package:app_crm/core/index_core.dart';
 
 class NotificationHandler {
   NotificationHandler._();
   static final NotificationHandler instance = NotificationHandler._();
 
-  void handle(WebSocketMessage message) {
+  void show(WebSocketMessage message) {
     final notif = _parse(message);
     if (notif != null) NotificationService.instance.show(notif);
+  }
+
+  void handle(WebSocketMessage message) {
+    final notif = _parse(message);
+    if (notif == null) return;
+    if (_isSuppressed(message)) return; // 👈 única línea nueva en handle()
+    NotificationService.instance.show(notif);
+  }
+
+  bool _isSuppressed(WebSocketMessage message) {
+    final String? route = AppRouteObserver.instance.currentRoute;
+
+    return switch (message.process) {
+      'MENSAJE_WHATSAPP' => _suppressWhatsApp(route, message),
+      'NUEVO_LEAD' => route == AppRoutes.leads,
+      'RECORDATORIO' => route == AppRoutes.recordatorios,
+      _ => false,
+    };
+  }
+
+  bool _suppressWhatsApp(String? route, WebSocketMessage message) {
+    if (route == AppRoutes.chats) return true;
+
+    if (route == AppRoutes.detalleChat) {
+      final String? activeId = AppRouteObserver.instance.activeLeadId;
+      final String? incomingId = _extractLeadId(message);
+      return activeId != null && activeId == incomingId;
+    }
+
+    return false;
+  }
+
+  String? _extractLeadId(WebSocketMessage message) {
+    if (message.records.isEmpty) return null;
+    final f = message.records.first;
+    return f.length > 2 ? f[2].trim() : null;
   }
 
   AppNotification? _parse(WebSocketMessage message) {

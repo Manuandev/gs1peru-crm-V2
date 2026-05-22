@@ -110,6 +110,7 @@ class AppWidget extends StatelessWidget {
                 // ── ROUTER ──────────────────────────────────────
                 // NavigatorKey permite navegar sin context (desde servicios, blocs, etc.)
                 navigatorKey: NavigationService.navigatorKey,
+                navigatorObservers: [AppRouteObserver.instance],
                 initialRoute: AppRoutes.splash,
                 onGenerateRoute: AppRouter.onGenerateRoute,
 

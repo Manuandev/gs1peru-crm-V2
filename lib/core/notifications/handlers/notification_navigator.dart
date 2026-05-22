@@ -1,7 +1,7 @@
 // lib/core/notifications/handlers/notification_navigator.dart
 
 import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/core/notifications/index_notifications.dart';
+import 'package:app_crm/core/index_core.dart';
 
 class NotificationNavigator {
   NotificationNavigator._();

@@ -15,54 +15,44 @@ class ChatDetailView extends StatefulWidget {
 }
 
 class _ChatDetailViewState extends State<ChatDetailView> {
-  final ScrollController _scrollController = ScrollController();
+  final _scroll = ChatScrollController();
   final AudioController _audioController = AudioController();
   bool _isLoadingMore = false;
   bool _isInitialLoad = true;
   bool _showScrollDown = false;
   DateTime? _lastLoadMoreTime;
 
-  // 👇 Agrega esta variable al State
-  double _scrollOffsetAntesDeCarga = 0;
-  // 👇 Cambia la variable
-  double _pixelsAntesDeCarga = 0;
-
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    _scroll.controller.addListener(_onScroll);
+    AppRouteObserver.instance.setActiveLead(widget.idLead);
+    context.read<InfoLeadCubit>().load(widget.idLead);
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    AppRouteObserver.instance.setActiveLead(null);
+    _scroll.dispose();
     _audioController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
-    // ── Botón scroll down ──────────────────────────────
-    final atBottom =
-        _scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 100;
+    final pos = _scroll.controller.position;
 
-    final shouldShow = !atBottom; // ← mostrar cuando NO está al fondo
-    if (_showScrollDown != shouldShow) {
-      setState(() => _showScrollDown = shouldShow);
+    // botón scroll down
+    final atBottom = pos.pixels >= pos.maxScrollExtent - 100;
+    if (_showScrollDown == atBottom) {
+      setState(() => _showScrollDown = !atBottom);
     }
 
-    // ── Paginación ─────────────────────────────────────
-    if (_scrollController.position.pixels >
-        _scrollController.position.minScrollExtent + 80) {
-      return;
-    }
+    // paginación
+    if (pos.pixels > pos.minScrollExtent + 80) return;
 
     final state = context.read<ChatDetailBloc>().state;
-    if (state is! ChatDetailSuccess) return;
-    if (!state.hasMore) return;
-    if (_isLoadingMore) return;
+    if (state is! ChatDetailSuccess || !state.hasMore || _isLoadingMore) return;
 
-    // ✅ Debounce: evita múltiples disparos en menos de 500ms
     final now = DateTime.now();
     if (_lastLoadMoreTime != null &&
         now.difference(_lastLoadMoreTime!) <
@@ -71,37 +61,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     }
     _lastLoadMoreTime = now;
 
-    final mensajeMasAntiguo = state.messages.first.idMensaje;
-
-    // 👇 En _onScroll, guarda el offset ANTES de disparar la carga
-    _scrollOffsetAntesDeCarga = _scrollController.position.maxScrollExtent;
-    _pixelsAntesDeCarga = _scrollController.position.pixels;
+    // ← guardar ANTES de disparar el evento
+    _scroll.guardarPosicionAntes();
     _isLoadingMore = true;
+
     context.read<ChatDetailBloc>().add(
       ChatDetailMoreMessagesLoaded(
         idLead: widget.idLead,
-        idUltimoMensaje: mensajeMasAntiguo,
+        idUltimoMensaje: state.messages.first.idMensaje,
       ),
     );
-  }
-
-  void _scrollToBottom({bool animated = true}) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-
-      // Forzar el extent más reciente
-      final maxExtent = _scrollController.position.maxScrollExtent;
-
-      if (animated) {
-        _scrollController.animateTo(
-          maxExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      } else {
-        _scrollController.jumpTo(maxExtent);
-      }
-    });
   }
 
   @override
@@ -206,19 +175,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     if (state is ChatDetailSuccess) {
                       if (_isInitialLoad) {
                         _isInitialLoad = false;
-                        _scrollToBottom(animated: false);
+                        _scroll.irAlFondo(animated: false);
                       } else if (_isLoadingMore) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (!_scrollController.hasClients) return;
-                          final nuevoMaxExtent =
-                              _scrollController.position.maxScrollExtent;
-                          final anteriorMaxExtent = _scrollOffsetAntesDeCarga;
-                          final alturaNuevosMensajes =
-                              nuevoMaxExtent - anteriorMaxExtent;
-                          _scrollController.jumpTo(
-                            _pixelsAntesDeCarga + alturaNuevosMensajes,
-                          );
-                        });
+                        _scroll.restaurarPosicionDespuesDeCarga();
                       }
                       _isLoadingMore = false;
                     }
@@ -261,11 +220,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
                     return MessageList(
                       messages: messages,
-                      scrollController: _scrollController,
+                      scrollController: _scroll.controller,
                       isLoadingMore: isLoadingMore,
                       audioController: _audioController,
                       idLead: widget.idLead,
-                      blockScroll: _isLoadingMore,
                     );
                   },
                 ),
@@ -276,12 +234,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     bottom: 8,
                     right: 12,
                     child: GestureDetector(
-                      onTap: () {
-                        if (!_scrollController.hasClients) return;
-                        _scrollController.jumpTo(
-                          _scrollController.position.maxScrollExtent,
-                        );
-                      },
+                      onTap: () => _scroll.irAlFondo(),
                       child: Container(
                         width: 36,
                         height: 36,
@@ -316,7 +269,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           ),
           // ── Input bar ──────────────────────────────────────
           ChatInputBar(
-            onScrollToBottom: () => _scrollToBottom(),
+            onScrollToBottom: () => _scroll.irAlFondo(),
             audioController: _audioController,
           ),
         ],

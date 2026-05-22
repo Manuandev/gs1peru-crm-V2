@@ -1,14 +1,17 @@
 // lib\features\chat\presentation\widgets\chat_detail\message_bubble.dart
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:get_video_thumbnail/index.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:get_video_thumbnail/get_video_thumbnail.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MessageBubble — burbuja principal
@@ -195,7 +198,7 @@ class _BubbleTimeRow extends StatelessWidget {
         ),
         if (isEnviado) ...[
           const SizedBox(width: 4),
-          _StatusIcon(
+          MessageStatusIcon(
             estado: estado,
             color: isOverImage ? Colors.white : textColor,
           ),
@@ -222,46 +225,6 @@ class _BubbleTimeRow extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
       child: content,
     );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// _StatusIcon — ✓ ✓✓ leído
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _StatusIcon extends StatelessWidget {
-  final String estado;
-  final Color color;
-
-  const _StatusIcon({required this.estado, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    // ignore: deprecated_member_use
-    final dimColor = color.withOpacity(0.65);
-
-    switch (estado) {
-      case 'wait':
-        return Icon(Icons.access_time_rounded, size: 12, color: dimColor);
-      case 'sent':
-        return Icon(Icons.check_rounded, size: 14, color: dimColor);
-      case 'delivered':
-        return Icon(Icons.done_all_rounded, size: 14, color: dimColor);
-      case 'read':
-        return Icon(
-          Icons.done_all_rounded,
-          size: 14,
-          color: Colors.lightBlue.shade300,
-        );
-      case 'failed':
-        return Icon(
-          Icons.error_outline_rounded,
-          size: 14,
-          color: Colors.red.shade400,
-        );
-      default:
-        return Icon(Icons.check_rounded, size: 14, color: dimColor);
-    }
   }
 }
 
@@ -381,6 +344,8 @@ class _VideoContent extends StatelessWidget {
 
   const _VideoContent({required this.message, required this.idLead});
 
+  bool get _isLocal => message.idChatCab.isEmpty;
+
   @override
   Widget build(BuildContext context) {
     final size = ResponsiveHelper.getValue<double>(
@@ -390,47 +355,169 @@ class _VideoContent extends StatelessWidget {
       desktop: 320,
     );
 
+    final url = _isLocal
+        ? message.mensaje
+        : MessageUrlHelper.buildFileUrl(message, idLead);
+
     return GestureDetector(
-      onTap: () {},
-      child: Container(
+      onTap: () {
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (_, _, _) => VideoViewerPage(
+              url: url,
+              fileName: '${message.nomArchivo}${message.extArchivo}',
+            ),
+            transitionsBuilder: (_, animation, _, child) =>
+                FadeTransition(opacity: animation, child: child),
+          ),
+        );
+      },
+      child: _VideoThumbnailWidget(
+        url: url,
         width: size,
         height: size * 0.65,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade800,
-          borderRadius: BorderRadius.circular(8),
-        ),
+        fileName: '${message.nomArchivo}${message.extArchivo}',
+      ),
+    );
+  }
+}
+
+// Widget separado porque necesita estado para el thumbnail
+class _VideoThumbnailWidget extends StatefulWidget {
+  final String url;
+  final double width;
+  final double height;
+  final String fileName;
+
+  const _VideoThumbnailWidget({
+    required this.url,
+    required this.width,
+    required this.height,
+    required this.fileName,
+  });
+
+  @override
+  State<_VideoThumbnailWidget> createState() => _VideoThumbnailWidgetState();
+}
+
+class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
+  Uint8List? _thumbnail;
+  bool _loadingThumb = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateThumbnail();
+  }
+
+  Future<void> _generateThumbnail() async {
+    try {
+      final bytes = await VideoThumbnail.thumbnailData(
+        video: widget.url,
+        imageFormat: ImageFormat.JPEG,
+        maxWidth: widget.width.toInt(),
+        quality: 75,
+      );
+      if (mounted) {
+        setState(() {
+          _thumbnail = bytes;
+          _loadingThumb = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('THUMBNAIL ERROR: $e'); // ← agrega esto
+      if (mounted) setState(() => _loadingThumb = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
         child: Stack(
-          alignment: Alignment.center,
+          fit: StackFit.expand,
           children: [
-            Icon(Icons.videocam_rounded, size: 48, color: Colors.white24),
+            // Fondo: thumbnail, loading, o fallback
+            if (_loadingThumb)
+              // 👇 ESTO ES LO QUE CAMBIA — circulo mientras carga
+              Container(
+                color: Colors.grey.shade800,
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white54,
+                  ),
+                ),
+              )
+            else if (_thumbnail != null)
+              Image.memory(_thumbnail!, fit: BoxFit.cover)
+            else
+              // fallback si falla el thumbnail
+              Container(
+                color: Colors.grey.shade800,
+                child: const Icon(
+                  Icons.videocam_rounded,
+                  size: 48,
+                  color: Colors.white24,
+                ),
+              ),
 
-            // Botón play
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.5),
-                shape: BoxShape.circle,
+            // Overlay gradient (solo si hay thumbnail)
+            if (!_loadingThumb)
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    // ignore: deprecated_member_use
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 32,
-              ),
-            ),
 
-            // Nombre del archivo
-            Positioned(
-              bottom: 8,
-              left: 8,
-              right: 8,
-              child: Text(
-                '${message.nomArchivo}${message.extArchivo}',
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
+            // Botón play (solo si no está cargando)
+            if (!_loadingThumb)
+              Center(
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
+                    color: Colors.black.withOpacity(0.55),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white30, width: 1.5),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                ),
               ),
-            ),
+
+            // Nombre del archivo (solo si no está cargando)
+            if (!_loadingThumb)
+              Positioned(
+                bottom: 8,
+                left: 8,
+                right: 8,
+                child: Text(
+                  widget.fileName,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

@@ -1,6 +1,5 @@
 // lib\main.dart
 
-import 'package:app_crm/core/notifications/index_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +21,8 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
   // ── NOTIFICACIONES ───────────────────────────────────────────
-  await NotificationService.instance.init();
+  NotificationService.instance.initBackground();
+  // await NotificationService.instance.init();
 
   await DateFormatter.initialize(locale: 'es');
 
@@ -44,6 +44,8 @@ void main() async {
   // ✅ Empieza a recolectar info del dispositivo en segundo plano
   // SIN await — no bloquea nada, corre mientras el usuario ve el splash/login
   DeviceInfoService.precargarEnBackground();
+  // ✅ Pide permisos de notificación en segundo plano — no bloquea
+  // NotificationService.instance.requestPermissions();
 
   runApp(AppWidget(themeCubit: themeCubit));
 }

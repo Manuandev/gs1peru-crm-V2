@@ -10,9 +10,12 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   InfoLeadCubit(this._getInfo) : super(const InfoLeadInitial());
 
   Future<void> load(String idLead) async {
+    if (isClosed) return;
+
     emit(const InfoLeadLoading());
     try {
       final info = await _getInfo(idLead);
+      if (isClosed) return;
       emit(InfoLeadSuccess(info));
     } on AppException catch (e) {
       emit(InfoLeadFailure(e.message));

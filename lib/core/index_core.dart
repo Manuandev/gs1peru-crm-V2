@@ -23,11 +23,12 @@ export 'extensions/badge_extensions.dart';
 
 export 'mixins/double_back_to_exit_mixin.dart';
 
-
 // #region models
 export 'models/combo_item.dart';
 export 'models/user_model.dart';
 // #endregion models
+
+export 'navigation/app_route_observer.dart';
 
 // #region network
 export 'network/api_client.dart';
@@ -42,7 +43,17 @@ export 'network/websocket/signalr_service.dart';
 export 'network/websocket/websocket_connection_state.dart';
 export 'network/websocket/websocket_message.dart';
 export 'network/websocket/websocket_message_parser.dart';
+export 'network/websocket/message_dispatcher.dart';
 // #endregion network
+
+// #region notificaciones
+export 'notifications/models/app_notification.dart';
+export 'notifications/services/notification_service.dart';
+export 'notifications/services/local_notification_service.dart';
+export 'notifications/services/firebase_notification_service.dart';
+export 'notifications/handlers/notification_handler.dart';
+export 'notifications/handlers/notification_navigator.dart';
+// #endregion notificaciones
 
 // #region presentation
 export 'presentation/bloc/drawer/drawer_bloc.dart';
@@ -90,6 +101,7 @@ export 'utils/string/string_validators.dart';
 // ui
 export 'utils/ui/avatar_utils.dart';
 export 'utils/ui/avatar_extensions.dart';
+export 'utils/ui/file_type_utils.dart';
 
 // #endregion utils
 

@@ -146,63 +146,34 @@ class ChatTile extends StatelessWidget {
   }
 
   Widget _buildPreview(Chat chat, double mensajeSize, ColorScheme colorScheme) {
-    final preview = _previewText(chat);
+    final preview = buildMessagePreview(chat);
     final hasIcon = preview.icon != null;
 
     return Row(
-      children: [
-        if (hasIcon) ...[
-          Icon(
-            preview.icon,
-            size: mensajeSize + 1,
-            color: Colors.grey.shade500,
-          ),
-          const SizedBox(width: 4),
-        ],
-        Expanded(
-          child: Text(
-            preview.text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: mensajeSize,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.normal,
-            ),
+    children: [
+      if (hasIcon) ...[
+        Icon(preview.icon, size: mensajeSize + 1, color: preview.color),
+        const SizedBox(width: 4),
+      ],
+      Expanded(
+        child: Text(
+          preview.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: mensajeSize,
+            color: preview.color ?? Colors.grey.shade500,
+            fontWeight: FontWeight.normal,
           ),
         ),
+      ),
+      // Estado: solo si YO mandé el mensaje
+      if (!chat.isEnviado) ...[
+        const SizedBox(width: 4),
+        MessageStatusIcon(estado: chat.estado, color: Colors.grey),
       ],
-    );
+    ],
+  );
   }
 
-  _PreviewData _previewText(Chat chat) {
-    final msg = chat.mensaje.toLowerCase();
-
-    // El backend puede mandar el tipo en el mensaje cuando es archivo
-    if (msg.startsWith('🎵') || msg.contains('[audio]')) {
-      return _PreviewData(Icons.mic_rounded, 'Audio');
-    }
-    if (msg.startsWith('📷') ||
-        msg.contains('[imagen]') ||
-        msg.contains('[foto]')) {
-      return _PreviewData(Icons.photo_rounded, 'Foto');
-    }
-    if (msg.startsWith('🎥') || msg.contains('[video]')) {
-      return _PreviewData(Icons.videocam_rounded, 'Video');
-    }
-    if (msg.startsWith('📄') ||
-        msg.contains('[archivo]') ||
-        msg.contains('[documento]')) {
-      return _PreviewData(Icons.insert_drive_file_rounded, 'Archivo');
-    }
-
-    // Texto normal
-    return _PreviewData(null, chat.mensaje);
-  }
-}
-
-class _PreviewData {
-  final IconData? icon;
-  final String text;
-  const _PreviewData(this.icon, this.text);
-}
+ }

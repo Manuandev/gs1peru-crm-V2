@@ -19,9 +19,9 @@ class ChatDetailPage extends StatelessWidget {
           )..add(ChatDetailStarted(idLead)),
         ),
         BlocProvider(
-          create: (_) =>
-              InfoLeadCubit(GetInfoUseCase(context.read<ChatRepository>()))
-                ..load(idLead), // 👈 esto faltaba
+          create: (_) => InfoLeadCubit(
+            GetInfoUseCase(context.read<ChatRepository>()),
+          ), // 👈 esto faltaba
         ),
       ],
       child: ChatDetailView(idLead: idLead),

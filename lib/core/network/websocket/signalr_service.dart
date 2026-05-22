@@ -1,7 +1,6 @@
 // lib\core\network\websocket\signalr_service.dart
 
 import 'dart:async';
-import 'package:app_crm/core/notifications/index_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
@@ -282,11 +281,10 @@ class SignalRService implements ISignalRService {
 
     // Parsear y emitir al stream — las features escuchan aquí
     final WebSocketMessage? message = WebSocketMessageParser.parse(rawMessage);
-    if (message != null && !_messageController.isClosed) {
-      _messageController.add(message);
-
-      // ✅ ESTA línea — ya está todo configurado, solo llámala
-      NotificationHandler.instance.handle(message);
+    if (message != null) {
+      MessageDispatcher.instance.dispatch(
+        message,
+      ); // 👈 un solo punto de entrada
     }
   }
 
@@ -320,7 +318,6 @@ class SignalRService implements ISignalRService {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
   }
-
 
   // ─── Reconexión con backoff exponencial ──────────────────────────────────
 

@@ -100,7 +100,11 @@ class DeviceInfoService {
   static Map<String, String>? _cachedInfo;
 
   static void precargarEnBackground() {
-    _backgroundFuture ??= DeviceInfoService()._cargarTodoInterno();
+    _backgroundFuture ??= DeviceInfoService()._cargarTodoInterno().then((info) {
+      // ✅ Ubicación ya resuelta → ahora pide notificación
+      NotificationService.instance.requestPermissions();
+      return info; // ← retorna el Map
+    });
   }
 
   static Future<Map<String, String>> getInfoConTimeout() async {

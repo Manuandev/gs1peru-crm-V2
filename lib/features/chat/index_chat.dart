@@ -34,11 +34,13 @@ export 'presentation/bloc/info_lead/info_lead_state.dart';
 export 'presentation/pages/chat_list_page.dart';
 export 'presentation/pages/chat_detail_page.dart';
 export 'presentation/pages/media_viewer_page.dart';
+export 'presentation/pages/video_viewer_page.dart';
 
 export 'presentation/widgets/chat_list/chat_list_landscape.dart';
 export 'presentation/widgets/chat_list/chat_list_portrait.dart';
 export 'presentation/widgets/chat_list/chat_list_view.dart';
 export 'presentation/widgets/chat_list/chat_tile.dart';
+export 'presentation/widgets/chat_list/message_preview_utils.dart';
 
 export 'presentation/widgets/chat_detail/chat_detail_view.dart';
 
@@ -46,6 +48,7 @@ export 'presentation/widgets/chat_detail/attachment_picker_widget.dart';
 
 export 'presentation/widgets/chat_detail/chat_detail_app_bar.dart';
 export 'presentation/widgets/chat_detail/chat_input_bar.dart';
+export 'presentation/widgets/chat_detail/chat_detail_scroll_controller.dart';
 
 export 'presentation/widgets/chat_detail/info_lead/chat_detail_datos_lead.dart';
 export 'presentation/widgets/chat_detail/info_lead/chat_detail_fases.dart';

@@ -1,9 +1,9 @@
 // lib/core/notifications/services/firebase_notification_service.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'package:app_crm/core/notifications/index_notifications.dart';
 
 class FirebaseNotificationService {
   FirebaseNotificationService._();
@@ -44,6 +44,38 @@ class FirebaseNotificationService {
     }
   }
 
+  Future<void> initBackground() async {
+    // ── FOREGROUND
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final notif = _fromRemoteMessage(message);
+      if (notif != null) LocalNotificationService.instance.show(notif);
+    });
+
+    // ── BACKGROUND tap
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final notif = _fromRemoteMessage(message);
+      if (notif != null) NotificationNavigator.instance.navigate(notif);
+    });
+
+    // ── APP CERRADA tap
+    final initial = await _fcm.getInitialMessage();
+    if (initial != null) {
+      final notif = _fromRemoteMessage(initial);
+      if (notif != null) NotificationNavigator.instance.navigate(notif);
+    }
+  }
+
+  Future<void> requestPermissions() async {
+    await _fcm.requestPermission(alert: true, badge: true, sound: true);
+
+    final token = await _fcm.getToken();
+    debugPrint('FCM Token: $token');
+
+    _fcm.onTokenRefresh.listen((newToken) {
+      debugPrint('FCM Token renovado: $newToken');
+    });
+  }
+
   AppNotification? _fromRemoteMessage(RemoteMessage message) {
     final data = message.data;
     final route = data['route'] as String?;
@@ -52,9 +84,9 @@ class FirebaseNotificationService {
     final payload = Map<String, String>.from(data)..remove('route');
 
     return AppNotification(
-      title  : message.notification?.title ?? data['title'] ?? '',
-      body   : message.notification?.body  ?? data['body']  ?? '',
-      route  : route,
+      title: message.notification?.title ?? data['title'] ?? '',
+      body: message.notification?.body ?? data['body'] ?? '',
+      route: route,
       payload: payload.isEmpty ? null : payload,
     );
   }

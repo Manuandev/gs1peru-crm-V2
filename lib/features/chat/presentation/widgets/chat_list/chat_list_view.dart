@@ -52,10 +52,11 @@ class ChatListView extends StatelessWidget {
           }
 
           if (state is ChatListSuccess) {
-            if (state.chats.isEmpty)
+            if (state.chats.isEmpty) {
               return const AppEmptyView(
                 message: 'No hay chats abiertos y/o disponibles.',
               );
+            }
 
             return OrientationBuilder(
               builder: (context, orientation) {

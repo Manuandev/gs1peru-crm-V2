@@ -73,31 +73,22 @@ class RemindersSection extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
 
-            // ── LISTA O VACÍO ─────────────────────────────────
-            if (reminders.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                child: const AppEmptyView(
-                  message: 'No tienes recordatorios pendientes',
-                ),
-              )
-            else
-              ...reminders.take(_maxVisible).toList().asMap().entries.map((e) {
-                final isLast =
-                    e.key == (reminders.length.clamp(0, _maxVisible) - 1);
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RemindersTileHome(reminders: e.value),
-                    if (!isLast)
-                      Divider(
-                        height: 1,
-                        indent: 52,
-                        color: colorScheme.outlineVariant.withOpacity(0.3),
-                      ),
-                  ],
-                );
-              }),
+            ...reminders.take(_maxVisible).toList().asMap().entries.map((e) {
+              final isLast =
+                  e.key == (reminders.length.clamp(0, _maxVisible) - 1);
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RemindersTileHome(reminders: e.value),
+                  if (!isLast)
+                    Divider(
+                      height: 1,
+                      indent: 52,
+                      color: colorScheme.outlineVariant.withOpacity(0.3),
+                    ),
+                ],
+              );
+            }),
 
             // ── VER TODOS ─────────────────────────────────────
             if (reminders.length > _maxVisible) ...[

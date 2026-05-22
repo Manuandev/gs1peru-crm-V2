@@ -5,17 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChatDetailPage extends StatelessWidget {
-  final Chat chat;
+  final String idLead;
 
-  const ChatDetailPage({super.key, required this.chat});
+  const ChatDetailPage({super.key, required this.idLead});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ChatDetailBloc(
-        GetChatMessagesUseCase(context.read<ChatRepository>()),
-      )..add(ChatDetailStarted(chat.idLead)),
-      child: ChatDetailView(chat: chat),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => ChatDetailBloc(
+            GetChatMessagesUseCase(context.read<ChatRepository>()),
+          )..add(ChatDetailStarted(idLead)),
+        ),
+        BlocProvider(
+          create: (_) =>
+              InfoLeadCubit(GetInfoUseCase(context.read<ChatRepository>()))
+                ..load(idLead), // 👈 esto faltaba
+        ),
+      ],
+      child: ChatDetailView(idLead: idLead),
     );
   }
 }

@@ -15,10 +15,12 @@ class AppRoutes {
 
   // ============================================================
   // MÓDULOS
-  // ============================================================ 
+  // ============================================================
   static const String leads = '/leads';
   static const String recordatorios = '/recordatorios';
   static const String chats = '/chats';
+  static const String propuestas = '/propuestas';
+  static const String prospectos = '/prospectos';
   static const String cobranza = '/cobranza';
 
   // ============================================================
@@ -30,4 +32,18 @@ class AppRoutes {
   // ============================================================
   static const String detalleChat = '/chats/detalle';
 
+  // ============================================================
+  // SUB-RUTAS PROSPECTOS
+  // ============================================================
+  static const String detalleProspecto = '/prospectos/detalle';
+
+  // ============================================================
+  // SUB-RUTAS PROPUESTAS
+  // ============================================================
+  static const String detallePropuesta = '/propuestas/detalle';
+
+  // ============================================================
+  // SUB-RUTAS COBRANZAS
+  // ============================================================
+  static const String detalleCobranza = '/cobranza/detalle';
 }

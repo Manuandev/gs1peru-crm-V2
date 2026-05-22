@@ -7,13 +7,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 enum _InputMode { text, audio, attachment }
 
 class ChatInputBar extends StatefulWidget {
-  final Chat chat;
   final VoidCallback onScrollToBottom;
   final AudioController audioController;
 
   const ChatInputBar({
     super.key,
-    required this.chat,
     required this.onScrollToBottom,
     required this.audioController,
   });

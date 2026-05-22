@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 ///     └── LeadsSection
 /// ```
 class HomePortrait extends StatelessWidget {
-  final HomeLoaded state; 
+  final HomeLoaded state;
 
   const HomePortrait({super.key, required this.state});
 
@@ -33,15 +33,19 @@ class HomePortrait extends StatelessWidget {
             leadsCount: state.leads.length,
             recordatoriosCount: state.reminders.length,
           ),
-          const SizedBox(height: AppSpacing.lg),
-          // ── RECORDATORIOS ───────────────────────────────────
-          RemindersSection(reminders: state.reminders),
-          const SizedBox(height: AppSpacing.lg),
-          // ── NUEVOS LEADS ────────────────────────────────────
-          LeadsSection(leads: state.leads),
-          const SizedBox(height: AppSpacing.lg),
-          // ── NUEVOS CHATS ────────────────────────────────────
-          ChatsSection(chats: state.chats),
+          if (state.reminders.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            RemindersSection(reminders: state.reminders),
+          ],
+          if (state.leads.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            LeadsSection(leads: state.leads),
+          ],
+
+          if (state.leads.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            ChatsSection(chats: state.chats),
+          ],
         ],
       ),
     );

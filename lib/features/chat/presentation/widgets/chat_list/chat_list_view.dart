@@ -11,7 +11,7 @@ class ChatListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       onLogout: () => context.logoutWithConfirmation(context),
-      title: 'Chats',
+      title: 'Mis conversaciones',
       drawerSide: DrawerSide.left,
       onSearch: (query) {
         context.read<ChatListBloc>().add(ChatListSearched(query));
@@ -34,7 +34,7 @@ class ChatListView extends StatelessWidget {
         listenWhen: (previous, current) =>
             previous is ChatListSuccess && current is ChatListFailure,
         listener: (context, state) {
-          if (state is ChatListFailure) { 
+          if (state is ChatListFailure) {
             context.showErrorSnack(state.message);
           }
         },
@@ -52,7 +52,10 @@ class ChatListView extends StatelessWidget {
           }
 
           if (state is ChatListSuccess) {
-            if (state.chats.isEmpty) return const AppEmptyView(message: 'No hay chats abiertos y/o disponibles.',);
+            if (state.chats.isEmpty)
+              return const AppEmptyView(
+                message: 'No hay chats abiertos y/o disponibles.',
+              );
 
             return OrientationBuilder(
               builder: (context, orientation) {

@@ -8,19 +8,30 @@ class ChatRemoteDatasource {
   final ApiClient _api = ApiClient();
   final _session = SessionService();
 
+  Future<InfoLeadModel> getInfoLead(String idLead) async {
+    final String body = '$idLead¯D';
+
+    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => InfoLeadModel.parse(data),
+      ApiEmpty() => throw const AppException(
+        'No se encontró información del lead.',
+      ),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   Future<List<ChatModel>> getChats() async {
     final String body = '${_session.codUser}¯L';
 
-
-    final result = await _api.postSafe(
-      ApiConstants.urlChatsLst,
-      body,
-    );
+    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
     return switch (result) {
       ApiSuccess(:final data) => ChatModel.parseList(data),
-      ApiEmpty()              => [],
-      ApiNoInternet()         => throw const AppException('Sin conexión a Internet.'),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };
   }
@@ -36,8 +47,8 @@ class ChatRemoteDatasource {
 
     return switch (result) {
       ApiSuccess(:final data) => ChatMessageModel.parseList(data),
-      ApiEmpty()              => [],
-      ApiNoInternet()         => throw const AppException('Sin conexión a Internet.'),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };
   }

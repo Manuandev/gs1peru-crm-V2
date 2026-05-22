@@ -69,11 +69,11 @@ extension NavigationExtensions on BuildContext {
   // MÓDULOS SECUNDARIOS - CHATS
   // ============================================================
 
-  Future<void> goToDetalleChat({required dynamic chat}) {
-    return navigateTo(AppRoutes.detalleChat, arguments: {'chat': chat});
+  Future<void> goToDetalleChat({required String idLead}) {
+    return navigateTo(AppRoutes.detalleChat, arguments: {'idLead': idLead});
   }
 
-  Future<void> goToDetalleChatDesdeHome({required dynamic chat}) {
+  Future<void> goToDetalleChatDesdeHome({required String idLead}) {
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return Future.value();
 
@@ -81,7 +81,7 @@ extension NavigationExtensions on BuildContext {
     state.pushNamedAndRemoveUntil(AppRoutes.chats, (route) => false);
 
     // 2. Inmediatamente apila ChatDetail encima
-    state.pushNamed(AppRoutes.detalleChat, arguments: {'chat': chat});
+    state.pushNamed(AppRoutes.detalleChat, arguments: {'idLead': idLead});
 
     return Future.value();
   }

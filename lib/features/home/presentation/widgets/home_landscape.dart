@@ -1,6 +1,5 @@
 // lib/features/home/presentation/widgets/home_landscape.dart
 
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 import 'package:flutter/material.dart';
@@ -51,11 +50,18 @@ class HomeLandscape extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                RemindersSection(reminders: state.reminders),
-                const SizedBox(height: AppSpacing.lg),
-                LeadsSection(leads: state.leads),
-                const SizedBox(height: AppSpacing.lg),
-                ChatsSection(chats: state.chats),
+                if (state.reminders.isNotEmpty) ...[
+                  RemindersSection(reminders: state.reminders),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                if (state.leads.isNotEmpty) ...[
+                  LeadsSection(leads: state.leads),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+
+                if (state.leads.isNotEmpty) ...[
+                  ChatsSection(chats: state.chats),
+                ],
               ],
             ),
           ),

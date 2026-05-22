@@ -253,6 +253,12 @@ class _StatusIcon extends StatelessWidget {
           size: 14,
           color: Colors.lightBlue.shade300,
         );
+      case 'failed':
+        return Icon(
+          Icons.error_outline_rounded,
+          size: 14,
+          color: Colors.red.shade400,
+        );
       default:
         return Icon(Icons.check_rounded, size: 14, color: dimColor);
     }

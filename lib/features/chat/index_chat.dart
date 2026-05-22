@@ -4,16 +4,21 @@ export 'data/datasources/remote/chat_remote_datasource.dart';
 
 export 'data/models/chat_model.dart';
 export 'data/models/chat_message_model.dart';
+export 'data/models/info_lead_model.dart';
 
 export 'data/repositories/chat_repository_impl.dart';
 
 export 'domain/entities/chat.dart';
 export 'domain/entities/chat_message.dart';
+export 'domain/entities/info_lead.dart';
+
+export 'domain/enums/lead_estado.dart';
 
 export 'domain/repositories/chat_repository.dart';
 
 export 'domain/usecases/get_chats_usecase.dart';
 export 'domain/usecases/get_chat_messages_usecase.dart';
+export 'domain/usecases/get_info_lead_usecase.dart';
 
 export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';
@@ -22,6 +27,9 @@ export 'presentation/bloc/chat_list/chat_list_state.dart';
 export 'presentation/bloc/chat_detail/chat_detail_bloc.dart';
 export 'presentation/bloc/chat_detail/chat_detail_event.dart';
 export 'presentation/bloc/chat_detail/chat_detail_state.dart';
+
+export 'presentation/bloc/info_lead/info_lead_cubit.dart';
+export 'presentation/bloc/info_lead/info_lead_state.dart';
 
 export 'presentation/pages/chat_list_page.dart';
 export 'presentation/pages/chat_detail_page.dart';
@@ -32,15 +40,21 @@ export 'presentation/widgets/chat_list/chat_list_portrait.dart';
 export 'presentation/widgets/chat_list/chat_list_view.dart';
 export 'presentation/widgets/chat_list/chat_tile.dart';
 
-
 export 'presentation/widgets/chat_detail/chat_detail_view.dart';
 
 export 'presentation/widgets/chat_detail/attachment_picker_widget.dart';
-export 'presentation/widgets/chat_detail/audio_player_widget.dart';
-export 'presentation/widgets/chat_detail/audio_recorder_widget.dart';
+
+export 'presentation/widgets/chat_detail/chat_detail_app_bar.dart';
 export 'presentation/widgets/chat_detail/chat_input_bar.dart';
-export 'presentation/widgets/chat_detail/message_bubble.dart';
-export 'presentation/widgets/chat_detail/message_list.dart';
-export 'presentation/widgets/chat_detail/message_parser.dart';
-export 'presentation/widgets/chat_detail/audio_controller.dart';
-export 'presentation/widgets/chat_detail/message_url_helper.dart';
+
+export 'presentation/widgets/chat_detail/info_lead/chat_detail_datos_lead.dart';
+export 'presentation/widgets/chat_detail/info_lead/chat_detail_fases.dart';
+
+export 'presentation/widgets/chat_detail/audio/audio_player_widget.dart';
+export 'presentation/widgets/chat_detail/audio/audio_recorder_widget.dart';
+export 'presentation/widgets/chat_detail/audio/audio_controller.dart';
+
+export 'presentation/widgets/chat_detail/mensaje/message_bubble.dart';
+export 'presentation/widgets/chat_detail/mensaje/message_list.dart';
+export 'presentation/widgets/chat_detail/mensaje/message_parser.dart';
+export 'presentation/widgets/chat_detail/mensaje/message_url_helper.dart';

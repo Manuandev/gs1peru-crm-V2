@@ -71,9 +71,9 @@ class AppRouter {
   static final Map<String, WidgetBuilder> _chatsRoutes = {
     AppRoutes.detalleChat: (context) {
       final args = _getArgs<Map<String, dynamic>>(context);
-      final chat = args['chat'] as Chat;
+      final idLead = args['idLead'] as String;
 
-      return ChatDetailPage(chat: chat);
+      return ChatDetailPage(idLead: idLead);
     },
   };
 

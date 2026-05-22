@@ -10,6 +10,7 @@ class MessageList extends StatelessWidget {
   final bool isLoadingMore;
   final AudioController audioController;
   final String idLead; // ← agregar
+  final bool blockScroll; // ← agregar
 
   const MessageList({
     super.key,
@@ -18,13 +19,16 @@ class MessageList extends StatelessWidget {
     required this.audioController,
     this.isLoadingMore = false,
     required this.idLead,
+    required this.blockScroll,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       controller: scrollController,
-      physics: const BouncingScrollPhysics(),
+      physics: blockScroll
+          ? const NeverScrollableScrollPhysics() // 👈 bloquea mientras carga
+          : const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: messages.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {

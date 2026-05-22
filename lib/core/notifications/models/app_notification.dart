@@ -17,7 +17,7 @@ class AppNotification {
     final map = <String, String>{
       'title': title, // necesitas incluir title y body
       'body': body, // para poder recuperarlos en fromPayloadString
-      if (route != null) 'route': route!,
+      'route': ?route,
       ...?payload,
     };
     return map.entries.map((e) => '${e.key}=${e.value}').join('&');

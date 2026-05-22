@@ -28,14 +28,11 @@ class NotificationHandler {
     String g(int i) => i < f.length ? f[i].trim() : '';
 
     return AppNotification(
-      title: g(0), // Prueba
-      body: _bodyPorTipo(g(3)), // text → '💬 Nuevo mensaje...'
+      title: 'Mensaje WhatsApp CRM', //g(0), // Prueba
+      body: _bodyPorTipo(g(3), g(0)), // text → '💬 Nuevo mensaje...'
       route: AppRoutes.detalleChat,
       payload: {
-        'idChatCab': g(2), // 106180
-        'nombre': g(0), // Prueba
-        'telefono': g(10), // 51970912036
-        'wamid': g(5),
+        'idLead': g(2), // 106180
       },
     );
   }
@@ -67,11 +64,12 @@ class NotificationHandler {
     );
   }
 
-  String _bodyPorTipo(String tipo) => switch (tipo.toLowerCase()) {
-    'image' => '📷 Imagen',
-    'audio' => '🎵 Audio',
-    'video' => '🎥 Video',
-    'document' => '📄 Documento',
-    _ => '💬 Nuevo mensaje de WhatsApp',
-  };
+  String _bodyPorTipo(String tipo, String mensaje) =>
+      switch (tipo.toLowerCase()) {
+        'image' => '📷 Imagen',
+        'audio' => '🎵 Audio',
+        'video' => '🎥 Video',
+        'document' => '📄 Documento',
+        _ => mensaje,
+      };
 }

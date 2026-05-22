@@ -2,7 +2,6 @@
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/notifications/index_notifications.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
 
 class NotificationNavigator {
   NotificationNavigator._();
@@ -22,25 +21,12 @@ class NotificationNavigator {
   }
 
   void _goChat(AppNotification notif) {
-    final p = notif.payload ?? {};
-    final state = NavigationService.navigatorKey.currentState; 
+    final idLead = notif.payload?['idLead'] ?? '';
+    final state = NavigationService.navigatorKey.currentState;
     if (state == null) return;
 
-    final chat = ChatModel(
-      idChatCab: p['idChatCab'] ?? '',
-      idLead: p['idLead'] ?? '',
-      nombreApe: p['nombre'] ?? '',
-      telefono: p['telefono'] ?? '',
-      mensaje: '',
-      fechaHora: '',
-      isFavorito: false,
-      isEnviado: false,
-      isBloqueado: false,
-    );
-
-    // ✅ Mismo comportamiento que goToDetalleChatDesdeHome
     state.pushNamedAndRemoveUntil(AppRoutes.chats, (r) => false);
-    state.pushNamed(AppRoutes.detalleChat, arguments: {'chat': chat});
+    state.pushNamed(AppRoutes.detalleChat, arguments: {'idLead': idLead});
   }
 
   void _goLead(AppNotification notif) => _go(AppRoutes.leads); // TODO

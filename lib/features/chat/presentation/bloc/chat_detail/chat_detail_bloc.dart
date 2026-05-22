@@ -43,7 +43,17 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     try {
       final messages = await _getChatMessages(idLead);
 
-      final sorted = [...messages]..sort((a, b) => a.fecha.compareTo(b.fecha));
+      final sorted = [...messages]
+        ..sort((a, b) {
+          final fechaA = DateFormatter.parseDate(a.fecha) ?? DateTime(0);
+          final fechaB = DateFormatter.parseDate(b.fecha) ?? DateTime(0);
+          final cmp = fechaA.compareTo(fechaB);
+          if (cmp != 0) return cmp;
+          // 👇 mismo minuto → ordena por idChatDet
+          return (int.tryParse(a.idChatDet) ?? 0).compareTo(
+            int.tryParse(b.idChatDet) ?? 0,
+          );
+        });
 
       emit(ChatDetailSuccess(messages: sorted, hasMore: messages.isNotEmpty));
     } on AppException catch (e) {
@@ -65,7 +75,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (state is! ChatDetailSuccess) return;
 
     final currentState = state as ChatDetailSuccess;
-    if (!currentState.hasMore) return; // ← ya no hay más, ignorar
+    if (!currentState.hasMore) return;
 
     emit(ChatDetailLoadingMore(messages: currentState.messages));
 
@@ -75,13 +85,24 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         idUltimoMensaje: event.idUltimoMensaje,
       );
 
-      // ✅ Merge y ordena ASC por fecha
       final merged = [...newMessages, ...currentState.messages];
-      merged.sort((a, b) => a.fecha.compareTo(b.fecha));
+
+      final seen = <String>{};
+      final unique = merged.where((m) => seen.add(m.idMensaje)).toList();
+      unique.sort((a, b) {
+        final fechaA = DateFormatter.parseDate(a.fecha) ?? DateTime(0);
+        final fechaB = DateFormatter.parseDate(b.fecha) ?? DateTime(0);
+        final cmp = fechaA.compareTo(fechaB);
+        if (cmp != 0) return cmp;
+        // 👇 mismo minuto → ordena por idChatDet
+        return (int.tryParse(a.idChatDet) ?? 0).compareTo(
+          int.tryParse(b.idChatDet) ?? 0,
+        );
+      });
 
       emit(
         ChatDetailSuccess(
-          messages: merged,
+          messages: unique,
           hasMore: newMessages.isNotEmpty, // ← false si servidor devolvió vacío
         ),
       );

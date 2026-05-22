@@ -30,18 +30,47 @@ class ApiConstants {
   static const String enviarMensaje = 'Wsp/SendMessageWhatsApp';
   static const String guardarMultimedia = 'Wsp/GuardarMultimediaWhatsApp';
 
+  // ========== PROSPECTOS ==========
+  static const String lstProspectos = 'Prospecto/SPProspectoLSTApp';
+  static const String cudProspectos = 'Prospecto/SPProspectoCUDApp';
+
+  // ========== PROPUESTA ==========
+  static const String lstPropuestas = 'Propuesta/SPPropuestaLSTApp';
+  static const String cudPropuestas = 'Propuesta/SPPropuestaCUDApp';
+
+  // ========== COBRANZAS ==========
+  static const String lstCobranzas = 'Cobranza/SPCobranzaLSTApp';
+  static const String cudCobranzas = 'Cobranza/SPCobranzaCUDApp';
+
   // ========== HELPERS ==========
 
   // URLs completas (helpers)
   static String get urlLogin => '$baseUrl$login';
   static String get urlLoginGoogle => '$baseUrl$loginGoogle';
-  static String get urlLeadsLst => '$baseUrl$lstleads';
-  static String get urlRecordatoriosLst => '$baseUrl$lstRecordatorios';
-  static String get urlChatsLst => '$baseUrl$lstChats';
 
+  // ========== LEADS ==========
+  static String get urlLeadsLst => '$baseUrl$lstleads';
+
+  // ========== RECORDATORIOS ==========
+  static String get urlRecordatoriosLst => '$baseUrl$lstRecordatorios';
+
+  // ========== WHATSAPP ==========
+  static String get urlChatsLst => '$baseUrl$lstChats';
   static String get urlListarChats => '$baseUrl$listarChats';
   static String get urlDetalleChat => '$baseUrl$detalleChat';
   static String get urlActualizarFavorito => '$baseUrl$actualizarFavorito';
   static String get urlEnviarMensaje => '$baseUrl$enviarMensaje';
   static String get urlGuardarMultimedia => '$baseUrl$guardarMultimedia';
+
+  // ========== PROSPECTOS ==========
+  static String get urlProspectosLst => '$baseUrl$lstProspectos';
+  static String get urlProspectosCud => '$baseUrl$cudProspectos';
+
+  // ========== PROPUESTA ==========
+  static String get urlPropuestasLst => '$baseUrl$lstPropuestas';
+  static String get urlPropuestasCud => '$baseUrl$cudPropuestas';
+
+  // ========== COBRANZAS ==========
+  static String get urlCobranzasLst => '$baseUrl$lstCobranzas';
+  static String get urlCobranzasCud => '$baseUrl$cudCobranzas';
 }

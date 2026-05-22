@@ -7,6 +7,10 @@ class ChatRepositoryImpl implements ChatRepository {
 
   const ChatRepositoryImpl(this._datasource);
 
+
+  @override
+  Future<InfoLead> getInfoLead(String idLead) => _datasource.getInfoLead(idLead);
+
   @override
   Future<List<Chat>> getChats() => _datasource.getChats();
 

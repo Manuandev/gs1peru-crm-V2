@@ -24,7 +24,7 @@ class ChatListLandscape extends StatelessWidget {
             final chat = state.chats[index];
             return ChatTile(
               chat: chat,
-              onTap: () => context.goToDetalleChat(chat: chat),
+              onTap: () => context.goToDetalleChat(idLead: chat.idLead),
             );
           },
         ),

@@ -14,7 +14,7 @@ class ChatTileHome extends StatelessWidget {
     final avatarBg = chat.nombreApe.avatarColor;
 
     return InkWell(
-      onTap: () => context.goToDetalleChatDesdeHome(chat: chat),
+      onTap: () => context.goToDetalleChatDesdeHome(idLead: chat.idLead),
       borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(

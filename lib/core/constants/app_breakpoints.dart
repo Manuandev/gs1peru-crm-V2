@@ -108,6 +108,9 @@ class AppSizing {
   /// Ícono pequeño: 16px — iconos dentro de labels o chips
   static const double iconSm = 16.0;
 
+  /// Ícono pequeño en botones de acción: 18px
+  static const double iconActionSm = 18.0;
+
   /// Ícono medio: 24px (BASE) — ícono estándar de Material Design
   static const double iconMd = 24.0;
 
@@ -130,6 +133,9 @@ class AppSizing {
   // ============================================================
   // ALTURAS DE ELEMENTOS
   // ============================================================
+
+  /// Radio de avatar en listas: 20px
+  static const double avatarRadiusSm = 20.0;
 
   /// Altura de input: 56px
   static const double inputHeight = 56.0;

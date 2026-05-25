@@ -19,43 +19,55 @@ class DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = ColorUtils.fromName(label);
+    final textColor = ColorUtils.textColorOn(color);
+
     return GestureDetector(
       onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // ── CARD ────────────────────────────────────────────
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  // ignore: deprecated_member_use
-                  color: color.withOpacity(0.35),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              // ignore: deprecated_member_use
+              color: color.withOpacity(0.30),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm + AppSpacing.xs,
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // ── CONTENIDO ──────────────────────────────────────
+            Row(
               children: [
-                Icon(icon, color: Colors.white, size: 22),
-                const SizedBox(width: AppSpacing.xs),
-                Flexible(
+                // Ícono en círculo translúcido
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
+                    color: Colors.white.withOpacity(0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: textColor, size: 20),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                // Label
+                Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
                     ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
@@ -63,44 +75,48 @@ class DashboardCard extends StatelessWidget {
                 ),
               ],
             ),
-          ),
 
-          // ── BADGE ────────────────────────────────────────────
-          if (badge != null && badge! > 0)
-            Positioned(
-              top: -8,
-              right: -8,
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '$badge',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+            // ── BADGE ──────────────────────────────────────────
+            if (badge != null && badge! > 0)
+              Positioned(
+                top: -AppSpacing.md,
+                right: -AppSpacing.sm,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs + 2,
+                    vertical: AppSpacing.xxs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: textColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        // ignore: deprecated_member_use
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$badge',
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-
-
-// La estructura de archivos queda así:
-// ```
-// home/presentation/widgets/
-// ├── home_view.dart
-// ├── home_portrait.dart       ← nuevo
-// ├── home_landscape.dart      ← nuevo
-// └── dashboard/
-//     ├── dashboard_card.dart  ← nuevo
-//     ├── home_menu_cards.dart ← nuevo
-//     ├── leads_section.dart   ← tú lo armas con tus LeadItem
-//     └── recordatorios_section.dart ← ídem

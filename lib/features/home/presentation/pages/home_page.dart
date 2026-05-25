@@ -23,10 +23,7 @@
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -38,9 +35,7 @@ class HomePage extends StatelessWidget {
     return ExitOnBackWrapper(
       child: BlocProvider(
         create: (context) => HomeBloc(
-          getLeads: GetLeadsUseCase(context.read<LeadRepository>()),
-          getReminders: GetRemindersUseCase(context.read<ReminderRepository>()),
-          getChats: GetChatsUseCase(context.read<ChatRepository>()),
+          getData: GetHomeUseCase(context.read<HomeRepository>()),
         )..add(const HomeStarted()),
         child: BlocListener<HomeBloc, HomeState>(
           listener: (context, state) {
@@ -48,14 +43,7 @@ class HomePage extends StatelessWidget {
               context.showErrorSnack(state.message);
             } else if (state is HomeLoaded) {
               context.updateBadge(
-                conversaciones: state.chats.length,
-                // prospectos: state.prospectos.length,
-                // propuestas: state.propuestas.length,
-                // cobranzas: state.cobranzas.length,
-
-                // leads: state.leads.length,
-                // chats: state.chats.length,
-                // reminders: state.reminders.length,
+                conversaciones: state.totConversaciones,
               );
             }
           },

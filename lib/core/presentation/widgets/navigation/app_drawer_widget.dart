@@ -122,7 +122,7 @@ class _DrawerContent extends StatelessWidget {
       conversacionesBadge: state.conversaciones,
       prospectosBadge: state.prospectos,
       propuestasBadge: state.propuestas,
-      cobranzasBadge: state.cobranzas,
+      cobranzaBadge: state.cobranzas,
     );
   }
 }

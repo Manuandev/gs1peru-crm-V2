@@ -93,7 +93,7 @@ class AppMenuItems {
     int? conversacionesBadge,
     int? prospectosBadge,
     int? propuestasBadge,
-    int? cobranzasBadge,
+    int? cobranzaBadge,
   }) {
     return [
       home,
@@ -137,7 +137,7 @@ class AppMenuItems {
         icon: AppIcons.moneda,
         label: 'Cobranza',
         route: AppRoutes.cobranza,
-        badge: cobranzasBadge,
+        badge: cobranzaBadge,
       ),
     ];
   }

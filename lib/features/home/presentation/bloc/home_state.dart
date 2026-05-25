@@ -9,9 +9,7 @@
 // ============================================================
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/reminder/index_reminder.dart';
+import 'package:app_crm/features/home/index_home.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class HomeState extends Equatable {
@@ -30,20 +28,23 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  final List<Lead> leads;
-  final List<Reminder> reminders;
-  final List<Chat> chats;
+  final Home home;
   final UserModel usuario;
 
   const HomeLoaded({
-    required this.leads,
-    required this.reminders,
-    required this.chats,
+    required this.home,
     required this.usuario,
   });
 
+  // Atajos para acceso rápido
+  int get totConversaciones => home.totConversaciones;
+  int get totProspectos => home.totProspectos;
+  int get totPropuesta => home.totPropuesta;
+  int get totCobranza => home.totCobranza;
+  List<Prioridad> get prioridades => home.prioridades;
+
   @override
-  List<Object?> get props => [leads];
+  List<Object?> get props => [home, usuario];
 }
 
 class HomeError extends HomeState {

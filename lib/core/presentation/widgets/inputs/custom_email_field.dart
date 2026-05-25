@@ -72,7 +72,7 @@ class CustomEmailField extends StatelessWidget {
       label: label ?? 'Email',
       hint: hint ?? 'ejemplo@correo.com',
       controller: controller,
-      validator: validator ?? emailValidator,
+      validator: validator ?? StringUtils.emailValidator,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       enabled: enabled,

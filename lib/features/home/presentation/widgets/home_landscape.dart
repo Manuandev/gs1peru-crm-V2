@@ -28,11 +28,7 @@ class HomeLandscape extends StatelessWidget {
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: HomeMenuCards(
-              inboxCount: state.chats.length,
-              leadsCount: state.leads.length,
-              recordatoriosCount: state.reminders.length,
-            ),
+            child: HomeMenuCards(state: state),
           ),
         ),
         // Separador vertical
@@ -50,18 +46,6 @@ class HomeLandscape extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (state.reminders.isNotEmpty) ...[
-                  RemindersSection(reminders: state.reminders),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-                if (state.leads.isNotEmpty) ...[
-                  LeadsSection(leads: state.leads),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-
-                if (state.leads.isNotEmpty) ...[
-                  ChatsSection(chats: state.chats),
-                ],
               ],
             ),
           ),

@@ -16,6 +16,9 @@ class ApiConstants {
   static const String login = 'Seguridad/ValidarLoginAppCRM';
   static const String loginGoogle = 'Seguridad/ValidarLoginGoogleAppCRM';
 
+  // ========== HOME ==========
+  static const String lstHome = 'Home/SPHomeLSTApp';
+
   // ========== LEADS ==========
   static const String lstleads = 'Lead/SPLeadLSTApp';
 
@@ -47,6 +50,9 @@ class ApiConstants {
   // URLs completas (helpers)
   static String get urlLogin => '$baseUrl$login';
   static String get urlLoginGoogle => '$baseUrl$loginGoogle';
+
+  // ========== HOME ==========
+  static String get urlHomeLst => '$baseUrl$lstHome';
 
   // ========== LEADS ==========
   static String get urlLeadsLst => '$baseUrl$lstleads';

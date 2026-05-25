@@ -21,31 +21,35 @@ class HomePortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeText = theme.textTheme;
+
+    final titleStyle = themeText.titleMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: themeText.titleMedium!.color,
+    );
+
+    final bodyStyle = themeText.bodySmall?.copyWith(
+      color: themeText.bodySmall!.color,
+    );
+
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text('totalConversaciones: ${state.totConversaciones}'),
+          Text('totCobranza: ${state.totCobranza}'),
+          Text('totProspectos: ${state.totProspectos}'),
+          Text('totPropuesta: ${state.totPropuesta}'),
           // ── MENU CARDS ──────────────────────────────────────
-          HomeMenuCards(
-            inboxCount: state.chats.length,
-            leadsCount: state.leads.length,
-            recordatoriosCount: state.reminders.length,
-          ),
-          if (state.reminders.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.lg),
-            RemindersSection(reminders: state.reminders),
-          ],
-          if (state.leads.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.lg),
-            LeadsSection(leads: state.leads),
-          ],
-
-          if (state.leads.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.lg),
-            ChatsSection(chats: state.chats),
-          ],
+          HomeMenuCards(state: state),
+          const SizedBox(height: AppSpacing.md),
+          Text("Prioridad ahora", style: titleStyle),
+          const SizedBox(height: AppSpacing.xxs),
+          Text("Responde rápido a tus conversaciones.", style: bodyStyle),
+          PrioridadSectionHome(prioridades: state.prioridades),
         ],
       ),
     );

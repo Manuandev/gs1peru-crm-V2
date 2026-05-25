@@ -91,17 +91,19 @@ export 'theme/theme_cubit.dart';
 
 // #region utils
 export 'utils/responsive_helper.dart';
+export 'utils/elapsed_time_utils.dart';
 
 export 'utils/date/date_extensions.dart';
 export 'utils/date/date_formats.dart';
 export 'utils/date/date_formatter.dart';
 
 export 'utils/string/string_utils.dart';
-export 'utils/string/string_validators.dart';
+
 // ui
 export 'utils/ui/avatar_utils.dart';
 export 'utils/ui/avatar_extensions.dart';
 export 'utils/ui/file_type_utils.dart';
+export 'utils/ui/color_utils.dart';
 
 // #endregion utils
 

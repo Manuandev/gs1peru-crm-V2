@@ -2,15 +2,15 @@
 
 enum Environment { dev, qa, prod }
 
-class EnvConfig { 
+class EnvConfig {
   // Entorno actual (cámbialo según necesites)
-  static const Environment current = Environment.qa;
+  static const Environment current = Environment.dev;
 
   // Configuración según entorno
   static String get baseUrl {
     switch (current) {
       case Environment.dev:
-        return 'https://3ad3-161-132-10-146.ngrok-free.app/'; // URL DE DEV
+        return 'https://expediter-falsify-spinach.ngrok-free.dev/'; // URL DE DEV
       case Environment.qa:
         return 'https://natcodee.net:40805/gs1pe_interfaz/'; // URL DE QA
       case Environment.prod:
@@ -32,7 +32,7 @@ class EnvConfig {
   static String get urlWebSocket {
     switch (current) {
       case Environment.dev:
-        return ''; // URL DE DEV
+        return 'https://natcodee.net:9002/socket/'; // URL DE DEV
       case Environment.qa:
         return 'https://natcodee.net:9002/socket/'; // URL DE QA
       case Environment.prod:

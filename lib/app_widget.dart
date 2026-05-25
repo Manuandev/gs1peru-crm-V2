@@ -27,6 +27,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/index_core.dart';
 import 'features/chat/index_chat.dart';
+import 'features/home/index_home.dart';
 import 'features/reminder/index_reminder.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
@@ -52,6 +53,11 @@ class AppWidget extends StatelessWidget {
         ),
 
         // ── HOME REPOSITORY ──────────────────────────────────
+        RepositoryProvider<HomeRepository>(
+          create: (context) => HomeRepositoryImpl(HomeRemoteDatasource()),
+        ),
+
+        // ── LEAD REPOSITORY ──────────────────────────────────
         RepositoryProvider<LeadRepository>(
           create: (context) => LeadRepositoryImpl(LeadRemoteDatasource()),
         ),

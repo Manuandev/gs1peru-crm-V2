@@ -29,38 +29,18 @@
 // ============================================================
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/reminder/index_reminder.dart';
+import 'package:app_crm/features/home/index_home.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'home_event.dart';
-import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  final GetLeadsUseCase _getLeads;
-  final GetRemindersUseCase _getReminders;
-  final GetChatsUseCase _getChats;
+  final GetHomeUseCase _getData;
   final _session = SessionService();
 
-  HomeBloc({
-    required GetLeadsUseCase getLeads,
-    required GetRemindersUseCase getReminders,
-    required GetChatsUseCase getChats,
-  }) : _getLeads = getLeads,
-       _getReminders = getReminders,
-       _getChats = getChats,
-       super(const HomeInitial()) {
+  HomeBloc({required GetHomeUseCase getData})
+    : _getData = getData,
+      super(const HomeInitial()) {
     on<HomeStarted>(_onStarted);
     on<HomeRefresh>(_onRefresh);
-  }
-
-  // ✅ Helper tipado explícito — evita el bug de inferencia de catchError
-  Future<T> _safe<T>(Future<T> future, T fallback) async {
-    try {
-      return await future;
-    } catch (_) {
-      return fallback; // ← solo errores inesperados usan fallback
-    }
   }
 
   Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit) async {
@@ -75,26 +55,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   Future<void> _loadData(Emitter<HomeState> emit) async {
     try {
-      final results = await Future.wait([
-        _safe<List<Lead>>(_getLeads(), []),
-        _safe<List<Reminder>>(_getReminders(), []),
-        _safe<List<Chat>>(_getChats(), []),
-      ]);
+      final home = await _getData.call();
 
-      final leads = results[0] as List<Lead>;
-      final reminders = results[1] as List<Reminder>;
-      final chats = results[2] as List<Chat>;
-
-      emit(
-        HomeLoaded(
-          leads: leads,
-          reminders: reminders,
-          chats: chats,
-          usuario: _session.user!,
-        ),
-      );
+      emit(HomeLoaded(home: home, usuario: _session.user!));
     } on AppException catch (e) {
-      emit(HomeError(e.message)); // ← sin internet muestra error real
+      emit(HomeError(e.message)); 
     } catch (e, stackTrace) {
       addError(e, stackTrace);
       emit(HomeError(e.toString()));

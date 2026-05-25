@@ -67,65 +67,8 @@ class _MobileCards extends StatelessWidget {
 
         return Column(
           children: [
-            // ── FILA 1: inbox grande + 2 pequeñas ──────────
-            SizedBox(
-              height: rowTopHeight,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: DashboardCard(
-                      label: 'Inbox',
-                      icon: Icons.chat_bubble_outline,
-                      color: Colors.blue,
-                      badge: inboxCount,
-                      onTap: context.goToChats,
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    flex: 2,
-                    child: DashboardCard(
-                      label: 'Mis leads',
-                      icon: Icons.person_outline,
-                      color: Colors.deepOrange,
-                      badge: leadsCount,
-                      onTap: context.goToLeads,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: AppSpacing.xs),
-
-            // ── FILA 2: 2 cards iguales ──────────────────
-            SizedBox(
-              height: rowBottomHeight,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: DashboardCard(
-                      label: 'Recordatorios',
-                      icon: Icons.access_time,
-                      color: Colors.green,
-                      badge: recordatoriosCount,
-                      onTap: context.goToReminders,
-                    ),
-                  ),
-                  SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: DashboardCard(
-                      label: 'Cobranza',
-                      icon: Icons.attach_money,
-                      color: Colors.purple,
-                      onTap: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            Row();
+            ],
         );
       },
     );
@@ -147,30 +90,8 @@ class _GridCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      _CardData(
-        'Inbox',
-        Icons.chat_bubble_outline,
-        Colors.blue,
-        badge: inboxCount,
-        onTap: context.goToChats,
-      ),
-      _CardData(
-        'Mis Leads',
-        Icons.person,
-        Colors.orange,
-        badge: leadsCount,
-        onTap: context.goToLeads,
-      ),
-      _CardData(
-        'Recordatorios',
-        Icons.access_time,
-        Colors.green,
-        badge: recordatoriosCount,
-        onTap: context.goToReminders,
-      ),
-      _CardData('Cobranza', Icons.attach_money, Colors.purple, onTap: () {}),
-    ];
+    final items = AppMenuItems.withBadges();
+      
 
     return GridView.builder(
       shrinkWrap: true,
@@ -199,13 +120,4 @@ class _GridCards extends StatelessWidget {
       },
     );
   }
-}
-
-class _CardData {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final int? badge;
-  final VoidCallback? onTap;
-  _CardData(this.label, this.icon, this.color, {this.badge, this.onTap});
 }

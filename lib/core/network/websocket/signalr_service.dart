@@ -101,13 +101,6 @@ class SignalRService implements ISignalRService {
         _hubConnection = _buildConnection();
         _registerHubHandlers();
 
-        debugPrint(
-          'Intentando conectar a SignalR (intento ${currentAttempt + 1})...',
-        );
-        debugPrint(
-          'Intentando conectar a SignalR URL: ${_hubConnection?.baseUrl}',
-        );
-
         final timeout = currentAttempt == 0
             ? const Duration(seconds: 3)
             : const Duration(seconds: 5);
@@ -263,7 +256,6 @@ class SignalRService implements ISignalRService {
     // Este handler solo parsea y emite al stream.
     // La lógica de negocio vive en los handlers de cada feature.
     _hubConnection!.on('broadcastMessage', (rawMessage) {
-      debugPrint('Mensaje recibido: $rawMessage');
       _handleIncomingMessage(rawMessage);
     });
   }

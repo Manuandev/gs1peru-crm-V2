@@ -6,7 +6,6 @@ import 'package:app_crm/core/index_core.dart';
 class DashboardCard extends StatelessWidget {
   final String label;
   final IconData icon;
-  final Color color;
   final int? badge;
   final VoidCallback? onTap;
 
@@ -14,7 +13,6 @@ class DashboardCard extends StatelessWidget {
     super.key,
     required this.label,
     required this.icon,
-    required this.color,
     this.badge,
     this.onTap,
   });

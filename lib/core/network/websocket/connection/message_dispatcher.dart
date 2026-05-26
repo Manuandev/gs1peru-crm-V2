@@ -2,7 +2,7 @@
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/navigation/app_route_observer.dart';
-import 'package:app_crm/core/network/websocket/websocket_message.dart';
+import 'package:app_crm/core/network/websocket/parser/websocket_message.dart';
 import 'package:app_crm/core/notifications/handlers/notification_handler.dart';
 import 'dart:async';
 
@@ -40,8 +40,9 @@ class MessageDispatcher {
 
     // Notificación solo si NO está viendo ese chat
     final bool enListaChats = route == AppRoutes.chats;
-    final bool enEsteDetalle = route == AppRoutes.detalleChat &&
-        AppRouteObserver.instance.activeLeadId == _leadId(message);
+    final bool enEsteDetalle =
+        (route == AppRoutes.detalleChat) &&
+        (AppRouteObserver.instance.activeLeadId == _leadId(message));
 
     if (!enListaChats && !enEsteDetalle) {
       NotificationHandler.instance.show(message);
@@ -76,10 +77,10 @@ class MessageDispatcher {
     if (!_streamController.isClosed) _streamController.add(message);
   }
 
-  String? _leadId(WebSocketMessage message) {
+  int? _leadId(WebSocketMessage message) {
     if (message.records.isEmpty) return null;
     final f = message.records.first;
-    return f.length > 2 ? f[2].trim() : null;
+    return f.length > 2 ? int.parse(f[2].trim()) : null;
   }
 
   void dispose() => _streamController.close();

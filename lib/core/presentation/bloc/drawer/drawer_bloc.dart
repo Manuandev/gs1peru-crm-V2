@@ -46,7 +46,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
         // newLeads: event.propuestas,
         prospectos: event.prospectos,
         propuestas: event.propuestas,
-        cobranzas: event.cobranzas,
+        cobranzas: event.cobranza,
       ),
     );
   }

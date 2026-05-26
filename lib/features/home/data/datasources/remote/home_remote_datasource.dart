@@ -18,7 +18,7 @@ class HomeRemoteDatasource {
       ApiEmpty() => const HomeModel(
           totConversaciones: 0,
           totProspectos: 0,
-          totPropuesta: 0,
+          totPropuestas: 0,
           totCobranza: 0,
           prioridades: [],
         ),

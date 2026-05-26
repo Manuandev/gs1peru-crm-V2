@@ -37,7 +37,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   }
 
   Future<void> _loadMessages(
-    String idLead,
+    int idLead,
     Emitter<ChatDetailState> emit,
   ) async {
     try {

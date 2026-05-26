@@ -10,7 +10,7 @@ abstract class ChatDetailEvent extends Equatable {
 }
 
 class ChatDetailStarted extends ChatDetailEvent {
-  final String idLead;
+  final int idLead;
   const ChatDetailStarted(this.idLead);
 
   @override
@@ -18,7 +18,7 @@ class ChatDetailStarted extends ChatDetailEvent {
 }
 
 class ChatDetailRefreshed extends ChatDetailEvent {
-  final String idLead;
+  final int idLead;
   const ChatDetailRefreshed(this.idLead);
 
   @override
@@ -26,7 +26,7 @@ class ChatDetailRefreshed extends ChatDetailEvent {
 }
 
 class ChatDetailMoreMessagesLoaded extends ChatDetailEvent {
-  final String idLead;
+  final int idLead;
   final String idUltimoMensaje;
   const ChatDetailMoreMessagesLoaded({
     required this.idLead,

@@ -8,7 +8,7 @@ class MessageUrlHelper {
 
   /// URL base del archivo:
   /// https://host/archivos_wsp_gs1/{idLead}/{idChatCab}/archivos_adjuntos/{nomArchivo}{extArchivo}
-  static String buildFileUrl(ChatMessage message, String idLead) {
+  static String buildFileUrl(ChatMessage message, int idLead) {
     final base = EnvConfig.urlArchivos;
     final cab = message.idChatCab;
     final nombre = Uri.encodeComponent(message.nomArchivo);

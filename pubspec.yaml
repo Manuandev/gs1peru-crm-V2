@@ -44,6 +44,7 @@ dependencies:
   video_player: ^2.11.1
   chewie: ^1.13.1
   get_video_thumbnail: ^0.7.0
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:

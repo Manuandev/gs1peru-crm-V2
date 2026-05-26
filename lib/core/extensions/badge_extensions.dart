@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 extension BadgeExtension on BuildContext {
-  void updateBadge({int? conversaciones, int? prospectos, int? propuestas, int? cobranzas}) {
+  void updateBadge({int? conversaciones, int? prospectos, int? propuestas, int? cobranza}) {
     read<DrawerBloc>().add(
       DrawerBadgesUpdated(
         conversaciones: conversaciones,
         prospectos: prospectos,
         propuestas: propuestas,
-        cobranzas: cobranzas,
+        cobranza: cobranza,
         // newLead: leads,
         // pendingReminders: reminders,
         // unreadChats: chats,

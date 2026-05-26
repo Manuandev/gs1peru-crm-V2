@@ -10,6 +10,7 @@ export 'constants/app_breakpoints.dart';
 export 'constants/app_images.dart';
 export 'constants/app_menu_items.dart';
 export 'constants/app_spacing.dart';
+export 'constants/app_icons_social.dart';
 // #endregion constants
 
 // #region database
@@ -20,6 +21,9 @@ export 'database/local_database.dart';
 export 'errors/app_exception.dart';
 
 export 'extensions/badge_extensions.dart';
+
+export 'helpers/canal_helper.dart';
+export 'helpers/estado_helper.dart';
 
 export 'mixins/double_back_to_exit_mixin.dart';
 
@@ -38,12 +42,15 @@ export 'network/interceptors/interceptors.dart';
 export 'network/interceptors/clean_response_interceptor.dart';
 export 'network/interceptors/token_interceptor.dart';
 
-export 'network/websocket/i_signalr_service.dart';
-export 'network/websocket/signalr_service.dart';
-export 'network/websocket/websocket_connection_state.dart';
-export 'network/websocket/websocket_message.dart';
-export 'network/websocket/websocket_message_parser.dart';
-export 'network/websocket/message_dispatcher.dart';
+export 'network/websocket/connection/i_signalr_service.dart';
+export 'network/websocket/connection/signalr_service.dart';
+export 'network/websocket/connection/websocket_connection_state.dart';
+export 'network/websocket/connection/message_dispatcher.dart';
+
+export 'network/websocket/parser/websocket_message.dart';
+export 'network/websocket/parser/websocket_message_parser.dart';
+
+export 'network/websocket/payloads/whatsapp_message_payload.dart';
 // #endregion network
 
 // #region notificaciones

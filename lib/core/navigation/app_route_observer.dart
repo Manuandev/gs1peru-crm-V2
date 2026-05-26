@@ -9,12 +9,12 @@ class AppRouteObserver extends RouteObserver<ModalRoute<Object?>> {
   static final AppRouteObserver instance = AppRouteObserver._();
 
   String? _currentRoute;
-  String? _activeLeadId; // seteado por ChatDetailPage
+  int? _activeLeadId; // seteado por ChatDetailPage
 
   String? get currentRoute => _currentRoute;
-  String? get activeLeadId => _activeLeadId;
+  int? get activeLeadId => _activeLeadId;
 
-  void setActiveLead(String? id) => _activeLeadId = id;
+  void setActiveLead(int? id) => _activeLeadId = id;
 
   @override
   void didPush(Route route, Route? previousRoute) {

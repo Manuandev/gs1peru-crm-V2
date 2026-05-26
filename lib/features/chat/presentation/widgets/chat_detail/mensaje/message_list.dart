@@ -9,7 +9,7 @@ class MessageList extends StatelessWidget {
   final ScrollController scrollController;
   final bool isLoadingMore;
   final AudioController audioController;
-  final String idLead;
+  final int idLead;
 
   const MessageList({
     super.key,

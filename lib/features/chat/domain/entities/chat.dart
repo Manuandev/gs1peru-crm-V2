@@ -3,7 +3,7 @@
 import 'package:equatable/equatable.dart';
 
 class Chat extends Equatable {
-  final String idLead; // 00 - ID_LEAD
+  final int idLead; // 00 - ID_LEAD
   final String nombreApe; // 01 - B.NOMBRE + ' ' + B.APELLIDOS
   final String telefono; // 02 - TELEFONO (+51-958914300)
   final String mensaje; // 03 - MENSAJE

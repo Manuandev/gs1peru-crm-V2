@@ -21,7 +21,7 @@ class ChatModel extends Chat {
     String f(int i) => i < fields.length ? fields[i].trim() : '';
 
     return ChatModel(
-      idLead: f(0),
+      idLead: int.parse(f(0)),
       nombreApe: f(1),
       telefono: f(2),
       mensaje: f(3),

@@ -14,26 +14,14 @@ import 'package:flutter/material.dart';
 class HomeMenuCards extends StatelessWidget {
   final HomeLoaded state;
 
-  const HomeMenuCards({
-    super.key,
-    required this.state,
-  });
+  const HomeMenuCards({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
-      mobile: (context) => _FlexCards(
-        state: state,
-        itemsRow: 2,
-      ),
-      tablet: (context) => _FlexCards(
-        state: state,
-        itemsRow: 3,
-      ),
-      desktop: (context) => _FlexCards(
-        state: state,
-        itemsRow: 4,
-      ),
+      mobile: (context) => _FlexCards(state: state, itemsRow: 2),
+      tablet: (context) => _FlexCards(state: state, itemsRow: 3),
+      desktop: (context) => _FlexCards(state: state, itemsRow: 4),
     );
   }
 }
@@ -42,17 +30,14 @@ class _FlexCards extends StatelessWidget {
   final HomeLoaded state;
   final int itemsRow;
 
-  const _FlexCards({
-    required this.state,
-    required this.itemsRow,
-  });
+  const _FlexCards({required this.state, required this.itemsRow});
 
   @override
   Widget build(BuildContext context) {
     final items = AppMenuItems.withBadges(
       conversacionesBadge: state.totConversaciones,
       prospectosBadge: state.totProspectos,
-      propuestasBadge: state.totPropuesta,
+      propuestasBadge: state.totPropuestas,
       cobranzaBadge: state.totCobranza,
     );
 
@@ -81,7 +66,10 @@ class _FlexCards extends StatelessWidget {
                     label: rows[r][c].label,
                     icon: rows[r][c].icon,
                     badge: rows[r][c].badge,
-                    onTap: () {},
+                    onTap: () {
+                      final route = rows[r][c].route;
+                      if (route != null) context.clearStackAndNavigateTo(route);
+                    },
                   ),
                 ),
               ],

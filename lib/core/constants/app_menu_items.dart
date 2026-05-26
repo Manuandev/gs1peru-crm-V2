@@ -40,18 +40,6 @@ class AppMenuItems {
 
   static const List<DrawerItemModel> mainItems = [
     home,
-    // DrawerItemModel(
-    //   id: AppRoutes.leads,
-    //   icon: Icons.people_outline,
-    //   label: 'Leads',
-    //   route: AppRoutes.leads,
-    // ),
-    // DrawerItemModel(
-    //   id: AppRoutes.recordatorios,
-    //   icon: Icons.alarm_outlined,
-    //   label: 'Recordatorios',
-    //   route: AppRoutes.recordatorios,
-    // ),
     DrawerItemModel(
       id: AppRoutes.chats,
       icon: AppIcons.message,
@@ -59,16 +47,16 @@ class AppMenuItems {
       route: AppRoutes.chats,
     ),
     DrawerItemModel(
-      id: AppRoutes.chats,
+      id: AppRoutes.prospectos,
       icon: AppIcons.user,
       label: 'Prospectos',
-      route: AppRoutes.chats,
+      route: AppRoutes.prospectos,
     ),
     DrawerItemModel(
-      id: AppRoutes.chats,
+      id: AppRoutes.propuestas,
       icon: AppIcons.fileOutlined,
       label: 'Propuestas',
-      route: AppRoutes.chats,
+      route: AppRoutes.propuestas,
     ),
     DrawerItemModel(
       id: AppRoutes.cobranza,
@@ -97,20 +85,6 @@ class AppMenuItems {
   }) {
     return [
       home,
-      // DrawerItemModel(
-      //   id: AppRoutes.leads,
-      //   icon: Icons.people_outline,
-      //   label: 'Leads',
-      //   route: AppRoutes.leads,
-      //   badge: leadsBadge,
-      // ),
-      // DrawerItemModel(
-      //   id: AppRoutes.recordatorios,
-      //   icon: Icons.alarm_outlined,
-      //   label: 'Recordatorios',
-      //   route: AppRoutes.recordatorios,
-      //   badge: remindersBadge,
-      // ),
       DrawerItemModel(
         id: AppRoutes.chats,
         icon: AppIcons.message,
@@ -119,17 +93,17 @@ class AppMenuItems {
         badge: conversacionesBadge,
       ),
       DrawerItemModel(
-        id: AppRoutes.chats,
+        id: AppRoutes.prospectos,
         icon: AppIcons.user,
         label: 'Prospectos',
-        route: AppRoutes.chats,
+        route: AppRoutes.prospectos,
         badge: prospectosBadge,
       ),
       DrawerItemModel(
-        id: AppRoutes.chats,
+        id: AppRoutes.propuestas,
         icon: AppIcons.fileOutlined,
         label: 'Propuestas',
-        route: AppRoutes.chats,
+        route: AppRoutes.propuestas,
         badge: propuestasBadge,
       ),
       DrawerItemModel(

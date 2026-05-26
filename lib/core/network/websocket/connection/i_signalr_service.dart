@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'websocket_connection_state.dart';
-import 'websocket_message.dart';
+import '../parser/websocket_message.dart';
 
 /// Contrato del servicio de WebSocket / SignalR.
 ///

@@ -9,14 +9,14 @@ class ChatRepositoryImpl implements ChatRepository {
 
 
   @override
-  Future<InfoLead> getInfoLead(String idLead) => _datasource.getInfoLead(idLead);
+  Future<InfoLead> getInfoLead(int idLead) => _datasource.getInfoLead(idLead);
 
   @override
   Future<List<Chat>> getChats() => _datasource.getChats();
 
   @override
   Future<List<ChatMessage>> getChatMessages(
-    String idLead, {
+    int idLead, {
     String? idUltimoMensaje,
   }) => _datasource.getChatMessages(idLead, idUltimoMensaje: idUltimoMensaje);
 }

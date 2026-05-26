@@ -40,8 +40,6 @@ class PrioridadSectionHome extends StatelessWidget {
                   PrioridadTileHome(prioridad: e.value),
                   if (!isLast)
                     Divider(
-                      height: 0.5,
-                      indent: 52,
                       // ignore: deprecated_member_use
                       color: colorScheme.outlineVariant.withOpacity(0.3),
                     ),

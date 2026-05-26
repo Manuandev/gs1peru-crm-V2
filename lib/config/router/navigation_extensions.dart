@@ -69,11 +69,11 @@ extension NavigationExtensions on BuildContext {
   // MÓDULOS SECUNDARIOS - CHATS
   // ============================================================
 
-  Future<void> goToDetalleChat({required String idLead}) {
+  Future<void> goToDetalleChat({required int idLead}) {
     return navigateTo(AppRoutes.detalleChat, arguments: {'idLead': idLead});
   }
 
-  Future<void> goToDetalleChatDesdeHome({required String idLead}) {
+  Future<void> goToDetalleChatDesdeHome({required int idLead}) {
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return Future.value();
 

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChatDetailPage extends StatelessWidget {
-  final String idLead;
+  final int idLead;
 
   const ChatDetailPage({super.key, required this.idLead});
 

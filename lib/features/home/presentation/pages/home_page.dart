@@ -44,6 +44,9 @@ class HomePage extends StatelessWidget {
             } else if (state is HomeLoaded) {
               context.updateBadge(
                 conversaciones: state.totConversaciones,
+                prospectos: state.totProspectos,
+                propuestas: state.totPropuestas,
+                cobranza: state.totCobranza,
               );
             }
           },

@@ -12,12 +12,12 @@ class DrawerBadgesUpdated extends DrawerEvent {
   // final int? newLeads;
   final int? prospectos;
   final int? propuestas;
-  final int? cobranzas;
+  final int? cobranza;
 
   DrawerBadgesUpdated({
     this.conversaciones,
     this.prospectos,
     this.propuestas,
-    this.cobranzas,
+    this.cobranza,
   });
 }

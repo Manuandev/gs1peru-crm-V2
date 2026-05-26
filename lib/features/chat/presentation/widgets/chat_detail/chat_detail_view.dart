@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChatDetailView extends StatefulWidget {
-  final String idLead;
+  final int idLead;
   const ChatDetailView({super.key, required this.idLead});
 
   @override

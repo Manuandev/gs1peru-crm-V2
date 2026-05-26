@@ -20,7 +20,7 @@ import 'package:get_video_thumbnail/get_video_thumbnail.dart';
 class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final AudioController audioController;
-  final String idLead;
+  final int idLead;
 
   const MessageBubble({
     super.key,
@@ -234,7 +234,7 @@ class _BubbleTimeRow extends StatelessWidget {
 
 class _ImageContent extends StatelessWidget {
   final ChatMessage message;
-  final String idLead;
+  final int idLead;
 
   const _ImageContent({required this.message, required this.idLead});
 
@@ -340,7 +340,7 @@ class _ImageErrorBox extends StatelessWidget {
 
 class _VideoContent extends StatelessWidget {
   final ChatMessage message;
-  final String idLead;
+  final int idLead;
 
   const _VideoContent({required this.message, required this.idLead});
 
@@ -531,7 +531,7 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
 
 class _DocumentContent extends StatefulWidget {
   final ChatMessage message;
-  final String idLead;
+  final int idLead;
   final Color textColor;
 
   const _DocumentContent({
@@ -682,7 +682,7 @@ class _DocumentContentState extends State<_DocumentContent> {
 
 class _TemplateContent extends StatelessWidget {
   final ChatMessage message;
-  final String idLead;
+  final int idLead;
   final Color textColor;
   final AudioController audioController;
 

@@ -8,7 +8,7 @@ class ChatRemoteDatasource {
   final ApiClient _api = ApiClient();
   final _session = SessionService();
 
-  Future<InfoLeadModel> getInfoLead(String idLead) async {
+  Future<InfoLeadModel> getInfoLead(int idLead) async {
     final String body = '$idLead¯D';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
@@ -37,7 +37,7 @@ class ChatRemoteDatasource {
   }
 
   Future<List<ChatMessageModel>> getChatMessages(
-    String idLead, {
+    int idLead, {
     String? idUltimoMensaje, // null = primera carga
   }) async {
     final result = await _api.postSafe(

@@ -7,7 +7,7 @@ class HomeModel extends Home {
   const HomeModel({
     required super.totConversaciones,
     required super.totProspectos,
-    required super.totPropuesta,
+    required super.totPropuestas,
     required super.totCobranza,
     required super.prioridades,
   });
@@ -43,7 +43,7 @@ class HomeModel extends Home {
     return HomeModel(
       totConversaciones: t(0),
       totProspectos: t(1),
-      totPropuesta: t(2),
+      totPropuestas: t(2),
       totCobranza: t(3),
       prioridades: prioridades,
     );

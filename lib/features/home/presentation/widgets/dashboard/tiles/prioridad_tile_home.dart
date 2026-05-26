@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 import 'package:flutter/material.dart';
@@ -45,13 +46,17 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
     final theme = Theme.of(context);
     final themeText = theme.textTheme;
 
-    final titleStyle = themeText.titleMedium?.copyWith(
+    final titleStyle = themeText.titleSmall?.copyWith(
       fontWeight: FontWeight.w700,
-      color: themeText.titleMedium!.color,
+      color: themeText.titleSmall!.color,
     );
 
     final labelMediumStyle = themeText.labelMedium?.copyWith(
       color: themeText.labelMedium!.color,
+    );
+
+    final labelSmallStyle = themeText.labelSmall?.copyWith(
+      color: themeText.labelSmall!.color,
     );
 
     final errorStyle = themeText.labelMedium?.copyWith(
@@ -80,11 +85,21 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                 SizedBox(height: AppSpacing.xs),
                 Row(
                   children: [
-                    if (prioridad.canal.isNotEmpty)
-                      Text(prioridad.canal, style: labelMediumStyle),
-                    if (prioridad.canal.isNotEmpty)
-                      SizedBox(width: AppSpacing.sm),
-                    Text(prioridad.estado, style: labelMediumStyle),
+                    if (prioridad.idCanal.isNotEmpty) ...[
+                      AppIconsSocial.widgetCanal(prioridad.idCanal),
+                      SizedBox(width: AppSpacing.xxs),
+                      Text(
+                        CanalHelper.get(prioridad.idCanal).nombre,
+                        style: labelSmallStyle,
+                      ),
+                      SizedBox(width: AppSpacing.xs),
+                    ],
+                    if (prioridad.idEstado.isNotEmpty) ...[
+                      AppIconsSocial.chipEstado(
+                        prioridad.idEstado,
+                        label: prioridad.estado,
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -104,7 +119,9 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               ActionButtonWidget(
                 icon: AppIcons.message,
                 color: Colors.green,
-                onTap: () {},
+                onTap: () {
+                  context.goToDetalleChatDesdeHome(idLead: prioridad.idLead);
+                },
                 tooltip: 'Mensaje',
               ),
               ActionButtonWidget(

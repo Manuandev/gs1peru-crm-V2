@@ -34,7 +34,7 @@ class NotificationHandler {
     if (route == AppRoutes.chats) return true;
 
     if (route == AppRoutes.detalleChat) {
-      final String? activeId = AppRouteObserver.instance.activeLeadId;
+      final int? activeId = AppRouteObserver.instance.activeLeadId;
       final String? incomingId = _extractLeadId(message);
       return activeId != null && activeId == incomingId;
     }

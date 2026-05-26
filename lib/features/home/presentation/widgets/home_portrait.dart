@@ -42,7 +42,7 @@ class HomePortrait extends StatelessWidget {
           Text('totalConversaciones: ${state.totConversaciones}'),
           Text('totCobranza: ${state.totCobranza}'),
           Text('totProspectos: ${state.totProspectos}'),
-          Text('totPropuesta: ${state.totPropuesta}'),
+          Text('totPropuesta: ${state.totPropuestas}'),
           // ── MENU CARDS ──────────────────────────────────────
           HomeMenuCards(state: state),
           const SizedBox(height: AppSpacing.md),

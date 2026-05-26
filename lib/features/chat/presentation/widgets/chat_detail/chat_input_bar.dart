@@ -44,7 +44,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    context.read<ChatDetailBloc>().add(ChatDetailTextMessageSent(text));
+    String numero = '';
+    final infoState = context.read<InfoLeadCubit>().state;
+    if (infoState is InfoLeadSuccess) {
+      numero = infoState.infoLead.telefono.replaceAll(RegExp(r'[^0-9]'), '');
+    }
+
+    String chatCab = '';
+    final chatState = context.read<ChatDetailBloc>().state;
+    if (chatState is ChatDetailSuccess && chatState.messages.isNotEmpty) {
+      chatCab = chatState.messages.first.idChatCab;
+    }
+
+    context.read<ChatDetailBloc>().add(ChatDetailTextMessageSent(text, numero: numero, chatCab: chatCab));
     _textController.clear();
     widget.onScrollToBottom();
   }

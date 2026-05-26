@@ -16,6 +16,7 @@ class ChatDetailPage extends StatelessWidget {
         BlocProvider(
           create: (_) => ChatDetailBloc(
             GetChatMessagesUseCase(context.read<ChatRepository>()),
+            SendChatMessageUseCase(context.read<ChatRepository>()),
           )..add(ChatDetailStarted(idLead)),
         ),
         BlocProvider(

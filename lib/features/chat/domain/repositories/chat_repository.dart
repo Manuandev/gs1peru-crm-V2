@@ -10,4 +10,6 @@ abstract class ChatRepository {
     int idLead, {
     String? idUltimoMensaje,
   });
+
+  bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab);
 }

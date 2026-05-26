@@ -43,4 +43,32 @@ class ChatMessage extends Equatable {
     idChatCab,
     idChatDet,
   ];
+
+  ChatMessage copyWith({
+    String? mensaje,
+    String? estado,
+    String? idMensaje,
+    bool? isEnviado,
+    String? tipo,
+    String? fecha,
+    String? idChatDetArc,
+    String? nomArchivo,
+    String? extArchivo,
+    String? idChatCab,
+    String? idChatDet,
+  }) {
+    return ChatMessage(
+      mensaje: mensaje ?? this.mensaje,
+      estado: estado ?? this.estado,
+      idMensaje: idMensaje ?? this.idMensaje,
+      isEnviado: isEnviado ?? this.isEnviado,
+      tipo: tipo ?? this.tipo,
+      fecha: fecha ?? this.fecha,
+      idChatDetArc: idChatDetArc ?? this.idChatDetArc,
+      nomArchivo: nomArchivo ?? this.nomArchivo,
+      extArchivo: extArchivo ?? this.extArchivo,
+      idChatCab: idChatCab ?? this.idChatCab,
+      idChatDet: idChatDet ?? this.idChatDet,
+    );
+  }
 }

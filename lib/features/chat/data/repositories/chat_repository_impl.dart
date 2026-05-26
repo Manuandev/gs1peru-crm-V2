@@ -19,4 +19,8 @@ class ChatRepositoryImpl implements ChatRepository {
     int idLead, {
     String? idUltimoMensaje,
   }) => _datasource.getChatMessages(idLead, idUltimoMensaje: idUltimoMensaje);
+
+  @override
+  bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab) =>
+      _datasource.sendWhatsAppMessage(mensaje, idLead, numero, chatCab);
 }

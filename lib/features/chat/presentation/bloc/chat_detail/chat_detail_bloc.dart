@@ -5,17 +5,37 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // ignore: depend_on_referenced_packages
 import 'package:uuid/uuid.dart';
+ import 'dart:async';
 
 class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   final GetChatMessagesUseCase _getChatMessages;
+  final SendChatMessageUseCase _sendChatMessage;
+  StreamSubscription<WebSocketMessage>? _messageSubscription;
+  int? _currentLeadId;
 
-  ChatDetailBloc(this._getChatMessages) : super(const ChatDetailInitial()) {
+  ChatDetailBloc(
+    this._getChatMessages,
+    this._sendChatMessage,
+  ) : super(const ChatDetailInitial()) {
     on<ChatDetailStarted>(_onStarted);
     on<ChatDetailRefreshed>(_onRefreshed);
     on<ChatDetailMoreMessagesLoaded>(_onMoreMessagesLoaded);
     on<ChatDetailTextMessageSent>(_onTextMessageSent);
     on<ChatDetailAudioMessageSent>(_onAudioMessageSent);
     on<ChatDetailFileMessageSent>(_onFileMessageSent);
+    on<ChatDetailIncomingMessageReceived>(_onIncomingMessageReceived);
+
+    _messageSubscription = MessageDispatcher.instance.stream.listen((message) {
+      if (!isClosed) {
+        add(ChatDetailIncomingMessageReceived(message));
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _messageSubscription?.cancel();
+    return super.close();
   }
 
   // ── Carga inicial ──────────────────────────────────────────────────────────
@@ -24,6 +44,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     ChatDetailStarted event,
     Emitter<ChatDetailState> emit,
   ) async {
+    _currentLeadId = event.idLead;
     emit(const ChatDetailLoading());
     await _loadMessages(event.idLead, emit);
   }
@@ -121,9 +142,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (state is! ChatDetailSuccess) return;
     if (event.mensaje.trim().isEmpty) return;
 
+    final tempId = const Uuid().v4();
+
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idMensaje: const Uuid().v4(),
+      idMensaje: tempId,
       fecha: DateTime.now().toIso8601String(),
       isEnviado: true,
       mensaje: event.mensaje.trim(),
@@ -132,7 +155,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       idChatDetArc: '',
       nomArchivo: '',
       extArchivo: '',
-      idChatCab: '',
+      idChatCab: event.chatCab,
       idChatDet: '',
     );
 
@@ -141,6 +164,15 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         messages: [...currentMessages, newMessage],
       ),
     );
+
+    if (_currentLeadId != null) {
+      _sendChatMessage(
+        event.mensaje.trim(),
+        _currentLeadId.toString(),
+        event.numero,
+        event.chatCab,
+      );
+    }
   }
 
   void _onAudioMessageSent(
@@ -197,5 +229,57 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         messages: [...currentMessages, newMessage],
       ),
     );
+  }
+
+  void _onIncomingMessageReceived(
+    ChatDetailIncomingMessageReceived event,
+    Emitter<ChatDetailState> emit,
+  ) {
+    if (state is! ChatDetailSuccess) return;
+    final currentState = state as ChatDetailSuccess;
+
+    if (event.message.process != 'MENSAJE_WHATSAPP') return;
+
+    final payload = WhatsAppMessagePayload.fromMessage(event.message);
+    if (payload == null) return;
+
+    // Solo procesamos si pertenece a este lead
+    if (payload.leadId != _currentLeadId) return;
+
+    final currentMessages = List<ChatMessage>.from(currentState.messages);
+
+    // Buscar si tenemos un mensaje pendiente (estado 'wait') con el mismo contenido
+    // asumiendo que el server broadcast envía de vuelta el mensaje de nuestro usuario (isEnviado = true)
+    final pendingIndex = currentMessages.lastIndexWhere(
+      (m) => m.estado == 'wait' && m.mensaje == payload.mensaje && m.isEnviado == true,
+    );
+
+    final incomingMessage = ChatMessage(
+      idMensaje: payload.whatsappMsgId.isNotEmpty ? payload.whatsappMsgId : payload.idInterno.toString(),
+      fecha: payload.fecha.isNotEmpty ? payload.fecha : DateTime.now().toIso8601String(),
+      isEnviado: true, // Si es el nuestro, isEnviado es true, si es del cliente, false. 
+      // NOTA: Para diferenciar envíado/recibido normalmente validas contra un ID de asesor o algo,
+      // pero provisionalmente lo dejamos como isEnviado = pendingIndex != -1, o mejor aún,
+      // la API nos mandará un flag. Asumiremos que si estaba en wait, es nuestro.
+      mensaje: payload.mensaje,
+      tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
+      estado: 'sent', // O el estado real
+      idChatDetArc: '',
+      nomArchivo: payload.nomArchivo,
+      extArchivo: '',
+      idChatCab: '',
+      idChatDet: payload.idInterno.toString(),
+    );
+
+    if (pendingIndex != -1) {
+      // Reemplazar optimista
+      currentMessages[pendingIndex] = incomingMessage.copyWith(isEnviado: true);
+    } else {
+      // Nuevo mensaje entrante
+      // Asumiremos isEnviado = false (es decir, del cliente) a menos que la trama nos indique otra cosa
+      currentMessages.add(incomingMessage.copyWith(isEnviado: false));
+    }
+
+    emit(currentState.copyWith(messages: currentMessages));
   }
 }

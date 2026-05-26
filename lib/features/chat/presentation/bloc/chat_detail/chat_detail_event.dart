@@ -1,5 +1,6 @@
 // lib\features\chat\presentation\bloc\chat_detail\chat_detail_event.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class ChatDetailEvent extends Equatable {
@@ -7,6 +8,14 @@ abstract class ChatDetailEvent extends Equatable {
 
   @override
   List<Object?> get props => [];
+}
+
+class ChatDetailIncomingMessageReceived extends ChatDetailEvent {
+  final WebSocketMessage message;
+  const ChatDetailIncomingMessageReceived(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
 
 class ChatDetailStarted extends ChatDetailEvent {
@@ -39,10 +48,12 @@ class ChatDetailMoreMessagesLoaded extends ChatDetailEvent {
 
 class ChatDetailTextMessageSent extends ChatDetailEvent {
   final String mensaje;
-  const ChatDetailTextMessageSent(this.mensaje);
+  final String numero;
+  final String chatCab;
+  const ChatDetailTextMessageSent(this.mensaje, {this.numero = '', this.chatCab = ''});
 
   @override
-  List<Object?> get props => [mensaje];
+  List<Object?> get props => [mensaje, numero, chatCab];
 }
 
 class ChatDetailAudioMessageSent extends ChatDetailEvent {

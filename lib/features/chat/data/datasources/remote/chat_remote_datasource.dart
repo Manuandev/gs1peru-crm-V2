@@ -52,4 +52,12 @@ class ChatRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab) {
+    final user = _session.user;
+    if (user == null) return false;
+
+    String data = "${user.token}¯$idLead¦¦${user.codUser}¦$mensaje¦text¦$numero¦0¦¦$chatCab¦¦¦¦${user.codUser}¦¯CA";
+    return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP¯$data");
+  }
 }

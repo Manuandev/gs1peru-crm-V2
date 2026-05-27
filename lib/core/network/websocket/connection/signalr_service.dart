@@ -1,10 +1,10 @@
 // lib\core\network\websocket\signalr_service.dart
 
 import 'dart:async';
-import 'package:flutter/foundation.dart';
-import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/index_dependencies.dart';
+import 'package:flutter/foundation.dart';
 
 /// Implementación del servicio SignalR.
 ///
@@ -64,6 +64,9 @@ class SignalRService implements ISignalRService {
 
   static const Duration _heartbeatInterval = Duration(seconds: 15);
   static const Duration _pingTimeout = Duration(seconds: 8);
+
+  static const Duration _pauseBetweenCycles = Duration(minutes: 1);
+  static const int _attemptsPerCycle = 3;
 
   // ─── Getters públicos ─────────────────────────────────────────────────────
 
@@ -136,14 +139,23 @@ class SignalRService implements ISignalRService {
     }
 
     // Agotamos intentos del while — programar reconexión con backoff
-    _isConnecting = false;
-    _emitState(WebSocketConnectionState.disconnected);
+    // _isConnecting = false;
+    // _emitState(WebSocketConnectionState.disconnected);
 
-    if (_currentState != WebSocketConnectionState.manuallyClosed &&
-        _hasInternet) {
-      _scheduleReconnect();
+    // if (_currentState != WebSocketConnectionState.manuallyClosed &&
+    //     _hasInternet) {
+    //   _scheduleReconnect();
+    // }
+    _isConnecting = false;
+
+    if (_currentState == WebSocketConnectionState.manuallyClosed ||
+        !_hasInternet) {
+      _emitState(WebSocketConnectionState.disconnected);
+      _startConnectivityMonitoring();
+      return;
     }
 
+    _scheduleCyclePause();
     _startConnectivityMonitoring();
   }
 
@@ -208,6 +220,7 @@ class SignalRService implements ISignalRService {
     }
 
     try {
+      debugPrint('MENSAJE ENVIADO: $message');
       _hubConnection!.invoke('OnMessage', args: <Object>[message]);
       return true;
     } catch (_) {
@@ -261,7 +274,7 @@ class SignalRService implements ISignalRService {
   // ─── Manejo de mensajes ───────────────────────────────────────────────────
 
   void _handleIncomingMessage(dynamic rawMessage) {
-    debugPrint('Mensaje recibido: $rawMessage');
+    debugPrint('MENSAJE RECIBIDO: $rawMessage');
 
     // Si llegó un mensaje, la conexión está viva
     if (!isConnected && _isHubConnected()) {
@@ -309,7 +322,39 @@ class SignalRService implements ISignalRService {
     _heartbeatTimer = null;
   }
 
-  // ─── Reconexión con backoff exponencial ──────────────────────────────────
+  // ─── Pausa entre ciclos (1 minuto) ───────────────────────────────────────
+
+  /// Llamado cuando un ciclo completo de [_attemptsPerCycle] intentos falla.
+  /// Espera [_pauseBetweenCycles] y luego inicia un nuevo ciclo desde cero.
+  void _scheduleCyclePause() {
+    if (_currentState == WebSocketConnectionState.manuallyClosed) return;
+    if (isConnected) return;
+
+    _reconnectTimer?.cancel();
+
+    debugPrint(
+      'SignalR: ciclo de $_attemptsPerCycle intentos fallido. '
+      'Esperando ${_pauseBetweenCycles.inSeconds}s antes del próximo ciclo.',
+    );
+
+    // Emitir un estado que indique pausa larga (reconnecting sirve; si tienes
+    // un estado específico como "waitingCycle" puedes usarlo aquí).
+    _emitState(WebSocketConnectionState.reconnecting);
+
+    _reconnectTimer = Timer(_pauseBetweenCycles, () async {
+      if (_currentState == WebSocketConnectionState.manuallyClosed) return;
+      if (isConnected) return;
+      if (!_hasInternet) return;
+
+      // Reiniciar contadores y comenzar un ciclo nuevo
+      _reconnectAttempts = 0;
+      _isConnecting = false;
+      debugPrint('SignalR: iniciando nuevo ciclo de reconexión.');
+      await connect();
+    });
+  }
+
+  // ─── Reconexión con backoff exponencial (desconexión inesperada) ──────────
 
   void _scheduleReconnect() {
     if (_currentState == WebSocketConnectionState.manuallyClosed) return;
@@ -334,7 +379,6 @@ class SignalRService implements ISignalRService {
   }
 
   // ─── Conectividad de red ──────────────────────────────────────────────────
-
   void _startConnectivityMonitoring() {
     _connectivitySubscription?.cancel();
 
@@ -368,7 +412,6 @@ class SignalRService implements ISignalRService {
   }
 
   // ─── Helpers privados ─────────────────────────────────────────────────────
-
   bool _isHubConnected() {
     return _hubConnection != null &&
         _hubConnection!.state == HubConnectionState.Connected;

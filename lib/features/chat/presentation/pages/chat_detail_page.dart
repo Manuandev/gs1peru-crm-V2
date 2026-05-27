@@ -23,7 +23,7 @@ class ChatDetailPage extends StatelessWidget {
         BlocProvider(
           create: (_) => InfoLeadCubit(
             GetInfoUseCase(context.read<ChatRepository>()),
-          ), // 👈 esto faltaba
+          ),
         ),
       ],
       child: ChatDetailView(idLead: idLead),

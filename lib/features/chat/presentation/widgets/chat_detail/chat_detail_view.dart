@@ -17,10 +17,13 @@ class ChatDetailView extends StatefulWidget {
 class _ChatDetailViewState extends State<ChatDetailView> {
   final _scroll = ChatScrollController();
   final AudioController _audioController = AudioController();
+
   bool _isLoadingMore = false;
   bool _isInitialLoad = true;
   bool _showScrollDown = false;
+
   DateTime? _lastLoadMoreTime;
+
   int _previousMessageCount = 0;
 
   @override
@@ -178,19 +181,25 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
                       if (_isInitialLoad) {
                         _isInitialLoad = false;
+                      } else if (_isLoadingMore) {
+                        // Fue carga de paginación, no hacemos scroll automático hacia abajo
                       } else {
                         // Si se agregó un mensaje nuevo
-                        if (currentCount > _previousMessageCount && state.messages.isNotEmpty) {
+                        if (currentCount > _previousMessageCount &&
+                            state.messages.isNotEmpty) {
                           final nuevoMensaje = state.messages.last;
                           // Si yo lo envié O si estábamos al fondo (!showScrollDown)
                           if (nuevoMensaje.isEnviado || !_showScrollDown) {
-                            Future.delayed(const Duration(milliseconds: 150), () {
-                              _scroll.irAlFondo(animated: true);
-                            });
+                            Future.delayed(
+                              const Duration(milliseconds: 150),
+                              () {
+                                _scroll.irAlFondo(animated: true);
+                              },
+                            );
                           }
                         }
                       }
-                      
+
                       _previousMessageCount = currentCount;
                       _isLoadingMore = false;
                     }
@@ -231,12 +240,21 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                       );
                     }
 
-                    return MessageList(
-                      messages: messages,
-                      scrollController: _scroll.controller,
-                      isLoadingMore: isLoadingMore,
-                      audioController: _audioController,
-                      idLead: widget.idLead,
+                    return BlocBuilder<InfoLeadCubit, InfoLeadState>(
+                      builder: (context, infoState) {
+                        final nombre = infoState is InfoLeadSuccess
+                            ? infoState.infoLead.cliente
+                            : '';
+
+                        return MessageList(
+                          messages: messages,
+                          scrollController: _scroll.controller,
+                          isLoadingMore: isLoadingMore,
+                          audioController: _audioController,
+                          idLead: widget.idLead,
+                          nombre: nombre,
+                        );
+                      },
                     );
                   },
                 ),

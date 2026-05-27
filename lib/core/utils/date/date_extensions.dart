@@ -19,4 +19,8 @@ extension StringDateFormatting on String {
   String formatWhatsApp() {
     return DateFormatter.formatWhatsApp(this);
   }
+
+  String formatWhatsAppMultimedia() {
+    return DateFormatter.formatWhatsAppMultimedia(this);
+  }
 }

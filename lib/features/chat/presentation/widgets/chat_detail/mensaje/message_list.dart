@@ -10,6 +10,7 @@ class MessageList extends StatelessWidget {
   final bool isLoadingMore;
   final AudioController audioController;
   final int idLead;
+  final String nombre;
 
   const MessageList({
     super.key,
@@ -18,6 +19,7 @@ class MessageList extends StatelessWidget {
     required this.audioController,
     this.isLoadingMore = false,
     required this.idLead,
+    required this.nombre,
   });
 
   @override
@@ -65,6 +67,7 @@ class MessageList extends StatelessWidget {
               message: message,
               audioController: audioController,
               idLead: idLead,
+              nombre: nombre,
             ),
           ],
         );

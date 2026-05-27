@@ -56,7 +56,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
       chatCab = chatState.messages.first.idChatCab;
     }
 
-    context.read<ChatDetailBloc>().add(ChatDetailTextMessageSent(text, numero: numero, chatCab: chatCab));
+    context.read<ChatDetailBloc>().add(
+      ChatDetailTextMessageSent(text, numero: numero, chatCab: chatCab),
+    );
     _textController.clear();
   }
 

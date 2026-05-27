@@ -21,12 +21,14 @@ class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final AudioController audioController;
   final int idLead;
+  final String nombre;
 
   const MessageBubble({
     super.key,
     required this.message,
     required this.audioController,
     required this.idLead,
+    required this.nombre,
   });
 
   bool get _isImageMsg => MessageUrlHelper.isImage(message);
@@ -137,7 +139,7 @@ class MessageBubble extends StatelessWidget {
   Widget _buildContent(BuildContext context, Color textColor) {
     switch (message.tipo) {
       case 'image':
-        return _ImageContent(message: message, idLead: idLead);
+        return _ImageContent(message: message, idLead: idLead, nombre: nombre);
 
       case 'audio':
         final path = _isLocalFile
@@ -153,7 +155,7 @@ class MessageBubble extends StatelessWidget {
         );
 
       case 'video':
-        return _VideoContent(message: message, idLead: idLead);
+        return _VideoContent(message: message, idLead: idLead, nombre: nombre);
 
       case 'document':
         return Padding(
@@ -173,6 +175,7 @@ class MessageBubble extends StatelessWidget {
             idLead: idLead,
             textColor: textColor,
             audioController: audioController,
+            nombre: nombre,
           ),
         );
 
@@ -267,8 +270,13 @@ class _BubbleTimeRow extends StatelessWidget {
 class _ImageContent extends StatelessWidget {
   final ChatMessage message;
   final int idLead;
+  final String nombre;
 
-  const _ImageContent({required this.message, required this.idLead});
+  const _ImageContent({
+    required this.message,
+    required this.idLead,
+    required this.nombre,
+  });
 
   bool get _isLocal => message.idChatCab.isEmpty;
 
@@ -278,6 +286,8 @@ class _ImageContent extends StatelessWidget {
         pageBuilder: (_, _, _) => MediaViewerPage(
           url: urlOrPath,
           fileName: '${message.nomArchivo}${message.extArchivo}',
+          senderName: nombre,
+          sentAt: message.fecha,
         ),
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
@@ -373,8 +383,13 @@ class _ImageErrorBox extends StatelessWidget {
 class _VideoContent extends StatelessWidget {
   final ChatMessage message;
   final int idLead;
+  final String nombre;
 
-  const _VideoContent({required this.message, required this.idLead});
+  const _VideoContent({
+    required this.message,
+    required this.idLead,
+    required this.nombre,
+  });
 
   bool get _isLocal => message.idChatCab.isEmpty;
 
@@ -395,9 +410,11 @@ class _VideoContent extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           PageRouteBuilder(
-            pageBuilder: (_, _, _) => VideoViewerPage(
+            pageBuilder: (_, _, _) => MediaViewerPage(
               url: url,
               fileName: '${message.nomArchivo}${message.extArchivo}',
+              senderName: nombre,
+              sentAt: message.fecha,
             ),
             transitionsBuilder: (_, animation, _, child) =>
                 FadeTransition(opacity: animation, child: child),
@@ -711,12 +728,14 @@ class _TemplateContent extends StatelessWidget {
   final int idLead;
   final Color textColor;
   final AudioController audioController;
+  final String nombre;
 
   const _TemplateContent({
     required this.message,
     required this.idLead,
     required this.textColor,
     required this.audioController,
+    required this.nombre,
   });
 
   @override
@@ -743,7 +762,11 @@ class _TemplateContent extends StatelessWidget {
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: _ImageContent(message: message, idLead: idLead),
+            child: _ImageContent(
+              message: message,
+              idLead: idLead,
+              nombre: nombre,
+            ),
           ),
         ],
       ],

@@ -51,6 +51,8 @@ export 'network/websocket/parser/websocket_message.dart';
 export 'network/websocket/parser/websocket_message_parser.dart';
 
 export 'network/websocket/payloads/whatsapp_message_payload.dart';
+export 'network/websocket/payloads/update_pantalla_whatsapp_payload.dart';
+export 'network/websocket/payloads/update_mensaje_whatsapp_payload.dart';
 // #endregion network
 
 // #region notificaciones

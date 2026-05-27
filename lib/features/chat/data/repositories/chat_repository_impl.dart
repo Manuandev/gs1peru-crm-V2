@@ -23,4 +23,23 @@ class ChatRepositoryImpl implements ChatRepository {
   @override
   bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab) =>
       _datasource.sendWhatsAppMessage(mensaje, idLead, numero, chatCab);
+
+  @override
+  Future<bool> uploadAndSendFileMessage({
+    required String filePath,
+    required String fileName,
+    required String tipo,
+    required String idLead,
+    required String numero,
+    required String chatCab,
+  }) async {
+    return _datasource.uploadAndSendFileMessage(
+      filePath: filePath,
+      fileName: fileName,
+      tipo: tipo,
+      idLead: idLead,
+      numero: numero,
+      chatCab: chatCab,
+    );
+  }
 }

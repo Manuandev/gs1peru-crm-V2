@@ -12,4 +12,13 @@ abstract class ChatRepository {
   });
 
   bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab);
+
+  Future<bool> uploadAndSendFileMessage({
+    required String filePath,
+    required String fileName,
+    required String tipo,
+    required String idLead,
+    required String numero,
+    required String chatCab,
+  });
 }

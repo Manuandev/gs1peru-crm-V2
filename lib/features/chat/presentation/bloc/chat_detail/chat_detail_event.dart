@@ -58,10 +58,12 @@ class ChatDetailTextMessageSent extends ChatDetailEvent {
 
 class ChatDetailAudioMessageSent extends ChatDetailEvent {
   final String audioPath;
-  const ChatDetailAudioMessageSent(this.audioPath);
+  final String numero;
+  final String chatCab;
+  const ChatDetailAudioMessageSent(this.audioPath, {this.numero = '', this.chatCab = ''});
 
   @override
-  List<Object?> get props => [audioPath];
+  List<Object?> get props => [audioPath, numero, chatCab];
 }
 
 class ChatDetailFileMessageSent extends ChatDetailEvent {
@@ -69,14 +71,18 @@ class ChatDetailFileMessageSent extends ChatDetailEvent {
   final String fileName;
   final String fileExt;
   final String tipo; // ← agregar ('image' | 'document')
+  final String numero;
+  final String chatCab;
 
   const ChatDetailFileMessageSent({
     required this.filePath,
     required this.fileName,
     required this.fileExt,
     required this.tipo, // ← agregar
+    this.numero = '',
+    this.chatCab = '',
   });
 
   @override
-  List<Object?> get props => [filePath, fileName, fileExt, tipo];
+  List<Object?> get props => [filePath, fileName, fileExt, tipo, numero, chatCab];
 }

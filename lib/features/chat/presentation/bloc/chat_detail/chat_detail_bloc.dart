@@ -13,9 +13,13 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   StreamSubscription<WebSocketMessage>? _messageSubscription;
   int? _currentLeadId;
 
+
+  final SendFileMessageUseCase _sendFileMessage;
+
   ChatDetailBloc(
     this._getChatMessages,
     this._sendChatMessage,
+    this._sendFileMessage,
   ) : super(const ChatDetailInitial()) {
     on<ChatDetailStarted>(_onStarted);
     on<ChatDetailRefreshed>(_onRefreshed);
@@ -133,7 +137,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     }
   }
 
-  // ── Envío local (sin API aún) ──────────────────────────────────────────────
+  // ── Envío local ──────────────────────────────────────────────
 
   void _onTextMessageSent(
     ChatDetailTextMessageSent event,
@@ -175,24 +179,27 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     }
   }
 
-  void _onAudioMessageSent(
+  Future<void> _onAudioMessageSent(
     ChatDetailAudioMessageSent event,
     Emitter<ChatDetailState> emit,
-  ) {
+  ) async {
     if (state is! ChatDetailSuccess) return;
+
+    final tempId = const Uuid().v4();
+    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idMensaje: const Uuid().v4(),
+      idMensaje: tempId,
       fecha: DateTime.now().toIso8601String(),
       isEnviado: true,
       mensaje: event.audioPath,
       tipo: 'audio',
       estado: 'wait',
       idChatDetArc: '',
-      nomArchivo: 'audio_${DateTime.now().millisecondsSinceEpoch}',
+      nomArchivo: fileName,
       extArchivo: 'm4a',
-      idChatCab: '',
+      idChatCab: event.chatCab,
       idChatDet: '',
     );
 
@@ -201,17 +208,35 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         messages: [...currentMessages, newMessage],
       ),
     );
+
+    if (_currentLeadId != null) {
+      final success = await _sendFileMessage(
+        filePath: event.audioPath,
+        fileName: fileName,
+        tipo: 'audio',
+        idLead: _currentLeadId.toString(),
+        numero: event.numero,
+        chatCab: event.chatCab,
+      );
+
+      if (!success && !isClosed) {
+        // Actualizar UI: mensaje fallido
+        _markMessageAsFailed(tempId, emit);
+      }
+    }
   }
 
-  void _onFileMessageSent(
+  Future<void> _onFileMessageSent(
     ChatDetailFileMessageSent event,
     Emitter<ChatDetailState> emit,
-  ) {
+  ) async {
     if (state is! ChatDetailSuccess) return;
+
+    final tempId = const Uuid().v4();
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idMensaje: const Uuid().v4(),
+      idMensaje: tempId,
       fecha: DateTime.now().toIso8601String(),
       isEnviado: true,
       mensaje: event.filePath,
@@ -220,7 +245,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       idChatDetArc: '',
       nomArchivo: event.fileName,
       extArchivo: event.fileExt,
-      idChatCab: '',
+      idChatCab: event.chatCab,
       idChatDet: '',
     );
 
@@ -229,18 +254,63 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         messages: [...currentMessages, newMessage],
       ),
     );
+
+    if (_currentLeadId != null) {
+      final success = await _sendFileMessage(
+        filePath: event.filePath,
+        fileName: event.fileName,
+        tipo: event.tipo,
+        idLead: _currentLeadId.toString(),
+        numero: event.numero,
+        chatCab: event.chatCab,
+      );
+
+      if (!success && !isClosed) {
+        // Actualizar UI: mensaje fallido
+        _markMessageAsFailed(tempId, emit);
+      }
+    }
   }
+
+  void _markMessageAsFailed(String tempId, Emitter<ChatDetailState> emit) {
+    if (state is! ChatDetailSuccess) return;
+    final currentState = state as ChatDetailSuccess;
+    final messages = List<ChatMessage>.from(currentState.messages);
+    final idx = messages.indexWhere((m) => m.idMensaje == tempId);
+    if (idx != -1) {
+      messages[idx] = messages[idx].copyWith(estado: 'failed');
+      emit(currentState.copyWith(messages: messages));
+    }
+  }
+
+  // ── Router de mensajes entrantes ───────────────────────────────────────────
 
   void _onIncomingMessageReceived(
     ChatDetailIncomingMessageReceived event,
     Emitter<ChatDetailState> emit,
   ) {
     if (state is! ChatDetailSuccess) return;
+
+    switch (event.message.process) {
+      case 'MENSAJE_WHATSAPP':
+        _handleMensajeWhatsApp(event.message, emit);
+      case 'UPDATE_PANTALLA_WHATSAPP':
+        _handleUpdatePantalla(event.message, emit);
+      case 'UPDATE_MENSAJE_WHATSAPP':
+        _handleUpdateMensaje(event.message, emit);
+      default:
+        break;
+    }
+  }
+
+  // ── MENSAJE_WHATSAPP — Mensaje entrante del cliente ────────────────────────
+
+  void _handleMensajeWhatsApp(
+    WebSocketMessage message,
+    Emitter<ChatDetailState> emit,
+  ) {
     final currentState = state as ChatDetailSuccess;
-
-    if (event.message.process != 'MENSAJE_WHATSAPP') return;
-
-    final payload = WhatsAppMessagePayload.fromMessage(event.message);
+    final payload = WhatsAppMessagePayload.fromMessage(message);
     if (payload == null) return;
 
     // Solo procesamos si pertenece a este lead
@@ -248,37 +318,118 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
-    // Buscar si tenemos un mensaje pendiente (estado 'wait') con el mismo contenido
-    // asumiendo que el server broadcast envía de vuelta el mensaje de nuestro usuario (isEnviado = true)
-    final pendingIndex = currentMessages.lastIndexWhere(
-      (m) => m.estado == 'wait' && m.mensaje == payload.mensaje && m.isEnviado == true,
-    );
+    // Verificar si ya existe un mensaje con este idMensaje (evitar duplicados)
+    final exists = currentMessages.any((m) => m.idMensaje == payload.idMensaje);
+    if (exists) return;
 
+    // MENSAJE_WHATSAPP siempre es un mensaje del cliente → isEnviado = false
     final incomingMessage = ChatMessage(
-      idMensaje: payload.whatsappMsgId.isNotEmpty ? payload.whatsappMsgId : payload.idInterno.toString(),
-      fecha: payload.fecha.isNotEmpty ? payload.fecha : DateTime.now().toIso8601String(),
-      isEnviado: true, // Si es el nuestro, isEnviado es true, si es del cliente, false. 
-      // NOTA: Para diferenciar envíado/recibido normalmente validas contra un ID de asesor o algo,
-      // pero provisionalmente lo dejamos como isEnviado = pendingIndex != -1, o mejor aún,
-      // la API nos mandará un flag. Asumiremos que si estaba en wait, es nuestro.
+      idMensaje: payload.idMensaje,
+      fecha: payload.fecha.isNotEmpty
+          ? payload.fecha
+          : DateTime.now().toIso8601String(),
+      isEnviado: false, // Siempre false — el cliente envió este mensaje
       mensaje: payload.mensaje,
       tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
-      estado: 'sent', // O el estado real
+      estado: '', // Mensajes recibidos no tienen estado de checks
       idChatDetArc: '',
       nomArchivo: payload.nomArchivo,
       extArchivo: '',
-      idChatCab: '',
-      idChatDet: payload.idInterno.toString(),
+      idChatCab: payload.idChatCab,
+      idChatDet: '',
+    );
+
+    currentMessages.add(incomingMessage);
+    emit(currentState.copyWith(messages: currentMessages));
+  }
+
+  // ── UPDATE_PANTALLA_WHATSAPP — Confirmación de nuestro mensaje enviado ─────
+
+  void _handleUpdatePantalla(
+    WebSocketMessage message,
+    Emitter<ChatDetailState> emit,
+  ) {
+    final currentState = state as ChatDetailSuccess;
+    final payload = UpdatePantallaWhatsAppPayload.fromMessage(message);
+    if (payload == null) return;
+
+    // Solo procesamos si pertenece a este lead
+    if (payload.leadId != _currentLeadId) return;
+
+    final currentMessages = List<ChatMessage>.from(currentState.messages);
+
+    // Buscar el mensaje pendiente (estado 'wait') que coincida con el contenido
+    // y sea nuestro (isEnviado = true)
+    final pendingIndex = currentMessages.lastIndexWhere(
+      (m) =>
+          m.estado == 'wait' &&
+          m.isEnviado == true &&
+          m.mensaje == payload.mensaje,
     );
 
     if (pendingIndex != -1) {
-      // Reemplazar optimista
-      currentMessages[pendingIndex] = incomingMessage.copyWith(isEnviado: true);
+      // Reemplazar el mensaje optimista con los datos reales del servidor
+      currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
+        idMensaje: payload.idMensaje,
+        estado: 'sent',
+        idChatCab: payload.idChatCab,
+      );
     } else {
-      // Nuevo mensaje entrante
-      // Asumiremos isEnviado = false (es decir, del cliente) a menos que la trama nos indique otra cosa
-      currentMessages.add(incomingMessage.copyWith(isEnviado: false));
+      // No encontramos un pendiente — agregar como mensaje nuevo enviado
+      // (posiblemente enviado desde otra sesión / otro dispositivo)
+      final exists = currentMessages.any(
+        (m) => m.idMensaje == payload.idMensaje,
+      );
+      if (exists) return;
+
+      currentMessages.add(
+        ChatMessage(
+          idMensaje: payload.idMensaje,
+          fecha: payload.hora.isNotEmpty
+              ? payload.hora
+              : DateTime.now().toIso8601String(),
+          isEnviado: true,
+          mensaje: payload.mensaje,
+          tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
+          estado: 'sent',
+          idChatDetArc: '',
+          nomArchivo: payload.nomArchivo,
+          extArchivo: '',
+          idChatCab: payload.idChatCab,
+          idChatDet: '',
+        ),
+      );
     }
+
+    emit(currentState.copyWith(messages: currentMessages));
+  }
+
+  // ── UPDATE_MENSAJE_WHATSAPP — Cambio de estado (sent → delivered → read) ──
+
+  void _handleUpdateMensaje(
+    WebSocketMessage message,
+    Emitter<ChatDetailState> emit,
+  ) {
+    final currentState = state as ChatDetailSuccess;
+    final payload = UpdateMensajeWhatsAppPayload.fromMessage(message);
+    if (payload == null) return;
+
+    // Solo procesamos si pertenece a este lead
+    if (payload.leadId != _currentLeadId) return;
+
+    final currentMessages = List<ChatMessage>.from(currentState.messages);
+
+    // Buscar el mensaje por su idMensaje
+    final msgIndex = currentMessages.indexWhere(
+      (m) => m.idMensaje == payload.idMensaje,
+    );
+
+    if (msgIndex == -1) return; // Mensaje no encontrado, ignorar
+
+    // Actualizar solo el estado del mensaje
+    currentMessages[msgIndex] = currentMessages[msgIndex].copyWith(
+      estado: payload.estado,
+    );
 
     emit(currentState.copyWith(messages: currentMessages));
   }

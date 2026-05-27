@@ -21,6 +21,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   bool _isInitialLoad = true;
   bool _showScrollDown = false;
   DateTime? _lastLoadMoreTime;
+  int _previousMessageCount = 0;
 
   @override
   void initState() {
@@ -173,12 +174,26 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                 BlocConsumer<ChatDetailBloc, ChatDetailState>(
                   listener: (context, state) {
                     if (state is ChatDetailSuccess) {
+                      final currentCount = state.messages.length;
+
                       if (_isInitialLoad) {
                         _isInitialLoad = false;
                         _scroll.irAlFondo(animated: false);
                       } else if (_isLoadingMore) {
                         _scroll.restaurarPosicionDespuesDeCarga();
+                      } else {
+                        // Si recibimos un mensaje nuevo y estábamos al fondo
+                        if (currentCount > _previousMessageCount) {
+                          // !_showScrollDown significa que ESTAMOS abajo (el botón NO se muestra)
+                          if (!_showScrollDown) {
+                            Future.delayed(const Duration(milliseconds: 150), () {
+                              _scroll.irAlFondo(animated: true);
+                            });
+                          }
+                        }
                       }
+                      
+                      _previousMessageCount = currentCount;
                       _isLoadingMore = false;
                     }
                     if (state is ChatDetailFailure) {

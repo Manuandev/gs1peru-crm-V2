@@ -20,6 +20,7 @@ export 'domain/usecases/get_chats_usecase.dart';
 export 'domain/usecases/get_chat_messages_usecase.dart';
 export 'domain/usecases/get_info_lead_usecase.dart';
 export 'domain/usecases/send_chat_message_usecase.dart';
+export 'domain/usecases/send_file_message_usecase.dart';
 
 export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';

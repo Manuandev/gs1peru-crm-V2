@@ -4,8 +4,9 @@
 // ============================================================
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/core/database/local_database.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class ThemeCubit extends Cubit<ThemeMode> {
   static const _key = 'theme';
@@ -31,8 +32,8 @@ class ThemeCubit extends Cubit<ThemeMode> {
   Future<void> setTheme(ThemeMode mode) async {
     emit(mode);
     final value = switch (mode) {
-      ThemeMode.light  => 'light',
-      ThemeMode.dark   => 'dark',
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
       ThemeMode.system => 'system',
     };
     await _db.setSetting(_key, value);

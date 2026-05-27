@@ -1,6 +1,6 @@
 // lib\features\chat\domain\usecases\send_file_message_usecase.dart
 
-import 'package:app_crm/features/chat/domain/repositories/chat_repository.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class SendFileMessageUseCase {
   final ChatRepository _repository;

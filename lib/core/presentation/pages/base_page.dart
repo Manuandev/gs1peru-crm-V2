@@ -1,7 +1,8 @@
 // lib/features/home/presentation/pages/base_page.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// BasePage — Página base para todas las pantallas del home
 ///

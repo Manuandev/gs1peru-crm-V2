@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:flutter/material.dart';
 
 class PrioridadSectionHome extends StatelessWidget {
   final List<Prioridad> prioridades;

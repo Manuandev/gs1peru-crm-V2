@@ -3,7 +3,7 @@
 // LOGIN - EVENTOS
 // ============================================================
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 abstract class LoginEvent extends Equatable {
   const LoginEvent();
@@ -31,11 +31,10 @@ class LoginSubmitted extends LoginEvent {
     required this.password,
     this.rememberSession = false,
   });
- 
+
   @override
   List<Object?> get props => [username, password];
 }
-
 
 class LoginWithGoogleSubmitted extends LoginEvent {
   const LoginWithGoogleSubmitted();

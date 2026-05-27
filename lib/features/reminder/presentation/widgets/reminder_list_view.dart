@@ -1,11 +1,12 @@
 // lib\features\reminder\presentation\widgets\reminder_list_view.dart
 
 
+import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/reminder/index_reminder.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ReminderListView extends StatelessWidget {
   const ReminderListView({super.key});

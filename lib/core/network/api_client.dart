@@ -9,10 +9,10 @@
 // - Se agrega postJsonWithToken para peticiones con header Token
 // ============================================================
 
-import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/core/network/api_result.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();

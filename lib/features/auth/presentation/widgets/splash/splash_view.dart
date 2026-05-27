@@ -21,11 +21,12 @@
 // estado pendiente (_pendingState) entre frames.
 // ============================================================
 
-import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/core/index_core.dart' show ResponsiveHelper;
-import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});

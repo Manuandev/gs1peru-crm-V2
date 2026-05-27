@@ -1,7 +1,8 @@
 // lib\features\auth\presentation\widgets\splash\splash_landscape.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class SplashLandscape extends StatelessWidget {
   const SplashLandscape({super.key});

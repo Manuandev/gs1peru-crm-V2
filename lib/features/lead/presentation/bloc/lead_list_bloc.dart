@@ -1,7 +1,8 @@
 // lib\features\lead\presentation\bloc\lead_list_bloc.dart
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   final GetLeadsUseCase _getLeads;

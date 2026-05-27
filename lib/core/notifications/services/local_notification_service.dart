@@ -1,7 +1,8 @@
 // lib/core/notifications/services/local_notification_service.dart
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 const AndroidNotificationChannel _channel = AndroidNotificationChannel(
   'app_crm_channel',

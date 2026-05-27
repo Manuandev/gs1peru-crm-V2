@@ -1,7 +1,8 @@
 // lib\core\presentation\widgets\inputs\custom_combo_multi_search_field.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class CustomComboMultiSearchField extends StatefulWidget {
   final List<String> data;
@@ -32,7 +33,8 @@ class CustomComboMultiSearchField extends StatefulWidget {
       _CustomComboMultiSearchFieldState();
 }
 
-class _CustomComboMultiSearchFieldState extends State<CustomComboMultiSearchField> {
+class _CustomComboMultiSearchFieldState
+    extends State<CustomComboMultiSearchField> {
   late List<ComboItem> _allItems;
   late List<ComboItem> _selected;
 
@@ -40,7 +42,9 @@ class _CustomComboMultiSearchFieldState extends State<CustomComboMultiSearchFiel
   void initState() {
     super.initState();
     _allItems = ComboItem.fromList(widget.data, separator: widget.separator);
-    _selected = _allItems.where((e) => widget.initialValues.contains(e.id)).toList();
+    _selected = _allItems
+        .where((e) => widget.initialValues.contains(e.id))
+        .toList();
   }
 
   @override
@@ -48,7 +52,9 @@ class _CustomComboMultiSearchFieldState extends State<CustomComboMultiSearchFiel
     super.didUpdateWidget(old);
     if (old.data != widget.data || old.separator != widget.separator) {
       _allItems = ComboItem.fromList(widget.data, separator: widget.separator);
-      _selected = _selected.where((s) => _allItems.any((e) => e.id == s.id)).toList();
+      _selected = _selected
+          .where((s) => _allItems.any((e) => e.id == s.id))
+          .toList();
     }
   }
 
@@ -76,19 +82,26 @@ class _CustomComboMultiSearchFieldState extends State<CustomComboMultiSearchFiel
   Widget build(BuildContext context) {
     final hasSelection = _selected.isNotEmpty;
     return FormField<List<ComboItem>>(
-      validator: widget.validator != null ? (_) => widget.validator!(_selected) : null,
+      validator: widget.validator != null
+          ? (_) => widget.validator!(_selected)
+          : null,
       builder: (field) => InkWell(
         onTap: widget.enabled ? _openPicker : null,
         borderRadius: BorderRadius.circular(4),
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: widget.label,
-            hintText: hasSelection ? null : (widget.hint ?? 'Buscar y seleccionar...'),
+            hintText: hasSelection
+                ? null
+                : (widget.hint ?? 'Buscar y seleccionar...'),
             border: const OutlineInputBorder(),
             enabled: widget.enabled,
             errorText: field.errorText,
             suffixIcon: const Icon(Icons.search),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
           ),
           isEmpty: !hasSelection,
           child: hasSelection
@@ -96,19 +109,23 @@ class _CustomComboMultiSearchFieldState extends State<CustomComboMultiSearchFiel
                   spacing: 6,
                   runSpacing: 4,
                   children: _selected
-                      .map((item) => Chip(
-                            label: Text(_display(item),
-                                style: Theme.of(context).textTheme.bodySmall),
-                            deleteIcon: const Icon(Icons.close, size: 14),
-                            onDeleted: widget.enabled
-                                ? () {
-                                    setState(() => _selected.remove(item));
-                                    widget.onChanged?.call(_selected);
-                                  }
-                                : null,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                          ))
+                      .map(
+                        (item) => Chip(
+                          label: Text(
+                            _display(item),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          deleteIcon: const Icon(Icons.close, size: 14),
+                          onDeleted: widget.enabled
+                              ? () {
+                                  setState(() => _selected.remove(item));
+                                  widget.onChanged?.call(_selected);
+                                }
+                              : null,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                        ),
+                      )
                       .toList(),
                 )
               : const SizedBox.shrink(),
@@ -161,12 +178,16 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
     setState(() {
       _filtered = q.isEmpty
           ? widget.allItems
-          : widget.allItems.where((e) => widget.display(e).toLowerCase().contains(q)).toList();
+          : widget.allItems
+                .where((e) => widget.display(e).toLowerCase().contains(q))
+                .toList();
     });
   }
 
-  void _toggle(ComboItem item) => setState(() =>
-      _selected.contains(item) ? _selected.remove(item) : _selected.add(item));
+  void _toggle(ComboItem item) => setState(
+    () =>
+        _selected.contains(item) ? _selected.remove(item) : _selected.add(item),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +211,10 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
                   suffixIcon: AnimatedBuilder(
                     animation: _searchCtrl,
                     builder: (_, _) => _searchCtrl.text.isNotEmpty
-                        ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: _searchCtrl.clear)
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: _searchCtrl.clear,
+                          )
                         : const SizedBox.shrink(),
                   ),
                   isDense: true,
@@ -202,8 +226,10 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
             Row(
               children: [
                 const SizedBox(width: 12),
-                Text('${_selected.length} seleccionado(s)',
-                    style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  '${_selected.length} seleccionado(s)',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 const Spacer(),
                 TextButton(
                   onPressed: () => setState(() {
@@ -211,11 +237,14 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
                       if (!_selected.contains(e)) _selected.add(e);
                     }
                   }),
-                  child: Text(allSelected ? 'Todos ✓' : 'Todos',
-                      style: const TextStyle(fontSize: 12)),
+                  child: Text(
+                    allSelected ? 'Todos ✓' : 'Todos',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
                 TextButton(
-                  onPressed: () => setState(() => _selected.removeWhere(_filtered.contains)),
+                  onPressed: () =>
+                      setState(() => _selected.removeWhere(_filtered.contains)),
                   child: const Text('Ninguno', style: TextStyle(fontSize: 12)),
                 ),
               ],
@@ -226,7 +255,8 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
                   ? const Center(child: Text('Sin resultados'))
                   : ListView.separated(
                       itemCount: _filtered.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1, indent: 16),
+                      separatorBuilder: (_, _) =>
+                          const Divider(height: 1, indent: 16),
                       itemBuilder: (_, i) {
                         final item = _filtered[i];
                         return CheckboxListTile(
@@ -242,8 +272,14 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.pop(context, _selected), child: const Text('Aceptar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _selected),
+          child: const Text('Aceptar'),
+        ),
       ],
     );
   }

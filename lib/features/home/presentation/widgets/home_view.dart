@@ -1,10 +1,11 @@
 // lib/features/home/presentation/widgets/home_view.dart
 
+import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// HomeView — Vista principal del Home
 ///

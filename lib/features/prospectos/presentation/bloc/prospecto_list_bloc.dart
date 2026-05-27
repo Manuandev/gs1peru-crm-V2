@@ -1,7 +1,8 @@
 // // lib\features\prospectos\presentation\bloc\prospecto_list_bloc.dart
 
+// import 'package:app_crm/index_dependencies.dart';
+
 // import 'package:app_crm/features/prospectos/index_prospectos.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
 
 // class ProspectoListBloc extends Bloc<ProspectoListEvent, ProspectoListState> {
 //   final GetProspectosUseCase _getProspectos;

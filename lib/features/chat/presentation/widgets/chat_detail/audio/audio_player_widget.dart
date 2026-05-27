@@ -1,8 +1,9 @@
 // lib\features\chat\presentation\widgets\chat_detail\audio_player_widget.dart
 
-import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioPath;

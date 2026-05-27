@@ -1,7 +1,8 @@
 // lib/core/presentation/widgets/navigation/custom_app_bar.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// CustomAppBar — AppBar completamente personalizable
 ///

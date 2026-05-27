@@ -1,7 +1,8 @@
 // lib\features\chat\presentation\bloc\info_lead\info_lead_state.dart
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:equatable/equatable.dart';
 
 sealed class InfoLeadState extends Equatable {
   const InfoLeadState();

@@ -4,9 +4,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:record/record.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 
 class AudioRecorderWidget extends StatefulWidget {
   /// Llamado cuando el usuario termina de grabar y confirma el envío

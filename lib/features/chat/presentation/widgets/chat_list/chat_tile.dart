@@ -1,7 +1,8 @@
 // lib/features/chats/presentation/widgets/chat_tile.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatTile extends StatelessWidget {
@@ -150,30 +151,29 @@ class ChatTile extends StatelessWidget {
     final hasIcon = preview.icon != null;
 
     return Row(
-    children: [
-      if (hasIcon) ...[
-        Icon(preview.icon, size: mensajeSize + 1, color: preview.color),
-        const SizedBox(width: 4),
-      ],
-      Expanded(
-        child: Text(
-          preview.label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: mensajeSize,
-            color: preview.color ?? Colors.grey.shade500,
-            fontWeight: FontWeight.normal,
+      children: [
+        if (hasIcon) ...[
+          Icon(preview.icon, size: mensajeSize + 1, color: preview.color),
+          const SizedBox(width: 4),
+        ],
+        Expanded(
+          child: Text(
+            preview.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: mensajeSize,
+              color: preview.color ?? Colors.grey.shade500,
+              fontWeight: FontWeight.normal,
+            ),
           ),
         ),
-      ),
-      // Estado: solo si YO mandé el mensaje
-      if (!chat.isEnviado) ...[
-        const SizedBox(width: 4),
-        MessageStatusIcon(estado: chat.estado, color: Colors.grey),
+        // Estado: solo si YO mandé el mensaje
+        if (!chat.isEnviado) ...[
+          const SizedBox(width: 4),
+          MessageStatusIcon(estado: chat.estado, color: Colors.grey),
+        ],
       ],
-    ],
-  );
+    );
   }
-
- }
+}

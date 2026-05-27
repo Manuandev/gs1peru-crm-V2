@@ -1,7 +1,8 @@
 // // lib\features\prospectos\presentation\bloc\prospecto_list_state.dart
 
+// import 'package:app_crm/index_dependencies.dart';
+
 // import 'package:app_crm/features/prospectos/index_prospectos.dart';
-// import 'package:equatable/equatable.dart';
 
 // abstract class ProspectoListState  extends Equatable {
 //   const ProspectoListState ();

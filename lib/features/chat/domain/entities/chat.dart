@@ -1,6 +1,6 @@
 // lib\features\chat\domain\entities\chat.dart
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 class Chat extends Equatable {
   final int idLead; // 00 - ID_LEAD

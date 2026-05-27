@@ -12,10 +12,10 @@
 //    incrementando el número de versión
 // ============================================================
 
-import 'package:sqflite/sqflite.dart';
-// ignore: depend_on_referenced_packages
-import 'package:path/path.dart';
-import 'i_local_database.dart';
+import 'package:path/path.dart' as p;
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class LocalDatabase implements ILocalDatabase {
   static final LocalDatabase _instance = LocalDatabase._internal();
@@ -42,7 +42,7 @@ class LocalDatabase implements ILocalDatabase {
     if (_database != null) return; // ya inicializada
 
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'app_crm.db');
+    final path = p.join(dbPath, 'app_crm.db');
 
     _database = await openDatabase(
       path,

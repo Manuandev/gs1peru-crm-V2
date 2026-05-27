@@ -1,7 +1,6 @@
 // lib/features/settings/presentation/bloc/settings/settings_state.dart
 
-import 'package:equatable/equatable.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 class SettingsState extends Equatable {
   final Map<Permission, PermissionStatus> permissions;

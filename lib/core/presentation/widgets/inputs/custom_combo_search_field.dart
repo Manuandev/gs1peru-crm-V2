@@ -1,7 +1,8 @@
 // lib\core\presentation\widgets\inputs\custom_combo_search_field.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class CustomComboSearchField extends StatefulWidget {
   final List<String> data;

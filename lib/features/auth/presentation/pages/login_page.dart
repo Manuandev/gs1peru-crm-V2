@@ -25,9 +25,10 @@
 //                     └── LoginLandscapeCard
 // ============================================================
 
-import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/features/auth/index_auth.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});

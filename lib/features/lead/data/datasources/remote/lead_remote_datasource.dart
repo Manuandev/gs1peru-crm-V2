@@ -1,7 +1,6 @@
 // lib\features\lead\data\datasources\remote\lead_remote_datasource.dart
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/core/network/api_result.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadRemoteDatasource {

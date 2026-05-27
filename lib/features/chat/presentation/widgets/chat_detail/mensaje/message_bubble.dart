@@ -2,16 +2,13 @@
 
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:get_video_thumbnail/index.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:get_video_thumbnail/get_video_thumbnail.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MessageBubble — burbuja principal

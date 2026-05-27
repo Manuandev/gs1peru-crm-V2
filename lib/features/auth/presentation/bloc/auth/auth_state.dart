@@ -20,7 +20,7 @@
 //
 // ============================================================
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();

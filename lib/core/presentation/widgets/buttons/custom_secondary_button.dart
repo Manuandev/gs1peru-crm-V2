@@ -1,7 +1,8 @@
 // lib/core/presentation/widgets/buttons/custom_secondary_button.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// CustomSecondaryButton — Botón de acción secundaria
 ///

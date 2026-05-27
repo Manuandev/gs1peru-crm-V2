@@ -1,8 +1,9 @@
 // lib\features\chat\presentation\widgets\chat_detail\message_list.dart
 
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:flutter/material.dart';
 
 class MessageList extends StatelessWidget {
   final List<ChatMessage> messages;
@@ -50,7 +51,7 @@ class MessageList extends StatelessWidget {
         // El índice 0 de la vista invertida es el último mensaje del array original.
         final messageIndex = messages.length - 1 - index;
         final message = messages[messageIndex];
-        
+
         // Las fechas se evalúan respecto al orden cronológico (array original).
         final previousMessage = messageIndex > 0
             ? messages[messageIndex - 1]

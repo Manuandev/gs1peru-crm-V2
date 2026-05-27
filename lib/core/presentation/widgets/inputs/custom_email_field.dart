@@ -1,8 +1,8 @@
 // lib/core/presentation/widgets/inputs/custom_email_field.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
-import 'custom_text_field.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// CustomEmailField — Input de email con validación de formato incluida
 ///
@@ -72,7 +72,7 @@ class CustomEmailField extends StatelessWidget {
       label: label ?? 'Email',
       hint: hint ?? 'ejemplo@correo.com',
       controller: controller,
-      validator: validator ?? StringUtils.emailValidator,
+      validator: validator ?? (value) => value.emailValidator,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       enabled: enabled,

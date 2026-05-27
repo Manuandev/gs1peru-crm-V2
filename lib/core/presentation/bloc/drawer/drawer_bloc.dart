@@ -1,6 +1,7 @@
 // lib\core\presentation\bloc\drawer\drawer_bloc.dart
 
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 
 class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {

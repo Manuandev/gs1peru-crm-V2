@@ -3,7 +3,7 @@
 // HOME - EVENTOS
 // ============================================================
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 abstract class HomeEvent extends Equatable {
   const HomeEvent();

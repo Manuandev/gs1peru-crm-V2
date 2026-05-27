@@ -1,6 +1,6 @@
 // lib\core\network\interceptors\clean_response_interceptor.dart
 
-import 'package:dio/dio.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 /// Limpia las comillas extra que agrega ASP.NET en las respuestas.
 /// Ejemplo: "\"hola mundo\"" → "hola mundo"

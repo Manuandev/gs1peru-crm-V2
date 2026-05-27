@@ -1,6 +1,6 @@
 // lib\features\chat\presentation\widgets\chat_detail\message_url_helper.dart
 
-import 'package:app_crm/config/env/env_config.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class MessageUrlHelper {

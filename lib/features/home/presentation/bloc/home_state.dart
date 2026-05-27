@@ -8,9 +8,10 @@
 //                          └→ HomeError (botón reintentar)
 // ============================================================
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:equatable/equatable.dart';
 
 abstract class HomeState extends Equatable {
   const HomeState();
@@ -31,10 +32,7 @@ class HomeLoaded extends HomeState {
   final Home home;
   final UserModel usuario;
 
-  const HomeLoaded({
-    required this.home,
-    required this.usuario,
-  });
+  const HomeLoaded({required this.home, required this.usuario});
 
   // Atajos para acceso rápido
   int get totConversaciones => home.totConversaciones;

@@ -36,7 +36,6 @@ export 'presentation/bloc/info_lead/info_lead_state.dart';
 export 'presentation/pages/chat_list_page.dart';
 export 'presentation/pages/chat_detail_page.dart';
 export 'presentation/pages/media_viewer_page.dart';
-export 'presentation/pages/video_viewer_page.dart';
 
 export 'presentation/widgets/chat_list/chat_list_landscape.dart';
 export 'presentation/widgets/chat_list/chat_list_portrait.dart';

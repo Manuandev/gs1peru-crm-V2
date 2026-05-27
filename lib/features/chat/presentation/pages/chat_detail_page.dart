@@ -1,8 +1,9 @@
 // lib\features\chat\presentation\pages\chat_detail_page.dart
 
-import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatDetailPage extends StatelessWidget {
   final int idLead;
@@ -21,9 +22,8 @@ class ChatDetailPage extends StatelessWidget {
           )..add(ChatDetailStarted(idLead)),
         ),
         BlocProvider(
-          create: (_) => InfoLeadCubit(
-            GetInfoUseCase(context.read<ChatRepository>()),
-          ),
+          create: (_) =>
+              InfoLeadCubit(GetInfoUseCase(context.read<ChatRepository>())),
         ),
       ],
       child: ChatDetailView(idLead: idLead),

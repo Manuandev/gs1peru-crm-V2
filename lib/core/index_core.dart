@@ -36,6 +36,7 @@ export 'navigation/app_route_observer.dart';
 
 // #region network
 export 'network/api_client.dart';
+export 'network/api_result.dart';
 
 export 'network/interceptors/error_interceptor.dart';
 export 'network/interceptors/interceptors.dart';

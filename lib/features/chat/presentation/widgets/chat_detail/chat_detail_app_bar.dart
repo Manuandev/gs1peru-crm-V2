@@ -1,8 +1,9 @@
 // lib\features\chat\presentation\widgets\chat_detail\chat_detail_app_bar.dart
 
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:flutter/material.dart';
 
 class ChatDetailAppBar extends StatelessWidget {
   final InfoLead infoLead;

@@ -1,6 +1,6 @@
 // lib\features\chat\domain\entities\info_lead.dart
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 class InfoLead extends Equatable {
   final String idLead;

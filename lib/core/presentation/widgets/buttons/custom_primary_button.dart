@@ -1,7 +1,8 @@
 // lib/core/presentation/widgets/buttons/custom_primary_button.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// CustomPrimaryButton — Botón principal de acción de la app
 ///
@@ -66,7 +67,7 @@ class CustomPrimaryButton extends StatelessWidget {
     this.isEnabled = true,
     this.icon,
     this.width,
-    this.height ,//= AppSizing.buttonHeight,
+    this.height, //= AppSizing.buttonHeight,
     this.padding,
   });
 

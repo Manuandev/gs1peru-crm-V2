@@ -2,11 +2,10 @@
 
 import 'dart:async';
 import 'dart:io';
+
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 // ── MODELO DE UBICACIÓN COMPLETA (geocodificación inversa) ───
 // Resultado de getUbicacionCompleta() — dirección real desde GPS

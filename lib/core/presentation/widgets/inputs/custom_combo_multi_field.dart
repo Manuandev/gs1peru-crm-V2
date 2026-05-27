@@ -1,7 +1,8 @@
 // lib\core\presentation\widgets\inputs\custom_combo_multi_field.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class CustomComboMultiField extends StatefulWidget {
   final List<String> data;
@@ -39,7 +40,9 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
   void initState() {
     super.initState();
     _allItems = ComboItem.fromList(widget.data, separator: widget.separator);
-    _selected = _allItems.where((e) => widget.initialValues.contains(e.id)).toList();
+    _selected = _allItems
+        .where((e) => widget.initialValues.contains(e.id))
+        .toList();
   }
 
   @override
@@ -47,7 +50,9 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
     super.didUpdateWidget(old);
     if (old.data != widget.data || old.separator != widget.separator) {
       _allItems = ComboItem.fromList(widget.data, separator: widget.separator);
-      _selected = _selected.where((s) => _allItems.any((e) => e.id == s.id)).toList();
+      _selected = _selected
+          .where((s) => _allItems.any((e) => e.id == s.id))
+          .toList();
     }
   }
 
@@ -74,7 +79,9 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
   Widget build(BuildContext context) {
     final hasSelection = _selected.isNotEmpty;
     return FormField<List<ComboItem>>(
-      validator: widget.validator != null ? (_) => widget.validator!(_selected) : null,
+      validator: widget.validator != null
+          ? (_) => widget.validator!(_selected)
+          : null,
       builder: (field) => InkWell(
         onTap: widget.enabled ? _openPicker : null,
         borderRadius: BorderRadius.circular(4),
@@ -86,7 +93,10 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
             enabled: widget.enabled,
             errorText: field.errorText,
             suffixIcon: const Icon(Icons.arrow_drop_down),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
           ),
           isEmpty: !hasSelection,
           child: hasSelection
@@ -94,19 +104,23 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
                   spacing: 6,
                   runSpacing: 4,
                   children: _selected
-                      .map((item) => Chip(
-                            label: Text(_display(item),
-                                style: Theme.of(context).textTheme.bodySmall),
-                            deleteIcon: const Icon(Icons.close, size: 14),
-                            onDeleted: widget.enabled
-                                ? () {
-                                    setState(() => _selected.remove(item));
-                                    widget.onChanged?.call(_selected);
-                                  }
-                                : null,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                          ))
+                      .map(
+                        (item) => Chip(
+                          label: Text(
+                            _display(item),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          deleteIcon: const Icon(Icons.close, size: 14),
+                          onDeleted: widget.enabled
+                              ? () {
+                                  setState(() => _selected.remove(item));
+                                  widget.onChanged?.call(_selected);
+                                }
+                              : null,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                        ),
+                      )
                       .toList(),
                 )
               : const SizedBox.shrink(),
@@ -142,8 +156,10 @@ class _PickerDialogState extends State<_PickerDialog> {
     _selected = List.of(widget.selected);
   }
 
-  void _toggle(ComboItem item) => setState(() =>
-      _selected.contains(item) ? _selected.remove(item) : _selected.add(item));
+  void _toggle(ComboItem item) => setState(
+    () =>
+        _selected.contains(item) ? _selected.remove(item) : _selected.add(item),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -167,8 +183,14 @@ class _PickerDialogState extends State<_PickerDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.pop(context, _selected), child: const Text('Aceptar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _selected),
+          child: const Text('Aceptar'),
+        ),
       ],
     );
   }

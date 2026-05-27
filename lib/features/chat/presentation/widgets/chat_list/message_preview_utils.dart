@@ -1,8 +1,9 @@
 // lib\core\utils\ui\message_preview_utils.dart
 
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:flutter/material.dart';
 
 class MessagePreview {
   final IconData? icon;

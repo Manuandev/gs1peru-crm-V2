@@ -1,8 +1,8 @@
 // lib/features/settings/presentation/bloc/settings/settings_cubit.dart
 
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'settings_state.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/features/settings/index_settings.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
   SettingsCubit() : super(const SettingsState());

@@ -1,6 +1,6 @@
-import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'date_formats.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class DateFormatter {
   static bool _initialized = false;

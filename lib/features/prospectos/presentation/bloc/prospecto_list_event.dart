@@ -1,6 +1,6 @@
 // lib\features\prospectos\presentation\bloc\prospecto_list_event.dart
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 abstract class ProspectoListEvent extends Equatable {
   const ProspectoListEvent();

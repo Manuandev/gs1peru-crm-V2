@@ -1,8 +1,9 @@
 // lib\features\chat\presentation\widgets\chat_detail\chat_input_bar.dart
 
-import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/index_dependencies.dart';
+
+import 'package:app_crm/features/chat/index_chat.dart';
 
 enum _InputMode { text, audio, attachment }
 

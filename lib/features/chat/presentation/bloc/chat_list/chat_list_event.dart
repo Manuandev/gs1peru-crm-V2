@@ -1,6 +1,7 @@
 // lib\features\chat\presentation\bloc\chat_list\chat_list_event.dart
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 
 abstract class ChatListEvent extends Equatable {
   const ChatListEvent();

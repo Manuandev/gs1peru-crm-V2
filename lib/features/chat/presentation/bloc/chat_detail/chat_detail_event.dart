@@ -1,7 +1,8 @@
 // lib\features\chat\presentation\bloc\chat_detail\chat_detail_event.dart
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
-import 'package:equatable/equatable.dart';
 
 abstract class ChatDetailEvent extends Equatable {
   const ChatDetailEvent();
@@ -50,7 +51,11 @@ class ChatDetailTextMessageSent extends ChatDetailEvent {
   final String mensaje;
   final String numero;
   final String chatCab;
-  const ChatDetailTextMessageSent(this.mensaje, {this.numero = '', this.chatCab = ''});
+  const ChatDetailTextMessageSent(
+    this.mensaje, {
+    this.numero = '',
+    this.chatCab = '',
+  });
 
   @override
   List<Object?> get props => [mensaje, numero, chatCab];
@@ -60,7 +65,11 @@ class ChatDetailAudioMessageSent extends ChatDetailEvent {
   final String audioPath;
   final String numero;
   final String chatCab;
-  const ChatDetailAudioMessageSent(this.audioPath, {this.numero = '', this.chatCab = ''});
+  const ChatDetailAudioMessageSent(
+    this.audioPath, {
+    this.numero = '',
+    this.chatCab = '',
+  });
 
   @override
   List<Object?> get props => [audioPath, numero, chatCab];
@@ -84,5 +93,12 @@ class ChatDetailFileMessageSent extends ChatDetailEvent {
   });
 
   @override
-  List<Object?> get props => [filePath, fileName, fileExt, tipo, numero, chatCab];
+  List<Object?> get props => [
+    filePath,
+    fileName,
+    fileExt,
+    tipo,
+    numero,
+    chatCab,
+  ];
 }

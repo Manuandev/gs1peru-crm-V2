@@ -1,18 +1,16 @@
 // lib\features\chat\presentation\bloc\chat_detail\chat_detail_bloc.dart
 
+import 'dart:async';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-// ignore: depend_on_referenced_packages
-import 'package:uuid/uuid.dart';
- import 'dart:async';
 
 class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   final GetChatMessagesUseCase _getChatMessages;
   final SendChatMessageUseCase _sendChatMessage;
   StreamSubscription<WebSocketMessage>? _messageSubscription;
   int? _currentLeadId;
-
 
   final SendFileMessageUseCase _sendFileMessage;
 
@@ -61,10 +59,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     await _loadMessages(event.idLead, emit);
   }
 
-  Future<void> _loadMessages(
-    int idLead,
-    Emitter<ChatDetailState> emit,
-  ) async {
+  Future<void> _loadMessages(int idLead, Emitter<ChatDetailState> emit) async {
     try {
       final messages = await _getChatMessages(idLead);
 

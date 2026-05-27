@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:flutter/material.dart';
 
 class LeadListLandscape extends StatelessWidget {
   final LeadListLoaded state;

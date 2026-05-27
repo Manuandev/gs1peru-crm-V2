@@ -1,7 +1,8 @@
 // lib/core/presentation/widgets/buttons/custom_text_button.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// CustomTextButton — Botón de texto sin fondo ni borde
 ///
@@ -43,7 +44,7 @@ class CustomTextButton extends StatelessWidget {
   final String text;
   // Callback al presionar. null = deshabilita el botón.
   final VoidCallback? onPressed;
-  // Color del texto e ícono. 
+  // Color del texto e ícono.
   final Color? textColor;
   // Tamaño de fuente custom. null = usa el de [AppTextStyles.buttonSmall]
   final double? fontSize;

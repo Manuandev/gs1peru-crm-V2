@@ -1,10 +1,9 @@
 // lib/core/network/websocket/message_dispatcher.dart
 
-import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/core/navigation/app_route_observer.dart';
-import 'package:app_crm/core/network/websocket/parser/websocket_message.dart';
-import 'package:app_crm/core/notifications/handlers/notification_handler.dart';
 import 'dart:async';
+
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
 
 class MessageDispatcher {
   MessageDispatcher._();

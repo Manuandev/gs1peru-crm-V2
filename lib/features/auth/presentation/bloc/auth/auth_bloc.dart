@@ -26,11 +26,10 @@
 // - LogoutUsecase → limpia la sesión al hacer logout
 // ============================================================
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:app_crm/features/auth/domain/usecases/logout_usecase.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LogoutUsecase _logoutUsecase;

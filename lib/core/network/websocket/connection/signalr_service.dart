@@ -2,11 +2,9 @@
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:signalr_netcore/hub_connection.dart';
-import 'package:signalr_netcore/hub_connection_builder.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// Implementación del servicio SignalR.
 ///

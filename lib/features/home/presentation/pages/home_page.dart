@@ -20,12 +20,12 @@
 //               └── HomeView
 // ============================================================
 
+import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -34,9 +34,9 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExitOnBackWrapper(
       child: BlocProvider(
-        create: (context) => HomeBloc(
-          getData: GetHomeUseCase(context.read<HomeRepository>()),
-        )..add(const HomeStarted()),
+        create: (context) =>
+            HomeBloc(getData: GetHomeUseCase(context.read<HomeRepository>()))
+              ..add(const HomeStarted()),
         child: BlocListener<HomeBloc, HomeState>(
           listener: (context, state) {
             if (state is HomeError) {

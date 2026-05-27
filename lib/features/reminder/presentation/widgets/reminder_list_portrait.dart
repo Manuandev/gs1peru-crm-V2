@@ -1,8 +1,9 @@
 // lib\features\reminder\presentation\widgets\reminder_list_portrait.dart
 
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/reminder/index_reminder.dart';
-import 'package:flutter/material.dart';
 
 class ReminderListPortrait extends StatelessWidget {
   final ReminderListLoaded state;

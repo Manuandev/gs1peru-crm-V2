@@ -1,7 +1,8 @@
 // lib/features/chats/presentation/widgets/chats_landscape.dart
 
-import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 /// Vista landscape: misma lista pero centrada con ancho máximo

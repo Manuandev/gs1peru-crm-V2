@@ -28,9 +28,10 @@
 // - IHomeRepository → (cuando exista) para cargar datos del home
 // ============================================================
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetHomeUseCase _getData;
@@ -59,7 +60,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
       emit(HomeLoaded(home: home, usuario: _session.user!));
     } on AppException catch (e) {
-      emit(HomeError(e.message)); 
+      emit(HomeError(e.message));
     } catch (e, stackTrace) {
       addError(e, stackTrace);
       emit(HomeError(e.toString()));

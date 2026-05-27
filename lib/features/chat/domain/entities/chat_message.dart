@@ -1,6 +1,6 @@
 // lib\features\chat\domain\entities\chat_message.dart
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 class ChatMessage extends Equatable {
   final String mensaje;

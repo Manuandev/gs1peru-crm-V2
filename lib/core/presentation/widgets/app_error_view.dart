@@ -1,17 +1,14 @@
 // lib\core\errors\app_error_view.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class AppErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const AppErrorView({
-    super.key,
-    required this.message,
-    required this.onRetry,
-  });
+  const AppErrorView({super.key, required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {

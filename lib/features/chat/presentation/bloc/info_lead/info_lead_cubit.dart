@@ -1,8 +1,9 @@
 // lib\features\chat\presentation\bloc\info_lead\info_lead_cubit.dart
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class InfoLeadCubit extends Cubit<InfoLeadState> {
   final GetInfoUseCase _getInfo;

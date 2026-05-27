@@ -1,7 +1,7 @@
 // lib/core/constants/app_icons_social.dart
 
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 /// Íconos de redes sociales y canales usando FontAwesome.
 /// Para usar: AppIconsSocial.canal(id) o AppIconsSocial.whatsapp

@@ -19,7 +19,7 @@
 // Solo las VIEWS los disparan al AuthBloc.
 // ============================================================
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
@@ -36,10 +36,7 @@ class AuthSessionRestored extends AuthEvent {
   final String userId;
   final String username;
 
-  const AuthSessionRestored({
-    required this.userId,
-    required this.username,
-  });
+  const AuthSessionRestored({required this.userId, required this.username});
 
   @override
   List<Object?> get props => [userId, username];
@@ -59,10 +56,7 @@ class AuthLoginSuccess extends AuthEvent {
   final String userId;
   final String username;
 
-  const AuthLoginSuccess({
-    required this.userId,
-    required this.username,
-  });
+  const AuthLoginSuccess({required this.userId, required this.username});
 
   @override
   List<Object?> get props => [userId, username];

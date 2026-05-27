@@ -8,10 +8,11 @@
 // 2. El layout (_PortraitLayout / _LandscapeLayout) solo los ORDENA
 // 3. OrientationBuilder elige cuál layout usar
 
+import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 class LoginLayout extends StatelessWidget {
   final LoginFormController formController;
@@ -218,10 +219,7 @@ class _GoogleSection extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onGoogleSignIn;
 
-  const _GoogleSection({
-    required this.isLoading,
-    required this.onGoogleSignIn,
-  });
+  const _GoogleSection({required this.isLoading, required this.onGoogleSignIn});
 
   @override
   Widget build(BuildContext context) {

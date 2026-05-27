@@ -5,7 +5,7 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 /// Parsea un mensaje con formato WhatsApp:
 /// *bold*, _italic_, ~tachado~, `mono`, URLs clicables y saltos de línea.

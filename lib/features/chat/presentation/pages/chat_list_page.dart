@@ -1,9 +1,10 @@
 // lib\features\chat\presentation\pages\chat_list_page.dart
 
+import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChatListPage extends StatelessWidget {
   const ChatListPage({super.key});

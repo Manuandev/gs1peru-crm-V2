@@ -1,7 +1,8 @@
 // lib\features\chat\presentation\bloc\chat_list\chat_list_state.dart
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:equatable/equatable.dart';
 
 abstract class ChatListState extends Equatable {
   const ChatListState();

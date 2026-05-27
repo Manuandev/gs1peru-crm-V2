@@ -15,7 +15,7 @@
 // - SplashError           → notifica AuthBloc con AuthSessionEmpty (va al Login)
 // ============================================================
 
-import 'package:equatable/equatable.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 abstract class SplashState extends Equatable {
   const SplashState();
@@ -41,10 +41,7 @@ class SplashSessionFound extends SplashState {
   final String userId;
   final String username;
 
-  const SplashSessionFound({
-    required this.userId,
-    required this.username,
-  });
+  const SplashSessionFound({required this.userId, required this.username});
 
   @override
   List<Object?> get props => [userId, username];

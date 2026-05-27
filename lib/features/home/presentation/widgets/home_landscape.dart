@@ -1,8 +1,9 @@
 // lib/features/home/presentation/widgets/home_landscape.dart
 
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:flutter/material.dart';
 
 /// Layout del Home para orientación landscape (horizontal)
 ///
@@ -45,8 +46,7 @@ class HomeLandscape extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-              ],
+              children: [],
             ),
           ),
         ),

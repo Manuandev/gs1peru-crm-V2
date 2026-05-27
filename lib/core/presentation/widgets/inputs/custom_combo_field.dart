@@ -1,7 +1,8 @@
 // lib\core\presentation\widgets\inputs\custom_combo_field.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 /// Combo de selección simple con scroll (dropdown clásico).
 ///
@@ -98,10 +99,12 @@ class _CustomComboFieldState extends State<CustomComboField> {
         border: const OutlineInputBorder(),
       ),
       items: _items
-          .map((item) => DropdownMenuItem<ComboItem>(
-                value: item,
-                child: Text(_display(item)),
-              ))
+          .map(
+            (item) => DropdownMenuItem<ComboItem>(
+              value: item,
+              child: Text(_display(item)),
+            ),
+          )
           .toList(),
       onChanged: widget.enabled
           ? (val) {
@@ -117,8 +120,8 @@ class _CustomComboFieldState extends State<CustomComboField> {
 
   // ── Getters de acceso rápido ─────────────────────────────────────────────
   ComboItem? get selectedItem => _selected;
-  String?    get selectedId   => _selected?.id;
+  String? get selectedId => _selected?.id;
 
   /// Accede a cualquier campo del item seleccionado por índice.
-  String?    selectedValue(int index) => _selected?.field(index);
+  String? selectedValue(int index) => _selected?.field(index);
 }

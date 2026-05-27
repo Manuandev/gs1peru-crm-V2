@@ -1,6 +1,6 @@
 // lib/config/router/app_router.dart
 
-// Importa tus páginas aquí
+import 'package:flutter/material.dart';
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -10,7 +10,6 @@ import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:app_crm/features/settings/index_settings.dart';
-import 'package:flutter/material.dart';
 
 /// Sistema de routing principal
 /// - Organizado por módulos

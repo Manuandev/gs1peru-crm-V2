@@ -1,7 +1,8 @@
 // lib\features\reminder\presentation\bloc\reminder_list_bloc.dart
 
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/features/reminder/index_reminder.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ReminderListBloc extends Bloc<ReminderListEvent, ReminderListState> {
   final GetRemindersUseCase _getReminders;

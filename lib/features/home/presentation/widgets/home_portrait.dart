@@ -1,8 +1,9 @@
 // lib/features/home/presentation/widgets/home_portrait.dart
 
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:flutter/material.dart';
 
 /// Layout del Home para orientación portrait (vertical)
 ///

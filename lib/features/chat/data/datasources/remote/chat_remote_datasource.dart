@@ -77,33 +77,72 @@ class ChatRemoteDatasource {
     try {
       final file = File(filePath);
       final fileBytes = await file.readAsBytes();
+      if (fileBytes.isEmpty) return false;
 
-      // 1. Subir a la base de datos usando multipart
-      final urlUpload = ApiConstants.urlGuardarMultimedia; 
+      // Extensión con punto (e.g. ".mp3", ".jpg") como lo arma el JS
+      final dotIndex = fileName.lastIndexOf('.');
+      final fileExt = dotIndex != -1 ? fileName.substring(dotIndex) : '';
 
-      final uploadResult = await _api.postMultipart(
+      // Cabecera: VAR01-VAR11 separados por ¦
+      // VAR01=idLead, VAR02='', VAR03=codUser, VAR04='', VAR05=tipo,
+      // VAR06=numero, VAR07='0', VAR08='', VAR09=chatCab, VAR10=fileName, VAR11=fileExt
+      final cabecera =
+          '$idLead¦¦${user.codUser}¦¦$tipo¦$numero¦0¦¦$chatCab¦$fileName¦$fileExt';
+
+      final urlUpload = ApiConstants.urlGuardarMultimedia;
+
+      // Tamaño máximo por fragmento (igual que VI_TOPE en el JS)
+      const int chunkSize = 2 * 1024 * 1024; // 2 MB
+      final int totalSize = fileBytes.length;
+      final int totalChunks = (totalSize / chunkSize).ceil();
+
+      // Subir fragmentos secuencialmente (viaje 0 hasta totalChunks - 1)
+      for (int i = 0; i < totalChunks; i++) {
+        final start = i * chunkSize;
+        var end = start + chunkSize;
+        if (end > totalSize) end = totalSize;
+
+        final chunkBytes = fileBytes.sublist(start, end);
+
+        // data = TOKEN¯cabecera¯LIST¯RF¯CONT¯TOTAL
+        final dataString =
+            '${user.token}¯$cabecera¯¯C¯$i¯$totalChunks';
+
+        final result = await _api.postMultipart(
+          url: urlUpload,
+          fields: {'data': dataString},
+          fileFieldName: 'files',
+          fileBytes: chunkBytes,
+          fileName: fileName,
+          headers: {'Token': user.token},
+        );
+
+        if (result.isEmpty) return false;
+
+        // Respuesta: "OK¦nroViaje"
+        final datos = result.split('¦');
+        if (datos[0] != 'OK') return false;
+      }
+
+      // Petición final (merge): CONT == TOTAL, archivo vacío
+      // El backend une los .part0, .part1, ... y emite el WebSocket
+      final mergeData =
+          '${user.token}¯$cabecera¯¯C¯$totalChunks¯$totalChunks';
+
+      final mergeResult = await _api.postMultipart(
         url: urlUpload,
-        fields: {
-          'idLead': idLead,
-          'codUser': user.codUser,
-          'tipo': tipo,
-          'chatCab': chatCab,
-        },
-        fileFieldName: 'file', // Cambia esto si tu backend espera otro nombre
-        fileBytes: fileBytes,
+        fields: {'data': mergeData},
+        fileFieldName: 'files',
+        fileBytes: <int>[],
         fileName: fileName,
         headers: {'Token': user.token},
       );
 
-      // Si el servidor retorna vacío (o si tu lógica considera que falló)
-      if (uploadResult.isEmpty) {
-        return false;
-      }
+      if (mergeResult.isEmpty) return false;
 
-      // 2. Si la subida fue exitosa, enviamos el mensaje por socket.
-      // NOTA: Ajusta esta trama según lo que espere el backend para archivos (ej. pasando el fileName)
-      String data = "${user.token}¯$idLead¦¦${user.codUser}¦¦$tipo¦$numero¦0¦¦$chatCab¦¦¦$fileName¦${user.codUser}¦¯CA";
-      return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP¯$data");
+      // Respuesta merge: "OK¦nroViaje¦" — cuando nroViaje == totalChunks, todo OK
+      final mergeDatos = mergeResult.split('¦');
+      return mergeDatos[0] == 'OK';
     } catch (e) {
       debugPrint('Error uploadAndSendFileMessage: $e');
       return false;

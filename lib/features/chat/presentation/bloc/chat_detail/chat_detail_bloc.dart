@@ -322,6 +322,10 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final exists = currentMessages.any((m) => m.idMensaje == payload.idMensaje);
     if (exists) return;
 
+    // Extraer extensión del nombre de archivo (e.g. 'doc.xlsx' → '.xlsx')
+    final extFromName = _extractExt(payload.nomArchivo);
+    final nameWithoutExt = _removeExt(payload.nomArchivo);
+
     // MENSAJE_WHATSAPP siempre es un mensaje del cliente → isEnviado = false
     final incomingMessage = ChatMessage(
       idMensaje: payload.idMensaje,
@@ -333,8 +337,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
       estado: '', // Mensajes recibidos no tienen estado de checks
       idChatDetArc: '',
-      nomArchivo: payload.nomArchivo,
-      extArchivo: '',
+      nomArchivo: nameWithoutExt,
+      extArchivo: extFromName,
       idChatCab: payload.idChatCab,
       idChatDet: '',
     );
@@ -382,6 +386,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       );
       if (exists) return;
 
+      final extFromName2 = _extractExt(payload.nomArchivo);
+      final nameWithoutExt2 = _removeExt(payload.nomArchivo);
+
       currentMessages.add(
         ChatMessage(
           idMensaje: payload.idMensaje,
@@ -393,8 +400,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
           estado: 'sent',
           idChatDetArc: '',
-          nomArchivo: payload.nomArchivo,
-          extArchivo: '',
+          nomArchivo: nameWithoutExt2,
+          extArchivo: extFromName2,
           idChatCab: payload.idChatCab,
           idChatDet: '',
         ),
@@ -432,5 +439,21 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     );
 
     emit(currentState.copyWith(messages: currentMessages));
+  }
+
+  // ── Helpers para extraer extensión del nombre de archivo ───────────────────
+
+  /// 'reporte.xlsx' → '.xlsx', '' → ''
+  static String _extractExt(String fileName) {
+    if (fileName.isEmpty) return '';
+    final dotIndex = fileName.lastIndexOf('.');
+    return dotIndex != -1 ? fileName.substring(dotIndex) : '';
+  }
+
+  /// 'reporte.xlsx' → 'reporte', '' → ''
+  static String _removeExt(String fileName) {
+    if (fileName.isEmpty) return '';
+    final dotIndex = fileName.lastIndexOf('.');
+    return dotIndex != -1 ? fileName.substring(0, dotIndex) : fileName;
   }
 }

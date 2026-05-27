@@ -23,6 +23,11 @@ class _MediaViewerPageState extends State<MediaViewerPage> {
       TransformationController();
   bool _isDownloading = false;
   double _downloadProgress = 0;
+  bool _showAppBar = true;
+
+  void _toggleAppBar() {
+    setState(() => _showAppBar = !_showAppBar);
+  }
 
   @override
   void dispose() {
@@ -88,43 +93,72 @@ class _MediaViewerPageState extends State<MediaViewerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(
-          widget.fileName,
-          style: const TextStyle(fontSize: 14, color: Colors.white70),
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          if (_isDownloading)
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  value: _downloadProgress > 0 ? _downloadProgress : null,
-                  strokeWidth: 2,
-                  color: Colors.white,
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: IgnorePointer(
+          ignoring: !_showAppBar,
+          child: AnimatedOpacity(
+            opacity: _showAppBar ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    // ignore: deprecated_member_use
+                    colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+                  ),
                 ),
               ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.download_rounded, color: Colors.white),
-              tooltip: 'Descargar',
-              onPressed: _download,
+              foregroundColor: Colors.white,
+              title: Text(
+                widget.fileName,
+                style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
+              ),
+              actions: [
+                if (_isDownloading)
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        value: _downloadProgress > 0 ? _downloadProgress : null,
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.download_rounded, color: Colors.white),
+                    tooltip: 'Descargar',
+                    onPressed: _download,
+                  ),
+              ],
             ),
-        ],
+          ),
+        ),
       ),
-      body: Center(
-        child: InteractiveViewer(
-          transformationController: _transformController,
-          minScale: 0.5,
-          maxScale: 5.0,
-
-          child: _buildImage(),
+      body: GestureDetector(
+        onTap: _toggleAppBar,
+        child: Container(
+          color: Colors.transparent,
+          width: double.infinity,
+          height: double.infinity,
+          child: Center(
+            child: InteractiveViewer(
+              transformationController: _transformController,
+              minScale: 0.5,
+              maxScale: 5.0,
+              child: _buildImage(),
+            ),
+          ),
         ),
       ),
     );

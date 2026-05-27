@@ -124,12 +124,24 @@ class _VideoViewerPageState extends State<VideoViewerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              // ignore: deprecated_member_use
+              colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
         title: Text(
           widget.fileName,
-          style: const TextStyle(fontSize: 14, color: Colors.white70),
+          style: const TextStyle(fontSize: 15, color: Colors.white, fontWeight: FontWeight.w500),
           overflow: TextOverflow.ellipsis,
         ),
         actions: [

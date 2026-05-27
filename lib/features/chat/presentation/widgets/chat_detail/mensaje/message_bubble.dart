@@ -30,6 +30,8 @@ class MessageBubble extends StatelessWidget {
   });
 
   bool get _isImageMsg => MessageUrlHelper.isImage(message);
+  bool get _isVideoMsg => MessageUrlHelper.isVideo(message);
+  bool get _isMediaMsg => _isImageMsg || _isVideoMsg;
   bool get _isLocalFile => message.idChatCab.isEmpty;
 
   @override
@@ -68,24 +70,44 @@ class MessageBubble extends StatelessWidget {
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: _bubbleRadius(isEnviado),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ── Contenido ──────────────────────────────────
-                _buildContent(context, textColor),
-
-                // ── Hora + estado ───────────────────────────────
-                _BubbleTimeRow(
-                  fecha: message.fecha,
-                  estado: message.estado,
-                  isEnviado: isEnviado,
-                  isOverImage: _isImageMsg,
-                  textColor: textColor,
-                ),
-              ],
+          child: Padding(
+            // Estilo WhatsApp: un ligero padding (2px) para fotos/videos, o 0 para texto.
+            padding: _isMediaMsg ? const EdgeInsets.all(2) : EdgeInsets.zero,
+            child: ClipRRect(
+              borderRadius: _isMediaMsg
+                  ? _innerBubbleRadius(isEnviado)
+                  : _bubbleRadius(isEnviado),
+              child: _isMediaMsg
+                  ? Stack(
+                      children: [
+                        _buildContent(context, textColor),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: _BubbleTimeRow(
+                            fecha: message.fecha,
+                            estado: message.estado,
+                            isEnviado: isEnviado,
+                            isOverImage: true,
+                            textColor: textColor,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildContent(context, textColor),
+                        _BubbleTimeRow(
+                          fecha: message.fecha,
+                          estado: message.estado,
+                          isEnviado: isEnviado,
+                          isOverImage: false,
+                          textColor: textColor,
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -99,6 +121,16 @@ class MessageBubble extends StatelessWidget {
       topRight: const Radius.circular(16),
       bottomLeft: Radius.circular(isEnviado ? 16 : 4),
       bottomRight: Radius.circular(isEnviado ? 4 : 16),
+    );
+  }
+
+  BorderRadius _innerBubbleRadius(bool isEnviado) {
+    // Si la burbuja externa tiene 16px de radio y 2px de padding, la interna debería tener ~14px.
+    return BorderRadius.only(
+      topLeft: const Radius.circular(14),
+      topRight: const Radius.circular(14),
+      bottomLeft: Radius.circular(isEnviado ? 14 : 3),
+      bottomRight: Radius.circular(isEnviado ? 3 : 14),
     );
   }
 
@@ -435,91 +467,85 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
     return Container(
       width: widget.width,
       height: widget.height,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Fondo: thumbnail, loading, o fallback
-            if (_loadingThumb)
-              // 👇 ESTO ES LO QUE CAMBIA — circulo mientras carga
-              Container(
-                color: Colors.grey.shade800,
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white54,
-                  ),
-                ),
-              )
-            else if (_thumbnail != null)
-              Image.memory(_thumbnail!, fit: BoxFit.cover)
-            else
-              // fallback si falla el thumbnail
-              Container(
-                color: Colors.grey.shade800,
-                child: const Icon(
-                  Icons.videocam_rounded,
-                  size: 48,
-                  color: Colors.white24,
+      color: Colors.grey.shade900,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Fondo: thumbnail, loading, o fallback
+          if (_loadingThumb)
+            // 👇 ESTO ES LO QUE CAMBIA — circulo mientras carga
+            Container(
+              color: Colors.grey.shade800,
+              child: const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white54,
                 ),
               ),
+            )
+          else if (_thumbnail != null)
+            Image.memory(_thumbnail!, fit: BoxFit.cover)
+          else
+            // fallback si falla el thumbnail
+            Container(
+              color: Colors.grey.shade800,
+              child: const Icon(
+                Icons.videocam_rounded,
+                size: 48,
+                color: Colors.white24,
+              ),
+            ),
 
-            // Overlay gradient (solo si hay thumbnail)
-            if (!_loadingThumb)
-              Container(
+          // Overlay gradient (solo si hay thumbnail)
+          if (!_loadingThumb)
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  // ignore: deprecated_member_use
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                ),
+              ),
+            ),
+
+          // Botón play (solo si no está cargando)
+          if (!_loadingThumb)
+            Center(
+              child: Container(
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    // ignore: deprecated_member_use
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
-                  ),
+                  // ignore: deprecated_member_use
+                  color: Colors.black.withOpacity(0.55),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white30, width: 1.5),
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 32,
                 ),
               ),
+            ),
 
-            // Botón play (solo si no está cargando)
-            if (!_loadingThumb)
-              Center(
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
-                    color: Colors.black.withOpacity(0.55),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white30, width: 1.5),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+          // Nombre del archivo (solo si no está cargando)
+          if (!_loadingThumb)
+            Positioned(
+              bottom: 8,
+              left: 8,
+              right: 8,
+              child: Text(
+                widget.fileName,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
                 ),
               ),
-
-            // Nombre del archivo (solo si no está cargando)
-            if (!_loadingThumb)
-              Positioned(
-                bottom: 8,
-                left: 8,
-                right: 8,
-                child: Text(
-                  widget.fileName,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                  ),
-                ),
-              ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

@@ -40,16 +40,18 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   }
 
   void _onScroll() {
+    if (!_scroll.controller.hasClients) return;
     final pos = _scroll.controller.position;
 
     // botón scroll down
-    final atBottom = pos.pixels >= pos.maxScrollExtent - 100;
-    if (_showScrollDown == atBottom) {
-      setState(() => _showScrollDown = !atBottom);
+    // Con reverse: true, el fondo está en pixels == 0.0
+    final notAtBottom = pos.pixels > 100;
+    if (_showScrollDown != notAtBottom) {
+      setState(() => _showScrollDown = notAtBottom);
     }
 
-    // paginación
-    if (pos.pixels > pos.minScrollExtent + 80) return;
+    // paginación (cuando llegamos arriba, que es maxScrollExtent)
+    if (pos.pixels < pos.maxScrollExtent - 80) return;
 
     final state = context.read<ChatDetailBloc>().state;
     if (state is! ChatDetailSuccess || !state.hasMore || _isLoadingMore) return;
@@ -62,8 +64,6 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     }
     _lastLoadMoreTime = now;
 
-    // ← guardar ANTES de disparar el evento
-    _scroll.guardarPosicionAntes();
     _isLoadingMore = true;
 
     context.read<ChatDetailBloc>().add(
@@ -178,14 +178,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
                       if (_isInitialLoad) {
                         _isInitialLoad = false;
-                        _scroll.irAlFondo(animated: false);
-                      } else if (_isLoadingMore) {
-                        _scroll.restaurarPosicionDespuesDeCarga();
                       } else {
-                        // Si recibimos un mensaje nuevo y estábamos al fondo
-                        if (currentCount > _previousMessageCount) {
-                          // !_showScrollDown significa que ESTAMOS abajo (el botón NO se muestra)
-                          if (!_showScrollDown) {
+                        // Si se agregó un mensaje nuevo
+                        if (currentCount > _previousMessageCount && state.messages.isNotEmpty) {
+                          final nuevoMensaje = state.messages.last;
+                          // Si yo lo envié O si estábamos al fondo (!showScrollDown)
+                          if (nuevoMensaje.isEnviado || !_showScrollDown) {
                             Future.delayed(const Duration(milliseconds: 150), () {
                               _scroll.irAlFondo(animated: true);
                             });

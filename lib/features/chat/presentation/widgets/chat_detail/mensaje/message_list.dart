@@ -23,6 +23,7 @@ class MessageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      reverse: true,
       controller: scrollController,
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
@@ -30,8 +31,8 @@ class MessageList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: messages.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        // Loader al tope cuando se pagina
-        if (isLoadingMore && index == 0) {
+        // Loader al tope visual (final de la lista invertida)
+        if (isLoadingMore && index == messages.length) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Center(
@@ -44,8 +45,11 @@ class MessageList extends StatelessWidget {
           );
         }
 
-        final messageIndex = isLoadingMore ? index - 1 : index;
+        // El índice 0 de la vista invertida es el último mensaje del array original.
+        final messageIndex = messages.length - 1 - index;
         final message = messages[messageIndex];
+        
+        // Las fechas se evalúan respecto al orden cronológico (array original).
         final previousMessage = messageIndex > 0
             ? messages[messageIndex - 1]
             : null;

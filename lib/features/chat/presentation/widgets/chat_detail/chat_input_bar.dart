@@ -58,14 +58,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
     context.read<ChatDetailBloc>().add(ChatDetailTextMessageSent(text, numero: numero, chatCab: chatCab));
     _textController.clear();
-    widget.onScrollToBottom();
   }
 
   void _onAudioReady(String path) {
     widget.audioController.stop();
     context.read<ChatDetailBloc>().add(ChatDetailAudioMessageSent(path));
     setState(() => _mode = _InputMode.text);
-    widget.onScrollToBottom();
   }
 
   void _onFilePicked(String path, String name, String ext, String tipo) {
@@ -79,7 +77,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
       ),
     );
     setState(() => _mode = _InputMode.text);
-    widget.onScrollToBottom();
   }
 
   void _toggleAttachment() {

@@ -321,12 +321,12 @@ class SignalRService implements ISignalRService {
     _reconnectTimer?.cancel();
 
     // Backoff: 500ms → 1s → 2s → 5s → 10s
-    const delays = [500, 1000, 2000, 5000, 10000];
-    final waitMs = delays[(_reconnectAttempts - 1).clamp(0, delays.length - 1)];
+    // const delays = [500, 1000, 2000, 5000, 10000];
+    // final waitMs = delays[(_reconnectAttempts - 1).clamp(0, delays.length - 1)];
 
     _emitState(WebSocketConnectionState.reconnecting);
 
-    _reconnectTimer = Timer(Duration(milliseconds: waitMs), () async {
+    _reconnectTimer = Timer(const Duration(seconds: 5), () async {
       if (_currentState != WebSocketConnectionState.manuallyClosed &&
           !isConnected) {
         _reconnectAttempts++;

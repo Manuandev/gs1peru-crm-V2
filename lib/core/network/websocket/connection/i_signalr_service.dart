@@ -36,6 +36,7 @@ abstract class ISignalRService {
   /// Inicia la conexión con el hub SignalR.
   /// Si ya está conectado o conectando, no hace nada.
   Future<void> connect();
+  Future<void> limpiarTokenFCM();
 
   /// Fuerza una reconexión aunque esté en proceso.
   /// Útil al recuperar internet o al volver de background.

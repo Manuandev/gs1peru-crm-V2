@@ -1,3 +1,63 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:app_crm/core/index_core.dart';
+
+class FirebaseNotificationService {
+  FirebaseNotificationService._();
+  static final FirebaseNotificationService instance =
+      FirebaseNotificationService._();
+
+  final _fcm = FirebaseMessaging.instance;
+
+  Future<void> init() async {
+    try {
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+        debugPrint('[FCM] Permiso no concedido');
+        return;
+      }
+
+      // foreground → mostrar notif local
+      FirebaseMessaging.onMessage.listen((message) {
+        final titulo =
+            message.data['titulo'] ?? message.notification?.title ?? '';
+        final cuerpo =
+            message.data['cuerpo'] ?? message.notification?.body ?? '';
+        if (titulo.isEmpty && cuerpo.isEmpty) return;
+        LocalNotificationService.instance.show(
+          AppNotification(title: titulo, body: cuerpo),
+        );
+      });
+    } catch (e) {
+      debugPrint('[FCM] Error inicializando: $e');
+    }
+  }
+
+  Future<String?> obtenerToken() async {
+    try {
+      return await _fcm.getToken();
+    } catch (e) {
+      debugPrint('[FCM] Error obteniendo token: $e');
+      return null;
+    }
+  }
+
+  Stream<String> get onTokenRefresh => _fcm.onTokenRefresh;
+}
+
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
+
+
+/*
 // lib/core/notifications/services/firebase_notification_service.dart
 
 import 'package:app_crm/core/index_core.dart';
@@ -98,3 +158,4 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   debugPrint('FCM Background: ${message.messageId}');
 }
+*/

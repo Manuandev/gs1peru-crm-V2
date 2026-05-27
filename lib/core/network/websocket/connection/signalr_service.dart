@@ -122,6 +122,7 @@ class SignalRService implements ISignalRService {
         WakelockPlus.enable();
         _startHeartbeat();
         _startConnectivityMonitoring();
+        await _registrarTokenFCM();
         return;
       } catch (_) {
         currentAttempt++;
@@ -223,17 +224,17 @@ class SignalRService implements ISignalRService {
   HubConnection _buildConnection() {
     final user = _session.user!;
 
-    // https://natcodee.net:9003/socket/?token=${$config.token}&tipoCliente=web&coduser=${$global.user.coduser}
     final connectionUrl =
         '${ApiConstants.urlWebSocket}'
         '?token=${user.token}'
         '&tipoCliente=mobile'
         '&coduser=${user.codUser}';
 
+    debugPrint('[SOCKET] Conectando a: $connectionUrl'); // ← agregar
+
     return HubConnectionBuilder().withUrl(connectionUrl).build()
-      ..serverTimeoutInMilliseconds =
-          60000 // ← 60s antes de considerar caída
-      ..keepAliveIntervalInMilliseconds = 10000; // ← ping nativo cada 10s
+      ..serverTimeoutInMilliseconds = 60000
+      ..keepAliveIntervalInMilliseconds = 10000;
   }
 
   void _registerHubHandlers() {
@@ -416,11 +417,12 @@ class SignalRService implements ISignalRService {
   }
 
   void _emitState(WebSocketConnectionState state) {
-    if (_currentState == state) return; // Evitar emitir el mismo estado
+    if (_currentState == state) return;
     _currentState = state;
     if (!_connectionStateController.isClosed) {
       _connectionStateController.add(state);
     }
+    debugPrint('[SOCKET] Estado: $state');
   }
 
   void _cancelAllTimers() {
@@ -428,5 +430,28 @@ class SignalRService implements ISignalRService {
     _reconnectTimer = null;
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
+  }
+
+  // FCM
+  Future<void> _registrarTokenFCM() async {
+    try {
+      final token = await FirebaseNotificationService.instance.obtenerToken();
+      if (token == null || token.isEmpty) return;
+      _hubConnection?.invoke('RegistrarTokenFCM', args: <Object>[token]);
+      debugPrint('[FCM] Token registrado en hub');
+    } catch (e) {
+      debugPrint('[FCM] Error registrando token en hub: $e');
+    }
+  }
+
+  @override
+  Future<void> limpiarTokenFCM() async {
+    try {
+      if (!_isHubConnected()) return;
+      await _hubConnection?.invoke('LimpiarTokenFCM');
+      debugPrint('[FCM] Token desregistrado');
+    } catch (e) {
+      debugPrint('[FCM] Error desregistrando token: $e');
+    }
   }
 }

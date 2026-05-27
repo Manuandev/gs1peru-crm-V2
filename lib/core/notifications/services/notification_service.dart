@@ -11,15 +11,14 @@ class NotificationService {
     await FirebaseNotificationService.instance.init();
   }
 
-  Future<void> initBackground() async {
-    await LocalNotificationService.instance.initBackground();
-    await FirebaseNotificationService.instance.initBackground();
-  }
+  // Future<void> initBackground() async {
+  //   await LocalNotificationService.instance.initBackground();
+  //   await FirebaseNotificationService.instance.initBackground();
+  // }
 
   /// Llamado desde el Splash — aquí sí pide permisos (ya hay UI)
   Future<void> requestPermissions() async {
     await LocalNotificationService.instance.requestPermissions();
-    await FirebaseNotificationService.instance.requestPermissions();
   }
 
   // Usado por SignalR (foreground)

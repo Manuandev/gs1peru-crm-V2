@@ -198,7 +198,12 @@ class BasePage extends StatelessWidget {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: bodyPadding ?? EdgeInsets.zero,
+                    padding:
+                        bodyPadding ??
+                        const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
                     child: body,
                   ),
                 ),

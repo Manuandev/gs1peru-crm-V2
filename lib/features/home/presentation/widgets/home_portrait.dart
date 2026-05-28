@@ -35,22 +35,27 @@ class HomePortrait extends StatelessWidget {
     );
 
     return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('totalConversaciones: ${state.totConversaciones}'),
-          Text('totCobranza: ${state.totCobranza}'),
-          Text('totProspectos: ${state.totProspectos}'),
-          Text('totPropuesta: ${state.totPropuestas}'),
-          // ── MENU CARDS ──────────────────────────────────────
+          CardTotalesHome(state: state),
+          const SizedBox(height: AppSpacing.md),
           HomeMenuCards(state: state),
           const SizedBox(height: AppSpacing.md),
           Text("Prioridad ahora", style: titleStyle),
           const SizedBox(height: AppSpacing.xxs),
           Text("Responde rápido a tus conversaciones.", style: bodyStyle),
+          const SizedBox(height: AppSpacing.sm),
           PrioridadSectionHome(prioridades: state.prioridades),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Prospectos nuevos', style: titleStyle),
+              TextButton(onPressed: () {}, child: Text('Ver todos')),
+            ],
+          ),
         ],
       ),
     );

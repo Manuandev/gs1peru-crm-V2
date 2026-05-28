@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -65,76 +64,72 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
       fontWeight: FontWeight.w700,
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.xs,
-        horizontal: AppSpacing.xs,
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: AppSizing.avatarRadiusSm,
-            backgroundColor: prioridad.nombre.avatarColor,
-            child: Text(prioridad.nombre.initials, style: labelMediumStyle),
-          ),
-          SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(prioridad.nombre, style: titleStyle),
-                SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    if (prioridad.idCanal.isNotEmpty) ...[
-                      AppIconsSocial.widgetCanal(prioridad.idCanal),
-                      SizedBox(width: AppSpacing.xxs),
-                      Text(
-                        CanalHelper.get(prioridad.idCanal).nombre,
-                        style: labelSmallStyle,
-                      ),
-                      SizedBox(width: AppSpacing.xs),
-                    ],
-                    if (prioridad.idEstado.isNotEmpty) ...[
-                      AppIconsSocial.chipEstado(
-                        prioridad.idEstado,
-                        label: prioridad.estado,
-                      ),
-                    ],
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: AppSizing.avatarRadiusSm,
+          backgroundColor: prioridad.nombre.avatarColor,
+          child: Text(prioridad.nombre.initials, style: labelMediumStyle),
+        ),
+        SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(prioridad.nombre, style: titleStyle),
+              SizedBox(height: AppSpacing.xs),
+              Row(
+                children: [
+                  if (prioridad.idCanal.isNotEmpty) ...[
+                    AppIconsSocial.widgetCanal(prioridad.idCanal),
+                    SizedBox(width: AppSpacing.xxs),
+                    Text(
+                      CanalHelper.get(prioridad.idCanal).nombre,
+                      style: labelSmallStyle,
+                    ),
+                    SizedBox(width: AppSpacing.xs),
                   ],
-                ),
-              ],
+                  if (prioridad.idEstado.isNotEmpty) ...[
+                    AppIconsSocial.chipEstado(
+                      prioridad.idEstado,
+                      label: prioridad.estado,
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: AppSpacing.sm),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(ElapsedTimeUtils.format(_elapsed), style: errorStyle),
+          ],
+        ),
+        SizedBox(width: AppSpacing.sm),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ActionButtonWidget(
+              icon: AppIcons.message,
+              color: Colors.green,
+              onTap: () {
+                context.goToDetalleChatDesdeHome(idLead: prioridad.idLead);
+              },
+              tooltip: 'Mensaje',
             ),
-          ),
-          SizedBox(width: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(ElapsedTimeUtils.format(_elapsed), style: errorStyle),
-            ],
-          ),
-          SizedBox(width: AppSpacing.sm),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ActionButtonWidget(
-                icon: AppIcons.message,
-                color: Colors.green,
-                onTap: () {
-                  context.goToDetalleChatDesdeHome(idLead: prioridad.idLead);
-                },
-                tooltip: 'Mensaje',
-              ),
-              ActionButtonWidget(
-                icon: AppIcons.phone,
-                color: Colors.blue,
-                onTap: () {},
-                tooltip: 'Llamar',
-              ),
-            ],
-          ),
-        ],
-      ),
+            ActionButtonWidget(
+              icon: AppIcons.phone,
+              color: Colors.blue,
+              onTap: () async {
+                await LauncherUtils.abrirTelefono(prioridad.telefono);
+              },
+              tooltip: 'Llamar',
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

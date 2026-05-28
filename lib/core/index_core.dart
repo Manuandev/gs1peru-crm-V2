@@ -107,6 +107,8 @@ export 'utils/date/date_extensions.dart';
 export 'utils/date/date_formats.dart';
 export 'utils/date/date_formatter.dart';
 
+export 'utils/launcher/launcher_utils.dart';
+
 export 'utils/string/string_utils.dart';
 
 // ui

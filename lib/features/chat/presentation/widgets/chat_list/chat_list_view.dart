@@ -11,6 +11,7 @@ class ChatListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
+      bodyPadding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       onLogout: () => context.logoutWithConfirmation(context),
       title: 'Mis conversaciones',
       drawerSide: DrawerSide.left,

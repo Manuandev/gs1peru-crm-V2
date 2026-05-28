@@ -27,6 +27,7 @@ export 'presentation/widgets/home_landscape.dart';
 export 'presentation/widgets/dashboard/dashboard_home.dart';
 export 'presentation/widgets/dashboard/home_menu_cards.dart';
 export 'presentation/widgets/dashboard/buttons/action_button_home.dart';
+export 'presentation/widgets/dashboard/card_totales_home.dart';
 
 export 'presentation/widgets/dashboard/sections/prioridad_section_home.dart';
 export 'presentation/widgets/dashboard/tiles/prioridad_tile_home.dart';

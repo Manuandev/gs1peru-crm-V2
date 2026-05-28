@@ -39,6 +39,8 @@ class HomeLoaded extends HomeState {
   int get totProspectos => home.totProspectos;
   int get totPropuestas => home.totPropuestas;
   int get totCobranza => home.totCobranza;
+  int get totLeadsNuevos => home.totLeadsNuevos;
+  int get totLeadsDesarrollo => home.totLeadsDesarrollo;
   List<Prioridad> get prioridades => home.prioridades;
 
   @override

@@ -19,6 +19,8 @@ class HomeRemoteDatasource {
           totProspectos: 0,
           totPropuestas: 0,
           totCobranza: 0,
+          totLeadsNuevos: 0,
+          totLeadsDesarrollo: 0,
           prioridades: [],
         ),
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),

@@ -253,7 +253,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (_currentLeadId != null) {
       final success = await _sendFileMessage(
         filePath: event.filePath,
-        fileName: event.fileName,
+        fileName: '${event.fileName}${event.fileExt}',
         tipo: event.tipo,
         idLead: _currentLeadId.toString(),
         numero: event.numero,

@@ -19,7 +19,8 @@ bool _isLocalFileHelper(ChatMessage msg) {
     return false;
   }
   final m = msg.mensaje;
-  return m.isNotEmpty && (m.startsWith('/') || m.startsWith('file://') || m.contains(r':\'));
+  return m.isNotEmpty &&
+      (m.startsWith('/') || m.startsWith('file://') || m.contains(r':\'));
 }
 
 class MessageBubble extends StatelessWidget {

@@ -51,6 +51,17 @@ class DateFormatter {
       return DateFormat('MMM d yyyy h:mma', 'en').parse(cleaned);
     } catch (_) {}
 
+    // Formato solo hora: "10:49" o "10:49:12"
+    final timeRegex = RegExp(r'^(\d{1,2}):(\d{2})(?::(\d{2}))?$');
+    final match = timeRegex.firstMatch(dateString.trim());
+    if (match != null) {
+      final now = DateTime.now();
+      final h = int.parse(match.group(1)!);
+      final m = int.parse(match.group(2)!);
+      final s = match.group(3) != null ? int.parse(match.group(3)!) : 0;
+      return DateTime(now.year, now.month, now.day, h, m, s);
+    }
+
     return null;
   }
 

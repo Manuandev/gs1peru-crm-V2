@@ -6,7 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class PrioridadTileHome extends StatefulWidget {
-  final Prioridad prioridad;
+  final PrioridadHome prioridad;
   const PrioridadTileHome({super.key, required this.prioridad});
 
   @override

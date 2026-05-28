@@ -4,7 +4,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class PrioridadSectionHome extends StatelessWidget {
-  final List<Prioridad> prioridades;
+  final List<PrioridadHome> prioridades;
 
   const PrioridadSectionHome({super.key, required this.prioridades});
 

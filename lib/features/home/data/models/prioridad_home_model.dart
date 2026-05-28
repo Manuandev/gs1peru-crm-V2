@@ -1,10 +1,10 @@
-// lib\features\lead\data\models\home_model.dart
+// lib\features\home\data\models\home_model.dart
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
-class PrioridadModel extends Prioridad {
-  const PrioridadModel({
+class PrioridadHomeModel extends PrioridadHome {
+  const PrioridadHomeModel({
     required super.idLead,
     required super.nombre,
     required super.telefono,
@@ -15,11 +15,11 @@ class PrioridadModel extends Prioridad {
     required super.fechaHora,
   });
 
-  factory PrioridadModel.fromRawString(String raw) {
+  factory PrioridadHomeModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
     String f(int i) => i < fields.length ? fields[i].trim() : '';
 
-    return PrioridadModel(
+    return PrioridadHomeModel(
         idLead: int.parse(f(0)),
         nombre: f(1),
         telefono: f(2),
@@ -31,11 +31,11 @@ class PrioridadModel extends Prioridad {
     );
   }
 
-  static List<PrioridadModel> parseList(String rawResponse) {
+  static List<PrioridadHomeModel> parseList(String rawResponse) {
     return rawResponse
         .split(AppConstants.sepRegistros) 
         .where((r) => r.trim().isNotEmpty)
-        .map((r) => PrioridadModel.fromRawString(r))
+        .map((r) => PrioridadHomeModel.fromRawString(r))
         .toList();
   }
 }

@@ -6,6 +6,7 @@ class Chat extends Equatable {
   final int idLead; // 00 - ID_LEAD
   final String nombreApe; // 01 - B.NOMBRE + ' ' + B.APELLIDOS
   final String telefono; // 02 - TELEFONO (+51-958914300)
+  final String idMensaje; // 03 - MENSAJE
   final String mensaje; // 03 - MENSAJE
   final String tipoMensaje; // 04 - TIPO_MENSAJE (E/S)
   final String estado; // 05 - ESTADO (LEIDO/NO_LEIDO)
@@ -17,6 +18,7 @@ class Chat extends Equatable {
     required this.idLead,
     required this.nombreApe,
     required this.telefono,
+    required this.idMensaje,
     required this.mensaje,
     required this.tipoMensaje,
     required this.estado,
@@ -30,6 +32,7 @@ class Chat extends Equatable {
     idLead,
     nombreApe,
     telefono,
+    idMensaje,
     mensaje,
     tipoMensaje,
     estado,

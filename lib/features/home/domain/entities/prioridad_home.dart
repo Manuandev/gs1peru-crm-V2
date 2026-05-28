@@ -1,4 +1,4 @@
-class Prioridad {
+class PrioridadHome {
   final int idLead;
   final String nombre;
   final String telefono;
@@ -8,7 +8,7 @@ class Prioridad {
   final String canal;
   final String fechaHora;
 
-  const Prioridad({
+  const PrioridadHome({
     required this.idLead,
     required this.nombre,
     required this.telefono,

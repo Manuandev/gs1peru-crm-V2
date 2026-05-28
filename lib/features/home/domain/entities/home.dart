@@ -7,7 +7,8 @@ class Home {
   final int totCobranza;
   final int totLeadsNuevos;
   final int totLeadsDesarrollo;
-  final List<Prioridad> prioridades;
+  final List<PrioridadHome> prioridades;
+  final List<ProspectoHome> prospectos;
 
   const Home({
     required this.totConversaciones,
@@ -17,5 +18,6 @@ class Home {
     required this.totLeadsNuevos,
     required this.totLeadsDesarrollo,
     required this.prioridades,
+    required this.prospectos,
   });
 }

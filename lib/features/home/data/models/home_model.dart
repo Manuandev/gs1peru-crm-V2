@@ -12,6 +12,7 @@ class HomeModel extends Home {
     required super.totLeadsNuevos,
     required super.totLeadsDesarrollo,
     required super.prioridades,
+    required super.prospectos,
   });
 
   /// Parsea la respuesta completa del SP.
@@ -28,6 +29,7 @@ class HomeModel extends Home {
     final partes = rawResponse.split(AppConstants.sepListas);
     final totalesRaw = partes.isNotEmpty ? partes[0] : '';
     final prioridadesRaw = partes.length > 1 ? partes[1] : '';
+    final prospectosRaw = partes.length > 2 ? partes[2] : '';
 
     // 2) Parsear totales
     final campos = totalesRaw.split(AppConstants.sepCampos);
@@ -39,8 +41,12 @@ class HomeModel extends Home {
 
     // 3) Parsear lista de prioridades
     final prioridades = prioridadesRaw.trim().isEmpty
-        ? <PrioridadModel>[]
-        : PrioridadModel.parseList(prioridadesRaw);
+        ? <PrioridadHomeModel>[]
+        : PrioridadHomeModel.parseList(prioridadesRaw);
+
+    final prospectos = prospectosRaw.trim().isEmpty
+        ? <ProspectoHomeModel>[]
+        : ProspectoHomeModel.parseList(prospectosRaw);
 
     return HomeModel(
       totConversaciones: t(0),
@@ -50,6 +56,7 @@ class HomeModel extends Home {
       totLeadsNuevos: t(4),
       totLeadsDesarrollo: t(5),
       prioridades: prioridades,
+      prospectos: prospectos,
     );
   }
 }

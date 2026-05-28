@@ -16,7 +16,13 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final themeText = theme.textTheme;
+
+    final titleMediumStyle = themeText.titleMedium?.copyWith(
+      color: themeText.titleMedium!.color,
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -35,11 +41,19 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
               ),
               child: Row(
                 children: [
-                  Text(
-                    'Datos del lead',
-                    style: AppTextStyles.titleSmall.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 3,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Datos del lead', style: themeText.titleMedium),
+                    ],
                   ),
                   const Spacer(),
                   Icon(
@@ -89,11 +103,15 @@ class _DatosLeadContenido extends StatelessWidget {
                 icon: Icons.flag_rounded,
                 label: 'Estado',
                 valor: infoLead.estado,
+                iconColor: Colors.blue.shade700,
+                iconBackground: Colors.blue.shade50,
               ),
               _DatoItem(
                 icon: Icons.list_alt_rounded,
                 label: 'Subestado',
                 valor: infoLead.subEstado,
+                iconColor: Colors.purple.shade700,
+                iconBackground: Colors.purple.shade50,
               ),
             ],
           ),
@@ -104,11 +122,15 @@ class _DatosLeadContenido extends StatelessWidget {
                 icon: Icons.campaign_rounded,
                 label: 'Campaña',
                 valor: infoLead.campania,
+                iconColor: Colors.teal.shade700,
+                iconBackground: Colors.teal.shade50,
               ),
               _DatoItem(
                 icon: Icons.calendar_today_rounded,
                 label: 'Evento',
                 valor: infoLead.evento,
+                iconColor: Colors.orange.shade700,
+                iconBackground: Colors.orange.shade50,
               ),
             ],
           ),
@@ -119,25 +141,29 @@ class _DatosLeadContenido extends StatelessWidget {
                 icon: Icons.share_rounded,
                 label: 'Canal',
                 valor: infoLead.canal,
+                iconColor: Colors.pink.shade700,
+                iconBackground: Colors.pink.shade50,
               ),
               _DatoItem(
                 icon: Icons.people_rounded,
                 label: 'Interés',
                 valor: infoLead.interes,
+                iconColor: Colors.green.shade700,
+                iconBackground: Colors.green.shade50,
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
 
           // ── Botón Editar lead ──
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
+          Align(
+            alignment: Alignment.centerRight,
+            child: CustomOutlinedButton(
+              text: 'Editar lead',
+              icon: const Icon(Icons.edit_rounded, size: AppSizing.iconSm),
               onPressed: () {
                 // acción editar lead
               },
-              icon: const Icon(Icons.edit_rounded, size: 16),
-              label: const Text('Editar lead'),
             ),
           ),
         ],
@@ -150,35 +176,48 @@ class _DatoItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final String valor;
+  final Color iconColor;
+  final Color iconBackground;
 
   const _DatoItem({
     required this.icon,
     required this.label,
     required this.valor,
+    required this.iconColor,
+    required this.iconBackground,
   });
 
   @override
   Widget build(BuildContext context) {
+    final themeText = Theme.of(context).textTheme;
+
     return Expanded(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: Colors.grey.shade500),
-          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: iconBackground,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, size: 14, color: iconColor),
+          ),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: AppTextStyles.labelSmall.copyWith(
+                  style: themeText.labelSmall?.copyWith(
                     color: Colors.grey.shade500,
                   ),
                 ),
                 Text(
                   valor == '' ? 'Sin $label' : valor,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
+                  style: themeText.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

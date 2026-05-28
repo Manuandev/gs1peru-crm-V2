@@ -53,30 +53,16 @@ class HomeView extends StatelessWidget {
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
         IconButton(
+          icon: Icon(AppIcons.notification, color: AppColors.textOnDark),
+          onPressed: () {},
+        ),
+        IconButton(
           icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
           onPressed: () {
             context.read<HomeBloc>().add(HomeRefresh());
           },
         ),
       ],
-      // appBarPopupItems: const [
-      //   AppBarPopupItem(
-      //     value: 'refresh',
-      //     icon: AppIcons.refresh,
-      //     label: 'Actualizar',
-      //   ),
-      //   AppBarPopupItem(
-      //     value: 'help',
-      //     icon: AppIcons.help,
-      //     label: 'Ayuda',
-      //     showDividerAfter: true,
-      //   ),
-      // ],
-      // onPopupSelected: (value) {
-      //   if (value == 'refresh') {
-      //     context.read<HomeBloc>().add(HomeRefreshRequested());
-      //   }
-      // },
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeInitial || state is HomeLoading) {

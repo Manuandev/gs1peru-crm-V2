@@ -133,19 +133,11 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           icon: Icons.block,
           label: 'Bloquear',
         ),
-        AppBarPopupItem(
-          value: 'ver_lead',
-          icon: Icons.person,
-          label: 'Ver lead',
-        ),
       ],
       onPopupSelected: (value) {
         switch (value) {
           case 'bloquear':
             // acción bloquear
-            break;
-          case 'ver_lead':
-            // acción ver lead
             break;
         }
       },

@@ -1,15 +1,54 @@
 // lib/features/chats/presentation/widgets/chat_tile.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
-class ChatTile extends StatelessWidget {
+class ChatTile extends StatefulWidget {
   final Chat chat;
   final VoidCallback? onTap;
 
   const ChatTile({super.key, required this.chat, this.onTap});
+
+  @override
+  State<ChatTile> createState() => _ChatTileState();
+}
+
+class _ChatTileState extends State<ChatTile> {
+  late Duration _elapsed;
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _elapsed = Duration.zero;
+    _updateElapsed();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      setState(() => _updateElapsed());
+    });
+  }
+
+  void _updateElapsed() {
+    final fecha = DateFormatter.parseDate(widget.chat.fechaHora);
+    if (fecha == null) return;
+    _elapsed = DateTime.now().difference(fecha);
+  }
+
+  @override
+  void didUpdateWidget(ChatTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.chat.fechaHora != widget.chat.fechaHora) {
+      _updateElapsed();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +96,7 @@ class ChatTile extends StatelessWidget {
     final dividerIndent = paddingH + (avatarRadius * 2) + 12;
 
     return InkWell(
-      onTap: onTap,
+      onTap: widget.onTap,
       // ignore: deprecated_member_use
       splashColor: colorScheme.primary.withOpacity(0.05),
       // ignore: deprecated_member_use
@@ -75,9 +114,9 @@ class ChatTile extends StatelessWidget {
                 // ─── Avatar ───────────────────────────────────────
                 CircleAvatar(
                   radius: avatarRadius,
-                  backgroundColor: AvatarUtils.color(chat.nombreApe),
+                  backgroundColor: AvatarUtils.color(widget.chat.nombreApe),
                   child: Text(
-                    AvatarUtils.initials(chat.nombreApe),
+                    AvatarUtils.initials(widget.chat.nombreApe),
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -100,7 +139,7 @@ class ChatTile extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              chat.nombreApe,
+                              widget.chat.nombreApe,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
@@ -111,7 +150,7 @@ class ChatTile extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            chat.fechaHora.formatWhatsApp(),
+                            widget.chat.fechaHora.formatWhatsApp(),
                             style: TextStyle(
                               fontSize: fechaSize,
                               color: Colors.grey.shade500,
@@ -124,7 +163,7 @@ class ChatTile extends StatelessWidget {
                       const SizedBox(height: 3),
 
                       // Fila: Mensaje | Badge
-                      _buildPreview(chat, mensajeSize, colorScheme),
+                      _buildPreview(widget.chat, mensajeSize, colorScheme),
                     ],
                   ),
                 ),
@@ -168,6 +207,18 @@ class ChatTile extends StatelessWidget {
             ),
           ),
         ),
+        // Tiempo: solo si el cliente mando el mensaje
+        if (chat.isEnviado) ...[
+          const SizedBox(width: 6),
+          Text(
+            'Sin respuesta ${ElapsedTimeUtils.formatHoMoS(_elapsed)}',
+            style: TextStyle(
+              fontSize: mensajeSize - 1,
+              color: ElapsedTimeUtils.colorFromElapsed(_elapsed),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
         // Estado: solo si YO mandé el mensaje
         if (!chat.isEnviado) ...[
           const SizedBox(width: 4),

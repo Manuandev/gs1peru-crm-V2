@@ -130,7 +130,8 @@ class SignalRService implements ISignalRService {
         _emitState(WebSocketConnectionState.reconnecting);
 
         if (currentAttempt < maxAttempts && _hasInternet) {
-          final delays = [300, 500];
+          // final delays = [300, 500];
+          final delays = [500, 1000];
           await Future.delayed(
             Duration(milliseconds: delays[(currentAttempt - 1).clamp(0, 1)]),
           );

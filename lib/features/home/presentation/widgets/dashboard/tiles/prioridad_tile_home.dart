@@ -104,7 +104,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(ElapsedTimeUtils.format(_elapsed), style: errorStyle),
+            Text(ElapsedTimeUtils.formatHyM(_elapsed), style: errorStyle),
           ],
         ),
         SizedBox(width: AppSpacing.sm),

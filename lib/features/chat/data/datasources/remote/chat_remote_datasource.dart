@@ -54,11 +54,17 @@ class ChatRemoteDatasource {
     };
   }
 
-  bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab) {
+  bool sendWhatsAppMessage(
+    String mensaje,
+    String idLead,
+    String numero,
+    String chatCab,
+  ) {
     final user = _session.user;
     if (user == null) return false;
 
-    String data = "${user.token}¯$idLead¦¦${user.codUser}¦$mensaje¦text¦$numero¦0¦¦$chatCab¦¦¦¦${user.codUser}¦¯CA";
+    String data =
+        "${user.token}¯$idLead¦¦${user.codUser}¦$mensaje¦text¦$numero¦0¦¦$chatCab¦¦¦¦${user.codUser}¦¯CA";
     return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP¯$data");
   }
 
@@ -88,6 +94,8 @@ class ChatRemoteDatasource {
       final cabecera =
           '$idLead¦¦${user.codUser}¦¦$tipo¦$numero¦0¦¦$chatCab¦$fileName¦$fileExt';
 
+      
+
       final urlUpload = ApiConstants.urlGuardarMultimedia;
 
       // Tamaño máximo por fragmento (igual que VI_TOPE en el JS)
@@ -104,8 +112,9 @@ class ChatRemoteDatasource {
         final chunkBytes = fileBytes.sublist(start, end);
 
         // data = TOKEN¯cabecera¯LIST¯RF¯CONT¯TOTAL
-        final dataString =
-            '${user.token}¯$cabecera¯¯C¯$i¯$totalChunks';
+        final dataString = '${user.token}¯$cabecera¯¯C¯$i¯$totalChunks';
+
+        debugPrint('DATA CABECERA : $dataString');
 
         final result = await _api.postMultipart(
           url: urlUpload,
@@ -125,8 +134,7 @@ class ChatRemoteDatasource {
 
       // Petición final (merge): CONT == TOTAL, archivo vacío
       // El backend une los .part0, .part1, ... y emite el WebSocket
-      final mergeData =
-          '${user.token}¯$cabecera¯¯C¯$totalChunks¯$totalChunks';
+      final mergeData = '${user.token}¯$cabecera¯¯C¯$totalChunks¯$totalChunks';
 
       final mergeResult = await _api.postMultipart(
         url: urlUpload,

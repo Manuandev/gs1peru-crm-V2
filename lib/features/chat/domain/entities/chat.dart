@@ -40,4 +40,30 @@ class Chat extends Equatable {
     isFavorito,
     isEnviado,
   ];
+
+  Chat copyWith({
+    int? idLead,
+    String? nombreApe,
+    String? telefono,
+    String? idMensaje,
+    String? mensaje,
+    String? tipoMensaje,
+    String? estado,
+    String? fechaHora,
+    bool? isFavorito,
+    bool? isEnviado,
+  }) {
+    return Chat(
+      idLead: idLead ?? this.idLead,
+      nombreApe: nombreApe ?? this.nombreApe,
+      telefono: telefono ?? this.telefono,
+      idMensaje: idMensaje ?? this.idMensaje,
+      mensaje: mensaje ?? this.mensaje,
+      tipoMensaje: tipoMensaje ?? this.tipoMensaje,
+      estado: estado ?? this.estado,
+      fechaHora: fechaHora ?? this.fechaHora,
+      isFavorito: isFavorito ?? this.isFavorito,
+      isEnviado: isEnviado ?? this.isEnviado,
+    );
+  }
 }

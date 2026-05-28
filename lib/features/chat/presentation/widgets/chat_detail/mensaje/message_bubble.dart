@@ -14,6 +14,14 @@ import 'package:app_crm/features/chat/index_chat.dart';
 // MessageBubble — burbuja principal
 // ─────────────────────────────────────────────────────────────────────────────
 
+bool _isLocalFileHelper(ChatMessage msg) {
+  if (msg.tipo == 'text' || msg.tipo == 'template' || msg.tipo == 'button') {
+    return false;
+  }
+  final m = msg.mensaje;
+  return m.isNotEmpty && (m.startsWith('/') || m.startsWith('file://') || m.contains(r':\'));
+}
+
 class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final AudioController audioController;
@@ -31,7 +39,7 @@ class MessageBubble extends StatelessWidget {
   bool get _isImageMsg => MessageUrlHelper.isImage(message);
   bool get _isVideoMsg => MessageUrlHelper.isVideo(message);
   bool get _isMediaMsg => _isImageMsg || _isVideoMsg;
-  bool get _isLocalFile => message.idChatCab.isEmpty;
+  bool get _isLocalFile => _isLocalFileHelper(message);
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +283,7 @@ class _ImageContent extends StatelessWidget {
     required this.nombre,
   });
 
-  bool get _isLocal => message.idChatCab.isEmpty;
+  bool get _isLocal => _isLocalFileHelper(message);
 
   void _openViewer(BuildContext context, String urlOrPath) {
     Navigator.of(context).push(
@@ -388,7 +396,7 @@ class _VideoContent extends StatelessWidget {
     required this.nombre,
   });
 
-  bool get _isLocal => message.idChatCab.isEmpty;
+  bool get _isLocal => _isLocalFileHelper(message);
 
   @override
   Widget build(BuildContext context) {
@@ -602,7 +610,7 @@ class _DocumentContentState extends State<_DocumentContent> {
     if (_isDownloading) return;
 
     // Archivo local recién seleccionado
-    if (widget.message.idChatCab.isEmpty) {
+    if (_isLocalFileHelper(widget.message)) {
       await OpenFilex.open(widget.message.mensaje);
       return;
     }

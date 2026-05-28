@@ -2,6 +2,7 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/core/index_core.dart';
 
 abstract class ChatListEvent extends Equatable {
   const ChatListEvent();
@@ -22,3 +23,12 @@ class ChatListSearched extends ChatListEvent {
   final String query;
   const ChatListSearched(this.query);
 }
+
+/// Evento disparado cuando llega un mensaje por WebSocket (envío o recepción).
+class ChatListIncomingMessageReceived extends ChatListEvent {
+  final WebSocketMessage message;
+  const ChatListIncomingMessageReceived(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

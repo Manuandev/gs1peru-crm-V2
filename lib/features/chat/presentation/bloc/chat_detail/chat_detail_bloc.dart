@@ -357,22 +357,54 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
-    // Buscar el mensaje pendiente (estado 'wait') que coincida con el contenido
-    // y sea nuestro (isEnviado = true)
-    final pendingIndex = currentMessages.lastIndexWhere(
-      (m) =>
-          m.estado == 'wait' &&
-          m.isEnviado == true &&
-          m.mensaje == payload.mensaje,
-    );
+    // Buscar el mensaje pendiente (estado 'wait') que sea nuestro
+    final pendingIndex = currentMessages.lastIndexWhere((m) {
+      if (m.estado != 'wait' || m.isEnviado != true) return false;
+
+      if (payload.tipoMensaje == 'text' || m.tipo == 'text') {
+        return m.mensaje == payload.mensaje;
+      } else {
+        // Multimedia:
+        // 1. Intentar coincidencia por nombre de archivo (ignorando extensión)
+        final localName = _removeExt(m.nomArchivo);
+        final payloadName = _removeExt(payload.nomArchivo);
+        if (localName.isNotEmpty && payloadName.isNotEmpty && localName == payloadName) {
+           return true;
+        }
+        
+        // 2. Fallback: coincidencia por tipo y misma hora/minuto
+        if (m.tipo == payload.tipoMensaje) {
+            final localTime = DateFormatter.parseDate(m.fecha);
+            if (localTime != null) {
+                final hhmm = "${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}";
+                if (payload.hora.contains(hhmm)) {
+                    return true;
+                }
+            } else {
+                return true; // Si no se puede parsear local, asumimos que es este.
+            }
+        }
+        return false;
+      }
+    });
 
     if (pendingIndex != -1) {
       // Reemplazar el mensaje optimista con los datos reales del servidor
+      // Para multimedia conservamos m.mensaje (que tiene la ruta local para renderizar)
       currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
         idMensaje: payload.idMensaje,
         estado: 'sent',
         idChatCab: payload.idChatCab,
       );
+
+      if (payload.tipoMensaje != 'text') {
+        final extFromName2 = _extractExt(payload.nomArchivo);
+        final nameWithoutExt2 = _removeExt(payload.nomArchivo);
+        currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
+          nomArchivo: nameWithoutExt2.isNotEmpty ? nameWithoutExt2 : currentMessages[pendingIndex].nomArchivo,
+          extArchivo: extFromName2.isNotEmpty ? extFromName2 : currentMessages[pendingIndex].extArchivo,
+        );
+      }
     } else {
       // No encontramos un pendiente — agregar como mensaje nuevo enviado
       // (posiblemente enviado desde otra sesión / otro dispositivo)

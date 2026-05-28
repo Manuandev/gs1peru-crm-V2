@@ -2,6 +2,7 @@
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:flutter/material.dart';
 
 class NotificationHandler {
   NotificationHandler._();
@@ -9,7 +10,13 @@ class NotificationHandler {
 
   void show(WebSocketMessage message) {
     final notif = _parse(message);
-    if (notif != null) NotificationService.instance.show(notif);
+    debugPrint('[NOTIF] parsed: ${notif?.title} | ${notif?.body}');
+    if (notif != null) {
+      NotificationService.instance.show(notif);
+      debugPrint('[NOTIF] show() llamado ✅');
+    } else {
+      debugPrint('[NOTIF] _parse retornó null ⚠️');
+    }
   }
 
   void handle(WebSocketMessage message) {

@@ -32,7 +32,7 @@ class EnvConfig {
   static String get urlWebSocket {
     switch (current) {
       case Environment.dev:
-        return 'https://tapered-handlebar-thirsty.ngrok-free.dev/socket/'; // URL DE DEV
+        return 'https://natcodee.net:9002/socket/'; // URL DE DEV
       case Environment.qa:
         return 'https://natcodee.net:9002/socket/'; // URL DE QA
       case Environment.prod:

@@ -58,8 +58,6 @@ class SignalRService implements ISignalRService {
   WebSocketConnectionState _currentState =
       WebSocketConnectionState.disconnected;
 
-  int _reconnectAttempts = 0;
-
   bool _isConnecting = false;
   bool _hasInternet = true;
   bool _isStopping = false;
@@ -116,7 +114,6 @@ class SignalRService implements ISignalRService {
         }
 
         // ✅ Conexión exitosa
-        _reconnectAttempts = 0;
         _isConnecting = false;
         _emitState(WebSocketConnectionState.connected);
         WakelockPlus.enable();
@@ -126,11 +123,10 @@ class SignalRService implements ISignalRService {
         return;
       } catch (_) {
         currentAttempt++;
-        _reconnectAttempts++;
         _emitState(WebSocketConnectionState.reconnecting);
 
         if (currentAttempt < maxAttempts && _hasInternet) {
-          final delays = [300, 500];
+          final delays = [30000, 50000];
           await Future.delayed(
             Duration(milliseconds: delays[(currentAttempt - 1).clamp(0, 1)]),
           );
@@ -157,7 +153,7 @@ class SignalRService implements ISignalRService {
     // Esperar si hay una conexión en curso (máx 1 segundo)
     int wait = 0;
     while (_isConnecting && wait < 2) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 50000));
       wait++;
     }
 
@@ -178,7 +174,6 @@ class SignalRService implements ISignalRService {
   Future<void> close() async {
     _emitState(WebSocketConnectionState.manuallyClosed);
     _isConnecting = false;
-    _reconnectAttempts = 0;
 
     _cancelAllTimers();
     await _connectivitySubscription?.cancel();
@@ -270,7 +265,6 @@ class SignalRService implements ISignalRService {
     if (!isConnected && _isHubConnected()) {
       _emitState(WebSocketConnectionState.connected);
     }
-    _reconnectAttempts = 0;
 
     // Parsear y emitir al stream — las features escuchan aquí
     final WebSocketMessage? message = WebSocketMessageParser.parse(rawMessage);
@@ -329,7 +323,6 @@ class SignalRService implements ISignalRService {
     _reconnectTimer = Timer(const Duration(seconds: 5), () async {
       if (_currentState != WebSocketConnectionState.manuallyClosed &&
           !isConnected) {
-        _reconnectAttempts++;
         _isConnecting = false;
         await connect();
       }
@@ -364,7 +357,6 @@ class SignalRService implements ISignalRService {
       if (!isConnected &&
           _currentState != WebSocketConnectionState.manuallyClosed &&
           !_isConnecting) {
-        _reconnectAttempts = 0;
         await forceReconnect();
       }
     }

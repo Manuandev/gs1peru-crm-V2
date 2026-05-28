@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'websocket_message.dart';
 
 /// Responsable de parsear los mensajes crudos del servidor SignalR
@@ -22,8 +24,6 @@ class WebSocketMessageParser {
   static WebSocketMessage? parse(dynamic rawMessage) {
     if (rawMessage == null) return null;
 
-    // El mensaje llega como lista de Dart: "[PROCESO¯registros]"
-    // quitamos los corchetes que agrega signalr_netcore
     final String raw = rawMessage
         .toString()
         .replaceAll('[', '')
@@ -31,22 +31,22 @@ class WebSocketMessageParser {
         .trim();
 
     final List<String> parts = raw.split(_processSeparator);
-
-    // Debe tener al menos PROCESO¯datos
-    if (parts.length < 2) return null;
+    if (parts.length < 2) {
+      debugPrint('[PARSER] ⚠️ Sin separador ±: $raw');
+      return null;
+    }
 
     final String process = parts[0].trim().toUpperCase();
     final String rawRecords = parts[1];
 
-    // Dividir en registros y filtrar vacíos
-    final List<String> rawRecordList =
-        rawRecords.split(_recordSeparator).where((r) => r.isNotEmpty).toList();
-
-    // Convertir cada registro en lista de campos
-    final List<List<String>> records = rawRecordList
-        .map((record) => record.split(_fieldSeparator))
-        .where((fields) => fields.isNotEmpty)
+    final List<List<String>> records = rawRecords
+        .split(_recordSeparator)
+        .where((r) => r.isNotEmpty)
+        .map((r) => r.split(_fieldSeparator))
+        .where((f) => f.isNotEmpty)
         .toList();
+
+    debugPrint('[PARSER] proceso:$process | registros:$records');
 
     return WebSocketMessage(
       process: process,

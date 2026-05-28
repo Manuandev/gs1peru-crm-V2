@@ -54,7 +54,7 @@ class AppMenuItems {
     ),
     DrawerItemModel(
       id: AppRoutes.propuestas,
-      icon: AppIcons.fileOutlined,
+      icon: AppIconsSocial.etapaPropuesta,
       label: 'Propuestas',
       route: AppRoutes.propuestas,
     ),
@@ -101,7 +101,7 @@ class AppMenuItems {
       ),
       DrawerItemModel(
         id: AppRoutes.propuestas,
-        icon: AppIcons.fileOutlined,
+        icon: AppIconsSocial.etapaPropuesta,
         label: 'Propuestas',
         route: AppRoutes.propuestas,
         badge: propuestasBadge,

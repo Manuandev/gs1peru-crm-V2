@@ -54,7 +54,7 @@ class _FlexCards extends StatelessWidget {
       rows.add(dashItems.sublist(i, end));
     }
 
-    return Column(
+    return Column( 
       children: [
         for (int r = 0; r < rows.length; r++) ...[
           if (r > 0) const SizedBox(height: AppSpacing.sm),

@@ -27,7 +27,7 @@ class DrawerItemModel {
   final String id;
 
   /// Ícono del ítem
-  final IconData icon;
+  final dynamic icon;
 
   /// Etiqueta visible
   final String label;
@@ -68,7 +68,7 @@ class DrawerItemModel {
 /// )
 class AppBarPopupItem {
   final String value;
-  final IconData icon;
+  final dynamic icon;
   final String label;
   final bool showDividerAfter;
 

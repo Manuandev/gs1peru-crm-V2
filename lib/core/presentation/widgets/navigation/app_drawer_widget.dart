@@ -273,7 +273,23 @@ class _DrawerItem extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(item.icon, color: iconColor, size: 22),
+                    item.icon is IconData
+                        ? Icon(
+                            item.icon,
+                            color: iconColor,
+                            size: AppSizing.iconNav,
+                          )
+                        : SizedBox(
+                            width: AppSizing.iconNav,
+                            height: AppSizing.iconNav,
+                            child: Center(
+                              child: FaIcon(
+                                item.icon,
+                                color: iconColor,
+                                size: AppSizing.iconNav - 4,
+                              ),
+                            ),
+                          ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(

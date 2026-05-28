@@ -1,12 +1,13 @@
 // lib/features/home/presentation/widgets/dashboard/dashboard_card.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
 class DashboardCard extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final dynamic icon;
   final int? badge;
   final VoidCallback? onTap;
 
@@ -57,7 +58,15 @@ class DashboardCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.25),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: textColor, size: 20),
+                  child: Center(
+                    child: icon is IconData
+                        ? Icon(icon, color: textColor, size: AppSizing.iconNav)
+                        : FaIcon(
+                            icon as FaIconData,
+                            color: textColor,
+                            size: AppSizing.iconNav - 4,
+                          ),
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 // Label

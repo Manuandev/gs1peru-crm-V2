@@ -35,17 +35,17 @@ class NotificationHandler {
 
     if (route == AppRoutes.detalleChat) {
       final int? activeId = AppRouteObserver.instance.activeLeadId;
-      final String? incomingId = _extractLeadId(message);
+      final int? incomingId = _extractLeadId(message);
       return activeId != null && activeId == incomingId;
     }
 
     return false;
   }
 
-  String? _extractLeadId(WebSocketMessage message) {
+  int? _extractLeadId(WebSocketMessage message) {
     if (message.records.isEmpty) return null;
     final f = message.records.first;
-    return f.length > 2 ? f[2].trim() : null;
+    return f.length > 2 ? int.tryParse(f[2].trim()) : null;
   }
 
   AppNotification? _parse(WebSocketMessage message) {

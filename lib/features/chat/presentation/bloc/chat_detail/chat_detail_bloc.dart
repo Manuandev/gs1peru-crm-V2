@@ -25,6 +25,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     on<ChatDetailTextMessageSent>(_onTextMessageSent);
     on<ChatDetailAudioMessageSent>(_onAudioMessageSent);
     on<ChatDetailFileMessageSent>(_onFileMessageSent);
+    on<ChatDetailBatchFileMessageSent>(_onBatchFileMessageSent);
     on<ChatDetailIncomingMessageReceived>(_onIncomingMessageReceived);
 
     _messageSubscription = MessageDispatcher.instance.stream.listen((message) {
@@ -267,6 +268,63 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     }
   }
 
+  // ── Envío batch (múltiples archivos en paralelo) ──────────────────────────
+
+  Future<void> _onBatchFileMessageSent(
+    ChatDetailBatchFileMessageSent event,
+    Emitter<ChatDetailState> emit,
+  ) async {
+    if (state is! ChatDetailSuccess) return;
+
+    // 1. Crear mensajes optimistas
+    final tempIds = <String>[];
+    final currentMessages = List<ChatMessage>.from(
+      (state as ChatDetailSuccess).messages,
+    );
+
+    for (final file in event.files) {
+      final tempId = const Uuid().v4();
+      tempIds.add(tempId);
+      currentMessages.add(ChatMessage(
+        idMensaje: tempId,
+        fecha: DateTime.now().toIso8601String(),
+        isEnviado: true,
+        mensaje: file.path,
+        tipo: file.tipo,
+        estado: 'wait',
+        idChatDetArc: '',
+        nomArchivo: file.nameWithoutExt,
+        extArchivo: file.ext,
+        idChatCab: event.chatCab,
+        idChatDet: '',
+      ));
+    }
+
+    emit(
+      (state as ChatDetailSuccess).copyWith(messages: currentMessages),
+    );
+
+    // 2. Enviar todos en paralelo
+    if (_currentLeadId == null) return;
+
+    final futures = List.generate(event.files.length, (i) async {
+      final file = event.files[i];
+      final success = await _sendFileMessage(
+        filePath: file.path,
+        fileName: '${file.nameWithoutExt}${file.ext}',
+        tipo: file.tipo,
+        idLead: _currentLeadId.toString(),
+        numero: event.numero,
+        chatCab: event.chatCab,
+      );
+      if (!success && !isClosed) {
+        _markMessageAsFailed(tempIds[i], emit);
+      }
+    });
+
+    await Future.wait(futures);
+  }
+
   void _markMessageAsFailed(String tempId, Emitter<ChatDetailState> emit) {
     if (state is! ChatDetailSuccess) return;
     final currentState = state as ChatDetailSuccess;
@@ -356,6 +414,10 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (payload.leadId != _currentLeadId) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
+
+    // FIX: Prevenir que eventos duplicados del socket consuman otros mensajes pendientes
+    final alreadyExists = currentMessages.any((m) => m.idMensaje == payload.idMensaje);
+    if (alreadyExists) return;
 
     // Buscar el mensaje pendiente (estado 'wait') que sea nuestro
     final pendingIndex = currentMessages.lastIndexWhere((m) {

@@ -43,9 +43,11 @@ export 'presentation/widgets/chat_list/chat_list_view.dart';
 export 'presentation/widgets/chat_list/chat_tile.dart';
 export 'presentation/widgets/chat_list/message_preview_utils.dart';
 
+
 export 'presentation/widgets/chat_detail/chat_detail_view.dart';
 
 export 'presentation/widgets/chat_detail/attachment_picker_widget.dart';
+export 'presentation/widgets/chat_detail/staged_file.dart'; 
 
 export 'presentation/widgets/chat_detail/chat_detail_app_bar.dart';
 export 'presentation/widgets/chat_detail/chat_input_bar.dart';

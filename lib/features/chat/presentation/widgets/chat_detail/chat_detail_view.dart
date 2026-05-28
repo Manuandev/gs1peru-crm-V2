@@ -83,6 +83,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return BasePage(
+      bodyPadding: EdgeInsets.zero,
       titleWidget: BlocBuilder<InfoLeadCubit, InfoLeadState>(
         buildWhen: (prev, curr) => curr is InfoLeadSuccess,
         builder: (context, state) => state is InfoLeadSuccess

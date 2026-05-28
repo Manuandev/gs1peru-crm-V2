@@ -83,14 +83,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
     setState(() => _mode = _InputMode.text);
   }
 
-  void _onFilePicked(String path, String name, String ext, String tipo) {
+  void _onFilesBatchPicked(List<StagedFile> files) {
+    if (files.isEmpty) return;
     widget.audioController.stop();
     context.read<ChatDetailBloc>().add(
-      ChatDetailFileMessageSent(
-        filePath: path,
-        fileName: name,
-        fileExt: ext,
-        tipo: tipo,
+      ChatDetailBatchFileMessageSent(
+        files: files,
         numero: _getNumero(),
         chatCab: _getChatCab(),
       ),
@@ -117,7 +115,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
         // ── Attachment picker (mostrar/ocultar) ───────────────
         if (_mode == _InputMode.attachment)
           AttachmentPickerWidget(
-            onFilePicked: _onFilePicked,
+            onFilesBatchPicked: _onFilesBatchPicked,
             onClose: () => setState(() => _mode = _InputMode.text),
           ),
 

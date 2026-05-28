@@ -3,6 +3,7 @@
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 abstract class ChatDetailEvent extends Equatable {
   const ChatDetailEvent();
@@ -101,4 +102,19 @@ class ChatDetailFileMessageSent extends ChatDetailEvent {
     numero,
     chatCab,
   ];
+}
+
+class ChatDetailBatchFileMessageSent extends ChatDetailEvent {
+  final List<StagedFile> files;
+  final String numero;
+  final String chatCab;
+
+  const ChatDetailBatchFileMessageSent({
+    required this.files,
+    this.numero = '',
+    this.chatCab = '',
+  });
+
+  @override
+  List<Object?> get props => [files, numero, chatCab];
 }

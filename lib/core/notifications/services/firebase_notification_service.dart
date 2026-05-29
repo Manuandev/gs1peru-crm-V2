@@ -1,7 +1,5 @@
 // lib/core/notifications/services/firebase_notification_service.dart
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -14,51 +12,50 @@ class FirebaseNotificationService {
   final _fcm = FirebaseMessaging.instance;
 
   Future<void> init() async {
-    await _fcm.requestPermission(alert: true, badge: true, sound: true);
+    try {
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
-    final token = await _fcm.getToken();
-    debugPrint('FCM Token: $token');
-    // TODO: enviar token al backend
+      if (settings.authorizationStatus != AuthorizationStatus.authorized)
+        return;
 
-    _fcm.onTokenRefresh.listen((newToken) {
-      debugPrint('FCM Token renovado: $newToken');
-      // TODO: actualizar en backend
-    });
+      // TODO: enviar token al backend
+      _fcm.onTokenRefresh.listen((newToken) {
+        // TODO: actualizar en backend
+      });
 
-    // ── FOREGROUND → mostramos notif local ──────────────────────
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      final notif = _fromRemoteMessage(message);
-      if (notif != null) LocalNotificationService.instance.show(notif);
-    });
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        final notif = _fromRemoteMessage(message);
+        if (notif != null) LocalNotificationService.instance.show(notif);
+      });
 
-    // ── BACKGROUND → usuario toca ───────────────────────────────
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final notif = _fromRemoteMessage(message);
-      if (notif != null) NotificationNavigator.instance.navigate(notif);
-    });
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        final notif = _fromRemoteMessage(message);
+        if (notif != null) NotificationNavigator.instance.navigate(notif);
+      });
 
-    // ── APP CERRADA → usuario toca ──────────────────────────────
-    final initial = await _fcm.getInitialMessage();
-    if (initial != null) {
-      final notif = _fromRemoteMessage(initial);
-      if (notif != null) NotificationNavigator.instance.navigate(notif);
-    }
+      final initial = await _fcm.getInitialMessage();
+      if (initial != null) {
+        final notif = _fromRemoteMessage(initial);
+        if (notif != null) NotificationNavigator.instance.navigate(notif);
+      }
+    } catch (_) {}
   }
 
   Future<void> initBackground() async {
-    // ── FOREGROUND
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notif = _fromRemoteMessage(message);
       if (notif != null) LocalNotificationService.instance.show(notif);
     });
 
-    // ── BACKGROUND tap
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       final notif = _fromRemoteMessage(message);
       if (notif != null) NotificationNavigator.instance.navigate(notif);
     });
 
-    // ── APP CERRADA tap
     final initial = await _fcm.getInitialMessage();
     if (initial != null) {
       final notif = _fromRemoteMessage(initial);
@@ -68,14 +65,18 @@ class FirebaseNotificationService {
 
   Future<void> requestPermissions() async {
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
-
-    final token = await _fcm.getToken();
-    debugPrint('FCM Token: $token');
-
-    _fcm.onTokenRefresh.listen((newToken) {
-      debugPrint('FCM Token renovado: $newToken');
-    });
+    _fcm.onTokenRefresh.listen((_) {});
   }
+
+  Future<String?> obtenerToken() async {
+    try {
+      return await _fcm.getToken();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Stream<String> get onTokenRefresh => _fcm.onTokenRefresh;
 
   AppNotification? _fromRemoteMessage(RemoteMessage message) {
     final data = message.data;
@@ -93,9 +94,7 @@ class FirebaseNotificationService {
   }
 }
 
-// ✅ TOP-LEVEL — con Firebase.initializeApp para v4.9.0
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint('FCM Background: ${message.messageId}');
 }

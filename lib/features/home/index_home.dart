@@ -4,21 +4,26 @@ export 'data/datasources/remote/home_remote_datasource.dart';
 
 export 'data/models/home_model.dart';
 export 'data/models/prioridad_home_model.dart';
-export 'data/models/prospecto_home_model.dart'; 
+export 'data/models/prospecto_home_model.dart';
+export 'data/models/notification_model.dart';
 
 export 'data/repositories/home_repository_impl.dart';
 
 export 'domain/entities/home.dart';
 export 'domain/entities/prioridad_home.dart';
 export 'domain/entities/prospecto_home.dart';
+export 'domain/entities/notification.dart';
 
 export 'domain/repositories/home_repository.dart';
 
 export 'domain/usecases/get_home_usecase.dart';
+export 'domain/usecases/get_notifications_usecase.dart';
 
 export 'presentation/bloc/home_bloc.dart';
 export 'presentation/bloc/home_event.dart';
 export 'presentation/bloc/home_state.dart';
+
+export 'presentation/bloc/notifications/notifications_bloc.dart';
 
 export 'presentation/pages/home_page.dart';
 

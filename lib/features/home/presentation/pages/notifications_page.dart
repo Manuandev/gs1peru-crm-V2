@@ -10,23 +10,18 @@ class NotificationsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        // BlocProvider(
-        //   create: (_) => NotificationsBloc(
-        //     GetNotificationUseCase(context.read<NotificationsRepository>()),
-        //     SendNotificationUseCase(context.read<NotificationsRepository>()),
-        //     SendFileNotificationUseCase(
-        //       context.read<NotificationsRepository>(),
-        //     ),
-        //   )..add(NotificationStarted()),
-        // ),
-        // BlocProvider(
-        //   create: (_) =>
-        //       InfoLeadCubit(GetInfoUseCase(context.read<ChatRepository>())),
-        // ),
-      ],
-      child: Text('NotificationsPage'),
+    return BlocProvider(
+      create: (context) =>
+          NotificationsBloc(getData: GetNotificationUseCase(context.read<HomeRepository>()))
+            ..add(const NotificationStarted()),
+      child: BlocListener<NotificationsBloc, NotificationsState>(
+        listener: (context, state) {
+          if (state is NotificationsError) {
+          } else if (state is NotificationsLoaded) {
+          }
+        },
+        child: const HomeView(),
+      ),
     );
   }
 }

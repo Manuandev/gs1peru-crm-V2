@@ -16,6 +16,7 @@ class UserModel {
   final String correoUser;
   final String telefono;
   final String celular;
+  final bool isModerador;
 
   const UserModel({
     required this.userId,
@@ -25,6 +26,7 @@ class UserModel {
     required this.correoUser,
     required this.telefono,
     required this.celular,
+    required this.isModerador,
   });
 
   factory UserModel.fromRawString(String raw) {
@@ -71,6 +73,7 @@ class UserModel {
       correoUser: f(2),
       telefono: f(3),
       celular: f(4),
+      isModerador: f(5) == '1' ? true : false,
     );
   }
 

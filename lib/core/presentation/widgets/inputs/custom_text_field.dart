@@ -87,6 +87,8 @@ class CustomTextField extends StatelessWidget {
   final FocusNode? focusNode;
   // Si el texto se muestra oculto (contraseña) — úsalo vía [CustomPasswordField]
   final bool obscureText;
+  // Si el texto ingresado debe convertirse automáticamente a mayúsculas
+  final bool isUpperCase;
 
   const CustomTextField({
     super.key,
@@ -113,6 +115,7 @@ class CustomTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.focusNode,
     this.obscureText = false,
+    this.isUpperCase = false,
   });
 
   @override
@@ -123,6 +126,14 @@ class CustomTextField extends StatelessWidget {
     final textColor = enabled
         ? theme.textTheme.bodyLarge?.color
         : theme.disabledColor;
+
+    List<TextInputFormatter>? formatters = inputFormatters;
+    if (isUpperCase) {
+      final uppercaseFormatter = _UpperCaseTextFormatter();
+      formatters = formatters != null 
+          ? [...formatters, uppercaseFormatter] 
+          : [uppercaseFormatter];
+    }
 
     return TextFormField(
       controller: controller,
@@ -136,7 +147,7 @@ class CustomTextField extends StatelessWidget {
       maxLength: maxLength,
       maxLines: maxLines,
       minLines: minLines,
-      inputFormatters: inputFormatters,
+      inputFormatters: formatters,
       autocorrect: autocorrect,
       textCapitalization: textCapitalization,
       focusNode: focusNode,
@@ -209,6 +220,19 @@ class CustomTextField extends StatelessWidget {
           borderSide: BorderSide(color: theme.disabledColor.withOpacity(0.4)),
         ),
       ),
+    );
+  }
+}
+
+class _UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }

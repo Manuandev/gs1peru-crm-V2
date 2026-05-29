@@ -81,6 +81,7 @@ class CustomEmailField extends StatelessWidget {
       autocorrect: false,
       textCapitalization: TextCapitalization.none,
       focusNode: focusNode,
+      isUpperCase: true,
       // ── PREFIJO: ícono de email ──────────────────────────────
       // AppIcons.email → centralizado en el catálogo de íconos
       prefixIcon: const Icon(AppIcons.email),

@@ -35,7 +35,7 @@ class LoginFormController {
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final ValueNotifier<bool> rememberSessionNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> rememberSessionNotifier = ValueNotifier(true);
   bool get rememberSession => rememberSessionNotifier.value;
 
   /// Texto del usuario (trimmed).

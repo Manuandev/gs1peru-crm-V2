@@ -259,6 +259,7 @@ class _FormSection extends StatelessWidget {
             enabled: !isLoading,
             prefixIcon: const Icon(AppIcons.user),
             textInputAction: TextInputAction.next,
+            isUpperCase: true, // Forzar mayúsculas en el usuario
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'El usuario es requerido';
@@ -287,19 +288,26 @@ class _FormSection extends StatelessWidget {
           ValueListenableBuilder<bool>(
             valueListenable: formController.rememberSessionNotifier,
             builder: (context, value, _) {
-              return Row(
-                children: [
-                  Checkbox(
-                    value: value,
-                    onChanged: isLoading
-                        ? null
-                        : (v) {
-                            formController.rememberSessionNotifier.value =
-                                v ?? false;
-                          },
-                  ),
-                  const Text('Mantener sesión activa'),
-                ],
+              return GestureDetector(
+                onTap: isLoading
+                    ? null
+                    : () {
+                        formController.rememberSessionNotifier.value = !value;
+                      },
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: value,
+                      onChanged: isLoading
+                          ? null
+                          : (v) {
+                              formController.rememberSessionNotifier.value =
+                                  v ?? false;
+                            },
+                    ),
+                    const Text('Mantener sesión activa'),
+                  ],
+                ),
               );
             },
           ),

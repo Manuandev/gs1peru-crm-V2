@@ -7,7 +7,6 @@
 // LOGOUT                        → limpia memoria + SQLite
 // ============================================================
 
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
@@ -39,16 +38,16 @@ class AuthRepositoryImpl implements AuthRepository {
     ApiClient().setToken(user.token);
     SessionService().setUser(user);
 
-    if (rememberSession) {
-      await _local.saveSession(
-        SessionModel(
-          loginType: LoginType.credentials,
-          username: username,
-          password: password,
-          expiresAt: DateTime.now().add(const Duration(days: 30)),
-        ),
-      );
-    }
+    // if (rememberSession) {
+    await _local.saveSession(
+      SessionModel(
+        loginType: LoginType.credentials,
+        username: username,
+        password: password,
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      ),
+    );
+    // }
 
     return _currentUser!;
   }

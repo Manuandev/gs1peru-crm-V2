@@ -53,7 +53,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Splash no encontró sesión → marcar como no autenticado
   void _onSessionEmpty(AuthSessionEmpty event, Emitter<AuthState> emit) {
-    emit(const AuthUnauthenticated());
+    emit(AuthUnauthenticated(
+      prefillUsername: event.prefillUsername,
+      prefillPassword: event.prefillPassword,
+    ));
   }
 
   /// Login exitoso → marcar como autenticado

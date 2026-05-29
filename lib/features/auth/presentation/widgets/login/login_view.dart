@@ -24,6 +24,15 @@ class _LoginViewState extends State<LoginView> {
   void initState() {
     super.initState();
     _formController = LoginFormController();
+    
+    // Si venimos del Splash y no había que recordar sesión, pre-llenar:
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthUnauthenticated) {
+      _formController.setInitialData(
+        authState.prefillUsername,
+        authState.prefillPassword,
+      );
+    }
   }
 
   @override

@@ -9,10 +9,12 @@ class SessionModel {
   final String? password;
   final String? email;
   final DateTime expiresAt;
+  final bool rememberMe;
 
   const SessionModel({
     required this.loginType,
     required this.expiresAt, 
+    this.rememberMe = false,
     this.username,
     this.password,
     this.email,
@@ -27,6 +29,7 @@ class SessionModel {
       password:  map['password'] as String?,
       email:     map['email'] as String?,
       expiresAt: DateTime.parse(map['expires_at'] as String),
+      rememberMe: (map['remember_me'] as int?) == 1,
     );
   }
 
@@ -36,6 +39,7 @@ class SessionModel {
         'password':   password,
         'email':      email,
         'expires_at': expiresAt.toIso8601String(),
+        'remember_me': rememberMe ? 1 : 0,
       };
 
   SessionEntity toEntity() => SessionEntity(
@@ -44,5 +48,6 @@ class SessionModel {
         password:  password,
         email:     email,
         expiresAt: expiresAt,
+        rememberMe: rememberMe,
       );
 }

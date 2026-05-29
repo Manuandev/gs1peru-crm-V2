@@ -298,7 +298,7 @@ class _FormSection extends StatelessWidget {
                                 v ?? false;
                           },
                   ),
-                  const Text('Recordar sesión'),
+                  const Text('Mantener sesión activa'),
                 ],
               );
             },

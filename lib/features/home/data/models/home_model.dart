@@ -11,6 +11,7 @@ class HomeModel extends Home {
     required super.totCobranza,
     required super.totLeadsNuevos,
     required super.totLeadsDesarrollo,
+    required super.totNotificaciones,
     required super.prioridades,
     required super.prospectos,
   });
@@ -55,6 +56,7 @@ class HomeModel extends Home {
       totCobranza: t(3),
       totLeadsNuevos: t(4),
       totLeadsDesarrollo: t(5),
+      totNotificaciones: t(6),
       prioridades: prioridades,
       prospectos: prospectos,
     );

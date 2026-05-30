@@ -7,6 +7,7 @@ class Home {
   final int totCobranza;
   final int totLeadsNuevos;
   final int totLeadsDesarrollo;
+  final int totNotificaciones;
   final List<PrioridadHome> prioridades;
   final List<ProspectoHome> prospectos;
 
@@ -17,6 +18,7 @@ class Home {
     required this.totCobranza,
     required this.totLeadsNuevos,
     required this.totLeadsDesarrollo,
+    required this.totNotificaciones,
     required this.prioridades,
     required this.prospectos,
   });

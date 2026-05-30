@@ -21,6 +21,7 @@ class HomeRemoteDatasource {
         totCobranza: 0,
         totLeadsNuevos: 0,
         totLeadsDesarrollo: 0,
+        totNotificaciones: 0,
         prioridades: [],
         prospectos: [],
       ),

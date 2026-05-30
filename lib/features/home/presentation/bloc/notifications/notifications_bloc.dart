@@ -2,31 +2,29 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
-class NotificationsBloc extends Bloc<HomeEvent, HomeState> {
+class NotificationsBloc extends Bloc<NotificationEvent, NotificationsState> {
   final GetNotificationUseCase _getData;
-  final _session = SessionService();
 
   NotificationsBloc({required GetNotificationUseCase getData})
     : _getData = getData,
-      super(const HomeInitial()) {
-    on<HomeStarted>(_onStarted);
-    on<HomeRefresh>(_onRefresh);
+      super(const NotificationsInitial()) {
+    on<NotificationStarted>(_onStarted);
+    on<NotificationRefresh>(_onRefresh);
   }
 
-  Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit) async {
-    emit(const HomeLoading());
+  Future<void> _onStarted(NotificationStarted event, Emitter<NotificationsState> emit) async {
+    emit(const NotificationsLoading());
     await _loadData(emit);
   }
 
-  Future<void> _onRefresh(HomeRefresh event, Emitter<HomeState> emit) async {
-    emit(const HomeLoading());
+  Future<void> _onRefresh(NotificationRefresh event, Emitter<NotificationsState> emit) async {
+    emit(const NotificationsLoading());
     await _loadData(emit);
   }
 
-  Future<void> _loadData(Emitter<HomeState> emit) async {
+  Future<void> _loadData(Emitter<NotificationsState> emit) async {
     // try {
     //   final home = await _getData.call();
 

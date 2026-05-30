@@ -35,7 +35,7 @@ class LoginFormController {
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final ValueNotifier<bool> rememberSessionNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> rememberSessionNotifier = ValueNotifier(true);
   bool get rememberSession => rememberSessionNotifier.value;
 
   /// Texto del usuario (trimmed).
@@ -47,8 +47,18 @@ class LoginFormController {
   /// Valida el formulario y retorna true si todo es correcto.
   bool validate() => formKey.currentState?.validate() ?? false;
 
-  /// Limpia ambos campos (útil tras un error de auth).
+  /// Limpia la contraseña (útil tras un error de auth).
   void clearPassword() => passwordController.clear();
+
+  /// Establece datos iniciales si vienen de un estado anterior (ej. Splash).
+  void setInitialData(String? initUsername, String? initPassword) {
+    if (initUsername != null && initUsername.isNotEmpty) {
+      usernameController.text = initUsername;
+    }
+    if (initPassword != null && initPassword.isNotEmpty) {
+      passwordController.text = initPassword;
+    }
+  }
 
   /// Liberar recursos. Llamar en [State.dispose].
   void dispose() {

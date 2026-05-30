@@ -7,7 +7,6 @@
 // LOGOUT                        → limpia memoria + SQLite
 // ============================================================
 
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
@@ -39,16 +38,15 @@ class AuthRepositoryImpl implements AuthRepository {
     ApiClient().setToken(user.token);
     SessionService().setUser(user);
 
-    if (rememberSession) {
-      await _local.saveSession(
-        SessionModel(
-          loginType: LoginType.credentials,
-          username: username,
-          password: password,
-          expiresAt: DateTime.now().add(const Duration(days: 30)),
-        ),
-      );
-    }
+    await _local.saveSession(
+      SessionModel(
+        loginType: LoginType.credentials,
+        username: username,
+        password: password,
+        rememberMe: rememberSession,
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      ),
+    );
 
     return _currentUser!;
   }
@@ -87,6 +85,11 @@ class AuthRepositoryImpl implements AuthRepository {
     if (entity.isExpired) {
       await _local.clearSession();
       return null;
+    }
+
+    if (!entity.rememberMe && !entity.isGoogle) {
+      await _local.clearSession();
+      throw SessionNotRememberedException(entity.username ?? '', entity.password ?? '');
     }
 
     // Detecta el tipo y re-autentica con el método correcto

@@ -8,10 +8,12 @@ class SessionEntity {
   final String? password;    // solo si loginType = credentials
   final String? email;       // solo si loginType = google
   final DateTime expiresAt;
+  final bool rememberMe;
 
   const SessionEntity({
     required this.loginType,
     required this.expiresAt,
+    this.rememberMe = false,
     this.username,
     this.password,
     this.email,

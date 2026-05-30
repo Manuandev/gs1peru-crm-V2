@@ -14,6 +14,7 @@ class SessionService {
   String get token => _user?.token ?? '';
   String get codUser => _user?.codUser ?? '';
   String get userApe => _user?.userApe ?? '';
+  bool get isModerador => _user?.isModerador ?? false;
   bool get hasSession => _user != null;
 
   // ── MÉTODOS ─────────────────────────────────────────────

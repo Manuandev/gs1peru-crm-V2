@@ -114,6 +114,7 @@ class _CustomPasswordFieldState extends State<CustomPasswordField> {
       autocorrect: false,
       focusNode: widget.focusNode,
       obscureText: _obscureText,
+      isUpperCase: true,
 
       // ── PREFIJO: ícono de candado ────────────────────────────
       // AppIcons.lock → centralizado en el catálogo de íconos

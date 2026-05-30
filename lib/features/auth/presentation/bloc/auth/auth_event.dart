@@ -45,7 +45,9 @@ class AuthSessionRestored extends AuthEvent {
 /// El Splash NO encontró sesión o hubo un error.
 /// Disparado por: SplashView cuando SplashBloc emite SplashSessionNotFound o SplashError.
 class AuthSessionEmpty extends AuthEvent {
-  const AuthSessionEmpty();
+  final String? prefillUsername;
+  final String? prefillPassword;
+  const AuthSessionEmpty({this.prefillUsername, this.prefillPassword});
 }
 
 // ── EVENTOS DEL LOGIN ────────────────────────────────────────

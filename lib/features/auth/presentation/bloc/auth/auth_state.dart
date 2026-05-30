@@ -64,5 +64,7 @@ class AuthAuthenticated extends AuthState {
 /// No hay sesión activa.
 /// El AppWidget navega automáticamente a /login cuando detecta este estado.
 class AuthUnauthenticated extends AuthState {
-  const AuthUnauthenticated();
+  final String? prefillUsername;
+  final String? prefillPassword;
+  const AuthUnauthenticated({this.prefillUsername, this.prefillPassword});
 }

@@ -51,7 +51,9 @@ class SplashSessionFound extends SplashState {
 /// La View notificará al AuthBloc para ir al Login.
 class SplashSessionNotFound extends SplashState {
   final String? message; // ← mensaje opcional
-  const SplashSessionNotFound({this.message});
+  final String? prefillUsername;
+  final String? prefillPassword;
+  const SplashSessionNotFound({this.message, this.prefillUsername, this.prefillPassword});
 }
 
 /// Error inesperado durante la verificación.

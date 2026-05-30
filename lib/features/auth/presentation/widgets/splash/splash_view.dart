@@ -82,7 +82,10 @@ class _SplashViewState extends State<SplashView> {
       if (state.message != null) {
         context.showErrorSnack(state.message!);
       }
-      context.read<AuthBloc>().add(const AuthSessionEmpty());
+      context.read<AuthBloc>().add(AuthSessionEmpty(
+        prefillUsername: state.prefillUsername,
+        prefillPassword: state.prefillPassword,
+      ));
     } else if (state is SplashError) {
       context.read<AuthBloc>().add(const AuthSessionEmpty());
     }

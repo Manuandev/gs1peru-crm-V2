@@ -33,6 +33,8 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
       }
 
       emit(SplashSessionFound(userId: user.userId, username: user.fullName));
+    } on SessionNotRememberedException catch (e) {
+      emit(SplashSessionNotFound(prefillUsername: e.username, prefillPassword: e.password));
     } on AppException catch (e) {
       emit(SplashSessionNotFound(message: e.message));
     } catch (e, stackTrace) {

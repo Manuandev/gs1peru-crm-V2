@@ -46,7 +46,7 @@ class LocalDatabase implements ILocalDatabase {
 
     _database = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -62,7 +62,8 @@ class LocalDatabase implements ILocalDatabase {
         username   TEXT,
         password   TEXT,
         email      TEXT,
-        expires_at TEXT NOT NULL
+        expires_at TEXT NOT NULL,
+        remember_me INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -80,11 +81,10 @@ class LocalDatabase implements ILocalDatabase {
   /// Migración cuando sube la versión de la BD.
   /// Incrementa el número en openDatabase → version: X
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Todo: agrega migraciones aquí si cambias tablas
-    // Ejemplo: si en versión 2 agregas columna 'cargo' a session:
-    // if (oldVersion < 2) {
-    //   await db.execute('ALTER TABLE session ADD COLUMN cargo TEXT');
-    // }
+    if (oldVersion < 2) {
+      // Agregar columna remember_me a session para usuarios existentes
+      await db.execute('ALTER TABLE session ADD COLUMN remember_me INTEGER NOT NULL DEFAULT 0');
+    }
   }
 
   // ── OPERACIONES GENÉRICAS ────────────────────────────────

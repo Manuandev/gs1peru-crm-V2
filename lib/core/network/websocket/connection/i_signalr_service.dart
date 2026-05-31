@@ -61,4 +61,6 @@ abstract class ISignalRService {
   /// Envía un mensaje al hub SignalR.
   /// Retorna `true` si se envió correctamente, `false` si no hay conexión.
   bool sendMessage(String message);
+
+  Future<void> limpiarTokenFCM();
 }

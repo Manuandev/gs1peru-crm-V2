@@ -123,6 +123,7 @@ class SignalRService implements ISignalRService {
         WakelockPlus.enable();
         _startHeartbeat();
         _startConnectivityMonitoring();
+        await _registrarTokenFCM();
         return;
       } catch (_) {
         currentAttempt++;
@@ -470,5 +471,27 @@ class SignalRService implements ISignalRService {
     _reconnectTimer = null;
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
+  }
+
+  Future<void> _registrarTokenFCM() async {
+    try {
+      final token = await FirebaseNotificationService.instance.obtenerToken();
+      if (token == null || token.isEmpty) return;
+      _hubConnection?.invoke('RegistrarTokenFCM', args: <Object>[token]);
+      debugPrint('[FCM] Token registrado en hub');
+    } catch (e) {
+      debugPrint('[FCM] Error registrando token en hub: $e');
+    }
+  }
+
+  @override
+  Future<void> limpiarTokenFCM() async {
+    try {
+      if (!_isHubConnected()) return;
+      await _hubConnection?.invoke('LimpiarTokenFCM');
+      debugPrint('[FCM] Token desregistrado');
+    } catch (e) {
+      debugPrint('[FCM] Error desregistrando token: $e');
+    }
   }
 }

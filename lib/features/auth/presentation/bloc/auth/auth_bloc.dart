@@ -53,10 +53,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Splash no encontró sesión → marcar como no autenticado
   void _onSessionEmpty(AuthSessionEmpty event, Emitter<AuthState> emit) {
-    emit(AuthUnauthenticated(
-      prefillUsername: event.prefillUsername,
-      prefillPassword: event.prefillPassword,
-    ));
+    emit(
+      AuthUnauthenticated(
+        prefillUsername: event.prefillUsername,
+        prefillPassword: event.prefillPassword,
+      ),
+    );
   }
 
   /// Login exitoso → marcar como autenticado
@@ -76,6 +78,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // LogoutUsecase → IAuthRepository.logout()
     // → AuthLocalDatasource.clearSession()  (limpia SQLite/SharedPrefs)
     // → AuthRemoteDatasource.logout()       (invalida token en API, si aplica)
+    await SignalRService.instance.limpiarTokenFCM();
     await SignalRService.instance.close();
     await _logoutUsecase();
 

@@ -186,8 +186,18 @@ class DeviceInfoService {
   /// Ejemplo: '192.168.1.10'
   Future<String> getLocalIp() async {
     try {
-      final ip = await _networkInfo.getWifiIP();
-      return ip ?? '0.0.0.0';
+      final wifiIp = await _networkInfo.getWifiIP();
+      if (wifiIp != null && wifiIp != '0.0.0.0') return wifiIp;
+
+      for (final interface in await NetworkInterface.list()) {
+        for (final addr in interface.addresses) {
+          if (!addr.isLoopback && addr.address.contains('.')) {
+            return addr.address;
+          }
+        }
+      }
+
+      return '0.0.0.0';
     } catch (_) {
       return '0.0.0.0';
     }

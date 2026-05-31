@@ -1,7 +1,7 @@
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
 /// LoginView — StatefulWidget que:
@@ -24,7 +24,7 @@ class _LoginViewState extends State<LoginView> {
   void initState() {
     super.initState();
     _formController = LoginFormController();
-    
+
     // Si venimos del Splash y no había que recordar sesión, pre-llenar:
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthUnauthenticated) {
@@ -59,7 +59,7 @@ class _LoginViewState extends State<LoginView> {
   }
 
   void _handleForgotPassword() {
-    context.showSnackBar('Contacta al administrador');
+    AppSnackBar.info(context, 'Contacta al administrador');
   }
 
   @override
@@ -76,7 +76,7 @@ class _LoginViewState extends State<LoginView> {
         listener: (context, state) {
           if (state is LoginSuccess) {
             // ✅ Notifica al AuthBloc → AppWidget navega al Home
-            context.showSuccessSnack('¡Bienvenido ${state.username}!');
+            AppSnackBar.success(context, '¡Bienvenido ${state.username}!');
             context.read<AuthBloc>().add(
               AuthLoginSuccess(userId: state.userId, username: state.username),
             );
@@ -84,7 +84,7 @@ class _LoginViewState extends State<LoginView> {
 
           if (state is LoginFailure) {
             // ❌ Login fallido → mostrar error y limpiar contraseña
-            context.showErrorSnack(state.message);
+            AppSnackBar.error(context, state.message);
             _formController.clearPassword();
           }
         },

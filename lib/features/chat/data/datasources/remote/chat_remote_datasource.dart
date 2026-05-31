@@ -8,9 +8,13 @@ import 'package:app_crm/features/chat/index_chat.dart';
 class ChatRemoteDatasource {
   final ApiClient _api = ApiClient();
   final _session = SessionService();
+  final _deviceInfo = DeviceInfoService();
+
+  final sep = AppConstants.sepListas;
+  final camp = AppConstants.sepCampos;
 
   Future<InfoLeadModel> getInfoLead(int idLead) async {
-    final String body = '$idLead¯D';
+    final String body = '${[idLead].join(camp)}${sep}D';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -25,7 +29,7 @@ class ChatRemoteDatasource {
   }
 
   Future<List<ChatModel>> getChats() async {
-    final String body = '${_session.codUser}¯L';
+    final String body = '${[_session.codUser].join(camp)}${sep}L';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -41,10 +45,9 @@ class ChatRemoteDatasource {
     int idLead, {
     String? idUltimoMensaje, // null = primera carga
   }) async {
-    final result = await _api.postSafe(
-      ApiConstants.urlChatsLst,
-      '$idLead¦${idUltimoMensaje ?? ''}¯LD',
-    );
+    final String body = '${[idLead, idUltimoMensaje ?? ''].join(camp)}${sep}LD';
+
+    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
     return switch (result) {
       ApiSuccess(:final data) => ChatMessageModel.parseList(data),
@@ -63,9 +66,12 @@ class ChatRemoteDatasource {
     final user = _session.user;
     if (user == null) return false;
 
-    String data =
-        "${user.token}¯$idLead¦¦${user.codUser}¦$mensaje¦text¦$numero¦0¦¦$chatCab¦¦¦¦${user.codUser}¦¯CA";
-    return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP¯$data");
+    final String body =
+        '${user.token}$sep'
+        '${[idLead, '', user.codUser, mensaje, 'text', numero, 0, '', chatCab, '', '', '', user.codUser, ''].join(camp)}'
+        '${sep}CA';
+
+    return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");
   }
 
   Future<bool> uploadAndSendFileMessage({
@@ -84,26 +90,29 @@ class ChatRemoteDatasource {
       final fileBytes = await file.readAsBytes();
       if (fileBytes.isEmpty) return false;
 
-      // Extensión con punto (e.g. ".mp3", ".jpg") como lo arma el JS
       final dotIndex = fileName.lastIndexOf('.');
       final fileExt = dotIndex != -1 ? fileName.substring(dotIndex) : '';
 
-      // Cabecera: VAR01-VAR11 separados por ¦
-      // VAR01=idLead, VAR02='', VAR03=codUser, VAR04='', VAR05=tipo,
-      // VAR06=numero, VAR07='0', VAR08='', VAR09=chatCab, VAR10=fileName, VAR11=fileExt
-      final cabecera =
-          '$idLead¦¦${user.codUser}¦¦$tipo¦$numero¦0¦¦$chatCab¦$fileName¦$fileExt';
-
-      
+      final cabecera = [
+        idLead,
+        '',
+        user.codUser,
+        '',
+        tipo,
+        numero,
+        0,
+        '',
+        chatCab,
+        fileName,
+        fileExt,
+      ].join(camp);
 
       final urlUpload = ApiConstants.urlGuardarMultimedia;
 
-      // Tamaño máximo por fragmento (igual que VI_TOPE en el JS)
-      const int chunkSize = 2 * 1024 * 1024; // 2 MB
+      const int chunkSize = 2 * 1024 * 1024;
       final int totalSize = fileBytes.length;
       final int totalChunks = (totalSize / chunkSize).ceil();
 
-      // Subir fragmentos secuencialmente (viaje 0 hasta totalChunks - 1)
       for (int i = 0; i < totalChunks; i++) {
         final start = i * chunkSize;
         var end = start + chunkSize;
@@ -111,10 +120,14 @@ class ChatRemoteDatasource {
 
         final chunkBytes = fileBytes.sublist(start, end);
 
-        // data = TOKEN¯cabecera¯LIST¯RF¯CONT¯TOTAL
-        final dataString = '${user.token}¯$cabecera¯¯C¯$i¯$totalChunks';
-
-        debugPrint('DATA CABECERA : $dataString');
+        final dataString = [
+          user.token,
+          cabecera,
+          '',
+          'C',
+          i,
+          totalChunks,
+        ].join(sep);
 
         final result = await _api.postMultipart(
           url: urlUpload,
@@ -127,14 +140,18 @@ class ChatRemoteDatasource {
 
         if (result.isEmpty) return false;
 
-        // Respuesta: "OK¦nroViaje"
-        final datos = result.split('¦');
+        final datos = result.split(camp);
         if (datos[0] != 'OK') return false;
       }
 
-      // Petición final (merge): CONT == TOTAL, archivo vacío
-      // El backend une los .part0, .part1, ... y emite el WebSocket
-      final mergeData = '${user.token}¯$cabecera¯¯C¯$totalChunks¯$totalChunks';
+      final mergeData = [
+        user.token,
+        cabecera,
+        '',
+        'C',
+        totalChunks,
+        totalChunks,
+      ].join(sep);
 
       final mergeResult = await _api.postMultipart(
         url: urlUpload,
@@ -147,12 +164,43 @@ class ChatRemoteDatasource {
 
       if (mergeResult.isEmpty) return false;
 
-      // Respuesta merge: "OK¦nroViaje¦" — cuando nroViaje == totalChunks, todo OK
-      final mergeDatos = mergeResult.split('¦');
+      final mergeDatos = mergeResult.split(camp);
       return mergeDatos[0] == 'OK';
     } catch (e) {
       debugPrint('Error uploadAndSendFileMessage: $e');
       return false;
     }
+  }
+
+  Future<CrudResult> updateEstado(int idLead, String idEstado) async {
+    final ip = await _deviceInfo.getLocalIp();
+
+    final String body =
+        '${[idLead, idEstado, _session.codUser, ip].join(camp)}${sep}UE';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsCud, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
+    };
+  }
+
+  Future<CrudResult> updateLeadCompleto(InfoLead lead) async {
+    final ip = await _deviceInfo.getLocalIp();
+
+    final String body =
+        '${[lead.idLead, lead.idEstado, lead.idCampania, lead.idEvento, lead.idCanal, lead.idInteres, _session.codUser, ip].join(camp)}${sep}U';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsCud, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
+    };
   }
 }

@@ -19,8 +19,8 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
   // ── NOTIFICACIONES ───────────────────────────────────────────
-  await NotificationService.instance.initBackground();
-  // await NotificationService.instance.init();
+  // await NotificationService.instance.initBackground();
+  await NotificationService.instance.init();
 
   await DateFormatter.initialize(locale: 'es');
 

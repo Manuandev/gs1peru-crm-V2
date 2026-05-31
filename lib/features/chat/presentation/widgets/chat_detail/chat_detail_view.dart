@@ -1,5 +1,6 @@
 // lib\features\chat\presentation\widgets\chat_detail\chat_detail_view.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
@@ -18,6 +19,7 @@ class ChatDetailView extends StatefulWidget {
 class _ChatDetailViewState extends State<ChatDetailView> {
   final _scroll = ChatScrollController();
   final AudioController _audioController = AudioController();
+  final List<StreamSubscription<String>> _subs = [];
 
   bool _isLoadingMore = false;
   bool _isInitialLoad = true;
@@ -33,6 +35,15 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     _scroll.controller.addListener(_onScroll);
     AppRouteObserver.instance.setActiveLead(widget.idLead);
     context.read<InfoLeadCubit>().load(widget.idLead);
+    final cubit = context.read<InfoLeadCubit>();
+    _subs.addAll([
+      cubit.successes.listen(
+        // ignore: use_build_context_synchronously
+        (msg) => AppSnackBar.success(context, msg, position: SnackPosition.top),
+      ),
+      // ignore: use_build_context_synchronously
+      cubit.errores.listen((msg) => AppSnackBar.error(context, msg)),
+    ]);
   }
 
   @override
@@ -40,6 +51,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     AppRouteObserver.instance.setActiveLead(null);
     _scroll.dispose();
     _audioController.dispose();
+    for (final s in _subs) {
+      s.cancel();
+    }
     super.dispose();
   }
 
@@ -152,11 +166,22 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             builder: (context, state) => state is InfoLeadSuccess
                 ? ChatDetailFases(
                     idEstadoActual: state.infoLead.idEstado,
-                    onEstadoTap: (estado) {
-                      context.read<InfoLeadCubit>().updateEstado(
-                        idEstado: estado.id,
-                        estado: estado.label,
+                    onEstadoTap: (estado) async {
+                      final confirmar = await context.showConfirmDialog(
+                        title: 'Confirmar cambio',
+                        message:
+                            '¿Deseas cambiar el estado a "${estado.label}"?',
                       );
+
+                      if (!confirmar) return;
+
+                      if (context.mounted) {
+                        context.read<InfoLeadCubit>().updateEstado(
+                          idLead: widget.idLead,
+                          idEstado: estado.id,
+                          estado: estado.label,
+                        );
+                      }
                     },
                   )
                 : const SizedBox.shrink(),
@@ -198,7 +223,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     }
                     if (state is ChatDetailFailure) {
                       _isLoadingMore = false;
-                      context.showErrorSnack(state.message);
+                      AppSnackBar.error(context, state.message);
                     }
                   },
                   builder: (context, state) {

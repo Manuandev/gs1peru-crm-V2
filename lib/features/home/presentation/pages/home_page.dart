@@ -23,7 +23,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
@@ -40,7 +39,7 @@ class HomePage extends StatelessWidget {
         child: BlocListener<HomeBloc, HomeState>(
           listener: (context, state) {
             if (state is HomeError) {
-              context.showErrorSnack(state.message);
+              AppSnackBar.error(context, state.message);
             } else if (state is HomeLoaded) {
               context.updateBadge(
                 conversaciones: state.totConversaciones,

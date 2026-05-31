@@ -1,5 +1,6 @@
 // lib\features\chat\domain\repositories\chat_repository.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 abstract class ChatRepository {
@@ -11,7 +12,12 @@ abstract class ChatRepository {
     String? idUltimoMensaje,
   });
 
-  bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab);
+  bool sendWhatsAppMessage(
+    String mensaje,
+    String idLead,
+    String numero,
+    String chatCab,
+  );
 
   Future<bool> uploadAndSendFileMessage({
     required String filePath,
@@ -21,4 +27,8 @@ abstract class ChatRepository {
     required String numero,
     required String chatCab,
   });
+
+  Future<CrudResult> updateEstado(int idLead, String idEstado);
+
+  Future<CrudResult> updateLeadCompleto(InfoLead lead);
 }

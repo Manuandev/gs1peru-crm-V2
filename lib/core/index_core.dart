@@ -37,6 +37,7 @@ export 'navigation/app_route_observer.dart';
 // #region network
 export 'network/api_client.dart';
 export 'network/api_result.dart';
+export 'network/crud_result.dart';
 
 export 'network/interceptors/error_interceptor.dart';
 export 'network/interceptors/interceptors.dart';
@@ -89,8 +90,12 @@ export 'presentation/widgets/inputs/custom_combo_multi_search_field.dart';
 export 'presentation/widgets/navigation/app_drawer_widget.dart';
 export 'presentation/widgets/navigation/custom_app_bar.dart';
 export 'presentation/widgets/navigation/drawer_item_model.dart';
-
 export 'presentation/widgets/navigation/exit_on_back_wrapper.dart';
+
+export 'presentation/widgets/app_error_view.dart';
+export 'presentation/widgets/app_loading_view.dart';
+export 'presentation/widgets/app_empty_view.dart';
+export 'presentation/widgets/app_snackbar.dart';
 // #endregion presentation
 
 export 'services/session_service.dart';
@@ -118,9 +123,3 @@ export 'utils/ui/file_type_utils.dart';
 export 'utils/ui/color_utils.dart';
 
 // #endregion utils
-
-// #region widgets
-export 'presentation/widgets/app_error_view.dart';
-export 'presentation/widgets/app_loading_view.dart';
-export 'presentation/widgets/app_empty_view.dart';
-// #endregion widgets

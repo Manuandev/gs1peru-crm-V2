@@ -31,7 +31,7 @@ class InfoLeadModel extends InfoLead {
     String f(int i) => i < fields.length ? fields[i].trim() : '';
 
     return InfoLeadModel(
-      idLead: f(0),
+      idLead: int.parse(f(0)),
       cliente: f(1),
       telefono: f(2),
       isFavorito: f(3) == '1',

@@ -22,6 +22,8 @@ export 'domain/usecases/get_info_lead_usecase.dart';
 export 'domain/usecases/send_chat_message_usecase.dart';
 export 'domain/usecases/send_file_message_usecase.dart';
 
+export 'domain/usecases/update_lead_estado_usecase.dart';
+
 export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';
 export 'presentation/bloc/chat_list/chat_list_state.dart';
@@ -43,11 +45,10 @@ export 'presentation/widgets/chat_list/chat_list_view.dart';
 export 'presentation/widgets/chat_list/chat_tile.dart';
 export 'presentation/widgets/chat_list/message_preview_utils.dart';
 
-
 export 'presentation/widgets/chat_detail/chat_detail_view.dart';
 
 export 'presentation/widgets/chat_detail/attachment_picker_widget.dart';
-export 'presentation/widgets/chat_detail/staged_file.dart'; 
+export 'presentation/widgets/chat_detail/staged_file.dart';
 
 export 'presentation/widgets/chat_detail/chat_detail_app_bar.dart';
 export 'presentation/widgets/chat_detail/chat_input_bar.dart';

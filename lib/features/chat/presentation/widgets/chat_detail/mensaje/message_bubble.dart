@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
@@ -647,7 +646,7 @@ class _DocumentContentState extends State<_DocumentContent> {
 
       await OpenFilex.open(savePath);
     } catch (_) {
-      if (mounted) context.showErrorSnack('Error al abrir el archivo');
+      if (mounted) AppSnackBar.error(context, 'Error al abrir el archivo');
     } finally {
       if (mounted) setState(() => _isDownloading = false);
     }

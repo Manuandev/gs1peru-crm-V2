@@ -24,7 +24,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
@@ -80,12 +79,14 @@ class _SplashViewState extends State<SplashView> {
     } else if (state is SplashSessionNotFound) {
       // Muestra mensaje si existe (sin internet)
       if (state.message != null) {
-        context.showErrorSnack(state.message!);
+        AppSnackBar.error(context, state.message!);
       }
-      context.read<AuthBloc>().add(AuthSessionEmpty(
-        prefillUsername: state.prefillUsername,
-        prefillPassword: state.prefillPassword,
-      ));
+      context.read<AuthBloc>().add(
+        AuthSessionEmpty(
+          prefillUsername: state.prefillUsername,
+          prefillPassword: state.prefillPassword,
+        ),
+      );
     } else if (state is SplashError) {
       context.read<AuthBloc>().add(const AuthSessionEmpty());
     }

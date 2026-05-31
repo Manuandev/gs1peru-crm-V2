@@ -334,9 +334,13 @@ class AppTheme {
 
       surface: AppColors.surfaceDark,
       onSurface: AppColors.textOnDark,
+      onSurfaceVariant: AppColors.grey400,
 
       error: AppColors.error,
       onError: Colors.white,
+
+      outline: AppColors.grey700,
+      outlineVariant: AppColors.grey800,
     );
 
     return ThemeData(
@@ -351,12 +355,8 @@ class AppTheme {
         backgroundColor: AppColors.surfaceDark,
       ),
       elevatedButtonTheme: lightTheme.elevatedButtonTheme,
-      outlinedButtonTheme: lightTheme.outlinedButtonTheme,
       textButtonTheme: lightTheme.textButtonTheme,
 
-      // ============================================================
-      // INPUT DECORATION (TextFields)
-      // ============================================================
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceDarkVariant,
@@ -395,15 +395,21 @@ class AppTheme {
         ),
       ),
 
-      // ============================================================
-      // CARD THEME
-      // ============================================================
-      cardTheme: CardThemeData(
-        color: colorScheme.surface,
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.grey300,
+          side: const BorderSide(color: AppColors.grey600, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          ),
+          minimumSize: const Size(double.infinity, AppSizing.buttonHeight),
+        ),
+      ),
 
+      cardTheme: CardThemeData(
+        color: AppColors.surfaceDark,
         elevation: 2,
-        // ignore: deprecated_member_use
-        shadowColor: Colors.black.withOpacity(0.4),
+        shadowColor: Colors.black.withValues(alpha: 0.4),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
         ),
@@ -412,6 +418,59 @@ class AppTheme {
       dialogTheme: lightTheme.dialogTheme.copyWith(
         backgroundColor: AppColors.surfaceDark,
       ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        elevation: AppSizing.elevationHigh,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSizing.radiusLg),
+          ),
+        ),
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.grey200,
+        contentTextStyle: const TextStyle(color: AppColors.textPrimary),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        ),
+      ),
+
+      iconTheme: const IconThemeData(
+        color: AppColors.textOnDark,
+        size: AppSizing.iconMd,
+      ),
+
+      dividerTheme: const DividerThemeData(
+        color: AppColors.grey700,
+        thickness: 1,
+      ),
+
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.grey800,
+        selectedColor: AppColors.primary.withValues(alpha: 0.3),
+        labelStyle: const TextStyle(color: AppColors.textOnDark),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        ),
+      ),
+
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.grey500;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return AppColors.grey700;
+        }),
+      ),
+
+      checkboxTheme: lightTheme.checkboxTheme,
+
+      radioTheme: lightTheme.radioTheme,
 
       textTheme: lightTheme.textTheme.apply(
         bodyColor: AppColors.textOnDark,

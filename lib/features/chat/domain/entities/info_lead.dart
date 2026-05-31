@@ -3,7 +3,7 @@
 import 'package:app_crm/index_dependencies.dart';
 
 class InfoLead extends Equatable {
-  final String idLead;
+  final int idLead;
   final String cliente;
   final String telefono;
   final bool isFavorito;

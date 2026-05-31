@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPage extends StatelessWidget {
@@ -18,7 +18,7 @@ class LeadListPage extends StatelessWidget {
       child: BlocListener<LeadListBloc, LeadListState>(
         listener: (context, state) {
           if (state is LeadListError) {
-            context.showErrorSnack(state.message);
+            AppSnackBar.error(context, state.message);
           } else if (state is LeadListLoaded) {
             // context.updateBadge(leads: state.leads.length);
           }

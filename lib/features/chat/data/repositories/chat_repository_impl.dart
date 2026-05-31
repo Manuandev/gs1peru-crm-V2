@@ -1,5 +1,6 @@
 //lib\features\chat\data\repositories\chat_repository_impl.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
@@ -42,4 +43,10 @@ class ChatRepositoryImpl implements ChatRepository {
       chatCab: chatCab,
     );
   }
+
+  @override
+  Future<CrudResult> updateEstado(int idLead, String idEstado) => _datasource.updateEstado(idLead, idEstado);
+
+  @override
+  Future<CrudResult> updateLeadCompleto(InfoLead lead) => _datasource.updateLeadCompleto(lead);
 }

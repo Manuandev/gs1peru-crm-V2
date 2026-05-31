@@ -32,12 +32,11 @@ class ChatListView extends StatelessWidget {
         }
       },
       body: BlocConsumer<ChatListBloc, ChatListState>(
-        // 👇 snack solo cuando ya había datos y falla el refresh
         listenWhen: (previous, current) =>
             previous is ChatListSuccess && current is ChatListFailure,
         listener: (context, state) {
           if (state is ChatListFailure) {
-            context.showErrorSnack(state.message);
+            AppSnackBar.error(context, state.message);
           }
         },
         builder: (context, state) {

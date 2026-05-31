@@ -1,6 +1,5 @@
 // lib/features/settings/presentation/pages/settings_page.dart
 
-
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
@@ -31,7 +30,6 @@ class _SettingsView extends StatelessWidget {
       title: 'Configuración',
       drawerSide: DrawerSide.left,
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           // ── APARIENCIA ──────────────────────────────────
           _SectionHeader(icon: Icons.palette_rounded, title: 'Apariencia'),
@@ -46,8 +44,8 @@ class _SettingsView extends StatelessWidget {
             'Toca un permiso denegado para solicitarlo. '
             'Si está bloqueado serás redirigido a los ajustes del sistema.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           const _PermissionsList(),
@@ -208,9 +206,9 @@ class _PermissionsList extends StatelessWidget {
             return _PermissionCard(
               item: item,
               status: status,
-              onTap: () => context
-                  .read<SettingsCubit>()
-                  .requestPermission(item.permission),
+              onTap: () => context.read<SettingsCubit>().requestPermission(
+                item.permission,
+              ),
             );
           }).toList(),
         );
@@ -232,20 +230,28 @@ class _PermissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGranted = status == PermissionStatus.granted ||
+    final isGranted =
+        status == PermissionStatus.granted ||
         status == PermissionStatus.limited;
-    final isBlocked = status == PermissionStatus.permanentlyDenied ||
+    final isBlocked =
+        status == PermissionStatus.permanentlyDenied ||
         status == PermissionStatus.restricted;
 
-    final color =
-        isGranted ? Colors.green : isBlocked ? Colors.red : Colors.orange;
-    final label =
-        isGranted ? 'Concedido' : isBlocked ? 'Bloqueado' : 'Denegado';
+    final color = isGranted
+        ? Colors.green
+        : isBlocked
+        ? Colors.red
+        : Colors.orange;
+    final label = isGranted
+        ? 'Concedido'
+        : isBlocked
+        ? 'Bloqueado'
+        : 'Denegado';
     final icon = isGranted
         ? Icons.check_circle_rounded
         : isBlocked
-            ? Icons.block_rounded
-            : Icons.cancel_rounded;
+        ? Icons.block_rounded
+        : Icons.cancel_rounded;
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -265,8 +271,10 @@ class _PermissionCard extends StatelessWidget {
           ),
           child: Icon(item.icon, color: color, size: 22),
         ),
-        title: Text(item.label,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          item.label,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         subtitle: Text(item.description),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -312,9 +320,9 @@ class _SectionHeader extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: primary,
-              ),
+            fontWeight: FontWeight.w700,
+            color: primary,
+          ),
         ),
       ],
     );

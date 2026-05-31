@@ -3,6 +3,7 @@
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:flutter/material.dart';
 
 class FirebaseNotificationService {
   FirebaseNotificationService._();
@@ -20,19 +21,26 @@ class FirebaseNotificationService {
       );
 
       if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+        debugPrint('>>> FCM: permiso no concedido');
         return;
       }
 
+      // ✅ Aquí sí, ya tiene permiso
+      final token = await _fcm.getToken();
+      debugPrint('>>> FCM TOKEN: $token');
+
       _fcm.onTokenRefresh.listen((newToken) {});
 
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        final notif = _fromRemoteMessage(message);
-        if (notif == null) return;
+      FirebaseMessaging.onMessage.listen((message) {
+        final titulo =
+            message.data['titulo'] ?? message.notification?.title ?? '';
+        final cuerpo =
+            message.data['cuerpo'] ?? message.notification?.body ?? '';
 
-        final route = AppRouteObserver.instance.currentRoute;
-        if (notif.route != null && route == notif.route) return;
-
-        LocalNotificationService.instance.show(notif);
+        if (titulo.isEmpty && cuerpo.isEmpty) return;
+        LocalNotificationService.instance.show(
+          AppNotification(title: titulo, body: cuerpo),
+        );
       });
 
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
@@ -45,7 +53,9 @@ class FirebaseNotificationService {
         final notif = _fromRemoteMessage(initial);
         if (notif != null) NotificationNavigator.instance.navigate(notif);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('>>> FCM ERROR: $e'); // ← cambia el catch silencioso también
+    }
   }
 
   Future<void> requestPermissions() async {
@@ -66,7 +76,7 @@ class FirebaseNotificationService {
   AppNotification? _fromRemoteMessage(RemoteMessage message) {
     final data = message.data;
     final route = data['route'] as String?;
-    if (route == null) return null;
+    // if (route == null) return null;
 
     final payload = Map<String, String>.from(data)..remove('route');
 

@@ -19,11 +19,8 @@ class ChatDetailFases extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final themeText = theme.textTheme;
 
-    final titleStyle = themeText.titleMedium?.copyWith(
-      color: themeText.titleMedium!.color,
-    );
-    final labelStyle = themeText.labelSmall?.copyWith(
-      color: themeText.labelSmall!.color,
+    final titleStyle = themeText.titleSmall?.copyWith(
+      color: themeText.titleSmall!.color,
     );
 
     return Container(

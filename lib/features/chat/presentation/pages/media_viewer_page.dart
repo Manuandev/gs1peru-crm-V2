@@ -158,7 +158,10 @@ class _MediaViewerPageState extends State<MediaViewerPage>
       await Gal.requestAccess();
       if (!await Gal.hasAccess()) {
         if (mounted) {
-          context.showErrorSnack('Permiso denegado para acceder a la galería');
+          AppSnackBar.error(
+            context,
+            'Permiso denegado para acceder a la galería',
+          );
         }
         return;
       }
@@ -179,7 +182,8 @@ class _MediaViewerPageState extends State<MediaViewerPage>
           await Gal.putImage(widget.url);
         }
         if (mounted) {
-          context.showSuccessSnack(
+          AppSnackBar.success(
+            context,
             '${isVideo ? "Video" : "Imagen"} guardado en galería',
           );
         }
@@ -206,12 +210,15 @@ class _MediaViewerPageState extends State<MediaViewerPage>
       }
 
       if (mounted) {
-        context.showSuccessSnack(
+        AppSnackBar.success(
+          context,
           '${isVideo ? "Video" : "Imagen"} guardado en galería',
         );
       }
     } catch (_) {
-      if (mounted) context.showErrorSnack('Error al guardar el archivo');
+      if (mounted) {
+        AppSnackBar.error(context, 'Error al guardar el archivo');
+      }
     } finally {
       if (mounted) setState(() => _isDownloading = false);
     }
@@ -221,6 +228,7 @@ class _MediaViewerPageState extends State<MediaViewerPage>
   @override
   Widget build(BuildContext context) {
     return BasePage(
+      bodyPadding: EdgeInsets.zero,
       backgroundColor: Colors.black,
       drawerSide: DrawerSide.none,
       // 👇 botón back

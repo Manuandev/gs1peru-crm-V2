@@ -153,7 +153,6 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                 ? ChatDetailFases(
                     idEstadoActual: state.infoLead.idEstado,
                     onEstadoTap: (estado) {
-                      // aquí llamas tu cubit para cambiar estado
                       context.read<InfoLeadCubit>().updateEstado(
                         idEstado: estado.id,
                         estado: estado.label,
@@ -162,7 +161,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                   )
                 : const SizedBox.shrink(),
           ),
-          // ── Lista de mensajes + botón scroll ──────────────
+
           Expanded(
             child: Stack(
               clipBehavior: Clip.none,
@@ -286,16 +285,20 @@ class _ChatDetailViewState extends State<ChatDetailView> {
               ],
             ),
           ),
+
           BlocBuilder<InfoLeadCubit, InfoLeadState>(
             buildWhen: (prev, curr) => curr is InfoLeadSuccess,
             builder: (context, state) => state is InfoLeadSuccess
                 ? ChatDetailDatosLead(infoLead: state.infoLead)
                 : const SizedBox.shrink(),
           ),
-          // ── Input bar ──────────────────────────────────────
-          ChatInputBar(
-            onScrollToBottom: () => _scroll.irAlFondo(),
-            audioController: _audioController,
+
+          BlocBuilder<ChatDetailBloc, ChatDetailState>(
+            buildWhen: (prev, curr) => curr is ChatDetailSuccess,
+            builder: (context, state) {
+              if (state is! ChatDetailSuccess) return const SizedBox.shrink();
+              return ChatInputBar(audioController: _audioController);
+            },
           ),
         ],
       ),

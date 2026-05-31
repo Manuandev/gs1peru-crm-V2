@@ -21,7 +21,7 @@ class CollapsibleSection extends StatefulWidget {
 }
 
 class _CollapsibleSectionState extends State<CollapsibleSection> {
-  bool _expanded = true;
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -66,26 +66,30 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
                   ),
                 ),
                 const Spacer(),
-                Icon(
-                  _expanded ? Icons.expand_less : Icons.expand_more,
-                  color: colorScheme.onSurfaceVariant,
+                AnimatedRotation(
+                  turns: _expanded ? 0.0 : -0.5,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: Icon(
+                    Icons.expand_less,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
         ),
         const Divider(height: 1),
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 250),
-          crossFadeState: _expanded
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: widget.children.isEmpty
+
+        Visibility(
+          visible: _expanded,
+          maintainState: true,
+          child: widget.children.isEmpty
               ? Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
-                      'Sin elementos',
+                      'No tienes ${widget.label.toLowerCase()}',
                       style: TextStyle(
                         fontSize: 13,
                         color: colorScheme.onSurface.withValues(alpha: 0.4),
@@ -94,7 +98,6 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
                   ),
                 )
               : Column(children: widget.children),
-          secondChild: const SizedBox.shrink(),
         ),
       ],
     );

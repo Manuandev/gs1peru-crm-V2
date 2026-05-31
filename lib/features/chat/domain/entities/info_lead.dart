@@ -20,6 +20,8 @@ class InfoLead extends Equatable {
   final String idInteres;
   final String interes;
   final bool isBloqueado;
+  final bool isExpirado;
+  final bool isCerrado;
 
   const InfoLead({
     required this.idLead,
@@ -39,6 +41,8 @@ class InfoLead extends Equatable {
     required this.idInteres,
     required this.interes,
     required this.isBloqueado,
+    required this.isExpirado,
+    required this.isCerrado,
   });
 
   @override
@@ -60,15 +64,27 @@ class InfoLead extends Equatable {
     idInteres,
     interes,
     isBloqueado,
+    isExpirado,
+    isCerrado,
   ];
 
   InfoLead copyWith({
     bool? isFavorito,
-    bool? isBloqueado,
     String? idEstado,
     String? estado,
     String? idSubEstado,
     String? subEstado,
+    String? idCampania,
+    String? campania,
+    String? idEvento,
+    String? evento,
+    String? idCanal,
+    String? canal,
+    String? idInteres,
+    String? interes,
+    bool? isBloqueado,
+    bool? isExpirado,
+    bool? isCerrado,
   }) {
     return InfoLead(
       idLead: idLead,
@@ -79,15 +95,17 @@ class InfoLead extends Equatable {
       estado: estado ?? this.estado,
       idSubEstado: idSubEstado ?? this.idSubEstado,
       subEstado: subEstado ?? this.subEstado,
-      idCampania: idCampania,
-      campania: campania,
-      idEvento: idEvento,
-      evento: evento,
-      idCanal: idCanal,
-      canal: canal,
-      idInteres: idInteres,
-      interes: interes,
+      idCampania: idCampania ?? this.idCampania,
+      campania: campania ?? this.campania,
+      idEvento: idEvento ?? this.idEvento,
+      evento: evento ?? this.evento,
+      idCanal: idCanal ?? this.idCanal,
+      canal: canal ?? this.canal,
+      idInteres: idInteres ?? this.idInteres,
+      interes: interes ?? this.interes,
       isBloqueado: isBloqueado ?? this.isBloqueado,
+      isExpirado: isExpirado ?? this.isExpirado,
+      isCerrado: isCerrado ?? this.isCerrado,
     );
   }
 }

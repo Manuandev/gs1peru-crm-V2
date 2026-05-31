@@ -21,6 +21,7 @@ class ApiConstants {
 
   // ========== LEADS ==========
   static const String lstleads = 'Lead/SPLeadLSTApp';
+  static const String cudleads = 'Lead/SPLeadCUDApp';
 
   // ========== RECORDATORIOS ==========
   static const String lstRecordatorios = 'Recordatorio/SPRecordatorioLSTApp';
@@ -56,6 +57,7 @@ class ApiConstants {
 
   // ========== LEADS ==========
   static String get urlLeadsLst => '$baseUrl$lstleads';
+  static String get urlLeadsCud => '$baseUrl$cudleads';
 
   // ========== RECORDATORIOS ==========
   static String get urlRecordatoriosLst => '$baseUrl$lstRecordatorios';

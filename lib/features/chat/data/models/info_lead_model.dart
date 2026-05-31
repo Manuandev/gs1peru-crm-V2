@@ -22,6 +22,8 @@ class InfoLeadModel extends InfoLead {
     required super.idInteres,
     required super.interes,
     required super.isBloqueado,
+    required super.isExpirado,
+    required super.isCerrado,
   });
 
   factory InfoLeadModel.fromRawString(String raw) {
@@ -46,6 +48,8 @@ class InfoLeadModel extends InfoLead {
       idInteres: f(14),
       interes: f(15),
       isBloqueado: f(16) == '1',
+      isExpirado: f(17) == '1',
+      isCerrado: f(18) == '1',
     );
   }
 

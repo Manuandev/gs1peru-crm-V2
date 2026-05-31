@@ -8,14 +8,9 @@ import 'package:app_crm/features/chat/index_chat.dart';
 enum _InputMode { text, audio, attachment }
 
 class ChatInputBar extends StatefulWidget {
-  final VoidCallback onScrollToBottom;
   final AudioController audioController;
 
-  const ChatInputBar({
-    super.key,
-    required this.onScrollToBottom,
-    required this.audioController,
-  });
+  const ChatInputBar({super.key, required this.audioController});
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
@@ -107,7 +102,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final themeText = theme.textTheme;
+
+    final bodyStyle = themeText.bodyMedium?.copyWith(
+      color: themeText.bodyMedium!.color,
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -131,91 +132,143 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
         // ── Input principal ───────────────────────────────────
         if (_mode != _InputMode.audio)
-          Container(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              border: Border(
-                top: BorderSide(color: colorScheme.outlineVariant, width: 0.8),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Adjuntar
-                IconButton(
-                  icon: Icon(
-                    _mode == _InputMode.attachment
-                        ? Icons.close_rounded
-                        : Icons.attach_file_rounded,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  onPressed: _toggleAttachment,
-                ),
+          BlocBuilder<InfoLeadCubit, InfoLeadState>(
+            buildWhen: (prev, curr) {
+              if (curr is! InfoLeadSuccess) return false;
+              if (prev is! InfoLeadSuccess) return true;
+              return prev.infoLead.isExpirado != curr.infoLead.isExpirado;
+            },
+            builder: (context, state) {
+              final expirado = state is InfoLeadSuccess
+                  ? state.infoLead.isExpirado
+                  : false;
 
-                // Campo de texto
-                Expanded(
-                  child: Container(
-                    constraints: const BoxConstraints(maxHeight: 120),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: TextField(
-                      controller: _textController,
-                      maxLines: null,
-                      textCapitalization: TextCapitalization.sentences,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: colorScheme.onSurface,
+              if (expirado) {
+                return Container(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    border: Border(
+                      top: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: 0.8,
                       ),
-                      decoration: InputDecoration(
-                        hintText: 'Escribe un mensaje...',
-                        hintStyle: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 14,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        border: InputBorder.none,
-                      ),
-                      onSubmitted: (_) => _sendText(),
                     ),
                   ),
-                ),
-
-                const SizedBox(width: 4),
-
-                // Enviar texto o activar audio
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (child, animation) =>
-                      ScaleTransition(scale: animation, child: child),
-                  child: _hasText
-                      ? IconButton(
-                          key: const ValueKey('send'),
-                          icon: Icon(
-                            Icons.send_rounded,
-                            color: colorScheme.primary,
-                          ),
-                          onPressed: _sendText,
-                        )
-                      : IconButton(
-                          key: const ValueKey('mic'),
-                          icon: Icon(
-                            Icons.mic_rounded,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () {
-                            widget.audioController.stop();
-                            setState(() => _mode = _InputMode.audio);
-                          },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Botón plantilla
+                      IconButton(
+                        icon: Icon(
+                          Icons.library_books_rounded,
+                          color: colorScheme.primary,
                         ),
+                        onPressed: () {},
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Sesión cerrada, debes usar una plantilla debido a que el cliente no ha escrito en las últimas 24 horas.',
+                          style: bodyStyle,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Container(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  border: Border(
+                    top: BorderSide(
+                      color: colorScheme.outlineVariant,
+                      width: 0.8,
+                    ),
+                  ),
                 ),
-              ],
-            ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Adjuntar
+                    IconButton(
+                      icon: Icon(
+                        _mode == _InputMode.attachment
+                            ? Icons.close_rounded
+                            : Icons.attach_file_rounded,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: _toggleAttachment,
+                    ),
+
+                    // Campo de texto
+                    Expanded(
+                      child: Container(
+                        constraints: const BoxConstraints(maxHeight: 120),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: TextField(
+                          controller: _textController,
+                          maxLines: null,
+                          textCapitalization: TextCapitalization.sentences,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colorScheme.onSurface,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Escribe un mensaje...',
+                            hintStyle: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 14,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (_) => _sendText(),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 4),
+
+                    // Enviar texto o activar audio
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
+                      child: _hasText
+                          ? IconButton(
+                              key: const ValueKey('send'),
+                              icon: Icon(
+                                Icons.send_rounded,
+                                color: colorScheme.primary,
+                              ),
+                              onPressed: _sendText,
+                            )
+                          : IconButton(
+                              key: const ValueKey('mic'),
+                              icon: Icon(
+                                Icons.mic_rounded,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              onPressed: () {
+                                widget.audioController.stop();
+                                setState(() => _mode = _InputMode.audio);
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
       ],
     );

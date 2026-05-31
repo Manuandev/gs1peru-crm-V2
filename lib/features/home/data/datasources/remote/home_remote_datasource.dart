@@ -26,12 +26,13 @@ class HomeRemoteDatasource {
         prospectos: [],
       ),
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
-      ApiError(:final message) => throw AppException(message), 
+      ApiError(:final message) => throw AppException(message),
     };
   }
 
   Future<NotificationModel> getNotifications() async {
-    final String body = '${_session.codUser}¦${_session.isModerador ? 1 : 0}¯LN';
+    final String body =
+        '${_session.codUser}¦${_session.isModerador ? 1 : 0}¯LN';
 
     final result = await _api.postSafe(ApiConstants.urlHomeLst, body);
 
@@ -39,11 +40,11 @@ class HomeRemoteDatasource {
       ApiSuccess(:final data) => NotificationModel.parse(data),
       ApiEmpty() => const NotificationModel(
         totNotificaciones: 0,
-        totLeadsNuevos: 0,
         totLeadsReasignados: 0,
+        totLeadsNuevos: 0,
         totRecordatorios: 0,
-        leadsNuevos: [],
         leadsReasignados: [],
+        leadsNuevos: [],
         recordatorios: [],
       ),
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),

@@ -15,8 +15,19 @@ class ChatDetailFases extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final themeText = theme.textTheme;
+
+    final titleStyle = themeText.titleMedium?.copyWith(
+      color: themeText.titleMedium!.color,
+    );
+    final labelStyle = themeText.labelSmall?.copyWith(
+      color: themeText.labelSmall!.color,
+    );
+
     return Container(
-      color: Theme.of(context).colorScheme.surface,
+      color: colorScheme.surface,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -24,7 +35,7 @@ class ChatDetailFases extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Fase del lead', style: AppTextStyles.labelSmall),
+          Text('Fase del lead', style: titleStyle),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: LeadEstado.values.map((estado) {

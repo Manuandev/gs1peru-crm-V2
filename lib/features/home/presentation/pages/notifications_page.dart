@@ -12,15 +12,15 @@ class NotificationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          NotificationsBloc(getData: GetNotificationUseCase(context.read<HomeRepository>()))
-            ..add(const NotificationStarted()),
+            NotificationsBloc(getData: GetNotificationsUseCase(context.read<HomeRepository>()))
+              ..add(const NotificationsStarted()),
       child: BlocListener<NotificationsBloc, NotificationsState>(
         listener: (context, state) {
           if (state is NotificationsError) {
           } else if (state is NotificationsLoaded) {
           }
         },
-        child: const HomeView(),
+        child: const NotificationsView(),
       ),
     );
   }

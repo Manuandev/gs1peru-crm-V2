@@ -17,11 +17,16 @@ class AppRoutes {
   // MÓDULOS
   // ============================================================
   static const String leads = '/leads';
-  static const String recordatorios = '/recordatorios';
   static const String chats = '/chats';
   static const String propuestas = '/propuestas';
   static const String prospectos = '/prospectos';
   static const String cobranza = '/cobranza';
+
+
+  // ============================================================
+  // SUB-RUTAS HOME
+  // ============================================================
+  static const String notifications = '/home/notifications';
 
   // ============================================================
   // SUB-RUTAS LEADS

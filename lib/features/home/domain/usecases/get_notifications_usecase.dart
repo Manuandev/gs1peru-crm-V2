@@ -2,9 +2,9 @@
 
 import 'package:app_crm/features/home/index_home.dart';
 
-class GetNotificationUseCase {
+class GetNotificationsUseCase {
   final HomeRepository repository;
-  const GetNotificationUseCase(this.repository);
+  const GetNotificationsUseCase(this.repository);
 
-  Future<List<Notification>> call() => repository.getNotifications();
+  Future<Notification> call() => repository.getNotifications();
 }

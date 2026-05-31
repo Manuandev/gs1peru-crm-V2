@@ -8,7 +8,6 @@ import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/reminder/index_reminder.dart';
 import 'package:app_crm/features/settings/index_settings.dart';
 
 /// Sistema de routing principal
@@ -36,10 +35,8 @@ class AppRouter {
     if (_authRoutes.containsKey(routeName)) return _authRoutes[routeName];
     if (_mainRoutes.containsKey(routeName)) return _mainRoutes[routeName];
     if (routeName.startsWith('/leads/')) return _leadsRoutes[routeName];
-    if (routeName.startsWith('/recordatorios/')) {
-      return _recordatoriosRoutes[routeName];
-    }
     if (routeName.startsWith('/chats/')) return _chatsRoutes[routeName];
+    if (routeName.startsWith('/home/')) return _homeRoutes[routeName];
     return null;
   }
 
@@ -55,16 +52,18 @@ class AppRouter {
   static final Map<String, WidgetBuilder> _mainRoutes = {
     AppRoutes.home: (_) => const HomePage(),
     AppRoutes.leads: (_) => const LeadListPage(),
-    AppRoutes.recordatorios: (_) => const ReminderListPage(),
     AppRoutes.chats: (_) => const ChatListPage(),
     AppRoutes.settings: (_) => const SettingsPage(),
+  };
+
+  // ── HOME ─────────────────────────────────────────────────────
+  static final Map<String, WidgetBuilder> _homeRoutes = {
+    AppRoutes.notifications: (_) => const NotificationsPage(),
   };
 
   // ── LEADS ─────────────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _leadsRoutes = {};
 
-  // ── RECORDATORIOS ─────────────────────────────────────────────
-  static final Map<String, WidgetBuilder> _recordatoriosRoutes = {};
 
   // ── CHATS ─────────────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _chatsRoutes = {

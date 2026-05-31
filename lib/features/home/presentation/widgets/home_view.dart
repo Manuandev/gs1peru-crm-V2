@@ -54,7 +54,7 @@ class HomeView extends StatelessWidget {
       appBarTrailingButtons: [
         IconButton(
           icon: Icon(AppIcons.notification, color: AppColors.textOnDark),
-          onPressed: () {},
+          onPressed: () => context.goToNotification(),
         ),
         IconButton(
           icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),

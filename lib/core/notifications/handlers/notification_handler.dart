@@ -25,7 +25,6 @@ class NotificationHandler {
     return switch (message.process) {
       'MENSAJE_WHATSAPP' => _suppressWhatsApp(route, message),
       'NUEVO_LEAD' => route == AppRoutes.leads,
-      'RECORDATORIO' => route == AppRoutes.recordatorios,
       _ => false,
     };
   }
@@ -52,27 +51,22 @@ class NotificationHandler {
     return switch (message.process) {
       'MENSAJE_WHATSAPP' => _parseWhatsApp(message),
       'NUEVO_LEAD' => _parseLead(message),
-      'RECORDATORIO' => _parseRecordatorio(message),
       _ => null,
     };
   }
 
   AppNotification? _parseWhatsApp(WebSocketMessage message) {
-    if (message.records.isEmpty) return null;
-    final f = message.records.first;
-    String g(int i) => i < f.length ? f[i].trim() : '';
+    final p = WhatsAppMessagePayload.fromMessage(message);
+    if (p == null) return null;
 
     return AppNotification(
-      title: 'Mensaje WhatsApp CRM', //g(0), // Prueba
-      body: _bodyPorTipo(g(3), g(0)), // text → '💬 Nuevo mensaje...'
+      title: 'Mensaje WhatsApp CRM',
+      body: _bodyPorTipo(p.tipoMensaje, p.mensaje),
       route: AppRoutes.detalleChat,
-      payload: {
-        'idLead': g(2), // 106180
-      },
+      payload: {'idLead': p.leadId.toString()},
     );
   }
 
-  // En NotificationHandler — agrega los parsers que faltan
   AppNotification? _parseLead(WebSocketMessage message) {
     if (message.records.isEmpty) return null;
     final f = message.records.first;
@@ -83,19 +77,6 @@ class NotificationHandler {
       body: g(0), // nombre del lead
       route: AppRoutes.leads,
       payload: {'idLead': g(1), 'nombre': g(0)},
-    );
-  }
-
-  AppNotification? _parseRecordatorio(WebSocketMessage message) {
-    if (message.records.isEmpty) return null;
-    final f = message.records.first;
-    String g(int i) => i < f.length ? f[i].trim() : '';
-
-    return AppNotification(
-      title: '⏰ Recordatorio',
-      body: g(0),
-      route: AppRoutes.recordatorios,
-      payload: {'idRecordatorio': g(1)},
     );
   }
 

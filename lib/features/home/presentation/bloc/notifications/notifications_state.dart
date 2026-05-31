@@ -21,16 +21,21 @@ class NotificationsLoading extends NotificationsState {
 }
 
 class NotificationsLoaded extends NotificationsState {
-  final List<Notification> notificaciones;
+  final Notification notification;
   final UserModel usuario;
 
-  const NotificationsLoaded({
-    required this.notificaciones,
-    required this.usuario,
-  });
-
+  const NotificationsLoaded({required this.notification, required this.usuario});
+  
+  int get totNotificaciones => notification.totNotificaciones;
+  int get totLeadsReasignados => notification.totLeadsReasignados;
+  int get totLeadsNuevos => notification.totLeadsNuevos;
+  int get totRecordatorios => notification.totRecordatorios;
+  List<LeadReasignado> get leadsReasignados => notification.leadsReasignados;
+  List<LeadNuevo> get leadsNuevos => notification.leadsNuevos;
+  List<Recordatorio> get recordatorios => notification.recordatorios;
+  
   @override
-  List<Object?> get props => [notificaciones, usuario];
+  List<Object?> get props => [notification, usuario];
 }
 
 class NotificationsError extends NotificationsState {

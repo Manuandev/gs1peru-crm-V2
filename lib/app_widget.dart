@@ -31,7 +31,6 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/home/index_home.dart';
-import 'package:app_crm/features/reminder/index_reminder.dart';
 
 class AppWidget extends StatelessWidget {
   final ThemeCubit themeCubit; // ✅ nuevo
@@ -60,12 +59,6 @@ class AppWidget extends StatelessWidget {
         // ── LEAD REPOSITORY ──────────────────────────────────
         RepositoryProvider<LeadRepository>(
           create: (context) => LeadRepositoryImpl(LeadRemoteDatasource()),
-        ),
-
-        // ── REMINDERS REPOSITORY ──────────────────────────────────
-        RepositoryProvider<ReminderRepository>(
-          create: (context) =>
-              ReminderRepositoryImpl(ReminderRemoteDatasource()),
         ),
 
         // ── CHATS REPOSITORY ──────────────────────────────────

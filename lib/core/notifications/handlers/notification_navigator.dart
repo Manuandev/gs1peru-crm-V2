@@ -13,9 +13,7 @@ class NotificationNavigator {
 
     if (route.startsWith(AppRoutes.chats)) return _goChat(notif);
     if (route.startsWith(AppRoutes.leads)) return _goLead(notif);
-    if (route.startsWith(AppRoutes.recordatorios)) {
-      return _goRecordatorio(notif);
-    }
+    
 
     _go(route);
   }
@@ -30,8 +28,6 @@ class NotificationNavigator {
   }
 
   void _goLead(AppNotification notif) => _go(AppRoutes.leads); // TODO
-  void _goRecordatorio(AppNotification notif) =>
-      _go(AppRoutes.recordatorios); // TODO
 
   void _go(String route) {
     NavigationService.navigatorKey.currentState?.pushNamedAndRemoveUntil(

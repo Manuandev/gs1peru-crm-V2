@@ -19,17 +19,20 @@ class FirebaseNotificationService {
         sound: true,
       );
 
-      if (settings.authorizationStatus != AuthorizationStatus.authorized)
+      if (settings.authorizationStatus != AuthorizationStatus.authorized) {
         return;
+      }
 
-      // TODO: enviar token al backend
-      _fcm.onTokenRefresh.listen((newToken) {
-        // TODO: actualizar en backend
-      });
+      _fcm.onTokenRefresh.listen((newToken) {});
 
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         final notif = _fromRemoteMessage(message);
-        if (notif != null) LocalNotificationService.instance.show(notif);
+        if (notif == null) return;
+
+        final route = AppRouteObserver.instance.currentRoute;
+        if (notif.route != null && route == notif.route) return;
+
+        LocalNotificationService.instance.show(notif);
       });
 
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
@@ -43,24 +46,6 @@ class FirebaseNotificationService {
         if (notif != null) NotificationNavigator.instance.navigate(notif);
       }
     } catch (_) {}
-  }
-
-  Future<void> initBackground() async {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      final notif = _fromRemoteMessage(message);
-      if (notif != null) LocalNotificationService.instance.show(notif);
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final notif = _fromRemoteMessage(message);
-      if (notif != null) NotificationNavigator.instance.navigate(notif);
-    });
-
-    final initial = await _fcm.getInitialMessage();
-    if (initial != null) {
-      final notif = _fromRemoteMessage(initial);
-      if (notif != null) NotificationNavigator.instance.navigate(notif);
-    }
   }
 
   Future<void> requestPermissions() async {

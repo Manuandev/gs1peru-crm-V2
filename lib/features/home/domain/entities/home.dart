@@ -8,6 +8,7 @@ class Home {
   final int totLeadsNuevos;
   final int totLeadsDesarrollo;
   final int totNotificaciones;
+  
   final List<PrioridadHome> prioridades;
   final List<ProspectoHome> prospectos;
 

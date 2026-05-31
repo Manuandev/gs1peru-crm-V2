@@ -52,13 +52,19 @@ extension NavigationExtensions on BuildContext {
   // ============================================================
 
   Future<void> goToLeads() => clearStackAndNavigateTo(AppRoutes.leads);
-  Future<void> goToReminders() =>
-      clearStackAndNavigateTo(AppRoutes.recordatorios);
   Future<void> goToChats() => clearStackAndNavigateTo(AppRoutes.chats);
   Future<void> goToCobranza() => clearStackAndNavigateTo(AppRoutes.cobranza);
   Future<void> goToSettings() => clearStackAndNavigateTo(AppRoutes.settings);
   Future<void> goToChangePassword() =>
       clearStackAndNavigateTo(AppRoutes.changePassword);
+
+  // ============================================================
+  // MÓDULOS SECUNDARIOS - HOME
+  // ============================================================
+
+  Future<void> goToNotification() {
+    return navigateTo(AppRoutes.notifications);
+  }
 
   // ============================================================
   // MÓDULOS SECUNDARIOS - LEADS

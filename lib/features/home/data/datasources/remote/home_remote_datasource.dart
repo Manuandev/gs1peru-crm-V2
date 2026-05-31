@@ -30,14 +30,22 @@ class HomeRemoteDatasource {
     };
   }
 
-  Future<List<Notification>> getNotifications() async {
-    final String body = '${_session.codUser}¦${_session.isModerador ? 1 : 0}¯L';
+  Future<NotificationModel> getNotifications() async {
+    final String body = '${_session.codUser}¦${_session.isModerador ? 1 : 0}¯LN';
 
     final result = await _api.postSafe(ApiConstants.urlHomeLst, body);
 
     return switch (result) {
-      ApiSuccess(:final data) => NotificationModel.parseList(data),
-      ApiEmpty() => const [],
+      ApiSuccess(:final data) => NotificationModel.parse(data),
+      ApiEmpty() => const NotificationModel(
+        totNotificaciones: 0,
+        totLeadsNuevos: 0,
+        totLeadsReasignados: 0,
+        totRecordatorios: 0,
+        leadsNuevos: [],
+        leadsReasignados: [],
+        recordatorios: [],
+      ),
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };

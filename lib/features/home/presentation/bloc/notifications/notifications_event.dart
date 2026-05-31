@@ -2,17 +2,17 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
-abstract class NotificationEvent extends Equatable {
-  const NotificationEvent();
+abstract class NotificationsEvent extends Equatable {
+  const NotificationsEvent();
 
   @override
   List<Object?> get props => [];
 }
 
-class NotificationStarted extends NotificationEvent {
-  const NotificationStarted();
+class NotificationsStarted extends NotificationsEvent {
+  const NotificationsStarted();
 }
 
-class NotificationRefresh extends NotificationEvent {
-  const NotificationRefresh();
+class NotificationsRefresh extends NotificationsEvent {
+  const NotificationsRefresh();
 }

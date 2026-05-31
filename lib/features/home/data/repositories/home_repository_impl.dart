@@ -11,5 +11,5 @@ class HomeRepositoryImpl implements HomeRepository {
   Future<Home> getData() => _remote.getData();
 
   @override
-  Future<List<Notification>> getNotifications() => _remote.getNotifications();
+  Future<Notification> getNotifications() => _remote.getNotifications();
 }

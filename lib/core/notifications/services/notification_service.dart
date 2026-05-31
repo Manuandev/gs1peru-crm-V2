@@ -13,7 +13,7 @@ class NotificationService {
 
   Future<void> initBackground() async {
     await LocalNotificationService.instance.initBackground();
-    await FirebaseNotificationService.instance.initBackground();
+    await FirebaseNotificationService.instance.init();
   }
 
   /// Llamado desde el Splash — aquí sí pide permisos (ya hay UI)

@@ -8,7 +8,7 @@ const AndroidNotificationChannel _channel = AndroidNotificationChannel(
   'app_crm_channel',
   'CRM Notificaciones',
   description: 'Notificaciones generales del CRM',
-  importance: Importance.high,
+  importance: Importance.max,
 );
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -94,7 +94,7 @@ class LocalNotificationService {
           _channel.id,
           _channel.name,
           channelDescription: _channel.description,
-          importance: Importance.high,
+          importance: Importance.max,
           priority: Priority.high,
           playSound: true,
         ),

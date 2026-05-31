@@ -27,8 +27,6 @@ class MessageDispatcher {
         _dispatchUpdateMensaje(message, route);
       case 'NUEVO_LEAD':
         _dispatchLead(message, route);
-      case 'RECORDATORIO':
-        _dispatchRecordatorio(message, route);
       default:
         // proceso desconocido → solo al stream por si alguien escucha
         _toStream(message);
@@ -78,16 +76,6 @@ class MessageDispatcher {
 
     // Notificación solo si NO está en lista de leads
     if (route != AppRoutes.leads) {
-      NotificationHandler.instance.show(message);
-    }
-  }
-
-  // ── RECORDATORIO ─────────────────────────────────────────────
-
-  void _dispatchRecordatorio(WebSocketMessage message, String? route) {
-    _toStream(message);
-
-    if (route != AppRoutes.recordatorios) {
       NotificationHandler.instance.show(message);
     }
   }

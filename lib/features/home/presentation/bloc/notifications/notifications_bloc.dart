@@ -2,38 +2,51 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
-class NotificationsBloc extends Bloc<NotificationEvent, NotificationsState> {
-  final GetNotificationUseCase _getData;
+class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
+  final GetNotificationsUseCase _getData;
+  final _session = SessionService();
 
-  NotificationsBloc({required GetNotificationUseCase getData})
+  NotificationsBloc({required GetNotificationsUseCase getData})
     : _getData = getData,
       super(const NotificationsInitial()) {
-    on<NotificationStarted>(_onStarted);
-    on<NotificationRefresh>(_onRefresh);
+    on<NotificationsStarted>(_onStarted);
+    on<NotificationsRefresh>(_onRefresh);
   }
 
-  Future<void> _onStarted(NotificationStarted event, Emitter<NotificationsState> emit) async {
+  Future<void> _onStarted(
+    NotificationsStarted event,
+    Emitter<NotificationsState> emit,
+  ) async {
     emit(const NotificationsLoading());
     await _loadData(emit);
   }
 
-  Future<void> _onRefresh(NotificationRefresh event, Emitter<NotificationsState> emit) async {
+  Future<void> _onRefresh(
+    NotificationsRefresh event,
+    Emitter<NotificationsState> emit,
+  ) async {
     emit(const NotificationsLoading());
     await _loadData(emit);
   }
 
   Future<void> _loadData(Emitter<NotificationsState> emit) async {
-    // try {
-    //   final home = await _getData.call();
+    try {
+      final notification = await _getData.call();
 
-    //   emit(HomeLoaded(home: home, usuario: _session.user!));
-    // } on AppException catch (e) {
-    //   emit(HomeError(e.message));
-    // } catch (e, stackTrace) {
-    //   addError(e, stackTrace);
-    //   emit(HomeError(e.toString()));
-    // }
+      emit(
+        NotificationsLoaded(
+          notification: notification,
+          usuario: _session.user!,
+        ),
+      );
+    } on AppException catch (e) {
+      emit(NotificationsError(e.message));
+    } catch (e, stackTrace) {
+      addError(e, stackTrace);
+      emit(NotificationsError(e.toString()));
+    }
   }
 }

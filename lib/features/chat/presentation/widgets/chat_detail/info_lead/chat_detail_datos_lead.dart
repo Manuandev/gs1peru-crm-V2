@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatDetailDatosLead extends StatefulWidget {
@@ -117,14 +119,14 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: Icons.campaign_rounded,
                 label: 'Campaña',
-                valor: infoLead.campania,
+                valor: infoLead.campania ?? '',
                 iconColor: Colors.teal.shade700,
                 iconBackground: Colors.teal.shade50,
               ),
               _DatoItem(
                 icon: Icons.calendar_today_rounded,
                 label: 'Evento',
-                valor: infoLead.evento,
+                valor: infoLead.evento ?? '',
                 iconColor: Colors.orange.shade700,
                 iconBackground: Colors.orange.shade50,
               ),
@@ -136,14 +138,14 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: Icons.share_rounded,
                 label: 'Canal',
-                valor: infoLead.canal,
+                valor: infoLead.canal ?? '',
                 iconColor: Colors.pink.shade700,
                 iconBackground: Colors.pink.shade50,
               ),
               _DatoItem(
                 icon: Icons.people_rounded,
                 label: 'Interés',
-                valor: infoLead.interes,
+                valor: infoLead.interes ?? '',
                 iconColor: Colors.green.shade700,
                 iconBackground: Colors.green.shade50,
               ),
@@ -157,9 +159,10 @@ class _DatosLeadContenido extends StatelessWidget {
             child: CustomOutlinedButton(
               text: 'Editar lead',
               icon: const Icon(Icons.edit_rounded, size: AppSizing.iconSm),
-              onPressed: () {
-                // acción editar lead
-              },
+              onPressed: () => context.goToEditarLead(
+                lead: infoLead,
+                cubit: context.read<InfoLeadCubit>(),
+              ),
             ),
           ),
         ],

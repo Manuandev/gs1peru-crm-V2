@@ -1,6 +1,7 @@
 // lib/config/router/app_router.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -64,7 +65,6 @@ class AppRouter {
   // ── LEADS ─────────────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _leadsRoutes = {};
 
-
   // ── CHATS ─────────────────────────────────────────────────────
   static final Map<String, WidgetBuilder> _chatsRoutes = {
     AppRoutes.detalleChat: (context) {
@@ -72,6 +72,17 @@ class AppRouter {
       final idLead = int.parse(args['idLead'].toString());
 
       return ChatDetailPage(idLead: idLead);
+    },
+
+    AppRoutes.detalleEditarLead: (context) {
+      final args = _getArgs<Map<String, dynamic>>(context);
+      final lead = args['lead'] as InfoLead;
+      final cubit = args['cubit'] as InfoLeadCubit;
+
+      return BlocProvider.value(
+        value: cubit,
+        child: EditLeadPage(lead: lead),
+      );
     },
   };
 

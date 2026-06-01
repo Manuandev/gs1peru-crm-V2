@@ -23,14 +23,15 @@ export 'domain/usecases/send_chat_message_usecase.dart';
 export 'domain/usecases/send_file_message_usecase.dart';
 
 export 'domain/usecases/update_lead_estado_usecase.dart';
+export 'domain/usecases/update_lead_info_usecase.dart';
 
 export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';
 export 'presentation/bloc/chat_list/chat_list_state.dart';
 
-export 'presentation/bloc/templates/templates_bloc.dart';
-export 'presentation/bloc/templates/templates_event.dart';
-export 'presentation/bloc/templates/templates_state.dart';
+export 'presentation/bloc/edit_lead/edit_lead_bloc.dart';
+export 'presentation/bloc/edit_lead/edit_lead_event.dart';
+export 'presentation/bloc/edit_lead/edit_lead_state.dart';
 
 export 'presentation/bloc/chat_detail/chat_detail_bloc.dart';
 export 'presentation/bloc/chat_detail/chat_detail_event.dart';
@@ -41,6 +42,7 @@ export 'presentation/bloc/info_lead/info_lead_state.dart';
 
 export 'presentation/pages/chat_list_page.dart';
 export 'presentation/pages/chat_detail_page.dart';
+export 'presentation/pages/edit_lead_page.dart';
 export 'presentation/pages/media_viewer_page.dart';
 
 export 'presentation/widgets/chat_list/chat_list_landscape.dart';
@@ -70,5 +72,5 @@ export 'presentation/widgets/chat_detail/mensaje/message_list.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_parser.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_url_helper.dart';
 
-export 'presentation/widgets/templates/templates_view.dart';
-export 'presentation/widgets/templates/templates_portrait.dart';
+export 'presentation/widgets/edit_lead/edit_lead_view.dart';
+export 'presentation/widgets/edit_lead/edit_lead_portrait.dart';

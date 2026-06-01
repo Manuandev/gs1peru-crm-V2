@@ -76,7 +76,8 @@ class FirebaseNotificationService {
 
   Future<String?> obtenerToken() async {
     try {
-      return await _fcm.getToken();
+    final token = await _fcm.getToken();
+    return token;
     } catch (_) {
       return null;
     }

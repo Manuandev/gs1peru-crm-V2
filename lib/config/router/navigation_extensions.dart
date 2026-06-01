@@ -3,9 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 extension NavigationExtensions on BuildContext {
   // ============================================================
@@ -76,6 +77,16 @@ extension NavigationExtensions on BuildContext {
 
   Future<void> goToDetalleChat({required int idLead}) {
     return navigateTo(AppRoutes.detalleChat, arguments: {'idLead': idLead});
+  }
+
+  Future<void> goToEditarLead({
+    required InfoLead lead,
+    required InfoLeadCubit cubit,
+  }) {
+    return navigateTo(
+      AppRoutes.detalleEditarLead,
+      arguments: {'lead': lead, 'cubit': cubit},
+    );
   }
 
   Future<void> goToDetalleChatDesdeHome({required int idLead}) {

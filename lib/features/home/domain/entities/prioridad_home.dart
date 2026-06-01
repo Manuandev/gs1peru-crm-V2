@@ -4,7 +4,7 @@ class PrioridadHome {
   final String telefono;
   final String idEstado;
   final String estado;
-  final String idCanal;
+  final int idCanal;
   final String canal;
   final String fechaHora;
 

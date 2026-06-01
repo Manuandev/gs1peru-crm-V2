@@ -7,8 +7,12 @@ class HomeRemoteDatasource {
   final ApiClient _api = ApiClient();
   final _session = SessionService();
 
+  final sep = AppConstants.sepListas;
+  final camp = AppConstants.sepCampos;
+
   Future<HomeModel> getData() async {
-    final String body = '${_session.codUser}¦${_session.isModerador ? 1 : 0}¯L';
+    final String body =
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}L';
 
     final result = await _api.postSafe(ApiConstants.urlHomeLst, body);
 

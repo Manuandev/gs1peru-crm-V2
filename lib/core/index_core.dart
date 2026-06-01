@@ -25,8 +25,8 @@ export 'errors/app_exception.dart';
 export 'extensions/badge_extensions.dart';
 
 export 'helpers/canal_helper.dart';
-export 'helpers/estado_helper.dart';
 
+export 'mixins/comboable.dart';
 export 'mixins/double_back_to_exit_mixin.dart';
 
 // #region models

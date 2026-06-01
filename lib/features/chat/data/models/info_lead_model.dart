@@ -30,6 +30,11 @@ class InfoLeadModel extends InfoLead {
     final fields = raw.split(AppConstants.sepCampos);
     String f(int i) => i < fields.length ? fields[i].trim() : '';
 
+    final String canal = f(13);
+    final String campania = f(9);
+    final String evento = f(11);
+    final String interes = f(15);
+
     return InfoLeadModel(
       idLead: int.parse(f(0)),
       cliente: f(1),
@@ -39,14 +44,14 @@ class InfoLeadModel extends InfoLead {
       estado: f(5),
       idSubEstado: f(6),
       subEstado: f(7),
-      idCampania: f(8),
-      campania: f(9),
-      idEvento: f(10),
-      evento: f(11),
-      idCanal: f(12),
-      canal: f(13),
-      idInteres: f(14),
-      interes: f(15),
+      idCampania: campania.isEmpty ? null : int.tryParse(f(8)),
+      campania: campania.isEmpty ? null : campania,
+      idEvento: evento.isEmpty ? null : int.tryParse(f(10)),
+      evento: evento.isEmpty ? null : evento,
+      idCanal: canal.isEmpty ? null : int.tryParse(f(12)),
+      canal: canal.isEmpty ? null : canal,
+      idInteres: interes.isEmpty ? null : int.tryParse(f(14)),
+      interes: interes.isEmpty ? null : interes,
       isBloqueado: f(16) == '1',
       isExpirado: f(17) == '1',
       isCerrado: f(18) == '1',

@@ -83,13 +83,11 @@ class AppWidget extends StatelessWidget {
               logoutUsecase: LogoutUsecase(context.read<AuthRepository>()),
             ),
           ), // ✅ DrawerBloc va aquí
-          BlocProvider<DrawerBloc>(
-            create: (context) => DrawerBloc()..add(DrawerStarted()),
-          ),
+          BlocProvider<DrawerBloc>(create: (context) => DrawerBloc()),
           BlocProvider<CatalogsBloc>(
             create: (context) => CatalogsBloc(
               getData: GetCatalogsUseCase(context.read<CatalogsRepository>()),
-            )..add(const CatalogsLoadRequested()),
+            ),
           ),
         ],
         child: BlocListener<AuthBloc, AuthState>(
@@ -105,6 +103,7 @@ class AppWidget extends StatelessWidget {
             if (state is AuthAuthenticated) {
               context.read<DrawerBloc>().add(DrawerStarted());
               context.goToHome();
+              context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
             } else if (state is AuthUnauthenticated) {
               context.goToLogin();
             }

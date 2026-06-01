@@ -479,7 +479,6 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
         });
       }
     } catch (e) {
-      debugPrint('THUMBNAIL ERROR: $e'); // ← agrega esto
       if (mounted) setState(() => _loadingThumb = false);
     }
   }

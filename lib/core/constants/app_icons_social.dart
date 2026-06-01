@@ -53,18 +53,18 @@ class AppIconsSocial {
   // ============================================================
   // COLORES — canales
   // ============================================================
-  static const Map<String, Color> _coloresCanal = {
-    "1": Color(0xFF25D366), // WhatsApp
-    "3": Color(0xFF010101), // TikTok
-    "4": Color(0xFFE1306C), // Instagram
-    "5": Color(0xFF1877F2), // Facebook
-    "6": Color(0xFF0A66C2), // LinkedIn
-    "7": Color(0xFF607D8B), // Web gs1
-    "8": Color(0xFFFF6B35), // Instapage
-    "9": Color(0xFF9C27B0), // Boca a boca
-    "10": Color(0xFF455A64), // Migración Bitrix
-    "11": Color(0xFF00897B), // Referido
-    "12": Color(0xFF6D4C41), // Manual
+  static const Map<int, Color> _coloresCanal = {
+    1: Color(0xFF25D366), // WhatsApp
+    3: Color(0xFF010101), // TikTok
+    4: Color(0xFFE1306C), // Instagram
+    5: Color(0xFF1877F2), // Facebook
+    6: Color(0xFF0A66C2), // LinkedIn
+    7: Color(0xFF607D8B), // Web gs1
+    8: Color(0xFFFF6B35), // Instapage
+    9: Color(0xFF9C27B0), // Boca a boca
+    10: Color(0xFF455A64), // Migración Bitrix
+    11: Color(0xFF00897B), // Referido
+    12: Color(0xFF6D4C41), // Manual
   };
 
   static const Map<String, Color> _coloresEstado = {
@@ -106,18 +106,18 @@ class AppIconsSocial {
   // ============================================================
   // HELPERS — canal
   // ============================================================
-  static const Map<String, FaIconData> _iconosCanal = {
-    "1": whatsapp,
-    "3": tiktok,
-    "4": instagram,
-    "5": facebook,
-    "6": linkedin,
-    "7": web,
-    "8": instapage,
-    "9": bocaBoca,
-    "10": migracion,
-    "11": referido,
-    "12": manual,
+  static const Map<int, FaIconData> _iconosCanal = {
+    1: whatsapp,
+    3: tiktok,
+    4: instagram,
+    5: facebook,
+    6: linkedin,
+    7: web,
+    8: instapage,
+    9: bocaBoca,
+    10: migracion,
+    11: referido,
+    12: manual,
   };
 
   static const Map<String, FaIconData> _iconosEstado = {
@@ -138,7 +138,7 @@ class AppIconsSocial {
     "15": etapaFichaInscripcion,
   };
 
-  static Color colorCanal(String id) =>
+  static Color colorCanal(int id) =>
       _coloresCanal[id] ?? const Color(0xFF9E9E9E);
 
   static Color colorEstado(String id) =>
@@ -147,14 +147,14 @@ class AppIconsSocial {
   static Color bgEstado(String id) => _bgEstado[id] ?? const Color(0xFFF5F5F5);
 
   /// Ícono de canal listo para usar
-  static Widget widgetCanal(String id, {double size = 14}) {
+  static Widget widgetCanal(int id, {double size = 14}) {
     final icon = FaIcon(
       _iconosCanal[id] ?? FontAwesomeIcons.question,
-      color: id == "4" || id == "8" ? Colors.white : colorCanal(id),
+      color: id == 4 || id == 8 ? Colors.white : colorCanal(id),
       size: size,
     );
 
-    if (id == "4" || id == "8") {
+    if (id == 4 || id == 8) {
       return ShaderMask(
         blendMode: BlendMode.srcIn,
         shaderCallback: (Rect bounds) => const LinearGradient(

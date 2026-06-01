@@ -8,7 +8,6 @@ class UpdateLeadInfoUseCase {
 
   const UpdateLeadInfoUseCase(this.repository);
 
-  // Recibe la entidad completa con todos los datos modificados
   Future<CrudResult> call(InfoLead leadModificado) async {
     return await repository.updateLeadCompleto(leadModificado);
   }

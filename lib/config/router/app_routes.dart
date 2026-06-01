@@ -36,6 +36,7 @@ class AppRoutes {
   // SUB-RUTAS CHATS
   // ============================================================
   static const String detalleChat = '/chats/detalle';
+  static const String detalleEditarLead = '/chats/detalle/editar-lead';
 
   // ============================================================
   // SUB-RUTAS PROSPECTOS

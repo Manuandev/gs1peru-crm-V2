@@ -19,34 +19,22 @@ import 'package:app_crm/core/index_core.dart';
 ///   },
 /// )
 /// ```
-class CustomComboField extends StatefulWidget {
-  /// Lista cruda: cada elemento es "id¦descripcion¦value...".
-  final List<String> data;
-
-  /// Separador de campos (default ¦).
-  final String separator;
-
-  /// Índice del campo que se muestra en el dropdown (0-based).
-  ///   0 → id | 1 → descripcion | 2 → value(2) | 3 → value(3) | ...
-  final int displayIndex;
-
+class CustomComboField<T extends Comboable> extends StatefulWidget {
+  final List<T> data;
+  final int idIndex;
+  final int labelIndex;
   final String label;
   final String? hint;
-
-  /// Valor inicial: debe coincidir con [ComboItem.id].
-  final String? initialValue;
-
-  final void Function(ComboItem? item)? onChanged;
+  final String? initialValue; // coincide con fields[idIndex].toString()
+  final void Function(T? item)? onChanged;
   final bool enabled;
-
-  /// Validador: recibe el [ComboItem.id] seleccionado (nullable si no seleccionó).
   final String? Function(String?)? validator;
 
   const CustomComboField({
     super.key,
     required this.data,
-    this.separator = '¦',
-    this.displayIndex = 1,
+    this.idIndex = 0,
+    this.labelIndex = 1,
     required this.label,
     this.hint,
     this.initialValue,
@@ -56,40 +44,39 @@ class CustomComboField extends StatefulWidget {
   });
 
   @override
-  State<CustomComboField> createState() => _CustomComboFieldState();
+  State<CustomComboField<T>> createState() => _CustomComboFieldState<T>();
 }
 
-class _CustomComboFieldState extends State<CustomComboField> {
-  late List<ComboItem> _items;
-  ComboItem? _selected;
+class _CustomComboFieldState<T extends Comboable>
+    extends State<CustomComboField<T>> {
+  T? _selected;
+
+  String _getId(T item) => item.fields[widget.idIndex].toString();
+  String _getLabel(T item) => item.fields[widget.labelIndex].toString();
 
   @override
   void initState() {
     super.initState();
-    _rebuild();
-  }
-
-  @override
-  void didUpdateWidget(covariant CustomComboField old) {
-    super.didUpdateWidget(old);
-    if (old.data != widget.data || old.separator != widget.separator) {
-      _rebuild();
-    }
-  }
-
-  void _rebuild() {
-    _items = ComboItem.fromList(widget.data, separator: widget.separator);
     _selected = widget.initialValue != null
-        ? _items.where((e) => e.id == widget.initialValue).firstOrNull
+        ? widget.data.where((e) => _getId(e) == widget.initialValue).firstOrNull
         : null;
   }
 
-  String _display(ComboItem item) =>
-      item.field(widget.displayIndex) ?? item.descripcion;
+  @override
+  void didUpdateWidget(covariant CustomComboField<T> old) {
+    super.didUpdateWidget(old);
+    if (old.data != widget.data) {
+      // si el item seleccionado ya no existe en la nueva lista, resetea
+      if (_selected != null &&
+          !widget.data.any((e) => _getId(e) == _getId(_selected as T))) {
+        _selected = null;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<ComboItem>(
+    return DropdownButtonFormField<T>(
       initialValue: _selected,
       isExpanded: true,
       hint: widget.hint != null ? Text(widget.hint!) : null,
@@ -98,11 +85,30 @@ class _CustomComboFieldState extends State<CustomComboField> {
         enabled: widget.enabled,
         border: const OutlineInputBorder(),
       ),
-      items: _items
+      items: widget.data
           .map(
-            (item) => DropdownMenuItem<ComboItem>(
+            (item) => DropdownMenuItem<T>(
               value: item,
-              child: Text(_display(item)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  _getLabel(item),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+      selectedItemBuilder: (context) => widget.data
+          .map(
+            (item) => Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _getLabel(item),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
           )
           .toList(),
@@ -113,15 +119,10 @@ class _CustomComboFieldState extends State<CustomComboField> {
             }
           : null,
       validator: widget.validator != null
-          ? (val) => widget.validator!(val?.id)
+          ? (_) => widget.validator!(
+              _selected != null ? _getId(_selected as T) : null,
+            )
           : null,
     );
   }
-
-  // ── Getters de acceso rápido ─────────────────────────────────────────────
-  ComboItem? get selectedItem => _selected;
-  String? get selectedId => _selected?.id;
-
-  /// Accede a cualquier campo del item seleccionado por índice.
-  String? selectedValue(int index) => _selected?.field(index);
 }

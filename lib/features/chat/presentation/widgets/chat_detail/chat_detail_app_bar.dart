@@ -54,7 +54,7 @@ class ChatDetailAppBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    infoLead.canal,
+                    infoLead.canal ?? 'Sin canal',
                     style: AppTextStyles.labelSmall.copyWith(
                       // ignore: deprecated_member_use
                       color: colorScheme.onPrimary.withOpacity(0.8),

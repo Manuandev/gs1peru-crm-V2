@@ -7,8 +7,11 @@ import 'package:app_crm/core/index_core.dart';
 class CatalogsRemoteDatasource {
   final ApiClient _api = ApiClient();
 
+  final sep = AppConstants.sepListas;
+  final camp = AppConstants.sepCampos;
+
   Future<ListasGenericasModel> getListas() async {
-    final String body = 'L';
+    final String body = '${sep}L';
 
     final result = await _api.postSafe(ApiConstants.urlListasLst, body);
 

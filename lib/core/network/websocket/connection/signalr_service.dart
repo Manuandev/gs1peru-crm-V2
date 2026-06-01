@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
-import 'package:flutter/foundation.dart';
 
 /// Implementación del servicio SignalR.
 ///
@@ -66,7 +65,6 @@ class SignalRService implements ISignalRService {
   static const Duration _pingTimeout = Duration(seconds: 8);
 
   static const Duration _pauseBetweenCycles = Duration(minutes: 1);
-  static const int _attemptsPerCycle = 3;
 
   // ─── Getters públicos ─────────────────────────────────────────────────────
 
@@ -222,7 +220,7 @@ class SignalRService implements ISignalRService {
     }
 
     try {
-      debugPrint('MENSAJE ENVIADO: $message');
+      // debugPrint('MENSAJE ENVIADO: $message');
       _hubConnection!.invoke('OnMessage', args: <Object>[message]);
       return true;
     } catch (_) {
@@ -276,7 +274,7 @@ class SignalRService implements ISignalRService {
   // ─── Manejo de mensajes ───────────────────────────────────────────────────
 
   void _handleIncomingMessage(dynamic rawMessage) {
-    debugPrint('MENSAJE RECIBIDO: $rawMessage');
+    // debugPrint('MENSAJE RECIBIDO: $rawMessage');
 
     // Si llegó un mensaje, la conexión está viva
     if (!isConnected && _isHubConnected()) {
@@ -334,10 +332,6 @@ class SignalRService implements ISignalRService {
 
     _reconnectTimer?.cancel();
 
-    debugPrint(
-      'SignalR: ciclo de $_attemptsPerCycle intentos fallido. '
-      'Esperando ${_pauseBetweenCycles.inSeconds}s antes del próximo ciclo.',
-    );
 
     // Emitir un estado que indique pausa larga (reconnecting sirve; si tienes
     // un estado específico como "waitingCycle" puedes usarlo aquí).
@@ -351,7 +345,6 @@ class SignalRService implements ISignalRService {
       // Reiniciar contadores y comenzar un ciclo nuevo
       _reconnectAttempts = 0;
       _isConnecting = false;
-      debugPrint('SignalR: iniciando nuevo ciclo de reconexión.');
       await connect();
     });
   }
@@ -478,9 +471,9 @@ class SignalRService implements ISignalRService {
       final token = await FirebaseNotificationService.instance.obtenerToken();
       if (token == null || token.isEmpty) return;
       _hubConnection?.invoke('RegistrarTokenFCM', args: <Object>[token]);
-      debugPrint('[FCM] Token registrado en hub');
+      // debugPrint('[FCM] Token registrado en hub');
     } catch (e) {
-      debugPrint('[FCM] Error registrando token en hub: $e');
+      // debugPrint('[FCM] Error registrando token en hub: $e');
     }
   }
 
@@ -489,9 +482,9 @@ class SignalRService implements ISignalRService {
     try {
       if (!_isHubConnected()) return;
       await _hubConnection?.invoke('LimpiarTokenFCM');
-      debugPrint('[FCM] Token desregistrado');
+      // debugPrint('[FCM] Token desregistrado');
     } catch (e) {
-      debugPrint('[FCM] Error desregistrando token: $e');
+      // debugPrint('[FCM] Error desregistrando token: $e');
     }
   }
 }

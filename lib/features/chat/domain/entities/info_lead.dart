@@ -11,14 +11,14 @@ class InfoLead extends Equatable {
   final String estado;
   final String idSubEstado;
   final String subEstado;
-  final String idCampania;
-  final String campania;
-  final String idEvento;
-  final String evento;
-  final String idCanal;
-  final String canal;
-  final String idInteres;
-  final String interes;
+  final int? idEvento;
+  final String? evento;
+  final int? idCampania;
+  final String? campania;
+  final int? idCanal;
+  final String? canal;
+  final int? idInteres;
+  final String? interes;
   final bool isBloqueado;
   final bool isExpirado;
   final bool isCerrado;
@@ -74,13 +74,14 @@ class InfoLead extends Equatable {
     String? estado,
     String? idSubEstado,
     String? subEstado,
-    String? idCampania,
+    int? idCampania,
     String? campania,
-    String? idEvento,
+    int? idEvento,
     String? evento,
-    String? idCanal,
+    bool clearEvento = false,
+    int? idCanal,
     String? canal,
-    String? idInteres,
+    int? idInteres,
     String? interes,
     bool? isBloqueado,
     bool? isExpirado,
@@ -97,8 +98,8 @@ class InfoLead extends Equatable {
       subEstado: subEstado ?? this.subEstado,
       idCampania: idCampania ?? this.idCampania,
       campania: campania ?? this.campania,
-      idEvento: idEvento ?? this.idEvento,
-      evento: evento ?? this.evento,
+      idEvento: clearEvento ? null : (idEvento ?? this.idEvento),
+      evento: clearEvento ? null : (evento ?? this.evento),
       idCanal: idCanal ?? this.idCanal,
       canal: canal ?? this.canal,
       idInteres: idInteres ?? this.idInteres,

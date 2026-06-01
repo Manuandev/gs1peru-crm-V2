@@ -80,7 +80,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               SizedBox(height: AppSpacing.xs),
               Row(
                 children: [
-                  if (prioridad.idCanal.isNotEmpty) ...[
+                  if (prioridad.idCanal > 0) ...[
                     AppIconsSocial.widgetCanal(prioridad.idCanal),
                     SizedBox(width: AppSpacing.xxs),
                     Text(

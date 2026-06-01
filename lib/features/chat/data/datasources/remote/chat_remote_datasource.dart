@@ -1,7 +1,6 @@
 //lib\features\chat\data\datasources\remote\chat_remote_datasource.dart
 
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
@@ -12,6 +11,9 @@ class ChatRemoteDatasource {
 
   final sep = AppConstants.sepListas;
   final camp = AppConstants.sepCampos;
+
+  String _orEmpty(dynamic val) =>
+      (val == null || val == 0) ? '' : val.toString();
 
   Future<InfoLeadModel> getInfoLead(int idLead) async {
     final String body = '${[idLead].join(camp)}${sep}D';
@@ -167,7 +169,6 @@ class ChatRemoteDatasource {
       final mergeDatos = mergeResult.split(camp);
       return mergeDatos[0] == 'OK';
     } catch (e) {
-      debugPrint('Error uploadAndSendFileMessage: $e');
       return false;
     }
   }
@@ -192,7 +193,8 @@ class ChatRemoteDatasource {
     final ip = await _deviceInfo.getLocalIp();
 
     final String body =
-        '${[lead.idLead, lead.idEstado, lead.idCampania, lead.idEvento, lead.idCanal, lead.idInteres, _session.codUser, ip].join(camp)}${sep}U';
+        '${[lead.idLead, lead.idEstado, _orEmpty(lead.idCampania), _orEmpty(lead.idEvento), _orEmpty(lead.idCanal), _orEmpty(lead.idInteres), _session.codUser, ip].join(camp)}'
+        '${sep}U';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsCud, body);
 

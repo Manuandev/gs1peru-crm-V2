@@ -25,6 +25,7 @@ class ChatDetailPage extends StatelessWidget {
           create: (_) => InfoLeadCubit(
             GetInfoUseCase(context.read<ChatRepository>()),
             UpdateLeadEstadoUseCase(context.read<ChatRepository>()),
+            UpdateLeadInfoUseCase(context.read<ChatRepository>()),
           ),
         ),
       ],

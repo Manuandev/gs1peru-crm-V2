@@ -56,10 +56,13 @@ class ListasGenericasModel extends ListasGenericas {
   }
 }
 
-class CampaniaItem {
+class CampaniaItem with Comboable {
   final int id;
   final String nombre;
   const CampaniaItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
 }
 
 class CampaniaItemModel extends CampaniaItem {
@@ -81,15 +84,19 @@ class CampaniaItemModel extends CampaniaItem {
   }
 }
 
-class OportunidadItem {
+class OportunidadItem with Comboable {
   final int idEvento;
   final int idCampania;
   final String nombre;
+
   const OportunidadItem({
     required this.idEvento,
     required this.idCampania,
     required this.nombre,
   });
+
+  @override
+  List<dynamic> get fields => [idEvento, idCampania, nombre];
 }
 
 class OportunidadItemModel extends OportunidadItem {
@@ -119,10 +126,13 @@ class OportunidadItemModel extends OportunidadItem {
   }
 }
 
-class CanalItem {
+class CanalItem with Comboable {
   final int id;
   final String nombre;
   const CanalItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
 }
 
 class CanalItemModel extends CanalItem {
@@ -144,10 +154,13 @@ class CanalItemModel extends CanalItem {
   }
 }
 
-class InteresItem {
+class InteresItem with Comboable {
   final int id;
   final String nombre;
   const InteresItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
 }
 
 class InteresItemModel extends InteresItem {

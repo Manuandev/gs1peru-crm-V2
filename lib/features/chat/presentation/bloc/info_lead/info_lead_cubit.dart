@@ -9,6 +9,7 @@ import 'package:app_crm/features/chat/index_chat.dart';
 class InfoLeadCubit extends Cubit<InfoLeadState> {
   final GetInfoUseCase _getInfo;
   final UpdateLeadEstadoUseCase _updateEstado;
+  final UpdateLeadInfoUseCase _updateInfo;
 
   final _successController = StreamController<String>.broadcast();
   Stream<String> get successes => _successController.stream;
@@ -16,7 +17,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   final _errorController = StreamController<String>.broadcast();
   Stream<String> get errores => _errorController.stream;
 
-  InfoLeadCubit(this._getInfo, this._updateEstado)
+  InfoLeadCubit(this._getInfo, this._updateEstado, this._updateInfo)
     : super(const InfoLeadInitial());
 
   @override
@@ -85,6 +86,70 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     } catch (e) {
       if (isClosed) return;
       emit(InfoLeadSuccess(snapshot));
+      _errorController.add('No se pudo cambiar el estado. Intenta de nuevo.');
+    }
+  }
+
+  Future<void> updateLead({
+    String? idEstado,
+    String? estado,
+    String? idSubEstado,
+    String? subEstado,
+    int? idCampania,
+    String? campania,
+    int? idEvento,
+    String? evento,
+    bool clearEvento = false,
+    int? idCanal,
+    String? canal,
+    int? idInteres,
+    String? interes,
+  }) async {
+    if (state is! InfoLeadSuccess) return;
+    final current = (state as InfoLeadSuccess).infoLead;
+
+    final updated = current.copyWith(
+      idEstado: idEstado,
+      estado: estado,
+      idSubEstado: idSubEstado,
+      subEstado: subEstado,
+      idCampania: idCampania,
+      campania: campania,
+      idEvento: idEvento,
+      evento: evento,
+      clearEvento: clearEvento,
+      idCanal: idCanal,
+      canal: canal,
+      idInteres: idInteres,
+      interes: interes,
+    );
+
+    emit(InfoLeadSuccess(updated));
+
+    try {
+      final result = await _updateInfo(updated);
+
+      if (isClosed) return;
+
+      switch (result) {
+        case CrudOk(:final message):
+          _successController.add(message);
+          break;
+        case CrudAlert(:final message):
+          _errorController.add(message);
+        case CrudError(:final message):
+          emit(InfoLeadSuccess(current));
+          _errorController.add(message);
+        case CrudNoInternet():
+          emit(InfoLeadSuccess(current));
+          _errorController.add('Sin conexión. Intenta de nuevo.');
+        case CrudEmpty():
+          emit(InfoLeadSuccess(current));
+          _errorController.add('Respuesta inesperada del servidor.');
+      }
+    } catch (e) {
+      if (isClosed) return;
+      emit(InfoLeadSuccess(current));
       _errorController.add('No se pudo cambiar el estado. Intenta de nuevo.');
     }
   }

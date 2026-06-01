@@ -50,6 +50,8 @@ export 'presentation/widgets/chat_list/chat_list_portrait.dart';
 export 'presentation/widgets/chat_list/chat_list_view.dart';
 export 'presentation/widgets/chat_list/chat_tile.dart';
 export 'presentation/widgets/chat_list/message_preview_utils.dart';
+export 'presentation/widgets/chat_list/chat_list_search.dart';
+export 'presentation/widgets/chat_list/chat_list_filter_chips.dart';
 
 export 'presentation/widgets/chat_detail/chat_detail_view.dart';
 

@@ -18,9 +18,9 @@ class ChatDetailAppBar extends StatelessWidget {
         // ── Avatar con iniciales ──
         CircleAvatar(
           radius: 20,
-          backgroundColor: infoLead.cliente.avatarColor,
+          backgroundColor: infoLead.nombreCompleto.avatarColor,
           child: Text(
-            infoLead.cliente.initials,
+            infoLead.nombreCompleto.initials,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -37,7 +37,7 @@ class ChatDetailAppBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                infoLead.cliente,
+                infoLead.nombreCompleto,
                 style: AppTextStyles.titleMedium.copyWith(
                   color: colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,

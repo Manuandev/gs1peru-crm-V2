@@ -4,6 +4,8 @@ import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
+enum ChatListFiltro { todos, sinResponder, enDesarrollo, propuesta }
+
 abstract class ChatListEvent extends Equatable {
   const ChatListEvent();
 
@@ -22,6 +24,17 @@ class ChatListRefreshed extends ChatListEvent {
 class ChatListSearched extends ChatListEvent {
   final String query;
   const ChatListSearched(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}
+
+class ChatListFiltered extends ChatListEvent {
+  final ChatListFiltro filtro;
+  const ChatListFiltered(this.filtro);
+
+  @override
+  List<Object?> get props => [filtro];
 }
 
 /// Evento disparado cuando llega un mensaje por WebSocket (envío o recepción).
@@ -31,4 +44,4 @@ class ChatListIncomingMessageReceived extends ChatListEvent {
 
   @override
   List<Object?> get props => [message];
-}
+}

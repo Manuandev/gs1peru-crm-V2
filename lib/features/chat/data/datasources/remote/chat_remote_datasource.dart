@@ -31,7 +31,8 @@ class ChatRemoteDatasource {
   }
 
   Future<List<ChatModel>> getChats() async {
-    final String body = '${[_session.codUser].join(camp)}${sep}L';
+    final String body =
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}L';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 

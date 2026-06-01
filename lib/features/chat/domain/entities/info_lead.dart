@@ -4,7 +4,9 @@ import 'package:app_crm/index_dependencies.dart';
 
 class InfoLead extends Equatable {
   final int idLead;
-  final String cliente;
+  final String nombre;
+  final String apellido;
+  final String nombreEmpresa;
   final String telefono;
   final bool isFavorito;
   final String idEstado;
@@ -23,9 +25,13 @@ class InfoLead extends Equatable {
   final bool isExpirado;
   final bool isCerrado;
 
+  String get nombreCompleto => '$nombre $apellido'.trim();
+
   const InfoLead({
     required this.idLead,
-    required this.cliente,
+    required this.nombre,
+    required this.apellido,
+    required this.nombreEmpresa,
     required this.telefono,
     required this.isFavorito,
     required this.idEstado,
@@ -48,7 +54,9 @@ class InfoLead extends Equatable {
   @override
   List<Object?> get props => [
     idLead,
-    cliente,
+    nombre,
+    apellido,
+    nombreEmpresa,
     telefono,
     isFavorito,
     idEstado,
@@ -89,7 +97,9 @@ class InfoLead extends Equatable {
   }) {
     return InfoLead(
       idLead: idLead,
-      cliente: cliente,
+      nombre: nombre,
+      apellido: apellido,
+      nombreEmpresa: nombreEmpresa,
       telefono: telefono,
       isFavorito: isFavorito ?? this.isFavorito,
       idEstado: idEstado ?? this.idEstado,

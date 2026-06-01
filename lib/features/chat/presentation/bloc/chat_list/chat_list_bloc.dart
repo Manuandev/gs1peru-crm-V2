@@ -11,14 +11,14 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   List<Chat> _allChats = [];
   StreamSubscription<WebSocketMessage>? _messageSubscription;
 
-  /// Guarda la última query de búsqueda para re-aplicar el filtro
-  /// después de una actualización en tiempo real.
   String _lastSearchQuery = '';
+  ChatListFiltro _filtroActivo = ChatListFiltro.todos;
 
   ChatListBloc(this._getChats) : super(const ChatListInitial()) {
     on<ChatListStarted>(_onStarted);
     on<ChatListRefreshed>(_onRefreshed);
     on<ChatListSearched>(_onSearched);
+    on<ChatListFiltered>(_onFiltered);
     on<ChatListIncomingMessageReceived>(_onIncomingMessageReceived);
 
     // Suscripción al stream de WebSocket — igual que ChatDetailBloc
@@ -56,7 +56,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       final chats = await _getChats();
       _allChats = chats;
 
-      emit(ChatListSuccess(chats: chats));
+      _emitFiltered(emit);
     } on AppException catch (e) {
       emit(ChatListFailure(e.message));
     } catch (e, stackTrace) {
@@ -66,22 +66,58 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   }
 
   void _onSearched(ChatListSearched event, Emitter<ChatListState> emit) {
-    if (state is! ChatListSuccess) return;
-
     _lastSearchQuery = event.query;
+    _emitFiltered(emit);
+  }
 
-    if (event.query.isEmpty) {
-      emit(ChatListSuccess(chats: _allChats));
-      return;
+  void _onFiltered(ChatListFiltered event, Emitter<ChatListState> emit) {
+    _filtroActivo = event.filtro;
+    _emitFiltered(emit);
+  }
+
+  void _emitFiltered(Emitter<ChatListState> emit) {
+    final conteos = {
+      ChatListFiltro.todos: _allChats.length,
+      ChatListFiltro.sinResponder: _allChats.where((c) => c.isEnviado).length,
+      ChatListFiltro.enDesarrollo: _allChats
+          .where((c) => c.idEstado == '01')
+          .length,
+      ChatListFiltro.propuesta: _allChats
+          .where((c) => c.idEstado == '02')
+          .length,
+    };
+
+    var resultado = List<Chat>.from(_allChats);
+
+    if (_filtroActivo == ChatListFiltro.sinResponder) {
+      resultado = resultado.where((c) => c.isEnviado).toList();
+    } else if (_filtroActivo == ChatListFiltro.enDesarrollo) {
+      resultado = resultado.where((c) => c.idEstado == '01').toList();
+    } else if (_filtroActivo == ChatListFiltro.propuesta) {
+      resultado = resultado.where((c) => c.idEstado == '02').toList();
     }
 
-    final query = event.query.toLowerCase();
-    final filtered = _allChats.where((chat) {
-      return chat.nombreApe.toLowerCase().contains(query) ||
-          chat.telefono.toLowerCase().contains(query);
-    }).toList();
+    // filtro búsqueda
+    final q = _lastSearchQuery.toLowerCase().trim();
+    if (q.isNotEmpty) {
+      resultado = resultado
+          .where(
+            (c) =>
+                c.nombre.toLowerCase().contains(q) ||
+                c.apellido.toLowerCase().contains(q) ||
+                c.telefono.contains(q) ||
+                c.nombreEmpresa.toLowerCase().contains(q),
+          )
+          .toList();
+    }
 
-    emit(ChatListSuccess(chats: filtered));
+    emit(
+      ChatListSuccess(
+        chats: resultado,
+        filtro: _filtroActivo,
+        conteos: conteos,
+      ),
+    );
   }
 
   // ── Router de mensajes entrantes ───────────────────────────────────────────
@@ -210,22 +246,5 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
     _allChats = chats;
     _emitFiltered(emit);
-  }
-
-  // ── Helper: emitir la lista filtrada si hay búsqueda activa ────────────────
-
-  void _emitFiltered(Emitter<ChatListState> emit) {
-    if (_lastSearchQuery.isEmpty) {
-      emit(ChatListSuccess(chats: _allChats));
-      return;
-    }
-
-    final query = _lastSearchQuery.toLowerCase();
-    final filtered = _allChats.where((chat) {
-      return chat.nombreApe.toLowerCase().contains(query) ||
-          chat.telefono.toLowerCase().contains(query);
-    }).toList();
-
-    emit(ChatListSuccess(chats: filtered));
   }
 }

@@ -3,21 +3,29 @@
 import 'package:app_crm/index_dependencies.dart';
 
 class Chat extends Equatable {
-  final int idLead; // 00 - ID_LEAD
-  final String nombreApe; // 01 - B.NOMBRE + ' ' + B.APELLIDOS
-  final String telefono; // 02 - TELEFONO (+51-958914300)
-  final String idMensaje; // 03 - MENSAJE
-  final String mensaje; // 03 - MENSAJE
-  final String tipoMensaje; // 04 - TIPO_MENSAJE (E/S)
-  final String estado; // 05 - ESTADO (LEIDO/NO_LEIDO)
-  final String fechaHora; // 06 - FCH_REGISTRO
-  final bool isFavorito; // 07 - FLG_FAVORITO
-  final bool isEnviado; // 08 - FLG_ENTRADA
+  final int idLead;
+  final String nombre;
+  final String apellido;
+  final String nombreEmpresa;
+  final String telefono;
+  final String idEstado;
+  final String idMensaje;
+  final String mensaje;
+  final String tipoMensaje;
+  final String estado;
+  final String fechaHora;
+  final bool isFavorito;
+  final bool isEnviado;
+
+  String get nombreCompleto => '$nombre $apellido'.trim();
 
   const Chat({
     required this.idLead,
-    required this.nombreApe,
+    required this.nombre,
+    required this.apellido,
+    required this.nombreEmpresa,
     required this.telefono,
+    required this.idEstado,
     required this.idMensaje,
     required this.mensaje,
     required this.tipoMensaje,
@@ -30,8 +38,11 @@ class Chat extends Equatable {
   @override
   List<Object?> get props => [
     idLead,
-    nombreApe,
+    nombre,
+    apellido,
+    nombreEmpresa,
     telefono,
+    idEstado,
     idMensaje,
     mensaje,
     tipoMensaje,
@@ -43,8 +54,11 @@ class Chat extends Equatable {
 
   Chat copyWith({
     int? idLead,
-    String? nombreApe,
+    String? nombre,
+    String? apellido,
+    String? nombreEmpresa,
     String? telefono,
+    String? idEstado,
     String? idMensaje,
     String? mensaje,
     String? tipoMensaje,
@@ -55,8 +69,11 @@ class Chat extends Equatable {
   }) {
     return Chat(
       idLead: idLead ?? this.idLead,
-      nombreApe: nombreApe ?? this.nombreApe,
+      nombre: nombre ?? this.nombre,
+      apellido: apellido ?? this.apellido,
+      nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
       telefono: telefono ?? this.telefono,
+      idEstado: idEstado ?? this.idEstado,
       idMensaje: idMensaje ?? this.idMensaje,
       mensaje: mensaje ?? this.mensaje,
       tipoMensaje: tipoMensaje ?? this.tipoMensaje,

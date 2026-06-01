@@ -6,8 +6,11 @@ import 'package:app_crm/features/chat/index_chat.dart';
 class ChatModel extends Chat {
   const ChatModel({
     required super.idLead,
-    required super.nombreApe,
+    required super.nombre,
+    required super.apellido,
+    required super.nombreEmpresa,
     required super.telefono,
+    required super.idEstado,
     required super.idMensaje,
     required super.mensaje,
     required super.tipoMensaje,
@@ -23,15 +26,18 @@ class ChatModel extends Chat {
 
     return ChatModel(
       idLead: int.parse(f(0)),
-      nombreApe: f(1),
-      telefono: f(2),
-      idMensaje: f(3),
-      mensaje: f(4),
-      tipoMensaje: f(5),
-      estado: f(6),
-      fechaHora: f(7),
-      isFavorito: f(8) == '1',
-      isEnviado: f(9) == '1',
+      nombre: f(1),
+      apellido: f(2),
+      nombreEmpresa: f(3),
+      telefono: f(4),
+      idEstado: f(5),
+      idMensaje: f(6),
+      mensaje: f(7),
+      tipoMensaje: f(8),
+      estado: f(9),
+      fechaHora: f(10),
+      isFavorito: f(11) == '1',
+      isEnviado: f(12) == '1',
     );
   }
 

@@ -114,9 +114,9 @@ class _ChatTileState extends State<ChatTile> {
                 // ─── Avatar ───────────────────────────────────────
                 CircleAvatar(
                   radius: avatarRadius,
-                  backgroundColor: AvatarUtils.color(widget.chat.nombreApe),
+                  backgroundColor: AvatarUtils.color(widget.chat.nombreCompleto),
                   child: Text(
-                    AvatarUtils.initials(widget.chat.nombreApe),
+                    AvatarUtils.initials(widget.chat.nombreCompleto),
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -139,7 +139,7 @@ class _ChatTileState extends State<ChatTile> {
                         children: [
                           Expanded(
                             child: Text(
-                              widget.chat.nombreApe,
+                              widget.chat.nombreCompleto,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,

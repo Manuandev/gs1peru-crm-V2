@@ -21,10 +21,17 @@ class ChatListLoading extends ChatListState {
 
 class ChatListSuccess extends ChatListState {
   final List<Chat> chats;
-  const ChatListSuccess({required this.chats});
+  final ChatListFiltro filtro;
+  final Map<ChatListFiltro, int> conteos;
+
+  const ChatListSuccess({
+    required this.chats,
+    this.filtro = ChatListFiltro.todos,
+    this.conteos = const {},
+  });
 
   @override
-  List<Object?> get props => [chats];
+  List<Object?> get props => [chats, filtro, conteos];
 }
 
 class ChatListFailure extends ChatListState {

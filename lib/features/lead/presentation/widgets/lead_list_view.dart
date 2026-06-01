@@ -15,7 +15,7 @@ class LeadListView extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return BasePage(
-      onLogout: () => context.logoutWithConfirmation(context),
+      onLogout: () => context.goToHome(),
       title: 'Leads',
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [

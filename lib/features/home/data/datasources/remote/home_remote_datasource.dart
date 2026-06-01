@@ -36,7 +36,7 @@ class HomeRemoteDatasource {
 
   Future<NotificationModel> getNotifications() async {
     final String body =
-        '${_session.codUser}¦${_session.isModerador ? 1 : 0}¯LN';
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LN';
 
     final result = await _api.postSafe(ApiConstants.urlHomeLst, body);
 

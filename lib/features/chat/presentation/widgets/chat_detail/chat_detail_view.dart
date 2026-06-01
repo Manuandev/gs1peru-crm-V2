@@ -261,7 +261,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     return BlocBuilder<InfoLeadCubit, InfoLeadState>(
                       builder: (context, infoState) {
                         final nombre = infoState is InfoLeadSuccess
-                            ? infoState.infoLead.cliente
+                            ? infoState.infoLead.nombreCompleto
                             : '';
 
                         return MessageList(

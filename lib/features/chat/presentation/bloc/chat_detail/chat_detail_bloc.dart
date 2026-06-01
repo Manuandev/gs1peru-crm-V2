@@ -9,20 +9,26 @@ import 'package:app_crm/features/chat/index_chat.dart';
 class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   final GetChatMessagesUseCase _getChatMessages;
   final SendChatMessageUseCase _sendChatMessage;
-  StreamSubscription<WebSocketMessage>? _messageSubscription;
-  int? _currentLeadId;
-
   final SendFileMessageUseCase _sendFileMessage;
+  final SendTemplateMessageUseCase _sendTemplateMessage;
+
+  StreamSubscription<WebSocketMessage>? _messageSubscription;
+
+  final _session = SessionService();
+
+  int? _currentLeadId;
 
   ChatDetailBloc(
     this._getChatMessages,
     this._sendChatMessage,
     this._sendFileMessage,
+    this._sendTemplateMessage,
   ) : super(const ChatDetailInitial()) {
     on<ChatDetailStarted>(_onStarted);
     on<ChatDetailRefreshed>(_onRefreshed);
     on<ChatDetailMoreMessagesLoaded>(_onMoreMessagesLoaded);
     on<ChatDetailTextMessageSent>(_onTextMessageSent);
+    on<ChatDetailTemplateMessageSent>(_onTemplateMessageSent);
     on<ChatDetailAudioMessageSent>(_onAudioMessageSent);
     on<ChatDetailFileMessageSent>(_onFileMessageSent);
     on<ChatDetailBatchFileMessageSent>(_onBatchFileMessageSent);
@@ -174,6 +180,69 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         event.chatCab,
       );
     }
+  }
+
+  void _onTemplateMessageSent(
+    ChatDetailTemplateMessageSent event,
+    Emitter<ChatDetailState> emit,
+  ) {
+    if (state is! ChatDetailSuccess) return;
+
+    final mensajeFormateado = event.template.detalle
+        .replaceAll('{{nombre_cliente}}', event.nombreCliente)
+        .replaceAll('{{apellido_cliente}}', event.apellidoCliente)
+        .replaceAll('{{nombre_asesor}}', _session.userApe);
+
+    final tempId = const Uuid().v4();
+    final currentMessages = (state as ChatDetailSuccess).messages;
+
+    final tieneArchivo = event.template.rutaArchivo.isNotEmpty;
+    final tipo = tieneArchivo
+        ? _tipoDeExtension(event.template.extensionArchivo)
+        : 'text';
+
+    final newMessage = ChatMessage(
+      idMensaje: tempId,
+      fecha: DateTime.now().toIso8601String(),
+      isEnviado: true,
+      mensaje: tieneArchivo ? event.template.rutaArchivo : mensajeFormateado,
+      tipo: tipo,
+      estado: 'wait',
+      idChatDetArc: '',
+      nomArchivo: event.template.nombreArchivo,
+      extArchivo: event.template.extensionArchivo,
+      idChatCab: event.chatCab,
+      idChatDet: '',
+    );
+
+    emit(
+      (state as ChatDetailSuccess).copyWith(
+        messages: [...currentMessages, newMessage],
+      ),
+    );
+
+    if (_currentLeadId != null) {
+      _sendTemplateMessage(
+        template: event.template,
+        mensajeFormateado: mensajeFormateado,
+        idLead: _currentLeadId.toString(),
+        numero: event.numero,
+        chatCab: event.chatCab,
+        nombreCliente: event.nombreCliente,
+        apellidoCliente: event.apellidoCliente,
+        isExpirado: event.isExpirado,
+        isCerrado: event.isCerrado,
+      );
+    }
+  }
+
+  /// Infiere el tipo de mensaje según la extensión del archivo de la plantilla
+  static String _tipoDeExtension(String ext) {
+    final e = ext.toLowerCase().replaceAll('.', '');
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(e)) return 'image';
+    if (['mp4', 'mov', 'avi'].contains(e)) return 'video';
+    if (['mp3', 'm4a', 'ogg', 'wav'].contains(e)) return 'audio';
+    return 'document';
   }
 
   Future<void> _onAudioMessageSent(

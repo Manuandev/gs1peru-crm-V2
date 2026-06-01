@@ -2,22 +2,36 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 extension NavigationExtensions on BuildContext {
-  // ============================================================
-  // NAVEGACIÓN BÁSICA
-  // ============================================================
+  // ── Primitivos (no usar directamente desde features) ───────
 
-  Future<T?> navigateTo<T>(String routeName, {Object? arguments}) {
+  Future<T?> _push<T>(String routeName, {Object? arguments}) {
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return Future.value(null);
     return state.pushNamed<T>(routeName, arguments: arguments);
   }
+
+  // Future<T?> _replaceWith<T>(String routeName, {Object? arguments}) =>
+  //     Navigator.of(
+  //       this,
+  //     ).pushReplacementNamed<T, dynamic>(routeName, arguments: arguments);
+
+  Future<T?> clearAndPush<T>(String routeName, {Object? arguments}) {
+    final state = NavigationService.navigatorKey.currentState;
+    if (state == null) return Future.value(null);
+    return state.pushNamedAndRemoveUntil<T>(
+      routeName,
+      (_) => false,
+      arguments: arguments,
+    );
+  }
+
+  // ── Generales ──────────────────────────────────────────────
 
   void goBack<T>([T? result]) {
     if (Navigator.of(this).canPop()) Navigator.of(this).pop(result);
@@ -25,86 +39,51 @@ extension NavigationExtensions on BuildContext {
 
   bool canGoBack() => Navigator.of(this).canPop();
 
-  Future<T?> replaceWith<T>(String routeName, {Object? arguments}) {
-    return Navigator.of(
-      this,
-    ).pushReplacementNamed<T, dynamic>(routeName, arguments: arguments);
-  }
+  // ── Rutas críticas ─────────────────────────────────────────
 
-  Future<T?> clearStackAndNavigateTo<T>(String routeName, {Object? arguments}) {
-    final state = NavigationService.navigatorKey.currentState;
-    if (state == null) return Future.value(null);
-    return state.pushNamedAndRemoveUntil<T>(
-      routeName,
-      (route) => false,
-      arguments: arguments,
-    );
-  }
+  Future<void> goToLogin() => clearAndPush(AppRoutes.login);
+  Future<void> goToHome() => clearAndPush(AppRoutes.home);
 
-  // ============================================================
-  // RUTAS CRÍTICAS
-  // ============================================================
+  // ── Módulos principales ────────────────────────────────────
 
-  Future<void> goToLogin() => clearStackAndNavigateTo(AppRoutes.login);
-  Future<void> goToHome() => clearStackAndNavigateTo(AppRoutes.home);
+  Future<void> goToLeads() => clearAndPush(AppRoutes.leads);
+  Future<void> goToChats() => clearAndPush(AppRoutes.chats);
+  Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
+  Future<void> goToSettings() => clearAndPush(AppRoutes.settings);
+  Future<void> goToChangePassword() => clearAndPush(AppRoutes.changePassword);
 
-  // ============================================================
-  // MÓDULOS PRINCIPALES
-  // ============================================================
+  // ── Home ───────────────────────────────────────────────────
 
-  Future<void> goToLeads() => clearStackAndNavigateTo(AppRoutes.leads);
-  Future<void> goToChats() => clearStackAndNavigateTo(AppRoutes.chats);
-  Future<void> goToCobranza() => clearStackAndNavigateTo(AppRoutes.cobranza);
-  Future<void> goToSettings() => clearStackAndNavigateTo(AppRoutes.settings);
-  Future<void> goToChangePassword() =>
-      clearStackAndNavigateTo(AppRoutes.changePassword);
+  Future<void> goToNotifications() => _push(AppRoutes.notifications);
 
-  // ============================================================
-  // MÓDULOS SECUNDARIOS - HOME
-  // ============================================================
+  // ── Chats ──────────────────────────────────────────────────
 
-  Future<void> goToNotification() {
-    return navigateTo(AppRoutes.notifications);
-  }
-
-  // ============================================================
-  // MÓDULOS SECUNDARIOS - LEADS
-  // ============================================================
-
-  // ============================================================
-  // MÓDULOS SECUNDARIOS - CHATS
-  // ============================================================
-
-  Future<void> goToDetalleChat({required int idLead}) {
-    return navigateTo(AppRoutes.detalleChat, arguments: {'idLead': idLead});
-  }
+  Future<void> goToDetalleChat({required int idLead}) =>
+      _push(AppRoutes.detalleChat, arguments: {'idLead': idLead});
 
   Future<void> goToEditarLead({
     required InfoLead lead,
     required InfoLeadCubit cubit,
-  }) {
-    return navigateTo(
-      AppRoutes.detalleEditarLead,
-      arguments: {'lead': lead, 'cubit': cubit},
-    );
-  }
+  }) => _push(
+    AppRoutes.detalleEditarLead,
+    arguments: {'lead': lead, 'cubit': cubit},
+  );
 
+  /// Retorna el [Template] seleccionado, o null si el usuario canceló.
+  Future<Template?> goToTemplates({required InfoLead lead}) =>
+      _push<Template>(AppRoutes.templates, arguments: {'lead': lead});
+
+  /// Navega a un chat desde home: limpia el stack, pone ChatList como base
+  /// y apila ChatDetail encima para que el back funcione correctamente.
   Future<void> goToDetalleChatDesdeHome({required int idLead}) {
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return Future.value();
-
-    // 1. Limpia todo y pone ChatList como base
-    state.pushNamedAndRemoveUntil(AppRoutes.chats, (route) => false);
-
-    // 2. Inmediatamente apila ChatDetail encima
+    state.pushNamedAndRemoveUntil(AppRoutes.chats, (_) => false);
     state.pushNamed(AppRoutes.detalleChat, arguments: {'idLead': idLead});
-
     return Future.value();
   }
 
-  // ============================================================
-  // DIÁLOGOS
-  // ============================================================
+  // ── Diálogos ───────────────────────────────────────────────
 
   Future<bool> showConfirmDialog({
     required String title,
@@ -146,7 +125,6 @@ extension NavigationExtensions on BuildContext {
                     child: SvgPicture.asset(AppImages.logoGs1Peru, height: 36),
                   ),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
                   child: Column(
@@ -170,14 +148,12 @@ extension NavigationExtensions on BuildContext {
                     ],
                   ),
                 ),
-
                 Divider(
                   color: colorScheme.outlineVariant,
                   height: 24,
                   indent: 24,
                   endIndent: 24,
                 ),
-
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Row(
@@ -226,25 +202,21 @@ extension NavigationExtensions on BuildContext {
   }
 }
 
-// ============================================================
-// NAVEGACIÓN SIN CONTEXT
-// ============================================================
+// ── NavigationService (sin context) ───────────────────────────
 
 class NavigationService {
+  NavigationService._();
+
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
 
   static BuildContext? get currentContext => navigatorKey.currentContext;
 
-  static Future<T?> navigateTo<T>(String routeName, {Object? arguments}) {
-    return navigatorKey.currentState!.pushNamed<T>(
-      routeName,
-      arguments: arguments,
-    );
-  }
+  static Future<T?> navigateTo<T>(String routeName, {Object? arguments}) =>
+      navigatorKey.currentState!.pushNamed<T>(routeName, arguments: arguments);
 
   static void goBack<T>([T? result]) {
-    if (navigatorKey.currentState!.canPop()) {
+    if (navigatorKey.currentState?.canPop() ?? false) {
       navigatorKey.currentState!.pop(result);
     }
   }

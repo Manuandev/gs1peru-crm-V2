@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
+import 'package:flutter/material.dart';
 
 /// Implementación del servicio SignalR.
 ///
@@ -220,7 +221,7 @@ class SignalRService implements ISignalRService {
     }
 
     try {
-      // debugPrint('MENSAJE ENVIADO: $message');
+      debugPrint('MENSAJE ENVIADO: $message');
       _hubConnection!.invoke('OnMessage', args: <Object>[message]);
       return true;
     } catch (_) {
@@ -274,7 +275,7 @@ class SignalRService implements ISignalRService {
   // ─── Manejo de mensajes ───────────────────────────────────────────────────
 
   void _handleIncomingMessage(dynamic rawMessage) {
-    // debugPrint('MENSAJE RECIBIDO: $rawMessage');
+    debugPrint('MENSAJE RECIBIDO: $rawMessage');
 
     // Si llegó un mensaje, la conexión está viva
     if (!isConnected && _isHubConnected()) {

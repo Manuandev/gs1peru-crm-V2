@@ -25,8 +25,8 @@ class _ChatListViewState extends State<ChatListView> {
   Widget build(BuildContext context) {
     return BasePage(
       bodyPadding: EdgeInsets.zero,
-      onLogout: () => context.goToHome(),
       title: 'Mis conversaciones',
+      onPop: () => context.goToHome(),
       drawerSide: DrawerSide.left,
       appBarPopupItems: const [
         AppBarPopupItem(

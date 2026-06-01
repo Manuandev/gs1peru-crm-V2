@@ -2,7 +2,6 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 abstract class NotificationsState extends Equatable {
@@ -22,9 +21,8 @@ class NotificationsLoading extends NotificationsState {
 
 class NotificationsLoaded extends NotificationsState {
   final Notification notification;
-  final UserModel usuario;
 
-  const NotificationsLoaded({required this.notification, required this.usuario});
+  const NotificationsLoaded({required this.notification});
   
   int get totNotificaciones => notification.totNotificaciones;
   int get totLeadsReasignados => notification.totLeadsReasignados;
@@ -35,7 +33,7 @@ class NotificationsLoaded extends NotificationsState {
   List<Recordatorio> get recordatorios => notification.recordatorios;
   
   @override
-  List<Object?> get props => [notification, usuario];
+  List<Object?> get props => [notification];
 }
 
 class NotificationsError extends NotificationsState {

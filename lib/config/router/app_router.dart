@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
@@ -11,125 +10,149 @@ import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/settings/index_settings.dart';
 
-/// Sistema de routing principal
-/// - Organizado por módulos
-/// - Type-safe con AppRoutes
-/// - Control de stack para evitar acumulación de memoria
+// ── Tipos de transición ────────────────────────────────────────
+
+enum TransitionType { material, fade, slideRight }
+
+// ── Definición tipada de ruta ──────────────────────────────────
+
+/// Encapsula el builder y la transición de una ruta.
+/// El tipo genérico [T] es el valor de retorno que [Navigator.pop] puede devolver.
+class RouteDefinition<T> {
+  const RouteDefinition({
+    required this.builder,
+    this.transition = TransitionType.material,
+  });
+
+  final WidgetBuilder builder;
+  final TransitionType transition;
+
+  Route<T> build(RouteSettings settings) {
+    if (transition == TransitionType.material) {
+      return MaterialPageRoute<T>(builder: builder, settings: settings);
+    }
+    return PageRouteBuilder<T>(
+      settings: settings,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, _, __) => builder(context),
+      transitionsBuilder: (context, animation, _, child) =>
+          AppRouter._applyTransition(transition, animation, child),
+    );
+  }
+}
+
+// ── Router principal ───────────────────────────────────────────
+
 class AppRouter {
   AppRouter._();
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
-    final String? routeName = settings.name;
-    if (routeName == null) return _buildErrorRoute();
+    final routeName = settings.name;
+    if (routeName == null) return _errorRoute();
 
-    final WidgetBuilder? builder = _findRouteBuilder(routeName);
-    if (builder == null) return _buildErrorRoute();
+    final definition = _registry[routeName];
 
-    return _buildRoute(
-      builder: builder,
-      settings: settings,
-      routeName: routeName,
-    );
-  }
-
-  static WidgetBuilder? _findRouteBuilder(String routeName) {
-    if (_authRoutes.containsKey(routeName)) return _authRoutes[routeName];
-    if (_mainRoutes.containsKey(routeName)) return _mainRoutes[routeName];
-    if (routeName.startsWith('/leads/')) return _leadsRoutes[routeName];
-    if (routeName.startsWith('/chats/')) return _chatsRoutes[routeName];
-    if (routeName.startsWith('/home/')) return _homeRoutes[routeName];
-    return null;
-  }
-
-  // ── AUTH ──────────────────────────────────────────────────────
-  static final Map<String, WidgetBuilder> _authRoutes = {
-    AppRoutes.splash: (_) => const SplashPage(),
-    AppRoutes.login: (_) => const LoginPage(),
-    AppRoutes.changePassword: (_) =>
-        const Scaffold(body: Center(child: Text('Cambiar Contraseña'))),
-  };
-
-  // ── PRINCIPALES ───────────────────────────────────────────────
-  static final Map<String, WidgetBuilder> _mainRoutes = {
-    AppRoutes.home: (_) => const HomePage(),
-    AppRoutes.leads: (_) => const LeadListPage(),
-    AppRoutes.chats: (_) => const ChatListPage(),
-    AppRoutes.settings: (_) => const SettingsPage(),
-  };
-
-  // ── HOME ─────────────────────────────────────────────────────
-  static final Map<String, WidgetBuilder> _homeRoutes = {
-    AppRoutes.notifications: (_) => const NotificationsPage(),
-  };
-
-  // ── LEADS ─────────────────────────────────────────────────────
-  static final Map<String, WidgetBuilder> _leadsRoutes = {};
-
-  // ── CHATS ─────────────────────────────────────────────────────
-  static final Map<String, WidgetBuilder> _chatsRoutes = {
-    AppRoutes.detalleChat: (context) {
-      final args = _getArgs<Map<String, dynamic>>(context);
-      final idLead = int.parse(args['idLead'].toString());
-
-      return ChatDetailPage(idLead: idLead);
-    },
-
-    AppRoutes.detalleEditarLead: (context) {
-      final args = _getArgs<Map<String, dynamic>>(context);
-      final lead = args['lead'] as InfoLead;
-      final cubit = args['cubit'] as InfoLeadCubit;
-
-      return BlocProvider.value(
-        value: cubit,
-        child: EditLeadPage(lead: lead),
+    if (definition == null) {
+      assert(
+        false,
+        '[AppRouter] Ruta no registrada: "$routeName". Agrégala en AppRouter._registry.',
       );
-    },
-  };
-
-  // ── HELPERS ───────────────────────────────────────────────────
-  static T _getArgs<T>(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments;
-    if (args == null) {
-      throw Exception(
-        'Argumentos faltantes en ${ModalRoute.of(context)?.settings.name}',
-      );
+      return _errorRoute();
     }
+
+    return definition.build(settings);
+  }
+
+  // ── Registro de rutas ──────────────────────────────────────
+  //
+  // Cada entrada es un RouteDefinition<T> donde T es el tipo de retorno.
+  // Rutas que no retornan valor usan void (o dynamic por defecto).
+  // Rutas que retornan valor declaran su tipo explícito.
+
+  static final Map<String, RouteDefinition<dynamic>> _registry = {
+    // AUTH
+    AppRoutes.splash: RouteDefinition(
+      builder: (_) => const SplashPage(),
+      transition: TransitionType.fade,
+    ),
+    AppRoutes.login: RouteDefinition(
+      builder: (_) => const LoginPage(),
+      transition: TransitionType.fade,
+    ),
+    AppRoutes.changePassword: RouteDefinition(
+      builder: (_) =>
+          const Scaffold(body: Center(child: Text('Cambiar Contraseña'))),
+    ),
+
+    // PRINCIPALES
+    AppRoutes.home: RouteDefinition(builder: (_) => const HomePage()),
+    AppRoutes.leads: RouteDefinition(builder: (_) => const LeadListPage()),
+    AppRoutes.chats: RouteDefinition(builder: (_) => const ChatListPage()),
+    AppRoutes.settings: RouteDefinition(builder: (_) => const SettingsPage()),
+
+    // PENDIENTES — en construcción
+    AppRoutes.prospectos: RouteDefinition(
+      builder: (_) => const UnderConstructionPage(routeName: 'Prospectos'),
+      transition: TransitionType.fade,
+    ),
+
+    AppRoutes.propuestas: RouteDefinition(
+      builder: (_) => const UnderConstructionPage(routeName: 'Propuestas'),
+      transition: TransitionType.fade,
+    ),
+
+    AppRoutes.cobranza: RouteDefinition(
+      builder: (_) => const UnderConstructionPage(routeName: 'Cobranza'),
+      transition: TransitionType.fade,
+    ),
+
+    // HOME
+    AppRoutes.notifications: RouteDefinition(
+      builder: (_) => const NotificationsPage(),
+      transition: TransitionType.slideRight,
+    ),
+
+    // CHATS
+    AppRoutes.detalleChat: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return ChatDetailPage(idLead: int.parse(args['idLead'].toString()));
+      },
+    ),
+    AppRoutes.detalleEditarLead: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return BlocProvider.value(
+          value: args['cubit'] as InfoLeadCubit,
+          child: EditLeadPage(lead: args['lead'] as InfoLead),
+        );
+      },
+    ),
+    AppRoutes.templates: RouteDefinition<Template>(
+      // T = Template: Navigator.pop<Template>(context, template) funciona
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SelectTemplatePage(lead: args['lead'] as InfoLead);
+      },
+    ),
+  };
+
+  // ── Helpers ────────────────────────────────────────────────
+
+  static T _requireArgs<T>(BuildContext context) {
+    final route = ModalRoute.of(context);
+    final args = route?.settings.arguments;
+    assert(
+      args != null,
+      '[AppRouter] La ruta "${route?.settings.name}" requiere argumentos de tipo $T.',
+    );
     return args as T;
   }
 
-  static Route<dynamic> _buildRoute({
-    required WidgetBuilder builder,
-    required RouteSettings settings,
-    required String routeName,
-  }) {
-    final transitionType = _getTransitionType(routeName);
-
-    if (transitionType == TransitionType.material) {
-      return MaterialPageRoute(builder: builder, settings: settings);
-    }
-
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => builder(context),
-      settings: settings,
-      transitionDuration: const Duration(milliseconds: 300),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return _buildTransition(transitionType, animation, child);
-      },
-    );
-  }
-
-  static TransitionType _getTransitionType(String routeName) {
-    if (routeName == AppRoutes.splash || routeName == AppRoutes.login) {
-      return TransitionType.fade;
-    }
-    // Detalle de chat: entra desde la derecha
-    if (routeName.contains('/detalle') || routeName.contains('/informacion')) {
-      return TransitionType.slideRight;
-    }
-    return TransitionType.material;
-  }
-
-  static Widget _buildTransition(
+  static Widget _applyTransition(
     TransitionType type,
     Animation<double> animation,
     Widget child,
@@ -148,19 +171,19 @@ class AppRouter {
               ),
           child: child,
         );
-      default:
+      case TransitionType.material:
         return child;
     }
   }
 
-  static Route<dynamic> _buildErrorRoute() {
+  static Route<dynamic> _errorRoute() {
     return MaterialPageRoute(
       builder: (_) => PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, _) {
           if (!didPop) {
             NavigationService.navigatorKey.currentState
-                ?.pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+                ?.pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
           }
         },
         child: Scaffold(
@@ -182,5 +205,3 @@ class AppRouter {
     );
   }
 }
-
-enum TransitionType { material, fade, slideRight }

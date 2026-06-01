@@ -57,7 +57,7 @@ class HomeView extends StatelessWidget {
           children: [
             IconButton(
               icon: Icon(AppIcons.notification, color: AppColors.textOnDark),
-              onPressed: () => context.goToNotification(),
+              onPressed: () => context.goToNotifications(),
             ),
             Positioned(
               top: 6,

@@ -82,6 +82,7 @@ export 'presentation/bloc/catalog/catalog_event.dart';
 export 'presentation/bloc/catalog/catalog_state.dart';
 
 export 'presentation/pages/base_page.dart';
+export 'presentation/pages/under_construction_page.dart';
 
 export 'presentation/widgets/buttons/custom_google_button.dart';
 export 'presentation/widgets/buttons/custom_outlined_button.dart';

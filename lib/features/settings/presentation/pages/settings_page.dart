@@ -26,7 +26,7 @@ class _SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      onLogout: () => context.goToHome(),
+      onPop: () => context.goToHome(),
       title: 'Configuración',
       drawerSide: DrawerSide.left,
       body: ListView(

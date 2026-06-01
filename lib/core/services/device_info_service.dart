@@ -471,17 +471,32 @@ class DeviceInfoService {
     // ✅ Usa el cache estático — no bloquea el login
     final info = await DeviceInfoService.getInfoConTimeout();
 
-    return 'PER'
-        '¦$username'
-        '¦$password'
-        '¦${info['ip_local']}'
-        '¦${info['coordenadas']}'
-        '¦${info['so']}'
-        '¦${info['modelo']}'
-        '¦${info['so_version']}'
-        '¦${info['pais_codigo']}'
-        '¦${info['region']}'
-        '¦${info['ciudad']}'
-        '¦${AppConstants.version}';
+    return [
+      'PER',
+      username,
+      password,
+      info['ip_local'],
+      info['coordenadas'],
+      info['so'],
+      info['modelo'],
+      info['so_version'],
+      info['pais_codigo'],
+      info['region'],
+      info['ciudad'],
+      AppConstants.version,
+    ].join(AppConstants.sepCampos);
+
+    // return 'PER'
+    //     '¦$username'
+    //     '¦$password'
+    //     '¦${info['ip_local']}'
+    //     '¦${info['coordenadas']}'
+    //     '¦${info['so']}'
+    //     '¦${info['modelo']}'
+    //     '¦${info['so_version']}'
+    //     '¦${info['pais_codigo']}'
+    //     '¦${info['region']}'
+    //     '¦${info['ciudad']}'
+    //     '¦${AppConstants.version}';
   }
 }

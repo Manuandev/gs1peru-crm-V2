@@ -5,12 +5,14 @@ export 'data/datasources/remote/chat_remote_datasource.dart';
 export 'data/models/chat_model.dart';
 export 'data/models/chat_message_model.dart';
 export 'data/models/info_lead_model.dart';
+export 'data/models/template_model.dart';
 
 export 'data/repositories/chat_repository_impl.dart';
 
 export 'domain/entities/chat.dart';
 export 'domain/entities/chat_message.dart';
 export 'domain/entities/info_lead.dart';
+export 'domain/entities/template.dart';
 
 export 'domain/enums/lead_estado.dart';
 
@@ -21,6 +23,8 @@ export 'domain/usecases/get_chat_messages_usecase.dart';
 export 'domain/usecases/get_info_lead_usecase.dart';
 export 'domain/usecases/send_chat_message_usecase.dart';
 export 'domain/usecases/send_file_message_usecase.dart';
+export 'domain/usecases/get_templates_usecase.dart';
+export 'domain/usecases/send_template_message_usecase.dart';
 
 export 'domain/usecases/update_lead_estado_usecase.dart';
 export 'domain/usecases/update_lead_info_usecase.dart';
@@ -40,10 +44,15 @@ export 'presentation/bloc/chat_detail/chat_detail_state.dart';
 export 'presentation/bloc/info_lead/info_lead_cubit.dart';
 export 'presentation/bloc/info_lead/info_lead_state.dart';
 
+export 'presentation/bloc/template/select_template_bloc.dart';
+export 'presentation/bloc/template/select_template_event.dart';
+export 'presentation/bloc/template/select_template_state.dart';
+
 export 'presentation/pages/chat_list_page.dart';
 export 'presentation/pages/chat_detail_page.dart';
 export 'presentation/pages/edit_lead_page.dart';
 export 'presentation/pages/media_viewer_page.dart';
+export 'presentation/pages/select_template_page.dart';
 
 export 'presentation/widgets/chat_list/chat_list_landscape.dart';
 export 'presentation/widgets/chat_list/chat_list_portrait.dart';
@@ -76,3 +85,6 @@ export 'presentation/widgets/chat_detail/mensaje/message_url_helper.dart';
 
 export 'presentation/widgets/edit_lead/edit_lead_view.dart';
 export 'presentation/widgets/edit_lead/edit_lead_portrait.dart';
+
+export 'presentation/widgets/chat_detail/template/select_template_view.dart';
+export 'presentation/widgets/chat_detail/template/select_template_portrait.dart';

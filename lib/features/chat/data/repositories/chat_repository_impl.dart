@@ -8,7 +8,6 @@ class ChatRepositoryImpl implements ChatRepository {
 
   const ChatRepositoryImpl(this._datasource);
 
-
   @override
   Future<InfoLead> getInfoLead(int idLead) => _datasource.getInfoLead(idLead);
 
@@ -22,8 +21,12 @@ class ChatRepositoryImpl implements ChatRepository {
   }) => _datasource.getChatMessages(idLead, idUltimoMensaje: idUltimoMensaje);
 
   @override
-  bool sendWhatsAppMessage(String mensaje, String idLead, String numero, String chatCab) =>
-      _datasource.sendWhatsAppMessage(mensaje, idLead, numero, chatCab);
+  bool sendWhatsAppMessage(
+    String mensaje,
+    String idLead,
+    String numero,
+    String chatCab,
+  ) => _datasource.sendWhatsAppMessage(mensaje, idLead, numero, chatCab);
 
   @override
   Future<bool> uploadAndSendFileMessage({
@@ -45,8 +48,36 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<CrudResult> updateEstado(int idLead, String idEstado) => _datasource.updateEstado(idLead, idEstado);
+  Future<CrudResult> updateEstado(int idLead, String idEstado) =>
+      _datasource.updateEstado(idLead, idEstado);
 
   @override
-  Future<CrudResult> updateLeadCompleto(InfoLead lead) => _datasource.updateLeadCompleto(lead);
+  Future<CrudResult> updateLeadCompleto(InfoLead lead) =>
+      _datasource.updateLeadCompleto(lead);
+
+  @override
+  Future<List<Template>> getTemplates() => _datasource.getTemplates();
+
+  @override
+  bool sendWhatsAppTemplateMessage({
+    required Template template,
+    required String mensajeFormateado,
+    required String idLead,
+    required String numero,
+    required String chatCab,
+    required String nombreCliente,
+    required String apellidoCliente,
+    required bool isExpirado,
+    required bool isCerrado,
+  }) => _datasource.sendWhatsAppTemplateMessage(
+    template: template,
+    mensajeFormateado: mensajeFormateado,
+    idLead: idLead,
+    numero: numero,
+    chatCab: chatCab,
+    nombreCliente: nombreCliente,
+    apellidoCliente: apellidoCliente,
+    isExpirado: isExpirado,
+    isCerrado: isCerrado,
+  );
 }

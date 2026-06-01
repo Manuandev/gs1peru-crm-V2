@@ -7,7 +7,6 @@ import 'package:app_crm/features/home/index_home.dart';
 
 class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   final GetNotificationsUseCase _getData;
-  final _session = SessionService();
 
   NotificationsBloc({required GetNotificationsUseCase getData})
     : _getData = getData,
@@ -39,7 +38,6 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
       emit(
         NotificationsLoaded(
           notification: notification,
-          usuario: _session.user!,
         ),
       );
     } on AppException catch (e) {

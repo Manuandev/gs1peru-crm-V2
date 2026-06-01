@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 enum _InputMode { text, audio, attachment }
@@ -18,6 +19,7 @@ class ChatInputBar extends StatefulWidget {
 
 class _ChatInputBarState extends State<ChatInputBar> {
   final TextEditingController _textController = TextEditingController();
+
   _InputMode _mode = _InputMode.text;
   bool _hasText = false;
 
@@ -100,6 +102,29 @@ class _ChatInputBarState extends State<ChatInputBar> {
     );
   }
 
+  Future<void> _onTemplateSelected() async {
+  final infoState = context.read<InfoLeadCubit>().state;
+  if (infoState is! InfoLeadSuccess) return;
+
+  final template = await context.goToTemplates(lead: infoState.infoLead);
+  if (template == null || !context.mounted) return;
+
+    final info = infoState.infoLead;
+
+    // ignore: use_build_context_synchronously
+    context.read<ChatDetailBloc>().add(
+      ChatDetailTemplateMessageSent(
+        template: template,
+        numero: info.telefono.replaceAll(RegExp(r'[^0-9]'), ''),
+        chatCab: _getChatCab(),
+        nombreCliente: info.nombre,
+        apellidoCliente: info.apellido,
+        isExpirado: info.isExpirado,
+        isCerrado: info.isCerrado,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -164,7 +189,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                           Icons.library_books_rounded,
                           color: colorScheme.primary,
                         ),
-                        onPressed: () {},
+                        onPressed: _onTemplateSelected,
                       ),
                       Expanded(
                         child: Text(
@@ -202,6 +227,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
                         color: colorScheme.onSurfaceVariant,
                       ),
                       onPressed: _toggleAttachment,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.library_books_rounded,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: _onTemplateSelected,
                     ),
 
                     // Campo de texto

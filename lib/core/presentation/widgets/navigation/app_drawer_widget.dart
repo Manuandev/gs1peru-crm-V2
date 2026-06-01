@@ -332,7 +332,7 @@ class _DrawerItem extends StatelessWidget {
       return;
     }
     if (isActive) return;
-    if (item.route != null) context.clearStackAndNavigateTo(item.route!);
+    if (item.route != null) context.clearAndPush(item.route!);
   }
 }
 

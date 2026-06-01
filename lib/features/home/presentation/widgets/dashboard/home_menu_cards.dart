@@ -69,7 +69,7 @@ class _FlexCards extends StatelessWidget {
                     badge: rows[r][c].badge,
                     onTap: () {
                       final route = rows[r][c].route;
-                      if (route != null) context.clearStackAndNavigateTo(route);
+                      if (route != null) context.clearAndPush(route);
                     },
                   ),
                 ),

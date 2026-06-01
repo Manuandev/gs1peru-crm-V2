@@ -29,7 +29,6 @@ class ChatListFilterChips extends StatelessWidget {
     ];
 
     return Container(
-      color: colorScheme.surface,
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,

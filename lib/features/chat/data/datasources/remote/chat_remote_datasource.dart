@@ -77,6 +77,44 @@ class ChatRemoteDatasource {
     return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");
   }
 
+  bool sendWhatsAppTemplateMessage({
+    required Template template,
+    required String mensajeFormateado,
+    required String idLead,
+    required String numero,
+    required String chatCab,
+    required String nombreCliente,
+    required String apellidoCliente,
+    required bool isExpirado,
+    required bool isCerrado, 
+  }) {
+    final user = _session.user;
+    if (user == null) return false;
+
+    final vars = [
+      idLead, // VAR01
+      template.nombre, // VAR02
+      user.codUser, // VAR03
+      mensajeFormateado, // VAR04
+      'template', // VAR05
+      numero, // VAR06
+      isExpirado || isCerrado ? '1' : '0', // VAR07
+      '', // VAR08
+      chatCab, // VAR09
+      '', // VAR10
+      nombreCliente, // VAR11
+      apellidoCliente, // VAR12
+      _session.userApe, // VAR13
+      template.detalle, // VAR14
+      '${template.rutaArchivo}${template.nombreArchivo}${template.extensionArchivo}', // VAR15
+      template.isBoton ? '1' : '0', // VAR16
+    ].join(camp);
+
+    final String body = '${user.token}$sep$vars${sep}CA';
+
+    return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");
+  }
+
   Future<bool> uploadAndSendFileMessage({
     required String filePath,
     required String fileName,
@@ -204,6 +242,19 @@ class ChatRemoteDatasource {
       ApiEmpty() => const CrudEmpty(),
       ApiNoInternet() => const CrudNoInternet(),
       ApiError(:final message) => CrudError(message),
+    };
+  }
+
+  Future<List<TemplateModel>> getTemplates() async {
+    final String body = '${sep}LP';
+
+    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => TemplateModel.parseList(data),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
     };
   }
 }

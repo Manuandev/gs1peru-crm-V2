@@ -62,6 +62,37 @@ class ChatDetailTextMessageSent extends ChatDetailEvent {
   List<Object?> get props => [mensaje, numero, chatCab];
 }
 
+class ChatDetailTemplateMessageSent extends ChatDetailEvent {
+  final Template template;
+  final String numero;
+  final String chatCab;
+  final String nombreCliente;
+  final String apellidoCliente;
+  final bool isExpirado;
+  final bool isCerrado;
+
+  const ChatDetailTemplateMessageSent({
+    required this.template,
+    required this.numero,
+    required this.chatCab,
+    required this.nombreCliente,
+    required this.apellidoCliente,
+    required this.isExpirado,
+    required this.isCerrado,
+  });
+
+  @override
+  List<Object?> get props => [
+        template,
+        numero,
+        chatCab,
+        nombreCliente,
+        apellidoCliente,
+        isExpirado,
+        isCerrado,
+      ];
+}
+
 class ChatDetailAudioMessageSent extends ChatDetailEvent {
   final String audioPath;
   final String numero;

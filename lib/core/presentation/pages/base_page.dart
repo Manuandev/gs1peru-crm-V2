@@ -101,6 +101,8 @@ class BasePage extends StatelessWidget {
   /// Contenido principal de la pantalla
   final Widget body;
 
+  final VoidCallback? onPop;
+
   /// Widget fijo al fondo (footer). null para no mostrar.
   final Widget? footer;
 
@@ -139,6 +141,7 @@ class BasePage extends StatelessWidget {
     this.showDrawerLogout = true,
     // Body
     required this.body,
+    this.onPop,
     this.footer,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
@@ -189,33 +192,39 @@ class BasePage extends StatelessWidget {
 
       // ── BODY + FOOTER ──────────────────────────────────────
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final orientation = MediaQuery.of(context).orientation;
-            final isLandscape = orientation == Orientation.landscape;
-
-            return Column(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding:
-                        bodyPadding ??
-                        const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
-                        ),
-                    child: body,
-                  ),
-                ),
-
-                // Footer automático pero RESPONSIVE
-                if (!isLandscape)
-                  footer ?? const _FooterPages()
-                else
-                  _FooterCompact(),
-              ],
-            );
+        child: PopScope(
+          canPop: onPop == null,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) onPop?.call();
           },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final orientation = MediaQuery.of(context).orientation;
+              final isLandscape = orientation == Orientation.landscape;
+
+              return Column(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding:
+                          bodyPadding ??
+                          const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                      child: body,
+                    ),
+                  ),
+
+                  // Footer automático pero RESPONSIVE
+                  if (!isLandscape)
+                    footer ?? const _FooterPages()
+                  else
+                    _FooterCompact(),
+                ],
+              );
+            },
+          ),
         ),
       ),
 

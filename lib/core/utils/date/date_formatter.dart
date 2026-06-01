@@ -142,6 +142,35 @@ class DateFormatter {
     return '$fechaCorta - $hora';
   }
 
+  static String formatConDia(String dateString, {String locale = 'es'}) {
+    if (dateString.isEmpty) return '';
+    final fecha = parseDate(dateString.trim());
+    if (fecha == null) return '';
+
+    final ahora = DateTime.now();
+    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+    final diaFecha = DateTime(fecha.year, fecha.month, fecha.day);
+    final diferencia = hoy.difference(diaFecha).inDays;
+
+    final hora = format(
+      date: fecha,
+      format: AppDateFormat.hourMinute,
+      locale: locale,
+    );
+
+    if (diferencia == 0) return 'Hoy $hora';
+    if (diferencia == 1) return 'Ayer $hora';
+    if (diferencia < 7) {
+      final diaSemana = format(
+        date: fecha,
+        format: AppDateFormat.weekdayOnly,
+        locale: locale,
+      );
+      return '$diaSemana $hora';
+    }
+    return format(date: fecha, format: AppDateFormat.shortDate, locale: locale);
+  }
+
   static String _resolvePattern(AppDateFormat format) {
     switch (format) {
       case AppDateFormat.hourMinute:

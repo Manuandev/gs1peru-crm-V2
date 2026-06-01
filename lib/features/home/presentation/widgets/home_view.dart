@@ -52,9 +52,48 @@ class HomeView extends StatelessWidget {
       ),
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
-        IconButton(
-          icon: Icon(AppIcons.notification, color: AppColors.textOnDark),
-          onPressed: () => context.goToNotification(),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              icon: Icon(AppIcons.notification, color: AppColors.textOnDark),
+              onPressed: () => context.goToNotification(),
+            ),
+            Positioned(
+              top: 6,
+              right: 6,
+              child: BlocBuilder<HomeBloc, HomeState>(
+                builder: (context, state) {
+                  if (state is! HomeLoaded) return const SizedBox.shrink();
+
+                  final count = state.totNotificaciones;
+                  if (count == 0) return const SizedBox.shrink();
+
+                  return Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
         IconButton(
           icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),

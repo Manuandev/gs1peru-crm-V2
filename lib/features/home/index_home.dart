@@ -55,3 +55,6 @@ export 'presentation/widgets/dashboard/buttons/action_button_home.dart';
 
 export 'presentation/widgets/dashboard/tiles/prioridad_tile_home.dart';
 export 'presentation/widgets/dashboard/sections/prioridad_section_home.dart';
+
+export 'presentation/widgets/dashboard/tiles/prospectos_tile_home.dart';
+export 'presentation/widgets/dashboard/sections/prospectos_section_home.dart';

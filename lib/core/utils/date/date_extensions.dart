@@ -9,6 +9,10 @@ extension DateTimeFormatting on DateTime {
   String formatWhatsApp() {
     return DateFormatter.formatWhatsApp(toIso8601String());
   }
+
+  String formatConDia() {
+    return DateFormatter.formatConDia(toIso8601String());
+  }
 }
 
 extension StringDateFormatting on String {
@@ -22,5 +26,9 @@ extension StringDateFormatting on String {
 
   String formatWhatsAppMultimedia() {
     return DateFormatter.formatWhatsAppMultimedia(this);
+  }
+
+  String formatConDia() {
+    return DateFormatter.formatConDia(this);
   }
 }

@@ -48,7 +48,6 @@ class HomePortrait extends StatelessWidget {
           Text("Responde rápido a tus conversaciones.", style: bodyStyle),
           const SizedBox(height: AppSpacing.sm),
           PrioridadSectionHome(prioridades: state.prioridades),
-          const SizedBox(height: AppSpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -56,6 +55,7 @@ class HomePortrait extends StatelessWidget {
               TextButton(onPressed: () {}, child: Text('Ver todos')),
             ],
           ),
+          ProspectosSectionHome(prospectos: state.prospectos),
         ],
       ),
     );

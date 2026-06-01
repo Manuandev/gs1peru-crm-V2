@@ -48,6 +48,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     Emitter<ChatDetailState> emit,
   ) async {
     _currentLeadId = event.idLead;
+    LocalNotificationService.instance.clearLead(event.idLead);
     emit(const ChatDetailLoading());
     await _loadMessages(event.idLead, emit);
   }
@@ -285,24 +286,24 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     for (final file in event.files) {
       final tempId = const Uuid().v4();
       tempIds.add(tempId);
-      currentMessages.add(ChatMessage(
-        idMensaje: tempId,
-        fecha: DateTime.now().toIso8601String(),
-        isEnviado: true,
-        mensaje: file.path,
-        tipo: file.tipo,
-        estado: 'wait',
-        idChatDetArc: '',
-        nomArchivo: file.nameWithoutExt,
-        extArchivo: file.ext,
-        idChatCab: event.chatCab,
-        idChatDet: '',
-      ));
+      currentMessages.add(
+        ChatMessage(
+          idMensaje: tempId,
+          fecha: DateTime.now().toIso8601String(),
+          isEnviado: true,
+          mensaje: file.path,
+          tipo: file.tipo,
+          estado: 'wait',
+          idChatDetArc: '',
+          nomArchivo: file.nameWithoutExt,
+          extArchivo: file.ext,
+          idChatCab: event.chatCab,
+          idChatDet: '',
+        ),
+      );
     }
 
-    emit(
-      (state as ChatDetailSuccess).copyWith(messages: currentMessages),
-    );
+    emit((state as ChatDetailSuccess).copyWith(messages: currentMessages));
 
     // 2. Enviar todos en paralelo
     if (_currentLeadId == null) return;
@@ -416,7 +417,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
     // FIX: Prevenir que eventos duplicados del socket consuman otros mensajes pendientes
-    final alreadyExists = currentMessages.any((m) => m.idMensaje == payload.idMensaje);
+    final alreadyExists = currentMessages.any(
+      (m) => m.idMensaje == payload.idMensaje,
+    );
     if (alreadyExists) return;
 
     // Buscar el mensaje pendiente (estado 'wait') que sea nuestro
@@ -430,21 +433,24 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         // 1. Intentar coincidencia por nombre de archivo (ignorando extensión)
         final localName = _removeExt(m.nomArchivo);
         final payloadName = _removeExt(payload.nomArchivo);
-        if (localName.isNotEmpty && payloadName.isNotEmpty && localName == payloadName) {
-           return true;
+        if (localName.isNotEmpty &&
+            payloadName.isNotEmpty &&
+            localName == payloadName) {
+          return true;
         }
-        
+
         // 2. Fallback: coincidencia por tipo y misma hora/minuto
         if (m.tipo == payload.tipoMensaje) {
-            final localTime = DateFormatter.parseDate(m.fecha);
-            if (localTime != null) {
-                final hhmm = "${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}";
-                if (payload.hora.contains(hhmm)) {
-                    return true;
-                }
-            } else {
-                return true; // Si no se puede parsear local, asumimos que es este.
+          final localTime = DateFormatter.parseDate(m.fecha);
+          if (localTime != null) {
+            final hhmm =
+                "${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}";
+            if (payload.hora.contains(hhmm)) {
+              return true;
             }
+          } else {
+            return true; // Si no se puede parsear local, asumimos que es este.
+          }
         }
         return false;
       }
@@ -463,8 +469,12 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         final extFromName2 = _extractExt(payload.nomArchivo);
         final nameWithoutExt2 = _removeExt(payload.nomArchivo);
         currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
-          nomArchivo: nameWithoutExt2.isNotEmpty ? nameWithoutExt2 : currentMessages[pendingIndex].nomArchivo,
-          extArchivo: extFromName2.isNotEmpty ? extFromName2 : currentMessages[pendingIndex].extArchivo,
+          nomArchivo: nameWithoutExt2.isNotEmpty
+              ? nameWithoutExt2
+              : currentMessages[pendingIndex].nomArchivo,
+          extArchivo: extFromName2.isNotEmpty
+              ? extFromName2
+              : currentMessages[pendingIndex].extArchivo,
         );
       }
     } else {

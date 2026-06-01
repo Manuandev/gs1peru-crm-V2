@@ -3,7 +3,6 @@
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:flutter/material.dart';
 
 class FirebaseNotificationService {
   FirebaseNotificationService._();
@@ -21,41 +20,53 @@ class FirebaseNotificationService {
       );
 
       if (settings.authorizationStatus != AuthorizationStatus.authorized) {
-        debugPrint('>>> FCM: permiso no concedido');
         return;
       }
 
-      // ✅ Aquí sí, ya tiene permiso
-      final token = await _fcm.getToken();
-      debugPrint('>>> FCM TOKEN: $token');
-
       _fcm.onTokenRefresh.listen((newToken) {});
 
-      FirebaseMessaging.onMessage.listen((message) {
-        final titulo =
-            message.data['titulo'] ?? message.notification?.title ?? '';
-        final cuerpo =
-            message.data['cuerpo'] ?? message.notification?.body ?? '';
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        final rawBody =
+            (message.notification?.body ?? message.data['body'] ?? '')
+                .replaceAll('[', '')
+                .replaceAll(']', '')
+                .trim();
 
-        if (titulo.isEmpty && cuerpo.isEmpty) return;
-        LocalNotificationService.instance.show(
-          AppNotification(title: titulo, body: cuerpo),
-        );
+        final wsMessage = WebSocketMessageParser.parse(rawBody);
+        if (wsMessage == null) return;
+
+        NotificationHandler.instance.handle(wsMessage);
       });
 
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        final notif = _fromRemoteMessage(message);
+        final rawBody =
+            (message.notification?.body ?? message.data['body'] ?? '')
+                .replaceAll('[', '')
+                .replaceAll(']', '')
+                .trim();
+
+        final wsMessage = WebSocketMessageParser.parse(rawBody);
+        if (wsMessage == null) return;
+
+        final notif = NotificationHandler.instance.parse(wsMessage);
         if (notif != null) NotificationNavigator.instance.navigate(notif);
       });
 
       final initial = await _fcm.getInitialMessage();
       if (initial != null) {
-        final notif = _fromRemoteMessage(initial);
-        if (notif != null) NotificationNavigator.instance.navigate(notif);
+        final rawBody =
+            (initial.notification?.body ?? initial.data['body'] ?? '')
+                .replaceAll('[', '')
+                .replaceAll(']', '')
+                .trim();
+
+        final wsMessage = WebSocketMessageParser.parse(rawBody);
+        if (wsMessage != null) {
+          final notif = NotificationHandler.instance.parse(wsMessage);
+          if (notif != null) NotificationNavigator.instance.navigate(notif);
+        }
       }
-    } catch (e) {
-      debugPrint('>>> FCM ERROR: $e'); // ← cambia el catch silencioso también
-    }
+    } catch (_) {}
   }
 
   Future<void> requestPermissions() async {
@@ -72,21 +83,6 @@ class FirebaseNotificationService {
   }
 
   Stream<String> get onTokenRefresh => _fcm.onTokenRefresh;
-
-  AppNotification? _fromRemoteMessage(RemoteMessage message) {
-    final data = message.data;
-    final route = data['route'] as String?;
-    // if (route == null) return null;
-
-    final payload = Map<String, String>.from(data)..remove('route');
-
-    return AppNotification(
-      title: message.notification?.title ?? data['title'] ?? '',
-      body: message.notification?.body ?? data['body'] ?? '',
-      route: route,
-      payload: payload.isEmpty ? null : payload,
-    );
-  }
 }
 
 @pragma('vm:entry-point')

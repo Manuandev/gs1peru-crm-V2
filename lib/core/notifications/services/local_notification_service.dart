@@ -1,5 +1,6 @@
 // lib/core/notifications/services/local_notification_service.dart
 
+import 'package:app_crm/config/router/app_routes.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -17,6 +18,8 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 class LocalNotificationService {
   LocalNotificationService._();
   static final LocalNotificationService instance = LocalNotificationService._();
+
+  final Map<int, List<String>> _mensajesPorLead = {};
 
   bool _initialized = false;
 
@@ -101,6 +104,48 @@ class LocalNotificationService {
       ),
       payload: notif.toPayloadString(),
     );
+  }
+
+  Future<void> showWhatsApp({
+    required int leadId,
+    required String mensaje,
+  }) async {
+    _mensajesPorLead[leadId] ??= [];
+    _mensajesPorLead[leadId]!.add(mensaje);
+
+    final mensajes = _mensajesPorLead[leadId]!;
+    final total = mensajes.length;
+
+    await flutterLocalNotificationsPlugin.show(
+      id: leadId,
+      title: 'Lead $leadId${total > 1 ? ' ($total mensajes)' : ''}',
+      body: mensajes.last,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channel.id,
+          _channel.name,
+          channelDescription: _channel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          styleInformation: InboxStyleInformation(
+            mensajes,
+            summaryText: '$total mensajes',
+          ),
+        ),
+      ),
+      payload: AppNotification(
+        title: 'Lead $leadId',
+        body: mensajes.last,
+        route: AppRoutes.detalleChat,
+        payload: {'idLead': leadId.toString()},
+      ).toPayloadString(),
+    );
+  }
+
+  void clearLead(int leadId) {
+    _mensajesPorLead.remove(leadId);
+    flutterLocalNotificationsPlugin.cancel(id: leadId);
   }
 
   Future<void> cancelAll() => flutterLocalNotificationsPlugin.cancelAll();

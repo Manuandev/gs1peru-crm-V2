@@ -8,12 +8,12 @@ class NotificationHandler {
   static final NotificationHandler instance = NotificationHandler._();
 
   void show(WebSocketMessage message) {
-    final notif = _parse(message);
+    final notif = parse(message);
     if (notif != null) NotificationService.instance.show(notif);
   }
 
   void handle(WebSocketMessage message) {
-    final notif = _parse(message);
+    final notif = parse(message);
     if (notif == null) return;
     if (_isSuppressed(message)) return; // 👈 única línea nueva en handle()
     NotificationService.instance.show(notif);
@@ -47,7 +47,7 @@ class NotificationHandler {
     return f.length > 2 ? int.tryParse(f[2].trim()) : null;
   }
 
-  AppNotification? _parse(WebSocketMessage message) {
+  AppNotification? parse(WebSocketMessage message) {
     return switch (message.process) {
       'MENSAJE_WHATSAPP' => _parseWhatsApp(message),
       'NUEVO_LEAD' => _parseLead(message),
@@ -59,12 +59,12 @@ class NotificationHandler {
     final p = WhatsAppMessagePayload.fromMessage(message);
     if (p == null) return null;
 
-    return AppNotification(
-      title: 'Mensaje WhatsApp CRM',
-      body: _bodyPorTipo(p.tipoMensaje, p.mensaje),
-      route: AppRoutes.detalleChat,
-      payload: {'idLead': p.leadId.toString()},
+    LocalNotificationService.instance.showWhatsApp(
+      leadId: p.leadId,
+      mensaje: _bodyPorTipo(p.tipoMensaje, p.mensaje),
     );
+
+    return null;
   }
 
   AppNotification? _parseLead(WebSocketMessage message) {

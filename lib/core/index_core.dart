@@ -18,6 +18,8 @@ export 'database/i_local_database.dart';
 export 'database/local_database.dart';
 // #endregion database
 
+export 'domain/usecases/get_catalogs_usecase.dart';
+
 export 'errors/app_exception.dart';
 
 export 'extensions/badge_extensions.dart';
@@ -30,6 +32,7 @@ export 'mixins/double_back_to_exit_mixin.dart';
 // #region models
 export 'models/combo_item.dart';
 export 'models/user_model.dart';
+export 'models/catalog_item.dart';
 // #endregion models
 
 export 'navigation/app_route_observer.dart';
@@ -38,6 +41,7 @@ export 'navigation/app_route_observer.dart';
 export 'network/api_client.dart';
 export 'network/api_result.dart';
 export 'network/crud_result.dart';
+export 'network/catalog_remote_datasource.dart';
 
 export 'network/interceptors/error_interceptor.dart';
 export 'network/interceptors/interceptors.dart';
@@ -59,9 +63,11 @@ export 'network/websocket/payloads/update_mensaje_whatsapp_payload.dart';
 
 // #region notificaciones
 export 'notifications/models/app_notification.dart';
+
 export 'notifications/services/notification_service.dart';
 export 'notifications/services/local_notification_service.dart';
 export 'notifications/services/firebase_notification_service.dart';
+
 export 'notifications/handlers/notification_handler.dart';
 export 'notifications/handlers/notification_navigator.dart';
 // #endregion notificaciones
@@ -70,6 +76,10 @@ export 'notifications/handlers/notification_navigator.dart';
 export 'presentation/bloc/drawer/drawer_bloc.dart';
 export 'presentation/bloc/drawer/drawer_event.dart';
 export 'presentation/bloc/drawer/drawer_state.dart';
+
+export 'presentation/bloc/catalog/catalog_bloc.dart';
+export 'presentation/bloc/catalog/catalog_event.dart';
+export 'presentation/bloc/catalog/catalog_state.dart';
 
 export 'presentation/pages/base_page.dart';
 
@@ -100,6 +110,9 @@ export 'presentation/widgets/app_snackbar.dart';
 
 export 'services/session_service.dart';
 export 'services/device_info_service.dart';
+
+export 'services/catalog_repository_impl.dart';
+export 'services/catalog_repository.dart';
 
 export 'theme/app_theme.dart';
 export 'theme/theme_cubit.dart';

@@ -28,6 +28,10 @@ export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';
 export 'presentation/bloc/chat_list/chat_list_state.dart';
 
+export 'presentation/bloc/templates/templates_bloc.dart';
+export 'presentation/bloc/templates/templates_event.dart';
+export 'presentation/bloc/templates/templates_state.dart';
+
 export 'presentation/bloc/chat_detail/chat_detail_bloc.dart';
 export 'presentation/bloc/chat_detail/chat_detail_event.dart';
 export 'presentation/bloc/chat_detail/chat_detail_state.dart';
@@ -65,3 +69,6 @@ export 'presentation/widgets/chat_detail/mensaje/message_bubble.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_list.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_parser.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_url_helper.dart';
+
+export 'presentation/widgets/templates/templates_view.dart';
+export 'presentation/widgets/templates/templates_portrait.dart';

@@ -51,6 +51,11 @@ class AppWidget extends StatelessWidget {
           ),
         ),
 
+        // ── CATALOGS REPOSITORY ──────────────────────────────
+        RepositoryProvider<CatalogsRepository>(
+          create: (_) => CatalogsRepositoryImpl(CatalogsRemoteDatasource()),
+        ),
+
         // ── HOME REPOSITORY ──────────────────────────────────
         RepositoryProvider<HomeRepository>(
           create: (context) => HomeRepositoryImpl(HomeRemoteDatasource()),
@@ -80,6 +85,11 @@ class AppWidget extends StatelessWidget {
           ), // ✅ DrawerBloc va aquí
           BlocProvider<DrawerBloc>(
             create: (context) => DrawerBloc()..add(DrawerStarted()),
+          ),
+          BlocProvider<CatalogsBloc>(
+            create: (context) => CatalogsBloc(
+              getData: GetCatalogsUseCase(context.read<CatalogsRepository>()),
+            )..add(const CatalogsLoadRequested()),
           ),
         ],
         child: BlocListener<AuthBloc, AuthState>(

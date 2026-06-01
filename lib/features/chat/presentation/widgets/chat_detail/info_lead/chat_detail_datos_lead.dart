@@ -20,10 +20,6 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
     final colorScheme = theme.colorScheme;
     final themeText = theme.textTheme;
 
-    final titleMediumStyle = themeText.titleMedium?.copyWith(
-      color: themeText.titleMedium!.color,
-    );
-
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,

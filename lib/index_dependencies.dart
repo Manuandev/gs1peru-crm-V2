@@ -31,6 +31,7 @@ export 'package:get_video_thumbnail/get_video_thumbnail.dart';
 export 'package:get_video_thumbnail/index.dart';
 export 'package:cached_network_image/cached_network_image.dart';
 export 'package:gal/gal.dart';
+export 'package:photo_manager/photo_manager.dart';
 
 // ─── Files ───────────────────────────────────────────────────────
 export 'package:file_picker/file_picker.dart';

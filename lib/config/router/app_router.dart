@@ -111,6 +111,15 @@ class AppRouter {
       transition: TransitionType.fade,
     ),
 
+    AppRoutes.mediaPicker: RouteDefinition<List<AssetEntity>>(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        _requireArgs<Map<String, dynamic>>(context);
+        return WhatsAppMediaPicker(
+          onConfirm: (assets) => Navigator.pop(context, assets),
+        );
+      },
+    ),
     // HOME
     AppRoutes.notifications: RouteDefinition(
       builder: (_) => const NotificationsPage(),

@@ -29,4 +29,6 @@ class AppRoutes {
   static const String detalleProspecto = '/prospectos/detalle';
   static const String detallePropuesta = '/propuestas/detalle';
   static const String detalleCobranza = '/cobranza/detalle';
+
+  static const String mediaPicker = '/media-picker';
 }

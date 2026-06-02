@@ -53,6 +53,9 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToSettings() => clearAndPush(AppRoutes.settings);
   Future<void> goToChangePassword() => clearAndPush(AppRoutes.changePassword);
 
+  Future<List<AssetEntity>?> goToMediaPicker() =>
+      _push<List<AssetEntity>>(AppRoutes.mediaPicker);
+
   // ── Home ───────────────────────────────────────────────────
 
   Future<void> goToNotifications() => _push(AppRoutes.notifications);

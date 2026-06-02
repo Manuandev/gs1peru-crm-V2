@@ -15,7 +15,7 @@ class NotificationHandler {
   void handle(WebSocketMessage message) {
     final notif = parse(message);
     if (notif == null) return;
-    if (_isSuppressed(message)) return; // 👈 única línea nueva en handle()
+    if (_isSuppressed(message)) return;
     NotificationService.instance.show(notif);
   }
 

@@ -1,10 +1,11 @@
 // lib\features\chat\presentation\widgets\chat_detail\attachment_picker_widget.dart
 
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/features/chat/presentation/widgets/chat_detail/staged_file.dart';
+
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class AttachmentPickerWidget extends StatefulWidget {
   /// Callback con la lista completa de archivos staged al presionar "Enviar"
@@ -28,8 +29,7 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
 
   final List<StagedFile> _staged = [];
 
-  int get _totalBytes =>
-      _staged.fold<int>(0, (sum, f) => sum + f.sizeBytes);
+  int get _totalBytes => _staged.fold<int>(0, (sum, f) => sum + f.sizeBytes);
 
   double get _totalMB => _totalBytes / (1024 * 1024);
 
@@ -37,27 +37,31 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
 
   // ── Selección desde galería (multi: fotos + videos) ─────────────────────
   Future<void> _pickFromGallery() async {
-    final files = await ImagePicker().pickMultipleMedia();
-    if (files.isEmpty) return;
+    final selected = await context.goToMediaPicker();
+    if (selected == null || selected.isEmpty) return;
 
     final newStaged = <StagedFile>[];
-    for (final xFile in files) {
-      final file = File(xFile.path);
+    for (final asset in selected) {
+      final file = await asset.originFile;
+      if (file == null) continue;
       final size = await file.length();
-      final name = xFile.name;
+      final name = asset.title ?? '';
       final dotIndex = name.lastIndexOf('.');
       final ext = dotIndex != -1 ? '.${name.substring(dotIndex + 1)}' : '';
-      final nameWithoutExt =
-          dotIndex != -1 ? name.substring(0, dotIndex) : name;
-      final rawExt = ext.replaceFirst('.', '').toLowerCase();
-      final tipo = _videoExts.contains(rawExt) ? 'video' : 'image';
-      newStaged.add(StagedFile(
-        path: xFile.path,
-        nameWithoutExt: nameWithoutExt,
-        ext: ext,
-        tipo: tipo,
-        sizeBytes: size,
-      ));
+      final nameWithoutExt = dotIndex != -1
+          ? name.substring(0, dotIndex)
+          : name;
+      final tipo = asset.type == AssetType.video ? 'video' : 'image';
+
+      newStaged.add(
+        StagedFile(
+          path: file.path,
+          nameWithoutExt: nameWithoutExt,
+          ext: ext,
+          tipo: tipo,
+          sizeBytes: size,
+        ),
+      );
     }
 
     _addFiles(newStaged);
@@ -81,8 +85,7 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
     _addFiles([
       StagedFile(
         path: newPath,
-        nameWithoutExt:
-            DateTime.now().millisecondsSinceEpoch.toString(),
+        nameWithoutExt: DateTime.now().millisecondsSinceEpoch.toString(),
         ext: '.jpg',
         tipo: 'image',
         sizeBytes: size,
@@ -109,15 +112,17 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
       final tipo = _imageExts.contains(lowerExt)
           ? 'image'
           : _videoExts.contains(lowerExt)
-              ? 'video'
-              : 'document';
-      newStaged.add(StagedFile(
-        path: pFile.path!,
-        nameWithoutExt: nameWithoutExt,
-        ext: ext,
-        tipo: tipo,
-        sizeBytes: pFile.size,
-      ));
+          ? 'video'
+          : 'document';
+      newStaged.add(
+        StagedFile(
+          path: pFile.path!,
+          nameWithoutExt: nameWithoutExt,
+          ext: ext,
+          tipo: tipo,
+          sizeBytes: pFile.size,
+        ),
+      );
     }
 
     _addFiles(newStaged);
@@ -255,9 +260,7 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
                     value: _usageFraction.clamp(0.0, 1.0),
                     minHeight: 6,
                     backgroundColor: colorScheme.outlineVariant.withAlpha(80),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _progressColor(),
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(_progressColor()),
                   ),
                 ),
               ),

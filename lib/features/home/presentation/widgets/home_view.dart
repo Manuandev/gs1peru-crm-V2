@@ -119,7 +119,7 @@ class HomeView extends StatelessWidget {
             return OrientationBuilder(
               builder: (context, orientation) {
                 if (orientation == Orientation.landscape) {
-                  return HomeLandscape(state: state);
+                  return HomePortrait(state: state);
                 }
                 return HomePortrait(state: state);
               },

@@ -99,7 +99,7 @@ class _CardTotalItem extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             titulo,
-            style: themeText.labelMedium?.copyWith(
+            style: themeText.labelSmall?.copyWith(
               color: iconColor.withAlpha(180),
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,

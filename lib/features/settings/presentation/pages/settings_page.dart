@@ -32,10 +32,10 @@ class _SettingsView extends StatelessWidget {
       body: ListView(
         children: [
           // ── APARIENCIA ──────────────────────────────────
-          _SectionHeader(icon: Icons.palette_rounded, title: 'Apariencia'),
-          const SizedBox(height: AppSpacing.md),
-          const _ThemeSelector(),
-          const SizedBox(height: AppSpacing.xl),
+          // _SectionHeader(icon: Icons.palette_rounded, title: 'Apariencia'),
+          // const SizedBox(height: AppSpacing.md),
+          // const _ThemeSelector(),
+          // const SizedBox(height: AppSpacing.xl),
 
           // ── PERMISOS ────────────────────────────────────
           _SectionHeader(icon: Icons.security_rounded, title: 'Permisos'),
@@ -64,95 +64,95 @@ class _SettingsView extends StatelessWidget {
 // ============================================================
 // SELECTOR DE TEMA — usa ThemeCubit (global, desde AppWidget)
 // ============================================================
-class _ThemeSelector extends StatelessWidget {
-  const _ThemeSelector();
+// class _ThemeSelector extends StatelessWidget {
+//   const _ThemeSelector();
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<ThemeCubit, ThemeMode>(
-      builder: (context, currentMode) {
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-            child: Column(
-              children: [
-                _ThemeOption(
-                  icon: Icons.light_mode_rounded,
-                  label: 'Claro',
-                  subtitle: 'Siempre usa el tema claro',
-                  selected: currentMode == ThemeMode.light,
-                  onTap: () =>
-                      context.read<ThemeCubit>().setTheme(ThemeMode.light),
-                ),
-                const Divider(height: 1, indent: 16, endIndent: 16),
-                _ThemeOption(
-                  icon: Icons.dark_mode_rounded,
-                  label: 'Oscuro',
-                  subtitle: 'Siempre usa el tema oscuro',
-                  selected: currentMode == ThemeMode.dark,
-                  onTap: () =>
-                      context.read<ThemeCubit>().setTheme(ThemeMode.dark),
-                ),
-                const Divider(height: 1, indent: 16, endIndent: 16),
-                _ThemeOption(
-                  icon: Icons.brightness_auto_rounded,
-                  label: 'Sistema',
-                  subtitle: 'Sigue el tema del dispositivo',
-                  selected: currentMode == ThemeMode.system,
-                  onTap: () =>
-                      context.read<ThemeCubit>().setTheme(ThemeMode.system),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return BlocBuilder<ThemeCubit, ThemeMode>(
+//       builder: (context, currentMode) {
+//         return Card(
+//           child: Padding(
+//             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+//             child: Column(
+//               children: [
+//                 _ThemeOption(
+//                   icon: Icons.light_mode_rounded,
+//                   label: 'Claro',
+//                   subtitle: 'Siempre usa el tema claro',
+//                   selected: currentMode == ThemeMode.light,
+//                   onTap: () =>
+//                       context.read<ThemeCubit>().setTheme(ThemeMode.light),
+//                 ),
+//                 const Divider(height: 1, indent: 16, endIndent: 16),
+//                 _ThemeOption(
+//                   icon: Icons.dark_mode_rounded,
+//                   label: 'Oscuro',
+//                   subtitle: 'Siempre usa el tema oscuro',
+//                   selected: currentMode == ThemeMode.dark,
+//                   onTap: () =>
+//                       context.read<ThemeCubit>().setTheme(ThemeMode.dark),
+//                 ),
+//                 const Divider(height: 1, indent: 16, endIndent: 16),
+//                 _ThemeOption(
+//                   icon: Icons.brightness_auto_rounded,
+//                   label: 'Sistema',
+//                   subtitle: 'Sigue el tema del dispositivo',
+//                   selected: currentMode == ThemeMode.system,
+//                   onTap: () =>
+//                       context.read<ThemeCubit>().setTheme(ThemeMode.system),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+// }
 
-class _ThemeOption extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
+// class _ThemeOption extends StatelessWidget {
+//   final IconData icon;
+//   final String label;
+//   final String subtitle;
+//   final bool selected;
+//   final VoidCallback onTap;
 
-  const _ThemeOption({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
+//   const _ThemeOption({
+//     required this.icon,
+//     required this.label,
+//     required this.subtitle,
+//     required this.selected,
+//     required this.onTap,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final color = selected
-        ? primary
-        : Theme.of(context).colorScheme.onSurfaceVariant;
+//   @override
+//   Widget build(BuildContext context) {
+//     final primary = Theme.of(context).colorScheme.primary;
+//     final color = selected
+//         ? primary
+//         : Theme.of(context).colorScheme.onSurfaceVariant;
 
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: color),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-          color: selected ? primary : null,
-        ),
-      ),
-      subtitle: Text(subtitle),
-      trailing: Icon(
-        selected
-            ? Icons.check_circle_rounded
-            : Icons.radio_button_unchecked_rounded,
-        color: color,
-      ),
-    );
-  }
-}
+//     return ListTile(
+//       onTap: onTap,
+//       leading: Icon(icon, color: color),
+//       title: Text(
+//         label,
+//         style: TextStyle(
+//           fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+//           color: selected ? primary : null,
+//         ),
+//       ),
+//       subtitle: Text(subtitle),
+//       trailing: Icon(
+//         selected
+//             ? Icons.check_circle_rounded
+//             : Icons.radio_button_unchecked_rounded,
+//         color: color,
+//       ),
+//     );
+//   }
+// }
 
 // ============================================================
 // LISTA DE PERMISOS — usa SettingsCubit (local, desde SettingsPage)

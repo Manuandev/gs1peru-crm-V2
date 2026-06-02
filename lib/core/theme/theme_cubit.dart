@@ -26,10 +26,12 @@ class ThemeCubit extends Cubit<ThemeMode> {
       default:
         emit(ThemeMode.system);
     }
+    emit(ThemeMode.light);
   }
 
   /// Cambia el tema y lo persiste en SQLite.
   Future<void> setTheme(ThemeMode mode) async {
+    emit(ThemeMode.light);
     emit(mode);
     final value = switch (mode) {
       ThemeMode.light => 'light',

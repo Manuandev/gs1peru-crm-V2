@@ -82,9 +82,6 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       ChatListFiltro.enDesarrollo: _allChats
           .where((c) => c.idEstado == '01')
           .length,
-      ChatListFiltro.propuesta: _allChats
-          .where((c) => c.idEstado == '02')
-          .length,
     };
 
     var resultado = List<Chat>.from(_allChats);
@@ -93,9 +90,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       resultado = resultado.where((c) => c.isEnviado).toList();
     } else if (_filtroActivo == ChatListFiltro.enDesarrollo) {
       resultado = resultado.where((c) => c.idEstado == '01').toList();
-    } else if (_filtroActivo == ChatListFiltro.propuesta) {
-      resultado = resultado.where((c) => c.idEstado == '02').toList();
-    }
+    } 
 
     // filtro búsqueda
     final q = _lastSearchQuery.toLowerCase().trim();

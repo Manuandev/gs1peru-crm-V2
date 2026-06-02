@@ -307,7 +307,7 @@ class ResponsiveBuilder extends StatelessWidget {
 /// ```
 class ResponsiveImage extends StatelessWidget {
   final String source;
-  final _ImageSourceType _sourceType;
+  final ImageSourceType _sourceType;
 
   final double nativeWidth;
   final double nativeHeight;
@@ -320,7 +320,7 @@ class ResponsiveImage extends StatelessWidget {
   const ResponsiveImage._({
     super.key,
     required this.source,
-    required _ImageSourceType sourceType,
+    required ImageSourceType sourceType,
     this.nativeWidth = 1900.0,
     this.nativeHeight = 1200.0,
     this.maxWidthFraction = 1.0,
@@ -345,7 +345,7 @@ class ResponsiveImage extends StatelessWidget {
     return ResponsiveImage._(
       key: key,
       source: assetPath,
-      sourceType: _ImageSourceType.asset,
+      sourceType: ImageSourceType.asset,
       nativeWidth: nativeWidth,
       nativeHeight: nativeHeight,
       maxWidthFraction: maxWidthFraction,
@@ -371,7 +371,7 @@ class ResponsiveImage extends StatelessWidget {
     return ResponsiveImage._(
       key: key,
       source: url,
-      sourceType: _ImageSourceType.network,
+      sourceType: ImageSourceType.network,
       nativeWidth: nativeWidth,
       nativeHeight: nativeHeight,
       maxWidthFraction: maxWidthFraction,
@@ -395,7 +395,7 @@ class ResponsiveImage extends StatelessWidget {
 
         Widget image;
 
-        if (_sourceType == _ImageSourceType.asset) {
+        if (_sourceType == ImageSourceType.asset) {
           image = Image.asset(
             source,
             width: size.width,
@@ -444,4 +444,3 @@ class ResponsiveImage extends StatelessWidget {
   }
 }
 
-enum _ImageSourceType { asset, network }

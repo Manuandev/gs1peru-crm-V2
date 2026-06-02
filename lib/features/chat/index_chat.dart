@@ -14,7 +14,10 @@ export 'domain/entities/chat_message.dart';
 export 'domain/entities/info_lead.dart';
 export 'domain/entities/template.dart';
 
+export 'domain/enums/media_type.dart';
+export 'domain/enums/input_mode.dart';
 export 'domain/enums/lead_estado.dart';
+export 'domain/enums/chat_filtro.dart';
 
 export 'domain/repositories/chat_repository.dart';
 

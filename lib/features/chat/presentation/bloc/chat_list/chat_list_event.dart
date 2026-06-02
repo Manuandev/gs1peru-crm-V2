@@ -3,8 +3,7 @@
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
-
-enum ChatListFiltro { todos, sinResponder, enDesarrollo, propuesta }
+import 'package:app_crm/features/chat/index_chat.dart';
 
 abstract class ChatListEvent extends Equatable {
   const ChatListEvent();

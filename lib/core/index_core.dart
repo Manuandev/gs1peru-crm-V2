@@ -18,6 +18,7 @@ export 'database/i_local_database.dart';
 export 'database/local_database.dart';
 // #endregion database
 
+export 'domain/enums/enums_core.dart';
 export 'domain/usecases/get_catalogs_usecase.dart';
 
 export 'errors/app_exception.dart';

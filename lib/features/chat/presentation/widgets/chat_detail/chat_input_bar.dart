@@ -6,8 +6,6 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
-enum _InputMode { text, audio, attachment }
-
 class ChatInputBar extends StatefulWidget {
   final AudioController audioController;
 
@@ -20,7 +18,7 @@ class ChatInputBar extends StatefulWidget {
 class _ChatInputBarState extends State<ChatInputBar> {
   final TextEditingController _textController = TextEditingController();
 
-  _InputMode _mode = _InputMode.text;
+  InputMode _mode = InputMode.text;
   bool _hasText = false;
 
   @override
@@ -77,7 +75,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
         chatCab: _getChatCab(),
       ),
     );
-    setState(() => _mode = _InputMode.text);
+    setState(() => _mode = InputMode.text);
   }
 
   void _onFilesBatchPicked(List<StagedFile> files) {
@@ -90,24 +88,24 @@ class _ChatInputBarState extends State<ChatInputBar> {
         chatCab: _getChatCab(),
       ),
     );
-    setState(() => _mode = _InputMode.text);
+    setState(() => _mode = InputMode.text);
   }
 
   void _toggleAttachment() {
     widget.audioController.stop();
     setState(
-      () => _mode = _mode == _InputMode.attachment
-          ? _InputMode.text
-          : _InputMode.attachment,
+      () => _mode = _mode == InputMode.attachment
+          ? InputMode.text
+          : InputMode.attachment,
     );
   }
 
   Future<void> _onTemplateSelected() async {
-  final infoState = context.read<InfoLeadCubit>().state;
-  if (infoState is! InfoLeadSuccess) return;
+    final infoState = context.read<InfoLeadCubit>().state;
+    if (infoState is! InfoLeadSuccess) return;
 
-  final template = await context.goToTemplates(lead: infoState.infoLead);
-  if (template == null || !context.mounted) return;
+    final template = await context.goToTemplates(lead: infoState.infoLead);
+    if (template == null || !context.mounted) return;
 
     final info = infoState.infoLead;
 
@@ -139,24 +137,24 @@ class _ChatInputBarState extends State<ChatInputBar> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // ── Attachment picker (mostrar/ocultar) ───────────────
-        if (_mode == _InputMode.attachment)
+        if (_mode == InputMode.attachment)
           AttachmentPickerWidget(
             onFilesBatchPicked: _onFilesBatchPicked,
-            onClose: () => setState(() => _mode = _InputMode.text),
+            onClose: () => setState(() => _mode = InputMode.text),
           ),
 
         // ── Audio recorder ────────────────────────────────────
-        if (_mode == _InputMode.audio)
+        if (_mode == InputMode.audio)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: AudioRecorderWidget(
               onAudioReady: _onAudioReady,
-              onCancel: () => setState(() => _mode = _InputMode.text),
+              onCancel: () => setState(() => _mode = InputMode.text),
             ),
           ),
 
         // ── Input principal ───────────────────────────────────
-        if (_mode != _InputMode.audio)
+        if (_mode != InputMode.audio)
           BlocBuilder<InfoLeadCubit, InfoLeadState>(
             buildWhen: (prev, curr) {
               if (curr is! InfoLeadSuccess) return false;
@@ -221,7 +219,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     // Adjuntar
                     IconButton(
                       icon: Icon(
-                        _mode == _InputMode.attachment
+                        _mode == InputMode.attachment
                             ? Icons.close_rounded
                             : Icons.attach_file_rounded,
                         color: colorScheme.onSurfaceVariant,
@@ -293,7 +291,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                               ),
                               onPressed: () {
                                 widget.audioController.stop();
-                                setState(() => _mode = _InputMode.audio);
+                                setState(() => _mode = InputMode.audio);
                               },
                             ),
                     ),

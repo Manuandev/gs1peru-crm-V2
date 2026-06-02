@@ -25,7 +25,6 @@ class ChatListFilterChips extends StatelessWidget {
       (filtro: ChatListFiltro.todos, label: 'Todas'),
       (filtro: ChatListFiltro.sinResponder, label: 'Sin responder'),
       (filtro: ChatListFiltro.enDesarrollo, label: 'En desarrollo'),
-      (filtro: ChatListFiltro.propuesta, label: 'Propuesta'),
     ];
 
     return Container(
@@ -139,8 +138,6 @@ class ChatListFilterChips extends StatelessWidget {
         return Colors.red;
       case ChatListFiltro.enDesarrollo:
         return Colors.orange;
-      case ChatListFiltro.propuesta:
-        return Colors.deepPurple;
       default:
         return AppColors.primary;
     }

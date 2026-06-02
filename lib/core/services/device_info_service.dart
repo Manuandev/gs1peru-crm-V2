@@ -84,9 +84,6 @@ class CoordinatesResult {
       : 'Sin ubicación: $error';
 }
 
-// ── MODELO DE TIPO DE CONEXIÓN ───────────────────────────────
-enum TipoConexion { wifi, mobile, ethernet, ninguna, desconocida }
-
 // ── SERVICIO PRINCIPAL ───────────────────────────────────────
 class DeviceInfoService {
   // Singletons internos — se crean una vez, no se instancian de nuevo

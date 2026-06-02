@@ -5,11 +5,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
-
-/// Tipo de media soportada
-enum MediaType { image, video }
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class MediaViewerPage extends StatefulWidget {
   final String url;

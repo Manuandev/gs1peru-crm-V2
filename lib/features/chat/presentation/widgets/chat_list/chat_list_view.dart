@@ -123,8 +123,6 @@ class _ChatListViewState extends State<ChatListView> {
         return '¡Todo al día! No hay chats sin responder.';
       case ChatListFiltro.enDesarrollo:
         return 'No hay chats en desarrollo.';
-      case ChatListFiltro.propuesta:
-        return 'No hay chats con propuesta enviada.';
       case ChatListFiltro.todos:
         return 'No hay chats abiertos y/o disponibles.';
     }

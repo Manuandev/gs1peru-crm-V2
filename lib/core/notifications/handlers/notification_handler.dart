@@ -24,7 +24,7 @@ class NotificationHandler {
 
     return switch (message.process) {
       'MENSAJE_WHATSAPP' => _suppressWhatsApp(route, message),
-      'NUEVO_LEAD' => route == AppRoutes.leads,
+      // 'NUEVO_LEAD' => route == AppRoutes.leads,
       _ => false,
     };
   }
@@ -50,7 +50,7 @@ class NotificationHandler {
   AppNotification? parse(WebSocketMessage message) {
     return switch (message.process) {
       'MENSAJE_WHATSAPP' => _parseWhatsApp(message),
-      'NUEVO_LEAD' => _parseLead(message),
+      // 'NUEVO_LEAD' => _parseLead(message),
       _ => null,
     };
   }
@@ -67,18 +67,18 @@ class NotificationHandler {
     return null;
   }
 
-  AppNotification? _parseLead(WebSocketMessage message) {
-    if (message.records.isEmpty) return null;
-    final f = message.records.first;
-    String g(int i) => i < f.length ? f[i].trim() : '';
+  // AppNotification? _parseLead(WebSocketMessage message) {
+  //   if (message.records.isEmpty) return null;
+  //   final f = message.records.first;
+  //   String g(int i) => i < f.length ? f[i].trim() : '';
 
-    return AppNotification(
-      title: '🔔 Nuevo lead',
-      body: g(0), // nombre del lead
-      route: AppRoutes.leads,
-      payload: {'idLead': g(1), 'nombre': g(0)},
-    );
-  }
+  //   return AppNotification(
+  //     title: '🔔 Nuevo lead',
+  //     body: g(0), // nombre del lead
+  //     route: AppRoutes.leads,
+  //     payload: {'idLead': g(1), 'nombre': g(0)},
+  //   );
+  // }
 
   String _bodyPorTipo(String tipo, String mensaje) =>
       switch (tipo.toLowerCase()) {

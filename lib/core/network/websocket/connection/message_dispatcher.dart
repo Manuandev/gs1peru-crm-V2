@@ -25,8 +25,8 @@ class MessageDispatcher {
         _dispatchUpdatePantalla(message, route);
       case 'UPDATE_MENSAJE_WHATSAPP':
         _dispatchUpdateMensaje(message, route);
-      case 'NUEVO_LEAD':
-        _dispatchLead(message, route);
+      // case 'NUEVO_LEAD':
+      //   _dispatchLead(message, route);
       default:
         // proceso desconocido → solo al stream por si alguien escucha
         _toStream(message);
@@ -70,15 +70,15 @@ class MessageDispatcher {
 
   // ── NUEVO LEAD ───────────────────────────────────────────────
 
-  void _dispatchLead(WebSocketMessage message, String? route) {
-    // Al stream — LeadListBloc puede reaccionar si quiere
-    _toStream(message);
+  // void _dispatchLead(WebSocketMessage message, String? route) {
+  //   // Al stream — LeadListBloc puede reaccionar si quiere
+  //   _toStream(message);
 
-    // Notificación solo si NO está en lista de leads
-    if (route != AppRoutes.leads) {
-      NotificationHandler.instance.show(message);
-    }
-  }
+  //   // Notificación solo si NO está en lista de leads
+  //   if (route != AppRoutes.leads) {
+  //     NotificationHandler.instance.show(message);
+  //   }
+  // }
 
   // ── helpers ──────────────────────────────────────────────────
 

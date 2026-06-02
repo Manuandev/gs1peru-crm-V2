@@ -6,31 +6,32 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPortrait extends StatelessWidget {
-  final LeadListLoaded state;
+  final List<LeadEntity> leads;
 
-  const LeadListPortrait({super.key, required this.state});
+  const LeadListPortrait({super.key, required this.leads});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Aquí está el resumen de hoy', style: AppTextStyles.bodyMedium),
-          const SizedBox(height: AppSpacing.xl),
-
-          ...state.leads.map(
-            (lead) => Card(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: ListTile(
-                title: Text(lead.idLead),
-                subtitle: Text('${lead.dni} - ${lead.dia} - ${lead.hora}'),
-              ),
-            ),
+    return ListView.builder(
+      itemCount: leads.length,
+      itemBuilder: (context, index) {
+        final lead = leads[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: LeadCard(
+            lead: lead,
+            onWhatsAppTap: () {
+              // TODO: tu lógica aquí
+            },
+            onChatTap: () {
+              // TODO: tu lógica aquí
+            },
+            onStarTap: () {
+              // TODO: tu lógica aquí
+            },
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -20,9 +20,13 @@ class LeadListLoading extends LeadListState {
 }
 
 class LeadListLoaded extends LeadListState {
-  final List<Lead> leads; // Leads cargados exitosamente
+  final List<LeadEntity> leads;
+  final LeadType type;
 
-  const LeadListLoaded({required this.leads});
+  const LeadListLoaded({required this.leads, required this.type});
+
+  @override
+  List<Object?> get props => [leads, type];
 }
 
 class LeadListError extends LeadListState {

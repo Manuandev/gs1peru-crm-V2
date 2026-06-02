@@ -1,5 +1,4 @@
-// lib\features\reminder\presentation\widgets\reminder_list_view.dart
-
+// lib\features\lead\presentation\widgets\lead_list_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -9,20 +8,21 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListView extends StatelessWidget {
-  const LeadListView({super.key});
+  final LeadType type;
+
+  const LeadListView({super.key, required this.type});
 
   @override
   Widget build(BuildContext context) {
-
     return BasePage(
       onPop: () => context.goToHome(),
-      title: 'Leads',
+      title: type == LeadType.prospectos ? 'Prospectos' : 'Propuestas',
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
         IconButton(
           icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
           onPressed: () {
-            context.read<LeadListBloc>().add(LeadListRefresh());
+            context.read<LeadListBloc>().add(LeadListRefresh(type));
           },
         ),
       ],
@@ -36,21 +36,19 @@ class LeadListView extends StatelessWidget {
             return AppErrorView(
               message: state.message,
               onRetry: () =>
-                  context.read<LeadListBloc>().add(LeadListRefresh()),
+                  context.read<LeadListBloc>().add(LeadListRefresh(type)),
             );
           }
 
           if (state is LeadListLoaded) {
-            if (state.leads.isEmpty) return const AppEmptyView(message: 'No hay leads disponibles.',);
-
-            return OrientationBuilder(
-              builder: (context, orientation) {
-                if (orientation == Orientation.landscape) {
-                  return LeadListLandscape(state: state);
-                }
-                return LeadListPortrait(state: state);
-              },
-            );
+            if (state.leads.isEmpty) {
+              return AppEmptyView(
+                message: type == LeadType.prospectos
+                    ? 'No hay prospectos.'
+                    : 'No hay propuestas.',
+              );
+            }
+            return LeadListPortrait(leads: state.leads);
           }
 
           return const SizedBox.shrink();
@@ -59,45 +57,3 @@ class LeadListView extends StatelessWidget {
     );
   }
 }
-
-// ============================================================
-// Cuerpo principal del Home
-// ============================================================
-
-/// _HomeBody — Contenido scrollable de la pantalla de inicio
-///
-/// Recibe el [HomeLoaded] para mostrar datos del usuario.
-/// Espacio reservado para los widgets reales del home (cards, estadísticas, etc.)
-
-// ============================================================
-// Footer fijo del Home
-// ============================================================
-// _HomeFooter — Barra inferior fija con información de versión
-//
-// Se muestra siempre en la parte inferior de la pantalla de inicio.
-// Usa colores del tema de Material 3 para adaptarse a dark/light mode.
-// Por si es necesario mostrar otro footer en una pantalla
-// class _HomeFooter extends StatelessWidget {
-//   const _HomeFooter();
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.symmetric(
-//         horizontal: AppSpacing.lg,
-//         vertical: AppSpacing.sm,
-//       ),
-//       decoration: BoxDecoration(
-//         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-//         border: Border(
-//           top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-//         ),
-//       ),
-//       child: Text(
-//         'v1.0.0 — Mi App',
-//         style: AppTextStyles.labelSmall,
-//         textAlign: TextAlign.center,
-//       ),
-//     );
-//   }
-// }

@@ -2,6 +2,8 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/features/lead/index_lead.dart';
+
 abstract class LeadListEvent extends Equatable {
   const LeadListEvent();
 
@@ -9,16 +11,18 @@ abstract class LeadListEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// La pantalla se inicializó.
-/// Carga los datos del usuario (nombre, email, badges).
-/// Disparado automáticamente por HomePage al crearse.
 class LeadListStarted extends LeadListEvent {
-  const LeadListStarted();
+  final LeadType type;
+  const LeadListStarted(this.type);
+
+  @override
+  List<Object?> get props => [type];
 }
 
-/// El usuario pidió actualizar los datos.
-/// Disparado por: popup "Actualizar" o pull-to-refresh.
-/// No muestra spinner completo para no parpadear la UI.
 class LeadListRefresh extends LeadListEvent {
-  const LeadListRefresh();
+  final LeadType type;
+  const LeadListRefresh(this.type);
+
+  @override
+  List<Object?> get props => [type];
 }

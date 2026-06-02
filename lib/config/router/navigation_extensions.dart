@@ -46,7 +46,8 @@ extension NavigationExtensions on BuildContext {
 
   // ── Módulos principales ────────────────────────────────────
 
-  Future<void> goToLeads() => clearAndPush(AppRoutes.leads);
+  Future<void> goToProspectos() => clearAndPush(AppRoutes.prospectos);
+  Future<void> goToPropuestas() => clearAndPush(AppRoutes.propuestas);
   Future<void> goToChats() => clearAndPush(AppRoutes.chats);
   Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
   Future<void> goToSettings() => clearAndPush(AppRoutes.settings);

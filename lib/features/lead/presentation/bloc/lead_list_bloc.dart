@@ -5,9 +5,11 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
-  final GetLeadsUseCase _getLeads;
+  final GetProspectosUseCase _getProspectos;
+  final GetPropuestasUseCase _getPropuestas;
 
-  LeadListBloc(this._getLeads) : super(const LeadListInitial()) {
+  LeadListBloc(this._getProspectos, this._getPropuestas)
+    : super(const LeadListInitial()) {
     on<LeadListStarted>(_onStarted);
     on<LeadListRefresh>(_onRefresh);
   }
@@ -17,7 +19,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     Emitter<LeadListState> emit,
   ) async {
     emit(const LeadListLoading());
-    await _loadData(emit);
+    await _loadData(event.type, emit);
   }
 
   Future<void> _onRefresh(
@@ -25,19 +27,18 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     Emitter<LeadListState> emit,
   ) async {
     emit(const LeadListLoading());
-    await _loadData(emit);
+    await _loadData(event.type, emit);
   }
 
-  Future<void> _loadData(Emitter<LeadListState> emit) async {
+  Future<void> _loadData(LeadType type, Emitter<LeadListState> emit) async {
     try {
-      final leadsF = _getLeads();
+      final List<LeadEntity> leads = type == LeadType.prospectos
+          ? await _getProspectos()
+          : await _getPropuestas();
 
-      final leads = await leadsF.catchError((_) => <LeadModel>[]);
-
-      emit(LeadListLoaded(leads: leads));
+      emit(LeadListLoaded(leads: leads, type: type));
     } catch (e, stackTrace) {
       addError(e, stackTrace);
-
       emit(LeadListError(e.toString()));
     }
   }

@@ -86,21 +86,26 @@ class AppRouter {
 
     // PRINCIPALES
     AppRoutes.home: RouteDefinition(builder: (_) => const HomePage()),
-    AppRoutes.leads: RouteDefinition(builder: (_) => const LeadListPage()),
     AppRoutes.chats: RouteDefinition(builder: (_) => const ChatListPage()),
     AppRoutes.settings: RouteDefinition(builder: (_) => const SettingsPage()),
 
-    // PENDIENTES — en construcción
     AppRoutes.prospectos: RouteDefinition(
-      builder: (_) => const UnderConstructionPage(routeName: 'Prospectos'),
-      transition: TransitionType.fade,
+      builder: (_) => const LeadListPage(type: LeadType.prospectos),
     ),
-
     AppRoutes.propuestas: RouteDefinition(
-      builder: (_) => const UnderConstructionPage(routeName: 'Propuestas'),
-      transition: TransitionType.fade,
+      builder: (_) => const LeadListPage(type: LeadType.propuestas),
     ),
 
+    // PENDIENTES — en construcción
+    // AppRoutes.prospectos: RouteDefinition(
+    //   builder: (_) => const UnderConstructionPage(routeName: 'Prospectos'),
+    //   transition: TransitionType.fade,
+    // ),
+
+    // AppRoutes.propuestas: RouteDefinition(
+    //   builder: (_) => const UnderConstructionPage(routeName: 'Propuestas'),
+    //   transition: TransitionType.fade,
+    // ),
     AppRoutes.cobranza: RouteDefinition(
       builder: (_) => const UnderConstructionPage(routeName: 'Cobranza'),
       transition: TransitionType.fade,

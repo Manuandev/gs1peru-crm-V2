@@ -7,13 +7,31 @@ class LeadRemoteDatasource {
   final ApiClient _api = ApiClient();
   final _session = SessionService();
 
-  Future<List<LeadModel>> getLeads() async {
-    final String body = '${_session.codUser}¯L';
+  final sep = AppConstants.sepListas;
+  final camp = AppConstants.sepCampos;
+
+  Future<List<ProspectoModel>> getProspectos() async {
+    final String body =
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}NE';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
     return switch (result) {
-      ApiSuccess(:final data) => LeadModel.parseList(data),
+      ApiSuccess(:final data) => ProspectoModel.parseList(data),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  Future<List<PropuestaModel>> getPropuestas() async {
+    final String body =
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}PT';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => PropuestaModel.parseList(data),
       ApiEmpty() => [],
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),

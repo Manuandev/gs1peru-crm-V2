@@ -12,7 +12,7 @@ class NotificationNavigator {
     if (route == null) return;
 
     if (route.startsWith(AppRoutes.chats)) return _goChat(notif);
-    if (route.startsWith(AppRoutes.leads)) return _goLead(notif);
+    // if (route.startsWith(AppRoutes.leads)) return _goLead(notif);
     
 
     _go(route);
@@ -27,7 +27,7 @@ class NotificationNavigator {
     state.pushNamed(AppRoutes.detalleChat, arguments: {'idLead': idLead});
   }
 
-  void _goLead(AppNotification notif) => _go(AppRoutes.leads); // TODO
+  // void _goLead(AppNotification notif) => _go(AppRoutes.leads); // TODO
 
   void _go(String route) {
     NavigationService.navigatorKey.currentState?.pushNamedAndRemoveUntil(

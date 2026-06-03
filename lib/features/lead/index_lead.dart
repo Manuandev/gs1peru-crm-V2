@@ -13,6 +13,8 @@ export 'domain/entities/prospecto.dart';
 export 'domain/entities/propuesta.dart';
 export 'domain/entities/lead_detail.dart';
 export 'domain/entities/lead.dart';
+export 'domain/entities/comentario_lead.dart';
+export 'domain/entities/lead_detalle_completo.dart';
 
 export 'domain/enums/types_lead.dart';
 export 'domain/enums/lead_filtro.dart';
@@ -25,7 +27,18 @@ export 'presentation/bloc/lead_list_bloc.dart';
 export 'presentation/bloc/lead_list_event.dart';
 export 'presentation/bloc/lead_list_state.dart';
 
+export 'presentation/bloc/lead_detalle_bloc.dart';
+export 'presentation/bloc/lead_detalle_event.dart';
+export 'presentation/bloc/lead_detalle_state.dart';
+
 export 'presentation/pages/lead_list_page.dart';
+export 'presentation/pages/lead_detalle_page.dart';
+
+export 'presentation/widgets/detalle/lead_detalle_view.dart';
+export 'presentation/widgets/detalle/lead_detalle_stepper.dart';
+export 'presentation/widgets/detalle/lead_detalle_info_card.dart';
+export 'presentation/widgets/detalle/lead_detalle_comentarios.dart';
+export 'presentation/widgets/detalle/lead_detalle_actions.dart';
 
 export 'presentation/widgets/lead_list_portrait.dart';
 export 'presentation/widgets/lead_list_view.dart';

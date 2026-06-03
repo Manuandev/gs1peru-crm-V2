@@ -48,7 +48,7 @@ class LeadListView extends StatelessWidget {
                     : 'No hay propuestas.',
               );
             }
-            return LeadListPortrait(leads: state.leads);
+            return LeadListPortrait(leads: state.leads, type: type);
           }
 
           return const SizedBox.shrink();

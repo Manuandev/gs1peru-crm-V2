@@ -300,6 +300,15 @@ class AppIcons {
   static const IconData visibilityOff_icon = Icons.visibility_off_outlined;
 
   // ============================================================
+  // NEGOCIO / CRM
+  // ============================================================
+  /// Edificio — empresa, organización
+  static const IconData business = Icons.business_outlined;
+
+  /// Etiqueta de oferta — interés, curso del lead
+  static const IconData interes = Icons.local_offer_outlined;
+
+  // ============================================================
   // SPLASH / BRANDING
   // ============================================================
 

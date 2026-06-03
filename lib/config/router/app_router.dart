@@ -120,6 +120,22 @@ class AppRouter {
         );
       },
     ),
+    // SEGUIMIENTO / PROPUESTAS — detalle de lead
+    AppRoutes.detalleSeguimiento: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return LeadDetallePage(idLead: args['idLead'] as int);
+      },
+    ),
+    AppRoutes.detallePropuesta: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return LeadDetallePage(idLead: args['idLead'] as int);
+      },
+    ),
+
     // HOME
     AppRoutes.notifications: RouteDefinition(
       builder: (_) => const NotificationsPage(),

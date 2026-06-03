@@ -6,6 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 extension NavigationExtensions on BuildContext {
   // ── Primitivos (no usar directamente desde features) ───────
@@ -55,6 +56,18 @@ extension NavigationExtensions on BuildContext {
 
   Future<List<AssetEntity>?> goToMediaPicker() =>
       _push<List<AssetEntity>>(AppRoutes.mediaPicker);
+
+  // ── Lead — detalle ─────────────────────────────────────────
+
+  Future<void> goToDetalleLead({
+    required int idLead,
+    required LeadType type,
+  }) => _push(
+    type == LeadType.seguimientos
+        ? AppRoutes.detalleSeguimiento
+        : AppRoutes.detallePropuesta,
+    arguments: {'idLead': idLead},
+  );
 
   // ── Home ───────────────────────────────────────────────────
 

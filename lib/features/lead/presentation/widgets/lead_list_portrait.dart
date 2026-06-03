@@ -3,13 +3,15 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPortrait extends StatelessWidget {
   final List<Lead> leads;
+  final LeadType type;
 
-  const LeadListPortrait({super.key, required this.leads});
+  const LeadListPortrait({super.key, required this.leads, required this.type});
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +42,13 @@ class LeadListPortrait extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: LeadCard(
                   lead: lead,
-                  onWhatsAppTap: () {
-                    // TODO: tu lógica aquí
-                  },
-                  onChatTap: () {
-                    // TODO: tu lógica aquí
-                  },
-                  onStarTap: () {
-                    // TODO: tu lógica aquí
-                  },
+                  onTap: () => context.goToDetalleLead(
+                    idLead: lead.idLead,
+                    type: type,
+                  ),
+                  onWhatsAppTap: () {},
+                  onChatTap: () {},
+                  onStarTap: () {},
                 ),
               );
             },

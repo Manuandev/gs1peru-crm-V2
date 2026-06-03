@@ -8,6 +8,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadCard extends StatelessWidget {
   final Lead lead;
+  final VoidCallback? onTap;
   final VoidCallback? onWhatsAppTap;
   final VoidCallback? onChatTap;
   final VoidCallback? onStarTap;
@@ -15,6 +16,7 @@ class LeadCard extends StatelessWidget {
   const LeadCard({
     super.key,
     required this.lead,
+    this.onTap,
     this.onWhatsAppTap,
     this.onChatTap,
     this.onStarTap,
@@ -23,7 +25,7 @@ class LeadCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(

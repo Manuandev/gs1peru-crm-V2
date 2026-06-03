@@ -5,21 +5,8 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
-class ChatListView extends StatefulWidget {
+class ChatListView extends StatelessWidget {
   const ChatListView({super.key});
-
-  @override
-  State<ChatListView> createState() => _ChatListViewState();
-}
-
-class _ChatListViewState extends State<ChatListView> {
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +15,10 @@ class _ChatListViewState extends State<ChatListView> {
       title: 'Mis conversaciones',
       onPop: () => context.goToHome(),
       drawerSide: DrawerSide.left,
+      // ── Búsqueda integrada en el AppBar (ícono de lupa) ──
+      onSearch: (query) {
+        context.read<ChatListBloc>().add(ChatListSearched(query));
+      },
       appBarPopupItems: const [
         AppBarPopupItem(
           value: 'refresh',
@@ -43,18 +34,6 @@ class _ChatListViewState extends State<ChatListView> {
       },
       body: Column(
         children: [
-          // ── Barra de búsqueda ──────────────────────────
-          ChatListSearchBar(
-            controller: _searchController,
-            onChanged: (query) {
-              context.read<ChatListBloc>().add(ChatListSearched(query));
-            },
-            onClear: () {
-              _searchController.clear();
-              context.read<ChatListBloc>().add(ChatListSearched(''));
-            },
-          ),
-
           // ── Chips de filtro ────────────────────────────
           BlocBuilder<ChatListBloc, ChatListState>(
             buildWhen: (prev, curr) => curr is ChatListSuccess,

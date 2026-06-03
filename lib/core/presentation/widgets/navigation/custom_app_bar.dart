@@ -84,7 +84,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   void _stopSearch() {
     setState(() => _isSearching = false);
     _searchController.clear();
-    widget.onSearch?.call(''); // limpia resultados
+    widget.onSearch?.call('');
   }
 
   @override
@@ -102,55 +102,55 @@ class _CustomAppBarState extends State<CustomAppBar> {
       // ── TÍTULO o CAMPO DE BÚSQUEDA ───────────────────────────
       title: _isSearching
           ? Container(
-              height: 40,
+              height: AppSizing.buttonHeight - AppSpacing.sm,
               decoration: BoxDecoration(
                 color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSizing.radiusSm),
               ),
               child: Row(
                 children: [
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
                       autofocus: true,
-                      style: TextStyle(
+                      style: AppTextStyles.bodyLarge.copyWith(
                         color: colorScheme.onSurface,
-                        fontSize: 16,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Buscar...',
-                        hintStyle: TextStyle(
-                          // ignore: deprecated_member_use
-                          color: colorScheme.onSurface.withOpacity(0.5),
-                          fontSize: 16,
+                        hintStyle: AppTextStyles.bodyLarge.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
+                          vertical: AppSpacing.sm,
                         ),
                       ),
                       onChanged: widget.onSearch,
                     ),
                   ),
-                  // ✅ X dentro del container
                   ValueListenableBuilder<TextEditingValue>(
                     valueListenable: _searchController,
-                    builder: (_, value, _) {
-                      if (value.text.isEmpty) return const SizedBox(width: 8);
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) {
+                        return const SizedBox(width: AppSpacing.sm);
+                      }
                       return GestureDetector(
                         onTap: () {
                           _searchController.clear();
                           widget.onSearch?.call('');
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                          ),
                           child: Icon(
                             Icons.close,
-                            size: 18,
+                            size: AppSizing.iconActionSm,
                             // ignore: deprecated_member_use
                             color: colorScheme.onSurface.withOpacity(0.5),
                           ),
@@ -252,7 +252,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
               value: item.value,
               child: Row(
                 children: [
-                  Icon(item.icon, size: 20, color: colorScheme.onSurface),
+                  Icon(
+                    item.icon,
+                    size: AppSizing.iconNav,
+                    color: colorScheme.onSurface,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(item.label, style: AppTextStyles.bodyMedium),
                 ],

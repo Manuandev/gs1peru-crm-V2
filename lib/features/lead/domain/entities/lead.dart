@@ -13,9 +13,9 @@ class Lead {
   final String estado;
   final int? idEvento;
   final String? evento;
-  final int? idCampania;
+  final int idCampania;
   final String? campania;
-  final int? idCanal;
+  final int idCanal;
   final String? canal;
   final int? idInteres;
   final String? interes;

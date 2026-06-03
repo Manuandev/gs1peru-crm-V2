@@ -18,35 +18,58 @@ class ChatTile extends StatefulWidget {
 
 class _ChatTileState extends State<ChatTile> {
   late Duration _elapsed;
-  late Timer _timer;
+  DateTime? _fechaRecepcion;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _elapsed = Duration.zero;
+    _fechaRecepcion = null; // usa fechaHora del backend
     _updateElapsed();
-    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
-      setState(() => _updateElapsed());
-    });
+    _startTimer();
   }
 
   void _updateElapsed() {
-    final fecha = DateFormatter.parseDate(widget.chat.fechaHora);
+    final fecha =
+        _fechaRecepcion ?? DateFormatter.parseDate(widget.chat.fechaHora);
     if (fecha == null) return;
     _elapsed = DateTime.now().difference(fecha);
+  }
+
+  void _startTimer() {
+    if (_timer != null) _timer!.cancel();
+
+    if (_elapsed.inSeconds < 60) {
+      // Fase 1: cada segundo
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        setState(() => _updateElapsed());
+        // Cuando llega al minuto, reinicia en modo minutos
+        if (_elapsed.inSeconds >= 60) {
+          _startTimer();
+        }
+      });
+    } else {
+      // Fase 2: cada minuto
+      _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+        setState(() => _updateElapsed());
+      });
+    }
   }
 
   @override
   void didUpdateWidget(ChatTile oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.chat.fechaHora != widget.chat.fechaHora) {
-      _updateElapsed();
+    if (oldWidget.chat.mensaje != widget.chat.mensaje) {
+      _fechaRecepcion = DateTime.now(); // timestamp exacto del cliente
+      setState(() => _elapsed = Duration.zero);
+      _startTimer();
     }
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -114,7 +137,9 @@ class _ChatTileState extends State<ChatTile> {
                 // ─── Avatar ───────────────────────────────────────
                 CircleAvatar(
                   radius: avatarRadius,
-                  backgroundColor: AvatarUtils.color(widget.chat.nombreCompleto),
+                  backgroundColor: AvatarUtils.color(
+                    widget.chat.nombreCompleto,
+                  ),
                   child: Text(
                     AvatarUtils.initials(widget.chat.nombreCompleto),
                     style: TextStyle(

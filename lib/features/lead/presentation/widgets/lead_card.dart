@@ -1,6 +1,8 @@
 // lib/features/lead/presentation/widgets/lead_card.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
@@ -123,14 +125,15 @@ class _LeadInfo extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (lead.canal != null) ...[
+            if (lead.idCanal > 0) ...[
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  AppIconsSocial.widgetCanal(lead.idCanal!),
+                  AppIconsSocial.widgetCanal(lead.idCanal),
                   SizedBox(width: AppSpacing.xs),
                   Flexible(
                     child: Text(
-                      CanalHelper.get(lead.idCanal!).nombre,
+                      CanalHelper.get(lead.idCanal).nombre,
                       style: labelSmallStyle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -164,10 +167,38 @@ class _LeadInfo extends StatelessWidget {
 // Timestamp derecho: fecha + badge de estado
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _LeadTimestamp extends StatelessWidget {
+class _LeadTimestamp extends StatefulWidget {
   final Lead lead;
-
   const _LeadTimestamp({required this.lead});
+
+  @override
+  State<_LeadTimestamp> createState() => _LeadTimestampState();
+}
+
+class _LeadTimestampState extends State<_LeadTimestamp> {
+  late Duration _elapsed;
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateElapsed();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      setState(() => _updateElapsed());
+    });
+  }
+
+  void _updateElapsed() {
+    final fecha = DateFormatter.parseDate(widget.lead.fechaHora);
+    if (fecha == null) return;
+    _elapsed = DateTime.now().difference(fecha);
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +206,7 @@ class _LeadTimestamp extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          lead.fechaHora.formatSinHoy(),
+          widget.lead.fechaHora.formatSinHoy(),
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,
@@ -183,14 +214,17 @@ class _LeadTimestamp extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          lead.fechaHora.formatSinHoy(),
+          ElapsedTimeUtils.formatHyM(_elapsed),
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        AppIconsSocial.chipEstado(lead.idEstado, label: lead.estado),
+        AppIconsSocial.chipEstado(
+          widget.lead.idEstado,
+          label: widget.lead.estado,
+        ),
       ],
     );
   }

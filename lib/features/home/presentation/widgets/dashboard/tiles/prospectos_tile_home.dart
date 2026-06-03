@@ -1,81 +1,109 @@
 // lib/features/home/presentation/widgets/dashboard/tiles/prospectos_tile_home.dart
 
 import 'package:flutter/material.dart';
-
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class ProspectoTileHome extends StatelessWidget {
   final ProspectoHome prospecto;
-  const ProspectoTileHome({super.key, required this.prospecto});
+  final VoidCallback? onTap;
+
+  const ProspectoTileHome({super.key, required this.prospecto, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeText = theme.textTheme;
 
-    final titleStyle = themeText.titleSmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: themeText.titleSmall!.color,
-    );
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            // ── AVATAR con ícono ──────────────────────────────────
+            _Avatar(nombre: prospecto.nombre),
+            const SizedBox(width: AppSpacing.md),
 
-    final empresaStyle = themeText.labelSmall?.copyWith(
-      color: AppColors.textSecondary,
-    );
-
-    final fechaStyle = themeText.labelSmall?.copyWith(
-      color: AppColors.textSecondary,
-    );
-
-    final avatarStyle = themeText.labelMedium?.copyWith(
-      color: AppColors.textOnDark,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: AppSizing.avatarRadiusSm,
-                backgroundColor: prospecto.nombre.avatarColor,
-                child: Text(prospecto.nombre.initials, style: avatarStyle),
-              ),
-              SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+            // ── NOMBRE + EMPRESA ──────────────────────────────────
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    prospecto.nombre,
+                    style: themeText.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (prospecto.nombreEmpresa.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      prospecto.nombre,
-                      style: titleStyle,
+                      'Empresa: ${prospecto.nombreEmpresa}',
+                      style: themeText.labelSmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (prospecto.nombreEmpresa.isNotEmpty) ...[
-                      SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        'Empresa: ${prospecto.nombreEmpresa}',
-                        style: empresaStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
-              SizedBox(width: AppSpacing.xs),
-              Text(prospecto.fechaHora.formatConDia(), style: fechaStyle),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(width: AppSpacing.xs),
+
+            // ── FECHA ─────────────────────────────────────────────
+            Text(
+              prospecto.fechaHora.formatConDia(),
+              style: themeText.labelSmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+
+            // ── FLECHA ────────────────────────────────────────────
+            Icon(
+              AppIcons.forward,
+              size: AppSizing.iconActionSm,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Avatar: círculo con color por nombre + ícono de persona ────────
+class _Avatar extends StatelessWidget {
+  final String nombre;
+
+  const _Avatar({required this.nombre});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = nombre.avatarColor;
+
+    // Color de fondo suave (10% opacidad) y color del ícono más saturado
+    final bgColor = Color.alphaBlend(
+      color.withValues(alpha: 0.15),
+      Colors.white,
+    );
+    final iconColor = color;
+
+    return Container(
+      width: AppSizing.avatarSm,
+      height: AppSizing.avatarSm,
+      decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+      child: Center(
+        child: Icon(AppIcons.user, color: iconColor, size: AppSizing.iconMd),
       ),
     );
   }

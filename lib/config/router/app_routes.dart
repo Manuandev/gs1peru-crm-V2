@@ -16,8 +16,8 @@ class AppRoutes {
   static const String settings = '/settings';
 
   static const String chats = '/chats';
+  static const String seguimiento = '/seguimiento';
   static const String propuestas = '/propuestas';
-  static const String prospectos = '/prospectos';
   static const String cobranza = '/cobranza';
 
   static const String notifications = '/home/notifications';
@@ -26,7 +26,7 @@ class AppRoutes {
   static const String detalleEditarLead = '/chats/detalle/editar-lead';
   static const String templates = '/chats/templates';
 
-  static const String detalleProspecto = '/prospectos/detalle';
+  static const String detalleSeguimiento = '/seguimiento/detalle';
   static const String detallePropuesta = '/propuestas/detalle';
   static const String detalleCobranza = '/cobranza/detalle';
 

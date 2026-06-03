@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class RecordatorioTile extends StatelessWidget {
@@ -35,9 +36,9 @@ class RecordatorioTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    recordatorio.fechaHora,
+                    recordatorio.fechaHora.formatConDia(),
                     style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.5),
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -47,7 +48,7 @@ class RecordatorioTile extends StatelessWidget {
               Text(
                 recordatorio.nombreEmpresa,
                 style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 8),
@@ -58,7 +59,7 @@ class RecordatorioTile extends StatelessWidget {
                   Icon(
                     Icons.phone_outlined,
                     size: 13,
-                    color: colorScheme.onSurface.withOpacity(0.5),
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Text(recordatorio.telefono, style: textTheme.bodySmall),
@@ -66,7 +67,7 @@ class RecordatorioTile extends StatelessWidget {
                   Icon(
                     Icons.person_outline,
                     size: 13,
-                    color: colorScheme.onSurface.withOpacity(0.5),
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Expanded(

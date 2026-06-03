@@ -1,6 +1,8 @@
 // lib/features/home/presentation/widgets/notifications/tiles/lead_reasignado_tile.dart
 
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class LeadReasignadoTile extends StatelessWidget {
@@ -34,9 +36,9 @@ class LeadReasignadoTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    lead.fechaHora,
+                    lead.fechaHora.formatConDia(),
                     style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.5),
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -47,7 +49,7 @@ class LeadReasignadoTile extends StatelessWidget {
               Text(
                 lead.nombreEmpresa,
                 style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 8),
@@ -58,7 +60,7 @@ class LeadReasignadoTile extends StatelessWidget {
                   Icon(
                     Icons.phone_outlined,
                     size: 13,
-                    color: colorScheme.onSurface.withOpacity(0.5),
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Text(lead.telefono, style: textTheme.bodySmall),
@@ -66,7 +68,7 @@ class LeadReasignadoTile extends StatelessWidget {
                   Icon(
                     Icons.person_outline,
                     size: 13,
-                    color: colorScheme.onSurface.withOpacity(0.5),
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Expanded(

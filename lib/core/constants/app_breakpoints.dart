@@ -134,9 +134,6 @@ class AppSizing {
   // ALTURAS DE ELEMENTOS
   // ============================================================
 
-  /// Radio de avatar en listas: 20px
-  static const double avatarRadiusSm = 20.0;
-
   /// Altura de input: 56px
   static const double inputHeight = 56.0;
 
@@ -180,4 +177,16 @@ class AppSizing {
 
   /// Grosor spinner grande
   static const double spinnerStrokeLarge = 4.0;
+
+  // Avatares
+  static const double avatarSm = 42;
+  static const double avatarMd = 48;
+  static const double avatarLg = 56;
+  static const double avatarXl = 72;
+
+  // Radio (para CircleAvatar que usa radius, no size)
+  static const double avatarRadiusSm = avatarSm / 2; // 21
+  static const double avatarRadiusMd = avatarMd / 2; // 24
+  static const double avatarRadiusLg = avatarLg / 2; // 28
+  static const double avatarRadiusXl = avatarXl / 2; // 36
 }

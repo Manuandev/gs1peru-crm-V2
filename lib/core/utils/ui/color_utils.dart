@@ -10,10 +10,10 @@ class ColorUtils {
     // Conversaciones
     'Mis conversaciones': Color(0xFF2196F3),
     'Conversaciones': Color(0xFF2196F3),
-    // Prospectos
-    'Prospectos': Color(0xFF4CAF50),
-    'Prospecto': Color(0xFF4CAF50),
-    // Propuesta / Propuestas
+    // Seguimientos
+    'Seguimiento': Color(0xFF4CAF50),
+    'Seguimientos': Color(0xFF4CAF50),
+    // Propuestas
     'Propuesta': Color(0xFFF26334),
     'Propuestas': Color(0xFFF26334),
     // Cobranza

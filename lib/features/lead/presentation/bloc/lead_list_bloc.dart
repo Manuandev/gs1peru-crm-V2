@@ -12,7 +12,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
   List<Lead> _allLeads = [];
   late LeadListFiltro _filtroActivo;
-  LeadType _currentType = LeadType.prospectos;
+  LeadType _currentType = LeadType.seguimientos;
   // StreamSubscription<WebSocketMessage>? _messageSubscription;
 
   LeadListBloc(this._getLeadsUseCase) : super(const LeadListInitial()) {
@@ -44,7 +44,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     _currentType = type;
     try {
       final leads = await _getLeadsUseCase(
-        type == LeadType.prospectos ? 'PO' : 'PA',
+        type == LeadType.seguimientos ? 'PO' : 'PA',
       );
       _allLeads = leads;
       _emitFiltered(emit);

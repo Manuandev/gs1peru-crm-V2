@@ -16,7 +16,7 @@ class LeadListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       onPop: () => context.goToHome(),
-      title: type == LeadType.prospectos ? 'Prospectos' : 'Propuestas',
+      title: type == LeadType.seguimientos ? 'Prospectos' : 'Propuestas',
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
         IconButton(
@@ -43,8 +43,8 @@ class LeadListView extends StatelessWidget {
           if (state is LeadListSuccess) {
             if (state.leads.isEmpty) {
               return AppEmptyView(
-                message: type == LeadType.prospectos
-                    ? 'No hay prospectos.'
+                message: type == LeadType.seguimientos
+                    ? 'No hay seguimientos.'
                     : 'No hay propuestas.',
               );
             }

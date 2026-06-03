@@ -89,8 +89,8 @@ class AppRouter {
     AppRoutes.chats: RouteDefinition(builder: (_) => const ChatListPage()),
     AppRoutes.settings: RouteDefinition(builder: (_) => const SettingsPage()),
 
-    AppRoutes.prospectos: RouteDefinition(
-      builder: (_) => const LeadListPage(type: LeadType.prospectos),
+    AppRoutes.seguimiento: RouteDefinition(
+      builder: (_) => const LeadListPage(type: LeadType.seguimientos),
     ),
     AppRoutes.propuestas: RouteDefinition(
       builder: (_) => const LeadListPage(type: LeadType.propuestas),

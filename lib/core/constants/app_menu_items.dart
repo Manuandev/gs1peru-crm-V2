@@ -47,10 +47,10 @@ class AppMenuItems {
       route: AppRoutes.chats,
     ),
     DrawerItemModel(
-      id: AppRoutes.prospectos,
+      id: AppRoutes.seguimiento,
       icon: AppIcons.user,
-      label: 'Prospectos',
-      route: AppRoutes.prospectos,
+      label: 'Seguimiento',
+      route: AppRoutes.seguimiento,
     ),
     DrawerItemModel(
       id: AppRoutes.propuestas,
@@ -93,10 +93,10 @@ class AppMenuItems {
         badge: conversacionesBadge,
       ),
       DrawerItemModel(
-        id: AppRoutes.prospectos,
+        id: AppRoutes.seguimiento,
         icon: AppIcons.user,
-        label: 'Prospectos',
-        route: AppRoutes.prospectos,
+        label: 'Seguimiento',
+        route: AppRoutes.seguimiento,
         badge: prospectosBadge,
       ),
       DrawerItemModel(

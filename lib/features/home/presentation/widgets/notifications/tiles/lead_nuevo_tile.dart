@@ -1,6 +1,8 @@
 // lib/features/home/presentation/widgets/notifications/tiles/lead_nuevo_tile.dart
 
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class LeadNuevoTile extends StatelessWidget {
@@ -33,7 +35,7 @@ class LeadNuevoTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    lead.fechaHora,
+                    lead.fechaHora.formatConDia(),
                     style: textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.5),
                     ),

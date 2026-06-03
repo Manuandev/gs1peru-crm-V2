@@ -34,6 +34,9 @@ class AppIcons {
   /// Inicio / Home — versión outline (inactivo)
   static const IconData home = Icons.home_outlined;
 
+  /// Chevron derecho — indicador de navegación a detalle en listas (LeadCard, etc.)
+  static const IconData chevronRight = Icons.chevron_right;
+
   /// Inicio / Home — versión rellena (activo)
   static const IconData homeFilled = Icons.home;
 

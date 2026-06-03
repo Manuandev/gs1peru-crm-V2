@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatListPortrait extends StatelessWidget {
@@ -17,9 +18,13 @@ class ChatListPortrait extends StatelessWidget {
       itemCount: state.chats.length,
       itemBuilder: (context, index) {
         final chat = state.chats[index];
-        return ChatTile(
-          chat: chat,
-          onTap: () => context.goToDetalleChat(idLead: chat.idLead),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: ChatTile(
+            chat: chat,
+            onTap: () => context.goToDetalleChat(idLead: chat.idLead),
+            onResponderTap: () => context.goToDetalleChat(idLead: chat.idLead),
+          ),
         );
       },
     );

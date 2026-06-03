@@ -1,4 +1,4 @@
-// lib/features/chats/presentation/widgets/chat_tile.dart
+// lib/features/chat/presentation/widgets/chat_list/chat_tile.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -8,23 +8,31 @@ import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatTile extends StatefulWidget {
   final Chat chat;
+  final int mensajesNoLeidos;
   final VoidCallback? onTap;
+  final VoidCallback? onResponderTap;
+  final VoidCallback? onEtiquetarTap;
 
-  const ChatTile({super.key, required this.chat, this.onTap});
+  const ChatTile({
+    super.key,
+    required this.chat,
+    this.mensajesNoLeidos = 0,
+    this.onTap,
+    this.onResponderTap,
+    this.onEtiquetarTap,
+  });
 
   @override
   State<ChatTile> createState() => _ChatTileState();
 }
 
 class _ChatTileState extends State<ChatTile> {
-  late Duration _elapsed;
+  Duration _elapsed = Duration.zero;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _elapsed = Duration.zero;
-    // usa fechaHora del backend
     _updateElapsed();
     _startTimer();
   }
@@ -36,19 +44,13 @@ class _ChatTileState extends State<ChatTile> {
   }
 
   void _startTimer() {
-    if (_timer != null) _timer!.cancel();
-
+    _timer?.cancel();
     if (_elapsed.inSeconds < 60) {
-      // Fase 1: cada segundo
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         setState(() => _updateElapsed());
-        // Cuando llega al minuto, reinicia en modo minutos
-        if (_elapsed.inSeconds >= 60) {
-          _startTimer();
-        }
+        if (_elapsed.inSeconds >= 60) _startTimer();
       });
     } else {
-      // Fase 2: cada minuto
       _timer = Timer.periodic(const Duration(minutes: 1), (_) {
         setState(() => _updateElapsed());
       });
@@ -59,8 +61,8 @@ class _ChatTileState extends State<ChatTile> {
   void didUpdateWidget(ChatTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.chat.mensaje != widget.chat.mensaje) {
-      _startTimer();
       setState(() => _updateElapsed());
+      _startTimer();
     }
   }
 
@@ -72,181 +74,377 @@ class _ChatTileState extends State<ChatTile> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    // ─── Valores responsivos con ResponsiveHelper ─────────────────
-    final avatarRadius = ResponsiveHelper.getValue<double>(
-      context,
-      mobile: 24,
-      tablet: 26,
-      desktop: 28,
-    );
-    final paddingH = ResponsiveHelper.getValue<double>(
-      context,
-      mobile: 16,
-      tablet: 20,
-      desktop: 24,
-    );
-    final paddingV = ResponsiveHelper.getValue<double>(
-      context,
-      mobile: 10,
-      tablet: 12,
-      desktop: 14,
-    );
-    final nombreSize = ResponsiveHelper.getValue<double>(
-      context,
-      mobile: 15,
-      tablet: 16,
-      desktop: 17,
-    );
-    final mensajeSize = ResponsiveHelper.getValue<double>(
-      context,
-      mobile: 13,
-      tablet: 14,
-      desktop: 15,
-    );
-    final fechaSize = ResponsiveHelper.getValue<double>(
-      context,
-      mobile: 12,
-      tablet: 12,
-      desktop: 13,
-    );
-
-    // Divider alineado al texto (igual que WhatsApp)
-    final dividerIndent = paddingH + (avatarRadius * 2) + 12;
-
-    return InkWell(
+    return GestureDetector(
       onTap: widget.onTap,
-      // ignore: deprecated_member_use
-      splashColor: colorScheme.primary.withOpacity(0.05),
-      // ignore: deprecated_member_use
-      highlightColor: colorScheme.primary.withOpacity(0.03),
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: paddingH,
-              vertical: paddingV,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.xs,
+          AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.cardShadow,
+              blurRadius: 4,
+              offset: Offset(0, 2),
             ),
-            child: Row(
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Fila principal ───────────────────────────────────────────
+            Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // ─── Avatar ───────────────────────────────────────
-                CircleAvatar(
-                  radius: avatarRadius,
-                  backgroundColor: AvatarUtils.color(
-                    widget.chat.nombreCompleto,
-                  ),
-                  child: Text(
-                    AvatarUtils.initials(widget.chat.nombreCompleto),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: avatarRadius * 0.58,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // ─── Nombre + Mensaje + Fecha + Badge ─────────────
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Fila: Nombre | Fecha
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.chat.nombreCompleto,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: nombreSize,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            widget.chat.fechaHora.formatWhatsApp(),
-                            style: TextStyle(
-                              fontSize: fechaSize,
-                              color: Colors.grey.shade500,
-                              fontWeight: FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 3),
-
-                      // Fila: Mensaje | Badge
-                      _buildPreview(widget.chat, mensajeSize, colorScheme),
-                    ],
-                  ),
+                _AvatarConCanal(chat: widget.chat),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(child: _InfoChat(chat: widget.chat)),
+                const SizedBox(width: AppSpacing.sm),
+                _ColumnaFecha(chat: widget.chat, elapsed: _elapsed),
+                const SizedBox(width: AppSpacing.xxs),
+                const Icon(
+                  AppIcons.chevronRight,
+                  size: AppSizing.iconSm,
+                  color: AppColors.textDisabled,
                 ),
               ],
             ),
-          ),
 
-          // ─── Divider alineado al texto ─────────────────────────
-          Padding(
-            padding: EdgeInsets.only(left: dividerIndent),
-            child: Divider(
-              height: 1,
-              thickness: 0.4,
-              color: Colors.grey.shade300,
+            const SizedBox(height: AppSpacing.sm),
+            const Divider(height: 1, thickness: 0.5, color: AppColors.border),
+            const SizedBox(height: AppSpacing.xs),
+
+            // ── Barra de acciones ────────────────────────────────────────
+            _BarraAcciones(
+              chat: widget.chat,
+              mensajesNoLeidos: widget.mensajesNoLeidos,
+              onResponderTap: widget.onResponderTap,
+              onEtiquetarTap: widget.onEtiquetarTap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Avatar con badge del canal en esquina inferior derecha
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AvatarConCanal extends StatelessWidget {
+  final Chat chat;
+
+  const _AvatarConCanal({required this.chat});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        CircleAvatar(
+          radius: AppSizing.avatarRadiusMd,
+          backgroundColor: AvatarUtils.color(chat.nombreCompleto),
+          child: Text(
+            AvatarUtils.initials(chat.nombreCompleto),
+            style: AppTextStyles.labelMedium.copyWith(
+              color: AppColors.textOnDark,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        if (chat.idCanal > 0)
+          Positioned(
+            bottom: -1,
+            right: -1,
+            child: Container(
+              width: AppSizing.avatarCanalBadge,
+              height: AppSizing.avatarCanalBadge,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.surface,
+                border: Border.all(
+                  color: AppColors.border,
+                  width: AppSizing.canalBadgeBorder,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: AppIconsSocial.widgetCanal(
+                chat.idCanal,
+                size: AppSizing.iconCanalBadge,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Info central: nombre + canal, empresa, último mensaje
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _InfoChat extends StatelessWidget {
+  final Chat chat;
+
+  const _InfoChat({required this.chat});
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = buildMessagePreview(chat);
+    final canalNombre = CanalHelper.get(chat.idCanal).nombre;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Nombre + ícono de canal + nombre del canal
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                chat.nombreCompleto,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            if (chat.idCanal > 0) ...[
+              const SizedBox(width: AppSpacing.xs),
+              AppIconsSocial.widgetCanal(
+                chat.idCanal,
+                size: AppSizing.iconCanalInfo,
+              ),
+              const SizedBox(width: AppSpacing.xxs),
+              Text(
+                canalNombre,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (chat.nombreEmpresa.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            chat.nombreEmpresa,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xxs),
+        // Último mensaje con ícono de tipo si aplica
+        Row(
+          children: [
+            if (preview.icon != null) ...[
+              Icon(
+                preview.icon,
+                size: AppSizing.iconCanalInfo,
+                color: preview.color ?? AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.xxs),
+            ],
+            Expanded(
+              child: Text(
+                preview.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: preview.color ?? AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Columna derecha: hora + chip "sin respuesta" o estado de entrega + chip etapa
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ColumnaFecha extends StatelessWidget {
+  final Chat chat;
+  final Duration elapsed;
+
+  const _ColumnaFecha({required this.chat, required this.elapsed});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorElapsed = ElapsedTimeUtils.colorFromElapsed(elapsed);
+    final textoElapsed = ElapsedTimeUtils.formatHyM(elapsed);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // Hora
+        Text(
+          chat.fechaHora.formatSinHoy(),
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        // Sin respuesta (solo cuando el cliente envió el último mensaje)
+        if (chat.isEnviado)
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xxs,
+            ),
+            decoration: BoxDecoration(
+              color: colorElapsed.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppSizing.radiusXs),
+            ),
+            child: Text(
+              'Sin respuesta $textoElapsed',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: colorElapsed,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        const SizedBox(height: AppSpacing.xxs),
+        // Chip de etapa del lead
+        AppIconsSocial.chipEstado(
+          chat.idEstado,
+          label: chat.estado,
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Barra de acciones: Responder | Etiquetar | ... + badge de mensajes no leídos
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BarraAcciones extends StatelessWidget {
+  final Chat chat;
+  final int mensajesNoLeidos;
+  final VoidCallback? onResponderTap;
+  final VoidCallback? onEtiquetarTap;
+
+  const _BarraAcciones({
+    required this.chat,
+    required this.mensajesNoLeidos,
+    this.onResponderTap,
+    this.onEtiquetarTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _BotonAccion(
+          icono: AppIconsSocial.widgetCanal(chat.idCanal, size: AppSizing.iconSm),
+          etiqueta: 'Responder',
+          onTap: onResponderTap,
+        ),
+        const _SeparadorAccion(),
+        _BotonAccion(
+          icono: const Icon(
+            AppIcons.interes,
+            size: AppSizing.iconSm,
+            color: AppColors.textSecondary,
+          ),
+          etiqueta: 'Etiquetar',
+          onTap: onEtiquetarTap,
+        ),
+        const _SeparadorAccion(),
+        const _BotonAccion(
+          icono: Icon(
+            AppIcons.moreHorizontal,
+            size: AppSizing.iconSm,
+            color: AppColors.textSecondary,
+          ),
+          etiqueta: '...',
+        ),
+        const Spacer(),
+        if (mensajesNoLeidos > 0)
+          Container(
+            constraints: const BoxConstraints(
+              minWidth: AppSizing.mensajesBadgeSize,
+              minHeight: AppSizing.mensajesBadgeSize,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              mensajesNoLeidos > 99 ? '99+' : '$mensajesNoLeidos',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textOnDark,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _BotonAccion extends StatelessWidget {
+  final Widget icono;
+  final String etiqueta;
+  final VoidCallback? onTap;
+
+  const _BotonAccion({
+    required this.icono,
+    required this.etiqueta,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          icono,
+          const SizedBox(width: AppSpacing.xxs),
+          Text(
+            etiqueta,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildPreview(Chat chat, double mensajeSize, ColorScheme colorScheme) {
-    final preview = buildMessagePreview(chat);
-    final hasIcon = preview.icon != null;
+class _SeparadorAccion extends StatelessWidget {
+  const _SeparadorAccion();
 
-    return Row(
-      children: [
-        if (hasIcon) ...[
-          Icon(preview.icon, size: mensajeSize + 1, color: preview.color),
-          const SizedBox(width: 4),
-        ],
-        Expanded(
-          child: Text(
-            preview.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: mensajeSize,
-              color: preview.color ?? Colors.grey.shade500,
-              fontWeight: FontWeight.normal,
-            ),
-          ),
-        ),
-        // Tiempo: solo si el cliente mando el mensaje
-        if (chat.isEnviado) ...[
-          const SizedBox(width: 6),
-          Text(
-            'Sin respuesta ${ElapsedTimeUtils.formatHoMoS(_elapsed)}',
-            style: TextStyle(
-              fontSize: mensajeSize - 1,
-              color: ElapsedTimeUtils.colorFromElapsed(_elapsed),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-        // Estado: solo si YO mandé el mensaje
-        if (!chat.isEnviado) ...[
-          const SizedBox(width: 4),
-          MessageStatusIcon(estado: chat.estado, color: Colors.grey),
-        ],
-      ],
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      child: Text(
+        '|',
+        style: AppTextStyles.bodySmall.copyWith(color: AppColors.border),
+      ),
     );
   }
 }

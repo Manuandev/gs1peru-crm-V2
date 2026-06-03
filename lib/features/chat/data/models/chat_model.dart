@@ -18,6 +18,7 @@ class ChatModel extends Chat {
     required super.fechaHora,
     required super.isFavorito,
     required super.isEnviado,
+    super.idCanal = 0,
   });
 
   factory ChatModel.fromRawString(String raw) {
@@ -38,6 +39,7 @@ class ChatModel extends Chat {
       fechaHora: f(10),
       isFavorito: f(11) == '1',
       isEnviado: f(12) == '1',
+      idCanal: int.tryParse(f(13)) ?? 0,
     );
   }
 

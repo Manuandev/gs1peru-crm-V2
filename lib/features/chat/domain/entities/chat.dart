@@ -16,6 +16,7 @@ class Chat extends Equatable {
   final String fechaHora;
   final bool isFavorito;
   final bool isEnviado;
+  final int idCanal;
 
   String get nombreCompleto => '$nombre $apellido'.trim();
 
@@ -33,6 +34,7 @@ class Chat extends Equatable {
     required this.fechaHora,
     required this.isFavorito,
     required this.isEnviado,
+    this.idCanal = 0,
   });
 
   @override
@@ -50,6 +52,7 @@ class Chat extends Equatable {
     fechaHora,
     isFavorito,
     isEnviado,
+    idCanal,
   ];
 
   Chat copyWith({
@@ -66,6 +69,7 @@ class Chat extends Equatable {
     String? fechaHora,
     bool? isFavorito,
     bool? isEnviado,
+    int? idCanal,
   }) {
     return Chat(
       idLead: idLead ?? this.idLead,
@@ -81,6 +85,7 @@ class Chat extends Equatable {
       fechaHora: fechaHora ?? this.fechaHora,
       isFavorito: isFavorito ?? this.isFavorito,
       isEnviado: isEnviado ?? this.isEnviado,
+      idCanal: idCanal ?? this.idCanal,
     );
   }
 }

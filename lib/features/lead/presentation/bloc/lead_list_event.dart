@@ -26,3 +26,11 @@ class LeadListRefresh extends LeadListEvent {
   @override
   List<Object?> get props => [type];
 }
+
+class LeadListFiltered extends LeadListEvent {
+  final LeadListFiltro filtro;
+  const LeadListFiltered(this.filtro);
+
+  @override
+  List<Object?> get props => [filtro];
+}

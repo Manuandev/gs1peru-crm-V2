@@ -18,21 +18,19 @@ class ChatTile extends StatefulWidget {
 
 class _ChatTileState extends State<ChatTile> {
   late Duration _elapsed;
-  DateTime? _fechaRecepcion;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _elapsed = Duration.zero;
-    _fechaRecepcion = null; // usa fechaHora del backend
+    // usa fechaHora del backend
     _updateElapsed();
     _startTimer();
   }
 
   void _updateElapsed() {
-    final fecha =
-        _fechaRecepcion ?? DateFormatter.parseDate(widget.chat.fechaHora);
+    final fecha = DateFormatter.parseDate(widget.chat.fechaHora);
     if (fecha == null) return;
     _elapsed = DateTime.now().difference(fecha);
   }
@@ -61,9 +59,8 @@ class _ChatTileState extends State<ChatTile> {
   void didUpdateWidget(ChatTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.chat.mensaje != widget.chat.mensaje) {
-      _fechaRecepcion = DateTime.now(); // timestamp exacto del cliente
-      setState(() => _elapsed = Duration.zero);
       _startTimer();
+      setState(() => _updateElapsed());
     }
   }
 

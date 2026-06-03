@@ -19,11 +19,18 @@ class LeadListLoading extends LeadListState {
   const LeadListLoading();
 }
 
-class LeadListLoaded extends LeadListState {
+class LeadListSuccess extends LeadListState {
   final List<Lead> leads;
   final LeadType type;
+  final LeadListFiltro filtro;
+  final Map<LeadListFiltro, int> conteos;
 
-  const LeadListLoaded({required this.leads, required this.type});
+  const LeadListSuccess({
+    required this.leads,
+    required this.type,
+    this.filtro = LeadListFiltro.todos,
+    this.conteos = const {},
+  });
 
   @override
   List<Object?> get props => [leads, type];

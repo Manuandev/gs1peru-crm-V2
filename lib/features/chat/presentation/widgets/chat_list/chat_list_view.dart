@@ -74,9 +74,9 @@ class _ChatListViewState extends State<ChatListView> {
           Expanded(
             child: BlocConsumer<ChatListBloc, ChatListState>(
               listenWhen: (previous, current) =>
-                  previous is ChatListSuccess && current is ChatListFailure,
+                  previous is ChatListSuccess && current is ChatListError,
               listener: (context, state) {
-                if (state is ChatListFailure) {
+                if (state is ChatListError) {
                   AppSnackBar.error(context, state.message);
                 }
               },
@@ -85,7 +85,7 @@ class _ChatListViewState extends State<ChatListView> {
                   return const AppLoadingView();
                 }
 
-                if (state is ChatListFailure) {
+                if (state is ChatListError) {
                   return AppErrorView(
                     message: state.message,
                     onRetry: () =>

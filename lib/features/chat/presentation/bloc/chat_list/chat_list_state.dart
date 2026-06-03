@@ -34,9 +34,9 @@ class ChatListSuccess extends ChatListState {
   List<Object?> get props => [chats, filtro, conteos];
 }
 
-class ChatListFailure extends ChatListState {
+class ChatListError extends ChatListState {
   final String message;
-  const ChatListFailure(this.message);
+  const ChatListError(this.message);
 
   @override
   List<Object?> get props => [message];

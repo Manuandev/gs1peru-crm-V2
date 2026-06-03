@@ -428,6 +428,7 @@ class _VideoContent extends StatelessWidget {
       },
       child: _VideoThumbnailWidget(
         url: url,
+        isLocal: _isLocal,
         width: size,
         height: size * 0.65,
         fileName: '${message.nomArchivo}${message.extArchivo}',
@@ -439,12 +440,14 @@ class _VideoContent extends StatelessWidget {
 // Widget separado porque necesita estado para el thumbnail
 class _VideoThumbnailWidget extends StatefulWidget {
   final String url;
+  final bool isLocal;
   final double width;
   final double height;
   final String fileName;
 
   const _VideoThumbnailWidget({
     required this.url,
+    required this.isLocal,
     required this.width,
     required this.height,
     required this.fileName,
@@ -466,12 +469,27 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
 
   Future<void> _generateThumbnail() async {
     try {
-      final bytes = await VideoThumbnail.thumbnailData(
-        video: widget.url,
-        imageFormat: ImageFormat.JPEG,
-        maxWidth: widget.width.toInt(),
-        quality: 75,
-      );
+      Uint8List? bytes;
+
+      if (widget.isLocal) {
+        // ── Archivo local: thumbnail instantáneo desde el path ──
+        bytes = await VideoThumbnail.thumbnailData(
+          video: widget.url, // path absoluto, ej: /data/.../video.mp4
+          imageFormat: ImageFormat.JPEG,
+          maxWidth: widget.width.toInt(),
+          quality: 75,
+        );
+      } else {
+        // ── Archivo remoto: jala desde la URL del servidor ──
+        // Solo intentar si la URL parece válida (ya confirmado por BD)
+        bytes = await VideoThumbnail.thumbnailData(
+          video: widget.url,
+          imageFormat: ImageFormat.JPEG,
+          maxWidth: widget.width.toInt(),
+          quality: 75,
+        );
+      }
+
       if (mounted) {
         setState(() {
           _thumbnail = bytes;

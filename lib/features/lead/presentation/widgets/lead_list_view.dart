@@ -40,7 +40,7 @@ class LeadListView extends StatelessWidget {
             );
           }
 
-          if (state is LeadListLoaded) {
+          if (state is LeadListSuccess) {
             if (state.leads.isEmpty) {
               return AppEmptyView(
                 message: type == LeadType.prospectos

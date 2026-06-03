@@ -7,7 +7,6 @@ export 'data/models/propuesta_model.dart';
 export 'data/models/lead_model.dart';
 export 'data/models/lead_detail_model.dart';
 
-
 export 'data/repositories/lead_repository_impl.dart';
 
 export 'domain/entities/prospecto.dart';
@@ -16,6 +15,7 @@ export 'domain/entities/lead_detail.dart';
 export 'domain/entities/lead.dart';
 
 export 'domain/enums/types_lead.dart';
+export 'domain/enums/lead_filtro.dart';
 
 export 'domain/repositories/lead_repository.dart';
 
@@ -31,4 +31,4 @@ export 'presentation/widgets/lead_list_portrait.dart';
 export 'presentation/widgets/lead_list_view.dart';
 export 'presentation/widgets/lead_card_actions.dart';
 export 'presentation/widgets/lead_card.dart';
-
+export 'presentation/widgets/lead_list_filter_chips.dart';

@@ -299,6 +299,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (state is! ChatDetailSuccess) return;
 
     final tempId = const Uuid().v4();
+    // Nombre con ms para matching único
+    final uniqueName =
+        '${event.fileName}_${DateTime.now().millisecondsSinceEpoch}';
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
@@ -309,7 +312,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       tipo: event.tipo,
       estado: 'wait',
       idChatDetArc: '',
-      nomArchivo: event.fileName,
+      nomArchivo: uniqueName,
       extArchivo: event.fileExt,
       idChatCab: event.chatCab,
       idChatDet: '',
@@ -324,7 +327,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (_currentLeadId != null) {
       final success = await _sendFileMessage(
         filePath: event.filePath,
-        fileName: '${event.fileName}${event.fileExt}',
+        fileName: '$uniqueName${event.fileExt}',
         tipo: event.tipo,
         idLead: _currentLeadId.toString(),
         numero: event.numero,
@@ -348,13 +351,19 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     // 1. Crear mensajes optimistas
     final tempIds = <String>[];
+    final uniqueNames = <String>[];
     final currentMessages = List<ChatMessage>.from(
       (state as ChatDetailSuccess).messages,
     );
 
     for (final file in event.files) {
       final tempId = const Uuid().v4();
+      final uniqueName =
+          '${file.nameWithoutExt}_${DateTime.now().millisecondsSinceEpoch + tempIds.length}';
+
       tempIds.add(tempId);
+      uniqueNames.add(uniqueName);
+
       currentMessages.add(
         ChatMessage(
           idMensaje: tempId,
@@ -364,7 +373,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           tipo: file.tipo,
           estado: 'wait',
           idChatDetArc: '',
-          nomArchivo: file.nameWithoutExt,
+          nomArchivo: uniqueName,
           extArchivo: file.ext,
           idChatCab: event.chatCab,
           idChatDet: '',
@@ -381,7 +390,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       final file = event.files[i];
       final success = await _sendFileMessage(
         filePath: file.path,
-        fileName: '${file.nameWithoutExt}${file.ext}',
+        fileName: '${uniqueNames[i]}${file.ext}',
         tipo: file.tipo,
         idLead: _currentLeadId.toString(),
         numero: event.numero,
@@ -476,86 +485,39 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     WebSocketMessage message,
     Emitter<ChatDetailState> emit,
   ) {
+    if (state is! ChatDetailSuccess) return;
     final currentState = state as ChatDetailSuccess;
     final payload = UpdatePantallaWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
-
-    // Solo procesamos si pertenece a este lead
     if (payload.leadId != _currentLeadId) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
-    // FIX: Prevenir que eventos duplicados del socket consuman otros mensajes pendientes
-    final alreadyExists = currentMessages.any(
-      (m) => m.idMensaje == payload.idMensaje,
-    );
-    if (alreadyExists) return;
+    // Evitar duplicados
+    if (currentMessages.any((m) => m.idMensaje == payload.idMensaje)) return;
 
-    // Buscar el mensaje pendiente (estado 'wait') que sea nuestro
-    final pendingIndex = currentMessages.lastIndexWhere((m) {
-      if (m.estado != 'wait' || m.isEnviado != true) return false;
-
-      if (payload.tipoMensaje == 'text' || m.tipo == 'text') {
-        return m.mensaje == payload.mensaje;
-      } else {
-        // Multimedia:
-        // 1. Intentar coincidencia por nombre de archivo (ignorando extensión)
-        final localName = _removeExt(m.nomArchivo);
-        final payloadName = _removeExt(payload.nomArchivo);
-        if (localName.isNotEmpty &&
-            payloadName.isNotEmpty &&
-            localName == payloadName) {
-          return true;
-        }
-
-        // 2. Fallback: coincidencia por tipo y misma hora/minuto
-        if (m.tipo == payload.tipoMensaje) {
-          final localTime = DateFormatter.parseDate(m.fecha);
-          if (localTime != null) {
-            final hhmm =
-                "${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}";
-            if (payload.hora.contains(hhmm)) {
-              return true;
-            }
-          } else {
-            return true; // Si no se puede parsear local, asumimos que es este.
-          }
-        }
-        return false;
-      }
-    });
+    final pendingIndex = _findPendingIndex(currentMessages, payload);
 
     if (pendingIndex != -1) {
-      // Reemplazar el mensaje optimista con los datos reales del servidor
-      // Para multimedia conservamos m.mensaje (que tiene la ruta local para renderizar)
+      // Asignar idMensaje real — desde aquí UPDATE_MENSAJE lo encuentra por id directo
+      final pName = _removeExt(payload.nomArchivo);
+      final pExt = _extractExt(payload.nomArchivo);
+
       currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
         idMensaje: payload.idMensaje,
         estado: 'sent',
         idChatCab: payload.idChatCab,
+        nomArchivo: pName.isNotEmpty
+            ? pName
+            : currentMessages[pendingIndex].nomArchivo,
+        extArchivo: pExt.isNotEmpty
+            ? pExt
+            : currentMessages[pendingIndex].extArchivo,
       );
-
-      if (payload.tipoMensaje != 'text') {
-        final extFromName2 = _extractExt(payload.nomArchivo);
-        final nameWithoutExt2 = _removeExt(payload.nomArchivo);
-        currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
-          nomArchivo: nameWithoutExt2.isNotEmpty
-              ? nameWithoutExt2
-              : currentMessages[pendingIndex].nomArchivo,
-          extArchivo: extFromName2.isNotEmpty
-              ? extFromName2
-              : currentMessages[pendingIndex].extArchivo,
-        );
-      }
     } else {
-      // No encontramos un pendiente — agregar como mensaje nuevo enviado
-      // (posiblemente enviado desde otra sesión / otro dispositivo)
-      final exists = currentMessages.any(
-        (m) => m.idMensaje == payload.idMensaje,
-      );
-      if (exists) return;
-
-      final extFromName2 = _extractExt(payload.nomArchivo);
-      final nameWithoutExt2 = _removeExt(payload.nomArchivo);
+      // Enviado desde otra sesión
+      final pName = _removeExt(payload.nomArchivo);
+      final pExt = _extractExt(payload.nomArchivo);
 
       currentMessages.add(
         ChatMessage(
@@ -568,8 +530,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
           estado: 'sent',
           idChatDetArc: '',
-          nomArchivo: nameWithoutExt2,
-          extArchivo: extFromName2,
+          nomArchivo: pName,
+          extArchivo: pExt,
           idChatCab: payload.idChatCab,
           idChatDet: '',
         ),
@@ -623,5 +585,51 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (fileName.isEmpty) return '';
     final dotIndex = fileName.lastIndexOf('.');
     return dotIndex != -1 ? fileName.substring(0, dotIndex) : fileName;
+  }
+
+  int _findPendingIndex(
+    List<ChatMessage> messages,
+    UpdatePantallaWhatsAppPayload payload,
+  ) {
+    // Regex UUID v4
+    final uuidRegex = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    );
+
+    return messages.lastIndexWhere((m) {
+      // Solo mensajes optimistas pendientes
+      if (m.estado != 'wait' || m.isEnviado != true) return false;
+      // Solo los que aún tienen tempId (UUID) — no los ya confirmados
+      if (!uuidRegex.hasMatch(m.idMensaje)) return false;
+      // Mismo tipo
+      if (payload.tipoMensaje.isNotEmpty && m.tipo != payload.tipoMensaje) {
+        return false;
+      }
+
+      switch (payload.tipoMensaje) {
+        case 'text':
+          return m.mensaje == payload.mensaje;
+
+        case 'template':
+          if (payload.nomArchivo.isEmpty) {
+            return m.mensaje == payload.mensaje;
+          }
+          return _removeExt(m.nomArchivo) == _removeExt(payload.nomArchivo) &&
+              m.extArchivo == _extractExt(payload.nomArchivo);
+
+        case 'image':
+        case 'video':
+        case 'audio':
+        case 'document':
+          if (payload.nomArchivo.isEmpty) return false;
+
+          return _removeExt(m.nomArchivo) == _removeExt(payload.nomArchivo) &&
+              m.extArchivo == _extractExt(payload.nomArchivo);
+
+        default:
+          return m.mensaje == payload.mensaje;
+      }
+    });
   }
 }

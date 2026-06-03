@@ -58,10 +58,10 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
       _emitFiltered(emit);
     } on AppException catch (e) {
-      emit(ChatListFailure(e.message));
+      emit(ChatListError(e.message));
     } catch (e, stackTrace) {
       addError(e, stackTrace);
-      emit(const ChatListFailure('Ocurrió un error inesperado.'));
+      emit(const ChatListError('Ocurrió un error inesperado.'));
     }
   }
 
@@ -76,12 +76,17 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   }
 
   void _emitFiltered(Emitter<ChatListState> emit) {
+    final ahora = DateTime.now();
+
     final conteos = {
       ChatListFiltro.todos: _allChats.length,
       ChatListFiltro.sinResponder: _allChats.where((c) => c.isEnviado).length,
-      ChatListFiltro.enDesarrollo: _allChats
-          .where((c) => c.idEstado == '01')
-          .length,
+      ChatListFiltro.enDesarrollo: _allChats.where((c) {
+        if (c.isEnviado) return false;
+        final fecha = DateFormatter.parseDate(c.fechaHora);
+        if (fecha == null) return false;
+        return ahora.difference(fecha).inHours < 72;
+      }).length,
     };
 
     var resultado = List<Chat>.from(_allChats);
@@ -89,8 +94,15 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (_filtroActivo == ChatListFiltro.sinResponder) {
       resultado = resultado.where((c) => c.isEnviado).toList();
     } else if (_filtroActivo == ChatListFiltro.enDesarrollo) {
-      resultado = resultado.where((c) => c.idEstado == '01').toList();
-    } 
+      resultado = resultado.where((c) {
+        if (c.isEnviado) {
+          return false;
+        }
+        final fecha = DateFormatter.parseDate(c.fechaHora);
+        if (fecha == null) return false;
+        return ahora.difference(fecha).inHours < 72;
+      }).toList();
+    }
 
     // filtro búsqueda
     final q = _lastSearchQuery.toLowerCase().trim();
@@ -151,9 +163,10 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
           ? payload.tipoMensaje
           : 'text',
       estado: '',
-      fechaHora: payload.fecha.isNotEmpty
-          ? payload.fecha
-          : DateTime.now().toIso8601String(),
+      fechaHora: DateTime.now().toIso8601String(),
+      // fechaHora: payload.fecha.isNotEmpty
+      //     ? payload.fecha
+      //     : DateTime.now().toIso8601String(),
       isEnviado:
           true, // FLG_ENTRADA = true → es mensaje de entrada (del cliente)
       idMensaje: payload.idMensaje,

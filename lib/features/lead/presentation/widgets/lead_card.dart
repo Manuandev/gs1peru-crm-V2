@@ -5,7 +5,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadCard extends StatelessWidget {
-  final LeadEntity lead;
+  final Lead lead;
   final VoidCallback? onWhatsAppTap;
   final VoidCallback? onChatTap;
   final VoidCallback? onStarTap;
@@ -71,7 +71,7 @@ class LeadCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _LeadAvatar extends StatelessWidget {
-  final LeadEntity lead;
+  final Lead lead;
 
   const _LeadAvatar({required this.lead});
 
@@ -96,12 +96,19 @@ class _LeadAvatar extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _LeadInfo extends StatelessWidget {
-  final LeadEntity lead;
+  final Lead lead;
 
   const _LeadInfo({required this.lead});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeText = theme.textTheme;
+
+    final labelSmallStyle = themeText.labelSmall?.copyWith(
+      color: themeText.labelSmall!.color,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -116,23 +123,34 @@ class _LeadInfo extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            // if (lead.canal != null) ...[
-            //   const SizedBox(width: AppSpacing.xs),
-            //   LeadCanalIcon(canal: lead.canal!),
-            // ],
+            if (lead.canal != null) ...[
+              Row(
+                children: [
+                  AppIconsSocial.widgetCanal(lead.idCanal!),
+                  SizedBox(width: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      CanalHelper.get(lead.idCanal!).nombre,
+                      style: labelSmallStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
-        const SizedBox(height: 2),
-        if (lead.interes != null)
-          Text(
-            '${lead.canal ?? ''} · ${lead.interes}',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppSpacing.xxs),
         Text(
-          lead.nombreEmpresa,
+          '${lead.canal ?? 'Sin canal'} · ${lead.interes ?? 'Sin interés'}',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          lead.nombreEmpresa.isEmpty ? 'Sin empresa' : lead.nombreEmpresa,
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
           ),
@@ -147,7 +165,7 @@ class _LeadInfo extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _LeadTimestamp extends StatelessWidget {
-  final LeadEntity lead;
+  final Lead lead;
 
   const _LeadTimestamp({required this.lead});
 
@@ -157,7 +175,15 @@ class _LeadTimestamp extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          lead.fechaHora,
+          lead.fechaHora.formatSinHoy(),
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          lead.fechaHora.formatSinHoy(),
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,

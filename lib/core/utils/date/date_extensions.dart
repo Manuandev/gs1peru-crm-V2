@@ -13,6 +13,10 @@ extension DateTimeFormatting on DateTime {
   String formatConDia() {
     return DateFormatter.formatConDia(toIso8601String());
   }
+
+  String formatSinHoy() {
+    return DateFormatter.formatSinHoy(toIso8601String());
+  }
 }
 
 extension StringDateFormatting on String {
@@ -30,5 +34,9 @@ extension StringDateFormatting on String {
 
   String formatConDia() {
     return DateFormatter.formatConDia(this);
+  }
+
+  String formatSinHoy() {
+    return DateFormatter.formatSinHoy(this);
   }
 }

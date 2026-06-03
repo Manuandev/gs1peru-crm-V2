@@ -3,7 +3,6 @@
 import 'package:app_crm/features/lead/index_lead.dart';
 
 abstract class LeadRepository {
-  Future<List<LeadEntity>> getProspectos();
+  Future<List<Lead>> getLeads(String proceso);
 
-  Future<List<LeadEntity>> getPropuestas();
 }

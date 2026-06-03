@@ -20,7 +20,7 @@ class LeadListLoading extends LeadListState {
 }
 
 class LeadListLoaded extends LeadListState {
-  final List<LeadEntity> leads;
+  final List<Lead> leads;
   final LeadType type;
 
   const LeadListLoaded({required this.leads, required this.type});

@@ -1,6 +1,6 @@
-// lib\features\lead\domain\entities\propuesta.dart
+// lib/features/lead/domain/entities/lead_entity.dart
 
-class Propuesta {
+class Lead {
   final int idLead;
   final String nombre;
   final String apellido;
@@ -8,6 +8,7 @@ class Propuesta {
   final String telefono;
   final bool isFavorito;
   final String asignadoA;
+  final String fechaHora;
   final String idEstado;
   final String estado;
   final int? idEvento;
@@ -18,11 +19,11 @@ class Propuesta {
   final String? canal;
   final int? idInteres;
   final String? interes;
-  final String fechaHora;
+  final bool ibChat;
 
   String get nombreCompleto => '$nombre $apellido'.trim();
 
-  const Propuesta({
+  const Lead({
     required this.idLead,
     required this.nombre,
     required this.apellido,
@@ -30,6 +31,7 @@ class Propuesta {
     required this.telefono,
     required this.isFavorito,
     required this.asignadoA,
+    required this.fechaHora,
     required this.idEstado,
     required this.estado,
     required this.idCampania,
@@ -40,10 +42,10 @@ class Propuesta {
     required this.canal,
     required this.idInteres,
     required this.interes,
-    required this.fechaHora,
+    required this.ibChat,
   });
 
-  Propuesta copyWith({
+  Lead copyWith({
     int? idLead,
     String? nombre,
     String? apellido,
@@ -51,6 +53,7 @@ class Propuesta {
     String? telefono,
     bool? isFavorito,
     String? asignadoA,
+    String? fechaHora,
     String? idEstado,
     String? estado,
     int? idEvento,
@@ -61,9 +64,9 @@ class Propuesta {
     String? canal,
     int? idInteres,
     String? interes,
-    String? fechaHora,
+    bool? ibChat,
   }) {
-    return Propuesta(
+    return Lead(
       idLead: idLead ?? this.idLead,
       nombre: nombre ?? this.nombre,
       apellido: apellido ?? this.apellido,
@@ -71,6 +74,7 @@ class Propuesta {
       telefono: telefono ?? this.telefono,
       isFavorito: isFavorito ?? this.isFavorito,
       asignadoA: asignadoA ?? this.asignadoA,
+      fechaHora: fechaHora ?? this.fechaHora,
       idEstado: idEstado ?? this.idEstado,
       estado: estado ?? this.estado,
       idEvento: idEvento ?? this.idEvento,
@@ -81,7 +85,7 @@ class Propuesta {
       canal: canal ?? this.canal,
       idInteres: idInteres ?? this.idInteres,
       interes: interes ?? this.interes,
-      fechaHora: fechaHora ?? this.fechaHora,
+      ibChat: ibChat ?? this.ibChat,
     );
   }
 }

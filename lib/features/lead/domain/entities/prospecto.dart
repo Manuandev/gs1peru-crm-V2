@@ -1,46 +1,25 @@
 // lib\features\lead\domain\entities\prospecto.dart
 
-import 'package:app_crm/features/lead/index_lead.dart';
-
-class Prospecto extends LeadEntity {
-  @override
+class Prospecto {
   final int idLead;
-  @override
   final String nombre;
-  @override
   final String apellido;
-  @override
   final String nombreEmpresa;
-  @override
   final String telefono;
-  @override
   final bool isFavorito;
-  @override
   final String asignadoA;
-  @override
   final String idEstado;
-  @override
   final String estado;
-  @override
   final int? idEvento;
-  @override
   final String? evento;
-  @override
   final int? idCampania;
-  @override
   final String? campania;
-  @override
   final int? idCanal;
-  @override
   final String? canal;
-  @override
   final int? idInteres;
-  @override
   final String? interes;
-  @override
   final String fechaHora;
 
-  @override
   String get nombreCompleto => '$nombre $apellido'.trim();
 
   const Prospecto({
@@ -64,8 +43,7 @@ class Prospecto extends LeadEntity {
     required this.fechaHora,
   });
 
-  @override
-  LeadEntity copyWith({
+  Prospecto copyWith({
     int? idLead,
     String? nombre,
     String? apellido,

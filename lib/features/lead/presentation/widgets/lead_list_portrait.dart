@@ -6,7 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPortrait extends StatelessWidget {
-  final List<LeadEntity> leads;
+  final List<Lead> leads;
 
   const LeadListPortrait({super.key, required this.leads});
 

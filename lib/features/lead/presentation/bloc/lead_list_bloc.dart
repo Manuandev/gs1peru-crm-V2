@@ -5,11 +5,9 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
-  final GetProspectosUseCase _getProspectos;
-  final GetPropuestasUseCase _getPropuestas;
+  final GetLeadsUseCase _getLeadsUseCase;
 
-  LeadListBloc(this._getProspectos, this._getPropuestas)
-    : super(const LeadListInitial()) {
+  LeadListBloc(this._getLeadsUseCase) : super(const LeadListInitial()) {
     on<LeadListStarted>(_onStarted);
     on<LeadListRefresh>(_onRefresh);
   }
@@ -32,9 +30,9 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
   Future<void> _loadData(LeadType type, Emitter<LeadListState> emit) async {
     try {
-      final List<LeadEntity> leads = type == LeadType.prospectos
-          ? await _getProspectos()
-          : await _getPropuestas();
+      final List<Lead> leads = await _getLeadsUseCase(
+        type == LeadType.prospectos ? 'PO' : 'PA',
+      );
 
       emit(LeadListLoaded(leads: leads, type: type));
     } catch (e, stackTrace) {

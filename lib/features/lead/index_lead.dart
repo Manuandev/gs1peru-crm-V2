@@ -4,21 +4,22 @@ export 'data/datasources/remote/lead_remote_datasource.dart';
 
 export 'data/models/prospecto_model.dart';
 export 'data/models/propuesta_model.dart';
+export 'data/models/lead_model.dart';
 export 'data/models/lead_detail_model.dart';
+
 
 export 'data/repositories/lead_repository_impl.dart';
 
 export 'domain/entities/prospecto.dart';
 export 'domain/entities/propuesta.dart';
 export 'domain/entities/lead_detail.dart';
-export 'domain/entities/lead_entity.dart';
+export 'domain/entities/lead.dart';
 
 export 'domain/enums/types_lead.dart';
 
 export 'domain/repositories/lead_repository.dart';
 
-export 'domain/usecases/get_propuestas_usecase.dart';
-export 'domain/usecases/get_prospectos_usecase.dart';
+export 'domain/usecases/get_leads_usecase.dart';
 
 export 'presentation/bloc/lead_list_bloc.dart';
 export 'presentation/bloc/lead_list_event.dart';

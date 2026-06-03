@@ -9,7 +9,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 /// Fila de botones de acción que aparece en la parte inferior de cada LeadCard.
 /// Los callbacks los inyecta el padre con la lógica real.
 class LeadCardActions extends StatelessWidget {
-  final LeadEntity lead;
+  final Lead lead;
   final VoidCallback? onWhatsAppTap;
   final VoidCallback? onChatTap;
   final VoidCallback? onStarTap;
@@ -26,21 +26,23 @@ class LeadCardActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _LeadActionButton(
-          icon: AppIconsSocial.whatsapp,
-          color: Color(0xFF25D366),
-          onTap: onWhatsAppTap,
-        ),
+        // _LeadActionButton(
+        //   icon: AppIconsSocial.whatsapp,
+        //   color: Color(0xFF25D366),
+        //   onTap: onWhatsAppTap,
+        // ),
+        // const SizedBox(width: AppSpacing.md),
+        if (lead.ibChat) ...[
+          _LeadActionButton(
+            icon: AppIcons.chat,
+            color: AppColors.primary,
+            onTap: onChatTap,
+          ),
+        ],
         const SizedBox(width: AppSpacing.md),
         _LeadActionButton(
-          icon: AppIcons.chat,
-          color: AppColors.primary,
-          onTap: onChatTap,
-        ),
-        const SizedBox(width: AppSpacing.md),
-        _LeadActionButton(
-          icon: Icons.star_border_rounded,
-          color: Colors.amber,
+          icon: lead.isFavorito ? Icons.star : Icons.star_border_rounded,
+          color: lead.isFavorito ? Colors.amber : Colors.grey,
           onTap: onStarTap,
         ),
       ],
@@ -73,7 +75,7 @@ class _LeadActionButton extends StatelessWidget {
         height: 36,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
         ),
         alignment: Alignment.center,
         child: icon is IconData

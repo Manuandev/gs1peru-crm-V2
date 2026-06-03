@@ -14,8 +14,7 @@ class LeadListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => LeadListBloc(
-        GetProspectosUseCase(context.read<LeadRepository>()),
-        GetPropuestasUseCase(context.read<LeadRepository>()),
+        GetLeadsUseCase(context.read<LeadRepository>()),
       )..add(LeadListStarted(type)),
       child: BlocListener<LeadListBloc, LeadListState>(
         listener: (context, state) {

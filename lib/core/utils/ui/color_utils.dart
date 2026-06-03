@@ -5,6 +5,21 @@ import 'package:flutter/material.dart';
 class ColorUtils {
   ColorUtils._(); // no instanciable
 
+  // ─── Colores fijos por label (dashboard principal) ────────────
+  static const Map<String, Color> _labelColors = {
+    // Conversaciones
+    'Mis conversaciones': Color(0xFF2196F3),
+    'Conversaciones': Color(0xFF2196F3),
+    // Prospectos
+    'Prospectos': Color(0xFF4CAF50),
+    'Prospecto': Color(0xFF4CAF50),
+    // Propuesta / Propuestas
+    'Propuesta': Color(0xFFF26334),
+    'Propuestas': Color(0xFFF26334),
+    // Cobranza
+    'Cobranza': Color(0xFF9C27B0),
+  };
+
   // ─── Paleta amplia (tonos medios: ni muy claros ni muy oscuros) ───
   // Luminosidad entre ~0.30 y ~0.55 para que el texto blanco siempre
   // sea legible sobre el fondo, y el color se distinga en modo oscuro.
@@ -31,11 +46,12 @@ class ColorUtils {
     Color(0xFF4E342E), // café oscuro
   ];
 
-  /// Retorna un color consistente basado en el [nombre].
-  /// Usa un hash simple para distribuir mejor los colores.
+  /// Color fijo si existe en el mapa, si no usa hash sobre la paleta.
   static Color fromName(String nombre) {
+    final fijo = _labelColors[nombre.trim()];
+    if (fijo != null) return fijo;
+
     if (nombre.trim().isEmpty) return _palette[0];
-    // Hash simple con todos los caracteres para mejor distribución
     int hash = 0;
     for (int i = 0; i < nombre.length; i++) {
       hash = (hash * 31 + nombre.codeUnitAt(i)) & 0x7FFFFFFF;
@@ -43,23 +59,23 @@ class ColorUtils {
     return _palette[hash % _palette.length];
   }
 
-  /// Color de texto óptimo (blanco o negro) según el brillo del [fondo].
-  /// Útil cuando necesitas poner texto sobre un color generado.
+  /// Color del badge: mismo color del card con overlay negro al 25%.
+  static Color badgeColor(Color base) {
+    return Color.alphaBlend(Colors.black.withValues(alpha: 0.25), base);
+  }
+
+  /// Color de texto óptimo (blanco o negro) según el brillo del fondo.
   static Color textColorOn(Color fondo) {
-    // Fórmula de luminancia relativa (WCAG)
     final luminance = fondo.computeLuminance();
     return luminance > 0.4 ? Colors.black87 : Colors.white;
   }
 
-  /// Versión suave del color para usar como fondo en tarjetas,
-  /// adaptada al [brightness] actual del tema (claro/oscuro).
+  /// Versión suave del color para fondos de tarjetas.
   static Color softBackground(String nombre, Brightness brightness) {
     final base = fromName(nombre);
     if (brightness == Brightness.dark) {
-      // En modo oscuro: fondo con baja opacidad sobre superficie oscura
       return Color.alphaBlend(base.withAlpha(50), const Color(0xFF1E1E1E));
     }
-    // En modo claro: tinte suave
     return Color.alphaBlend(base.withAlpha(35), Colors.white);
   }
 }

@@ -52,87 +52,68 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
       color: themeText.titleSmall!.color,
     );
 
-    final labelMediumStyle = themeText.labelMedium?.copyWith(
-      color: themeText.labelMedium!.color,
-    );
-
     final labelSmallStyle = themeText.labelSmall?.copyWith(
       color: themeText.labelSmall!.color,
     );
 
-    final elapsedStyle = themeText.labelSmall?.copyWith(
-      color: colorScheme.error,
-      fontWeight: FontWeight.w700,
+    final avatarStyle = themeText.labelMedium?.copyWith(
+      color: AppColors.textOnDark,
     );
+
+    final elapsedColor = ElapsedTimeUtils.colorFromElapsed(_elapsed);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
+        horizontal: AppSpacing.xs,
         vertical: AppSpacing.xs,
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+          // ─── Avatar ──────────────────────────────────────
+          CircleAvatar(
+            radius: AppSizing.avatarRadiusSm + 4,
+            backgroundColor: prioridad.nombre.avatarColor,
+            child: Text(
+              prioridad.nombre.initials,
+              style: avatarStyle?.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+
+          // ─── Info central (Nombre + Canal + Estado) ──────
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Fila 1: Nombre
+                Text(
                   prioridad.nombre,
                   style: titleStyle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              SizedBox(width: AppSpacing.xs),
-              Text(
-                '${ElapsedTimeUtils.formatHyM(_elapsed)} sin responder',
-                style: elapsedStyle,
-              ),
-            ],
-          ),
+                const SizedBox(height: AppSpacing.xs),
 
-          const SizedBox(height: AppSpacing.xs),
-          Divider(
-            height: 1,
-            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-
-          Row(
-            children: [
-              CircleAvatar(
-                radius: AppSizing.avatarRadiusSm,
-                backgroundColor: prioridad.nombre.avatarColor,
-                child: Text(
-                  prioridad.nombre.initials,
-                  style: labelMediumStyle?.copyWith(
-                    color: AppColors.textOnDark,
-                  ),
-                ),
-              ),
-              SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                // Fila 2: Canal + Estado
+                Row(
                   children: [
                     if (prioridad.idCanal > 0) ...[
-                      Row(
-                        children: [
-                          AppIconsSocial.widgetCanal(prioridad.idCanal),
-                          SizedBox(width: AppSpacing.xs),
-                          Flexible(
-                            child: Text(
-                              CanalHelper.get(prioridad.idCanal).nombre,
-                              style: labelSmallStyle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      AppIconsSocial.widgetCanal(prioridad.idCanal, size: 12),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Flexible(
+                        child: Text(
+                          CanalHelper.get(prioridad.idCanal).nombre,
+                          style: labelSmallStyle?.copyWith(fontSize: 11),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      SizedBox(height: AppSpacing.xs),
+                      const SizedBox(width: AppSpacing.sm),
                     ],
                     if (prioridad.idEstado.isNotEmpty)
                       AppIconsSocial.chipEstado(
@@ -141,34 +122,110 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                       ),
                   ],
                 ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: AppSpacing.xs),
+
+          // ─── Columna derecha: Timer + Botones ────────────
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Timer elapsed
+              Text(
+                ElapsedTimeUtils.formatHyM(_elapsed),
+                style: themeText.labelMedium?.copyWith(
+                  color: elapsedColor,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
               ),
-              SizedBox(width: AppSpacing.xs),
+              Text(
+                'sin respuesta',
+                style: themeText.labelSmall?.copyWith(
+                  color: elapsedColor,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+
+              // Botones de acción
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ActionButtonWidget(
+                  _MiniActionButton(
                     icon: AppIcons.message,
-                    color: Colors.green,
+                    color: const Color(0xFF25D366),
                     onTap: () {
                       context.goToDetalleChatDesdeHome(
                         idLead: prioridad.idLead,
                       );
                     },
-                    tooltip: 'Mensaje',
+                    tooltip: 'WhatsApp',
                   ),
-                  ActionButtonWidget(
+                  const SizedBox(width: AppSpacing.xs),
+                  _MiniActionButton(
                     icon: AppIcons.phone,
-                    color: Colors.blue,
+                    color: colorScheme.primary,
                     onTap: () async {
                       await LauncherUtils.abrirTelefono(prioridad.telefono);
                     },
                     tooltip: 'Llamar',
                   ),
+                  // const SizedBox(width: AppSpacing.xs),
+                  // _MiniActionButton(
+                  //   icon: AppIcons.check,
+                  //   color: const Color(0xFF7C4DFF),
+                  //   onTap: () {
+                  //     context.goToDetalleChatDesdeHome(
+                  //       idLead: prioridad.idLead,
+                  //     );
+                  //   },
+                  //   tooltip: 'Ver detalle',
+                  // ),
                 ],
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Botón de acción compacto para el tile ──────────────
+class _MiniActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  const _MiniActionButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        onTap: onTap,
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
       ),
     );
   }

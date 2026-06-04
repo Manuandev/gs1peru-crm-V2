@@ -34,9 +34,19 @@ class AppTextStyles {
   // Un solo lugar para cambiar todos los tamaños.
   // ============================================================
 
+  /// Micro: 9px — texto de badge de notificaciones en AppBar
+  static const double sizeXxs = 9.0;
+
+  /// Sub: 10px — texto de apoyo muy pequeño (ej: "sin respuesta" en PrioridadTile)
+  static const double sizeSub = 10.0;
+
   static const double sizeXs = 11.0;
   static const double sizeSm = 12.0;
   static const double sizeMd = 14.0;
+
+  /// Intermedio entre sizeSm y sizeMd: 13px — timer elapsed en PrioridadTile
+  static const double sizeSmPlus = 13.0;
+
   static const double sizeBase = 15.0; // Intermedio: tablet (entre sizeMd y sizeLg)
   static const double sizeLg = 16.0; // Base: inputs, botones
   static const double sizeXl = 18.0;
@@ -55,6 +65,9 @@ class AppTextStyles {
   static const FontWeight weightMedium = FontWeight.w500;
   static const FontWeight weightSemiBold = FontWeight.w600;
   static const FontWeight weightBold = FontWeight.w700;
+
+  /// Extra bold: w800 — timer de urgencia alta en PrioridadTile
+  static const FontWeight weightExtraBold = FontWeight.w800;
 
   // ============================================================
   // ESTILOS BASE — SIN COLOR
@@ -215,6 +228,12 @@ class AppTextStyles {
 
   /// Apretado: -0.3 — para headings grandes (evita exceso de espacio)
   static const double letterSpacingTight = -0.3;
+
+  /// Estrecho positivo: 0.2 — labels en DashboardCard
+  static const double letterSpacingXNarrow = 0.2;
+
+  /// Estrecho positivo: 0.3 — subtítulos de CardTotalesHome
+  static const double letterSpacingNarrow = 0.3;
 
   /// Amplio: 4.0 — título principal sobre fondo de marca (Splash / Login)
   static const double letterSpacingWide = 4.0;

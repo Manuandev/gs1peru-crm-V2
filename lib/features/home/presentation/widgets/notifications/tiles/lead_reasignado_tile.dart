@@ -13,15 +13,17 @@ class LeadReasignadoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.chipGap,
+      ),
       child: InkWell(
         onTap: () {},
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.sm2),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -31,61 +33,69 @@ class LeadReasignadoTile extends StatelessWidget {
                 children: [
                   Text(
                     lead.nombre,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: AppTextStyles.weightBold,
                     ),
                   ),
                   Text(
                     lead.fechaHora.formatConDia(),
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: colorScheme.onSurface.withValues(
+                        alpha: AppColors.opacityHint,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
 
               // Empresa
               Text(
                 lead.nombreEmpresa,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: colorScheme.onSurface.withValues(
+                    alpha: AppColors.opacityTextMuted,
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
 
               // Teléfono + asignado a
               Row(
                 children: [
                   Icon(
-                    Icons.phone_outlined,
-                    size: 13,
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    AppIcons.phone,
+                    size: AppSizing.iconXxs,
+                    color: colorScheme.onSurface.withValues(
+                      alpha: AppColors.opacityHint,
+                    ),
                   ),
-                  const SizedBox(width: 4),
-                  Text(lead.telefono, style: textTheme.bodySmall),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(lead.telefono, style: AppTextStyles.bodySmall),
+                  const SizedBox(width: AppSpacing.md),
                   Icon(
-                    Icons.person_outline,
-                    size: 13,
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    AppIcons.user,
+                    size: AppSizing.iconXxs,
+                    color: colorScheme.onSurface.withValues(
+                      alpha: AppColors.opacityHint,
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: Text(
                       lead.asignadoA,
-                      style: textTheme.bodySmall,
+                      style: AppTextStyles.bodySmall,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
 
               // Campaña / Evento / Canal
               Wrap(
-                spacing: 6,
-                runSpacing: 4,
+                spacing: AppSpacing.chipGap,
+                runSpacing: AppSpacing.xs,
                 children: [
                   _Tag(
                     label: lead.campania,
@@ -126,16 +136,18 @@ class _Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.tagPaddingV,
+      ),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppSizing.radiusTag),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
+        style: AppTextStyles.labelSmall.copyWith(
+          fontWeight: AppTextStyles.weightMedium,
           color: textColor,
         ),
       ),

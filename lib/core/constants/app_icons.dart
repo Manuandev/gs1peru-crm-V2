@@ -311,6 +311,28 @@ class AppIcons {
   /// Etiqueta de oferta — interés, curso del lead
   static const IconData interes = Icons.local_offer_outlined;
 
+  /// Reasignar / intercambiar — sección de leads reasignados en notificaciones
+  static const IconData reasignar = Icons.swap_horiz_rounded;
+
+  /// Lead nuevo / agregar persona — sección de leads nuevos en notificaciones
+  static const IconData leadNuevo = Icons.person_add_alt_1_rounded;
+
+  /// Campana activa — sección de recordatorios en notificaciones
+  static const IconData notificationActive = Icons.notifications_active_rounded;
+
+  /// Campana desactivada — empty state de la pantalla de notificaciones
+  static const IconData notificationOff = Icons.notifications_off_outlined;
+
+  /// Rayo / Acción — campo "acción" en RecordatorioTile
+  static const IconData accion = Icons.bolt_outlined;
+
+  // ============================================================
+  // NAVEGACIÓN — VARIANTES iOS
+  // ============================================================
+
+  /// Flecha atrás estilo iOS — botón de retroceso en NotificationsView
+  static const IconData backIos = Icons.arrow_back_ios_new_rounded;
+
   // ============================================================
   // SPLASH / BRANDING
   // ============================================================
@@ -332,4 +354,7 @@ class AppIcons {
 
   /// Flecha hacia abajo / dropdown — indicador de campo de selección (Combo)
   static const IconData dropDown = Icons.arrow_drop_down;
+
+  /// Chevron arriba — colapsar sección (CollapsibleSection)
+  static const IconData expandLess = Icons.expand_less;
 }

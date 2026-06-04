@@ -12,9 +12,6 @@ class ProspectoTileHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final themeText = theme.textTheme;
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -37,8 +34,8 @@ class ProspectoTileHome extends StatelessWidget {
                 children: [
                   Text(
                     prospecto.nombre,
-                    style: themeText.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.titleSmall.copyWith(
+                      fontWeight: AppTextStyles.weightBold,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -47,7 +44,7 @@ class ProspectoTileHome extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       'Empresa: ${prospecto.nombreEmpresa}',
-                      style: themeText.labelSmall?.copyWith(
+                      style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                       maxLines: 1,
@@ -62,7 +59,7 @@ class ProspectoTileHome extends StatelessWidget {
             // ── FECHA ─────────────────────────────────────────────
             Text(
               prospecto.fechaHora.formatConDia(),
-              style: themeText.labelSmall?.copyWith(
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
@@ -91,19 +88,17 @@ class _Avatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = nombre.avatarColor;
 
-    // Color de fondo suave (10% opacidad) y color del ícono más saturado
     final bgColor = Color.alphaBlend(
-      color.withValues(alpha: 0.15),
-      Colors.white,
+      color.withValues(alpha: AppColors.opacityAvatarBg),
+      AppColors.surface,
     );
-    final iconColor = color;
 
     return Container(
       width: AppSizing.avatarSm,
       height: AppSizing.avatarSm,
       decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
       child: Center(
-        child: Icon(AppIcons.user, color: iconColor, size: AppSizing.iconMd),
+        child: Icon(AppIcons.user, color: color, size: AppSizing.iconMd),
       ),
     );
   }

@@ -74,8 +74,14 @@ class AppSizing {
   /// Muy pequeño: 4px — chips, badges, skeletons
   static const double radiusXs = 4.0;
 
+  /// Chip/tag: 6px — _Tag de campaña / canal / evento en tiles de notificación
+  static const double radiusTag = 6.0;
+
   /// Pequeño: 8px — snackbars, tooltips
   static const double radiusSm = 8.0;
+
+  /// Pequeño-medio: 10px — badge de conteo en CollapsibleSection
+  static const double radiusSm2 = 10.0;
 
   /// Medio: 12px (BASE) — inputs, botones, tarjetas internas
   static const double radiusMd = 12.0;
@@ -124,6 +130,9 @@ class AppSizing {
 
   /// Ícono grande: 32px — iconos en headers y estados vacíos
   static const double iconLg = 32.0;
+
+  /// FaIcon grande: 28px — FontAwesome en DashboardCard (FA es visualmente mayor que Material, se reduce 4px)
+  static const double iconFaLg = 28.0;
 
   /// Ícono extra grande: 48px — ilustraciones de error/éxito en pantalla
   static const double iconXl = 48.0;
@@ -206,6 +215,12 @@ class AppSizing {
   static const double avatarRadiusLg = avatarLg / 2; // 28
   static const double avatarRadiusXl = avatarXl / 2; // 36
 
+  /// Radio del avatar en PrioridadTileHome: 25px (avatarRadiusSm + 4, equilibrio visual con el tile)
+  static const double avatarRadiusHomeTile = 25.0;
+
+  /// Botón de acción compacto en tiles: 32px (chat, llamar en PrioridadTile)
+  static const double miniActionButton = 32.0;
+
   /// Diámetro del badge de notificaciones en AppBar — 18px
   /// Más pequeño que mensajesBadgeSize (22px): el AppBar tiene menos espacio visual
   static const double notifBadgeSize = 18.0;
@@ -228,6 +243,9 @@ class AppSizing {
 
   /// Hairline / línea mínima: 1dp — Divider sin padding extra, bordes finos
   static const double hairline = 1.0;
+
+  /// Ícono micro: 13dp — metadatos en tiles (teléfono, persona, acción, aviso)
+  static const double iconXxs = 13.0;
 
   /// Ícono extra pequeño: 14dp — deleteIcon en Chip, íconos inline en texto
   static const double iconXs = 14.0;

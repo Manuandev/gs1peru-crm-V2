@@ -98,8 +98,20 @@ class AppSpacing {
   // si el valor aparece en múltiples componentes.
   // ============================================================
 
+  /// 3px — padding interno de badges compactos (ej: badge de notificaciones en AppBar)
+  static const double badgePadding = 3.0;
+
+  /// 3px — padding vertical del chip _Tag en tiles de notificación (campaña, canal, evento)
+  static const double tagPaddingV = 3.0;
+
+  /// 7px — padding horizontal del badge de conteo en CollapsibleSection
+  static const double badgePaddingH = 7.0;
+
   /// 6px — espaciado entre chips/tags en Wrap (spacing y runSpacing)
   static const double chipGap = 6.0;
+
+  /// 80px — padding superior para pantallas de estado vacío (empty state)
+  static const double emptyStateTop = 80.0;
 
   /// 12px — gap entre ícono y texto en notificaciones; margen
   /// externo lateral de snackbars

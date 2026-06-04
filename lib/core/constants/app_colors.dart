@@ -240,6 +240,24 @@ class AppColors {
   /// Material 3 pressed-state sobre onPrimary — más perceptible que opacityActiveItem (12%)
   static const double opacityPressedOnDark = 0.24;
 
+  /// Fondo translúcido de avatar derivado por nombre (ProspectoTile): 15%
+  static const double opacityAvatarBg = 0.15;
+
+  /// Sombra coloreada de DashboardCard (caja de sombra sobre color primario): 30%
+  static const double opacityShadow = 0.30;
+
+  /// Divider semitransparente en sections de home: 30%
+  static const double opacityDivider = 0.30;
+
+  /// Texto secundario muy atenuado en tiles de notificación: 60%
+  static const double opacityTextMuted = 0.60;
+
+  /// Texto de estado vacío / empty state: 40%
+  static const double opacityEmptyText = 0.40;
+
+  /// Íconos muy sutiles sobre fondos de card (CardTotalesHome subtítulos): 71%
+  static const double opacityIconMuted = 0.71;
+
   // ============================================================
   // SNACKBAR / TOAST — Paletas semánticas modo oscuro
   // Fondos oscuros consistentes para notificaciones en ambos temas.

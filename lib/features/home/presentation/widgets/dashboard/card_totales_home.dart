@@ -73,9 +73,6 @@ class _CardTotalItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final themeText = theme.textTheme;
-
     return Expanded(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -91,18 +88,18 @@ class _CardTotalItem extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             cantidad.toString(),
-            style: themeText.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: AppTextStyles.weightBold,
               color: iconColor,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             titulo,
-            style: themeText.labelSmall?.copyWith(
-              color: iconColor.withAlpha(180),
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: iconColor.withValues(alpha: AppColors.opacityIconMuted),
+              fontWeight: AppTextStyles.weightSemiBold,
+              letterSpacing: AppTextStyles.letterSpacingNarrow,
             ),
             textAlign: TextAlign.center,
             maxLines: 2,

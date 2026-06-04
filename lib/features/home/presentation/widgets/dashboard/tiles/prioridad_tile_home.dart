@@ -42,24 +42,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
   @override
   Widget build(BuildContext context) {
     final prioridad = widget.prioridad;
-
-    final theme = Theme.of(context);
-    final themeText = theme.textTheme;
-    final colorScheme = theme.colorScheme;
-
-    final titleStyle = themeText.titleSmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: themeText.titleSmall!.color,
-    );
-
-    final labelSmallStyle = themeText.labelSmall?.copyWith(
-      color: themeText.labelSmall!.color,
-    );
-
-    final avatarStyle = themeText.labelMedium?.copyWith(
-      color: AppColors.textOnDark,
-    );
-
+    final colorScheme = Theme.of(context).colorScheme;
     final elapsedColor = ElapsedTimeUtils.colorFromElapsed(_elapsed);
 
     return Padding(
@@ -72,13 +55,14 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
         children: [
           // ─── Avatar ──────────────────────────────────────
           CircleAvatar(
-            radius: AppSizing.avatarRadiusSm + 4,
+            radius: AppSizing.avatarRadiusHomeTile,
             backgroundColor: prioridad.nombre.avatarColor,
             child: Text(
               prioridad.nombre.initials,
-              style: avatarStyle?.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textOnDark,
+                fontSize: AppTextStyles.sizeMd,
+                fontWeight: AppTextStyles.weightBold,
               ),
             ),
           ),
@@ -93,7 +77,9 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                 // Fila 1: Nombre
                 Text(
                   prioridad.nombre,
-                  style: titleStyle,
+                  style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: AppTextStyles.weightBold,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -108,7 +94,9 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                       Flexible(
                         child: Text(
                           CanalHelper.get(prioridad.idCanal).nombre,
-                          style: labelSmallStyle?.copyWith(fontSize: 11),
+                          style: AppTextStyles.labelSmall.copyWith(
+                            fontSize: AppTextStyles.sizeXs,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -136,18 +124,18 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               // Timer elapsed
               Text(
                 ElapsedTimeUtils.formatHyM(_elapsed),
-                style: themeText.labelMedium?.copyWith(
+                style: AppTextStyles.labelMedium.copyWith(
                   color: elapsedColor,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
+                  fontWeight: AppTextStyles.weightExtraBold,
+                  fontSize: AppTextStyles.sizeSmPlus,
                 ),
               ),
               Text(
                 'sin respuesta',
-                style: themeText.labelSmall?.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: elapsedColor,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 10,
+                  fontWeight: AppTextStyles.weightMedium,
+                  fontSize: AppTextStyles.sizeSub,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxs),
@@ -158,7 +146,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                 children: [
                   _MiniActionButton(
                     icon: AppIcons.message,
-                    color: const Color(0xFF25D366),
+                    color: AppIconsSocial.colorCanal(1),
                     onTap: () {
                       context.goToDetalleChatDesdeHome(
                         idLead: prioridad.idLead,
@@ -175,17 +163,6 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                     },
                     tooltip: 'Llamar',
                   ),
-                  // const SizedBox(width: AppSpacing.xs),
-                  // _MiniActionButton(
-                  //   icon: AppIcons.check,
-                  //   color: const Color(0xFF7C4DFF),
-                  //   onTap: () {
-                  //     context.goToDetalleChatDesdeHome(
-                  //       idLead: prioridad.idLead,
-                  //     );
-                  //   },
-                  //   tooltip: 'Ver detalle',
-                  // ),
                 ],
               ),
             ],
@@ -218,13 +195,13 @@ class _MiniActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
         onTap: onTap,
         child: Container(
-          width: 32,
-          height: 32,
+          width: AppSizing.miniActionButton,
+          height: AppSizing.miniActionButton,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(AppSizing.radiusMd),
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
+          child: Icon(icon, color: AppColors.textOnDark, size: AppSizing.iconSm),
         ),
       ),
     );

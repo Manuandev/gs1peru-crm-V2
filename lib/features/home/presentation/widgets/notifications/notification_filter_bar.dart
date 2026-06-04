@@ -1,6 +1,8 @@
-// lib/features/home/presentation/widgets/notifications/collapsible_section.dart
+// lib/features/home/presentation/widgets/notifications/notification_filter_bar.dart
 
 import 'package:flutter/material.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class CollapsibleSection extends StatefulWidget {
   final IconData icon;
@@ -33,34 +35,35 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
         InkWell(
           onTap: () => setState(() => _expanded = !_expanded),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm2,
+            ),
             child: Row(
               children: [
-                Icon(widget.icon, size: 18, color: colorScheme.primary),
-                const SizedBox(width: 8),
+                Icon(widget.icon, size: AppSizing.iconActionSm, color: colorScheme.primary),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   widget.label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: AppTextStyles.weightBold,
                     color: colorScheme.primary,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
+                    horizontal: AppSpacing.badgePaddingH,
+                    vertical: AppSpacing.xxs,
                   ),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
                   ),
                   child: Text(
                     '${widget.count}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      fontWeight: AppTextStyles.weightBold,
                       color: colorScheme.onPrimaryContainer,
                     ),
                   ),
@@ -71,7 +74,7 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
                   child: Icon(
-                    Icons.expand_less,
+                    AppIcons.expandLess,
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -86,13 +89,14 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
           maintainState: true,
           child: widget.children.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   child: Center(
                     child: Text(
                       'No tienes ${widget.label.toLowerCase()}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: colorScheme.onSurface.withValues(
+                          alpha: AppColors.opacityEmptyText,
+                        ),
                       ),
                     ),
                   ),

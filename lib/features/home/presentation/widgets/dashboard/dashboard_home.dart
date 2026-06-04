@@ -39,8 +39,7 @@ class DashboardCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSizing.radiusLg),
                 boxShadow: [
                   BoxShadow(
-                    // ignore: deprecated_member_use
-                    color: color.withOpacity(0.30),
+                    color: color.withValues(alpha: AppColors.opacityShadow),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -63,7 +62,7 @@ class DashboardCard extends StatelessWidget {
                       : FaIcon(
                           icon as FaIconData,
                           color: textColor,
-                          size: AppSizing.iconLg - 4,
+                          size: AppSizing.iconFaLg,
                         ),
                   const SizedBox(width: AppSpacing.sm),
                   // ── LABEL ──────────────────────────────────────
@@ -72,8 +71,8 @@ class DashboardCard extends StatelessWidget {
                       label,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: textColor,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
+                        fontWeight: AppTextStyles.weightBold,
+                        letterSpacing: AppTextStyles.letterSpacingXNarrow,
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
@@ -90,11 +89,11 @@ class DashboardCard extends StatelessWidget {
                 right: AppSpacing.xs,
                 child: Container(
                   constraints: const BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 22,
+                    minWidth: AppSizing.iconMd,
+                    minHeight: AppSizing.iconActionSm,
                   ),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs + 2,
+                    horizontal: AppSpacing.chipGap,
                     vertical: AppSpacing.xxs,
                   ),
                   decoration: BoxDecoration(

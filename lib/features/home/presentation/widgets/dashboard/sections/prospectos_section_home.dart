@@ -23,8 +23,9 @@ class ProspectosSectionHome extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizing.radiusLg),
         side: BorderSide(
-          // ignore: deprecated_member_use
-          color: colorScheme.outlineVariant.withOpacity(0.5),
+          color: colorScheme.outlineVariant.withValues(
+            alpha: AppColors.opacityDisabledBorder,
+          ),
           width: 1,
         ),
       ),
@@ -43,8 +44,9 @@ class ProspectosSectionHome extends StatelessWidget {
                   ProspectoTileHome(prospecto: e.value),
                   if (!isLast)
                     Divider(
-                      // ignore: deprecated_member_use
-                      color: colorScheme.outlineVariant.withOpacity(0.3),
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: AppColors.opacityDivider,
+                      ),
                     ),
                 ],
               );

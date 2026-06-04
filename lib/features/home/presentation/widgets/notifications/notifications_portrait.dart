@@ -1,7 +1,8 @@
-// lib/features/home/presentation/widgets/home_portrait.dart
+// lib/features/home/presentation/widgets/notifications/notifications_portrait.dart
 
 import 'package:flutter/material.dart';
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class NotificationsPortrait extends StatelessWidget {
@@ -24,7 +25,7 @@ class NotificationsPortrait extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CollapsibleSection(
-            icon: Icons.swap_horiz_rounded,
+            icon: AppIcons.reasignar,
             label: 'Leads Reasignados',
             count: state.totLeadsReasignados,
             children: state.leadsReasignados
@@ -32,7 +33,7 @@ class NotificationsPortrait extends StatelessWidget {
                 .toList(),
           ),
           CollapsibleSection(
-            icon: Icons.person_add_alt_1_rounded,
+            icon: AppIcons.leadNuevo,
             label: 'Leads Nuevos',
             count: state.totLeadsNuevos,
             children: state.leadsNuevos
@@ -40,7 +41,7 @@ class NotificationsPortrait extends StatelessWidget {
                 .toList(),
           ),
           CollapsibleSection(
-            icon: Icons.notifications_active_rounded,
+            icon: AppIcons.notificationActive,
             label: 'Recordatorios',
             count: state.totRecordatorios,
             children: state.recordatorios
@@ -61,21 +62,24 @@ class _EmptyNotifications extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 80),
+      padding: const EdgeInsets.only(top: AppSpacing.emptyStateTop),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.notifications_off_outlined,
-            size: 48,
-            color: colorScheme.onSurface.withOpacity(0.3),
+            AppIcons.notificationOff,
+            size: AppSizing.iconXl,
+            color: colorScheme.onSurface.withValues(
+              alpha: AppColors.opacityDivider,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm2),
           Text(
             'No tienes notificaciones',
-            style: TextStyle(
-              fontSize: 14,
-              color: colorScheme.onSurface.withOpacity(0.4),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: colorScheme.onSurface.withValues(
+                alpha: AppColors.opacityEmptyText,
+              ),
             ),
           ),
         ],

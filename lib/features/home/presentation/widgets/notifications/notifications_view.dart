@@ -1,4 +1,4 @@
-// lib/features/home/presentation/widgets/home_view.dart
+// lib/features/home/presentation/widgets/notifications/notifications_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -18,7 +18,7 @@ class NotificationsView extends StatelessWidget {
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [
         IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: const Icon(AppIcons.backIos),
           onPressed: () => context.goBack(),
         ),
       ],

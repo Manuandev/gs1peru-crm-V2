@@ -22,18 +22,6 @@ class HomePortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final themeText = theme.textTheme;
-
-    final titleStyle = themeText.titleMedium?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: themeText.titleMedium!.color,
-    );
-
-    final bodyStyle = themeText.bodySmall?.copyWith(
-      color: themeText.bodySmall!.color,
-    );
-
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
@@ -43,16 +31,29 @@ class HomePortrait extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           HomeMenuCards(state: state),
           const SizedBox(height: AppSpacing.md),
-          Text("Prioridad ahora", style: titleStyle),
+          Text(
+            'Prioridad ahora',
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: AppTextStyles.weightBold,
+            ),
+          ),
           const SizedBox(height: AppSpacing.xxs),
-          Text("Responde rápido a tus conversaciones.", style: bodyStyle),
+          Text(
+            'Responde rápido a tus conversaciones.',
+            style: AppTextStyles.bodySmall,
+          ),
           const SizedBox(height: AppSpacing.sm),
           PrioridadSectionHome(prioridades: state.prioridades),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Prospectos nuevos', style: titleStyle),
-              TextButton(onPressed: () {}, child: Text('Ver todos')),
+              Text(
+                'Prospectos nuevos',
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: AppTextStyles.weightBold,
+                ),
+              ),
+              CustomTextButton(text: 'Ver todos', onPressed: () {}),
             ],
           ),
           ProspectosSectionHome(prospectos: state.prospectos),

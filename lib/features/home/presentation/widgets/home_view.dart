@@ -44,10 +44,10 @@ class HomeView extends StatelessWidget {
 
             return Text(
               'Hola, ${nombre[0]} 👋',
-              style: AppTextStyles.titleMedium.copyWith(),
+              style: AppTextStyles.titleMedium,
             );
           }
-          return const Text('Inicio');
+          return const Text('Inicio', style: AppTextStyles.titleMedium);
         },
       ),
       drawerSide: DrawerSide.left,
@@ -60,8 +60,8 @@ class HomeView extends StatelessWidget {
               onPressed: () => context.goToNotifications(),
             ),
             Positioned(
-              top: 6,
-              right: 6,
+              top: AppSpacing.chipGap,
+              right: AppSpacing.chipGap,
               child: BlocBuilder<HomeBloc, HomeState>(
                 builder: (context, state) {
                   if (state is! HomeLoaded) return const SizedBox.shrink();
@@ -70,21 +70,21 @@ class HomeView extends StatelessWidget {
                   if (count == 0) return const SizedBox.shrink();
 
                   return Container(
-                    padding: const EdgeInsets.all(3),
+                    padding: const EdgeInsets.all(AppSpacing.badgePadding),
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: AppColors.error,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
+                      minWidth: AppSizing.iconSm,
+                      minHeight: AppSizing.iconSm,
                     ),
                     child: Text(
                       count > 99 ? '99+' : '$count',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textOnDark,
+                        fontSize: AppTextStyles.sizeXxs,
+                        fontWeight: AppTextStyles.weightBold,
                         height: 1,
                       ),
                       textAlign: TextAlign.center,

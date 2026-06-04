@@ -602,8 +602,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       if (m.estado != 'wait' || m.isEnviado != true) return false;
       // Solo los que aún tienen tempId (UUID) — no los ya confirmados
       if (!uuidRegex.hasMatch(m.idMensaje)) return false;
-      // Mismo tipo
-      if (payload.tipoMensaje.isNotEmpty && m.tipo != payload.tipoMensaje) {
+      // Mismo tipo — las plantillas se guardan localmente como 'text' o tipo de
+      // archivo, pero el servidor responde con 'template'; no filtrar por tipo en ese caso
+      if (payload.tipoMensaje.isNotEmpty &&
+          m.tipo != payload.tipoMensaje &&
+          payload.tipoMensaje != 'template') {
         return false;
       }
 

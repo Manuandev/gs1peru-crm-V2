@@ -226,6 +226,26 @@ class AppTextStyles {
   // LETTER SPACING (Espaciado entre letras)
   // ============================================================
 
+  // ============================================================
+  // LINE HEIGHT (Altura de línea)
+  // ============================================================
+
+  /// Altura de línea para títulos compactos (ej: nombre en AppBar de multimedia): 1.2
+  static const double lineHeightTitle = 1.2;
+
+  /// Altura de línea para subtítulos y metadata (ej: fecha en AppBar de multimedia): 1.3
+  static const double lineHeightSub = 1.3;
+
+  /// Altura de línea del cuerpo de mensaje (WhatsApp, chat): 1.4
+  static const double lineHeightBody = 1.4;
+
+  // ============================================================
+  // LETTER SPACING (Espaciado entre letras)
+  // ============================================================
+
+  /// Código monospace en mensajes: +0.5
+  static const double letterSpacingCode = 0.5;
+
   /// Apretado: -0.3 — para headings grandes (evita exceso de espacio)
   static const double letterSpacingTight = -0.3;
 

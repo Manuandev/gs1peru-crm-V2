@@ -15,13 +15,7 @@ class ChatDetailFases extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final themeText = theme.textTheme;
-
-    final titleStyle = themeText.titleSmall?.copyWith(
-      color: themeText.titleSmall!.color,
-    );
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       color: colorScheme.surface,
@@ -32,7 +26,7 @@ class ChatDetailFases extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Fase del lead', style: titleStyle),
+          Text('Fase del lead', style: AppTextStyles.titleSmall),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: LeadEstado.values.map((estado) {
@@ -49,38 +43,38 @@ class ChatDetailFases extends StatelessWidget {
                         child: Column(
                           children: [
                             Container(
-                              width: 28,
-                              height: 28,
+                              width: AppSizing.faseIndicatorSize,
+                              height: AppSizing.faseIndicatorSize,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: isActivo
-                                    ? Colors.green
-                                    : Colors.transparent,
+                                    ? AppColors.success
+                                    : AppColors.transparent,
                                 border: Border.all(
                                   color: isActivo
-                                      ? Colors.green
-                                      : Colors.grey.shade400,
-                                  width: 2,
+                                      ? AppColors.success
+                                      : AppColors.grey400,
+                                  width: AppSizing.borderFocusWidth,
                                 ),
                               ),
                               child: isActivo
                                   ? const Icon(
-                                      Icons.circle,
-                                      color: Colors.white,
-                                      size: 12,
+                                      AppIcons.circuloRelleno,
+                                      color: AppColors.textOnDark,
+                                      size: AppSizing.indicatorDotSize,
                                     )
                                   : null,
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppSpacing.xs),
                             Text(
                               estado.label,
                               style: AppTextStyles.labelSmall.copyWith(
                                 color: isActivo
-                                    ? Colors.green
-                                    : Colors.grey.shade600,
+                                    ? AppColors.success
+                                    : AppColors.grey600,
                                 fontWeight: isActivo
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                                    ? AppTextStyles.weightBold
+                                    : AppTextStyles.weightRegular,
                               ),
                               textAlign: TextAlign.center,
                               overflow: TextOverflow.ellipsis,
@@ -94,9 +88,9 @@ class ChatDetailFases extends StatelessWidget {
                     if (!isUltimo)
                       Expanded(
                         child: Container(
-                          height: 2,
-                          margin: const EdgeInsets.only(bottom: 20),
-                          color: Colors.grey.shade300,
+                          height: AppSizing.borderFocusWidth,
+                          margin: const EdgeInsets.only(bottom: AppSpacing.mdLg),
+                          color: AppColors.grey300,
                         ),
                       ),
                   ],

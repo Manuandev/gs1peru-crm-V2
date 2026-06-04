@@ -71,6 +71,9 @@ class AppSizing {
   // BORDER RADIUS (Redondeo de bordes)
   // ============================================================
 
+  /// Micro: 2px — barra de acento vertical en headers de sección y bordes mínimos
+  static const double radiusXxs = 2.0;
+
   /// Muy pequeño: 4px — chips, badges, skeletons
   static const double radiusXs = 4.0;
 
@@ -85,6 +88,9 @@ class AppSizing {
 
   /// Medio: 12px (BASE) — inputs, botones, tarjetas internas
   static const double radiusMd = 12.0;
+
+  /// Medio-grande: 14px — cards de plantilla (SelectTemplatePortrait)
+  static const double radiusMdLg = 14.0;
 
   /// Grande: 16px — cards principales, dialogs
   static const double radiusLg = 16.0;
@@ -267,6 +273,9 @@ class AppSizing {
   /// Ícono en campo de búsqueda: 20dp — prefixIcon en TextField de búsqueda
   static const double iconSearch = 20.0;
 
+  /// Ícono inline en fila de texto o metadatos: 12dp — adjunto en template, etiquetas pequeñas
+  static const double iconInline = 12.0;
+
   /// Contenedor cuadrado del ícono en snackbar/toast: 36dp
   static const double snackIconContainer = 36.0;
 
@@ -337,12 +346,81 @@ class AppSizing {
   /// Ancho del borde fino (hairline visible): 0.5dp — chips no seleccionados
   static const double borderWidthThin = 0.5;
 
+  /// Borde sutil: 0.8dp — separador entre barra de input y área de mensajes
+  static const double borderWidthSubtle = 0.8;
+
+  /// Blur muy suave: 4dp — sombra de burbujas de mensaje y textos
+  static const double shadowBlurXs = 4.0;
+
+  /// Radio interior de burbuja multimedia: 14dp (radiusLg − padding media 2dp)
+  static const double radiusBubbleInner = 14.0;
+
+  /// Punta redondeada interior de burbuja multimedia: 3dp
+  static const double radiusBubbleTipInner = 3.0;
+
+  /// Botón circular de play en visor de video: 52dp
+  static const double videoPlayButton = 52.0;
+
+  /// Grosor spinner ligero: 2.5dp — indicador de descarga de documentos
+  static const double spinnerStrokeLight = 2.5;
+
+  /// Tamaño del spinner compacto en carga paginada de lista: 20dp
+  static const double spinnerSizeSm = 20.0;
+
+  /// Ancho de la barra de arrastre (handle) del bottom sheet en WhatsAppMediaPicker: 36dp
+  static const double handleWidth = 36.0;
+
+  /// Ancho de la barra de acento vertical en headers de sección: 3dp
+  static const double accentBarWidth = 3.0;
+
+  /// Contenedor cuadrado de ícono en cards/listas (SelectTemplatePortrait, etc.): 40dp
+  static const double iconContainerMd = 40.0;
+
+  /// Altura de la barra de preview de multimedia seleccionada (WhatsAppMediaPicker): 72dp
+  static const double previewBarHeight = 72.0;
+
+  /// Tamaño del thumbnail en la barra de preview (WhatsAppMediaPicker): 52dp
+  static const double previewThumbSize = 52.0;
+
+  /// Diámetro del círculo indicador de etapa en ChatDetailFases: 28dp
+  static const double faseIndicatorSize = 28.0;
+
+  /// Diámetro del punto activo dentro del círculo de etapa (ChatDetailFases): 12dp
+  static const double indicatorDotSize = 12.0;
+
+  /// Ícono de estado de mensaje enviado/entregado/leído/error: 14dp
+  static const double iconStatus = 14.0;
+
+  /// Ícono reloj (estado pendiente de mensaje): 12dp
+  static const double iconStatusWait = 12.0;
+
+  /// Ancho del widget reproductor de audio en burbuja de chat: 200dp
+  static const double audioPlayerWidth = 200.0;
+
+  /// Altura del track del Slider de audio: 2.5dp
+  static const double sliderTrackHeight = 2.5;
+
+  /// Radio del thumb del Slider de audio: 5dp
+  static const double sliderThumbRadius = 5.0;
+
+  /// Alto del área de thumbnails y del chip de archivo en attachment picker: 80dp
+  static const double attachThumbnailHeight = 80.0;
+
+  /// Altura mínima de LinearProgressIndicator (uso de memoria, progreso): 6dp
+  static const double progressBarHeight = 6.0;
+
+  /// Alto máximo del campo de texto multi-línea en ChatInputBar: 120dp
+  static const double inputMaxHeight = 120.0;
+
   // ============================================================
   // DRAWER HEADER — Avatar responsive
   // ============================================================
 
   /// Radio del avatar en drawer (modo landscape compacto): 20dp
   static const double drawerAvatarRadiusCompact = 20.0;
+
+  /// Radio del avatar compacto en el AppBar del detalle de chat: 20dp
+  static const double avatarRadiusAppBar = 20.0;
 
   /// Radio del avatar en drawer (orientación normal): 30dp
   static const double drawerAvatarRadius = 30.0;

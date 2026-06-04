@@ -165,8 +165,8 @@ class AppIcons {
   /// Imagen outline — galería, foto
   static const IconData image = Icons.image_outlined;
 
-  /// PDF outline — documento PDF
-  static const IconData pdf = Icons.picture_as_pdf_outlined;
+  /// PDF — documento PDF (rounded, para chips y listas de archivos)
+  static const IconData pdf = Icons.picture_as_pdf_rounded;
 
   // ============================================================
   // CONFIGURACIÓN Y HERRAMIENTAS
@@ -326,6 +326,76 @@ class AppIcons {
   /// Rayo / Acción — campo "acción" en RecordatorioTile
   static const IconData accion = Icons.bolt_outlined;
 
+  /// Megáfono / Campaña — canal de origen en subtítulo del AppBar de chat
+  static const IconData campaign = Icons.campaign_rounded;
+
+  /// Enviar mensaje — botón de envío en ChatInputBar
+  static const IconData send = Icons.send_rounded;
+
+  /// Micrófono — grabar audio en ChatInputBar
+  static const IconData mic = Icons.mic_rounded;
+
+  /// Plantillas de mensajes WhatsApp — botón en ChatInputBar
+  static const IconData plantillas = Icons.library_books_rounded;
+
+  /// Reproducir — botón play en visor de video y reproductor de audio
+  static const IconData play = Icons.play_arrow_rounded;
+
+  /// Pausar — botón pause en reproductor de audio
+  static const IconData pause = Icons.pause_rounded;
+
+  /// Detener — botón stop en grabador de audio
+  static const IconData stop = Icons.stop_rounded;
+
+  /// Foto / imagen — ícono de preview de tipo imagen en chat tile
+  static const IconData photo = Icons.photo_rounded;
+
+  /// Galería / biblioteca de fotos — botón galería en attachment picker
+  static const IconData photoLibrary = Icons.photo_library_rounded;
+
+  /// Cámara — tomar foto en attachment picker
+  static const IconData camera = Icons.camera_alt_rounded;
+
+  /// Descargar archivo — botón de descarga en MediaViewerPage
+  static const IconData downloadFile = Icons.download_rounded;
+
+  /// Cámara desactivada / error de video — estado de error en MediaViewerPage
+  static const IconData videocamOff = Icons.videocam_off_rounded;
+
+  // ── Estado de mensaje (MessageStatusIcon) ───────────────────────────────
+
+  /// Reloj — estado "pendiente/enviando" de mensaje WhatsApp
+  static const IconData accessTime = Icons.access_time_rounded;
+
+  /// Check simple — estado "enviado" de mensaje WhatsApp
+  static const IconData checkSingle = Icons.check_rounded;
+
+  /// Doble check — estado "entregado" o "leído" de mensaje WhatsApp
+  static const IconData checkDouble = Icons.done_all_rounded;
+
+  /// Cámara de video — fallback cuando falla el thumbnail
+  static const IconData videocam = Icons.videocam_rounded;
+
+  /// Imagen rota — fallback cuando falla la carga de imagen
+  static const IconData brokenImage = Icons.broken_image_rounded;
+
+  // ── Tipos de archivo (DocumentContent en MessageBubble) ──────────────────────
+
+  /// Archivo Excel / hoja de cálculo
+  static const IconData fileExcel = Icons.table_chart_rounded;
+
+  /// Archivo Word / documento de texto
+  static const IconData fileWord = Icons.description_rounded;
+
+  /// Archivo PowerPoint / presentación
+  static const IconData filePowerpoint = Icons.slideshow_rounded;
+
+  /// Archivo ZIP / comprimido
+  static const IconData fileZip = Icons.folder_zip_rounded;
+
+  /// Archivo genérico (fallback de tipo desconocido)
+  static const IconData fileGeneric = Icons.insert_drive_file_rounded;
+
   // ============================================================
   // NAVEGACIÓN — VARIANTES iOS
   // ============================================================
@@ -357,4 +427,45 @@ class AppIcons {
 
   /// Chevron arriba — colapsar sección (CollapsibleSection)
   static const IconData expandLess = Icons.expand_less;
+
+  // ============================================================
+  // INDICADORES
+  // ============================================================
+
+  /// Círculo relleno — punto indicador de etapa activa en ChatDetailFases
+  static const IconData circuloRelleno = Icons.circle;
+
+  // ── Acordeón / secciones expandibles ────────────────────────────────────
+
+  // ── Selección / confirmación ─────────────────────────────────────────────
+
+  /// Check circle relleno — indicador de ítem seleccionado (SelectTemplatePortrait)
+  static const IconData checkCircleFilled = Icons.check_circle_rounded;
+
+  // ── Empty states ─────────────────────────────────────────────────────────
+
+  /// Editar nota — empty state cuando no hay plantillas
+  static const IconData editNote = Icons.edit_note_rounded;
+
+  // ── Acordeón / secciones expandibles ────────────────────────────────────
+
+  /// Check redondeado — ítem activo en selector de álbum (WhatsAppMediaPicker)
+  static const IconData checkRounded = Icons.check_rounded;
+
+  /// Play con círculo relleno — badge de video sobre thumbnail en galería
+  static const IconData playCircle = Icons.play_circle_fill_rounded;
+
+  /// Flecha abajo (teclado, redondeada) — header de sección expandida
+  static const IconData arrowDown = Icons.keyboard_arrow_down_rounded;
+
+  /// Flecha arriba (teclado, redondeada) — header de sección colapsada
+  static const IconData arrowUp = Icons.keyboard_arrow_up_rounded;
+
+  // ── Campos de lead (ChatDetailDatosLead) ────────────────────────────────
+
+  /// Bandera redondeada — ícono del campo Estado en datos del lead
+  static const IconData flag = Icons.flag_rounded;
+
+  /// Lista alternativa — ícono del campo Subestado en datos del lead
+  static const IconData listAlt = Icons.list_alt_rounded;
 }

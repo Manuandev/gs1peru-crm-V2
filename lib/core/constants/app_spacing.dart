@@ -101,6 +101,9 @@ class AppSpacing {
   /// 3px — padding interno de badges compactos (ej: badge de notificaciones en AppBar)
   static const double badgePadding = 3.0;
 
+  /// 5px — offset de posicionamiento de badges sobre tiles de grid (video badge en WhatsAppMediaPicker)
+  static const double gridBadgePad = 5.0;
+
   /// 3px — padding vertical del chip _Tag en tiles de notificación (campaña, canal, evento)
   static const double tagPaddingV = 3.0;
 
@@ -109,6 +112,23 @@ class AppSpacing {
 
   /// 6px — espaciado entre chips/tags en Wrap (spacing y runSpacing)
   static const double chipGap = 6.0;
+
+  /// 10px — gap entre avatar y columna de texto en AppBar de detalle (chat)
+  static const double smPlus = 10.0;
+
+  /// 18px — valor intermedio entre md(16) y lg(24); padding horizontal del botón
+  /// de envío en _PickerHeader (WhatsAppMediaPicker)
+  static const double mdPlus = 18.0;
+
+  /// 20px — valor intermedio entre md(16) y lg(24); margen inferior de la línea
+  /// conectora entre círculos de etapa en ChatDetailFases
+  static const double mdLg = 20.0;
+
+  /// 6px — padding interno del contenedor de ícono con fondo de color (_DatoItem en ChatDetailDatosLead)
+  static const double iconBgPad = 6.0;
+
+  /// 14px — padding del contenedor de spinner en posición de trailing de AppBar
+  static const double iconButtonPad = 14.0;
 
   /// 14px — padding horizontal del chip de filtro en listas (LeadListFilterChips)
   static const double chipPaddingH = 14.0;

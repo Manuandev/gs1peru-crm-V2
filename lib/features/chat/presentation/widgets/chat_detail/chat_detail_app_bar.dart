@@ -17,18 +17,17 @@ class ChatDetailAppBar extends StatelessWidget {
       children: [
         // ── Avatar con iniciales ──
         CircleAvatar(
-          radius: 20,
+          radius: AppSizing.avatarRadiusAppBar,
           backgroundColor: infoLead.nombreCompleto.avatarColor,
           child: Text(
             infoLead.nombreCompleto.initials,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+            style: AppTextStyles.titleSmall.copyWith(
+              fontWeight: AppTextStyles.weightBold,
+              color: AppColors.textOnDark,
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.smPlus),
 
         // ── Nombre + canal ──
         Expanded(
@@ -40,24 +39,26 @@ class ChatDetailAppBar extends StatelessWidget {
                 infoLead.nombreCompleto,
                 style: AppTextStyles.titleMedium.copyWith(
                   color: colorScheme.onPrimary,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTextStyles.weightBold,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
               Row(
                 children: [
                   Icon(
-                    Icons.campaign_rounded,
-                    size: 13,
-                    // ignore: deprecated_member_use
-                    color: colorScheme.onPrimary.withOpacity(0.8),
+                    AppIcons.campaign,
+                    size: AppSizing.iconXxs,
+                    color: colorScheme.onPrimary.withValues(
+                      alpha: AppColors.opacityOnPrimarySubtle,
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     infoLead.canal ?? 'Sin canal',
                     style: AppTextStyles.labelSmall.copyWith(
-                      // ignore: deprecated_member_use
-                      color: colorScheme.onPrimary.withOpacity(0.8),
+                      color: colorScheme.onPrimary.withValues(
+                        alpha: AppColors.opacityOnPrimarySubtle,
+                      ),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

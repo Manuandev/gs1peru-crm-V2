@@ -179,6 +179,29 @@ class DateFormatter {
   /// Ayer       → "Ayer 10:22"
   /// Esta semana → "miércoles 10:22"
   /// Más antiguo → "26/03/2025"
+  /// Separador de fecha en lista de mensajes (estilo WhatsApp):
+  /// Hoy        → "Hoy"
+  /// Ayer       → "Ayer"
+  /// < 7 días   → nombre del día de la semana (ej. "miércoles")
+  /// Más antiguo → "d de MMMM yyyy"  (ej. "27 de marzo 2025")
+  static String formatDateSeparator(String dateString, {String locale = 'es'}) {
+    if (dateString.isEmpty) return '';
+    final fecha = parseDate(dateString.trim());
+    if (fecha == null) return '';
+
+    final ahora = DateTime.now();
+    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+    final diaFecha = DateTime(fecha.year, fecha.month, fecha.day);
+    final diferencia = hoy.difference(diaFecha).inDays;
+
+    if (diferencia == 0) return 'Hoy';
+    if (diferencia == 1) return 'Ayer';
+    if (diferencia < 7) {
+      return format(date: fecha, format: AppDateFormat.weekdayOnly, locale: locale);
+    }
+    return format(date: fecha, format: AppDateFormat.longDate, locale: locale);
+  }
+
   static String formatSinHoy(String dateString, {String locale = 'es'}) {
     if (dateString.isEmpty) return '';
     final fecha = parseDate(dateString.trim());

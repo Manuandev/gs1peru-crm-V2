@@ -2,6 +2,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 class WhatsAppMediaPicker extends StatefulWidget {
@@ -75,12 +76,12 @@ class _WhatsAppMediaPickerState extends State<WhatsAppMediaPicker> {
       children: [
         // Handle
         Container(
-          width: 36,
-          height: 4,
-          margin: const EdgeInsets.symmetric(vertical: 10),
+          width: AppSizing.handleWidth,
+          height: AppSpacing.xs,
+          margin: const EdgeInsets.symmetric(vertical: AppSpacing.smPlus),
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
-            borderRadius: BorderRadius.circular(2),
+            color: AppColors.grey300,
+            borderRadius: BorderRadius.circular(AppSizing.radiusXxs),
           ),
         ),
 
@@ -104,16 +105,17 @@ class _WhatsAppMediaPickerState extends State<WhatsAppMediaPicker> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : GridView.builder(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(AppSpacing.xxs),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    crossAxisSpacing: 2,
-                    mainAxisSpacing: 2,
+                    crossAxisSpacing: AppSpacing.xxs,
+                    mainAxisSpacing: AppSpacing.xxs,
                   ),
                   itemCount: _assets.length,
                   itemBuilder: (_, i) {
                     final asset = _assets[i];
-                    final idx = _selected.indexWhere((a) => a.id == asset.id);
+                    final idx =
+                        _selected.indexWhere((a) => a.id == asset.id);
                     return _MediaTile(
                       asset: asset,
                       selectionIndex: idx != -1 ? idx + 1 : null,
@@ -151,9 +153,12 @@ class _PickerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm2,
+        vertical: AppSpacing.smPlus,
+      ),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        border: Border(bottom: BorderSide(color: AppColors.grey200)),
       ),
       child: Row(
         children: [
@@ -166,13 +171,10 @@ class _PickerHeader extends StatelessWidget {
                 children: [
                   Text(
                     current?.name ?? 'Recientes',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+                    style: AppTextStyles.titleMedium,
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+                  const SizedBox(width: AppSpacing.xs),
+                  const Icon(AppIcons.arrowDown, size: AppSizing.iconSearch),
                 ],
               ),
             ),
@@ -183,14 +185,14 @@ class _PickerHeader extends StatelessWidget {
               ? FilledButton.icon(
                   onPressed: onConfirm,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF25D366),
+                    backgroundColor: AppIconsSocial.colorCanal(1),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 8,
+                      horizontal: AppSpacing.mdPlus,
+                      vertical: AppSpacing.sm,
                     ),
                     shape: const StadiumBorder(),
                   ),
-                  icon: const Icon(Icons.send_rounded, size: 16),
+                  icon: const Icon(AppIcons.send, size: AppSizing.iconSm),
                   label: Text('Enviar $selectedCount'),
                 )
               : TextButton(
@@ -206,7 +208,9 @@ class _PickerHeader extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizing.radiusLg),
+        ),
       ),
       builder: (_) => ListView.builder(
         shrinkWrap: true,
@@ -214,7 +218,10 @@ class _PickerHeader extends StatelessWidget {
         itemBuilder: (_, i) => ListTile(
           title: Text(albums[i].name),
           trailing: current?.id == albums[i].id
-              ? const Icon(Icons.check_rounded, color: Color(0xFF25D366))
+              ? Icon(
+                  AppIcons.checkRounded,
+                  color: AppIconsSocial.colorCanal(1),
+                )
               : null,
           onTap: () {
             onAlbumChanged(albums[i]);
@@ -254,13 +261,16 @@ class _MediaTile extends StatelessWidget {
             ),
             builder: (_, snap) {
               if (snap.data == null) {
-                return Container(color: Colors.grey.shade200);
+                return Container(color: AppColors.grey200);
               }
               return ColorFiltered(
                 colorFilter: isSelected
-                    ? const ColorFilter.mode(Colors.black38, BlendMode.darken)
+                    ? const ColorFilter.mode(
+                        AppColors.black38,
+                        BlendMode.darken,
+                      )
                     : const ColorFilter.mode(
-                        Colors.transparent,
+                        AppColors.transparent,
                         BlendMode.multiply,
                       ),
                 child: Image.memory(snap.data!, fit: BoxFit.cover),
@@ -271,23 +281,28 @@ class _MediaTile extends StatelessWidget {
           // Badge video
           if (asset.type == AssetType.video)
             Positioned(
-              bottom: 5,
-              left: 6,
+              bottom: AppSpacing.gridBadgePad,
+              left: AppSpacing.chipGap,
               child: Row(
                 children: [
                   const Icon(
-                    Icons.play_circle_fill_rounded,
-                    color: Colors.white,
-                    size: 16,
+                    AppIcons.playCircle,
+                    color: AppColors.textOnDark,
+                    size: AppSizing.iconSm,
                   ),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: AppSpacing.badgePadding),
                   Text(
                     _formatDuration(asset.videoDuration),
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
+                      color: AppColors.textOnDark,
+                      fontSize: AppTextStyles.sizeXs,
+                      fontWeight: AppTextStyles.weightSemiBold,
+                      shadows: [
+                        Shadow(
+                          blurRadius: AppSizing.shadowBlurXs,
+                          color: AppColors.black54,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -296,20 +311,22 @@ class _MediaTile extends StatelessWidget {
 
           // Check ring
           Positioned(
-            top: 6,
-            right: 6,
+            top: AppSpacing.chipGap,
+            right: AppSpacing.chipGap,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              width: 22,
-              height: 22,
+              width: AppSizing.mensajesBadgeSize,
+              height: AppSizing.mensajesBadgeSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected
-                    ? const Color(0xFF25D366)
-                    : Colors.transparent,
+                    ? AppIconsSocial.colorCanal(1)
+                    : AppColors.transparent,
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF25D366) : Colors.white,
-                  width: 1.5,
+                  color: isSelected
+                      ? AppIconsSocial.colorCanal(1)
+                      : AppColors.textOnDark,
+                  width: AppSizing.canalBadgeBorder,
                 ),
               ),
               child: isSelected
@@ -317,9 +334,9 @@ class _MediaTile extends StatelessWidget {
                       child: Text(
                         '$selectionIndex',
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          color: AppColors.textOnDark,
+                          fontSize: AppTextStyles.sizeXs,
+                          fontWeight: AppTextStyles.weightBold,
                         ),
                       ),
                     )
@@ -338,7 +355,6 @@ class _MediaTile extends StatelessWidget {
   }
 }
 
-
 // _PreviewBar — thumbnails seleccionados abajo
 
 class _PreviewBar extends StatelessWidget {
@@ -350,15 +366,18 @@ class _PreviewBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 72,
+      height: AppSizing.previewBarHeight,
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        border: Border(top: BorderSide(color: AppColors.grey200)),
       ),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm2,
+          vertical: AppSpacing.smPlus,
+        ),
         itemCount: selected.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) => _PreviewThumb(
           asset: selected[i],
           onRemove: () => onRemove(selected[i]),
@@ -379,33 +398,54 @@ class _PreviewThumb extends StatelessWidget {
     return Stack(
       children: [
         FutureBuilder<Uint8List?>(
-          future: asset.thumbnailDataWithSize(const ThumbnailSize.square(100)),
+          future: asset.thumbnailDataWithSize(
+            const ThumbnailSize.square(100),
+          ),
           builder: (_, snap) => ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             child: snap.data != null
-                ? Image.memory(snap.data!, width: 52, height: 52, fit: BoxFit.cover)
-                : Container(width: 52, height: 52, color: Colors.grey.shade200),
+                ? Image.memory(
+                    snap.data!,
+                    width: AppSizing.previewThumbSize,
+                    height: AppSizing.previewThumbSize,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: AppSizing.previewThumbSize,
+                    height: AppSizing.previewThumbSize,
+                    color: AppColors.grey200,
+                  ),
           ),
         ),
         Positioned(
-          top: -4, right: -4,
+          top: -AppSpacing.xs,
+          right: -AppSpacing.xs,
           child: GestureDetector(
             onTap: onRemove,
             child: Container(
-              width: 18, height: 18,
+              width: AppSizing.notifBadgeSize,
+              height: AppSizing.notifBadgeSize,
               decoration: const BoxDecoration(
-                color: Colors.black54,
+                color: AppColors.black54,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close_rounded, size: 12, color: Colors.white),
+              child: const Icon(
+                AppIcons.close,
+                size: AppSizing.iconInline,
+                color: AppColors.textOnDark,
+              ),
             ),
           ),
         ),
         Container(
-          width: 52, height: 52,
+          width: AppSizing.previewThumbSize,
+          height: AppSizing.previewThumbSize,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF25D366), width: 2),
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+            border: Border.all(
+              color: AppIconsSocial.colorCanal(1),
+              width: AppSizing.borderFocusWidth,
+            ),
           ),
         ),
       ],

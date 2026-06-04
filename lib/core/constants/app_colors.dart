@@ -209,6 +209,15 @@ class AppColors {
   /// Color completamente transparente
   static const Color transparent = Color(0x00000000);
 
+  /// Negro puro — fondo del visor de multimedia y overlays absolutos
+  static const Color blackSolid = Color(0xFF000000);
+
+  /// Negro 38% opacidad — overlay de selección sobre thumbnails (WhatsAppMediaPicker)
+  static const Color black38 = Color(0x61000000);
+
+  /// Negro 54% opacidad — fondo semi-opaco de botones de cierre sobre imágenes
+  static const Color black54 = Color(0x8A000000);
+
   // ============================================================
   // OPACIDADES MATERIAL 3 (estados de controles interactivos)
   // Úsalas con .withValues(alpha: AppColors.opacityXxx)
@@ -252,14 +261,101 @@ class AppColors {
   /// Divider semitransparente en sections de home: 30%
   static const double opacityDivider = 0.30;
 
+  // ============================================================
+  // CHAT — Preview de tipo de mensaje y estado de envío
+  // ============================================================
+
+  /// Ícono de audio en preview de chat tile: purple 400
+  static const Color msgPreviewAudio = Color(0xFFAB47BC);
+
+  /// Ícono de video en preview de chat tile: orange 400
+  static const Color msgPreviewVideo = Color(0xFFFFA726);
+
+  /// Doble-check de mensaje leído: lightBlue 300
+  static const Color msgStatusRead = Color(0xFF4FC3F7);
+
+  /// Rojo suave para íconos de fallo/error en chat (red 400)
+  static const Color errorLight = Color(0xFFEF5350);
+
+  /// Rojo oscuro para fondo de snackbar de error inline (red 700)
+  static const Color errorDark = Color(0xFFD32F2F);
+
+  /// Tinte del botón galería en attachment picker (purple 500)
+  static const Color attachGallery = Color(0xFF9C27B0);
+
+  // ── Tipos de archivo ─────────────────────────────────────────────────────
+
+  /// Color del ícono Excel en chip de documento: green 600
+  static const Color fileColorExcel = Color(0xFF43A047);
+
+  /// Color del ícono PowerPoint en chip de documento: orange 600
+  static const Color fileColorPowerpoint = Color(0xFFFB8C00);
+
+  // ============================================================
+  // OPACIDADES ADICIONALES
+  // ============================================================
+
+  /// Opacidad del timestamp en burbujas de mensaje: 65%
+  static const double opacityTimestamp = 0.65;
+
+  /// Fondo muy sutil de ícono en tarjeta de documento/media: 8%
+  static const double opacityIconTint = 0.08;
+
+  /// Fondo del bloque monospace en mensajes WhatsApp (`código`): 10%
+  static const double opacityCodeBackground = 0.10;
+
+  /// Texto secundario ligeramente visible (reproductor de audio, duración): 70%
+  static const double opacitySubtleText = 0.70;
+
+  /// Borde semitransparente sobre fondos oscuros (botón play, video): 30%
+  static const double opacityBorderOnDark = 0.30;
+
   /// Texto secundario muy atenuado en tiles de notificación: 60%
   static const double opacityTextMuted = 0.60;
 
   /// Texto de estado vacío / empty state: 40%
   static const double opacityEmptyText = 0.40;
 
+  /// Ícono de estado vacío / empty state: 30%
+  static const double opacityEmptyIcon = 0.30;
+
   /// Íconos muy sutiles sobre fondos de card (CardTotalesHome subtítulos): 71%
   static const double opacityIconMuted = 0.71;
+
+  // ============================================================
+  // DATO ITEM — Colores de ícono por campo en ChatDetailDatosLead
+  // Cada campo del lead lleva un tono distinctivo: fg = ícono, bg = fondo del contenedor
+  // ============================================================
+
+  /// Ícono del campo Estado (blue 700)
+  static const Color datoEstadoFg = Color(0xFF1976D2);
+  /// Fondo del campo Estado (blue 50)
+  static const Color datoEstadoBg = Color(0xFFE3F2FD);
+
+  /// Ícono del campo Subestado (purple 700)
+  static const Color datoSubestadoFg = Color(0xFF7B1FA2);
+  /// Fondo del campo Subestado (purple 50)
+  static const Color datoSubestadobg = Color(0xFFF3E5F5);
+
+  /// Ícono del campo Campaña (teal 700)
+  static const Color datoCampaniaFg = Color(0xFF00796B);
+  /// Fondo del campo Campaña (teal 50)
+  static const Color datoCampaniaBg = Color(0xFFE0F2F1);
+
+  /// Ícono del campo Evento (orange 700)
+  static const Color datoEventoFg = Color(0xFFF57C00);
+  /// Fondo del campo Evento (orange 50)
+  static const Color datoEventoBg = Color(0xFFFFF3E0);
+
+  /// Ícono del campo Canal (pink 700)
+  static const Color datoCanalFg = Color(0xFFC2185B);
+  /// Fondo del campo Canal (pink 50)
+  static const Color datoCanalBg = Color(0xFFFCE4EC);
+
+  /// Ícono del campo Interés (green 700)
+  static const Color datoInteresFg = Color(0xFF388E3C);
+  /// Fondo del campo Interés (green 50)
+  static const Color datoInteresBg = Color(0xFFE8F5E9);
 
   // ============================================================
   // SNACKBAR / TOAST — Paletas semánticas modo oscuro

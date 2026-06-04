@@ -2,14 +2,16 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:app_crm/core/index_core.dart';
+
 IconData fileIcon(String mensaje) {
   final ext = mensaje.toLowerCase().split('.').last;
   switch (ext) {
-    case 'pdf':              return Icons.picture_as_pdf_rounded;
-    case 'doc': case 'docx': return Icons.description_rounded;
-    case 'xls': case 'xlsx': return Icons.table_chart_rounded;
-    case 'ppt': case 'pptx': return Icons.slideshow_rounded;
-    default:                 return Icons.insert_drive_file_rounded;
+    case 'pdf':              return AppIcons.pdf;
+    case 'doc': case 'docx': return AppIcons.fileWord;
+    case 'xls': case 'xlsx': return AppIcons.fileExcel;
+    case 'ppt': case 'pptx': return AppIcons.filePowerpoint;
+    default:                 return AppIcons.fileGeneric;
   }
 }
 
@@ -27,10 +29,10 @@ String fileLabel(String mensaje) {
 Color fileColor(String mensaje) {
   final ext = mensaje.toLowerCase().split('.').last;
   switch (ext) {
-    case 'pdf':              return Colors.red.shade400;
-    case 'doc': case 'docx': return Colors.blue.shade500;
-    case 'xls': case 'xlsx': return Colors.green.shade600;
-    case 'ppt': case 'pptx': return Colors.orange.shade600;
-    default:                 return Colors.grey.shade500;
+    case 'pdf':              return AppColors.errorLight;
+    case 'doc': case 'docx': return AppColors.info;
+    case 'xls': case 'xlsx': return AppColors.fileColorExcel;
+    case 'ppt': case 'pptx': return AppColors.fileColorPowerpoint;
+    default:                 return AppColors.grey500;
   }
 }

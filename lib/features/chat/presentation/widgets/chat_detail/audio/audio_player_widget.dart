@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
@@ -107,39 +108,35 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         ? colorScheme.onPrimary
         : colorScheme.primary;
     final trackColor = widget.isEnviado
-        // ignore: deprecated_member_use
-        ? colorScheme.onPrimary.withOpacity(0.3)
-        // ignore: deprecated_member_use
-        : colorScheme.primary.withOpacity(0.2);
+        ? colorScheme.onPrimary.withValues(alpha: AppColors.opacityBorderOnDark)
+        : colorScheme.primary.withValues(alpha: AppColors.opacitySubtle);
     final activeTrackColor = widget.isEnviado
-        // ignore: deprecated_member_use
-        ? colorScheme.onPrimary.withOpacity(0.8)
+        ? colorScheme.onPrimary.withValues(alpha: AppColors.opacityOnPrimarySubtle)
         : colorScheme.primary;
 
     return SizedBox(
-      width: 200,
+      width: AppSizing.audioPlayerWidth,
       child: Row(
         children: [
           // ── Play/Pause ─────────────────────────────────────
           GestureDetector(
             onTap: _togglePlay,
             child: Container(
-              width: 36,
-              height: 36,
+              width: AppSizing.buttonHeightSmall,
+              height: AppSizing.buttonHeightSmall,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                // ignore: deprecated_member_use
-                color: iconColor.withOpacity(0.15),
+                color: iconColor.withValues(alpha: AppColors.opacityAvatarBg),
               ),
               child: Icon(
-                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                _isPlaying ? AppIcons.pause : AppIcons.play,
                 color: iconColor,
-                size: 22,
+                size: AppSizing.iconNav,
               ),
             ),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
 
           // ── Progress + duración ────────────────────────────
           Expanded(
@@ -149,12 +146,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               children: [
                 SliderTheme(
                   data: SliderThemeData(
-                    trackHeight: 2.5,
+                    trackHeight: AppSizing.sliderTrackHeight,
                     thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 5,
+                      enabledThumbRadius: AppSizing.sliderThumbRadius,
                     ),
                     overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 10,
+                      overlayRadius: AppSizing.radiusSm2,
                     ),
                     activeTrackColor: activeTrackColor,
                     inactiveTrackColor: trackColor,
@@ -176,17 +173,16 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 4),
+                  padding: const EdgeInsets.only(left: AppSpacing.xs),
                   child: Text(
                     _formatDuration(
                       _isPlaying || _position > Duration.zero
                           ? _position
                           : _duration,
                     ),
-                    style: TextStyle(
-                      fontSize: 10,
-                      // ignore: deprecated_member_use
-                      color: iconColor.withOpacity(0.7),
+                    style: AppTextStyles.labelSmall.copyWith(
+                      fontSize: AppTextStyles.sizeSub,
+                      color: iconColor.withValues(alpha: AppColors.opacitySubtleText),
                     ),
                   ),
                 ),

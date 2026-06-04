@@ -28,7 +28,7 @@ class LeadCardActions extends StatelessWidget {
       children: [
         // _LeadActionButton(
         //   icon: AppIconsSocial.whatsapp,
-        //   color: Color(0xFF25D366),
+        //   color: AppIconsSocial.colorCanal(1),
         //   onTap: onWhatsAppTap,
         // ),
         // const SizedBox(width: AppSpacing.md),

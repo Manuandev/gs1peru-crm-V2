@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class SelectTemplatePortrait extends StatefulWidget {
@@ -26,12 +27,19 @@ class _SelectTemplatePortraitState extends State<SelectTemplatePortrait> {
         // ── Lista de cards ────────────────────────────────────
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
             itemCount: widget.state.templates.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            separatorBuilder: (_, _) =>
+                const SizedBox(height: AppSpacing.smPlus),
             itemBuilder: (context, index) {
               final template = widget.state.templates[index];
-              final isSelected = _selected?.idPlantilla == template.idPlantilla;
+              final isSelected =
+                  _selected?.idPlantilla == template.idPlantilla;
 
               return _TemplateCard(
                 template: template,
@@ -51,19 +59,26 @@ class _SelectTemplatePortraitState extends State<SelectTemplatePortrait> {
           firstChild: SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _selected == null
                       ? null
                       : () => context.goBack<Template>(_selected),
-                  icon: const Icon(Icons.send_rounded),
+                  icon: const Icon(AppIcons.send),
                   label: const Text('Enviar plantilla'),
                   style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.chipPaddingH,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppSizing.radiusMd),
                     ),
                   ),
                 ),
@@ -93,7 +108,6 @@ class _TemplateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final theme = Theme.of(context);
 
     final tieneArchivo = template.rutaArchivo.isNotEmpty;
 
@@ -105,40 +119,44 @@ class _TemplateCard extends StatelessWidget {
           color: isSelected
               ? colorScheme.primaryContainer
               : colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppSizing.radiusMdLg),
           border: Border.all(
             color: isSelected
                 ? colorScheme.primary
                 : colorScheme.outlineVariant,
-            width: isSelected ? 2 : 1,
+            width: isSelected
+                ? AppSizing.borderFocusWidth
+                : AppSizing.hairline,
           ),
         ),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.chipPaddingH),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Ícono tipo ──────────────────────────────────
             Container(
-              width: 40,
-              height: 40,
+              width: AppSizing.iconContainerMd,
+              height: AppSizing.iconContainerMd,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? colorScheme.primary.withValues(alpha: 0.15)
+                    ? colorScheme.primary.withValues(
+                        alpha: AppColors.opacityAvatarBg,
+                      )
                     : colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
               ),
               child: Icon(
                 tieneArchivo
                     ? _iconForExt(template.extensionArchivo)
-                    : Icons.chat_bubble_outline_rounded,
+                    : AppIcons.chat,
                 color: isSelected
                     ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,
-                size: 20,
+                size: AppSizing.iconSearch,
               ),
             ),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.sm2),
 
             // ── Nombre + preview ────────────────────────────
             Expanded(
@@ -147,18 +165,18 @@ class _TemplateCard extends StatelessWidget {
                 children: [
                   Text(
                     template.nombre,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.titleSmall.copyWith(
+                      fontWeight: AppTextStyles.weightSemiBold,
                       color: isSelected
                           ? colorScheme.primary
                           : colorScheme.onSurface,
                     ),
                   ),
                   if (template.detalle.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       template.detalle,
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: AppTextStyles.bodySmall.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
                       maxLines: 2,
@@ -166,18 +184,18 @@ class _TemplateCard extends StatelessWidget {
                     ),
                   ],
                   if (tieneArchivo) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.chipGap),
                     Row(
                       children: [
                         Icon(
-                          Icons.attach_file_rounded,
-                          size: 12,
+                          AppIcons.attach,
+                          size: AppSizing.iconInline,
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 2),
+                        const SizedBox(width: AppSpacing.xxs),
                         Text(
                           template.nombreArchivo,
-                          style: theme.textTheme.labelSmall?.copyWith(
+                          style: AppTextStyles.labelSmall.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -192,11 +210,11 @@ class _TemplateCard extends StatelessWidget {
             // ── Check seleccionado ──────────────────────────
             if (isSelected)
               Padding(
-                padding: const EdgeInsets.only(left: 8),
+                padding: const EdgeInsets.only(left: AppSpacing.sm),
                 child: Icon(
-                  Icons.check_circle_rounded,
+                  AppIcons.checkCircleFilled,
                   color: colorScheme.primary,
-                  size: 20,
+                  size: AppSizing.iconSearch,
                 ),
               ),
           ],
@@ -208,12 +226,12 @@ class _TemplateCard extends StatelessWidget {
   IconData _iconForExt(String ext) {
     final e = ext.toLowerCase().replaceAll('.', '');
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(e)) {
-      return Icons.image_outlined;
+      return AppIcons.image;
     }
-    if (['mp4', 'mov', 'avi'].contains(e)) return Icons.videocam_outlined;
-    if (['mp3', 'm4a', 'ogg', 'wav'].contains(e)) return Icons.mic_outlined;
-    if (['pdf'].contains(e)) return Icons.picture_as_pdf_outlined;
-    return Icons.insert_drive_file_outlined;
+    if (['mp4', 'mov', 'avi'].contains(e)) return AppIcons.videocam;
+    if (['mp3', 'm4a', 'ogg', 'wav'].contains(e)) return AppIcons.mic;
+    if (['pdf'].contains(e)) return AppIcons.pdf;
+    return AppIcons.fileOutlined;
   }
 }
 
@@ -227,21 +245,24 @@ class _EmptyTemplate extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 80),
+      padding: const EdgeInsets.only(top: AppSpacing.emptyStateTop),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.edit_note_rounded,
-            size: 48,
-            color: colorScheme.onSurface.withValues(alpha: 0.3),
+            AppIcons.editNote,
+            size: AppSizing.iconXl,
+            color: colorScheme.onSurface.withValues(
+              alpha: AppColors.opacityEmptyIcon,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm2),
           Text(
             'No hay plantillas',
-            style: TextStyle(
-              fontSize: 14,
-              color: colorScheme.onSurface.withValues(alpha: 0.4),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: colorScheme.onSurface.withValues(
+                alpha: AppColors.opacityEmptyText,
+              ),
             ),
           ),
         ],

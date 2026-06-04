@@ -60,26 +60,25 @@ class MessageBubble extends StatelessWidget {
         ),
         child: Container(
           margin: EdgeInsets.only(
-            top: 2,
-            bottom: 2,
-            left: isEnviado ? 48 : 0,
-            right: isEnviado ? 0 : 48,
+            top: AppSpacing.xxs,
+            bottom: AppSpacing.xxs,
+            left: isEnviado ? AppSpacing.xxl : 0,
+            right: isEnviado ? 0 : AppSpacing.xxl,
           ),
           decoration: BoxDecoration(
             color: bubbleColor,
             borderRadius: _bubbleRadius(isEnviado),
             boxShadow: [
               BoxShadow(
-                // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 4,
+                color: AppColors.black(0.06),
+                blurRadius: AppSizing.shadowBlurXs,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
           child: Padding(
             // Estilo WhatsApp: un ligero padding (2px) para fotos/videos, o 0 para texto.
-            padding: _isMediaMsg ? const EdgeInsets.all(2) : EdgeInsets.zero,
+            padding: _isMediaMsg ? const EdgeInsets.all(AppSpacing.xxs) : EdgeInsets.zero,
             child: ClipRRect(
               borderRadius: _isMediaMsg
                   ? _innerBubbleRadius(isEnviado)
@@ -124,20 +123,24 @@ class MessageBubble extends StatelessWidget {
 
   BorderRadius _bubbleRadius(bool isEnviado) {
     return BorderRadius.only(
-      topLeft: const Radius.circular(16),
-      topRight: const Radius.circular(16),
-      bottomLeft: Radius.circular(isEnviado ? 16 : 4),
-      bottomRight: Radius.circular(isEnviado ? 4 : 16),
+      topLeft: const Radius.circular(AppSizing.radiusLg),
+      topRight: const Radius.circular(AppSizing.radiusLg),
+      bottomLeft: Radius.circular(isEnviado ? AppSizing.radiusLg : AppSizing.radiusXs),
+      bottomRight: Radius.circular(isEnviado ? AppSizing.radiusXs : AppSizing.radiusLg),
     );
   }
 
   BorderRadius _innerBubbleRadius(bool isEnviado) {
     // Si la burbuja externa tiene 16px de radio y 2px de padding, la interna debería tener ~14px.
     return BorderRadius.only(
-      topLeft: const Radius.circular(14),
-      topRight: const Radius.circular(14),
-      bottomLeft: Radius.circular(isEnviado ? 14 : 3),
-      bottomRight: Radius.circular(isEnviado ? 3 : 14),
+      topLeft: const Radius.circular(AppSizing.radiusBubbleInner),
+      topRight: const Radius.circular(AppSizing.radiusBubbleInner),
+      bottomLeft: Radius.circular(
+        isEnviado ? AppSizing.radiusBubbleInner : AppSizing.radiusBubbleTipInner,
+      ),
+      bottomRight: Radius.circular(
+        isEnviado ? AppSizing.radiusBubbleTipInner : AppSizing.radiusBubbleInner,
+      ),
     );
   }
 
@@ -151,7 +154,7 @@ class MessageBubble extends StatelessWidget {
             ? message.mensaje
             : MessageUrlHelper.buildFileUrl(message, idLead);
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
           child: AudioPlayerWidget(
             audioPath: path,
             isEnviado: message.isEnviado,
@@ -164,7 +167,7 @@ class MessageBubble extends StatelessWidget {
 
       case 'document':
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
           child: _DocumentContent(
             message: message,
             idLead: idLead,
@@ -174,7 +177,7 @@ class MessageBubble extends StatelessWidget {
 
       case 'template':
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
           child: _TemplateContent(
             message: message,
             idLead: idLead,
@@ -189,7 +192,7 @@ class MessageBubble extends StatelessWidget {
       case 'button':
       default:
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
 
           // child: Text(
           //   message.mensaje,
@@ -225,22 +228,24 @@ class _BubbleTimeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeColor = isOverImage
-        ? Colors.white
-        // ignore: deprecated_member_use
-        : textColor.withOpacity(0.65);
+        ? AppColors.textOnDark
+        : textColor.withValues(alpha: AppColors.opacityTimestamp);
 
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           fecha.formatDate(AppDateFormat.hourMinute),
-          style: TextStyle(fontSize: 10, color: timeColor),
+          style: AppTextStyles.labelSmall.copyWith(
+            fontSize: AppTextStyles.sizeSub,
+            color: timeColor,
+          ),
         ),
         if (isEnviado) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           MessageStatusIcon(
             estado: estado,
-            color: isOverImage ? Colors.white : textColor,
+            color: isOverImage ? AppColors.textOnDark : textColor,
           ),
         ],
       ],
@@ -248,13 +253,15 @@ class _BubbleTimeRow extends StatelessWidget {
 
     if (isOverImage) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 8, 6),
+        padding: const EdgeInsets.fromLTRB(0, 0, AppSpacing.sm, AppSpacing.chipGap),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.chipGap,
+            vertical: AppSpacing.xxs,
+          ),
           decoration: BoxDecoration(
-            // ignore: deprecated_member_use
-            color: Colors.black.withOpacity(0.45),
-            borderRadius: BorderRadius.circular(10),
+            color: AppColors.black(0.45),
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
           ),
           child: content,
         ),
@@ -262,7 +269,7 @@ class _BubbleTimeRow extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.xxs, AppSpacing.sm2, AppSpacing.chipGap),
       child: content,
     );
   }
@@ -346,8 +353,10 @@ class _ImagePlaceholder extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      color: Colors.grey.shade200,
-      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      color: AppColors.grey200,
+      child: const Center(
+        child: CircularProgressIndicator(strokeWidth: AppSizing.spinnerStrokeSmall),
+      ),
     );
   }
 }
@@ -361,19 +370,19 @@ class _ImageErrorBox extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      color: Colors.grey.shade200,
+      color: AppColors.grey200,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.broken_image_rounded,
-            size: 48,
-            color: Colors.grey.shade400,
+            AppIcons.brokenImage,
+            size: AppSizing.iconXl,
+            color: AppColors.grey400,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'Imagen no disponible',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey500),
           ),
         ],
       ),
@@ -506,7 +515,7 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
     return Container(
       width: widget.width,
       height: widget.height,
-      color: Colors.grey.shade900,
+      color: AppColors.grey900,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -514,11 +523,11 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
           if (_loadingThumb)
             // 👇 ESTO ES LO QUE CAMBIA — circulo mientras carga
             Container(
-              color: Colors.grey.shade800,
-              child: const Center(
+              color: AppColors.grey800,
+              child: Center(
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white54,
+                  strokeWidth: AppSizing.spinnerStrokeSmall,
+                  color: AppColors.white(0.54),
                 ),
               ),
             )
@@ -527,11 +536,11 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
           else
             // fallback si falla el thumbnail
             Container(
-              color: Colors.grey.shade800,
-              child: const Icon(
-                Icons.videocam_rounded,
-                size: 48,
-                color: Colors.white24,
+              color: AppColors.grey800,
+              child: Icon(
+                AppIcons.videocam,
+                size: AppSizing.iconXl,
+                color: AppColors.white(AppColors.opacityPressedOnDark),
               ),
             ),
 
@@ -542,8 +551,7 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  // ignore: deprecated_member_use
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                  colors: [AppColors.transparent, AppColors.black(0.5)],
                 ),
               ),
             ),
@@ -552,18 +560,20 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
           if (!_loadingThumb)
             Center(
               child: Container(
-                width: 52,
-                height: 52,
+                width: AppSizing.videoPlayButton,
+                height: AppSizing.videoPlayButton,
                 decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
-                  color: Colors.black.withOpacity(0.55),
+                  color: AppColors.black(0.55),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white30, width: 1.5),
+                  border: Border.all(
+                    color: AppColors.white(AppColors.opacityBorderOnDark),
+                    width: AppSizing.animRingStroke,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 32,
+                child: Icon(
+                  AppIcons.play,
+                  color: AppColors.textOnDark,
+                  size: AppSizing.iconLg,
                 ),
               ),
             ),
@@ -571,16 +581,21 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
           // Nombre del archivo (solo si no está cargando)
           if (!_loadingThumb)
             Positioned(
-              bottom: 8,
-              left: 8,
-              right: 8,
+              bottom: AppSpacing.sm,
+              left: AppSpacing.sm,
+              right: AppSpacing.sm,
               child: Text(
                 widget.fileName,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
-                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                style: TextStyle(
+                  color: AppColors.white(0.70),
+                  fontSize: AppTextStyles.sizeXs,
+                  shadows: [
+                    Shadow(
+                      color: AppColors.black(1.0),
+                      blurRadius: AppSizing.shadowBlurXs,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -615,12 +630,12 @@ class _DocumentContentState extends State<_DocumentContent> {
 
   IconData _iconForExt(String ext) {
     final e = ext.toLowerCase().replaceAll('.', '');
-    if (e == 'pdf') return Icons.picture_as_pdf_rounded;
-    if (['xls', 'xlsx'].contains(e)) return Icons.table_chart_rounded;
-    if (['doc', 'docx'].contains(e)) return Icons.description_rounded;
-    if (['ppt', 'pptx'].contains(e)) return Icons.slideshow_rounded;
-    if (['zip', 'rar'].contains(e)) return Icons.folder_zip_rounded;
-    return Icons.insert_drive_file_rounded;
+    if (e == 'pdf') return AppIcons.pdf;
+    if (['xls', 'xlsx'].contains(e)) return AppIcons.fileExcel;
+    if (['doc', 'docx'].contains(e)) return AppIcons.fileWord;
+    if (['ppt', 'pptx'].contains(e)) return AppIcons.filePowerpoint;
+    if (['zip', 'rar'].contains(e)) return AppIcons.fileZip;
+    return AppIcons.fileGeneric;
   }
 
   Future<void> _downloadAndOpen() async {
@@ -679,33 +694,32 @@ class _DocumentContentState extends State<_DocumentContent> {
     return GestureDetector(
       onTap: _downloadAndOpen,
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(AppSpacing.smPlus),
         decoration: BoxDecoration(
-          // ignore: deprecated_member_use
-          color: iconColor.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(10),
+          color: iconColor.withValues(alpha: AppColors.opacityIconTint),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Icono o loader de progreso
             SizedBox(
-              width: 28,
-              height: 28,
+              width: AppSizing.iconFaLg,
+              height: AppSizing.iconFaLg,
               child: _isDownloading
                   ? CircularProgressIndicator(
                       value: _progress > 0 ? _progress : null,
-                      strokeWidth: 2.5,
+                      strokeWidth: AppSizing.spinnerStrokeLight,
                       color: iconColor,
                     )
                   : Icon(
                       _iconForExt(widget.message.extArchivo),
-                      size: 28,
+                      size: AppSizing.iconFaLg,
                       color: iconColor,
                     ),
             ),
 
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.smPlus),
 
             // Nombre y estado
             Flexible(
@@ -717,18 +731,19 @@ class _DocumentContentState extends State<_DocumentContent> {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: AppTextStyles.sizeSmPlus,
                       color: widget.textColor,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTextStyles.weightMedium,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.xxs),
                   Text(
                     _isDownloading ? 'Descargando...' : 'Toca para abrir',
                     style: TextStyle(
-                      fontSize: 11,
-                      // ignore: deprecated_member_use
-                      color: widget.textColor.withOpacity(0.6),
+                      fontSize: AppTextStyles.sizeXs,
+                      color: widget.textColor.withValues(
+                        alpha: AppColors.opacityTextMuted,
+                      ),
                     ),
                   ),
                 ],
@@ -781,9 +796,9 @@ class _TemplateContent extends StatelessWidget {
 
         // Imagen del template
         if (hasImage) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             child: _ImageContent(
               message: message,
               idLead: idLead,

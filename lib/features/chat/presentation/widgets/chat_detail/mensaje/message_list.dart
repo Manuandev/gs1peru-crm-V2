@@ -33,18 +33,23 @@ class MessageList extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm2,
+        vertical: AppSpacing.sm,
+      ),
       itemCount: messages.length + (isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         // Loader al tope visual (final de la lista invertida)
         if (isLoadingMore && index == messages.length) {
           return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.sm2),
             child: Center(
               child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                width: AppSizing.spinnerSizeSm,
+                height: AppSizing.spinnerSizeSm,
+                child: CircularProgressIndicator(
+                  strokeWidth: AppSizing.spinnerStrokeSmall,
+                ),
               ),
             ),
           );
@@ -91,22 +96,7 @@ class _DateSeparator extends StatelessWidget {
   final String fecha;
   const _DateSeparator({required this.fecha});
 
-  // Mismo patrón que ChatTile._formatFecha
-  String _label() {
-    if (fecha.isEmpty) return '';
-    final date = DateFormatter.parseDate(fecha);
-    if (date == null) return '';
-
-    final ahora = DateTime.now();
-    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
-    final diaFecha = DateTime(date.year, date.month, date.day);
-    final diferencia = hoy.difference(diaFecha).inDays;
-
-    if (diferencia == 0) return 'Hoy';
-    if (diferencia == 1) return 'Ayer';
-    if (diferencia < 7) return fecha.formatDate(AppDateFormat.weekdayOnly);
-    return fecha.formatDate(AppDateFormat.longDate);
-  }
+  String _label() => fecha.formatDateSeparator();
 
   @override
   Widget build(BuildContext context) {
@@ -114,20 +104,21 @@ class _DateSeparator extends StatelessWidget {
     if (label.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm2),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm2,
+            vertical: AppSpacing.xs,
+          ),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
           ),
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
+            style: AppTextStyles.labelMedium.copyWith(
+              color: AppColors.grey500,
             ),
           ),
         ),

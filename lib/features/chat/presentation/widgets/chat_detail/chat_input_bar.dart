@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatInputBar extends StatefulWidget {
@@ -146,7 +147,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
         // ── Audio recorder ────────────────────────────────────
         if (_mode == InputMode.audio)
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm2,
+              vertical: AppSpacing.sm,
+            ),
             child: AudioRecorderWidget(
               onAudioReady: _onAudioReady,
               onCancel: () => setState(() => _mode = InputMode.text),
@@ -168,13 +172,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
               if (expirado) {
                 return Container(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
                     border: Border(
                       top: BorderSide(
                         color: colorScheme.outlineVariant,
-                        width: 0.8,
+                        width: AppSizing.borderWidthSubtle,
                       ),
                     ),
                   ),
@@ -184,7 +188,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                       // Botón plantilla
                       IconButton(
                         icon: Icon(
-                          Icons.library_books_rounded,
+                          AppIcons.plantillas,
                           color: colorScheme.primary,
                         ),
                         onPressed: _onTemplateSelected,
@@ -203,13 +207,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
               }
 
               return Container(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
                   border: Border(
                     top: BorderSide(
                       color: colorScheme.outlineVariant,
-                      width: 0.8,
+                      width: AppSizing.borderWidthSubtle,
                     ),
                   ),
                 ),
@@ -220,15 +224,15 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     IconButton(
                       icon: Icon(
                         _mode == InputMode.attachment
-                            ? Icons.close_rounded
-                            : Icons.attach_file_rounded,
+                            ? AppIcons.close
+                            : AppIcons.attach,
                         color: colorScheme.onSurfaceVariant,
                       ),
                       onPressed: _toggleAttachment,
                     ),
                     IconButton(
                       icon: Icon(
-                        Icons.library_books_rounded,
+                        AppIcons.plantillas,
                         color: colorScheme.onSurfaceVariant,
                       ),
                       onPressed: _onTemplateSelected,
@@ -237,28 +241,28 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     // Campo de texto
                     Expanded(
                       child: Container(
-                        constraints: const BoxConstraints(maxHeight: 120),
+                        constraints: const BoxConstraints(
+                          maxHeight: AppSizing.inputMaxHeight,
+                        ),
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(AppSizing.radiusXl),
                         ),
                         child: TextField(
                           controller: _textController,
                           maxLines: null,
                           textCapitalization: TextCapitalization.sentences,
-                          style: TextStyle(
-                            fontSize: 14,
+                          style: AppTextStyles.bodyMedium.copyWith(
                             color: colorScheme.onSurface,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Escribe un mensaje...',
-                            hintStyle: TextStyle(
+                            hintStyle: AppTextStyles.bodyMedium.copyWith(
                               color: colorScheme.onSurfaceVariant,
-                              fontSize: 14,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.smPlus,
                             ),
                             border: InputBorder.none,
                           ),
@@ -267,7 +271,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                       ),
                     ),
 
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
 
                     // Enviar texto o activar audio
                     AnimatedSwitcher(
@@ -278,7 +282,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                           ? IconButton(
                               key: const ValueKey('send'),
                               icon: Icon(
-                                Icons.send_rounded,
+                                AppIcons.send,
                                 color: colorScheme.primary,
                               ),
                               onPressed: _sendText,
@@ -286,7 +290,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                           : IconButton(
                               key: const ValueKey('mic'),
                               icon: Icon(
-                                Icons.mic_rounded,
+                                AppIcons.mic,
                                 color: colorScheme.onSurfaceVariant,
                               ),
                               onPressed: () {

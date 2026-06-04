@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/core/index_core.dart';
 
 class AudioRecorderWidget extends StatefulWidget {
   /// Llamado cuando el usuario termina de grabar y confirma el envío
@@ -115,17 +116,20 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm2,
+        vertical: AppSpacing.smPlus,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppSizing.radiusXl),
       ),
       child: Row(
         children: [
           // ── Cancelar ──────────────────────────────────────────
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded),
-            color: Colors.red.shade400,
+            icon: const Icon(AppIcons.delete),
+            color: AppColors.errorLight,
             onPressed: _cancelRecording,
             tooltip: 'Cancelar',
           ),
@@ -136,17 +140,15 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (_isRecording)
-                  _PulsingDot(color: Colors.red.shade400),
-                if (_isRecording) const SizedBox(width: 8),
+                  _PulsingDot(color: AppColors.errorLight),
+                if (_isRecording) const SizedBox(width: AppSpacing.sm),
                 Text(
                   _hasRecording
                       ? 'Listo para enviar'
                       : _formatElapsed(_elapsed),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.labelLarge.copyWith(
                     color: _isRecording
-                        ? Colors.red.shade400
+                        ? AppColors.errorLight
                         : colorScheme.onSurface,
                   ),
                 ),
@@ -157,7 +159,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
           // ── Stop / Enviar ─────────────────────────────────────
           if (_isRecording)
             IconButton(
-              icon: const Icon(Icons.stop_rounded),
+              icon: const Icon(AppIcons.stop),
               color: colorScheme.primary,
               onPressed: _stopRecording,
               tooltip: 'Detener',
@@ -165,7 +167,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
 
           if (_hasRecording)
             IconButton(
-              icon: const Icon(Icons.send_rounded),
+              icon: const Icon(AppIcons.send),
               color: colorScheme.primary,
               onPressed: _sendRecording,
               tooltip: 'Enviar audio',
@@ -197,7 +199,7 @@ class _PulsingDotState extends State<_PulsingDot>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(_controller);
+    _animation = Tween<double>(begin: AppColors.opacityEmptyText, end: 1.0).animate(_controller);
   }
 
   @override
@@ -211,8 +213,8 @@ class _PulsingDotState extends State<_PulsingDot>
     return FadeTransition(
       opacity: _animation,
       child: Container(
-        width: 8,
-        height: 8,
+        width: AppSizing.splashDotSize,
+        height: AppSizing.splashDotSize,
         decoration: BoxDecoration(
           color: widget.color,
           shape: BoxShape.circle,

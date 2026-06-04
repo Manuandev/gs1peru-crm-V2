@@ -83,7 +83,7 @@ class ChatListView extends StatelessWidget {
                   return OrientationBuilder(
                     builder: (context, orientation) {
                       if (orientation == Orientation.landscape) {
-                        return ChatListLandscape(state: state);
+                        return ChatListPortrait(state: state);
                       }
                       return ChatListPortrait(state: state);
                     },

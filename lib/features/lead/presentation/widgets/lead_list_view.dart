@@ -16,7 +16,7 @@ class LeadListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       onPop: () => context.goToHome(),
-      title: type == LeadType.seguimientos ? 'Prospectos' : 'Propuestas',
+      title: type == LeadType.seguimientos ? 'Seguimientos' : 'Propuestas',
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
         IconButton(
@@ -41,14 +41,11 @@ class LeadListView extends StatelessWidget {
           }
 
           if (state is LeadListSuccess) {
-            if (state.leads.isEmpty) {
-              return AppEmptyView(
-                message: type == LeadType.seguimientos
-                    ? 'No hay seguimientos.'
-                    : 'No hay propuestas.',
-              );
-            }
-            return LeadListPortrait(leads: state.leads, type: type);
+            return LeadListPortrait(
+              leads: state.leads,
+              type: type,
+              filtro: state.filtro,
+            );
           }
 
           return const SizedBox.shrink();

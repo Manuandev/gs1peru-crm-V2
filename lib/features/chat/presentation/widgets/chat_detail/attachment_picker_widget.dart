@@ -4,7 +4,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/features/chat/presentation/widgets/chat_detail/staged_file.dart';
+
+import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class AttachmentPickerWidget extends StatefulWidget {
   /// Callback con la lista completa de archivos staged al presionar "Enviar"
@@ -138,7 +140,7 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
               'Los archivos seleccionados superan el límite de 16 MB '
               '(${(newTotal / (1024 * 1024)).toStringAsFixed(1)} MB)',
             ),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: AppColors.errorDark,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -162,9 +164,9 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
 
   // ── Color de la barra de progreso según uso ─────────────────────────────
   Color _progressColor() {
-    if (_usageFraction >= 0.9) return Colors.red;
-    if (_usageFraction >= 0.7) return Colors.orange;
-    return Colors.green;
+    if (_usageFraction >= 0.9) return AppColors.error;
+    if (_usageFraction >= 0.7) return AppColors.warning;
+    return AppColors.success;
   }
 
   @override
@@ -181,32 +183,35 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
         children: [
           // ── Botones de selección ───────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm2,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _AttachOption(
-                  icon: Icons.photo_library_rounded,
+                  icon: AppIcons.photoLibrary,
                   label: 'Galería',
-                  color: Colors.purple,
+                  color: AppColors.attachGallery,
                   onTap: _pickFromGallery,
                 ),
                 _AttachOption(
-                  icon: Icons.camera_alt_rounded,
+                  icon: AppIcons.camera,
                   label: 'Cámara',
-                  color: Colors.blue,
+                  color: AppColors.info,
                   onTap: _pickFromCamera,
                 ),
                 _AttachOption(
-                  icon: Icons.insert_drive_file_rounded,
+                  icon: AppIcons.fileGeneric,
                   label: 'Archivo',
-                  color: Colors.orange,
+                  color: AppColors.warning,
                   onTap: _pickDocument,
                 ),
                 _AttachOption(
-                  icon: Icons.close_rounded,
+                  icon: AppIcons.close,
                   label: 'Cerrar',
-                  color: Colors.grey,
+                  color: AppColors.grey500,
                   onTap: widget.onClose,
                 ),
               ],
@@ -225,17 +230,22 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
 
   Widget _buildStagingZone(ColorScheme colorScheme) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm2,
+        AppSpacing.sm,
+        AppSpacing.sm2,
+        AppSpacing.sm2,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // ── Thumbnails / chips scrollable ──────────────────────────
           SizedBox(
-            height: 80,
+            height: AppSizing.attachThumbnailHeight,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _staged.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final file = _staged[index];
                 return _StagedFileChip(
@@ -246,47 +256,46 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.smPlus),
 
           // ── Barra de progreso ─────────────────────────────────────
           Row(
             children: [
               Expanded(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppSizing.radiusXs),
                   child: LinearProgressIndicator(
                     value: _usageFraction.clamp(0.0, 1.0),
-                    minHeight: 6,
+                    minHeight: AppSizing.progressBarHeight,
                     backgroundColor: colorScheme.outlineVariant.withAlpha(80),
                     valueColor: AlwaysStoppedAnimation<Color>(_progressColor()),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.smPlus),
               Text(
                 '${_totalMB.toStringAsFixed(1)} / 16.0 MB',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: AppTextStyles.labelMedium.copyWith(
+                  fontWeight: AppTextStyles.weightSemiBold,
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.smPlus),
 
           // ── Botón enviar ──────────────────────────────────────────
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: _sendBatch,
-              icon: const Icon(Icons.send_rounded, size: 18),
+              icon: const Icon(AppIcons.send, size: AppSizing.iconActionSm),
               label: Text('Enviar (${_staged.length})'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm2),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
                 ),
               ),
             ),
@@ -313,23 +322,23 @@ class _StagedFileChip extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          width: 72,
-          height: 80,
+          width: AppSizing.avatarXl,
+          height: AppSizing.attachThumbnailHeight,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
             color: colorScheme.surfaceContainerHighest,
             border: Border.all(
               color: colorScheme.outlineVariant.withAlpha(120),
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
             child: isImage
                 ? Image.file(
                     File(file.path),
                     fit: BoxFit.cover,
-                    width: 72,
-                    height: 80,
+                    width: AppSizing.avatarXl,
+                    height: AppSizing.attachThumbnailHeight,
                     errorBuilder: (_, _, _) => _buildDocIcon(colorScheme),
                   )
                 : _buildDocIcon(colorScheme),
@@ -337,18 +346,22 @@ class _StagedFileChip extends StatelessWidget {
         ),
         // Botón ✕
         Positioned(
-          top: 2,
-          right: 2,
+          top: AppSpacing.xxs,
+          right: AppSpacing.xxs,
           child: GestureDetector(
             onTap: onRemove,
             child: Container(
-              width: 20,
-              height: 20,
+              width: AppSizing.iconSearch,
+              height: AppSizing.iconSearch,
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: AppColors.black(0.54),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 14, color: Colors.white),
+              child: Icon(
+                AppIcons.close,
+                size: AppSizing.iconXs,
+                color: AppColors.textOnDark,
+              ),
             ),
           ),
         ),
@@ -362,9 +375,9 @@ class _StagedFileChip extends StatelessWidget {
               file.ext.replaceFirst('.', '').toUpperCase(),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
+              style: AppTextStyles.labelSmall.copyWith(
+                fontSize: AppTextStyles.sizeXxs,
+                fontWeight: AppTextStyles.weightBold,
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
@@ -376,8 +389,8 @@ class _StagedFileChip extends StatelessWidget {
   Widget _buildDocIcon(ColorScheme colorScheme) {
     return Center(
       child: Icon(
-        Icons.insert_drive_file_rounded,
-        size: 32,
+        AppIcons.fileGeneric,
+        size: AppSizing.iconLg,
         color: colorScheme.onSurfaceVariant,
       ),
     );
@@ -407,22 +420,19 @@ class _AttachOption extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: AppSizing.videoPlayButton,
+            height: AppSizing.videoPlayButton,
             decoration: BoxDecoration(
-              // ignore: deprecated_member_use
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: AppColors.opacityDisabledBg),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: color, size: AppSizing.iconMd),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.chipGap),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+            style: AppTextStyles.labelMedium.copyWith(
+              color: AppColors.grey600,
             ),
           ),
         ],

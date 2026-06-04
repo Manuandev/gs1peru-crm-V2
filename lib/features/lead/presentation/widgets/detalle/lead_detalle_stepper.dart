@@ -10,8 +10,16 @@ class LeadDetalleStepper extends StatelessWidget {
 
   static const _pasos = [
     _DatoPaso(id: '00', label: 'Nuevo', icon: AppIconsSocial.etapaNuevo),
-    _DatoPaso(id: '01', label: 'En desarrollo', icon: AppIconsSocial.etapaEnDesarrollo),
-    _DatoPaso(id: '02', label: 'Propuesta', icon: AppIconsSocial.etapaPropuesta),
+    _DatoPaso(
+      id: '01',
+      label: 'En desarrollo',
+      icon: AppIconsSocial.etapaEnDesarrollo,
+    ),
+    _DatoPaso(
+      id: '02',
+      label: 'Propuesta',
+      icon: AppIconsSocial.etapaPropuesta,
+    ),
     _DatoPaso(id: '11', label: 'Cobranza', icon: AppIconsSocial.etapaGanado),
   ];
 
@@ -83,7 +91,7 @@ class _PasoEtapa extends StatelessWidget {
 
     if (isActivo) {
       bgCircle = colorEstado;
-      iconColor = Colors.white;
+      iconColor = AppColors.textOnDark;
       borderColor = colorEstado;
     } else if (isCompletado) {
       bgCircle = AppIconsSocial.bgEstado(paso.id);
@@ -104,7 +112,10 @@ class _PasoEtapa extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: bgCircle,
-            border: Border.all(color: borderColor, width: AppSizing.borderFocusWidth),
+            border: Border.all(
+              color: borderColor,
+              width: AppSizing.borderFocusWidth,
+            ),
           ),
           child: Center(
             child: FaIcon(paso.icon, size: AppSizing.iconSm, color: iconColor),
@@ -114,8 +125,12 @@ class _PasoEtapa extends StatelessWidget {
         Text(
           paso.label,
           style: AppTextStyles.labelSmall.copyWith(
-            color: isActivo || isCompletado ? colorEstado : AppColors.textDisabled,
-            fontWeight: isActivo ? AppTextStyles.weightSemiBold : AppTextStyles.weightRegular,
+            color: isActivo || isCompletado
+                ? colorEstado
+                : AppColors.textDisabled,
+            fontWeight: isActivo
+                ? AppTextStyles.weightSemiBold
+                : AppTextStyles.weightRegular,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,

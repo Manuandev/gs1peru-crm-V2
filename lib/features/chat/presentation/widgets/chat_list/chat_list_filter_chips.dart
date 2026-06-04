@@ -44,8 +44,8 @@ class ChatListFilterChips extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 9,
+                    horizontal: AppSpacing.chipPaddingH,
+                    vertical: AppSpacing.chipPaddingV,
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
@@ -57,8 +57,8 @@ class ChatListFilterChips extends StatelessWidget {
                         ? []
                         : [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 6,
+                              color: AppColors.black(0.08),
+                              blurRadius: AppSizing.shadowBlurSm,
                               offset: const Offset(0, 2),
                             ),
                           ],
@@ -68,7 +68,7 @@ class ChatListFilterChips extends StatelessWidget {
                             color: colorScheme.outlineVariant.withValues(
                               alpha: 0.5,
                             ),
-                            width: 0.5,
+                            width: AppSizing.borderWidthThin,
                           ),
                   ),
                   child: Row(
@@ -78,43 +78,42 @@ class ChatListFilterChips extends StatelessWidget {
                         chip.label,
                         style: TextStyle(
                           fontSize: AppTextStyles.sizeSm,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTextStyles.weightSemiBold,
                           color: isSelected
                               ? colorScheme.onPrimary
                               : colorScheme.onSurface,
                         ),
                       ),
                       if (count > 0) ...[
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppSpacing.chipGap),
                         // Badge circular con tamaño mínimo garantizado
                         Container(
                           constraints: const BoxConstraints(
-                            minWidth: 22,
-                            minHeight: 22,
+                            minWidth: AppSizing.mensajesBadgeSize,
+                            minHeight: AppSizing.mensajesBadgeSize,
                           ),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
+                            horizontal: AppSpacing.chipGap,
+                            vertical: AppSpacing.xxs,
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.white.withValues(alpha: 0.35)
+                                ? AppColors.white(0.35)
                                 : _badgeColor(chip.filtro),
                             shape: count < 10
                                 ? BoxShape
                                       .circle // perfecto círculo para 1 dígito
                                 : BoxShape.rectangle,
                             borderRadius: count >= 10
-                                ? BorderRadius.circular(11)
+                                ? BorderRadius.circular(AppSizing.radiusCircular)
                                 : null,
                           ),
                           child: Center(
                             child: Text(
                               '$count',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                fontWeight: AppTextStyles.weightBold,
+                                color: AppColors.textOnDark,
                                 height: 1,
                               ),
                             ),
@@ -135,9 +134,9 @@ class ChatListFilterChips extends StatelessWidget {
   Color _badgeColor(ChatListFiltro filtro) {
     switch (filtro) {
       case ChatListFiltro.sinResponder:
-        return Colors.red;
+        return AppColors.error;
       case ChatListFiltro.enDesarrollo:
-        return Colors.orange;
+        return AppColors.warning;
       default:
         return AppColors.primary;
     }

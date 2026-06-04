@@ -16,9 +16,7 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final themeText = theme.textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
@@ -40,22 +38,21 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
                   Row(
                     children: [
                       Container(
-                        width: 3,
-                        height: 16,
+                        width: AppSizing.accentBarWidth,
+                        height: AppSizing.iconSm,
                         decoration: BoxDecoration(
                           color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius:
+                              BorderRadius.circular(AppSizing.radiusXxs),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text('Datos del lead', style: themeText.titleMedium),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text('Datos del lead', style: AppTextStyles.titleMedium),
                     ],
                   ),
                   const Spacer(),
                   Icon(
-                    _expandido
-                        ? Icons.keyboard_arrow_down_rounded
-                        : Icons.keyboard_arrow_up_rounded,
+                    _expandido ? AppIcons.arrowDown : AppIcons.arrowUp,
                     color: colorScheme.onSurface,
                   ),
                 ],
@@ -96,18 +93,18 @@ class _DatosLeadContenido extends StatelessWidget {
           Row(
             children: [
               _DatoItem(
-                icon: Icons.flag_rounded,
+                icon: AppIcons.flag,
                 label: 'Estado',
                 valor: infoLead.estado,
-                iconColor: Colors.blue.shade700,
-                iconBackground: Colors.blue.shade50,
+                iconColor: AppColors.datoEstadoFg,
+                iconBackground: AppColors.datoEstadoBg,
               ),
               _DatoItem(
-                icon: Icons.list_alt_rounded,
+                icon: AppIcons.listAlt,
                 label: 'Subestado',
                 valor: infoLead.subEstado,
-                iconColor: Colors.purple.shade700,
-                iconBackground: Colors.purple.shade50,
+                iconColor: AppColors.datoSubestadoFg,
+                iconBackground: AppColors.datoSubestadobg,
               ),
             ],
           ),
@@ -115,18 +112,18 @@ class _DatosLeadContenido extends StatelessWidget {
           Row(
             children: [
               _DatoItem(
-                icon: Icons.campaign_rounded,
+                icon: AppIcons.campaign,
                 label: 'Campaña',
                 valor: infoLead.campania ?? '',
-                iconColor: Colors.teal.shade700,
-                iconBackground: Colors.teal.shade50,
+                iconColor: AppColors.datoCampaniaFg,
+                iconBackground: AppColors.datoCampaniaBg,
               ),
               _DatoItem(
-                icon: Icons.calendar_today_rounded,
+                icon: AppIcons.calendar,
                 label: 'Evento',
                 valor: infoLead.evento ?? '',
-                iconColor: Colors.orange.shade700,
-                iconBackground: Colors.orange.shade50,
+                iconColor: AppColors.datoEventoFg,
+                iconBackground: AppColors.datoEventoBg,
               ),
             ],
           ),
@@ -134,18 +131,18 @@ class _DatosLeadContenido extends StatelessWidget {
           Row(
             children: [
               _DatoItem(
-                icon: Icons.share_rounded,
+                icon: AppIcons.share,
                 label: 'Canal',
                 valor: infoLead.canal ?? '',
-                iconColor: Colors.pink.shade700,
-                iconBackground: Colors.pink.shade50,
+                iconColor: AppColors.datoCanalFg,
+                iconBackground: AppColors.datoCanalBg,
               ),
               _DatoItem(
-                icon: Icons.people_rounded,
+                icon: AppIcons.users,
                 label: 'Interés',
                 valor: infoLead.interes ?? '',
-                iconColor: Colors.green.shade700,
-                iconBackground: Colors.green.shade50,
+                iconColor: AppColors.datoInteresFg,
+                iconBackground: AppColors.datoInteresBg,
               ),
             ],
           ),
@@ -186,19 +183,17 @@ class _DatoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeText = Theme.of(context).textTheme;
-
     return Expanded(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(AppSpacing.iconBgPad),
             decoration: BoxDecoration(
               color: iconBackground,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(AppSizing.radiusTag),
             ),
-            child: Icon(icon, size: 14, color: iconColor),
+            child: Icon(icon, size: AppSizing.iconXs, color: iconColor),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -207,14 +202,14 @@ class _DatoItem extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: themeText.labelSmall?.copyWith(
-                    color: Colors.grey.shade500,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.grey500,
                   ),
                 ),
                 Text(
                   valor == '' ? 'Sin $label' : valor,
-                  style: themeText.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontWeight: AppTextStyles.weightMedium,
                   ),
                 ),
               ],

@@ -17,21 +17,21 @@ MessagePreview buildMessagePreview(Chat chat) {
   switch (chat.tipoMensaje.toLowerCase()) {
     case 'audio':
       return MessagePreview(
-        Icons.mic_rounded,
+        AppIcons.mic,
         'Audio',
-        color: Colors.purple.shade400,
+        color: AppColors.msgPreviewAudio,
       );
     case 'image':
       return MessagePreview(
-        Icons.photo_rounded,
+        AppIcons.photo,
         'Foto',
-        color: Colors.green.shade500,
+        color: AppColors.success,
       );
     case 'video':
       return MessagePreview(
-        Icons.videocam_rounded,
+        AppIcons.videocam,
         'Video',
-        color: Colors.orange.shade400,
+        color: AppColors.msgPreviewVideo,
       );
     case 'document':
       return MessagePreview(
@@ -57,30 +57,29 @@ class MessageStatusIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ignore: deprecated_member_use
-    final dimColor = color.withOpacity(0.65);
+    final dimColor = color.withValues(alpha: AppColors.opacityTimestamp);
 
     switch (estado) {
       case 'wait':
-        return Icon(Icons.access_time_rounded, size: 12, color: dimColor);
+        return Icon(AppIcons.accessTime, size: AppSizing.iconStatusWait, color: dimColor);
       case 'sent':
-        return Icon(Icons.check_rounded, size: 14, color: dimColor);
+        return Icon(AppIcons.checkSingle, size: AppSizing.iconStatus, color: dimColor);
       case 'delivered':
-        return Icon(Icons.done_all_rounded, size: 14, color: dimColor);
+        return Icon(AppIcons.checkDouble, size: AppSizing.iconStatus, color: dimColor);
       case 'read':
         return Icon(
-          Icons.done_all_rounded,
-          size: 14,
-          color: Colors.lightBlue.shade300,
+          AppIcons.checkDouble,
+          size: AppSizing.iconStatus,
+          color: AppColors.msgStatusRead,
         );
       case 'failed':
         return Icon(
-          Icons.error_outline_rounded,
-          size: 14,
-          color: Colors.red.shade400,
+          AppIcons.error,
+          size: AppSizing.iconStatus,
+          color: AppColors.errorLight,
         );
       default:
-        return Icon(Icons.help_outline_rounded, size: 14, color: dimColor);
+        return Icon(AppIcons.help, size: AppSizing.iconStatus, color: dimColor);
     }
   }
 }

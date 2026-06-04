@@ -42,6 +42,13 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
   Future<void> _loadData(LeadType type, Emitter<LeadListState> emit) async {
     _currentType = type;
+
+    if (_currentType == LeadType.propuestas &&
+        (_filtroActivo == LeadListFiltro.nuevos ||
+            _filtroActivo == LeadListFiltro.enDesarrollo)) {
+      _filtroActivo = LeadListFiltro.misCasos;
+    }
+
     try {
       final leads = await _getLeadsUseCase(
         type == LeadType.seguimientos ? 'PO' : 'PA',

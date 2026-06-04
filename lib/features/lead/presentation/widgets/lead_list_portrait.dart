@@ -10,8 +10,14 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class LeadListPortrait extends StatelessWidget {
   final List<Lead> leads;
   final LeadType type;
+  final LeadListFiltro filtro;
 
-  const LeadListPortrait({super.key, required this.leads, required this.type});
+  const LeadListPortrait({
+    super.key,
+    required this.leads,
+    required this.type,
+    required this.filtro,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,31 +34,48 @@ class LeadListPortrait extends StatelessWidget {
               onFiltroTap: (filtro) {
                 context.read<LeadListBloc>().add(LeadListFiltered(filtro));
               },
+              type: type,
             );
           },
         ),
 
         // ── Lista ──────────────────────────────────────
         Expanded(
-          child: ListView.builder(
-            itemCount: leads.length,
-            itemBuilder: (context, index) {
-              final lead = leads[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: LeadCard(
-                  lead: lead,
-                  onTap: () => context.goToDetalleLead(
-                    idLead: lead.idLead,
-                    type: type,
-                  ),
-                  onWhatsAppTap: () {},
-                  onChatTap: () {},
-                  onStarTap: () {},
+          child: leads.isEmpty
+              ? AppEmptyView(
+                  message: switch (filtro) {
+                    LeadListFiltro.todos =>
+                      type == LeadType.seguimientos
+                          ? 'No hay seguimientos.'
+                          : 'No hay propuestas.',
+                    LeadListFiltro.misCasos =>
+                      type == LeadType.seguimientos
+                          ? 'No tienes seguimientos asignados.'
+                          : 'No tienes propuestas asignadas.',
+                    LeadListFiltro.nuevos => 'No hay seguimientos nuevos.',
+                    LeadListFiltro.enDesarrollo =>
+                      'No hay seguimientos en desarrollo.',
+                  },
+                )
+              : ListView.builder(
+                  itemCount: leads.length,
+                  itemBuilder: (context, index) {
+                    final lead = leads[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: LeadCard(
+                        lead: lead,
+                        onTap: () => context.goToDetalleLead(
+                          idLead: lead.idLead,
+                          type: type,
+                        ),
+                        onWhatsAppTap: () {},
+                        onChatTap: () {},
+                        onStarTap: () {},
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );

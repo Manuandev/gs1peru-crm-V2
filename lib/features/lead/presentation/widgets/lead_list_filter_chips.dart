@@ -1,4 +1,4 @@
-// lib/
+// lib/features/lead/presentation/widgets/lead_list_filter_chips.dart
 
 import 'package:flutter/material.dart';
 
@@ -9,12 +9,14 @@ class LeadListFilterChips extends StatelessWidget {
   final LeadListFiltro filtroActual;
   final Map<LeadListFiltro, int> conteos;
   final void Function(LeadListFiltro) onFiltroTap;
+  final LeadType type;
 
   const LeadListFilterChips({
     super.key,
     required this.filtroActual,
     required this.conteos,
     required this.onFiltroTap,
+    required this.type,
   });
 
   @override
@@ -30,9 +32,15 @@ class LeadListFilterChips extends StatelessWidget {
       (filtro: LeadListFiltro.enDesarrollo, label: 'En desarrollo'),
     ];
 
-    final chips = isModerador
-        ? allChips
-        : allChips.where((c) => c.filtro != LeadListFiltro.todos).toList();
+    final chips = allChips.where((c) {
+      if (c.filtro == LeadListFiltro.todos && !isModerador) return false;
+      if (type == LeadType.propuestas &&
+          (c.filtro == LeadListFiltro.nuevos ||
+              c.filtro == LeadListFiltro.enDesarrollo)) {
+        return false;
+      }
+      return true;
+    }).toList();
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -112,7 +120,9 @@ class LeadListFilterChips extends StatelessWidget {
                                       .circle // perfecto círculo para 1 dígito
                                 : BoxShape.rectangle,
                             borderRadius: count >= 10
-                                ? BorderRadius.circular(AppSizing.radiusCircular)
+                                ? BorderRadius.circular(
+                                    AppSizing.radiusCircular,
+                                  )
                                 : null,
                           ),
                           child: Center(

@@ -227,12 +227,12 @@ class _MediaViewerPageState extends State<MediaViewerPage>
   Widget build(BuildContext context) {
     return BasePage(
       bodyPadding: EdgeInsets.zero,
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.blackSolid,
       drawerSide: DrawerSide.none,
       // 👇 botón back
       appBarLeadingButtons: [
         IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: const Icon(AppIcons.backIos),
           onPressed: () => context.goBack(),
         ),
       ],
@@ -244,21 +244,19 @@ class _MediaViewerPageState extends State<MediaViewerPage>
             if (widget.senderName != null && widget.senderName!.isNotEmpty)
               Text(
                 widget.senderName!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
+                style: AppTextStyles.titleSmall.copyWith(
+                  fontSize: AppTextStyles.sizeBase,
+                  color: AppColors.textOnDark,
+                  height: AppTextStyles.lineHeightTitle,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             Text(
               widget.sentAt?.formatWhatsAppMultimedia() ?? '',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
-                height: 1.3,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.white(0.70),
+                height: AppTextStyles.lineHeightSub,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -269,20 +267,20 @@ class _MediaViewerPageState extends State<MediaViewerPage>
       appBarTrailingButtons: [
         if (_isDownloading)
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppSpacing.iconButtonPad),
             child: SizedBox(
-              width: 20,
-              height: 20,
+              width: AppSizing.spinnerSizeSm,
+              height: AppSizing.spinnerSizeSm,
               child: CircularProgressIndicator(
                 value: _downloadProgress > 0 ? _downloadProgress : null,
-                strokeWidth: 2,
-                color: Colors.white,
+                strokeWidth: AppSizing.spinnerStrokeSmall,
+                color: AppColors.textOnDark,
               ),
             ),
           )
         else
           IconButton(
-            icon: const Icon(Icons.download_rounded, color: Colors.white),
+            icon: const Icon(AppIcons.downloadFile, color: AppColors.textOnDark),
             tooltip: 'Descargar',
             onPressed: _download,
           ),
@@ -339,7 +337,9 @@ class _MediaViewerPageState extends State<MediaViewerPage>
       imageUrl: widget.url,
       fit: BoxFit.contain,
       placeholder: (_, __) =>
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
+          const Center(
+            child: CircularProgressIndicator(color: AppColors.textOnDark),
+          ),
       errorWidget: (_, __, ___) => _imageErrorWidget(),
     );
   }
@@ -348,11 +348,17 @@ class _MediaViewerPageState extends State<MediaViewerPage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.broken_image_rounded, size: 64, color: Colors.white30),
-        const SizedBox(height: 12),
-        const Text(
+        Icon(
+          AppIcons.brokenImage,
+          size: AppSizing.iconErrorSm,
+          color: AppColors.white(AppColors.opacityBorderOnDark),
+        ),
+        const SizedBox(height: AppSpacing.sm2),
+        Text(
           'No se pudo cargar la imagen',
-          style: TextStyle(color: Colors.white54, fontSize: 14),
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.white(0.54),
+          ),
         ),
       ],
     );
@@ -362,7 +368,7 @@ class _MediaViewerPageState extends State<MediaViewerPage>
   Widget _buildVideoViewer() {
     if (_videoInitializing) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: CircularProgressIndicator(color: AppColors.textOnDark),
       );
     }
 
@@ -370,15 +376,17 @@ class _MediaViewerPageState extends State<MediaViewerPage>
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.videocam_off_rounded,
-            size: 64,
-            color: Colors.white30,
+          Icon(
+            AppIcons.videocamOff,
+            size: AppSizing.iconErrorSm,
+            color: AppColors.white(AppColors.opacityBorderOnDark),
           ),
-          const SizedBox(height: 12),
-          const Text(
+          const SizedBox(height: AppSpacing.sm2),
+          Text(
             'No se pudo cargar el video',
-            style: TextStyle(color: Colors.white54, fontSize: 14),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.white(0.54),
+            ),
           ),
         ],
       );

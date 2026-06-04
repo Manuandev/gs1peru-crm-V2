@@ -197,21 +197,11 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             onChanged: (item) => setState(() => _interes = item),
           ),
           const SizedBox(height: AppSpacing.lg),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: (_hayCambios && !_isLoading) ? _guardar : null,
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Guardar'),
-            ),
+          CustomPrimaryButton(
+            text: 'Guardar',
+            onPressed: _guardar,
+            isLoading: _isLoading,
+            isEnabled: _hayCambios && !_isLoading,
           ),
         ],
       ),

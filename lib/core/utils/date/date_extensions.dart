@@ -39,4 +39,10 @@ extension StringDateFormatting on String {
   String formatSinHoy() {
     return DateFormatter.formatSinHoy(this);
   }
+
+  /// Separador de fecha en lista de mensajes WhatsApp:
+  /// "Hoy" / "Ayer" / nombre del día / "d de MMMM yyyy"
+  String formatDateSeparator() {
+    return DateFormatter.formatDateSeparator(this);
+  }
 }

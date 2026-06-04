@@ -7,6 +7,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/core/index_core.dart';
+
 /// Parsea un mensaje con formato WhatsApp:
 /// *bold*, _italic_, ~tachado~, `mono`, URLs clicables y saltos de línea.
 List<InlineSpan> parseMensaje(String mensaje, Color textColor) {
@@ -52,12 +54,11 @@ bool _isUrl(String token) => _urlRegex.hasMatch(token);
 InlineSpan _urlSpan(String url) {
   return TextSpan(
     text: url,
-    style: TextStyle(
-      color: Colors.lightBlue.shade300,
-      fontSize: 14,
-      height: 1.4,
+    style: AppTextStyles.bodyMedium.copyWith(
+      color: AppColors.msgStatusRead,
+      height: AppTextStyles.lineHeightBody,
       decoration: TextDecoration.underline,
-      decorationColor: Colors.lightBlue.shade300,
+      decorationColor: AppColors.msgStatusRead,
     ),
     recognizer: TapGestureRecognizer()
       ..onTap = () async {
@@ -83,7 +84,10 @@ List<InlineSpan> _parseFormatted(String text, Color textColor) {
   final List<InlineSpan> spans = [];
   int last = 0;
 
-  final base = TextStyle(color: textColor, fontSize: 14, height: 1.4);
+  final base = AppTextStyles.bodyMedium.copyWith(
+    color: textColor,
+    height: AppTextStyles.lineHeightBody,
+  );
 
   for (final match in _formatRegex.allMatches(text)) {
     if (match.start > last) {
@@ -93,7 +97,7 @@ List<InlineSpan> _parseFormatted(String text, Color textColor) {
     if (match.group(1) != null) {
       spans.add(TextSpan(
         text: match.group(1),
-        style: base.copyWith(fontWeight: FontWeight.bold),
+        style: base.copyWith(fontWeight: AppTextStyles.weightBold),
       ));
     } else if (match.group(2) != null) {
       spans.add(TextSpan(
@@ -109,10 +113,9 @@ List<InlineSpan> _parseFormatted(String text, Color textColor) {
       spans.add(TextSpan(
         text: match.group(4),
         style: base.copyWith(
-          fontFamily: 'monospace',
-          // ignore: deprecated_member_use
-          backgroundColor: textColor.withOpacity(0.1),
-          letterSpacing: 0.5,
+          fontFamily: AppTextStyles.fontMono,
+          backgroundColor: textColor.withValues(alpha: AppColors.opacityCodeBackground),
+          letterSpacing: AppTextStyles.letterSpacingCode,
         ),
       ));
     }

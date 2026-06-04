@@ -45,7 +45,7 @@ class _SplashViewState extends State<SplashView> {
 
   /// Tiempo mínimo que se muestra el splash.
   /// Ajústalo según la duración de tu animación.
-  static const Duration _minDuration = Duration(seconds: 2);
+  static const Duration _minDuration = Duration(milliseconds: 2500);
 
   @override
   void initState() {
@@ -94,11 +94,8 @@ class _SplashViewState extends State<SplashView> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       body: BlocListener<SplashBloc, SplashState>(
-        // Solo escucha estados finales (no SplashInitial ni SplashLoading)
         listenWhen: (_, current) =>
             current is SplashSessionFound ||
             current is SplashSessionNotFound ||
@@ -106,38 +103,27 @@ class _SplashViewState extends State<SplashView> {
 
         listener: (context, state) {
           if (!_minTimerDone) {
-            // Timer aún no terminó → guardar para procesar después
             _pendingState = state;
             return;
           }
-          // Timer ya terminó → notificar inmediatamente
           _notifyAuthBloc(state);
         },
 
         child: OrientationBuilder(
           builder: (context, orientation) {
-            final isLandscape = orientation == Orientation.landscape;
+            final esLandscape = orientation == Orientation.landscape;
 
             return Container(
               width: double.infinity,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [colorScheme.primary, colorScheme.primaryContainer],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primaryLight],
                 ),
               ),
               child: SafeArea(
-                child: Padding(
-                  padding: ResponsiveHelper.screenPadding(context),
-                  child: isLandscape
-                      // ── HORIZONTAL ──────────────────────────────────
-                      // Todo: implementa splashOrientationWidth
-                      ? SplashLandscape()
-                      // ── VERTICAL ────────────────────────────────────
-                      // Todo: implementa splashOrientationHeigt
-                      : SplashPortrait(),
-                ),
+                child: esLandscape ? const SplashLandscape() : const SplashPortrait(),
               ),
             );
           },

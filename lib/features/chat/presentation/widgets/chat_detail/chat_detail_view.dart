@@ -147,11 +147,30 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           icon: Icons.block,
           label: 'Bloquear',
         ),
+        AppBarPopupItem(
+          value: 'editarLead',
+          icon: Icons.edit,
+          label: 'Editar lead',
+        ),
       ],
       onPopupSelected: (value) {
         switch (value) {
           case 'bloquear':
             // acción bloquear
+            break;
+          case 'editarLead':
+            final infoLead =
+                context.read<InfoLeadCubit>().state is InfoLeadSuccess
+                ? (context.read<InfoLeadCubit>().state as InfoLeadSuccess)
+                      .infoLead
+                : null;
+            if (infoLead != null) {
+              context.goToEditarLead(
+                lead: infoLead,
+                cubit: context.read<InfoLeadCubit>(),
+              );
+            }
+
             break;
         }
       },

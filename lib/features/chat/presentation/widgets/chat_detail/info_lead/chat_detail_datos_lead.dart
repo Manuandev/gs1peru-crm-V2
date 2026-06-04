@@ -154,17 +154,17 @@ class _DatosLeadContenido extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
 
           // ── Botón Editar lead ──
-          Align(
-            alignment: Alignment.centerRight,
-            child: CustomOutlinedButton(
-              text: 'Editar lead',
-              icon: const Icon(Icons.edit_rounded, size: AppSizing.iconSm),
-              onPressed: () => context.goToEditarLead(
-                lead: infoLead,
-                cubit: context.read<InfoLeadCubit>(),
-              ),
-            ),
-          ),
+          // Align(
+          //   alignment: Alignment.centerRight,
+          //   child: CustomOutlinedButton(
+          //     text: 'Editar lead',
+          //     icon: const Icon(Icons.edit_rounded, size: AppSizing.iconSm),
+          //     onPressed: () => context.goToEditarLead(
+          //       lead: infoLead,
+          //       cubit: context.read<InfoLeadCubit>(),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

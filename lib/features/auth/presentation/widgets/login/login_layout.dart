@@ -198,7 +198,8 @@ class _LogoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final logoSize = (size.shortestSide * 0.35).clamp(80.0, 160.0);
+    final logoSize = (size.shortestSide * AppSizing.logoLoginRatio)
+        .clamp(AppSizing.iconXxl, AppSizing.logoLoginMax);
 
     return Center(
       child: SizedBox(
@@ -303,7 +304,10 @@ class _FormSection extends StatelessWidget {
                                   v ?? false;
                             },
                     ),
-                    const Text('Mantener sesión activa'),
+                    const Text(
+                      'Mantener sesión activa',
+                      style: AppTextStyles.bodyMedium,
+                    ),
                   ],
                 ),
               );
@@ -342,7 +346,7 @@ class _Divider extends StatelessWidget {
         Expanded(child: Divider()),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text('o continúa con'),
+          child: Text('o continúa con', style: AppTextStyles.labelMedium),
         ),
         Expanded(child: Divider()),
       ],

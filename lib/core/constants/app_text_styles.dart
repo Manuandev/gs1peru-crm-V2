@@ -216,6 +216,9 @@ class AppTextStyles {
   /// Apretado: -0.3 — para headings grandes (evita exceso de espacio)
   static const double letterSpacingTight = -0.3;
 
+  /// Amplio: 4.0 — título principal sobre fondo de marca (Splash / Login)
+  static const double letterSpacingWide = 4.0;
+
   // ============================================================
   // ESTILOS DE NOTIFICACIONES (snackbars / toasts)
   // Llevan color explícito porque se usan sobre fondos oscuros

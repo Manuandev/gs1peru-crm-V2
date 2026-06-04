@@ -210,7 +210,7 @@ class BasePage extends StatelessWidget {
                           bodyPadding ??
                           const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
+                            vertical: AppSpacing.sm2,
                           ),
                       child: body,
                     ),
@@ -335,13 +335,22 @@ class _SocketChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, color) = switch (state) {
       WebSocketConnectionState.connected => ('● En línea', AppColors.success),
-      WebSocketConnectionState.connecting => ('● Conectando', AppColors.warning),
+      WebSocketConnectionState.connecting => (
+        '● Conectando',
+        AppColors.warning,
+      ),
       WebSocketConnectionState.reconnecting => (
         '● Reconectando',
         AppColors.warning,
       ),
-      WebSocketConnectionState.disconnected => ('● Sin conexión', AppColors.error),
-      WebSocketConnectionState.noInternet => ('● Sin internet', AppColors.error),
+      WebSocketConnectionState.disconnected => (
+        '● Sin conexión',
+        AppColors.error,
+      ),
+      WebSocketConnectionState.noInternet => (
+        '● Sin internet',
+        AppColors.error,
+      ),
       WebSocketConnectionState.manuallyClosed => ('', AppColors.transparent),
     };
 

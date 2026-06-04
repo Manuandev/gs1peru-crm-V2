@@ -120,18 +120,32 @@ class AppColors {
       primary.withOpacity(opacity);
 
   // ============================================================
-  // GRADIENTE PRINCIPAL (Login / Splash background)
+  // GRADIENTE PRINCIPAL (Login background)
   // ============================================================
 
-  /// Inicio del gradiente de fondo (morado-azul)
+  /// Inicio del gradiente de fondo Login (morado-azul)
   static const Color gradientStart = Color(0xFF667eea);
 
-  /// Fin del gradiente de fondo (morado oscuro)
+  /// Fin del gradiente de fondo Login (morado oscuro)
   static const Color gradientEnd = Color(0xFF764ba2);
 
-  ///GRADIANTES PARA GS1
-  //static const Color gradientStart = primary;
-  //static const Color gradientEnd = Color(0xFF003E73);
+  // ============================================================
+  // GRADIENTE SPLASH — Azul corporativo GS1
+  // ============================================================
+
+  /// Extremo claro del gradiente del Splash (azul GS1 medio)
+  static const Color primaryLight = Color(0xFF003E73);
+
+  // ── Anillos decorativos del Splash (blanco semitransparente sobre fondo oscuro)
+
+  /// Blanco 15% — anillo exterior del Splash
+  static const Color splashRing1 = Color(0x26FFFFFF);
+
+  /// Blanco 10% — anillo medio del Splash
+  static const Color splashRing2 = Color(0x1AFFFFFF);
+
+  /// Blanco 7% — anillo interior del Splash
+  static const Color splashRing3 = Color(0x12FFFFFF);
 
   // ============================================================
   // COLORES "ON" PARA SNACKBARS
@@ -221,6 +235,10 @@ class AppColors {
 
   /// Texto de cuerpo semitransparente (ej: mensaje en snackbar): 85%
   static const double opacityBodyText = 0.85;
+
+  /// Overlay de presión visible sobre fondos oscuros (AppBar, headers): 24%
+  /// Material 3 pressed-state sobre onPrimary — más perceptible que opacityActiveItem (12%)
+  static const double opacityPressedOnDark = 0.24;
 
   // ============================================================
   // SNACKBAR / TOAST — Paletas semánticas modo oscuro

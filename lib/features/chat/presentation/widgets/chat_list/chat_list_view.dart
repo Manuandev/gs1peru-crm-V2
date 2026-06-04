@@ -11,7 +11,10 @@ class ChatListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      bodyPadding: EdgeInsets.zero,
+      bodyPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
       title: 'Mis conversaciones',
       onPop: () => context.goToHome(),
       drawerSide: DrawerSide.left,

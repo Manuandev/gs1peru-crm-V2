@@ -135,6 +135,18 @@ class AppSizing {
   static const double iconDisplay = 120.0;
 
   // ============================================================
+  // LOGO — Pantalla de Login
+  // ============================================================
+
+  /// Factor de escala del logo en login: 0.35 (35% del lado más corto)
+  /// Permite que el logo escale con el tamaño de pantalla — LoginLayout._LogoSection
+  static const double logoLoginRatio = 0.35;
+
+  /// Tamaño máximo del logo en login: 160px
+  /// Límite superior del clamp — evita logos demasiado grandes en tablets
+  static const double logoLoginMax = 160.0;
+
+  // ============================================================
   // ALTURAS DE ELEMENTOS
   // ============================================================
 
@@ -194,6 +206,10 @@ class AppSizing {
   static const double avatarRadiusLg = avatarLg / 2; // 28
   static const double avatarRadiusXl = avatarXl / 2; // 36
 
+  /// Diámetro del badge de notificaciones en AppBar — 18px
+  /// Más pequeño que mensajesBadgeSize (22px): el AppBar tiene menos espacio visual
+  static const double notifBadgeSize = 18.0;
+
   // Badge de canal sobre el avatar del lead (LeadCard)
   /// Diámetro del badge circular que muestra el ícono del canal sobre el avatar — 18px
   static const double avatarCanalBadge = 18.0;
@@ -230,6 +246,13 @@ class AppSizing {
 
   /// Altura del contenido del diálogo de selección múltiple con búsqueda: 420dp
   static const double searchDialogContent = 420.0;
+
+  // ============================================================
+  // SPLASH — Indicador de carga (dots)
+  // ============================================================
+
+  /// Diámetro de cada punto en el indicador de carga del Splash: 8dp
+  static const double splashDotSize = 8.0;
 
   // ============================================================
   // ANIMACIÓN — UnderConstructionPage (anillos giratorios)

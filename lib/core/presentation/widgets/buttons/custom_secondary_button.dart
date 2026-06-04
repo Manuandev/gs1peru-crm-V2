@@ -65,9 +65,9 @@ class CustomSecondaryButton extends StatelessWidget {
 
     final bool enabled = isEnabled && !isLoading && onPressed != null;
 
-    final Color backgroundColor =
-        // ignore: deprecated_member_use
-        enabled ? colorScheme.secondary : theme.disabledColor.withOpacity(0.2);
+    final Color backgroundColor = enabled
+        ? colorScheme.secondary
+        : theme.disabledColor.withValues(alpha: AppColors.opacitySubtle);
 
     final Color foregroundColor = enabled
         ? colorScheme.onSecondary
@@ -86,16 +86,16 @@ class CustomSecondaryButton extends StatelessWidget {
             vertical: AppSpacing.buttonPaddingVertical,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
           ),
-          elevation: 1,
+          elevation: AppSizing.elevationMin,
         ),
         child: isLoading
             ? SizedBox(
-                height: 24,
-                width: 24,
+                height: AppSizing.iconMd,
+                width: AppSizing.iconMd,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: AppSizing.spinnerStrokeSmall,
                   valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
                 ),
               )
@@ -107,7 +107,7 @@ class CustomSecondaryButton extends StatelessWidget {
                     data: IconThemeData(color: foregroundColor),
                     child: icon!,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     text,
                     style: AppTextStyles.button.copyWith(

@@ -72,6 +72,9 @@ class _LoginViewState extends State<LoginView> {
         // Solo escucha estados finales para acciones
         listenWhen: (_, current) =>
             current is LoginSuccess || current is LoginFailure,
+        // Solo reconstruye cuando cambia el flag de carga (único dato que usa el builder)
+        buildWhen: (prev, curr) =>
+            (prev is LoginLoading) != (curr is LoginLoading),
 
         listener: (context, state) {
           if (state is LoginSuccess) {

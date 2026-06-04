@@ -87,7 +87,7 @@ class _CustomComboMultiSearchFieldState
           : null,
       builder: (field) => InkWell(
         onTap: widget.enabled ? _openPicker : null,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppSizing.radiusXs),
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: widget.label,
@@ -97,17 +97,17 @@ class _CustomComboMultiSearchFieldState
             border: const OutlineInputBorder(),
             enabled: widget.enabled,
             errorText: field.errorText,
-            suffixIcon: const Icon(Icons.search),
+            suffixIcon: const Icon(AppIcons.search),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+              horizontal: AppSpacing.snackGap,
+              vertical: AppSpacing.sm,
             ),
           ),
           isEmpty: !hasSelection,
           child: hasSelection
               ? Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
+                  spacing: AppSpacing.chipGap,
+                  runSpacing: AppSpacing.xs,
                   children: _selected
                       .map(
                         (item) => Chip(
@@ -115,7 +115,7 @@ class _CustomComboMultiSearchFieldState
                             _display(item),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
-                          deleteIcon: const Icon(Icons.close, size: 14),
+                          deleteIcon: const Icon(AppIcons.close, size: AppSizing.iconXs),
                           onDeleted: widget.enabled
                               ? () {
                                   setState(() => _selected.remove(item));
@@ -194,38 +194,41 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
     final allSelected = _filtered.every(_selected.contains);
     return AlertDialog(
       title: Text(widget.label),
-      contentPadding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+      contentPadding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.snackGap, AppSpacing.sm, 0),
       content: SizedBox(
         width: double.maxFinite,
-        height: 420,
+        height: AppSizing.searchDialogContent,
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
               child: TextField(
                 controller: _searchCtrl,
                 autofocus: true,
                 decoration: InputDecoration(
                   hintText: widget.hint,
-                  prefixIcon: const Icon(Icons.search, size: 20),
+                  prefixIcon: const Icon(AppIcons.search, size: AppSizing.iconSearch),
                   suffixIcon: AnimatedBuilder(
                     animation: _searchCtrl,
                     builder: (_, _) => _searchCtrl.text.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
+                            icon: const Icon(AppIcons.close, size: AppSizing.iconActionSm),
                             onPressed: _searchCtrl.clear,
                           )
                         : const SizedBox.shrink(),
                   ),
                   isDense: true,
                   border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 ),
               ),
             ),
             Row(
               children: [
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.snackGap),
                 Text(
                   '${_selected.length} seleccionado(s)',
                   style: Theme.of(context).textTheme.bodySmall,
@@ -239,24 +242,24 @@ class _SearchPickerDialogState extends State<_SearchPickerDialog> {
                   }),
                   child: Text(
                     allSelected ? 'Todos ✓' : 'Todos',
-                    style: const TextStyle(fontSize: 12),
+                    style: AppTextStyles.bodySmall,
                   ),
                 ),
                 TextButton(
                   onPressed: () =>
                       setState(() => _selected.removeWhere(_filtered.contains)),
-                  child: const Text('Ninguno', style: TextStyle(fontSize: 12)),
+                  child: const Text('Ninguno', style: AppTextStyles.bodySmall),
                 ),
               ],
             ),
-            const Divider(height: 1),
+            const Divider(height: AppSizing.hairline),
             Expanded(
               child: _filtered.isEmpty
                   ? const Center(child: Text('Sin resultados'))
                   : ListView.separated(
                       itemCount: _filtered.length,
                       separatorBuilder: (_, _) =>
-                          const Divider(height: 1, indent: 16),
+                          const Divider(height: AppSizing.hairline, indent: AppSpacing.md),
                       itemBuilder: (_, i) {
                         final item = _filtered[i];
                         return CheckboxListTile(

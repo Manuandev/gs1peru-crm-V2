@@ -184,4 +184,95 @@ class AppColors {
 
   static const Color surfaceDark = Color(0xFF1E1E1E);
   static const Color surfaceDarkVariant = Color(0xFF2A2A2A);
+
+  // ============================================================
+  // TRANSPARENTE
+  // ============================================================
+
+  /// Color completamente transparente
+  static const Color transparent = Color(0x00000000);
+
+  // ============================================================
+  // OPACIDADES MATERIAL 3 (estados de controles interactivos)
+  // Úsalas con .withValues(alpha: AppColors.opacityXxx)
+  // sobre colorScheme tokens — no como colores absolutos.
+  // ============================================================
+
+  /// Fondo de control deshabilitado (Material 3 estándar): 12%
+  static const double opacityDisabledBg = 0.12;
+
+  /// Texto/ícono de control deshabilitado (Material 3 estándar): 38%
+  static const double opacityDisabledFg = 0.38;
+
+  /// Borde de control deshabilitado: 50%
+  static const double opacityDisabledBorder = 0.5;
+
+  /// Fondo muy sutil de control deshabilitado (secundario): 20%
+  static const double opacitySubtle = 0.2;
+
+  /// Ítem activo en drawer / nav rail: 12% del color primario
+  static const double opacityActiveItem = 0.12;
+
+  /// Texto/subtítulo sobre fondo primario oscuro: 80%
+  static const double opacityOnPrimarySubtle = 0.8;
+
+  /// Hint / placeholder sobre surface: 50%
+  static const double opacityHint = 0.5;
+
+  /// Texto de cuerpo semitransparente (ej: mensaje en snackbar): 85%
+  static const double opacityBodyText = 0.85;
+
+  // ============================================================
+  // SNACKBAR / TOAST — Paletas semánticas modo oscuro
+  // Fondos oscuros consistentes para notificaciones en ambos temas.
+  // Referenciados en app_snackbar.dart (_SnackConfig).
+  // ============================================================
+
+  /// Fondo del snackbar de éxito (verde oscuro)
+  static const Color snackSuccessBg = Color(0xFF1B2E1C);
+
+  /// Fondo del contenedor de ícono — snackbar éxito
+  static const Color snackSuccessIconBg = Color(0xFF2D4A2F);
+
+  /// Color del ícono — snackbar éxito
+  static const Color snackSuccessIcon = Color(0xFF81C784);
+
+  /// Color del texto — snackbar éxito
+  static const Color snackSuccessText = Color(0xFFD4EDDA);
+
+  /// Fondo del snackbar de error (rojo oscuro)
+  static const Color snackErrorBg = Color(0xFF2E1B1B);
+
+  /// Fondo del contenedor de ícono — snackbar error
+  static const Color snackErrorIconBg = Color(0xFF4A2D2D);
+
+  /// Color del ícono — snackbar error
+  static const Color snackErrorIcon = Color(0xFFE57373);
+
+  /// Color del texto — snackbar error
+  static const Color snackErrorText = Color(0xFFF8D7DA);
+
+  /// Fondo del snackbar de advertencia (ámbar oscuro)
+  static const Color snackWarningBg = Color(0xFF2E2418);
+
+  /// Fondo del contenedor de ícono — snackbar advertencia
+  static const Color snackWarningIconBg = Color(0xFF4A3820);
+
+  /// Color del ícono — snackbar advertencia
+  static const Color snackWarningIcon = Color(0xFFFFB74D);
+
+  /// Color del texto — snackbar advertencia
+  static const Color snackWarningText = Color(0xFFFFF3CD);
+
+  /// Fondo del snackbar informativo (azul oscuro)
+  static const Color snackInfoBg = Color(0xFF1B2435);
+
+  /// Fondo del contenedor de ícono — snackbar info
+  static const Color snackInfoIconBg = Color(0xFF253654);
+
+  /// Color del ícono — snackbar info
+  static const Color snackInfoIcon = Color(0xFF64B5F6);
+
+  /// Color del texto — snackbar info
+  static const Color snackInfoText = Color(0xFFD0E8FB);
 }

@@ -80,13 +80,11 @@ class CustomPrimaryButton extends StatelessWidget {
 
     final Color backgroundColor = enabled
         ? colorScheme.primary
-        // ignore: deprecated_member_use
-        : colorScheme.onSurface.withOpacity(0.12);
+        : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledBg);
 
     final Color foregroundColor = enabled
         ? colorScheme.onPrimary
-        // ignore: deprecated_member_use
-        : colorScheme.onSurface.withOpacity(0.38);
+        : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledFg);
 
     return SizedBox(
       width: width ?? double.infinity,
@@ -111,11 +109,10 @@ class CustomPrimaryButton extends StatelessWidget {
         ),
         child: isLoading
             ? SizedBox(
-                height: 24,
-                width: 24,
+                height: AppSizing.iconMd,
+                width: AppSizing.iconMd,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  // ✅ Blanco forzado porque está sobre fondo azul primario
+                  strokeWidth: AppSizing.spinnerStrokeSmall,
                   valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
                 ),
               )
@@ -127,7 +124,7 @@ class CustomPrimaryButton extends StatelessWidget {
                     data: IconThemeData(color: foregroundColor),
                     child: icon!,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     text,
                     style: AppTextStyles.button.copyWith(

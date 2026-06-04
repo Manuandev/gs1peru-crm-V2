@@ -37,6 +37,7 @@ class AppTextStyles {
   static const double sizeXs = 11.0;
   static const double sizeSm = 12.0;
   static const double sizeMd = 14.0;
+  static const double sizeBase = 15.0; // Intermedio: tablet (entre sizeMd y sizeLg)
   static const double sizeLg = 16.0; // Base: inputs, botones
   static const double sizeXl = 18.0;
   static const double size2xl = 22.0;
@@ -207,4 +208,32 @@ class AppTextStyles {
   // ============================================================
 
   static const TextStyle snackWarningText = TextStyle();
+
+  // ============================================================
+  // LETTER SPACING (Espaciado entre letras)
+  // ============================================================
+
+  /// Apretado: -0.3 — para headings grandes (evita exceso de espacio)
+  static const double letterSpacingTight = -0.3;
+
+  // ============================================================
+  // ESTILOS DE NOTIFICACIONES (snackbars / toasts)
+  // Llevan color explícito porque se usan sobre fondos oscuros
+  // de la paleta snackbar (AppColors.snackXxxText), no del tema.
+  // ============================================================
+
+  /// Título de notificación: 13sp semiBold h1.3
+  /// Usado en la primera línea del snackbar cuando se pasa [title]
+  static const TextStyle snackTitle = TextStyle(
+    fontSize: 13.0,
+    fontWeight: weightSemiBold,
+    height: 1.3,
+  );
+
+  /// Cuerpo de notificación: 12sp regular h1.4
+  /// Texto principal del mensaje en el snackbar
+  static const TextStyle snackBody = TextStyle(
+    fontSize: sizeSm,
+    height: 1.4,
+  );
 }

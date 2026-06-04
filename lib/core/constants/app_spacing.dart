@@ -87,4 +87,25 @@ class AppSpacing {
   /// Espaciado entre secciones grandes de una pantalla
   /// - Corresponde a 32px (xl)
   static const double sectionSpacing = xl;
+
+  // ============================================================
+  // VALORES INTERMEDIOS
+  // Para valores entre los puntos de escala base. Agrega solo
+  // si el valor aparece en múltiples componentes.
+  // ============================================================
+
+  /// 6px — espaciado entre chips/tags en Wrap (spacing y runSpacing)
+  static const double chipGap = 6.0;
+
+  /// 12px — gap entre ícono y texto en notificaciones; margen
+  /// externo lateral de snackbars
+  static const double snackGap = 12.0;
+
+  /// 14px — padding interno cómodo en notificaciones
+  /// (izquierda, top, bottom del cuerpo del snackbar)
+  static const double snackPadding = 14.0;
+
+  /// 10px — padding derecho del cuerpo de snackbars
+  /// (deja espacio visual al botón de cierre)
+  static const double snackPaddingEnd = 10.0;
 }

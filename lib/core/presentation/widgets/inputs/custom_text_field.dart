@@ -153,10 +153,7 @@ class CustomTextField extends StatelessWidget {
       focusNode: focusNode,
       obscureText: obscureText,
 
-      // ── ESTILO DEL TEXTO INGRESADO ────────────────────────────
-      // Se usa AppTextStyles.inputText (sin color) y se aplica el color
-      // según el estado del campo (enabled / disabled).
-      style: TextStyle(fontSize: 16, color: textColor),
+      style: AppTextStyles.inputText.copyWith(color: textColor),
       decoration: InputDecoration(
         // Textos del campo
         labelText: label,
@@ -198,7 +195,7 @@ class CustomTextField extends StatelessWidget {
         // Borde cuando está enfocado
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+          borderSide: BorderSide(color: colorScheme.primary, width: AppSizing.borderFocusWidth),
         ),
 
         // Borde cuando hay error
@@ -210,7 +207,7 @@ class CustomTextField extends StatelessWidget {
         // Borde cuando está enfocado y hay error
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          borderSide: BorderSide(color: colorScheme.error, width: 2),
+          borderSide: BorderSide(color: colorScheme.error, width: AppSizing.borderFocusWidth),
         ),
 
         // Borde cuando está deshabilitado

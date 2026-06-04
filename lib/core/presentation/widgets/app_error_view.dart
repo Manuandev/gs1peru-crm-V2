@@ -14,42 +14,43 @@ class AppErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     final errorIconSize = ResponsiveHelper.getValue<double>(
       context,
-      mobile: 64,
-      tablet: 72,
-      desktop: 80,
+      mobile: AppSizing.iconErrorSm,
+      tablet: AppSizing.iconErrorMd,
+      desktop: AppSizing.iconXxl,
     );
     final errorTextSize = ResponsiveHelper.getValue<double>(
       context,
-      mobile: 14,
-      tablet: 15,
-      desktop: 16,
+      mobile: AppTextStyles.sizeMd,
+      tablet: AppTextStyles.sizeBase,
+      desktop: AppTextStyles.sizeLg,
     );
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.wifi_off_rounded,
+              AppIcons.wifiOff,
               size: errorIconSize,
-              color: Colors.grey.shade300,
+              color: AppColors.grey300,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey.shade500,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.grey500,
                 fontSize: errorTextSize,
               ),
             ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar'),
+            const SizedBox(height: AppSpacing.lg),
+            CustomPrimaryButton(
+              text: 'Reintentar',
+              icon: const Icon(AppIcons.refresh),
               onPressed: onRetry,
+              width: null,
             ),
           ],
         ),

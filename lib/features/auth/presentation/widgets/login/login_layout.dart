@@ -35,7 +35,7 @@ class LoginLayout extends StatelessWidget {
     return OrientationBuilder(
       builder: (context, orientation) {
         // ── Secciones de contenido (iguales en ambas orientaciones) ──
-        final logo = _LogoSection();
+        const logo = _LogoSection();
         final google = _GoogleSection(
           isLoading: isLoading,
           onGoogleSignIn: onGoogleSignIn,
@@ -80,30 +80,28 @@ class _PortraitLayout extends StatelessWidget {
           physics: const ClampingScrollPhysics(),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: IntrinsicHeight(
-              child: Center(
-                child: Padding(
-                  padding: ResponsiveHelper.screenPadding(context),
-                  child: Card(
-                    elevation: AppSizing.elevationHigh,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizing.radiusLg),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          logo,
-                          const SizedBox(height: AppSpacing.md),
-                          google,
-                          const SizedBox(height: AppSpacing.md),
-                          _Divider(),
-                          const SizedBox(height: AppSpacing.md),
-                          form,
-                        ],
-                      ),
+            child: Center(
+              child: Padding(
+                padding: ResponsiveHelper.screenPadding(context),
+                child: Card(
+                  elevation: AppSizing.elevationHigh,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSizing.radiusLg),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        logo,
+                        const SizedBox(height: AppSpacing.md),
+                        google,
+                        const SizedBox(height: AppSpacing.md),
+                        const _Divider(),
+                        const SizedBox(height: AppSpacing.md),
+                        form,
+                      ],
                     ),
                   ),
                 ),

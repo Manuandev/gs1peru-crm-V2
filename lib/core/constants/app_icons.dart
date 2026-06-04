@@ -318,4 +318,18 @@ class AppIcons {
   /// Rayo / Flash — ícono de splash screen y branding de la app.
   /// Se muestra en tamaño AppSizing.iconDisplay (120px) sobre el gradiente.
   static const IconData lightning = Icons.flash_on;
+
+  // ============================================================
+  // RED Y CONECTIVIDAD
+  // ============================================================
+
+  /// Sin conexión Wi-Fi / error de red — usado en AppErrorView
+  static const IconData wifiOff = Icons.wifi_off_rounded;
+
+  // ============================================================
+  // SELECCIÓN / FORMULARIOS
+  // ============================================================
+
+  /// Flecha hacia abajo / dropdown — indicador de campo de selección (Combo)
+  static const IconData dropDown = Icons.arrow_drop_down;
 }

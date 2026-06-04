@@ -320,11 +320,13 @@ class _ColumnaFecha extends StatelessWidget {
             ),
           ),
         const SizedBox(height: AppSpacing.xxs),
+
         // Chip de etapa del lead
-        AppIconsSocial.chipEstado(
-          chat.idEstado,
-          label: chat.estado,
-        ),
+        // AppIconsSocial.chipEstado(
+        //   chat.idEstado,
+        //   label: chat.estado,
+        // ),
+        MessageStatusIcon(estado: chat.estado, color: Colors.grey),
       ],
     );
   }
@@ -352,7 +354,10 @@ class _BarraAcciones extends StatelessWidget {
     return Row(
       children: [
         _BotonAccion(
-          icono: AppIconsSocial.widgetCanal(chat.idCanal, size: AppSizing.iconSm),
+          icono: AppIconsSocial.widgetCanal(
+            chat.idCanal,
+            size: AppSizing.iconSm,
+          ),
           etiqueta: 'Responder',
           onTap: onResponderTap,
         ),
@@ -406,11 +411,7 @@ class _BotonAccion extends StatelessWidget {
   final String etiqueta;
   final VoidCallback? onTap;
 
-  const _BotonAccion({
-    required this.icono,
-    required this.etiqueta,
-    this.onTap,
-  });
+  const _BotonAccion({required this.icono, required this.etiqueta, this.onTap});
 
   @override
   Widget build(BuildContext context) {

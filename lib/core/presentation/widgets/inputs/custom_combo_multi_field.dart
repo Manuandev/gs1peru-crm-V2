@@ -84,7 +84,7 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
           : null,
       builder: (field) => InkWell(
         onTap: widget.enabled ? _openPicker : null,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppSizing.radiusXs),
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: widget.label,
@@ -92,17 +92,17 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
             border: const OutlineInputBorder(),
             enabled: widget.enabled,
             errorText: field.errorText,
-            suffixIcon: const Icon(Icons.arrow_drop_down),
+            suffixIcon: const Icon(AppIcons.dropDown),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+              horizontal: AppSpacing.snackGap,
+              vertical: AppSpacing.sm,
             ),
           ),
           isEmpty: !hasSelection,
           child: hasSelection
               ? Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
+                  spacing: AppSpacing.chipGap,
+                  runSpacing: AppSpacing.xs,
                   children: _selected
                       .map(
                         (item) => Chip(
@@ -110,7 +110,7 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
                             _display(item),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
-                          deleteIcon: const Icon(Icons.close, size: 14),
+                          deleteIcon: const Icon(AppIcons.close, size: AppSizing.iconXs),
                           onDeleted: widget.enabled
                               ? () {
                                   setState(() => _selected.remove(item));
@@ -165,7 +165,7 @@ class _PickerDialogState extends State<_PickerDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.label),
-      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       content: SizedBox(
         width: double.maxFinite,
         child: ListView.builder(

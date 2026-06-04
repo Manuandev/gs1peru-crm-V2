@@ -1,7 +1,5 @@
 // lib/core/presentation/widgets/buttons/custom_google_button.dart
 
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
@@ -60,15 +58,15 @@ class CustomGoogleButton extends StatelessWidget {
           side: BorderSide(
             color: enabled
                 ? colorScheme.outline
-                : colorScheme.onSurface.withOpacity(0.12),
+                : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledBg),
           ),
         ),
         child: isLoading
             ? SizedBox(
-                height: 24,
-                width: 24,
+                height: AppSizing.iconMd,
+                width: AppSizing.iconMd,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: AppSizing.spinnerStrokeSmall,
                   color: colorScheme.primary,
                 ),
               )
@@ -76,8 +74,8 @@ class CustomGoogleButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SizedBox(
-                    height: 24,
-                    width: 24,
+                    height: AppSizing.iconMd,
+                    width: AppSizing.iconMd,
                     child: SvgPicture.asset(
                       AppImages.logoGoogle,
                       fit: BoxFit.contain,
@@ -89,8 +87,7 @@ class CustomGoogleButton extends StatelessWidget {
                     style: AppTextStyles.button.copyWith(
                       color: enabled
                           ? colorScheme.onSurface
-                          // ignore: duplicate_ignore
-                          : colorScheme.onSurface.withOpacity(0.38),
+                          : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledFg),
                     ),
                   ),
                 ],

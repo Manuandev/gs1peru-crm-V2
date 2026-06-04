@@ -73,7 +73,7 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
         final q = tv.text.toLowerCase();
         return _allItems.where((e) => _display(e).toLowerCase().contains(q));
       },
-      optionsMaxHeight: widget.maxSuggestions * 48.0,
+      optionsMaxHeight: widget.maxSuggestions * AppSizing.buttonHeight,
       onSelected: (item) {
         _selected = item;
         widget.onChanged?.call(item);
@@ -91,14 +91,14 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
               animation: controller,
               builder: (_, _) => controller.text.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(AppIcons.close, size: AppSizing.iconActionSm),
                       onPressed: () {
                         controller.clear();
                         _selected = null;
                         widget.onChanged?.call(null);
                       },
                     )
-                  : const Icon(Icons.search, size: 18),
+                  : const Icon(AppIcons.search, size: AppSizing.iconActionSm),
             ),
           ),
           validator: widget.validator != null
@@ -109,18 +109,18 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
       optionsViewBuilder: (context, onSelected, options) => Align(
         alignment: Alignment.topLeft,
         child: Material(
-          elevation: 4,
-          borderRadius: BorderRadius.circular(8),
+          elevation: AppSizing.elevationMedium,
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: widget.maxSuggestions * 48.0,
-              maxWidth: MediaQuery.of(context).size.width - 32,
+              maxHeight: widget.maxSuggestions * AppSizing.buttonHeight,
+              maxWidth: MediaQuery.of(context).size.width - AppSpacing.xl,
             ),
             child: ListView.separated(
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               itemCount: options.length,
-              separatorBuilder: (_, _) => const Divider(height: 1, indent: 16),
+              separatorBuilder: (_, _) => const Divider(height: AppSizing.hairline, indent: AppSpacing.md),
               itemBuilder: (_, i) {
                 final item = options.elementAt(i);
                 return ListTile(

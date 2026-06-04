@@ -73,8 +73,9 @@ class CustomOutlinedButton extends StatelessWidget {
 
     final Color effectiveBorderColor =
         borderColor ??
-        // ignore: deprecated_member_use
-        (enabled ? colorScheme.primary : theme.disabledColor.withOpacity(0.5));
+        (enabled
+            ? colorScheme.primary
+            : theme.disabledColor.withValues(alpha: AppColors.opacityDisabledBorder));
 
     return SizedBox(
       width: width ?? double.infinity,
@@ -83,21 +84,21 @@ class CustomOutlinedButton extends StatelessWidget {
         onPressed: enabled ? onPressed : null,
         style: OutlinedButton.styleFrom(
           foregroundColor: effectiveTextColor,
-          side: BorderSide(color: effectiveBorderColor, width: 2),
+          side: BorderSide(color: effectiveBorderColor, width: AppSizing.borderFocusWidth),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.buttonPaddingHorizontal,
             vertical: AppSpacing.buttonPaddingVertical,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
           ),
         ),
         child: isLoading
             ? SizedBox(
-                height: 24,
-                width: 24,
+                height: AppSizing.iconMd,
+                width: AppSizing.iconMd,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: AppSizing.spinnerStrokeSmall,
                   valueColor: AlwaysStoppedAnimation<Color>(effectiveTextColor),
                 ),
               )
@@ -109,7 +110,7 @@ class CustomOutlinedButton extends StatelessWidget {
                     data: IconThemeData(color: effectiveTextColor),
                     child: icon!,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     text,
                     style: AppTextStyles.buttonSecondary.copyWith(

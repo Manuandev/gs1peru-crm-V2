@@ -35,6 +35,10 @@ class AppBreakpoints {
 
   /// Desktop grande: Mayor a 1200px
   static const double desktopLarge = 1600;
+
+  /// Altura máxima considerada "compacta" (landscape en móvil): 500dp
+  /// Usado en _DrawerHeader para detectar orientación landscape con pantalla pequeña
+  static const double compactHeight = 500;
 }
 
 // ============================================================
@@ -201,4 +205,87 @@ class AppSizing {
   static const double iconCanalInfo = 12.0;
   /// Diámetro del badge de mensajes no leídos (LeadCard, borde derecho) — 22px
   static const double mensajesBadgeSize = 22.0;
+
+  // ============================================================
+  // VALORES ADICIONALES
+  // ============================================================
+
+  /// Hairline / línea mínima: 1dp — Divider sin padding extra, bordes finos
+  static const double hairline = 1.0;
+
+  /// Ícono extra pequeño: 14dp — deleteIcon en Chip, íconos inline en texto
+  static const double iconXs = 14.0;
+
+  /// Ícono en campo de búsqueda: 20dp — prefixIcon en TextField de búsqueda
+  static const double iconSearch = 20.0;
+
+  /// Contenedor cuadrado del ícono en snackbar/toast: 36dp
+  static const double snackIconContainer = 36.0;
+
+  /// Elevación mínima: 1dp — botón secundario en reposo
+  static const double elevationMin = 1.0;
+
+  /// Altura de la barra de progreso en snackbar/toast: 3dp
+  static const double snackProgressBar = 3.0;
+
+  /// Altura del contenido del diálogo de selección múltiple con búsqueda: 420dp
+  static const double searchDialogContent = 420.0;
+
+  // ============================================================
+  // ANIMACIÓN — UnderConstructionPage (anillos giratorios)
+  // ============================================================
+
+  /// Anillo exterior + SizedBox contenedor: 260dp
+  static const double animRingOuter = 260.0;
+
+  /// Anillo medio: 210dp
+  static const double animRingMid = 210.0;
+
+  /// Anillo interior: 160dp
+  static const double animRingInner = 160.0;
+
+  /// Contenedor central con logo: 110dp
+  static const double animRingCenter = 110.0;
+
+  /// Logo SVG dentro del contenedor central: 72dp
+  static const double animLogoSize = 72.0;
+
+  /// Grosor del trazo de cada anillo animado: 1.5dp
+  static const double animRingStroke = 1.5;
+
+  // ============================================================
+  // ÍCONOS DE ESTADO VACÍO / ERROR (responsive)
+  // ============================================================
+
+  /// Ícono de error en móvil: 64dp
+  static const double iconErrorSm = 64.0;
+
+  /// Ícono de error en tablet: 72dp
+  static const double iconErrorMd = 72.0;
+
+  // ============================================================
+  // SNACKBAR / TOAST
+  // ============================================================
+
+  /// Offset inferior para posicionar el snackbar arriba: 120dp
+  /// Uso: MediaQuery.size.height - AppSizing.snackTopOffset
+  static const double snackTopOffset = 120.0;
+
+  // ============================================================
+  // BORDES DE FOCO / ACTIVO
+  // ============================================================
+
+  /// Ancho del borde en estado focus o seleccionado: 2dp
+  /// Usado en inputs enfocados, botones outlined, etc.
+  static const double borderFocusWidth = 2.0;
+
+  // ============================================================
+  // DRAWER HEADER — Avatar responsive
+  // ============================================================
+
+  /// Radio del avatar en drawer (modo landscape compacto): 20dp
+  static const double drawerAvatarRadiusCompact = 20.0;
+
+  /// Radio del avatar en drawer (orientación normal): 30dp
+  static const double drawerAvatarRadius = 30.0;
 }

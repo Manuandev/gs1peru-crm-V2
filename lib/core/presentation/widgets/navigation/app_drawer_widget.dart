@@ -81,12 +81,12 @@ class _DrawerContent extends StatelessWidget {
                     isActive: item.id == currentRoute,
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: AppSizing.hairline),
                 if (showSettings)
                   _DrawerItem(
                     item: DrawerItemModel(
                       id: AppRoutes.settings,
-                      icon: Icons.settings_outlined,
+                      icon: AppIcons.settings,
                       label: 'Configuración',
                       onTap: onSettings ?? () => context.goToSettings(),
                     ),
@@ -96,7 +96,7 @@ class _DrawerContent extends StatelessWidget {
                   _DrawerItem(
                     item: DrawerItemModel(
                       id: '__logout__',
-                      icon: Icons.logout,
+                      icon: AppIcons.logout,
                       label: 'Cerrar sesión',
                       // ✅ Solo ejecuta el callback que viene de la page.
                       // Quien sabe de AuthBloc es la page, no el drawer.
@@ -141,8 +141,8 @@ class _DrawerHeader extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.of(context).size;
 
-    final compact = size.width > size.height && size.height < 500;
-    final avatarRadius = compact ? 20.0 : 30.0;
+    final compact = size.width > size.height && size.height < AppBreakpoints.compactHeight;
+    final avatarRadius = compact ? AppSizing.drawerAvatarRadiusCompact : AppSizing.drawerAvatarRadius;
     final verticalPadding = compact ? AppSpacing.md : AppSpacing.xl;
 
     if (state is! DrawerLoaded) return const SizedBox.shrink();
@@ -204,8 +204,9 @@ class _DrawerHeader extends StatelessWidget {
                   Text(
                     loaded.userSubtitle!,
                     style: AppTextStyles.bodySmall.copyWith(
-                      // ignore: deprecated_member_use
-                      color: colorScheme.onPrimary.withOpacity(0.8),
+                      color: colorScheme.onPrimary.withValues(
+                        alpha: AppColors.opacityOnPrimarySubtle,
+                      ),
                     ),
                   ),
                 ],
@@ -246,11 +247,9 @@ class _DrawerItem extends StatelessWidget {
         ? colorScheme.primary
         : colorScheme.onSurface;
 
-    // ignore: deprecated_member_use
     final bgColor = isActive
-        // ignore: deprecated_member_use
-        ? colorScheme.primary.withOpacity(0.12)
-        : Colors.transparent;
+        ? colorScheme.primary.withValues(alpha: AppColors.opacityActiveItem)
+        : AppColors.transparent;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -258,7 +257,7 @@ class _DrawerItem extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.sm,
-            vertical: 2,
+            vertical: AppSpacing.xxs,
           ),
           child: Material(
             color: bgColor,
@@ -269,7 +268,7 @@ class _DrawerItem extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm + 2,
+                  vertical: AppSpacing.sm + AppSpacing.xxs,
                 ),
                 child: Row(
                   children: [
@@ -286,7 +285,7 @@ class _DrawerItem extends StatelessWidget {
                               child: FaIcon(
                                 item.icon,
                                 color: iconColor,
-                                size: AppSizing.iconNav - 4,
+                                size: AppSizing.iconActionSm,
                               ),
                             ),
                           ),
@@ -348,7 +347,10 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.chipGap,
+        vertical: AppSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.error,
         borderRadius: BorderRadius.circular(AppSizing.radiusCircular),

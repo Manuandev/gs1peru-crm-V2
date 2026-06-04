@@ -273,7 +273,7 @@ class _FooterPages extends StatelessWidget {
             '${AppConstants.nombreApp} - v${AppConstants.version}',
             style: AppTextStyles.labelSmall,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           StreamBuilder<WebSocketConnectionState>(
             stream: SignalRService.instance.connectionStateStream,
             initialData: SignalRService.instance.currentState,
@@ -297,7 +297,7 @@ class _FooterCompact extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: 4, // más chico que AppSpacing.sm
+        vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -312,7 +312,7 @@ class _FooterCompact extends StatelessWidget {
             '${AppConstants.nombreApp} - v${AppConstants.version}',
             style: AppTextStyles.labelSmall,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           StreamBuilder<WebSocketConnectionState>(
             stream: SignalRService.instance.connectionStateStream,
             initialData: SignalRService.instance.currentState,
@@ -334,15 +334,15 @@ class _SocketChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (state) {
-      WebSocketConnectionState.connected => ('● En línea', Colors.green),
-      WebSocketConnectionState.connecting => ('● Conectando', Colors.orange),
+      WebSocketConnectionState.connected => ('● En línea', AppColors.success),
+      WebSocketConnectionState.connecting => ('● Conectando', AppColors.warning),
       WebSocketConnectionState.reconnecting => (
         '● Reconectando',
-        Colors.orange,
+        AppColors.warning,
       ),
-      WebSocketConnectionState.disconnected => ('● Sin conexión', Colors.red),
-      WebSocketConnectionState.noInternet => ('● Sin internet', Colors.red),
-      WebSocketConnectionState.manuallyClosed => ('', Colors.transparent),
+      WebSocketConnectionState.disconnected => ('● Sin conexión', AppColors.error),
+      WebSocketConnectionState.noInternet => ('● Sin internet', AppColors.error),
+      WebSocketConnectionState.manuallyClosed => ('', AppColors.transparent),
     };
 
     if (label.isEmpty) return const SizedBox.shrink();

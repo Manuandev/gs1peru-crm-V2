@@ -28,6 +28,8 @@ class MessageList extends StatelessWidget {
     return ListView.builder(
       reverse: true,
       controller: scrollController,
+      // ignore: deprecated_member_use
+      cacheExtent: 500.0,
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),

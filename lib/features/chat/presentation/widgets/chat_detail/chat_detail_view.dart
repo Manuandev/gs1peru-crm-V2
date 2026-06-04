@@ -259,6 +259,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                     }
 
                     return BlocBuilder<InfoLeadCubit, InfoLeadState>(
+                      buildWhen: (prev, curr) {
+                        if (curr is! InfoLeadSuccess) return false;
+                        if (prev is! InfoLeadSuccess) return true;
+                        return prev.infoLead.nombreCompleto !=
+                            curr.infoLead.nombreCompleto;
+                      },
                       builder: (context, infoState) {
                         final nombre = infoState is InfoLeadSuccess
                             ? infoState.infoLead.nombreCompleto
@@ -319,7 +325,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           ),
 
           BlocBuilder<ChatDetailBloc, ChatDetailState>(
-            buildWhen: (prev, curr) => curr is ChatDetailSuccess,
+            buildWhen: (prev, curr) =>
+                (prev is ChatDetailSuccess) != (curr is ChatDetailSuccess),
             builder: (context, state) {
               if (state is! ChatDetailSuccess) return const SizedBox.shrink();
               return ChatInputBar(audioController: _audioController);

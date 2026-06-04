@@ -25,13 +25,13 @@ class AppSnackBar {
       ..showSnackBar(
         SnackBar(
           padding: EdgeInsets.zero,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+          backgroundColor: AppColors.transparent,
+          elevation: AppSizing.elevationNone,
           duration: duration,
           behavior: SnackBarBehavior.floating,
           margin: position == SnackPosition.top
               ? EdgeInsets.only(
-                  bottom: MediaQuery.of(context).size.height - 120,
+                  bottom: MediaQuery.of(context).size.height - AppSizing.snackTopOffset,
                   left: 0,
                   right: 0,
                 )
@@ -121,34 +121,34 @@ class _SnackConfig {
 
   factory _SnackConfig.of(SnackType type) => switch (type) {
     SnackType.success => const _SnackConfig(
-      background: Color(0xFF1B2E1C),
-      iconBackground: Color(0xFF2D4A2F),
-      iconColor: Color(0xFF81C784),
-      textColor: Color(0xFFD4EDDA),
+      background: AppColors.snackSuccessBg,
+      iconBackground: AppColors.snackSuccessIconBg,
+      iconColor: AppColors.snackSuccessIcon,
+      textColor: AppColors.snackSuccessText,
       progressColor: AppColors.success,
       icon: AppIcons.checkCircle,
     ),
     SnackType.error => const _SnackConfig(
-      background: Color(0xFF2E1B1B),
-      iconBackground: Color(0xFF4A2D2D),
-      iconColor: Color(0xFFE57373),
-      textColor: Color(0xFFF8D7DA),
+      background: AppColors.snackErrorBg,
+      iconBackground: AppColors.snackErrorIconBg,
+      iconColor: AppColors.snackErrorIcon,
+      textColor: AppColors.snackErrorText,
       progressColor: AppColors.error,
       icon: AppIcons.error,
     ),
     SnackType.warning => const _SnackConfig(
-      background: Color(0xFF2E2418),
-      iconBackground: Color(0xFF4A3820),
-      iconColor: Color(0xFFFFB74D),
-      textColor: Color(0xFFFFF3CD),
+      background: AppColors.snackWarningBg,
+      iconBackground: AppColors.snackWarningIconBg,
+      iconColor: AppColors.snackWarningIcon,
+      textColor: AppColors.snackWarningText,
       progressColor: AppColors.warning,
       icon: AppIcons.warning,
     ),
     SnackType.info => const _SnackConfig(
-      background: Color(0xFF1B2435),
-      iconBackground: Color(0xFF253654),
-      iconColor: Color(0xFF64B5F6),
-      textColor: Color(0xFFD0E8FB),
+      background: AppColors.snackInfoBg,
+      iconBackground: AppColors.snackInfoIconBg,
+      iconColor: AppColors.snackInfoIcon,
+      textColor: AppColors.snackInfoText,
       progressColor: AppColors.info,
       icon: AppIcons.infoCircle,
     ),
@@ -196,31 +196,41 @@ class _AppSnackContentState extends State<_AppSnackContent>
     final c = widget.config;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.snackGap,
+        0,
+        AppSpacing.snackGap,
+        AppSpacing.snackGap,
+      ),
       decoration: BoxDecoration(
         color: c.background,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
       ),
       clipBehavior: Clip.hardEdge,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.snackPadding,
+              AppSpacing.snackPadding,
+              AppSpacing.snackPaddingEnd,
+              AppSpacing.snackPadding,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Ícono
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: AppSizing.snackIconContainer,
+                  height: AppSizing.snackIconContainer,
                   decoration: BoxDecoration(
                     color: c.iconBackground,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppSizing.radiusSm),
                   ),
-                  child: Icon(c.icon, color: c.iconColor, size: 18),
+                  child: Icon(c.icon, color: c.iconColor, size: AppSizing.iconActionSm),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.snackGap),
                 // Texto
                 Expanded(
                   child: Column(
@@ -229,21 +239,16 @@ class _AppSnackContentState extends State<_AppSnackContent>
                       if (widget.title != null) ...[
                         Text(
                           widget.title!,
-                          style: TextStyle(
+                          style: AppTextStyles.snackTitle.copyWith(
                             color: c.textColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            height: 1.3,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.xxs),
                       ],
                       Text(
                         widget.message,
-                        style: TextStyle(
-                          color: c.textColor.withValues(alpha: 0.85),
-                          fontSize: 12,
-                          height: 1.4,
+                        style: AppTextStyles.snackBody.copyWith(
+                          color: c.textColor.withValues(alpha: AppColors.opacityBodyText),
                         ),
                       ),
                     ],
@@ -254,11 +259,11 @@ class _AppSnackContentState extends State<_AppSnackContent>
                   onTap: () =>
                       ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                   child: Padding(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(AppSpacing.xs),
                     child: Icon(
                       AppIcons.close,
-                      color: c.textColor.withValues(alpha: 0.5),
-                      size: 16,
+                      color: c.textColor.withValues(alpha: AppColors.opacityHint),
+                      size: AppSizing.iconSm,
                     ),
                   ),
                 ),
@@ -271,7 +276,10 @@ class _AppSnackContentState extends State<_AppSnackContent>
             builder: (_, _) => FractionallySizedBox(
               alignment: Alignment.centerLeft,
               widthFactor: 1 - _progress.value,
-              child: Container(height: 3, color: c.progressColor),
+              child: Container(
+                height: AppSizing.snackProgressBar,
+                color: c.progressColor,
+              ),
             ),
           ),
         ],

@@ -120,7 +120,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       decoration: InputDecoration(
                         hintText: 'Buscar...',
                         hintStyle: AppTextStyles.bodyLarge.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          color: colorScheme.onSurface.withValues(alpha: AppColors.opacityHint),
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -149,10 +149,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             horizontal: AppSpacing.sm,
                           ),
                           child: Icon(
-                            Icons.close,
+                            AppIcons.close,
                             size: AppSizing.iconActionSm,
-                            // ignore: deprecated_member_use
-                            color: colorScheme.onSurface.withOpacity(0.5),
+                            color: colorScheme.onSurface.withValues(alpha: AppColors.opacityHint),
                           ),
                         ),
                       );
@@ -177,7 +176,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget _buildBackButton() {
     final colorScheme = Theme.of(context).colorScheme;
     return IconButton(
-      icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
+      icon: Icon(AppIcons.back, color: colorScheme.onPrimary),
       onPressed: _stopSearch,
     );
   }
@@ -210,7 +209,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     if (widget.onSearch != null) {
       actions.add(
         IconButton(
-          icon: Icon(Icons.search, color: colorScheme.onPrimary),
+          icon: Icon(AppIcons.search, color: colorScheme.onPrimary),
           onPressed: _startSearch,
         ),
       );

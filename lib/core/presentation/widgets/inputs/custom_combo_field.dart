@@ -90,7 +90,7 @@ class _CustomComboFieldState<T extends Comboable>
             (item) => DropdownMenuItem<T>(
               value: item,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 child: Text(
                   _getLabel(item),
                   overflow: TextOverflow.ellipsis,

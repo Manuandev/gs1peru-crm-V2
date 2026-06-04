@@ -68,8 +68,8 @@ class _UnderConstructionPageState extends State<UnderConstructionPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              width: 260,
-              height: 260,
+              width: AppSizing.animRingOuter,
+              height: AppSizing.animRingOuter,
               child: AnimatedBuilder(
                 animation: _ctrl,
                 builder: (_, __) => Stack(
@@ -77,37 +77,37 @@ class _UnderConstructionPageState extends State<UnderConstructionPage>
                   children: [
                     _RotatingRing(
                       angle: _ring1.value,
-                      size: 260,
-                      color: Colors.grey.withValues(alpha: 0.25),
+                      size: AppSizing.animRingOuter,
+                      color: AppColors.grey500.withValues(alpha: 0.25),
                     ),
                     _RotatingRing(
                       angle: _ring2.value,
-                      size: 210,
-                      color: Colors.grey.withValues(alpha: 0.20),
+                      size: AppSizing.animRingMid,
+                      color: AppColors.grey500.withValues(alpha: 0.20),
                     ),
                     _RotatingRing(
                       angle: _ring1.value * 1.5,
-                      size: 160,
-                      color: Colors.grey.withValues(alpha: 0.15),
+                      size: AppSizing.animRingInner,
+                      color: AppColors.grey500.withValues(alpha: 0.15),
                     ),
                     ScaleTransition(
                       scale: _pulse,
                       child: Container(
-                        width: 110,
-                        height: 110,
+                        width: AppSizing.animRingCenter,
+                        height: AppSizing.animRingCenter,
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(
                             AppSizing.radiusLg,
                           ),
                           border: Border.all(
-                            color: Colors.grey.withValues(alpha: 0.25),
+                            color: AppColors.grey500.withValues(alpha: 0.25),
                           ),
                         ),
                         child: Center(
                           child: SvgPicture.asset(
                             AppImages.logoTheme(context),
-                            width: 72,
+                            width: AppSizing.animLogoSize,
                           ),
                         ),
                       ),
@@ -131,16 +131,15 @@ class _UnderConstructionPageState extends State<UnderConstructionPage>
                 children: [
                   _BlinkingDot(),
                   const SizedBox(width: AppSpacing.xs),
-                  const Text('En desarrollo', style: TextStyle(fontSize: 12)),
+                  const Text('En desarrollo', style: AppTextStyles.bodySmall),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.lg), // era 20
             Text(
               'Página en construcción',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
+              style: AppTextStyles.headlineSmall.copyWith(
+                letterSpacing: AppTextStyles.letterSpacingTight,
               ),
             ),
             const SizedBox(height: AppSpacing.sm), // era 8
@@ -178,7 +177,7 @@ class _RotatingRing extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(
             color: color,
-            width: 1.5,
+            width: AppSizing.animRingStroke,
             strokeAlign: BorderSide.strokeAlignCenter,
           ),
         ),
@@ -220,7 +219,7 @@ class _BlinkingDotState extends State<_BlinkingDot>
         height: AppSpacing.sm,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          color: Color(0xFFF26724),
+          color: AppColors.secondary,
         ),
       ),
     );

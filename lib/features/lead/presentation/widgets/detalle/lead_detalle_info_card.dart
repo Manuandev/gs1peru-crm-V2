@@ -74,10 +74,10 @@ class _InfoFila extends StatelessWidget {
       ),
       child: Row(
         children: [
-          SizedBox(width: 20, child: icono),
+          SizedBox(width: AppSizing.iconSearch, child: icono),
           const SizedBox(width: AppSpacing.sm),
           SizedBox(
-            width: 96,
+            width: AppSizing.infoLabelWidth,
             child: Text(
               etiqueta,
               style: AppTextStyles.bodySmall.copyWith(

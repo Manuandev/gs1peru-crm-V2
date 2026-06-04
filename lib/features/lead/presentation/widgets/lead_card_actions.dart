@@ -41,8 +41,8 @@ class LeadCardActions extends StatelessWidget {
         ],
         const SizedBox(width: AppSpacing.md),
         _LeadActionButton(
-          icon: lead.isFavorito ? Icons.star : Icons.star_border_rounded,
-          color: lead.isFavorito ? Colors.amber : Colors.grey,
+          icon: lead.isFavorito ? AppIcons.starFilled : AppIcons.star,
+          color: lead.isFavorito ? AppColors.favorito : AppColors.textDisabled,
           onTap: onStarTap,
         ),
       ],
@@ -71,16 +71,16 @@ class _LeadActionButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        width: 36,
-        height: 36,
+        width: AppSizing.buttonHeightSmall,
+        height: AppSizing.buttonHeightSmall,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: color.withValues(alpha: 0.1),
         ),
         alignment: Alignment.center,
         child: icon is IconData
-            ? Icon(icon as IconData, size: 20, color: color)
-            : FaIcon(icon, size: 16, color: color),
+            ? Icon(icon as IconData, size: AppSizing.iconSearch, color: color)
+            : FaIcon(icon, size: AppSizing.iconSm, color: color),
       ),
     );
   }

@@ -189,6 +189,9 @@ class AppColors {
   static const Color divider = grey200;
   static const Color cardShadow = Color(0x14000000);
 
+  /// Color del ícono de estrella/favorito activo (Amber 500 Material) — LeadCardActions
+  static const Color favorito = Color(0xFFFFC107);
+
   // ============================================================
   // SURFACE VARIANTS
   // ============================================================

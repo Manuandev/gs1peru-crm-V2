@@ -16,7 +16,7 @@ class LeadDetalleActions extends StatelessWidget {
         boxShadow: const [
           BoxShadow(
             color: AppColors.cardShadow,
-            blurRadius: 8,
+            blurRadius: AppSizing.shadowBlurMd,
             offset: Offset(0, -2),
           ),
         ],

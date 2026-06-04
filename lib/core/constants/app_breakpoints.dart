@@ -112,6 +112,16 @@ class AppSizing {
   static const double elevationHigh = 8.0;
 
   // ============================================================
+  // BLUR DE SOMBRAS (BoxShadow.blurRadius)
+  // ============================================================
+
+  /// Blur suave: 6dp — sombra de chips no seleccionados (LeadListFilterChips)
+  static const double shadowBlurSm = 6.0;
+
+  /// Blur medio: 8dp — sombra de barra inferior de detalle (LeadDetalleActions)
+  static const double shadowBlurMd = 8.0;
+
+  // ============================================================
   // TAMAÑOS DE ICONOS
   // ============================================================
 
@@ -189,6 +199,10 @@ class AppSizing {
   /// Ancho máximo para contenido ancho: 1200px
   /// Ejemplo: dashboards, tablas de datos
   static const double maxWidthWide = 1200.0;
+
+  /// Ancho de la columna de etiqueta en filas de información de detalle: 96dp
+  /// Alinea etiqueta y valor en _InfoFila (LeadDetalleInfoCard)
+  static const double infoLabelWidth = 96.0;
 
   // ============================================================
   // SPINNERS
@@ -320,6 +334,9 @@ class AppSizing {
   /// Usado en inputs enfocados, botones outlined, etc.
   static const double borderFocusWidth = 2.0;
 
+  /// Ancho del borde fino (hairline visible): 0.5dp — chips no seleccionados
+  static const double borderWidthThin = 0.5;
+
   // ============================================================
   // DRAWER HEADER — Avatar responsive
   // ============================================================
@@ -329,4 +346,11 @@ class AppSizing {
 
   /// Radio del avatar en drawer (orientación normal): 30dp
   static const double drawerAvatarRadius = 30.0;
+
+  // ============================================================
+  // STEPPER
+  // ============================================================
+
+  /// Diámetro del círculo de etapa en el stepper de detalle: 40dp — LeadDetalleStepper
+  static const double stepperCircleSize = 40.0;
 }

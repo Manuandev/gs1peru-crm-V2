@@ -30,7 +30,7 @@ class LeadCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.sm),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           border: Border.all(color: AppColors.border),
           boxShadow: const [
             BoxShadow(
@@ -82,13 +82,13 @@ class _LeadAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
-      radius: 24,
+      radius: AppSizing.avatarRadiusMd,
       backgroundColor: AvatarUtils.color(lead.nombreCompleto),
       child: Text(
         AvatarUtils.initials(lead.nombreCompleto),
         style: AppTextStyles.labelMedium.copyWith(
           color: AppColors.textOnDark,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppTextStyles.weightSemiBold,
         ),
       ),
     );
@@ -106,13 +106,6 @@ class _LeadInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final themeText = theme.textTheme;
-
-    final labelSmallStyle = themeText.labelSmall?.copyWith(
-      color: themeText.labelSmall!.color,
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -122,7 +115,7 @@ class _LeadInfo extends StatelessWidget {
               child: Text(
                 lead.nombreCompleto,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTextStyles.weightSemiBold,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -136,7 +129,7 @@ class _LeadInfo extends StatelessWidget {
                   Flexible(
                     child: Text(
                       CanalHelper.get(lead.idCanal).nombre,
-                      style: labelSmallStyle,
+                      style: AppTextStyles.labelSmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -211,7 +204,7 @@ class _LeadTimestampState extends State<_LeadTimestamp> {
           widget.lead.fechaHora.formatSinHoy(),
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTextStyles.weightMedium,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -219,7 +212,7 @@ class _LeadTimestampState extends State<_LeadTimestamp> {
           ElapsedTimeUtils.formatHyM(_elapsed),
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTextStyles.weightMedium,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),

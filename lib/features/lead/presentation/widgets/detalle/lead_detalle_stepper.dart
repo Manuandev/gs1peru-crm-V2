@@ -42,7 +42,7 @@ class LeadDetalleStepper extends StatelessWidget {
             ),
             if (i < _pasos.length - 1)
               Padding(
-                padding: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.only(top: AppSpacing.sm2),
                 child: Icon(
                   AppIcons.forward,
                   size: AppSizing.iconSm,
@@ -99,12 +99,12 @@ class _PasoEtapa extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: AppSizing.stepperCircleSize,
+          height: AppSizing.stepperCircleSize,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: bgCircle,
-            border: Border.all(color: borderColor, width: 2),
+            border: Border.all(color: borderColor, width: AppSizing.borderFocusWidth),
           ),
           child: Center(
             child: FaIcon(paso.icon, size: AppSizing.iconSm, color: iconColor),
@@ -115,7 +115,7 @@ class _PasoEtapa extends StatelessWidget {
           paso.label,
           style: AppTextStyles.labelSmall.copyWith(
             color: isActivo || isCompletado ? colorEstado : AppColors.textDisabled,
-            fontWeight: isActivo ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: isActivo ? AppTextStyles.weightSemiBold : AppTextStyles.weightRegular,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,

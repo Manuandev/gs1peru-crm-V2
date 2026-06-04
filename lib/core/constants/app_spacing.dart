@@ -110,6 +110,12 @@ class AppSpacing {
   /// 6px — espaciado entre chips/tags en Wrap (spacing y runSpacing)
   static const double chipGap = 6.0;
 
+  /// 14px — padding horizontal del chip de filtro en listas (LeadListFilterChips)
+  static const double chipPaddingH = 14.0;
+
+  /// 9px — padding vertical del chip de filtro en listas (LeadListFilterChips)
+  static const double chipPaddingV = 9.0;
+
   /// 80px — padding superior para pantallas de estado vacío (empty state)
   static const double emptyStateTop = 80.0;
 

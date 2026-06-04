@@ -238,10 +238,10 @@ class _PermissionCard extends StatelessWidget {
         status == PermissionStatus.restricted;
 
     final color = isGranted
-        ? Colors.green
+        ? AppColors.success
         : isBlocked
-        ? Colors.red
-        : Colors.orange;
+        ? AppColors.error
+        : AppColors.warning;
     final label = isGranted
         ? 'Concedido'
         : isBlocked

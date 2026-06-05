@@ -4,12 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
+/// Header fijo — no cambia cuando el usuario cambia la condición de pago.
+/// Solo el chip de condición actualiza su color (primary/success).
 class CobranzaFacturaHeader extends StatelessWidget {
   final CobranzaFacturaState state;
   const CobranzaFacturaHeader({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final esCredito = state.idCondicion == 'CR';
+    final chipColor = esCredito ? AppColors.primary : AppColors.success;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -24,205 +29,93 @@ class CobranzaFacturaHeader extends StatelessWidget {
           ),
         ],
       ),
-      child: state.esCredito
-          ? _LayoutCredito(state: state)
-          : _LayoutContado(state: state),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Layout Crédito: avatar+nombre+curso arriba, monto+chip debajo centrado
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _LayoutCredito extends StatelessWidget {
-  final CobranzaFacturaState state;
-  const _LayoutCredito({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _Avatar(nombre: state.nombre),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    state.nombre.toUpperCase(),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: AppTextStyles.weightBold,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    state.oportunidad,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // ── Avatar ────────────────────────────────────────────
+          CircleAvatar(
+            radius: AppSizing.avatarRadiusMd,
+            backgroundColor: AvatarUtils.color(state.nombre),
+            child: Text(
+              AvatarUtils.initials(state.nombre),
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textOnDark,
+                fontWeight: AppTextStyles.weightSemiBold,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
+          ),
+
+          const SizedBox(width: AppSpacing.sm),
+
+          // ── Nombre + curso ────────────────────────────────────
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Monto total',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                Text(
-                  'S/ ${state.montoTotal.toStringAsFixed(2)}',
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    color: AppColors.primary,
+                  state.nombre.toUpperCase(),
+                  style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: AppTextStyles.weightBold,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  state.oportunidad,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
-            _ChipCondicion(idCondicion: state.idCondicion, condicion: state.condicion),
-          ],
-        ),
-      ],
-    );
-  }
-}
+          ),
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Layout Contado: avatar+nombre+curso a la izquierda, monto+chip a la derecha
-// ─────────────────────────────────────────────────────────────────────────────
+          const SizedBox(width: AppSpacing.sm),
 
-class _LayoutContado extends StatelessWidget {
-  final CobranzaFacturaState state;
-  const _LayoutContado({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        _Avatar(nombre: state.nombre),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // ── Monto + chip ──────────────────────────────────────
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                state.nombre.toUpperCase(),
-                style: AppTextStyles.bodyMedium.copyWith(
+                'Monto total',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                'S/ ${state.montoTotal.toStringAsFixed(2)}',
+                style: AppTextStyles.titleLarge.copyWith(
+                  color: AppColors.primary,
                   fontWeight: AppTextStyles.weightBold,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxs),
-              Text(
-                state.oportunidad,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+              // Chip animado: solo el color cambia
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                decoration: BoxDecoration(
+                  color: chipColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSizing.radiusXl),
+                  border: Border.all(
+                    color: chipColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  state.condicion,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: chipColor,
+                    fontWeight: AppTextStyles.weightSemiBold,
+                  ),
+                ),
               ),
             ],
           ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              'Monto total',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            Text(
-              'S/ ${state.montoTotal.toStringAsFixed(2)}',
-              style: AppTextStyles.titleLarge.copyWith(
-                color: AppColors.primary,
-                fontWeight: AppTextStyles.weightBold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xxs),
-            _ChipCondicion(
-              idCondicion: state.idCondicion,
-              condicion: state.condicion,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Chip de condición de pago
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _ChipCondicion extends StatelessWidget {
-  final String idCondicion;
-  final String condicion;
-  const _ChipCondicion({required this.idCondicion, required this.condicion});
-
-  @override
-  Widget build(BuildContext context) {
-    final esCredito = idCondicion == 'CR';
-    final color = esCredito ? AppColors.primary : AppColors.success;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppSizing.radiusXl),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        condicion,
-        style: AppTextStyles.labelMedium.copyWith(
-          color: color,
-          fontWeight: AppTextStyles.weightSemiBold,
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Avatar compartido
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _Avatar extends StatelessWidget {
-  final String nombre;
-  const _Avatar({required this.nombre});
-
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: AppSizing.avatarRadiusMd,
-      backgroundColor: AvatarUtils.color(nombre),
-      child: Text(
-        AvatarUtils.initials(nombre),
-        style: AppTextStyles.labelMedium.copyWith(
-          color: AppColors.textOnDark,
-          fontWeight: AppTextStyles.weightSemiBold,
-        ),
+        ],
       ),
     );
   }

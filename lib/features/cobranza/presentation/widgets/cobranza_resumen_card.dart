@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
+/// Siempre visible. Anima el contenido cuando cambia la condición de pago.
 class CobranzaResumenCard extends StatelessWidget {
   final CobranzaFacturaState state;
   const CobranzaResumenCard({super.key, required this.state});
@@ -13,16 +14,49 @@ class CobranzaResumenCard extends StatelessWidget {
     return Column(
       children: [
         // ── Resumen calculado ──────────────────────────────────
-        _CardContenido(
-          child: state.esCredito
-              ? _ResumenCredito(state: state)
-              : _ResumenContado(state: state),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.cardShadow,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: state.esCredito
+                ? _ResumenCredito(key: const ValueKey('cr'), state: state)
+                : _ResumenContado(key: const ValueKey('co'), state: state),
+          ),
         ),
 
         const SizedBox(height: AppSpacing.sm),
 
         // ── Aviso informativo ──────────────────────────────────
-        _CardContenido(
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.cardShadow,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               Icon(
@@ -50,12 +84,12 @@ class CobranzaResumenCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Resumen Crédito
+// Resumen Crédito — ícono + título primary + filas
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ResumenCredito extends StatelessWidget {
   final CobranzaFacturaState state;
-  const _ResumenCredito({required this.state});
+  const _ResumenCredito({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +124,7 @@ class _ResumenCredito extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _FilaResumen(
           label: 'Importe comprobante',
-          valor: 'S/ ${state.importeCredito.toStringAsFixed(2)}',
+          valor: 'S/ ${state.montoTotal.toStringAsFixed(2)}',
         ),
         _FilaResumen(
           label: 'Detracción 12%',
@@ -101,22 +135,19 @@ class _ResumenCredito extends StatelessWidget {
           valor: 'S/ ${state.importeCredito.toStringAsFixed(2)}',
           destacado: true,
         ),
-        _FilaResumen(
-          label: 'N° cuotas',
-          valor: '${state.numCuotas}',
-        ),
+        _FilaResumen(label: 'N° cuotas', valor: '${state.numCuotas}'),
       ],
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Resumen Contado
+// Resumen Contado — título + filas
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ResumenContado extends StatelessWidget {
   final CobranzaFacturaState state;
-  const _ResumenContado({required this.state});
+  const _ResumenContado({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -149,34 +180,6 @@ class _ResumenContado extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _CardContenido extends StatelessWidget {
-  final Widget child;
-  const _CardContenido({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
 
 class _FilaResumen extends StatelessWidget {
   final String label;

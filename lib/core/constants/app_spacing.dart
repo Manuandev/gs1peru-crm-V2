@@ -40,9 +40,9 @@ class AppSpacing {
   /// Uso: Espacio interno de botones, gap entre elementos relacionados
   static const double sm = 8.0;
 
-  /// Pequeño: 12px
+  /// Pequeño: 10px
   /// Uso: Espacio interno entre elementos relacionados
-  static const double sm2 = 12.0;
+  static const double sm2 = 10.0;
 
   /// Medio: 16px (BASE)
   /// Uso: Padding estándar de contenedores, separación entre inputs

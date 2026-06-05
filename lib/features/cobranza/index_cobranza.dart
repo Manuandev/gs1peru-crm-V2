@@ -39,8 +39,7 @@ export 'presentation/widgets/cobranza_list_view.dart';
 export 'presentation/widgets/cobranza_summary_cards.dart';
 export 'presentation/widgets/cobranza_factura_view.dart';
 export 'presentation/widgets/cobranza_factura_header.dart';
-export 'presentation/widgets/cobranza_campos_credito.dart';
-export 'presentation/widgets/cobranza_campos_contado.dart';
+export 'presentation/widgets/cobranza_campos_extra.dart';
 export 'presentation/widgets/cobranza_resumen_card.dart';
 
 export 'presentation/widgets/detalle/cobranza_detalle_view.dart';

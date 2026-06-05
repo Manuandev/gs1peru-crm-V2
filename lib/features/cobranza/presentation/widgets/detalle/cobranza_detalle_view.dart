@@ -11,15 +11,17 @@ class CobranzaDetalleView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Detalle de cobro'),
-        leading: IconButton(
-          icon: Icon(AppIcons.back, color: AppColors.textOnDark),
-          onPressed: () => Navigator.of(context).pop(),
+    return BasePage(
+      title: 'Detalle de cobro',
+      drawerSide: DrawerSide.none,
+      bodyPadding: EdgeInsets.zero,
+      appBarLeadingButtons: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.goBack(),
         ),
-      ),
+      ],
+
       body: BlocBuilder<CobranzaDetalleBloc, CobranzaDetalleState>(
         builder: (context, state) {
           if (state is CobranzaDetalleLoading ||
@@ -30,9 +32,9 @@ class CobranzaDetalleView extends StatelessWidget {
           if (state is CobranzaDetalleError) {
             return AppErrorView(
               message: state.mensaje,
-              onRetry: () => context
-                  .read<CobranzaDetalleBloc>()
-                  .add(CobranzaDetalleStarted(0)),
+              onRetry: () => context.read<CobranzaDetalleBloc>().add(
+                CobranzaDetalleStarted(0),
+              ),
             );
           }
 
@@ -105,9 +107,7 @@ class _BottomActionButton extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.border),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: SizedBox(
         width: double.infinity,
@@ -122,10 +122,7 @@ class _BottomActionButton extends StatelessWidget {
             condicion: detalle.condicion,
           ),
           icon: Icon(config.icono, size: AppSizing.iconMd),
-          label: Text(
-            config.texto,
-            style: AppTextStyles.button,
-          ),
+          label: Text(config.texto, style: AppTextStyles.button),
           style: FilledButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -149,10 +146,7 @@ class _BottomActionButton extends StatelessWidget {
           icono: AppIcons.checkCircle,
         );
       case 'PP':
-        return _BotonConfig(
-          texto: 'Confirmar pago',
-          icono: AppIcons.moneda,
-        );
+        return _BotonConfig(texto: 'Confirmar pago', icono: AppIcons.moneda);
       default:
         return _BotonConfig(texto: '', icono: AppIcons.check);
     }

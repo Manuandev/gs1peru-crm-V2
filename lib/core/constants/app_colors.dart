@@ -358,6 +358,28 @@ class AppColors {
   static const Color datoInteresBg = Color(0xFFE8F5E9);
 
   // ============================================================
+  // OPACIDADES SEMÁNTICAS COBRANZA — helpers para fondos suaves de iconos
+  // ============================================================
+
+  /// Success con opacidad — fondo suave del chip "Importe a crédito" en PlanResumenCard
+  static Color successWithOpacity(double opacity) =>
+      // ignore: deprecated_member_use
+      success.withOpacity(opacity);
+
+  /// Secondary con opacidad — fondo suave del chip "Detracción" en PlanResumenCard
+  static Color secondaryWithOpacity(double opacity) =>
+      // ignore: deprecated_member_use
+      secondary.withOpacity(opacity);
+
+  /// Morado Material 700 — ícono del chip "Cuotas" en PlanResumenCard
+  static const Color purple = Color(0xFF7B1FA2);
+
+  /// Morado con opacidad — fondo suave del chip "Cuotas" en PlanResumenCard
+  static Color purpleWithOpacity(double opacity) =>
+      // ignore: deprecated_member_use
+      purple.withOpacity(opacity);
+
+  // ============================================================
   // SNACKBAR / TOAST — Paletas semánticas modo oscuro
   // Fondos oscuros consistentes para notificaciones en ambos temas.
   // Referenciados en app_snackbar.dart (_SnackConfig).

@@ -132,6 +132,21 @@ class AppRouter {
       },
     ),
 
+    AppRoutes.planCredito: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return CobranzaPlanPage(
+          idCobranza: args['idCobranza'] as int,
+          nombre: args['nombre'] as String,
+          oportunidad: args['oportunidad'] as String,
+          montoTotal: args['montoTotal'] as double,
+          detraccion: args['detraccion'] as double,
+          importeCredito: args['importeCredito'] as double,
+        );
+      },
+    ),
+
     AppRoutes.mediaPicker: RouteDefinition<List<AssetEntity>>(
       transition: TransitionType.slideRight,
       builder: (context) {

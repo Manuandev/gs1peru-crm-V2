@@ -1,10 +1,14 @@
 // lib/features/cobranza/presentation/bloc/cobranza_factura_bloc.dart
 
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaFacturaBloc
     extends Bloc<CobranzaFacturaEvent, CobranzaFacturaState> {
+  final GuardarBorradorUseCase _guardarBorrador;
+  final FacturarContadoUseCase _facturarContado;
+
   CobranzaFacturaBloc({
     required int idCobranza,
     required String nombre,
@@ -12,7 +16,11 @@ class CobranzaFacturaBloc
     required double montoTotal,
     required String idCondicion,
     required String condicion,
-  }) : super(
+    required GuardarBorradorUseCase guardarBorradorUseCase,
+    required FacturarContadoUseCase facturarContadoUseCase,
+  })  : _guardarBorrador = guardarBorradorUseCase,
+        _facturarContado = facturarContadoUseCase,
+        super(
           CobranzaFacturaState(
             idCobranza: idCobranza,
             nombre: nombre,
@@ -28,8 +36,8 @@ class CobranzaFacturaBloc
     on<DescripcionChanged>(_onDescripcionChanged);
     on<HojaAceptacionChanged>(_onHojaChanged);
     on<PlanValidarPressed>(_onPlanValidar);
-    on<GuardarBorradorPressed>(_onGuardarBorrador);
-    on<FacturarPressed>(_onFacturar);
+    on<GuardarBorradorPressed>(_onGuardarBorradorPressed);
+    on<FacturarPressed>(_onFacturarPressed);
   }
 
   void _onCondicionChanged(
@@ -41,6 +49,7 @@ class CobranzaFacturaBloc
       condicion: event.condicion,
       planValidado: false,
       fechaVencimiento: '',
+      status: CobranzaFacturaStatus.idle,
     ));
   }
 
@@ -73,21 +82,91 @@ class CobranzaFacturaBloc
     PlanValidarPressed event,
     Emitter<CobranzaFacturaState> emit,
   ) {
-    // TODO: conectar validación real con el endpoint
     emit(state.copyWith(planValidado: true));
   }
 
-  void _onGuardarBorrador(
+  Future<void> _onGuardarBorradorPressed(
     GuardarBorradorPressed event,
     Emitter<CobranzaFacturaState> emit,
-  ) {
-    // TODO: implementar guardado de borrador
+  ) async {
+    emit(state.copyWith(status: CobranzaFacturaStatus.loading));
+    try {
+      final result = await _guardarBorrador(state.idCobranza);
+      switch (result) {
+        case CrudOk():
+          emit(state.copyWith(status: CobranzaFacturaStatus.borradorGuardado));
+        case CrudAlert(:final message):
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: message,
+          ));
+        case CrudError(:final message):
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: message,
+          ));
+        case CrudNoInternet():
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: 'Sin conexión a Internet.',
+          ));
+        case CrudEmpty():
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: 'Sin respuesta del servidor.',
+          ));
+      }
+    } catch (e, st) {
+      addError(e, st);
+      emit(state.copyWith(
+        status: CobranzaFacturaStatus.error,
+        mensajeError: e.toString(),
+      ));
+    }
   }
 
-  void _onFacturar(
+  Future<void> _onFacturarPressed(
     FacturarPressed event,
     Emitter<CobranzaFacturaState> emit,
-  ) {
-    // TODO: implementar facturación real
+  ) async {
+    if (state.esCredito) {
+      emit(state.copyWith(status: CobranzaFacturaStatus.continuarPlan));
+      return;
+    }
+
+    emit(state.copyWith(status: CobranzaFacturaStatus.loading));
+    try {
+      final result = await _facturarContado(state.idCobranza);
+      switch (result) {
+        case CrudOk():
+          emit(state.copyWith(status: CobranzaFacturaStatus.facturadoOk));
+        case CrudAlert(:final message):
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: message,
+          ));
+        case CrudError(:final message):
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: message,
+          ));
+        case CrudNoInternet():
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: 'Sin conexión a Internet.',
+          ));
+        case CrudEmpty():
+          emit(state.copyWith(
+            status: CobranzaFacturaStatus.error,
+            mensajeError: 'Sin respuesta del servidor.',
+          ));
+      }
+    } catch (e, st) {
+      addError(e, st);
+      emit(state.copyWith(
+        status: CobranzaFacturaStatus.error,
+        mensajeError: e.toString(),
+      ));
+    }
   }
 }

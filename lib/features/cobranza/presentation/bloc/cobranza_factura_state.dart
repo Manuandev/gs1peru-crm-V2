@@ -2,6 +2,17 @@
 
 import 'package:app_crm/core/index_core.dart';
 
+// ── Estado de operación del formulario de facturación ────────────────────────
+
+enum CobranzaFacturaStatus {
+  idle,
+  loading,
+  borradorGuardado,
+  facturadoOk,
+  continuarPlan,
+  error,
+}
+
 // ── Modelo para el combo de condición de pago ────────────────────────────────
 
 class CondicionItem with Comboable {
@@ -36,6 +47,10 @@ class CobranzaFacturaState {
   final String hojaAceptacion;
   final bool planValidado;
 
+  // ── Estado de la operación ──────────────────────────────────
+  final CobranzaFacturaStatus status;
+  final String? mensajeError;
+
   // ── Calculados para el resumen ──────────────────────────────
   double get detraccion => 0.0;
   double get importeCredito => montoTotal - detraccion;
@@ -57,6 +72,8 @@ class CobranzaFacturaState {
     this.descripcion = '',
     this.hojaAceptacion = '',
     this.planValidado = false,
+    this.status = CobranzaFacturaStatus.idle,
+    this.mensajeError,
   });
 
   CobranzaFacturaState copyWith({
@@ -67,6 +84,8 @@ class CobranzaFacturaState {
     String? descripcion,
     String? hojaAceptacion,
     bool? planValidado,
+    CobranzaFacturaStatus? status,
+    String? mensajeError,
   }) {
     return CobranzaFacturaState(
       idCobranza: idCobranza,
@@ -80,6 +99,8 @@ class CobranzaFacturaState {
       descripcion: descripcion ?? this.descripcion,
       hojaAceptacion: hojaAceptacion ?? this.hojaAceptacion,
       planValidado: planValidado ?? this.planValidado,
+      status: status ?? this.status,
+      mensajeError: mensajeError ?? this.mensajeError,
     );
   }
 }

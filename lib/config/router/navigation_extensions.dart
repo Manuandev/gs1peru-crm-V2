@@ -69,6 +69,22 @@ extension NavigationExtensions on BuildContext {
         'idCondicion': idCondicion,
         'condicion': condicion,
       });
+
+  Future<void> goToPlanCredito({
+    required int idCobranza,
+    required String nombre,
+    required String oportunidad,
+    required double montoTotal,
+    required double detraccion,
+    required double importeCredito,
+  }) => _push(AppRoutes.planCredito, arguments: {
+        'idCobranza': idCobranza,
+        'nombre': nombre,
+        'oportunidad': oportunidad,
+        'montoTotal': montoTotal,
+        'detraccion': detraccion,
+        'importeCredito': importeCredito,
+      });
   Future<void> goToSettings() => clearAndPush(AppRoutes.settings);
   Future<void> goToChangePassword() => clearAndPush(AppRoutes.changePassword);
 

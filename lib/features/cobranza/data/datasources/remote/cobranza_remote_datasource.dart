@@ -1,5 +1,6 @@
 // lib/features/cobranza/data/datasources/remote/cobranza_remote_datasource.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaRemoteDatasource {
@@ -136,4 +137,34 @@ class CobranzaRemoteDatasource {
           telefono: '987654327',
         ),
       ];
+
+  Future<CrudResult> guardarBorrador(int idCobranza) async {
+    // TODO: conectar con endpoint real
+    // final body = '${[_session.codUser, idCobranza, 'GB'].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
+    // final raw = await _api.postJsonGetText(ApiConstants.urlCobranzasLst, body);
+    // return parseCrudResponse(raw);
+    await Future.delayed(const Duration(milliseconds: 500));
+    return const CrudOk('Borrador guardado correctamente');
+  }
+
+  Future<CrudResult> facturarContado(int idCobranza) async {
+    // TODO: conectar con endpoint real
+    // final body = '${[_session.codUser, idCobranza, 'FC'].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
+    // final raw = await _api.postJsonGetText(ApiConstants.urlCobranzasLst, body);
+    // return parseCrudResponse(raw);
+    await Future.delayed(const Duration(milliseconds: 500));
+    return const CrudOk('Factura generada correctamente');
+  }
+
+  Future<CrudResult> guardarPlanCredito(
+    int idCobranza,
+    List<CuotaPlan> cuotas,
+  ) async {
+    // TODO: conectar con endpoint real
+    // Serializar: idCobranza + cuotas separadas por AppConstants.sepRegistros
+    // final body = ...
+    // return parseCrudResponse(raw);
+    await Future.delayed(const Duration(milliseconds: 500));
+    return const CrudOk('Plan de crédito guardado correctamente');
+  }
 }

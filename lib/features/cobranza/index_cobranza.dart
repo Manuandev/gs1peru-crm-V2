@@ -7,6 +7,8 @@ export 'data/models/cobranza_model.dart';
 export 'data/repositories/cobranza_repository_impl.dart';
 
 export 'domain/entities/cobranza.dart';
+export 'domain/entities/cobranza_detalle.dart';
+export 'domain/entities/historial_cobranza.dart';
 
 export 'domain/enums/cobranza_chip_filtro.dart';
 
@@ -18,10 +20,32 @@ export 'presentation/bloc/cobranza_list_bloc.dart';
 export 'presentation/bloc/cobranza_list_event.dart';
 export 'presentation/bloc/cobranza_list_state.dart';
 
+export 'presentation/bloc/cobranza_detalle_bloc.dart';
+export 'presentation/bloc/cobranza_detalle_event.dart';
+export 'presentation/bloc/cobranza_detalle_state.dart';
+
+export 'presentation/bloc/cobranza_factura_bloc.dart';
+export 'presentation/bloc/cobranza_factura_event.dart';
+export 'presentation/bloc/cobranza_factura_state.dart';
+
 export 'presentation/pages/cobranza_list_page.dart';
+export 'presentation/pages/cobranza_detalle_page.dart';
+export 'presentation/pages/cobranza_factura_page.dart';
 
 export 'presentation/widgets/cobranza_card.dart';
 export 'presentation/widgets/cobranza_filter_chips.dart';
 export 'presentation/widgets/cobranza_list_portrait.dart';
 export 'presentation/widgets/cobranza_list_view.dart';
 export 'presentation/widgets/cobranza_summary_cards.dart';
+export 'presentation/widgets/cobranza_factura_view.dart';
+export 'presentation/widgets/cobranza_factura_header.dart';
+export 'presentation/widgets/cobranza_campos_credito.dart';
+export 'presentation/widgets/cobranza_campos_contado.dart';
+export 'presentation/widgets/cobranza_resumen_card.dart';
+
+export 'presentation/widgets/detalle/cobranza_detalle_view.dart';
+export 'presentation/widgets/detalle/cobranza_detalle_info_card.dart';
+export 'presentation/widgets/detalle/cobranza_detalle_stepper.dart';
+export 'presentation/widgets/detalle/cobranza_detalle_acciones.dart';
+export 'presentation/widgets/detalle/cobranza_detalle_datos_clave.dart';
+export 'presentation/widgets/detalle/cobranza_detalle_historial.dart';

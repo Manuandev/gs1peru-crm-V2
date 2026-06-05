@@ -28,6 +28,7 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/cobranza/index_cobranza.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/home/index_home.dart';
@@ -69,6 +70,11 @@ class AppWidget extends StatelessWidget {
         // ── CHATS REPOSITORY ──────────────────────────────────
         RepositoryProvider<ChatRepository>(
           create: (context) => ChatRepositoryImpl(ChatRemoteDatasource()),
+        ),
+
+        // ── COBRANZA REPOSITORY ───────────────────────────────
+        RepositoryProvider<CobranzaRepository>(
+          create: (_) => CobranzaRepositoryImpl(CobranzaRemoteDatasource()),
         ),
       ],
 

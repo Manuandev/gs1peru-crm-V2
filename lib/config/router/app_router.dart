@@ -9,6 +9,7 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/settings/index_settings.dart';
+import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 // ── Tipos de transición ────────────────────────────────────────
 
@@ -34,7 +35,7 @@ class RouteDefinition<T> {
     return PageRouteBuilder<T>(
       settings: settings,
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, _, __) => builder(context),
+      pageBuilder: (context, _, _) => builder(context),
       transitionsBuilder: (context, animation, _, child) =>
           AppRouter._applyTransition(transition, animation, child),
     );
@@ -107,8 +108,28 @@ class AppRouter {
     //   transition: TransitionType.fade,
     // ),
     AppRoutes.cobranza: RouteDefinition(
-      builder: (_) => const UnderConstructionPage(routeName: 'Cobranza'),
-      transition: TransitionType.fade,
+      builder: (_) => const CobranzaListPage(),
+    ),
+    AppRoutes.detalleCobranza: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return CobranzaDetallePage(idCobranza: args['idCobranza'] as int);
+      },
+    ),
+    AppRoutes.facturarCobranza: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return CobranzaFacturaPage(
+          idCobranza: args['idCobranza'] as int,
+          nombre: args['nombre'] as String,
+          oportunidad: args['oportunidad'] as String,
+          montoTotal: args['montoTotal'] as double,
+          idCondicion: args['idCondicion'] as String,
+          condicion: args['condicion'] as String,
+        );
+      },
     ),
 
     AppRoutes.mediaPicker: RouteDefinition<List<AssetEntity>>(

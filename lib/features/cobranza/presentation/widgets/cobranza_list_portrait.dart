@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
@@ -47,7 +48,9 @@ class CobranzaListPortrait extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: CobranzaCard(
                         cobranza: cobranza,
-                        onVerTap: () {},
+                        onVerTap: () => context.goToDetalleCobranza(
+                          idCobranza: cobranza.idCobranza,
+                        ),
                         onWhatsAppTap: () {},
                       ),
                     );

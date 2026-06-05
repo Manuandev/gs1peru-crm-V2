@@ -13,6 +13,7 @@ class CobranzaListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       onPop: () => context.goToHome(),
+      bodyPadding: EdgeInsets.zero,
       title: 'Cobranzas',
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
@@ -31,8 +32,9 @@ class CobranzaListView extends StatelessWidget {
           if (state is CobranzaListError) {
             return AppErrorView(
               message: state.message,
-              onRetry: () =>
-                  context.read<CobranzaListBloc>().add(const CobranzaListRefresh()),
+              onRetry: () => context.read<CobranzaListBloc>().add(
+                const CobranzaListRefresh(),
+              ),
             );
           }
 

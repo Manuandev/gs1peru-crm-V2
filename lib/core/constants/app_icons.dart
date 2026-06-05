@@ -461,6 +461,19 @@ class AppIcons {
   /// Flecha arriba (teclado, redondeada) — header de sección colapsada
   static const IconData arrowUp = Icons.keyboard_arrow_up_rounded;
 
+  // ============================================================
+  // COBRANZA
+  // ============================================================
+
+  /// Escudo / seguridad — botón "Validar plan de crédito" en CobranzaFactura
+  static const IconData escudo = Icons.security_rounded;
+
+  /// Gráfico de torta — ícono del resumen de crédito en CobranzaFactura
+  static const IconData pieChart = Icons.pie_chart_outline_rounded;
+
+  /// Archivo con signo pesos — botón "Facturar ahora" y adjuntar hoja
+  static const IconData fileFactura = Icons.receipt_long_rounded;
+
   // ── Campos de lead (ChatDetailDatosLead) ────────────────────────────────
 
   /// Bandera redondeada — ícono del campo Estado en datos del lead

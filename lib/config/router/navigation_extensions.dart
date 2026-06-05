@@ -51,6 +51,24 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToPropuestas() => clearAndPush(AppRoutes.propuestas);
   Future<void> goToChats() => clearAndPush(AppRoutes.chats);
   Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
+  Future<void> goToDetalleCobranza({required int idCobranza}) =>
+      _push(AppRoutes.detalleCobranza, arguments: {'idCobranza': idCobranza});
+
+  Future<void> goToFacturarCobranza({
+    required int idCobranza,
+    required String nombre,
+    required String oportunidad,
+    required double montoTotal,
+    required String idCondicion,
+    required String condicion,
+  }) => _push(AppRoutes.facturarCobranza, arguments: {
+        'idCobranza': idCobranza,
+        'nombre': nombre,
+        'oportunidad': oportunidad,
+        'montoTotal': montoTotal,
+        'idCondicion': idCondicion,
+        'condicion': condicion,
+      });
   Future<void> goToSettings() => clearAndPush(AppRoutes.settings);
   Future<void> goToChangePassword() => clearAndPush(AppRoutes.changePassword);
 

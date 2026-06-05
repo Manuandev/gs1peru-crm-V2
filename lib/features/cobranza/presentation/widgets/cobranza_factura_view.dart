@@ -60,7 +60,7 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                     children: [
                       // ── 1. Header fijo ─────────────────────────
                       CobranzaFacturaHeader(state: state),
-                      const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.sm),
 
                       // ── 2. Card de formulario ──────────────────
                       _FormCard(
@@ -83,7 +83,7 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                               }
                             },
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.sm),
 
                           // Extra ARRIBA — solo crédito muestra fecha+validar
                           CobranzaCamposExtra(esArriba: true, state: state),
@@ -98,7 +98,7 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                                 .read<CobranzaFacturaBloc>()
                                 .add(OcChanged(v)),
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.sm),
 
                           // Descripción — siempre
                           _CampoCompartido(
@@ -110,7 +110,7 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                                 .read<CobranzaFacturaBloc>()
                                 .add(DescripcionChanged(v)),
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.sm),
 
                           // Hoja de aceptación — siempre
                           _CampoCompartido(
@@ -127,7 +127,7 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                           CobranzaCamposExtra(esArriba: false, state: state),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.sm),
 
                       // ── 3. Resumen + aviso ─────────────────────
                       CobranzaResumenCard(state: state),
@@ -159,7 +159,7 @@ class _FormCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -206,7 +206,7 @@ class _CampoCompartido extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTextStyles.bodySmall.copyWith(
+          style: AppTextStyles.labelMedium.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
@@ -215,6 +215,7 @@ class _CampoCompartido extends StatelessWidget {
           label: '',
           hint: hint,
           controller: controller,
+          minLines: 1,
           maxLines: 3,
           maxLength: maxChars,
           onChanged: onChanged,

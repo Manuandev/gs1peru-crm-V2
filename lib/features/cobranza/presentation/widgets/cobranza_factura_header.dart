@@ -16,7 +16,7 @@ class CobranzaFacturaHeader extends StatelessWidget {
     final chipColor = esCredito ? AppColors.primary : AppColors.success;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -54,14 +54,14 @@ class CobranzaFacturaHeader extends StatelessWidget {
               children: [
                 Text(
                   state.nombre.toUpperCase(),
-                  style: AppTextStyles.bodyMedium.copyWith(
+                  style: AppTextStyles.labelMedium.copyWith(
                     fontWeight: AppTextStyles.weightBold,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   state.oportunidad,
-                  style: AppTextStyles.bodySmall.copyWith(
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                   maxLines: 2,
@@ -85,9 +85,9 @@ class CobranzaFacturaHeader extends StatelessWidget {
               ),
               Text(
                 'S/ ${state.montoTotal.toStringAsFixed(2)}',
-                style: AppTextStyles.titleLarge.copyWith(
+                style: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.primary,
-                  fontWeight: AppTextStyles.weightBold,
+                  fontWeight: AppTextStyles.weightSemiBold,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxs),
@@ -95,8 +95,8 @@ class CobranzaFacturaHeader extends StatelessWidget {
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xxs,
                 ),
                 decoration: BoxDecoration(
                   color: chipColor.withValues(alpha: 0.1),

@@ -16,7 +16,7 @@ class CobranzaResumenCard extends StatelessWidget {
         // ── Resumen calculado ──────────────────────────────────
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -44,7 +44,7 @@ class CobranzaResumenCard extends StatelessWidget {
         // ── Aviso informativo ──────────────────────────────────
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -99,15 +99,15 @@ class _ResumenCredito extends StatelessWidget {
         Row(
           children: [
             Container(
-              width: AppSizing.avatarMd,
-              height: AppSizing.avatarMd,
+              width: AppSizing.buttonHeightSmall,
+              height: AppSizing.buttonHeightSmall,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primaryWithOpacity(0.08),
               ),
               child: Icon(
                 AppIcons.pieChart,
-                size: AppSizing.iconMd,
+                size: AppSizing.iconSm,
                 color: AppColors.primary,
               ),
             ),
@@ -195,7 +195,7 @@ class _FilaResumen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

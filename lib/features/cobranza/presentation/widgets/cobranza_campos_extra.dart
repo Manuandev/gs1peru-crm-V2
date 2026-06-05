@@ -102,7 +102,7 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
         // ── Fecha de vencimiento ─────────────────────────────
         Text(
           'Fecha de vencimiento',
-          style: AppTextStyles.bodySmall.copyWith(
+          style: AppTextStyles.labelMedium.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
@@ -113,20 +113,20 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
           onTap: _seleccionarFecha,
           decoration: InputDecoration(
             hintText: 'dd/mm/aaaa',
-            hintStyle: AppTextStyles.bodySmall.copyWith(
+            hintStyle: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textDisabled,
             ),
             suffixIcon: IconButton(
               icon: Icon(
                 AppIcons.calendar,
-                size: AppSizing.iconMd,
+                size: AppSizing.iconSm,
                 color: AppColors.primary,
               ),
               onPressed: _seleccionarFecha,
             ),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm2,
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -144,13 +144,14 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
               ),
             ),
           ),
-          style: AppTextStyles.bodySmall,
+          style: AppTextStyles.bodyMedium,
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
         // ── Botón validar plan ───────────────────────────────
         CustomPrimaryButton(
           text: 'Validar plan de crédito',
+          height: AppSizing.buttonHeightSmall,
           icon: Icon(
             AppIcons.escudo,
             size: AppSizing.iconSm,
@@ -183,7 +184,7 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
           ),
         ],
 
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
       ],
     );
   }

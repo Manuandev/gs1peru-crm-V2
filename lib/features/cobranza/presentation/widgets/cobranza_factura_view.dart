@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 /// StatefulWidget — necesario para los 3 controllers de los campos compartidos.
@@ -41,15 +43,16 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
   Widget build(BuildContext context) {
     return BlocBuilder<CobranzaFacturaBloc, CobranzaFacturaState>(
       builder: (context, state) {
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            title: Text(state.esCredito ? 'Facturar crédito' : 'Facturar'),
-            leading: IconButton(
-              icon: Icon(AppIcons.back, color: AppColors.textOnDark),
-              onPressed: () => Navigator.of(context).pop(),
+        return BasePage(
+          drawerSide: DrawerSide.none,
+          bodyPadding: EdgeInsets.zero,
+          title: state.esCredito ? 'Facturar crédito' : 'Facturar',
+          appBarLeadingButtons: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () => context.goBack(),
             ),
-          ),
+          ],
           body: Column(
             children: [
               Expanded(
@@ -75,11 +78,11 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                             onChanged: (item) {
                               if (item != null) {
                                 context.read<CobranzaFacturaBloc>().add(
-                                      CondicionChanged(
-                                        item.fields[0],
-                                        item.fields[1],
-                                      ),
-                                    );
+                                  CondicionChanged(
+                                    item.fields[0],
+                                    item.fields[1],
+                                  ),
+                                );
                               }
                             },
                           ),
@@ -91,7 +94,8 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                           // O/C — siempre
                           _CampoCompartido(
                             label: 'O/C',
-                            hint: 'Ingresa el número de orden de compra (opcional)',
+                            hint:
+                                'Ingresa el número de orden de compra (opcional)',
                             controller: _ocCtrl,
                             maxChars: _maxChars,
                             onChanged: (v) => context
@@ -131,7 +135,6 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
 
                       // ── 3. Resumen + aviso ─────────────────────
                       CobranzaResumenCard(state: state),
-                      const SizedBox(height: AppSpacing.lg),
                     ],
                   ),
                 ),
@@ -221,18 +224,18 @@ class _CampoCompartido extends StatelessWidget {
           onChanged: onChanged,
         ),
         // Contador de caracteres
-        Align(
-          alignment: Alignment.centerRight,
-          child: ValueListenableBuilder<TextEditingValue>(
-            valueListenable: controller,
-            builder: (_, value, __) => Text(
-              '${value.text.length}/$maxChars',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
+        // Align(
+        //   alignment: Alignment.centerRight,
+        //   child: ValueListenableBuilder<TextEditingValue>(
+        //     valueListenable: controller,
+        //     builder: (_, value, __) => Text(
+        //       '${value.text.length}/$maxChars',
+        //       style: AppTextStyles.labelSmall.copyWith(
+        //         color: AppColors.textSecondary,
+        //       ),
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }
@@ -266,9 +269,9 @@ class _BotonesFactura extends StatelessWidget {
           // Guardar borrador
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () => context
-                  .read<CobranzaFacturaBloc>()
-                  .add(const GuardarBorradorPressed()),
+              onPressed: () => context.read<CobranzaFacturaBloc>().add(
+                const GuardarBorradorPressed(),
+              ),
               icon: Icon(AppIcons.save, size: AppSizing.iconSm),
               label: const Text('Guardar borrador'),
               style: OutlinedButton.styleFrom(
@@ -284,9 +287,9 @@ class _BotonesFactura extends StatelessWidget {
           // Continuar / Facturar ahora
           Expanded(
             child: FilledButton.icon(
-              onPressed: () => context
-                  .read<CobranzaFacturaBloc>()
-                  .add(const FacturarPressed()),
+              onPressed: () => context.read<CobranzaFacturaBloc>().add(
+                const FacturarPressed(),
+              ),
               icon: Icon(
                 state.esCredito ? AppIcons.forward : AppIcons.fileFactura,
                 size: AppSizing.iconSm,

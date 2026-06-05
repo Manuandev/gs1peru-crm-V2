@@ -89,6 +89,8 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   // Si el texto ingresado debe convertirse automáticamente a mayúsculas
   final bool isUpperCase;
+  // Callback al tocar el campo
+  final VoidCallback? onTap;
 
   const CustomTextField({
     super.key,
@@ -116,6 +118,7 @@ class CustomTextField extends StatelessWidget {
     this.focusNode,
     this.obscureText = false,
     this.isUpperCase = false,
+    this.onTap,
   });
 
   @override
@@ -136,6 +139,7 @@ class CustomTextField extends StatelessWidget {
     }
 
     return TextFormField(
+      onTap: onTap,
       controller: controller,
       validator: validator,
       onChanged: onChanged,

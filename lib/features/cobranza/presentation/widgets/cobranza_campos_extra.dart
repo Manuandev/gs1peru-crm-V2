@@ -72,7 +72,7 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
   Future<void> _seleccionarFecha() async {
     final inicial = widget.state.fechaVencimiento.isNotEmpty
         ? DateFormatter.parseDate(widget.state.fechaVencimiento) ??
-            DateTime.now().add(const Duration(days: 30))
+              DateTime.now().add(const Duration(days: 30))
         : DateTime.now().add(const Duration(days: 30));
 
     final fecha = await showDatePicker(
@@ -87,9 +87,9 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
       final formateada = fecha.format(AppDateFormat.shortDate);
       _fechaCtrl.text = formateada;
       if (mounted) {
-        context
-            .read<CobranzaFacturaBloc>()
-            .add(FechaVencimientoChanged(formateada));
+        context.read<CobranzaFacturaBloc>().add(
+          FechaVencimientoChanged(formateada),
+        );
       }
     }
   }
@@ -107,60 +107,71 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        TextFormField(
+        // TextFormField(
+        //   controller: _fechaCtrl,
+        //   readOnly: true,
+        //   onTap: _seleccionarFecha,
+        //   decoration: InputDecoration(
+        //     hintText: 'dd/mm/aaaa',
+        //     hintStyle: AppTextStyles.bodyMedium.copyWith(
+        //       color: AppColors.textDisabled,
+        //     ),
+        //     suffixIcon: IconButton(
+        //       icon: Icon(
+        //         AppIcons.calendar,
+        //         size: AppSizing.iconSm,
+        //         color: AppColors.primary,
+        //       ),
+        //       onPressed: _seleccionarFecha,
+        //     ),
+        //     contentPadding: const EdgeInsets.symmetric(
+        //       horizontal: AppSpacing.sm,
+        //       vertical: AppSpacing.xs,
+        //     ),
+        //     border: OutlineInputBorder(
+        //       borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        //       borderSide: const BorderSide(color: AppColors.border),
+        //     ),
+        //     enabledBorder: OutlineInputBorder(
+        //       borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        //       borderSide: const BorderSide(color: AppColors.border),
+        //     ),
+        //     focusedBorder: OutlineInputBorder(
+        //       borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        //       borderSide: BorderSide(
+        //         color: AppColors.primary,
+        //         width: AppSizing.borderWidthThin * 2,
+        //       ),
+        //     ),
+        //   ),
+        //   style: AppTextStyles.bodyMedium,
+        // ),
+        CustomTextField(
           controller: _fechaCtrl,
           readOnly: true,
           onTap: _seleccionarFecha,
-          decoration: InputDecoration(
-            hintText: 'dd/mm/aaaa',
-            hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textDisabled,
+          suffixIcon: IconButton(
+            icon: Icon(
+              AppIcons.calendar,
+              size: AppSizing.iconSm,
+              color: AppColors.primary,
             ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                AppIcons.calendar,
-                size: AppSizing.iconSm,
-                color: AppColors.primary,
-              ),
-              onPressed: _seleccionarFecha,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-              borderSide: BorderSide(
-                color: AppColors.primary,
-                width: AppSizing.borderWidthThin * 2,
-              ),
-            ),
+            onPressed: _seleccionarFecha,
           ),
-          style: AppTextStyles.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
-
         // ── Botón validar plan ───────────────────────────────
         CustomPrimaryButton(
           text: 'Validar plan de crédito',
-          height: AppSizing.buttonHeightSmall,
           icon: Icon(
             AppIcons.escudo,
-            size: AppSizing.iconSm,
+            size: AppSizing.iconMd,
             color: AppColors.textOnDark,
           ),
           isEnabled: widget.state.fechaVencimiento.isNotEmpty,
-          onPressed: () => context
-              .read<CobranzaFacturaBloc>()
-              .add(const PlanValidarPressed()),
+          onPressed: () => context.read<CobranzaFacturaBloc>().add(
+            const PlanValidarPressed(),
+          ),
         ),
 
         if (widget.state.planValidado) ...[
@@ -216,7 +227,11 @@ class _ExtraContado extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(AppIcons.attach, size: AppSizing.iconLg, color: AppColors.primary),
+              Icon(
+                AppIcons.attach,
+                size: AppSizing.iconLg,
+                color: AppColors.primary,
+              ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 'Adjuntar archivo',

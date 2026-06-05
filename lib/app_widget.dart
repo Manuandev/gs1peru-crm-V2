@@ -23,6 +23,7 @@
 
 // DEPENDENCIAS
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -127,6 +128,17 @@ class AppWidget extends StatelessWidget {
                 navigatorObservers: [AppRouteObserver.instance],
                 initialRoute: AppRoutes.splash,
                 onGenerateRoute: AppRouter.onGenerateRoute,
+
+                // ── LOCALIZACIÓN ────────────────────────────────
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('es', 'PE'),
+                  Locale('en', 'US'),
+                ],
 
                 // ── TEMA ────────────────────────────────────────
                 // Todo: personaliza AppTheme.lightTheme y AppTheme.darkTheme

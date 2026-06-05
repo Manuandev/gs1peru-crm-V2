@@ -454,6 +454,192 @@ CustomTextField(
 )
 ```
 
+### CustomPasswordField
+Input de contraseña con toggle de visibilidad. Delega a `CustomTextField`.
+```dart
+CustomPasswordField(
+  label: 'Contraseña',
+  controller: _pwdCtrl,
+  // hint, helperText, validator, onChanged, onSubmitted,
+  // textInputAction, enabled, showToggleButton, focusNode — opcionales
+)
+```
+
+### CustomEmailField
+Input de email con validación de formato incluida. Delega a `CustomTextField`.
+```dart
+CustomEmailField(
+  controller: _emailCtrl,
+  onSubmitted: (_) => _focusPassword(),
+  // label, hint, validator, onChanged, enabled, focusNode — opcionales
+)
+```
+
+### CustomOutlinedButton
+Botón con borde visible, sin relleno. Para acciones secundarias o de cancelar.
+```dart
+CustomOutlinedButton(
+  text: 'CANCELAR',
+  onPressed: () => Navigator.pop(context),
+  // isLoading, isEnabled, icon, width, height, borderColor, textColor — opcionales
+)
+```
+
+### CustomGoogleButton
+Botón outlined con logo de Google para autenticación.
+```dart
+CustomGoogleButton(
+  onPressed: _handleGoogleLogin,
+  isLoading: false,
+  // width, height — opcionales
+)
+```
+
+### AppSnackBar
+Snackbar con diseño custom: icono + título + mensaje + barra de progreso animada.
+```dart
+AppSnackBar.success(context, 'Guardado correctamente', title: 'Éxito');
+AppSnackBar.error(context, 'Error al conectar');
+AppSnackBar.warning(context, 'Campo requerido');
+AppSnackBar.info(context, 'Sincronizando...');
+
+// Genérico con control total
+AppSnackBar.show(
+  context,
+  message: 'Mensaje',
+  title: 'Título',             // opcional
+  type: SnackType.success,     // success | error | warning | info
+  position: SnackPosition.bottom, // top | bottom
+  duration: Duration(seconds: 3),
+)
+```
+
+### AppLoadingView
+Vista de carga centrada (spinner). Usar en estados de carga de BLoC.
+```dart
+const AppLoadingView()
+```
+
+### AppEmptyView
+Vista de estado vacío con mensaje customizable.
+```dart
+AppEmptyView(message: 'No hay registros disponibles')
+```
+
+### AppErrorView
+Vista de error con botón reintentar.
+```dart
+AppErrorView(
+  message: 'Sin conexión al servidor',
+  onRetry: _cargarDatos,
+)
+```
+
+### CustomComboField\<T extends Comboable\>
+Dropdown de selección simple. `T` debe implementar el mixin `Comboable`.
+```dart
+CustomComboField<CampaniaItem>(
+  data: state.campanias,     // List<T extends Comboable>
+  label: 'Campaña',
+  idIndex: 0,                // índice del campo ID en fields
+  labelIndex: 1,             // índice del campo a mostrar
+  initialValue: '5',         // coincide con fields[idIndex].toString()
+  onChanged: (item) { ... },
+  // hint, enabled, validator — opcionales
+)
+```
+
+### CustomComboSearchField
+Combo con búsqueda por texto (Autocomplete). Recibe `List<String>` crudas.
+```dart
+CustomComboSearchField(
+  data: crudas,              // ["id¦descripcion", ...]
+  label: 'Oportunidad',
+  displayIndex: 1,
+  initialValue: '10',        // id inicial
+  onChanged: (item) { ... },
+  maxSuggestions: 6,
+  // separator, hint, enabled, validator — opcionales
+)
+```
+
+### CustomComboMultiField
+Combo multi-selección con chips. Abre diálogo con checkboxes.
+```dart
+CustomComboMultiField(
+  data: crudas,
+  label: 'Intereses',
+  initialValues: ['1', '3'],
+  onChanged: (items) { ... },  // List<ComboItem>
+  // separator, displayIndex, hint, enabled, validator — opcionales
+)
+```
+
+### CustomComboMultiSearchField
+Combo multi-selección con buscador en el diálogo (igual que Multi + campo de búsqueda).
+```dart
+CustomComboMultiSearchField(
+  data: crudas,
+  label: 'Intereses',
+  initialValues: ['1'],
+  onChanged: (items) { ... },
+)
+```
+
+### DrawerItemModel + DrawerSide + AppBarPopupItem
+Modelos de configuración para el drawer y el popup del AppBar.
+```dart
+enum DrawerSide { left, right, none }
+
+DrawerItemModel(
+  id: AppRoutes.leads,          // usado para marcar ítem activo
+  icon: AppIcons.users,         // IconData o IconDataSocial
+  label: 'Leads',
+  route: AppRoutes.leads,       // o onTap: () { ... }
+  badge: 5,                     // badge numérico opcional
+  showDividerAfter: true,
+)
+
+AppBarPopupItem(
+  value: 'refresh',
+  icon: AppIcons.refresh,
+  label: 'Actualizar',
+  showDividerAfter: false,
+)
+```
+
+### CustomAppBar
+AppBar completamente personalizable con drawer, búsqueda, notificaciones y popup.
+```dart
+CustomAppBar(
+  title: 'Leads',                    // o titleWidget: Widget
+  drawerSide: DrawerSide.left,       // left | right | none
+  onSearch: (query) { ... },         // activa campo de búsqueda en AppBar
+  notificationCount: 3,              // null=oculto | 0=sin badge | >0=badge+pulso
+  onNotification: () { ... },
+  trailingButtons: [IconButton(...)],
+  popupItems: [AppBarPopupItem(value: 'export', icon: AppIcons.download, label: 'Exportar')],
+  onPopupSelected: (value) { ... },
+)
+```
+
+### AppDrawerWidget
+Drawer con header de usuario, ítems navegables, badges y logout. Consume `DrawerBloc`.
+```dart
+AppDrawerWidget(
+  items: AppMenuItems.withBadges(conversacionesBadge: 3),
+  showSettings: true,
+  showLogout: true,
+  onSettings: () { ... },    // null = navega a AppRoutes.settings automáticamente
+)
+```
+
+### ExitOnBackWrapper
+Envuelve un widget para mostrar diálogo de confirmación al salir de la app.
+```dart
+ExitOnBackWrapper(child: MyHomePage())
+```
+
 ---
 
 ## Utilidades core
@@ -567,3 +753,566 @@ await db.getSetting('theme')           // String? — null si no existe
 **Agregar tabla nueva:**
 1. Agregar `CREATE TABLE` en `_onCreate` en `local_database.dart`
 2. Si la app ya está instalada → agregar migración en `_onUpgrade` e incrementar `version: X`
+
+---
+
+## ApiConstants — `constants/api_constants.dart`
+
+Centraliza todas las URLs y endpoints. Las URLs se componen de `EnvConfig.baseUrl + ruta`.
+
+```dart
+// Bases (desde EnvConfig — nunca hardcodear)
+ApiConstants.baseUrl        // URL base REST
+ApiConstants.urlArchivos    // URL de archivos/multimedia
+ApiConstants.urlWebSocket   // URL SignalR
+
+// Endpoints (segmento de ruta — patrón: LST = lectura, CUD = create/update/delete)
+ApiConstants.login / loginGoogle
+ApiConstants.lstListas
+ApiConstants.lstleads / cudleads
+ApiConstants.lstChats / listarChats / detalleChat / enviarMensaje / guardarMultimedia
+ApiConstants.lstProspectos / cudProspectos
+ApiConstants.lstPropuestas / cudPropuestas
+ApiConstants.lstCobranzas / cudCobranzas
+
+// URLs completas (helpers — usan baseUrl automáticamente)
+ApiConstants.urlLogin / urlLoginGoogle
+ApiConstants.urlLeadsLst / urlLeadsCud
+// ... y así para todos los módulos
+```
+
+---
+
+## AppMenuItems — `constants/app_menu_items.dart`
+
+Un único lugar donde viven todos los ítems del drawer. Si cambia una ruta o ícono, solo se cambia aquí.
+
+```dart
+// Lista fija (sin badges)
+AppMenuItems.mainItems    // [home, Conversaciones, Seguimiento, Propuestas, Cobranza]
+
+// Con badges dinámicos (preferir en producción)
+AppMenuItems.withBadges(
+  conversacionesBadge: 3,
+  prospectosBadge: null,     // null = no muestra badge
+  propuestasBadge: 1,
+  cobranzaBadge: null,
+)
+
+// Ítem individual pre-construido
+AppMenuItems.home   // DrawerItemModel del inicio
+```
+
+**Agregar módulo nuevo:**
+1. Definir constante estática en `AppMenuItems`
+2. Agregarla a `mainItems` y al método `withBadges()`
+
+---
+
+## ThemeCubit — `theme/theme_cubit.dart`
+
+Persiste el `ThemeMode` en SQLite. Emite siempre `ThemeMode.light` por ahora (dark en desarrollo).
+
+```dart
+// En main() — cargar antes de runApp
+await themeCubit.loadSavedTheme();
+
+// En pantalla de configuración — cuando se implemente
+context.read<ThemeCubit>().setTheme(ThemeMode.dark);
+```
+
+Estado emitido: `ThemeMode` (light / dark / system).
+
+---
+
+## Modelos core — `models/`
+
+### UserModel — `models/user_model.dart`
+Datos del usuario autenticado. Vive **solo en memoria** (no se persiste en SQLite).
+
+```dart
+user.userId / token / codUser / userApe / correoUser
+user.telefono / celular / isModerador
+user.fullName   // alias de userApe para mostrar en UI
+
+// Parser (llamado internamente por el feature de auth)
+UserModel.fromRawString(rawResponse)
+```
+
+### ComboItem — `models/combo_item.dart`
+Modelo genérico para todos los dropdowns. Soporta N campos separados por `¦`.
+
+```dart
+ComboItem.fromRaw('001¦Gerente¦GER')  // parsea string crudo
+ComboItem.fromList(dataList)           // parsea lista de strings
+
+item.id           // campo 0 — siempre presente
+item.descripcion  // campo 1 — siempre presente
+item.value(2)     // campo extra índice 2 (nullable)
+item.field(n)     // acceso genérico por índice 0-based
+item.fieldCount   // total de campos
+```
+
+### Catálogos — `models/catalog_item.dart`
+
+| Clase | Campos |
+|---|---|
+| `ListasGenericas` | campanias, oportunidades, canales, intereses |
+| `CampaniaItem` | id(int), nombre |
+| `OportunidadItem` | idEvento(int), idCampania(int), nombre |
+| `CanalItem` | id(int), nombre |
+| `InteresItem` | id(int), nombre |
+
+Todas implementan `Comboable`. Parsear con `ListasGenericasModel.parse(rawResponse)`.
+
+---
+
+## Errores — `errors/app_exception.dart`
+
+```dart
+// Excepción genérica de la app — usar en datasources y usecases
+throw AppException('Token inválido');
+
+// Solo en el flujo de login — para re-llenar el formulario con credenciales guardadas
+throw SessionNotRememberedException(username, password);
+```
+
+---
+
+## Domain — `domain/`
+
+### Mixin Comboable — `mixins/comboable.dart`
+Marca una clase como compatible con `CustomComboField<T>`.
+```dart
+class CampaniaItem with Comboable {
+  @override
+  List<dynamic> get fields => [id, nombre];  // orden: id primero, label segundo
+}
+```
+
+### Enums — `domain/enums/enums_core.dart`
+```dart
+enum ImageSourceType { asset, network }
+```
+
+### GetCatalogsUseCase — `domain/usecases/get_catalogs_usecase.dart`
+Obtiene las listas genéricas (campañas, oportunidades, canales, intereses).
+```dart
+final listas = await GetCatalogsUseCase(repository).call();
+```
+
+---
+
+## Servicios core — `services/`
+
+### SessionService — `services/session_service.dart`
+Singleton en memoria. El único lugar donde viven los datos del usuario autenticado.
+```dart
+final session = SessionService();  // singleton
+
+session.setUser(userModel)   // al hacer login exitoso
+session.clear()              // al hacer logout
+
+session.user         // UserModel? (null si no hay sesión)
+session.token        // String del token
+session.codUser      // código del usuario
+session.userApe      // nombre/apellido
+session.isModerador  // bool
+session.hasSession   // bool
+```
+
+### DeviceInfoService — `services/device_info_service.dart`
+Recoge información del dispositivo, SO y GPS. Usar siempre el caché estático.
+
+```dart
+// Llamar en Splash — precarga GPS en background (no bloquea)
+DeviceInfoService.precargarEnBackground();
+
+// En datasource de login — usa el caché, timeout de 3s como fallback
+final info = await DeviceInfoService.getInfoConTimeout();
+// info['coordenadas'], info['modelo'], info['so'], info['ciudad'], ...
+
+// Acceso individual (retorna caché si ya se obtuvo)
+await DeviceInfoService().getCoordinates()        // CoordinatesResult
+await DeviceInfoService().getUbicacionCompleta()  // UbicacionResult
+```
+
+**UbicacionResult:** pais, paisCodigo, region, provincia, ciudad, distrito, calle, numero, codigoPostal  
+**CoordinatesResult:** latitud, longitud, altitud, precision, coordsString
+
+### CatalogsRepository / CatalogsRepositoryImpl
+Contrato e implementación para obtener listas genéricas del backend. Consumir solo a través de `GetCatalogsUseCase` o `CatalogsBloc`.
+
+---
+
+## Network — `network/`
+
+### ApiClient — `network/api_client.dart`
+Singleton Dio. Todos los datasources lo usan. Nunca instanciar Dio directamente.
+
+```dart
+final client = ApiClient();   // singleton
+
+client.setToken(token)        // al hacer login
+client.clearToken()           // al hacer logout
+
+// Métodos de petición
+await client.postJsonGetText(url, body)   // retorna String crudo
+await client.postSafe(url, body)          // retorna ApiResult<String>
+await client.postMultipart(url: ..., fields: ..., fileFieldName: ..., fileBytes: ..., fileName: ...)
+```
+
+**Interceptores integrados (en orden de ejecución):**
+1. `TokenBodyInterceptor` — prepende `token¯` al body antes de enviar
+2. `CleanResponseInterceptor` — quita comillas extra que agrega ASP.NET
+3. `ErrorInterceptor` — convierte DioException en AppException
+4. `LogInterceptor` — solo en debug mode
+
+### ApiResult\<T\> — `network/api_result.dart`
+Resultado sealed de una llamada REST. Nunca usar `null` ni excepciones raw.
+
+```dart
+switch (result) {
+  case ApiSuccess<String>(:final data) => _parsear(data),
+  case ApiEmpty()                       => _sinDatos(),
+  case ApiNoInternet()                  => _sinInternet(),
+  case ApiError(:final message)         => _mostrarError(message),
+}
+```
+
+### CrudResult — `network/crud_result.dart`
+Resultado sealed de operación CUD. Parsea la respuesta del backend.
+
+```dart
+final raw = await client.postJsonGetText(url, body);
+final result = parseCrudResponse(raw);   // función top-level
+
+switch (result) {
+  case CrudOk(:final message)    => _exito(message),
+  case CrudAlert(:final message) => _alerta(message),
+  case CrudError(:final message) => _error(message),
+  case CrudNoInternet()          => _sinInternet(),
+  case CrudEmpty()               => _sinRespuesta(),
+}
+```
+
+---
+
+## WebSocket / SignalR — `network/websocket/`
+
+### Arquitectura
+
+```
+SignalRService (singleton)
+  └─ gestiona conexión / reconexión / heartbeat
+  └─ parsea mensajes con WebSocketMessageParser
+  └─ pasa al MessageDispatcher
+
+MessageDispatcher (singleton)
+  └─ switch por message.process
+  └─ decide si mostrar notificación según ruta activa
+  └─ emite al stream público (features escuchan aquí)
+```
+
+### SignalRService — `network/websocket/connection/signalr_service.dart`
+```dart
+// Ciclo de vida (manejado por el feature de auth)
+await SignalRService.instance.connect()
+await SignalRService.instance.close()      // logout — no reconecta
+await SignalRService.instance.reset()      // para reconectar desde cero
+await SignalRService.instance.forceReconnect()
+
+// Estado en tiempo real
+SignalRService.instance.connectionStateStream  // Stream<WebSocketConnectionState>
+SignalRService.instance.currentState
+SignalRService.instance.isConnected
+
+// Enviar mensaje al hub
+SignalRService.instance.sendMessage(json)  // retorna bool (éxito/fallo)
+
+// FCM — automático al conectar / desconectar
+await SignalRService.instance.limpiarTokenFCM()   // llamar al logout
+```
+
+**Reconexión:** backoff exponencial (500ms → 1s → 2s → 5s → 10s), luego pausa de 1 minuto por ciclo.
+
+### MessageDispatcher — `network/websocket/connection/message_dispatcher.dart`
+Las features filtran mensajes por proceso:
+```dart
+MessageDispatcher.instance.stream
+  .where((msg) => msg.process == 'MENSAJE_WHATSAPP')
+  .listen(_handleMensaje);
+```
+
+### WebSocketConnectionState — enum
+`connected` · `disconnected` · `connecting` · `reconnecting` · `manuallyClosed` · `noInternet`
+
+### WebSocketMessage — `network/websocket/parser/websocket_message.dart`
+```dart
+msg.process      // "MENSAJE_WHATSAPP", "UPDATE_PANTALLA_WHATSAPP", ...
+msg.records      // List<List<String>> — registros parseados (¬ = separador de registros)
+msg.firstRecord  // shortcut al primer registro
+msg.receivedAt   // DateTime de recepción
+```
+
+### Payloads — `network/websocket/payloads/`
+
+| Clase | Proceso | Cuándo llega |
+|---|---|---|
+| `WhatsAppMessagePayload` | `MENSAJE_WHATSAPP` | Mensaje nuevo del cliente |
+| `UpdatePantallaWhatsAppPayload` | `UPDATE_PANTALLA_WHATSAPP` | Confirmación de mensaje enviado |
+| `UpdateMensajeWhatsAppPayload` | `UPDATE_MENSAJE_WHATSAPP` | Cambio de estado (checks) |
+
+```dart
+final payload = WhatsAppMessagePayload.fromMessage(wsMessage);
+// payload?.mensaje / leadId / tipoMensaje / idMensaje / codAsesor / flgCerrado / ...
+```
+
+**Agregar proceso nuevo:**
+1. Añadir case en `MessageDispatcher.dispatch()`
+2. Crear payload class en `payloads/` si necesita parseo complejo
+3. La feature se suscribe a `MessageDispatcher.instance.stream`
+
+---
+
+## Notificaciones — `notifications/`
+
+### Flujo
+
+```
+Backend → FCM (background) ──────────────────┐
+                                             ▼
+Backend → SignalR → MessageDispatcher → NotificationHandler
+                                             │
+                              LocalNotificationService.showWhatsApp()
+                                             │
+                              Al tocar → NotificationNavigator.navigate()
+```
+
+### NotificationService — `notifications/services/notification_service.dart`
+Coordinador de todos los servicios de notificación.
+```dart
+await NotificationService.instance.init()               // en main()
+await NotificationService.instance.initBackground()     // en handler background
+await NotificationService.instance.requestPermissions() // en Splash (hay UI)
+await NotificationService.instance.cancelAll()          // al logout
+```
+
+### AppNotification — `notifications/models/app_notification.dart`
+```dart
+AppNotification(
+  title: 'Nuevo mensaje',
+  body: 'Hola, ¿cómo está?',
+  route: AppRoutes.detalleChat,       // ruta al tocar la notif
+  payload: {'idLead': '42'},          // datos extras
+)
+```
+
+### NotificationHandler — `notifications/handlers/notification_handler.dart`
+Decide si mostrar o suprimir una notificación según la ruta activa (evita duplicados).
+- Suprime `MENSAJE_WHATSAPP` si el usuario ya está viendo esa lista o ese chat específico.
+
+### NotificationNavigator — `notifications/handlers/notification_navigator.dart`
+Navega a la pantalla correcta al tocar la notificación (desde background/killed).
+```dart
+NotificationNavigator.instance.navigate(notif)  // interno — llamado por Firebase service
+```
+
+### FirebaseNotificationService — `notifications/services/firebase_notification_service.dart`
+Gestiona FCM: permisos, token, mensajes en foreground/background/killed.
+```dart
+await FirebaseNotificationService.instance.obtenerToken()  // String? token FCM
+```
+
+Registrar el handler de background en `main()`:
+```dart
+FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+```
+
+---
+
+## BLoCs core — `presentation/bloc/`
+
+### DrawerBloc — `presentation/bloc/drawer/`
+Maneja el estado del drawer (datos de usuario + badges de módulos).
+
+**Eventos:**
+- `DrawerStarted` — carga datos instantáneamente desde `SessionService` (sin async)
+- `DrawerBadgesUpdated` — actualiza contadores (conversaciones, prospectos, propuestas, cobranzas)
+
+**Estados:**
+- `DrawerIdle` — antes del login
+- `DrawerLoaded` — con userName, userApe, userSubtitle y badges
+
+```dart
+// Disparar al entrar a home
+context.read<DrawerBloc>().add(DrawerStarted());
+
+// Actualizar badges desde cualquier feature (usa BadgeExtension)
+context.updateBadge(conversaciones: 3, propuestas: 1);
+```
+
+### CatalogsBloc — `presentation/bloc/catalog/`
+Carga las listas genéricas del backend una sola vez al inicio de sesión.
+
+**Evento:** `CatalogsLoadRequested`
+
+**Estados:** `CatalogsInitial` → `CatalogsLoading` → `CatalogsLoaded` | `CatalogsError`
+
+```dart
+// Acceso en widgets
+final state = context.watch<CatalogsBloc>().state;
+if (state is CatalogsLoaded) {
+  final campanias = state.campanias;   // List<CampaniaItem>
+  final canales = state.canales;       // List<CanalItem>
+  final intereses = state.intereses;   // List<InteresItem>
+  final opors = state.oportunidades;   // List<OportunidadItem>
+}
+```
+
+---
+
+## Páginas core — `presentation/pages/`
+
+### BasePage — `presentation/pages/base_page.dart`
+Layout base para **todas las pantallas del home**. Arma AppBar + Drawer + Body + Footer automáticamente.
+
+```dart
+BasePage(
+  title: 'Leads',                               // o titleWidget: Widget
+  drawerSide: DrawerSide.left,                  // left | right | none
+  body: LeadsView(),
+
+  // AppBar — todos opcionales
+  appBarTrailingButtons: [IconButton(...)],
+  appBarPopupItems: [AppBarPopupItem(...)],
+  onPopupSelected: (value) { ... },
+  onSearch: (query) { ... },                    // activa buscador en AppBar
+
+  // Drawer — todos opcionales
+  drawerItems: AppMenuItems.withBadges(...),
+  showDrawerSettings: true,
+  showDrawerLogout: true,
+  onSettings: () { ... },
+
+  // Layout — todos opcionales
+  footer: MyFooter(),                           // null = footer estándar
+  floatingActionButton: FloatingActionButton(...),
+  bodyPadding: EdgeInsets.zero,                 // null = padding estándar md
+  onPop: () => context.goToHome(),              // intercepta el back button
+  backgroundColor: AppColors.background,
+)
+```
+
+El **footer estándar** muestra: `{nombreApp} - v{version}` + chip de estado SignalR (● En línea / ● Reconectando / ● Sin internet).
+
+### UnderConstructionPage — `presentation/pages/under_construction_page.dart`
+Placeholder animado para rutas aún no implementadas. Usa `BasePage`.
+```dart
+UnderConstructionPage(routeName: 'Reportes')
+```
+
+---
+
+## Navegación core — `navigation/`
+
+### AppRouteObserver — `navigation/app_route_observer.dart`
+Singleton que trackea la ruta activa y el lead abierto en el chat. Usado por `MessageDispatcher` y `NotificationHandler` para suprimir notificaciones cuando la pantalla ya está visible.
+
+```dart
+// Registrar en MaterialApp (ya configurado en app_widget.dart)
+navigatorObservers: [AppRouteObserver.instance]
+
+// En ChatDetailPage — informar qué lead está abierto
+AppRouteObserver.instance.setActiveLead(leadId);  // initState
+AppRouteObserver.instance.setActiveLead(null);    // dispose
+
+// Leer desde cualquier lugar
+AppRouteObserver.instance.currentRoute   // String? ruta actual
+AppRouteObserver.instance.activeLeadId  // int? lead en detalle chat
+```
+
+---
+
+## Mixins — `mixins/`
+
+### DoubleBackToExitMixin — `mixins/double_back_to_exit_mixin.dart`
+Requiere doble back press en 2s para salir de la app. Alternativa a `ExitOnBackWrapper`.
+```dart
+class _HomeState extends State<HomePage> with DoubleBackToExitMixin {
+  // el mixin provee onWillPop() — conectarlo a PopScope/WillPopScope
+}
+```
+
+---
+
+## Extensions — `extensions/`
+
+### BadgeExtension on BuildContext — `extensions/badge_extensions.dart`
+Actualiza los badges del drawer desde cualquier feature sin acceder directamente al BLoC.
+```dart
+context.updateBadge(
+  conversaciones: 3,
+  prospectos: 1,
+  propuestas: null,   // null = no cambia el valor actual
+  cobranza: 0,
+)
+```
+
+---
+
+## Helpers — `helpers/`
+
+### CanalHelper — `helpers/canal_helper.dart`
+Alternativa a `AppIconsSocial` usando iconos **Material** (no FontAwesome). Útil cuando no se puede usar `FaIcon`.
+
+```dart
+final info = CanalHelper.get(1)   // CanalInfo para WhatsApp
+info.nombre  // 'WhatsApp'
+info.icon    // Icons.message (MaterialIcons)
+info.color   // Color(0xFF25D366)
+
+// Widget listo
+CanalHelper.icon(1, size: AppSizing.iconMd)  // Icon con color correcto
+```
+
+Preferir `AppIconsSocial` en la mayoría de casos. Usar `CanalHelper` cuando se necesiten `Icon` nativos.
+
+---
+
+## Utils adicionales — `utils/`
+
+### AvatarUtils + StringAvatarX — `utils/ui/avatar_utils.dart` + `utils/ui/avatar_extensions.dart`
+
+```dart
+// Estático
+AvatarUtils.initials('Juan Pérez')   // "JP"
+AvatarUtils.color('Juan Pérez')      // Color consistente por nombre
+
+// Extension on String
+'Juan Pérez'.initials     // "JP"
+'Juan Pérez'.avatarColor  // Color
+```
+
+### StringExtensions / NullableStringExtensions — `utils/string/string_utils.dart`
+
+```dart
+'+51 999 888 777'.limpiarTelefono   // '+51999888777' — quita espacios y guiones
+'hola'.convertToHex                 // representación hexadecimal del string
+
+// Validador de email (para usar en validators de formularios)
+null.emailValidator          // 'El email es requerido'
+'abc@'.emailValidator        // 'Ingresa un email válido'
+'abc@mail.com'.emailValidator // null (válido)
+```
+
+### LauncherUtils — `utils/launcher/launcher_utils.dart`
+
+```dart
+await LauncherUtils.abrirTelefono('999888777');
+await LauncherUtils.abrirCorreo(
+  'cliente@mail.com',
+  asunto: 'Propuesta GS1',
+  cuerpo: 'Estimado...',
+)
+```

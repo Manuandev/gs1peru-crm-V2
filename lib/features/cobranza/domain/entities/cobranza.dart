@@ -1,7 +1,7 @@
 // lib/features/cobranza/domain/entities/cobranza.dart
 
 class Cobranza {
-  final int idCobranza;
+  final String numSol;
   final String nombre;
   final String apellido;
   final String evento;
@@ -20,7 +20,7 @@ class Cobranza {
   String get nombreCompleto => '$nombre $apellido'.trim();
 
   const Cobranza({
-    required this.idCobranza,
+    required this.numSol,
     required this.nombre,
     required this.apellido,
     required this.evento,
@@ -38,7 +38,6 @@ class Cobranza {
   });
 
   Cobranza copyWith({
-    int? idCobranza,
     String? nombre,
     String? apellido,
     String? evento,
@@ -55,7 +54,7 @@ class Cobranza {
     String? telefono,
   }) {
     return Cobranza(
-      idCobranza: idCobranza ?? this.idCobranza,
+      numSol: numSol,
       nombre: nombre ?? this.nombre,
       apellido: apellido ?? this.apellido,
       evento: evento ?? this.evento,

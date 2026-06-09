@@ -6,6 +6,7 @@
 // RESPONSABILIDADES:
 // - Mostrar la UI/animación del splash
 // - Garantizar un tiempo mínimo de visualización (para la animación)
+// - Solicitar permisos de notificación sin bloquear el flujo principal
 // - Escuchar el resultado del SplashBloc
 // - Notificar al AuthBloc (que vive en el root) para que navegue
 //
@@ -16,9 +17,10 @@
 //       → AuthBloc cambia estado
 //         → AppWidget BlocListener navega
 //
-// POR QUÉ StatefulWidget:
-// Necesita el timer mínimo (_minTimerDone) y guardar el
-// estado pendiente (_pendingState) entre frames.
+// PERMISOS DE NOTIFICACIÓN:
+// Se solicitan en segundo plano después del primer frame (hay UI visible).
+// El flujo del splash NO espera la respuesta del diálogo — siempre continúa.
+// El timeout de 30s garantiza que el diálogo ignorado no bloquee nada.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -34,41 +36,112 @@ class SplashView extends StatefulWidget {
   State<SplashView> createState() => _SplashViewState();
 }
 
-class _SplashViewState extends State<SplashView> {
+class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
   /// Controla si el tiempo mínimo de animación ya pasó.
-  /// El splash siempre se muestra al menos [_minDuration].
   bool _minTimerDone = false;
 
-  /// Guarda el estado del SplashBloc si llegó antes de que
-  /// terminara el timer mínimo.
+  /// Guarda el estado del SplashBloc si llegó antes de que terminara el timer.
   SplashState? _pendingState;
 
-  /// Tiempo mínimo que se muestra el splash.
-  /// Ajústalo según la duración de tu animación.
+  /// Indica que hay un diálogo de permisos en curso.
+  /// Se usa en [didChangeAppLifecycleState] para re-verificar al volver.
+  bool _solicitandoPermisos = false;
+
   static const Duration _minDuration = Duration(milliseconds: 2500);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startMinTimer();
+
+    // Los permisos se piden después del primer frame (ya hay UI visible).
+    // No bloqueamos initState — el splash se muestra inmediatamente.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _solicitarPermisosEnBackground();
+    });
   }
 
-  /// Inicia el timer mínimo de visualización.
-  /// Cuando termina, procesa el estado pendiente si ya llegó.
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────────────
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Si el usuario volvió al primer plano mientras el diálogo estaba abierto,
+    // re-verificamos el permiso. El timeout ya puede haber disparado (ignorado),
+    // pero si el usuario aceptó en ese momento, configuramos los listeners ahora.
+    if (state == AppLifecycleState.resumed && _solicitandoPermisos) {
+      _verificarPermisoAlVolver();
+    }
+  }
+
+  Future<void> _verificarPermisoAlVolver() async {
+    if (!mounted) return;
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    final concedido =
+        settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+
+    if (concedido) {
+      await NotificationPermissionManager.instance.guardarConcedido();
+      // Llama init() que detecta el permiso ya concedido y activa los listeners
+      // sin mostrar ningún diálogo al usuario
+      await FirebaseNotificationService.instance.init();
+    }
+  }
+
+  // ── Permisos ──────────────────────────────────────────────────
+
+  /// Solicita permisos en background — NO bloquea el flujo del splash.
+  /// El splash navega a Login/Home independientemente del resultado aquí.
+  Future<void> _solicitarPermisosEnBackground() async {
+    final manager = NotificationPermissionManager.instance;
+    final debeSolicitar = await manager.deberiaSolicitar();
+    if (!debeSolicitar || !mounted) return;
+
+    _solicitandoPermisos = true;
+
+    // timeout = 30s: si el usuario ignora el diálogo más de 30s, avanzamos
+    final concedido = await NotificationService.instance.requestPermissions();
+
+    if (!mounted) return;
+    _solicitandoPermisos = false;
+
+    if (concedido) {
+      await manager.guardarConcedido();
+    } else {
+      // Distinguir entre denegado explícitamente e ignorado/timeout
+      final settings =
+          await FirebaseMessaging.instance.getNotificationSettings();
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        await manager.guardarDenegado();
+      } else {
+        // notDetermined o provisional → usuario no respondió (ignorado)
+        await manager.guardarIgnorado();
+      }
+    }
+  }
+
+  // ── Timer mínimo ──────────────────────────────────────────────
+
   void _startMinTimer() {
     Future.delayed(_minDuration, () {
       if (!mounted) return;
       setState(() => _minTimerDone = true);
 
-      // Si el bloc terminó mientras esperábamos el timer, procesarlo ahora
       if (_pendingState != null) {
         _notifyAuthBloc(_pendingState!);
       }
     });
   }
 
-  /// Notifica al AuthBloc según el resultado del SplashBloc.
-  /// El AuthBloc cambia su estado y AppWidget navega automáticamente.
+  // ── Navegación ────────────────────────────────────────────────
+
   void _notifyAuthBloc(SplashState state) {
     if (!mounted) return;
 
@@ -77,7 +150,6 @@ class _SplashViewState extends State<SplashView> {
         AuthSessionRestored(userId: state.userId, username: state.username),
       );
     } else if (state is SplashSessionNotFound) {
-      // Muestra mensaje si existe (sin internet)
       if (state.message != null) {
         AppSnackBar.error(context, state.message!);
       }
@@ -91,6 +163,8 @@ class _SplashViewState extends State<SplashView> {
       context.read<AuthBloc>().add(const AuthSessionEmpty());
     }
   }
+
+  // ── Build ──────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +197,9 @@ class _SplashViewState extends State<SplashView> {
                 ),
               ),
               child: SafeArea(
-                child: esLandscape ? const SplashLandscape() : const SplashPortrait(),
+                child: esLandscape
+                    ? const SplashLandscape()
+                    : const SplashPortrait(),
               ),
             );
           },

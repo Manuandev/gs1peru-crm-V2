@@ -94,7 +94,7 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              _EstadoBadge(idEstado: detalle.idEstado, estado: detalle.estado),
+              _EstadoBadge(idEstado: detalle.idEstado.toString(), estado: detalle.estado),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Condición de pago',

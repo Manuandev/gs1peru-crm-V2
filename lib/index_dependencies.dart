@@ -41,6 +41,7 @@ export 'package:open_filex/open_filex.dart';
 export 'package:permission_handler/permission_handler.dart';
 
 // ─── Location ────────────────────────────────────────────────────
+export 'package:flutter_localizations/flutter_localizations.dart';
 export 'package:geolocator/geolocator.dart' hide ServiceStatus;
 export 'package:geocoding/geocoding.dart';
 

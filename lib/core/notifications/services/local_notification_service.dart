@@ -45,12 +45,7 @@ class LocalNotificationService {
         >()
         ?.createNotificationChannel(_channel);
 
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-
+    // No pedir permisos aquí — se hace desde el Splash con UI visible
     _initialized = true;
   }
 

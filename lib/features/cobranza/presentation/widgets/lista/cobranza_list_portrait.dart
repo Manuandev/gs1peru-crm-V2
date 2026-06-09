@@ -29,8 +29,9 @@ class CobranzaListPortrait extends StatelessWidget {
             if (state is! CobranzaListSuccess) return const SizedBox.shrink();
             return CobranzaFilterChips(
               filtroActual: state.chipFiltro,
-              onFiltroTap: (filtro) =>
-                  context.read<CobranzaListBloc>().add(CobranzaChipChanged(filtro)),
+              onFiltroTap: (filtro) => context.read<CobranzaListBloc>().add(
+                CobranzaChipChanged(filtro),
+              ),
             );
           },
         ),
@@ -40,7 +41,9 @@ class CobranzaListPortrait extends StatelessWidget {
           child: cobranzas.isEmpty
               ? AppEmptyView(message: _mensajeVacio())
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   itemCount: cobranzas.length,
                   itemBuilder: (context, index) {
                     final cobranza = cobranzas[index];
@@ -49,7 +52,7 @@ class CobranzaListPortrait extends StatelessWidget {
                       child: CobranzaCard(
                         cobranza: cobranza,
                         onVerTap: () => context.goToDetalleCobranza(
-                          idCobranza: cobranza.idCobranza,
+                          numSol: cobranza.numSol,
                         ),
                         onWhatsAppTap: () {},
                       ),

@@ -1,7 +1,8 @@
 // lib/core/notifications/services/firebase_notification_service.dart
 
-import 'package:app_crm/index_dependencies.dart';
+import 'dart:async';
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class FirebaseNotificationService {
@@ -11,79 +12,102 @@ class FirebaseNotificationService {
 
   final _fcm = FirebaseMessaging.instance;
 
+  // Evita registrar los listeners más de una vez
+  bool _listenersRegistrados = false;
+
+  /// Fase 1 — inicializar sin pedir permisos.
+  /// Seguro de llamar en main() antes de runApp().
+  /// Si el usuario ya concedió permisos en una sesión anterior, configura
+  /// los listeners directamente sin mostrar ningún diálogo.
   Future<void> init() async {
     try {
-      final settings = await _fcm.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      final configuracion = await _fcm.getNotificationSettings();
 
-      if (settings.authorizationStatus != AuthorizationStatus.authorized) {
-        return;
-      }
+      final yaAutorizado =
+          configuracion.authorizationStatus == AuthorizationStatus.authorized ||
+          configuracion.authorizationStatus == AuthorizationStatus.provisional;
 
-      _fcm.onTokenRefresh.listen((newToken) {});
+      if (yaAutorizado) _configurarListeners();
 
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        final rawBody =
-            (message.notification?.body ?? message.data['body'] ?? '')
-                .replaceAll('[', '')
-                .replaceAll(']', '')
-                .trim();
-
-        final wsMessage = WebSocketMessageParser.parse(rawBody);
-        if (wsMessage == null) return;
-
-        NotificationHandler.instance.handle(wsMessage);
-      });
-
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        final rawBody =
-            (message.notification?.body ?? message.data['body'] ?? '')
-                .replaceAll('[', '')
-                .replaceAll(']', '')
-                .trim();
-
-        final wsMessage = WebSocketMessageParser.parse(rawBody);
-        if (wsMessage == null) return;
-
-        final notif = NotificationHandler.instance.parse(wsMessage);
-        if (notif != null) NotificationNavigator.instance.navigate(notif);
-      });
-
-      final initial = await _fcm.getInitialMessage();
-      if (initial != null) {
-        final rawBody =
-            (initial.notification?.body ?? initial.data['body'] ?? '')
-                .replaceAll('[', '')
-                .replaceAll(']', '')
-                .trim();
-
-        final wsMessage = WebSocketMessageParser.parse(rawBody);
-        if (wsMessage != null) {
-          final notif = NotificationHandler.instance.parse(wsMessage);
-          if (notif != null) NotificationNavigator.instance.navigate(notif);
-        }
-      }
+      // Mensaje que lanzó la app desde estado killed (tap en notificación)
+      final inicial = await _fcm.getInitialMessage();
+      if (inicial != null) _procesarMensaje(inicial, navegarAlAbrir: true);
     } catch (_) {}
   }
 
-  Future<void> requestPermissions() async {
-    await _fcm.requestPermission(alert: true, badge: true, sound: true);
-    _fcm.onTokenRefresh.listen((_) {});
+  /// Fase 2 — pide permisos al usuario con un timeout de seguridad.
+  /// Llamar solo cuando ya hay UI visible (desde el Splash o similar).
+  ///
+  /// Retorna true si el permiso fue concedido.
+  /// Nunca lanza excepción — siempre retorna false ante cualquier error o timeout.
+  Future<bool> requestPermissions({
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    try {
+      final configuracion = await _fcm
+          .requestPermission(alert: true, badge: true, sound: true)
+          .timeout(timeout);
+
+      final concedido =
+          configuracion.authorizationStatus == AuthorizationStatus.authorized ||
+          configuracion.authorizationStatus == AuthorizationStatus.provisional;
+
+      if (concedido) _configurarListeners();
+      return concedido;
+    } on TimeoutException {
+      // El usuario ignoró el diálogo durante [timeout] — continuar sin bloquear
+      return false;
+    } catch (_) {
+      return false;
+    }
   }
 
+  /// Obtiene el token FCM actual.
+  /// Solo llamar después de confirmar que el permiso fue concedido.
   Future<String?> obtenerToken() async {
     try {
-    final token = await _fcm.getToken();
-    return token;
+      return await _fcm.getToken();
     } catch (_) {
       return null;
     }
   }
 
   Stream<String> get onTokenRefresh => _fcm.onTokenRefresh;
+
+  // ── Privado ───────────────────────────────────────────────────
+
+  void _configurarListeners() {
+    if (_listenersRegistrados) return;
+    _listenersRegistrados = true;
+
+    _fcm.onTokenRefresh.listen((_) {});
+
+    FirebaseMessaging.onMessage.listen((message) {
+      _procesarMensaje(message);
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      _procesarMensaje(message, navegarAlAbrir: true);
+    });
+  }
+
+  void _procesarMensaje(RemoteMessage message, {bool navegarAlAbrir = false}) {
+    final cuerpo =
+        (message.notification?.body ?? message.data['body'] ?? '')
+            .replaceAll('[', '')
+            .replaceAll(']', '')
+            .trim();
+
+    final wsMessage = WebSocketMessageParser.parse(cuerpo);
+    if (wsMessage == null) return;
+
+    if (navegarAlAbrir) {
+      final notif = NotificationHandler.instance.parse(wsMessage);
+      if (notif != null) NotificationNavigator.instance.navigate(notif);
+    } else {
+      NotificationHandler.instance.handle(wsMessage);
+    }
+  }
 }
 
 @pragma('vm:entry-point')

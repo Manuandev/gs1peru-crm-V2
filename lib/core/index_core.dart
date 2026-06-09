@@ -68,6 +68,7 @@ export 'notifications/models/app_notification.dart';
 export 'notifications/services/notification_service.dart';
 export 'notifications/services/local_notification_service.dart';
 export 'notifications/services/firebase_notification_service.dart';
+export 'notifications/services/notification_permission_manager.dart';
 
 export 'notifications/handlers/notification_handler.dart';
 export 'notifications/handlers/notification_navigator.dart';
@@ -130,6 +131,7 @@ export 'utils/date/date_formatter.dart';
 export 'utils/launcher/launcher_utils.dart';
 
 export 'utils/string/string_utils.dart';
+export 'utils/string/parse_utils.dart';  
 
 // ui
 export 'utils/ui/avatar_utils.dart';

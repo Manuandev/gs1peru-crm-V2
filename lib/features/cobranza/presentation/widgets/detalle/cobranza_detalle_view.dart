@@ -67,7 +67,7 @@ class _CobranzaDetalleBody extends StatelessWidget {
               children: [
                 CobranzaDetalleInfoCard(detalle: detalle),
                 const SizedBox(height: AppSpacing.md),
-                CobranzaDetalleStepper(idEstadoActual: detalle.idEstado),
+                CobranzaDetalleStepper(idEstadoActual: detalle.idEstado.toString()),
                 const SizedBox(height: AppSpacing.md),
                 CobranzaDetalleAcciones(detalle: detalle),
                 const SizedBox(height: AppSpacing.md),
@@ -95,7 +95,7 @@ class _BottomActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _configBoton(detalle.idEstado);
+    final config = _configBoton(detalle.idEstado.toString());
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -118,7 +118,7 @@ class _BottomActionButton extends StatelessWidget {
             nombre: detalle.nombreCompleto,
             oportunidad: detalle.oportunidad,
             montoTotal: detalle.montoTotal,
-            idCondicion: detalle.idCondicion,
+            idCondicion: detalle.idCondicion.toString(),
             condicion: detalle.condicion,
           ),
           icon: Icon(config.icono, size: AppSizing.iconMd),

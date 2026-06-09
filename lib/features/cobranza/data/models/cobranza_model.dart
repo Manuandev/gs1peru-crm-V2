@@ -5,7 +5,7 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaModel extends Cobranza {
   const CobranzaModel({
-    required super.idCobranza,
+    required super.numSol,
     required super.nombre,
     required super.apellido,
     required super.evento,
@@ -27,7 +27,7 @@ class CobranzaModel extends Cobranza {
     String f(int i) => i < fields.length ? fields[i].trim() : '';
 
     return CobranzaModel(
-      idCobranza: int.tryParse(f(0)) ?? 0,
+      numSol: f(0),
       nombre: f(1),
       apellido: f(2),
       evento: f(3),

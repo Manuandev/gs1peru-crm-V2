@@ -9,9 +9,9 @@ class CobranzaDetalle {
   final String oportunidad;
   final String ejecutivo;
   final double montoTotal;
-  final String idEstado;
+  final int idEstado;
   final String estado;
-  final String idCondicion;
+  final int idCondicion;
   final String condicion;
   final String fechaSolicitud;
   final String tipoComprobante;

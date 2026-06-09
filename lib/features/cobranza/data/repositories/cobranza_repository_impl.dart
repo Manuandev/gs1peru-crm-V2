@@ -12,6 +12,10 @@ class CobranzaRepositoryImpl implements CobranzaRepository {
   Future<List<Cobranza>> getCobranzas() => _remote.getCobranzas();
 
   @override
+  Future<CobranzaDetalle?> getDetalleCobranza(String numSol) =>
+      _remote.getDetalleCobranza(numSol);
+
+  @override
   Future<CrudResult> guardarBorrador(int idCobranza) =>
       _remote.guardarBorrador(idCobranza);
 

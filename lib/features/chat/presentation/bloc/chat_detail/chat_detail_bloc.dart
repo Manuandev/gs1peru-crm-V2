@@ -618,7 +618,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           if (payload.nomArchivo.isEmpty) {
             return m.mensaje == payload.mensaje;
           }
-          return _removeExt(m.nomArchivo) == _removeExt(payload.nomArchivo) &&
+          return m.nomArchivo == _removeExt(payload.nomArchivo) &&
               m.extArchivo == _extractExt(payload.nomArchivo);
 
         case 'image':
@@ -627,7 +627,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         case 'document':
           if (payload.nomArchivo.isEmpty) return false;
 
-          return _removeExt(m.nomArchivo) == _removeExt(payload.nomArchivo) &&
+          return m.nomArchivo == _removeExt(payload.nomArchivo) &&
               m.extArchivo == _extractExt(payload.nomArchivo);
 
         default:

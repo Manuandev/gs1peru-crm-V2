@@ -117,16 +117,16 @@ class _ChatTileState extends State<ChatTile> {
             ),
 
             const SizedBox(height: AppSpacing.sm),
-            const Divider(height: 1, thickness: 0.5, color: AppColors.border),
-            const SizedBox(height: AppSpacing.xs),
+            // const Divider(height: 1, thickness: 0.5, color: AppColors.border),
+            // const SizedBox(height: AppSpacing.xs),
 
-            // ── Barra de acciones ────────────────────────────────────────
-            _BarraAcciones(
-              chat: widget.chat,
-              mensajesNoLeidos: widget.mensajesNoLeidos,
-              onResponderTap: widget.onResponderTap,
-              onEtiquetarTap: widget.onEtiquetarTap,
-            ),
+            // // ── Barra de acciones ────────────────────────────────────────
+            // _BarraAcciones(
+            //   chat: widget.chat,
+            //   mensajesNoLeidos: widget.mensajesNoLeidos,
+            //   onResponderTap: widget.onResponderTap,
+            //   onEtiquetarTap: widget.onEtiquetarTap,
+            // ),
           ],
         ),
       ),

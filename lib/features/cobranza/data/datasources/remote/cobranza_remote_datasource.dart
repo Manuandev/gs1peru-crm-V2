@@ -8,17 +8,19 @@ class CobranzaRemoteDatasource {
   final _session = SessionService();
 
   Future<List<CobranzaModel>> getCobranzas() async {
-    final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0].join(AppConstants.sepCampos)}${AppConstants.sepListas}L';
+    // final String body =
+    //     '${[_session.codUser, _session.isModerador ? 1 : 0].join(AppConstants.sepCampos)}${AppConstants.sepListas}L';
 
-    final result = await _api.postSafe(ApiConstants.urlCobranzasLst, body);
+    // final result = await _api.postSafe(ApiConstants.urlCobranzasLst, body);
 
-    return switch (result) {
-      ApiSuccess(:final data) => CobranzaModel.parseList(data),
-      ApiEmpty() => [],
-      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
-      ApiError(:final message) => throw AppException(message),
-    };
+    // return switch (result) {
+    //   ApiSuccess(:final data) => CobranzaModel.parseList(data),
+    //   ApiEmpty() => [],
+    //   ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+    //   ApiError(:final message) => throw AppException(message),
+    // };
+    await Future.delayed(const Duration(milliseconds: 500));
+    return _mockCobranzas();
   }
 
   Future<CobranzaDetalle?> getDetalleCobranza(String numSol) async {

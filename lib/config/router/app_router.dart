@@ -114,7 +114,7 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return CobranzaDetallePage(idCobranza: args['idCobranza'] as int);
+        return CobranzaDetallePage(idCobranza: args['numSol'] as String);
       },
     ),
     AppRoutes.facturarCobranza: RouteDefinition(
@@ -122,7 +122,7 @@ class AppRouter {
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
         return CobranzaFacturaPage(
-          idCobranza: args['idCobranza'] as int,
+          idCobranza: args['idCobranza'] as String,
           nombre: args['nombre'] as String,
           oportunidad: args['oportunidad'] as String,
           montoTotal: args['montoTotal'] as double,
@@ -137,7 +137,7 @@ class AppRouter {
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
         return CobranzaPlanPage(
-          idCobranza: args['idCobranza'] as int,
+          idCobranza: args['idCobranza'] as String,
           nombre: args['nombre'] as String,
           oportunidad: args['oportunidad'] as String,
           montoTotal: args['montoTotal'] as double,

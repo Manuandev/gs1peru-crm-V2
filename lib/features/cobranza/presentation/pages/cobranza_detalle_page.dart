@@ -6,7 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaDetallePage extends StatelessWidget {
-  final int idCobranza;
+  final String idCobranza;
   const CobranzaDetallePage({super.key, required this.idCobranza});
 
   @override

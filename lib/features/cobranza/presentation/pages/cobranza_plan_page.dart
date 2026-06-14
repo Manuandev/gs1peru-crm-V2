@@ -7,7 +7,7 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaPlanPage extends StatelessWidget {
-  final int idCobranza;
+  final String idCobranza;
   final String nombre;
   final String oportunidad;
   final double montoTotal;

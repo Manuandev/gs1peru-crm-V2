@@ -8,7 +8,7 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
   final GuardarPlanCreditoUseCase _guardarPlanCredito;
 
   CobranzaPlanBloc({
-    required int idCobranza,
+    required String idCobranza,
     required String nombre,
     required String oportunidad,
     required double montoTotal,
@@ -35,7 +35,7 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
   }
 
   static CobranzaPlanState _estadoInicial({
-    required int idCobranza,
+    required String idCobranza,
     required String nombre,
     required String oportunidad,
     required double montoTotal,

@@ -7,6 +7,6 @@ class FacturarContadoUseCase {
   final CobranzaRepository _repository;
   const FacturarContadoUseCase(this._repository);
 
-  Future<CrudResult> call(int idCobranza) =>
+  Future<CrudResult> call(String idCobranza) =>
       _repository.facturarContado(idCobranza);
 }

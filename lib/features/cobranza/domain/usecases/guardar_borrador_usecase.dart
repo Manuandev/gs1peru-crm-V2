@@ -7,6 +7,6 @@ class GuardarBorradorUseCase {
   final CobranzaRepository _repository;
   const GuardarBorradorUseCase(this._repository);
 
-  Future<CrudResult> call(int idCobranza) =>
+  Future<CrudResult> call(String idCobranza) =>
       _repository.guardarBorrador(idCobranza);
 }

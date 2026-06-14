@@ -6,7 +6,7 @@ abstract class CobranzaFacturaEvent {
 
 // Carga inicial con los datos del cobro padre
 class CobranzaFacturaStarted extends CobranzaFacturaEvent {
-  final int idCobranza;
+  final String idCobranza;
   final String nombre;
   final String oportunidad;
   final double montoTotal;

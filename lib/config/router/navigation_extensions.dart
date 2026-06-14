@@ -55,7 +55,7 @@ extension NavigationExtensions on BuildContext {
       _push(AppRoutes.detalleCobranza, arguments: {'numSol': numSol});
 
   Future<void> goToFacturarCobranza({
-    required int idCobranza,
+    required String idCobranza,
     required String nombre,
     required String oportunidad,
     required double montoTotal,
@@ -71,7 +71,7 @@ extension NavigationExtensions on BuildContext {
       });
 
   Future<void> goToPlanCredito({
-    required int idCobranza,
+    required String idCobranza,
     required String nombre,
     required String oportunidad,
     required double montoTotal,

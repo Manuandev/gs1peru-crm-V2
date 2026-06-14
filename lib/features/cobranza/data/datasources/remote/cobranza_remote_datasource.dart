@@ -151,7 +151,7 @@ class CobranzaRemoteDatasource {
     ),
   ];
 
-  Future<CrudResult> guardarBorrador(int idCobranza) async {
+  Future<CrudResult> guardarBorrador(String idCobranza) async {
     // TODO: conectar con endpoint real
     // final body = '${[_session.codUser, idCobranza, 'GB'].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
     // final raw = await _api.postJsonGetText(ApiConstants.urlCobranzasLst, body);
@@ -160,7 +160,7 @@ class CobranzaRemoteDatasource {
     return const CrudOk('Borrador guardado correctamente');
   }
 
-  Future<CrudResult> facturarContado(int idCobranza) async {
+  Future<CrudResult> facturarContado(String idCobranza) async {
     // TODO: conectar con endpoint real
     // final body = '${[_session.codUser, idCobranza, 'FC'].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
     // final raw = await _api.postJsonGetText(ApiConstants.urlCobranzasLst, body);
@@ -170,7 +170,7 @@ class CobranzaRemoteDatasource {
   }
 
   Future<CrudResult> guardarPlanCredito(
-    int idCobranza,
+    String idCobranza,
     List<CuotaPlan> cuotas,
   ) async {
     // TODO: conectar con endpoint real

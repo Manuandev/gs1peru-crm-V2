@@ -33,7 +33,7 @@ class CobranzaDetalleView extends StatelessWidget {
             return AppErrorView(
               message: state.mensaje,
               onRetry: () => context.read<CobranzaDetalleBloc>().add(
-                CobranzaDetalleStarted(0),
+                CobranzaDetalleStarted("0"),
               ),
             );
           }

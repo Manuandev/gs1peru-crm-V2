@@ -3,7 +3,7 @@
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaDetalle {
-  final int idCobranza;
+  final String idCobranza;
   final String nombre;
   final String apellido;
   final String oportunidad;

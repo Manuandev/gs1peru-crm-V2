@@ -10,7 +10,7 @@ class CobranzaFacturaBloc
   final FacturarContadoUseCase _facturarContado;
 
   CobranzaFacturaBloc({
-    required int idCobranza,
+    required String idCobranza,
     required String nombre,
     required String oportunidad,
     required double montoTotal,

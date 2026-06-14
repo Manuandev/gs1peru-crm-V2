@@ -33,7 +33,7 @@ const condicionesDisponibles = [
 
 class CobranzaFacturaState {
   // Datos del cobro padre (read-only)
-  final int idCobranza;
+  final String idCobranza;
   final String nombre;
   final String oportunidad;
   final double montoTotal;

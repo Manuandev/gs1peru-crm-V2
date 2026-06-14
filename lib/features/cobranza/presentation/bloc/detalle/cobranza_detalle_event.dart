@@ -5,6 +5,6 @@ abstract class CobranzaDetalleEvent {
 }
 
 class CobranzaDetalleStarted extends CobranzaDetalleEvent {
-  final int idCobranza;
+  final String idCobranza;
   const CobranzaDetalleStarted(this.idCobranza);
 }

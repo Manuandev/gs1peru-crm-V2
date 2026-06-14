@@ -32,7 +32,7 @@ class CobranzaDetalleModel extends CobranzaDetalle {
         : HistorialCobranzaModel.parseList(historialRaw);
 
     return CobranzaDetalleModel(
-    idCobranza:      ParseUtils.toInt(c, 0),
+    idCobranza:      ParseUtils.str(c, 0),
     nombre:          ParseUtils.str(c, 1),
     apellido:        ParseUtils.str(c, 2),
     oportunidad:     ParseUtils.str(c, 3),

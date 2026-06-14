@@ -21,7 +21,7 @@ class CobranzaDetalleBloc
     emit(CobranzaDetalleSuccess(_mockDetalle(event.idCobranza)));
   }
 
-  CobranzaDetalle _mockDetalle(int idCobranza) => CobranzaDetalle(
+  CobranzaDetalle _mockDetalle(String idCobranza) => CobranzaDetalle(
         idCobranza: idCobranza,
         nombre: 'Lina Sachi',
         apellido: 'Minaya Guzman',

@@ -329,18 +329,18 @@ class _MediaViewerPageState extends State<MediaViewerPage>
       return Image.file(
         File(widget.url),
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => _imageErrorWidget(),
+        errorBuilder: (_, _, _) => _imageErrorWidget(),
       );
     }
 
     return CachedNetworkImage(
       imageUrl: widget.url,
       fit: BoxFit.contain,
-      placeholder: (_, __) =>
+      placeholder: (_, _) =>
           const Center(
             child: CircularProgressIndicator(color: AppColors.textOnDark),
           ),
-      errorWidget: (_, __, ___) => _imageErrorWidget(),
+      errorWidget: (_, _, _) => _imageErrorWidget(),
     );
   }
 

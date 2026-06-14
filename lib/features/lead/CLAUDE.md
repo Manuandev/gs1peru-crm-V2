@@ -1,25 +1,38 @@
-# Feature: Lead
+# Lead Feature
 
-Gestiona la lista de leads en dos modos: Seguimientos y Propuestas.
+## Propósito
+Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propuestas (`PA`).
 
-## Archivos clave
+## Pantallas
+- `LeadListPage` → lista de leads con chips de filtro; recibe `LeadType` como argumento
+- `LeadDetallePage` → detalle completo del lead con comentarios y stepper de estado
 
-| Archivo | Qué hace |
-|---|---|
-| `data/datasources/remote/lead_remote_datasource.dart` | Consulta leads por tipo |
-| `data/models/lead_model.dart` | Parseo de lista de leads |
-| `domain/entities/lead.dart` | Entidad pura |
-| `domain/repositories/lead_repository.dart` | Interfaz |
-| `data/repositories/lead_repository_impl.dart` | Implementación |
-| `domain/usecases/get_leads_usecase.dart` | Caso de uso |
-| `presentation/bloc/lead_list_bloc.dart` | Estado de la lista |
-| `presentation/pages/lead_list_page.dart` | Crea el BlocProvider |
-| `presentation/widgets/lead_list_view.dart` | UI pura |
+## BLoCs / Cubits
+- `LeadListBloc` (list/) → carga leads por tipo, filtra en memoria; conteos por filtro
+- `LeadDetalleBloc` (detail/) → carga detalle + comentarios de un lead por `idLead`
 
----
+## Widgets principales
+- `LeadListView` (list/) → vista principal con AppBar + BlocBuilder
+- `LeadListPortrait` (list/) → lista scrollable con `LeadCard`s y filtros
+- `LeadCard` (list/) → tarjeta de lead con avatar, info, timestamp y botones de acción
+- `LeadCardActions` (list/) → fila de botones (chat, favorito) en la parte inferior de cada card
+- `LeadListFilterChips` (list/) → chips horizontales de filtro con badges de conteo
+- `LeadDetalleView` (detalle/) → layout principal del detalle con todas las secciones
+- `LeadDetalleStepper` (detalle/) → stepper visual de estado del lead
+- `LeadDetalleInfoCard` (detalle/) → tarjeta con datos clave del lead
+- `LeadDetalleComentarios` (detalle/) → lista de comentarios del lead
+- `LeadDetalleActions` (detalle/) → botones de acción del detalle
 
-## LeadType — tipos de lista
+## SPs que consume
+- `[CRM].[SP_LeadsLst]` → lista de leads por tipo ('PO' o 'PA') y agente/moderador
 
+## Dependencias externas
+- `LeadRepository` (RepositoryProvider global)
+- `SessionService` → para filtro `misCasos` y rol de moderador
+
+## Notas importantes
+
+### LeadType — tipos de lista
 ```dart
 enum LeadType {
   seguimientos,  // código SP: 'PO' → ruta AppRoutes.seguimiento
@@ -27,103 +40,24 @@ enum LeadType {
 }
 ```
 
-Siempre pasar el tipo al crear el Bloc:
+### LeadListFiltro
 ```dart
-LeadListBloc(GetLeadsUseCase(...))..add(LeadListStarted(type))
+enum LeadListFiltro { todos, misCasos, nuevos, enDesarrollo }
 ```
+- Moderador: filtro inicial `todos`; agente: `misCasos`
+- Propuestas: no muestra chips `nuevos` ni `enDesarrollo`
+- Conteos se calculan sobre `_allLeads` (lista completa), no sobre la lista filtrada
 
----
+### Navegación
+- Seguimiento/Propuestas → `clearAndPush` (limpia stack; se abre desde Drawer)
+- Detalle de chat desde lead → `context.goToDetalleChat(idLead: lead.idLead)` (apila)
 
-## LeadListFiltro — filtros de lista
-
-```dart
-enum LeadListFiltro {
-  todos,          // todos los leads
-  misCasos,       // lead.asignadoA == session.codUser
-  nuevos,         // lead.idEstado == '00'
-  enDesarrollo,   // lead.idEstado == '01'
-}
-```
-
-**Filtro inicial según rol:**
-```dart
-_filtroActivo = _session.isModerador
-    ? LeadListFiltro.todos      // moderador ve todo
-    : LeadListFiltro.misCasos;  // agente solo ve los suyos
-```
-
----
-
-## LeadListBloc
-
-```dart
-// Estados
-LeadListInitial
-LeadListLoading
-LeadListSuccess(leads, filtro, conteos, type)
-LeadListError(message)
-
-// Eventos
-LeadListStarted(type)   // carga inicial
-LeadListRefresh(type)   // recarga (botón refresh en AppBar)
-LeadListFiltered(filtro) // cambio de filtro — no recarga red, filtra en memoria
-```
-
-**Conteos disponibles en `LeadListSuccess`:**
-```dart
-state.conteos[LeadListFiltro.todos]
-state.conteos[LeadListFiltro.misCasos]
-state.conteos[LeadListFiltro.nuevos]
-state.conteos[LeadListFiltro.enDesarrollo]
-```
-
-Los conteos siempre se calculan sobre `_allLeads` (lista completa sin filtrar),
-no sobre la lista filtrada visible.
-
----
-
-## GetLeadsUseCase
-
-```dart
-class GetLeadsUseCase {
-  Future<List<Lead>> call(String tipo) async {
-    return _repository.getLeads(tipo);
-    // tipo: 'PO' = seguimientos | 'PA' = propuestas
-  }
-}
-```
-
----
-
-## Entidad Lead — campos principales
-
+### Campos principales de Lead
 ```dart
 lead.idLead      // int — identificador único
 lead.idEstado    // String — '00'–'15' (ver AppIconsSocial etapas)
 lead.idCanal     // int — canal de origen (ver AppIconsSocial canales)
 lead.asignadoA   // String — codUser del agente asignado
-lead.nombre      // String
-lead.telefono    // String
-lead.fechaHora   // String — usar .formatWhatsApp() para mostrar
-```
-
----
-
-## Páginas y rutas
-
-| Página | Ruta | Tipo |
-|---|---|---|
-| `LeadListPage(type: LeadType.seguimientos)` | `AppRoutes.seguimiento` | clearAndPush |
-| `LeadListPage(type: LeadType.propuestas)` | `AppRoutes.propuestas` | clearAndPush |
-
-Ambas rutas limpian el stack (se navega desde el Drawer).
-
----
-
-## Navegación a detalle de chat desde un lead
-
-Desde cualquier lead se puede ir al chat del lead:
-```dart
-context.goToDetalleChat(idLead: lead.idLead)
-// apila ChatDetailPage sobre LeadListPage
+lead.nombreCompleto // String
+lead.fechaHora   // String — usar .formatSinHoy() para mostrar
 ```

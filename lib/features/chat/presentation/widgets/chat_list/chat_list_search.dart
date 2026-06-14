@@ -32,7 +32,7 @@ class ChatListSearchBar extends StatelessWidget {
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: ValueListenableBuilder(
           valueListenable: controller,
-          builder: (_, value, __) => value.text.isNotEmpty
+          builder: (_, value, _) => value.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.close_rounded),
                   onPressed: onClear,

@@ -72,7 +72,7 @@ class _UnderConstructionPageState extends State<UnderConstructionPage>
               height: AppSizing.animRingOuter,
               child: AnimatedBuilder(
                 animation: _ctrl,
-                builder: (_, __) => Stack(
+                builder: (_, _) => Stack(
                   alignment: Alignment.center,
                   children: [
                     _RotatingRing(

@@ -1,4 +1,4 @@
-// lib\features\chat\index.dart
+// lib/features/chat/index_chat.dart
 
 export 'data/datasources/remote/chat_remote_datasource.dart';
 

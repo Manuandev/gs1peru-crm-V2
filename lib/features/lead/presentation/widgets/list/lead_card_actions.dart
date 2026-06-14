@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/lead_card_actions.dart
+// lib/features/lead/presentation/widgets/list/lead_card_actions.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';

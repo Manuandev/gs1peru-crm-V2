@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/widgets/cobranza_campos_extra.dart
+// lib/features/cobranza/presentation/widgets/factura/cobranza_campos_extra.dart
 //
 // Contiene solo lo que CAMBIA según condición de pago:
 //   esArriba: true  → crédito muestra [fecha + validar], contado muestra nada
@@ -107,45 +107,6 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        // TextFormField(
-        //   controller: _fechaCtrl,
-        //   readOnly: true,
-        //   onTap: _seleccionarFecha,
-        //   decoration: InputDecoration(
-        //     hintText: 'dd/mm/aaaa',
-        //     hintStyle: AppTextStyles.bodyMedium.copyWith(
-        //       color: AppColors.textDisabled,
-        //     ),
-        //     suffixIcon: IconButton(
-        //       icon: Icon(
-        //         AppIcons.calendar,
-        //         size: AppSizing.iconSm,
-        //         color: AppColors.primary,
-        //       ),
-        //       onPressed: _seleccionarFecha,
-        //     ),
-        //     contentPadding: const EdgeInsets.symmetric(
-        //       horizontal: AppSpacing.sm,
-        //       vertical: AppSpacing.xs,
-        //     ),
-        //     border: OutlineInputBorder(
-        //       borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        //       borderSide: const BorderSide(color: AppColors.border),
-        //     ),
-        //     enabledBorder: OutlineInputBorder(
-        //       borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        //       borderSide: const BorderSide(color: AppColors.border),
-        //     ),
-        //     focusedBorder: OutlineInputBorder(
-        //       borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        //       borderSide: BorderSide(
-        //         color: AppColors.primary,
-        //         width: AppSizing.borderWidthThin * 2,
-        //       ),
-        //     ),
-        //   ),
-        //   style: AppTextStyles.bodyMedium,
-        // ),
         CustomTextField(
           controller: _fechaCtrl,
           readOnly: true,

@@ -1,4 +1,4 @@
-// lib/features\home\index.dart
+// lib/features/home/index_home.dart
 
 export 'data/datasources/remote/home_remote_datasource.dart';
 
@@ -25,9 +25,9 @@ export 'domain/repositories/home_repository.dart';
 export 'domain/usecases/get_home_usecase.dart';
 export 'domain/usecases/get_notifications_usecase.dart';
 
-export 'presentation/bloc/home_bloc.dart';
-export 'presentation/bloc/home_event.dart';
-export 'presentation/bloc/home_state.dart';
+export 'presentation/bloc/home/home_bloc.dart';
+export 'presentation/bloc/home/home_event.dart';
+export 'presentation/bloc/home/home_state.dart';
 
 export 'presentation/bloc/notifications/notifications_bloc.dart';
 export 'presentation/bloc/notifications/notifications_event.dart';

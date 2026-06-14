@@ -55,7 +55,7 @@ class _CobranzaDetalleBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tieneAccion = detalle.idEstado != 'CA';
+    final tieneAccion = detalle.estado != 'CA';
 
     return Column(
       children: [

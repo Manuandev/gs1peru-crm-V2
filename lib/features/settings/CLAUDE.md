@@ -7,7 +7,7 @@ Configuración de la app: tema claro/oscuro y preferencias de usuario.
 | Archivo | Qué hace |
 |---|---|
 | `presentation/pages/settings_page.dart` | Pantalla de configuración |
-| `core/cubit/theme_cubit.dart` | Controla ThemeMode globalmente |
+| `core/theme/theme_cubit.dart` | Controla ThemeMode globalmente |
 
 ---
 

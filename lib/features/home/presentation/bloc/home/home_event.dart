@@ -1,4 +1,4 @@
-// lib/features/home/presentation/bloc/home_event.dart
+// lib/features/home/presentation/bloc/home/home_event.dart
 // ============================================================
 // HOME - EVENTOS
 // ============================================================

@@ -1,4 +1,4 @@
-// lib/features/home/presentation/bloc/home_bloc.dart
+// lib/features/home/presentation/bloc/home/home_bloc.dart
 // ============================================================
 // HOME BLOC
 // ============================================================

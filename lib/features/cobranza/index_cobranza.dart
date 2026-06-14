@@ -48,10 +48,10 @@ export 'presentation/widgets/lista/cobranza_filter_chips.dart';
 export 'presentation/widgets/lista/cobranza_list_portrait.dart';
 export 'presentation/widgets/lista/cobranza_list_view.dart';
 export 'presentation/widgets/lista/cobranza_summary_cards.dart';
-export 'presentation/widgets/fractura/cobranza_factura_view.dart';
-export 'presentation/widgets/fractura/cobranza_factura_header.dart';
-export 'presentation/widgets/fractura/cobranza_campos_extra.dart';
-export 'presentation/widgets/fractura/cobranza_resumen_card.dart';
+export 'presentation/widgets/factura/cobranza_factura_view.dart';
+export 'presentation/widgets/factura/cobranza_factura_header.dart';
+export 'presentation/widgets/factura/cobranza_campos_extra.dart';
+export 'presentation/widgets/factura/cobranza_resumen_card.dart';
 
 export 'presentation/widgets/plan/cobranza_plan_view.dart';
 export 'presentation/widgets/plan/cobranza_plan_resumen_card.dart';

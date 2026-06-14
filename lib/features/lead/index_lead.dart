@@ -1,4 +1,4 @@
-// lib\features\lead\index.dart
+// lib/features/lead/index_lead.dart
 
 export 'data/datasources/remote/lead_remote_datasource.dart';
 
@@ -23,13 +23,13 @@ export 'domain/repositories/lead_repository.dart';
 
 export 'domain/usecases/get_leads_usecase.dart';
 
-export 'presentation/bloc/lead_list_bloc.dart';
-export 'presentation/bloc/lead_list_event.dart';
-export 'presentation/bloc/lead_list_state.dart';
+export 'presentation/bloc/list/lead_list_bloc.dart';
+export 'presentation/bloc/list/lead_list_event.dart';
+export 'presentation/bloc/list/lead_list_state.dart';
 
-export 'presentation/bloc/lead_detalle_bloc.dart';
-export 'presentation/bloc/lead_detalle_event.dart';
-export 'presentation/bloc/lead_detalle_state.dart';
+export 'presentation/bloc/detail/lead_detalle_bloc.dart';
+export 'presentation/bloc/detail/lead_detalle_event.dart';
+export 'presentation/bloc/detail/lead_detalle_state.dart';
 
 export 'presentation/pages/lead_list_page.dart';
 export 'presentation/pages/lead_detalle_page.dart';
@@ -40,8 +40,8 @@ export 'presentation/widgets/detalle/lead_detalle_info_card.dart';
 export 'presentation/widgets/detalle/lead_detalle_comentarios.dart';
 export 'presentation/widgets/detalle/lead_detalle_actions.dart';
 
-export 'presentation/widgets/lead_list_portrait.dart';
-export 'presentation/widgets/lead_list_view.dart';
-export 'presentation/widgets/lead_card_actions.dart';
-export 'presentation/widgets/lead_card.dart';
-export 'presentation/widgets/lead_list_filter_chips.dart';
+export 'presentation/widgets/list/lead_list_portrait.dart';
+export 'presentation/widgets/list/lead_list_view.dart';
+export 'presentation/widgets/list/lead_card_actions.dart';
+export 'presentation/widgets/list/lead_card.dart';
+export 'presentation/widgets/list/lead_list_filter_chips.dart';

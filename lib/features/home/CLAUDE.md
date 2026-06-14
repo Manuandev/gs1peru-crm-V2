@@ -12,7 +12,8 @@ Dashboard principal con totales, prioridades y prospectos recientes.
 | `data/models/prospecto_home_model.dart` | Prospectos recientes |
 | `domain/entities/home.dart` | Entidad pura |
 | `domain/entities/prioridad_home.dart` | Entidad pura |
-| `presentation/bloc/home_bloc.dart` | Estado del dashboard |
+| `presentation/bloc/home/home_bloc.dart` | Estado del dashboard |
+| `presentation/bloc/notifications/notifications_bloc.dart` | Estado de las notificaciones |
 | `presentation/pages/home_page.dart` | Crea el BlocProvider |
 | `presentation/widgets/` | Cards, listas, badges |
 

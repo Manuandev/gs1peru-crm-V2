@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/bloc/lead_detalle_bloc.dart
+// lib/features/lead/presentation/bloc/detail/lead_detalle_bloc.dart
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';

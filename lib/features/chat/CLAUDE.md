@@ -17,6 +17,20 @@ Es el feature más complejo de la app — leer completo antes de tocar cualquier
 
 ---
 
+## BLoCs / Cubits — estructura de subcarpetas
+
+| BLoC | Subcarpeta | Responsabilidad |
+|---|---|---|
+| `ChatListBloc` | `bloc/chat_list/` | Lista de chats con filtros y búsqueda |
+| `ChatDetailBloc` | `bloc/chat_detail/` | Mensajes, estado de conversación, paginación |
+| `EditLeadBloc` | `bloc/edit_lead/` | Formulario de edición de datos del lead |
+| `InfoLeadCubit` | `bloc/info_lead/` | Estado reactivo del lead en el detalle del chat |
+| `SelectTemplateBloc` | `bloc/template/` | Selección de template de WhatsApp |
+
+**`InfoLeadCubit` se comparte entre `ChatDetailPage` y `EditLeadPage`** — se crea en `ChatDetailPage` y se pasa a `EditLeadPage` con `BlocProvider.value`. No crear uno nuevo en `EditLeadPage`.
+
+---
+
 ## Endpoints y códigos de operación
 
 Todos los métodos usan `ApiConstants.urlChatsLst` o `ApiConstants.urlLeadsCud`:

@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/lead_card.dart
+// lib/features/lead/presentation/widgets/list/lead_card.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';

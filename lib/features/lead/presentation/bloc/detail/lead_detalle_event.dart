@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/bloc/lead_detalle_event.dart
+// lib/features/lead/presentation/bloc/detail/lead_detalle_event.dart
 
 abstract class LeadDetalleEvent {
   const LeadDetalleEvent();

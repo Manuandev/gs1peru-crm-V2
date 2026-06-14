@@ -12,7 +12,9 @@ Gestiona login, splash, logout y persistencia de sesión.
 | `domain/repositories/auth_repository.dart` | Interfaz |
 | `data/repositories/auth_repository_impl.dart` | Implementación |
 | `domain/usecases/logout_usecase.dart` | Caso de uso logout |
-| `presentation/bloc/auth_bloc.dart` | Árbitro global de sesión |
+| `presentation/bloc/auth/auth_bloc.dart` | Árbitro global de sesión |
+| `presentation/bloc/login/login_bloc.dart` | Flujo de login |
+| `presentation/bloc/splash/splash_bloc.dart` | Verificación de sesión inicial |
 
 ---
 

@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/widgets/cobranza_factura_view.dart
+// lib/features/cobranza/presentation/widgets/factura/cobranza_factura_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';

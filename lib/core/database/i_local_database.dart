@@ -1,3 +1,4 @@
+// lib/core/database/i_local_database.dart
 /// Contrato de base de datos local.
 /// 
 /// IMPLEMENTACIONES POSIBLES:

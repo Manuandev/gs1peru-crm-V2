@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\widgets\chat_detail\chat_input_bar.dart
+// lib/features/chat/presentation/widgets/chat_detail/chat_input_bar.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';

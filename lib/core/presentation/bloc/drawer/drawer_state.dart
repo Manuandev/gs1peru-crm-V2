@@ -1,3 +1,4 @@
+// lib/core/presentation/bloc/drawer/drawer_state.dart
 abstract class DrawerState {
   const DrawerState();
 }

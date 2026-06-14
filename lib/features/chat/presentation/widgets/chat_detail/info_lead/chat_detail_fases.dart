@@ -1,3 +1,4 @@
+// lib/features/chat/presentation/widgets/chat_detail/info_lead/chat_detail_fases.dart
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';

@@ -1,4 +1,4 @@
-// lib/features/auth/presentation/widgets/splash_view.dart
+// lib/features/auth/presentation/widgets/splash/splash_view.dart
 // ============================================================
 // SPLASH VIEW
 // ============================================================

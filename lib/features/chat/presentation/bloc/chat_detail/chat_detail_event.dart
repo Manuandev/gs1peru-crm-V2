@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\bloc\chat_detail\chat_detail_event.dart
+// lib/features/chat/presentation/bloc/chat_detail/chat_detail_event.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

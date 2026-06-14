@@ -1,4 +1,4 @@
-// lib\features\chat\data\models\template_model.dart
+// lib/features/chat/data/models/template_model.dart
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';

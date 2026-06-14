@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\widgets\chat_detail\audio_recorder_widget.dart
+// lib/features/chat/presentation/widgets/chat_detail/audio/audio_recorder_widget.dart
 
 import 'dart:async';
 import 'dart:io';

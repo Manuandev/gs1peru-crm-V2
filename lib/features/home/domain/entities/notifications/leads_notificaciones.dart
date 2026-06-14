@@ -1,4 +1,4 @@
-// lib\features\home\domain\entities\notifications\leads_notificaciones.dart
+// lib/features/home/domain/entities/notifications/leads_notificaciones.dart
 
 class LeadReasignado {
   final int idLead;

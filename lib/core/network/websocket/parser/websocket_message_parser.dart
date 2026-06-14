@@ -1,3 +1,4 @@
+// lib/core/network/websocket/parser/websocket_message_parser.dart
 import 'websocket_message.dart';
 
 /// Responsable de parsear los mensajes crudos del servidor SignalR

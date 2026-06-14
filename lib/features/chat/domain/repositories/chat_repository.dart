@@ -1,4 +1,4 @@
-// lib\features\chat\domain\repositories\chat_repository.dart
+// lib/features/chat/domain/repositories/chat_repository.dart
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';

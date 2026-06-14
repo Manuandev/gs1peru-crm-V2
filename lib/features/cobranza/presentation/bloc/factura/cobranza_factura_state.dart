@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/bloc/cobranza_factura_state.dart
+// lib/features/cobranza/presentation/bloc/factura/cobranza_factura_state.dart
 
 import 'package:app_crm/core/index_core.dart';
 

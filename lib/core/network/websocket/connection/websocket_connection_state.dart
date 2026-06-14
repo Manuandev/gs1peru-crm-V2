@@ -1,3 +1,4 @@
+// lib/core/network/websocket/connection/websocket_connection_state.dart
 /// Estados posibles de la conexión WebSocket / SignalR
 enum WebSocketConnectionState {
   /// Conectado y listo para recibir/enviar mensajes

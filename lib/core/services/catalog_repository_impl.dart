@@ -1,4 +1,4 @@
-// lib/core/services/catalog_repository.dart
+// lib/core/services/catalog_repository_impl.dart
 
 import 'package:app_crm/core/index_core.dart';
 

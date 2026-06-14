@@ -1,3 +1,4 @@
+// lib/features/home/domain/entities/home.dart
 import 'package:app_crm/features/home/index_home.dart';
 
 class Home {

@@ -1,4 +1,4 @@
-// lib\features\home\presentation\bloc\notifications\notifications_event.dart
+// lib/features/home/presentation/bloc/notifications/notifications_event.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\widgets\chat_detail\message_bubble.dart
+// lib/features/chat/presentation/widgets/chat_detail/mensaje/message_bubble.dart
 
 import 'dart:io';
 import 'dart:typed_data';

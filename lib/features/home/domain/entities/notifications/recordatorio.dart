@@ -1,4 +1,4 @@
-// lib\features\home\domain\entities\notifications\recordatorio.dart
+// lib/features/home/domain/entities/notifications/recordatorio.dart
 
 class Recordatorio {
   final int idLead;

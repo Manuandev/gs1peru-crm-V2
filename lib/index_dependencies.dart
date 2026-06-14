@@ -1,3 +1,4 @@
+// lib/index_dependencies.dart
 // ─── HTTP & Networking ───────────────────────────────────────────
 export 'package:dio/dio.dart';
 export 'package:connectivity_plus/connectivity_plus.dart';

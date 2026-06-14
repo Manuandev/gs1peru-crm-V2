@@ -1,4 +1,4 @@
-// lib\features\chat\domain\entities\chat_message.dart
+// lib/features/chat/domain/entities/chat_message.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

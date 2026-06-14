@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/widgets/cobranza_summary_cards.dart
+// lib/features/cobranza/presentation/widgets/lista/cobranza_summary_cards.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';

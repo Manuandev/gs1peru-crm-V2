@@ -1,4 +1,4 @@
-// lib/features/home/presentation/widgets/dashboard/dashboard_card.dart
+// lib/features/home/presentation/widgets/dashboard/dashboard_home.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';

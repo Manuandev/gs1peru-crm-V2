@@ -1,4 +1,4 @@
-// lib\core\constants\app_images.dart
+// lib/core/constants/app_images.dart
 
 import 'package:flutter/material.dart';
 

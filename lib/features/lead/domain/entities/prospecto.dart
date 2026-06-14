@@ -1,4 +1,4 @@
-// lib\features\lead\domain\entities\prospecto.dart
+// lib/features/lead/domain/entities/prospecto.dart
 
 class Prospecto {
   final int idLead;

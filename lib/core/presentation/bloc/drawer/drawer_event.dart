@@ -1,4 +1,4 @@
-// lib/features/home/presentation/bloc/drawer/drawer_event.dart
+// lib/core/presentation/bloc/drawer/drawer_event.dart
 
 abstract class DrawerEvent {}
 

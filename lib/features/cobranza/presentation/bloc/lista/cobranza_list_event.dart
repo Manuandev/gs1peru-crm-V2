@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/bloc/cobranza_list_event.dart
+// lib/features/cobranza/presentation/bloc/lista/cobranza_list_event.dart
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';

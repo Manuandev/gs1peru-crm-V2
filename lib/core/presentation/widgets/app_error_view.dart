@@ -1,4 +1,4 @@
-// lib\core\errors\app_error_view.dart
+// lib/core/presentation/widgets/app_error_view.dart
 
 import 'package:flutter/material.dart';
 

@@ -1,4 +1,4 @@
-// lib\features\lead\domain\entities\lead_detail.dart
+// lib/features/lead/domain/entities/lead_detail.dart
 
 class LeadDetail {
   final String idCreacion; // 00 - ID_CREACION

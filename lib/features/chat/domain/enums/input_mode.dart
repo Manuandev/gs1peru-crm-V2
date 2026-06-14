@@ -1,3 +1,3 @@
-// lib\features\chat\domain\enums\input_mode.dart
+// lib/features/chat/domain/enums/input_mode.dart
 
 enum InputMode { text, audio, attachment }

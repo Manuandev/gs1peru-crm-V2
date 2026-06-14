@@ -1,4 +1,4 @@
-// lib\core\models\combo_item.dart
+// lib/core/models/combo_item.dart
 
 /// Modelo compartido para todos los tipos de combo.
 ///

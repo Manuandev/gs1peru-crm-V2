@@ -1,3 +1,4 @@
+// lib/features/home/domain/entities/prospecto_home.dart
 class ProspectoHome {
   final int idLead;
   final String nombre;

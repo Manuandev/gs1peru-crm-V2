@@ -1,4 +1,4 @@
-// lib/
+// lib/features/chat/presentation/widgets/chat_list/chat_list_filter_chips.dart
 
 import 'package:flutter/material.dart';
 

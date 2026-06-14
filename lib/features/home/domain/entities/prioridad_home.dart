@@ -1,3 +1,4 @@
+// lib/features/home/domain/entities/prioridad_home.dart
 class PrioridadHome {
   final int idLead;
   final String nombre;

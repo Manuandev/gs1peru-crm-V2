@@ -1,4 +1,4 @@
-// lib/features/lead/domain/entities/lead_entity.dart
+// lib/features/lead/domain/entities/lead.dart
 
 class Lead {
   final int idLead;

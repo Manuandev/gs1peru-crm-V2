@@ -1,4 +1,4 @@
-// lib\features\auth\index.dart
+// lib/features/auth/index_auth.dart
 
 export 'data/datasources/local/auth_local_datasource.dart';
 export 'data/datasources/remote/auth_remote_datasource.dart';

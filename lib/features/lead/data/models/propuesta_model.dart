@@ -1,4 +1,4 @@
-// lib\features\lead\data\models\propuesta_model.dart
+// lib/features/lead/data/models/propuesta_model.dart
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';

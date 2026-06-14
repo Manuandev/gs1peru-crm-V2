@@ -1,3 +1,4 @@
+// lib/features/home/presentation/widgets/dashboard/sections/prioridad_section_home.dart
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';

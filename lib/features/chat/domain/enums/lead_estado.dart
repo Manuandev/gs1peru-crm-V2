@@ -1,4 +1,4 @@
-// lib\features\chat\domain\enums\lead_estado.dart
+// lib/features/chat/domain/enums/lead_estado.dart
 
 enum LeadEstado {
   nuevo('00', 'Nuevo'),

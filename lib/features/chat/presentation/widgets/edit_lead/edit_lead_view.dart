@@ -1,4 +1,4 @@
-// lib/features/chat/presentation/widgets/templates/templates_view.dart
+// lib/features/chat/presentation/widgets/edit_lead/edit_lead_view.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';

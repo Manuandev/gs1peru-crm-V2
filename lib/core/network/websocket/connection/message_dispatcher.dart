@@ -1,4 +1,4 @@
-// lib/core/network/websocket/message_dispatcher.dart
+// lib/core/network/websocket/connection/message_dispatcher.dart
 
 import 'dart:async';
 

@@ -1,3 +1,4 @@
+// lib/core/network/websocket/parser/websocket_message.dart
 /// Representa un mensaje ya parseado recibido por el WebSocket.
 ///
 /// El protocolo del servidor usa el formato:

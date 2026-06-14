@@ -1,3 +1,4 @@
+// lib/core/network/websocket/connection/i_signalr_service.dart
 import 'dart:async';
 import 'websocket_connection_state.dart';
 import '../parser/websocket_message.dart';

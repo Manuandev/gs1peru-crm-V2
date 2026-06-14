@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/bloc/cobranza_plan_event.dart
+// lib/features/cobranza/presentation/bloc/plan/cobranza_plan_event.dart
 
 abstract class CobranzaPlanEvent {
   const CobranzaPlanEvent();

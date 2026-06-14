@@ -1,4 +1,4 @@
-// lib\core\widgets\app_empty_view.dart
+// lib/core/presentation/widgets/app_empty_view.dart
 
 import 'package:flutter/material.dart';
 

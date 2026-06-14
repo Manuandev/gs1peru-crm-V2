@@ -1,4 +1,4 @@
-// lib\core\utils\string\string_utils.dart
+// lib/core/utils/string/string_utils.dart
 
 extension StringExtensions on String {
   String get limpiarTelefono {

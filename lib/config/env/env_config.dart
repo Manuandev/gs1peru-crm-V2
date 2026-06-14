@@ -1,4 +1,4 @@
-// lib\config\env\env_config.dart
+// lib/config/env/env_config.dart
 
 enum Environment { dev, qa, prod }
 

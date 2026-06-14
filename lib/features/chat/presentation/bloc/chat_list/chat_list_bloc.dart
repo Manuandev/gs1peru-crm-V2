@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\bloc\chat_list\chat_list_bloc.dart
+// lib/features/chat/presentation/bloc/chat_list/chat_list_bloc.dart
 
 import 'dart:async';
 import 'package:app_crm/index_dependencies.dart';

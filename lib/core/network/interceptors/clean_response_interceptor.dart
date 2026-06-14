@@ -1,4 +1,4 @@
-// lib\core\network\interceptors\clean_response_interceptor.dart
+// lib/core/network/interceptors/clean_response_interceptor.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

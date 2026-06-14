@@ -1,4 +1,4 @@
-// lib\core\constants\app_constants.dart
+// lib/core/constants/app_constants.dart
 
 /// Constantes usadas en el proyecto
 ///

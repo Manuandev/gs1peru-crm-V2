@@ -1,4 +1,4 @@
-// lib\core\presentation\bloc\drawer\drawer_bloc.dart
+// lib/core/presentation/bloc/drawer/drawer_bloc.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

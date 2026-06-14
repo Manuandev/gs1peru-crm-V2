@@ -1,4 +1,4 @@
-// lib/features/chat/presentation/widgets/chat_detail/message_parser.dart
+// lib/features/chat/presentation/widgets/chat_detail/mensaje/message_parser.dart
 //
 // ✅ MOVIDO desde message_bubble.dart
 //    Lógica de parseo de texto puro — no tiene nada que hacer en un widget.

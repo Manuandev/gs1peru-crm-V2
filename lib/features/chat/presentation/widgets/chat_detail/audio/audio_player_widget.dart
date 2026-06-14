@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\widgets\chat_detail\audio_player_widget.dart
+// lib/features/chat/presentation/widgets/chat_detail/audio/audio_player_widget.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';

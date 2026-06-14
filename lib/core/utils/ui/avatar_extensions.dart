@@ -1,3 +1,4 @@
+// lib/core/utils/ui/avatar_extensions.dart
 import 'package:flutter/material.dart';
 import 'avatar_utils.dart';
 

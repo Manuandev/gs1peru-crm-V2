@@ -1,4 +1,4 @@
-// lib/features/cobranza/domain/usecases/get_cobranzas_usecase.dart
+// lib/features/cobranza/domain/usecases/get_detalle_cobranza_usecase.dart
 
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 

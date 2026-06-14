@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/bloc/cobranza_plan_bloc.dart
+// lib/features/cobranza/presentation/bloc/plan/cobranza_plan_bloc.dart
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';

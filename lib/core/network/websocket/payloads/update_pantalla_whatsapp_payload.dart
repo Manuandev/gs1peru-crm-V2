@@ -1,4 +1,4 @@
-// lib\core\network\websocket\payloads\update_pantalla_whatsapp_payload.dart
+// lib/core/network/websocket/payloads/update_pantalla_whatsapp_payload.dart
 
 import 'package:app_crm/core/index_core.dart';
 

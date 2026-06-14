@@ -1,4 +1,4 @@
-// lib/features/home/presentation/widgets/exit_on_back_wrapper.dart
+// lib/core/presentation/widgets/navigation/exit_on_back_wrapper.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // SystemNavigator

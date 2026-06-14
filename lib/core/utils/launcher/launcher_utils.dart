@@ -1,4 +1,4 @@
-// lib\core\utils\launcher\launcher_utils.dart
+// lib/core/utils/launcher/launcher_utils.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

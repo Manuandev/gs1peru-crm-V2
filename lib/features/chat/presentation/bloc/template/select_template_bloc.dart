@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\bloc\templates\templates_bloc.dart
+// lib/features/chat/presentation/bloc/template/select_template_bloc.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

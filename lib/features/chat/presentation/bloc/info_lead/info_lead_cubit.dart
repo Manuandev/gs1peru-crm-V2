@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\bloc\info_lead\info_lead_cubit.dart
+// lib/features/chat/presentation/bloc/info_lead/info_lead_cubit.dart
 
 import 'dart:async';
 import 'package:app_crm/index_dependencies.dart';

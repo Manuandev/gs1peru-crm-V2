@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/bloc/cobranza_detalle_bloc.dart
+// lib/features/cobranza/presentation/bloc/detalle/cobranza_detalle_bloc.dart
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';

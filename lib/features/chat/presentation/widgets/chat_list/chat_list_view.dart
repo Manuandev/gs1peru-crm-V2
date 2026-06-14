@@ -1,3 +1,4 @@
+// lib/features/chat/presentation/widgets/chat_list/chat_list_view.dart
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 

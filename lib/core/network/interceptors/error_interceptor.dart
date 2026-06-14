@@ -1,3 +1,4 @@
+// lib/core/network/interceptors/error_interceptor.dart
 import 'dart:io';
 import 'package:app_crm/index_dependencies.dart';
 

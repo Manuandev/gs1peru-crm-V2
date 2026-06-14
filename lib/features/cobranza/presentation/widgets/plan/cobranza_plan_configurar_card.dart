@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/widgets/cobranza_plan_configurar_card.dart
+// lib/features/cobranza/presentation/widgets/plan/cobranza_plan_configurar_card.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

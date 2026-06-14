@@ -1,4 +1,4 @@
-// lib\features\chat\domain\usecases\get_info_usecase.dart
+// lib/features/chat/domain/usecases/get_info_lead_usecase.dart
 
 import 'package:app_crm/features/chat/index_chat.dart';
 

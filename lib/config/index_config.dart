@@ -1,4 +1,4 @@
-// lib\config\index.dart
+// lib/config/index_config.dart
 
 export 'env/env_config.dart';
 

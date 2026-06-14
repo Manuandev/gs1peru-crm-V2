@@ -1,3 +1,4 @@
+// lib/core/utils/ui/avatar_utils.dart
 import 'package:flutter/material.dart';
 
 class AvatarUtils {

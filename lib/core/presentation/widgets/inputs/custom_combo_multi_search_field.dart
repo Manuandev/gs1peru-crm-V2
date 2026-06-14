@@ -1,4 +1,4 @@
-// lib\core\presentation\widgets\inputs\custom_combo_multi_search_field.dart
+// lib/core/presentation/widgets/inputs/custom_combo_multi_search_field.dart
 
 import 'package:flutter/material.dart';
 

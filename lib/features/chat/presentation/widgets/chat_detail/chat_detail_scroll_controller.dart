@@ -1,3 +1,4 @@
+// lib/features/chat/presentation/widgets/chat_detail/chat_detail_scroll_controller.dart
 import 'package:flutter/material.dart';
 
 class ChatScrollController {

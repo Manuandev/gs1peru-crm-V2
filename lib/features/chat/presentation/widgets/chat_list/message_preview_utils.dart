@@ -1,4 +1,4 @@
-// lib\core\utils\ui\message_preview_utils.dart
+// lib/features/chat/presentation/widgets/chat_list/message_preview_utils.dart
 
 import 'package:flutter/material.dart';
 

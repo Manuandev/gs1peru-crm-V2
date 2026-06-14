@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\widgets\chat_detail\audio_controller.dart
+// lib/features/chat/presentation/widgets/chat_detail/audio/audio_controller.dart
 
 import 'package:flutter/foundation.dart';
 

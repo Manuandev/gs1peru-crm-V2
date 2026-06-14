@@ -1,4 +1,4 @@
-// lib/features/settings/presentation/bloc/settings/settings_state.dart
+// lib/features/settings/presentation/bloc/settings_state.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

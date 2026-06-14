@@ -1,4 +1,4 @@
-// lib/features/home/domain/entities/notification.dart
+// lib/features/home/domain/entities/notifications/notification.dart
 
 import 'package:app_crm/features/home/index_home.dart';
 

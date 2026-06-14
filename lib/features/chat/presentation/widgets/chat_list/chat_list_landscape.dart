@@ -1,4 +1,4 @@
-// lib/features/chats/presentation/widgets/chats_landscape.dart
+// lib/features/chat/presentation/widgets/chat_list/chat_list_landscape.dart
 
 import 'package:flutter/material.dart';
 

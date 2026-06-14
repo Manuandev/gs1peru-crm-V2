@@ -1,4 +1,4 @@
-// lib\features\home\presentation\pages\notificaciones_page.dart
+// lib/features/chat/presentation/pages/edit_lead_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';

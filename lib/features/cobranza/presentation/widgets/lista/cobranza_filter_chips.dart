@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/widgets/cobranza_filter_chips.dart
+// lib/features/cobranza/presentation/widgets/lista/cobranza_filter_chips.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';

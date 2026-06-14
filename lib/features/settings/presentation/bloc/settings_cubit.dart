@@ -1,4 +1,4 @@
-// lib/features/settings/presentation/bloc/settings/settings_cubit.dart
+// lib/features/settings/presentation/bloc/settings_cubit.dart
 
 import 'package:app_crm/index_dependencies.dart';
 

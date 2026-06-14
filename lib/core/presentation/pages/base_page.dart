@@ -1,4 +1,4 @@
-// lib/features/home/presentation/pages/base_page.dart
+// lib/core/presentation/pages/base_page.dart
 
 import 'package:flutter/material.dart';
 

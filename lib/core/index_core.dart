@@ -1,4 +1,4 @@
-// lib\core\index.dart
+// lib/core/index_core.dart
 
 // #region constants
 export 'constants/app_constants.dart';

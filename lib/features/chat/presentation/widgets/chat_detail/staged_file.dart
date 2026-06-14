@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\widgets\chat_detail\staged_file.dart
+// lib/features/chat/presentation/widgets/chat_detail/staged_file.dart
 
 /// Representa un archivo en la zona de staging antes de enviarlo.
 class StagedFile {

@@ -1,4 +1,4 @@
-// lib\features\lead\domain\usecases\get_leads_usecase.dart
+// lib/features/lead/domain/usecases/get_leads_usecase.dart
 
 import 'package:app_crm/features/lead/index_lead.dart';
 

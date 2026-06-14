@@ -1,4 +1,4 @@
-// lib\features\chat\presentation\widgets\chat_detail\attachment_picker_widget.dart
+// lib/features/chat/presentation/widgets/chat_detail/attachment_picker_widget.dart
 
 import 'dart:io';
 

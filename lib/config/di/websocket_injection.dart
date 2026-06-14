@@ -1,3 +1,4 @@
+// lib/config/di/websocket_injection.dart
 // import 'package:get_it/get_it.dart';
 
 // ignore: dangling_library_doc_comments

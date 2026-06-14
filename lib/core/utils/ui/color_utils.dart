@@ -1,3 +1,4 @@
+// lib/core/utils/ui/color_utils.dart
 import 'package:flutter/material.dart';
 
 /// Utilidades de color para generar colores consistentes y legibles

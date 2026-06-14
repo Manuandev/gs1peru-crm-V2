@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/bloc/cobranza_factura_event.dart
+// lib/features/cobranza/presentation/bloc/factura/cobranza_factura_event.dart
 
 abstract class CobranzaFacturaEvent {
   const CobranzaFacturaEvent();

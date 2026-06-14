@@ -1,4 +1,4 @@
-// lib\core\utils\ui\file_type_utils.dart
+// lib/core/utils/ui/file_type_utils.dart
 
 import 'package:flutter/material.dart';
 

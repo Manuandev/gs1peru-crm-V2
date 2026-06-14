@@ -1,4 +1,4 @@
-// lib/features/cobranza/data/models/detalle_cobranza_model.dart
+// lib/features/cobranza/data/models/historial_cobranza_model.dart
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';

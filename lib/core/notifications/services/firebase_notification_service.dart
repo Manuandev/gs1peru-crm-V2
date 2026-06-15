@@ -93,7 +93,7 @@ class FirebaseNotificationService {
 
   void _procesarMensaje(RemoteMessage message, {bool navegarAlAbrir = false}) {
     final cuerpo =
-        (message.notification?.body ?? message.data['body'] ?? '')
+        (message.notification?.body ?? message.data['cuerpo'] ?? '')
             .replaceAll('[', '')
             .replaceAll(']', '')
             .trim();
@@ -113,4 +113,18 @@ class FirebaseNotificationService {
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  await LocalNotificationService.instance.initBackground();
+
+  final body = message.data['cuerpo'] ?? message.notification?.body;
+  if (body == null) return;
+
+  final parsed = WebSocketMessageParser.parse(body);
+  if (parsed == null) return;
+
+  switch (parsed.process) {
+    case 'NUEVO_LEAD':
+      await LocalNotificationService.instance.showLeadNuevoNotification(parsed);
+    case 'MENSAJE_WHATSAPP':
+      await LocalNotificationService.instance.showChatNotification(parsed);
+  }
 }

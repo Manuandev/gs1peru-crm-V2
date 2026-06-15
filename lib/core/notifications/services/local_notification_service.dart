@@ -33,7 +33,10 @@ class LocalNotificationService {
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         if (response.payload == null || response.payload!.isEmpty) return;
         final notif = AppNotification.fromPayloadString(response.payload!);
-        NotificationNavigator.instance.navigate(notif);
+        NotificationNavigator.instance.navigateWithAction(
+          notif,
+          actionId: response.actionId,
+        );
       },
       onDidReceiveBackgroundNotificationResponse: _onBackgroundTap,
     );
@@ -59,7 +62,10 @@ class LocalNotificationService {
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         if (response.payload == null || response.payload!.isEmpty) return;
         final notif = AppNotification.fromPayloadString(response.payload!);
-        NotificationNavigator.instance.navigate(notif);
+        NotificationNavigator.instance.navigateWithAction(
+          notif,
+          actionId: response.actionId,
+        );
       },
       onDidReceiveBackgroundNotificationResponse: _onBackgroundTap,
     );
@@ -138,12 +144,79 @@ class LocalNotificationService {
     );
   }
 
+  Future<void> showLeadNuevoNotification(WebSocketMessage parsed) async {
+    if (parsed.records.isEmpty) return;
+    final f = parsed.records.first;
+    String get(int i) => i < f.length ? f[i].trim() : '';
+
+    final leadId = int.tryParse(get(0)) ?? 0;
+    if (leadId == 0) return;
+
+    final nombre = get(1);
+    final empresa = get(2);
+    final canal = f.length > 11 ? get(11) : '';
+
+    final detalles = [
+      if (empresa.isNotEmpty) 'Empresa: $empresa',
+      if (canal.isNotEmpty) 'Canal: $canal',
+    ].join('\n');
+
+    await flutterLocalNotificationsPlugin.show(
+      id: leadId,
+      title: 'Nuevo lead',
+      body: nombre.isNotEmpty ? nombre : 'Sin nombre',
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channel.id,
+          _channel.name,
+          channelDescription: _channel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          styleInformation: BigTextStyleInformation(
+            detalles.isNotEmpty ? detalles : nombre,
+            contentTitle: 'Nuevo lead: $nombre',
+            summaryText: canal.isNotEmpty ? canal : null,
+          ),
+          actions: const [
+            AndroidNotificationAction('ver_lead', 'Ver lead'),
+            AndroidNotificationAction('abrir_conversacion', 'Abrir conversación'),
+          ],
+        ),
+      ),
+      payload: AppNotification(
+        title: 'Nuevo lead',
+        body: nombre,
+        route: AppRoutes.seguimiento,
+        payload: {'idLead': leadId.toString(), 'nombre': nombre},
+      ).toPayloadString(),
+    );
+  }
+
+  Future<void> showChatNotification(WebSocketMessage parsed) async {
+    final p = WhatsAppMessagePayload.fromMessage(parsed);
+    if (p == null) return;
+    await showWhatsApp(
+      leadId: p.leadId,
+      mensaje: _textoMensaje(p.tipoMensaje, p.mensaje),
+    );
+  }
+
   void clearLead(int leadId) {
     _mensajesPorLead.remove(leadId);
     flutterLocalNotificationsPlugin.cancel(id: leadId);
   }
 
   Future<void> cancelAll() => flutterLocalNotificationsPlugin.cancelAll();
+
+  String _textoMensaje(String tipo, String mensaje) =>
+      switch (tipo.toLowerCase()) {
+        'image' => '📷 Imagen',
+        'audio' => '🎵 Audio',
+        'video' => '🎥 Video',
+        'document' => '📄 Documento',
+        _ => mensaje,
+      };
 }
 
 @pragma('vm:entry-point')

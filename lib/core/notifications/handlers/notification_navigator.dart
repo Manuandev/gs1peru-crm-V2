@@ -12,10 +12,34 @@ class NotificationNavigator {
     if (route == null) return;
 
     if (route.startsWith(AppRoutes.chats)) return _goChat(notif);
-    // if (route.startsWith(AppRoutes.leads)) return _goLead(notif);
-    
+    if (route.startsWith(AppRoutes.seguimiento)) return _goLead(notif);
 
     _go(route);
+  }
+
+  /// Navega según el botón de acción que tocó el usuario.
+  /// Llamado desde onDidReceiveNotificationResponse con response.actionId.
+  void navigateWithAction(AppNotification notif, {String? actionId}) {
+    switch (actionId) {
+      case 'ver_lead':
+        _goLead(notif);
+      case 'abrir_conversacion':
+        _goChat(notif);
+      default:
+        navigate(notif);
+    }
+  }
+
+  /// Detecta si la app fue abierta desde una notificación local en estado killed.
+  /// Llamar después de que el navigator key esté inicializado (ej: desde Splash).
+  Future<void> handleLocalNotificationLaunch() async {
+    final details =
+        await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    if (details?.didNotificationLaunchApp != true) return;
+    final response = details!.notificationResponse;
+    if (response?.payload == null || response!.payload!.isEmpty) return;
+    final notif = AppNotification.fromPayloadString(response.payload!);
+    navigateWithAction(notif, actionId: response.actionId);
   }
 
   void _goChat(AppNotification notif) {
@@ -27,7 +51,21 @@ class NotificationNavigator {
     state.pushNamed(AppRoutes.detalleChat, arguments: {'idLead': idLead});
   }
 
-  // void _goLead(AppNotification notif) => _go(AppRoutes.leads); // TODO
+  void _goLead(AppNotification notif) {
+    final idLead = int.tryParse(notif.payload?['idLead'] ?? '') ?? 0;
+    final state = NavigationService.navigatorKey.currentState;
+    if (state == null) return;
+
+    if (idLead == 0) {
+      state.pushNamedAndRemoveUntil(AppRoutes.seguimiento, (r) => false);
+      return;
+    }
+    state.pushNamedAndRemoveUntil(AppRoutes.seguimiento, (r) => false);
+    state.pushNamed(
+      AppRoutes.detalleSeguimiento,
+      arguments: {'idLead': idLead},
+    );
+  }
 
   void _go(String route) {
     NavigationService.navigatorKey.currentState?.pushNamedAndRemoveUntil(

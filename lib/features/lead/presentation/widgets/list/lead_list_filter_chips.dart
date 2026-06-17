@@ -22,17 +22,16 @@ class LeadListFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
     final isModerador = SessionService().isModerador;
 
-    final allChips = [
+    final todosChips = [
       (filtro: LeadListFiltro.todos, label: 'Todas'),
       (filtro: LeadListFiltro.misCasos, label: 'Mis casos'),
       (filtro: LeadListFiltro.nuevos, label: 'Nuevos'),
       (filtro: LeadListFiltro.enDesarrollo, label: 'En desarrollo'),
     ];
 
-    final chips = allChips.where((c) {
+    final chips = todosChips.where((c) {
       if (c.filtro == LeadListFiltro.todos && !isModerador) return false;
       if (type == LeadType.propuestas &&
           (c.filtro == LeadListFiltro.nuevos ||
@@ -51,12 +50,14 @@ class LeadListFilterChips extends StatelessWidget {
           children: chips.map((chip) {
             final isSelected = filtroActual == chip.filtro;
             final count = conteos[chip.filtro] ?? 0;
+            final labelColor = isSelected
+                ? colorScheme.onPrimary
+                : colorScheme.onSurface;
 
             return Padding(
               padding: const EdgeInsets.only(right: AppSpacing.sm),
               child: GestureDetector(
                 onTap: () => onFiltroTap(chip.filtro),
-
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
@@ -68,7 +69,6 @@ class LeadListFilterChips extends StatelessWidget {
                         ? colorScheme.primary
                         : colorScheme.surface,
                     borderRadius: BorderRadius.circular(AppSizing.radiusXl),
-                    // Sombra suave para chips no seleccionados (efecto card)
                     boxShadow: isSelected
                         ? []
                         : [
@@ -87,57 +87,26 @@ class LeadListFilterChips extends StatelessWidget {
                             width: AppSizing.borderWidthThin,
                           ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        chip.label,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          fontWeight: AppTextStyles.weightSemiBold,
-                          color: isSelected
-                              ? colorScheme.onPrimary
-                              : colorScheme.onSurface,
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: chip.label,
+                          style: AppTextStyles.labelMedium.copyWith(
+                            fontWeight: AppTextStyles.weightSemiBold,
+                            color: labelColor,
+                          ),
                         ),
-                      ),
-                      if (count > 0) ...[
-                        const SizedBox(width: AppSpacing.chipGap),
-                        // Badge circular con tamaño mínimo garantizado
-                        Container(
-                          constraints: const BoxConstraints(
-                            minWidth: AppSizing.mensajesBadgeSize,
-                            minHeight: AppSizing.mensajesBadgeSize,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.chipGap,
-                            vertical: AppSpacing.xxs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.white(0.35)
-                                : _badgeColor(chip.filtro),
-                            shape: count < 10
-                                ? BoxShape
-                                      .circle // perfecto círculo para 1 dígito
-                                : BoxShape.rectangle,
-                            borderRadius: count >= 10
-                                ? BorderRadius.circular(
-                                    AppSizing.radiusCircular,
-                                  )
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '$count',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                fontWeight: AppTextStyles.weightBold,
-                                color: AppColors.textOnDark,
-                                height: 1,
-                              ),
+                        if (count > 0)
+                          TextSpan(
+                            text: '  $count',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              fontWeight: AppTextStyles.weightMedium,
+                              color: labelColor,
                             ),
                           ),
-                        ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -146,18 +115,5 @@ class LeadListFilterChips extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _badgeColor(LeadListFiltro filtro) {
-    switch (filtro) {
-      case LeadListFiltro.todos:
-        return AppColors.info;
-      case LeadListFiltro.misCasos:
-        return AppColors.secondary;
-      case LeadListFiltro.nuevos:
-        return AppColors.error;
-      case LeadListFiltro.enDesarrollo:
-        return AppColors.success;
-    }
   }
 }

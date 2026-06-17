@@ -12,10 +12,17 @@ class LeadListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => LeadListBloc(
-        GetLeadsUseCase(context.read<LeadRepository>()),
-      )..add(LeadListStarted(type)),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => LeadListBloc(
+            GetLeadsUseCase(context.read<LeadRepository>()),
+          )..add(LeadListStarted(type)),
+        ),
+        BlocProvider(
+          create: (_) => LeadListVistaCubit()..cargar(),
+        ),
+      ],
       child: BlocListener<LeadListBloc, LeadListState>(
         listener: (context, state) {
           if (state is LeadListError) {

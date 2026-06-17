@@ -23,6 +23,7 @@ export 'domain/usecases/get_lead_detalle_usecase.dart';
 export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';
 export 'presentation/bloc/list/lead_list_state.dart';
+export 'presentation/bloc/list/lead_lista_vista_cubit.dart';
 
 export 'presentation/bloc/detail/lead_detalle_bloc.dart';
 export 'presentation/bloc/detail/lead_detalle_event.dart';

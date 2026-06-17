@@ -460,4 +460,11 @@ class AppSizing {
 
   /// Ancho del chip largo en skeleton (Mis casos, En desarrollo): 96dp
   static const double skeletonChipWidthMd = 96.0;
+
+  // ============================================================
+  // LEAD CARD
+  // ============================================================
+
+  /// Ancho del borde de acento izquierdo en LeadCard según el color del estado: 4dp
+  static const double cardBorderEstadoAncho = 4.0;
 }

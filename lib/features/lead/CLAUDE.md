@@ -9,15 +9,16 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 
 ## BLoCs / Cubits
 - `LeadListBloc` (list/) → carga leads por tipo, filtra en memoria; conteos por filtro
+- `LeadListVistaCubit` (list/) → modo de visualización de la lista (detallada/compacta); persiste en `LocalDatabase` clave `lead_lista_compacta`
 - `LeadDetalleBloc` (detail/) → carga detalle + comentarios de un lead por `idLead`
 
 ## Widgets principales
-- `LeadListView` (list/) → vista principal con AppBar + BlocBuilder; muestra `LeadListSkeleton` en loading
+- `LeadListView` (list/) → vista principal con AppBar + BlocBuilder; botón toggle vista detallada/compacta en trailing del AppBar; muestra `LeadListSkeleton` en loading
 - `LeadListSkeleton` (list/) → skeleton de carga de la lista: chips placeholder + 7 cards placeholder
-- `LeadListPortrait` (list/) → lista scrollable con `LeadCard`s y filtros
-- `LeadCard` (list/) → tarjeta de lead con avatar, info, timestamp y botones de acción
-- `LeadCardActions` (list/) → fila de botones (chat, favorito) en la parte inferior de cada card
-- `LeadListFilterChips` (list/) → chips horizontales de filtro con badges de conteo
+- `LeadListPortrait` (list/) → lista scrollable con `LeadCard`s y filtros; recibe `modoCompacto: bool`
+- `LeadCard` (list/) → tarjeta de lead con borde izquierdo por estado, avatar+badge canal, `_LeadEstadoRow`, timestamp y acciones; `modoCompacto: bool` alterna entre vista detallada y compacta
+- `LeadCardActions` (list/) → fila de botones circulares (chat, favorito) — solo en vista detallada
+- `LeadListFilterChips` (list/) → chips horizontales de filtro estilo pill; contador inline (`"Todas  100"`, no badge separado)
 - `LeadDetalleView` (detalle/) → layout principal del detalle con todas las secciones
 - `LeadDetalleSkeleton` (detalle/) → skeleton de carga del detalle: reemplaza el BasePage completo
 - `LeadDetalleStepper` (detalle/) → stepper visual de 4 etapas con header "ETAPA · X de 4 · Nombre"
@@ -58,12 +59,17 @@ enum LeadListFiltro { todos, misCasos, nuevos, enDesarrollo }
 
 ### Campos principales de Lead
 ```dart
-lead.idLead      // int — identificador único
-lead.idEstado    // String — '00'–'15' (ver AppIconsSocial etapas)
-lead.idCanal     // int — canal de origen (ver AppIconsSocial canales)
-lead.asignadoA   // String — codUser del agente asignado
-lead.nombreCompleto // String
-lead.fechaHora   // String — usar .formatSinHoy() para mostrar
+lead.idLead         // int — identificador único
+lead.idEstado       // String — '00'–'15' (ver AppIconsSocial etapas)
+lead.idCanal        // int — canal de origen (ver AppIconsSocial canales)
+lead.asesor         // String — codUser del agente asignado (filtro misCasos)
+lead.nombreCompleto // String — getter: nombre + apellido
+lead.fechaHora      // String — usar .formatSinHoy() para mostrar
+lead.evento         // String — oportunidad/producto (subtítulo 1ª parte)
+lead.interes        // String — interés del lead (subtítulo 2ª parte)
+lead.nombreEmpresa  // String — empresa (subtítulo 3ª parte)
+lead.canal          // String — nombre del canal (mostrado en _LeadEstadoRow)
+lead.estado         // String — label del estado (mostrado en _LeadEstadoRow)
 ```
 
 ---

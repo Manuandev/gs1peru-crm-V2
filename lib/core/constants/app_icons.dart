@@ -462,6 +462,16 @@ class AppIcons {
   static const IconData arrowUp = Icons.keyboard_arrow_up_rounded;
 
   // ============================================================
+  // LISTA — modos de visualización
+  // ============================================================
+
+  /// Vista detallada — toggle de la lista de leads en modo expandido
+  static const IconData vistaDetallada = Icons.view_agenda_outlined;
+
+  /// Vista compacta — toggle de la lista de leads en modo condensado
+  static const IconData vistaCompacta = Icons.view_list;
+
+  // ============================================================
   // COBRANZA
   // ============================================================
 

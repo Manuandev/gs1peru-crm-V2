@@ -11,12 +11,14 @@ class LeadListPortrait extends StatelessWidget {
   final List<Lead> leads;
   final LeadType type;
   final LeadListFiltro filtro;
+  final bool modoCompacto;
 
   const LeadListPortrait({
     super.key,
     required this.leads,
     required this.type,
     required this.filtro,
+    this.modoCompacto = false,
   });
 
   @override
@@ -65,6 +67,7 @@ class LeadListPortrait extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: LeadCard(
                         lead: lead,
+                        modoCompacto: modoCompacto,
                         onTap: () => context.goToDetalleLead(
                           idLead: lead.idLead,
                           type: type,

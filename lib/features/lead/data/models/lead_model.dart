@@ -6,13 +6,17 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class LeadModel extends Lead {
   const LeadModel({
     required super.idLead,
+    required super.idContacto,
     required super.nombre,
     required super.apellido,
     required super.nombreEmpresa,
-    required super.telefono,
-    required super.isFavorito,
-    required super.asignadoA,
+    required super.asesor,
     required super.fechaHora,
+    required super.idNumero,
+    required super.prefijo,
+    required super.numero,
+    required super.isFavorito,
+    required super.correo,
     required super.idEstado,
     required super.estado,
     required super.idCampania,
@@ -28,28 +32,31 @@ class LeadModel extends Lead {
 
   factory LeadModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
 
     return LeadModel(
-      idLead: int.parse(f(0)),
-      nombre: f(1),
-      apellido: f(2),
-      nombreEmpresa: f(3),
-      telefono: f(4),
-      isFavorito: f(5) == '1' ? true : false,
-      asignadoA: f(6),
-      fechaHora: f(7),
-      idEstado: f(8),
-      estado: f(9),
-      idCampania: int.tryParse(f(10)) ?? 0,
-      campania: f(11).isEmpty ? null : f(11),
-      idEvento: int.tryParse(f(12)) ?? 0,
-      evento: f(13).isEmpty ? null : f(13),
-      idCanal: int.tryParse(f(14)) ?? 0,
-      canal: f(15).isEmpty ? null : f(15),
-      idInteres: f(16).isEmpty ? null : int.tryParse(f(16)),
-      interes: f(17).isEmpty ? null : f(17),
-      ibChat: f(18) == '1' ? true : false,
+      idLead: ParseUtils.toInt(fields, 0),
+      idContacto: ParseUtils.toInt(fields, 1),
+      nombre: ParseUtils.str(fields, 2),
+      apellido: ParseUtils.str(fields, 3),
+      nombreEmpresa: ParseUtils.str(fields, 4),
+      asesor: ParseUtils.str(fields, 5),
+      fechaHora: ParseUtils.str(fields, 6),
+      idNumero: ParseUtils.toInt(fields, 7),
+      prefijo: ParseUtils.str(fields, 8),
+      numero: ParseUtils.str(fields, 9),
+      isFavorito: ParseUtils.str(fields, 10) == '1' ? true : false,
+      correo: ParseUtils.str(fields, 11),
+      idEstado: ParseUtils.str(fields, 12),
+      estado: ParseUtils.str(fields, 13),
+      idCampania: ParseUtils.toInt(fields, 14),
+      campania: ParseUtils.str(fields, 15),
+      idEvento: ParseUtils.toInt(fields, 16),
+      evento: ParseUtils.str(fields, 17),
+      idCanal: ParseUtils.toInt(fields, 18),
+      canal: ParseUtils.str(fields, 19),
+      idInteres: ParseUtils.toInt(fields, 20),
+      interes: ParseUtils.str(fields, 21),
+      ibChat: ParseUtils.str(fields, 22) == '1' ? true : false,
     );
   }
 
@@ -59,5 +66,10 @@ class LeadModel extends Lead {
         .where((r) => r.trim().isNotEmpty)
         .map((r) => LeadModel.fromRawString(r))
         .toList();
+  }
+
+  static LeadModel? parse(String rawResponse) {
+    if (rawResponse.trim().isEmpty) return null;
+    return LeadModel.fromRawString(rawResponse);
   }
 }

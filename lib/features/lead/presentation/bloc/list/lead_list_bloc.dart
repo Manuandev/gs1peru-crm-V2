@@ -70,7 +70,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     final conteos = {
       LeadListFiltro.todos: _allLeads.length,
       LeadListFiltro.misCasos: _allLeads
-          .where((c) => c.asignadoA == _session.codUser)
+          .where((c) => c.asesor == _session.codUser)
           .length,
       LeadListFiltro.nuevos: _allLeads.where((c) => c.idEstado == '00').length,
       LeadListFiltro.enDesarrollo: _allLeads
@@ -81,7 +81,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     var resultado = List<Lead>.from(_allLeads);
     if (_filtroActivo == LeadListFiltro.misCasos) {
       resultado = resultado
-          .where((c) => c.asignadoA == _session.codUser)
+          .where((c) => c.asesor == _session.codUser)
           .toList();
     } else if (_filtroActivo == LeadListFiltro.nuevos) {
       resultado = resultado.where((c) => c.idEstado == '00').toList();

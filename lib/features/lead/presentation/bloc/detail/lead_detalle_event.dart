@@ -8,3 +8,8 @@ class LeadDetalleStarted extends LeadDetalleEvent {
   final int idLead;
   const LeadDetalleStarted(this.idLead);
 }
+
+class LeadDetalleRefresh extends LeadDetalleEvent {
+  final int idLead;
+  const LeadDetalleRefresh(this.idLead);
+}

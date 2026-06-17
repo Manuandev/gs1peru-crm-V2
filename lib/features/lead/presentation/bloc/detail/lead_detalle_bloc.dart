@@ -1,11 +1,15 @@
 // lib/features/lead/presentation/bloc/detail/lead_detalle_bloc.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadDetalleBloc extends Bloc<LeadDetalleEvent, LeadDetalleState> {
-  LeadDetalleBloc() : super(const LeadDetalleInitial()) {
+  final GetLeadDetalleUseCase _getData;
+
+  LeadDetalleBloc(this._getData) : super(const LeadDetalleInitial()) {
     on<LeadDetalleStarted>(_onStarted);
+    on<LeadDetalleRefresh>(_onRefresh);
   }
 
   Future<void> _onStarted(
@@ -13,54 +17,27 @@ class LeadDetalleBloc extends Bloc<LeadDetalleEvent, LeadDetalleState> {
     Emitter<LeadDetalleState> emit,
   ) async {
     emit(const LeadDetalleLoading());
-    await Future.delayed(const Duration(milliseconds: 400));
+    await _loadData(event.idLead, emit);
+  }
 
-    // TODO: reemplazar con llamada real a BD usando event.idLead
-    final ahora = DateTime.now();
-    emit(
-      LeadDetalleSuccess(
-        detalle: LeadDetalleCompleto(
-          idLead: event.idLead,
-          nombre: 'Daniela',
-          apellido: 'Gómez',
-          nombreEmpresa: 'Estudio Creativo',
-          telefono: '+51 987 654 321',
-          correo: 'daniela@estudiocreativo.com',
-          idCanal: 7,
-          canal: 'Web',
-          interes: 'Community Manager',
-          idEstado: '00',
-          estado: 'Nuevo',
-          fechaUltimaInteraccion:
-              ahora.subtract(const Duration(minutes: 3)).toString(),
-        ),
-        comentarios: [
-          ComentarioLead(
-            id: 1,
-            texto:
-                'Le envié información del curso por WhatsApp. Está interesada en la siguiente fecha.',
-            fechaHora:
-                ahora.subtract(const Duration(minutes: 5)).toString(),
-            autor: 'Agente CRM',
-          ),
-          ComentarioLead(
-            id: 2,
-            texto:
-                'Se le hizo seguimiento, solicitó información de precios y horarios.',
-            fechaHora:
-                ahora.subtract(const Duration(minutes: 31)).toString(),
-            autor: 'Agente CRM',
-          ),
-          ComentarioLead(
-            id: 3,
-            texto: 'Primera consulta por Instagram, interesada en el curso.',
-            fechaHora: ahora
-                .subtract(const Duration(days: 1, hours: 1, minutes: 15))
-                .toString(),
-            autor: 'Agente CRM',
-          ),
-        ],
-      ),
-    );
+  Future<void> _onRefresh(
+    LeadDetalleRefresh event,
+    Emitter<LeadDetalleState> emit,
+  ) async {
+    emit(const LeadDetalleLoading());
+    await _loadData(event.idLead, emit);
+  }
+
+  Future<void> _loadData(int idLead, Emitter<LeadDetalleState> emit) async {
+    try {
+      final leadDetalle = await _getData.call(idLead);
+
+      emit(LeadDetalleLoaded(detalle: leadDetalle));
+    } on AppException catch (e) {
+      emit(LeadDetalleError(e.message));
+    } catch (e, stackTrace) {
+      addError(e, stackTrace);
+      emit(LeadDetalleError(e.toString()));
+    }
   }
 }

@@ -12,7 +12,9 @@ class LeadDetallePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => LeadDetalleBloc()..add(LeadDetalleStarted(idLead)),
+      create: (_) => LeadDetalleBloc(
+        GetLeadDetalleUseCase(context.read<LeadRepository>()),
+      )..add(LeadDetalleStarted(idLead)),
       child: LeadDetalleView(idLead: idLead),
     );
   }

@@ -2,19 +2,15 @@
 
 export 'data/datasources/remote/lead_remote_datasource.dart';
 
-export 'data/models/prospecto_model.dart';
-export 'data/models/propuesta_model.dart';
 export 'data/models/lead_model.dart';
 export 'data/models/lead_detail_model.dart';
+export 'data/models/comentario_lead_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
 
-export 'domain/entities/prospecto.dart';
-export 'domain/entities/propuesta.dart';
-export 'domain/entities/lead_detail.dart';
 export 'domain/entities/lead.dart';
+export 'domain/entities/lead_detail.dart';
 export 'domain/entities/comentario_lead.dart';
-export 'domain/entities/lead_detalle_completo.dart';
 
 export 'domain/enums/types_lead.dart';
 export 'domain/enums/lead_filtro.dart';
@@ -22,6 +18,7 @@ export 'domain/enums/lead_filtro.dart';
 export 'domain/repositories/lead_repository.dart';
 
 export 'domain/usecases/get_leads_usecase.dart';
+export 'domain/usecases/get_lead_detalle_usecase.dart';
 
 export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';

@@ -14,14 +14,15 @@ class LeadDetalleLoading extends LeadDetalleState {
   const LeadDetalleLoading();
 }
 
-class LeadDetalleSuccess extends LeadDetalleState {
-  final LeadDetalleCompleto detalle;
-  final List<ComentarioLead> comentarios;
+class LeadDetalleLoaded extends LeadDetalleState {
+  final LeadDetalle detalle;
 
-  const LeadDetalleSuccess({
-    required this.detalle,
-    required this.comentarios,
-  });
+  const LeadDetalleLoaded({required this.detalle});
+
+  Lead get lead => detalle.lead;
+  List<ComentarioLead> get comentarios => detalle.comentarios;
+
+  List<Object?> get props => [detalle];
 }
 
 class LeadDetalleError extends LeadDetalleState {

@@ -25,7 +25,7 @@ class LeadDetalleView extends StatelessWidget {
             body: AppErrorView(message: state.mensaje, onRetry: () {}),
           );
         }
-        if (state is LeadDetalleSuccess) {
+        if (state is LeadDetalleLoaded) {
           return _DetalleScaffold(
             detalle: state.detalle,
             comentarios: state.comentarios,
@@ -38,7 +38,7 @@ class LeadDetalleView extends StatelessWidget {
 }
 
 class _DetalleScaffold extends StatelessWidget {
-  final LeadDetalleCompleto detalle;
+  final LeadDetalle detalle;
   final List<ComentarioLead> comentarios;
 
   const _DetalleScaffold({required this.detalle, required this.comentarios});
@@ -48,7 +48,7 @@ class _DetalleScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(detalle.nombreCompleto),
+        title: Text(detalle.lead.nombreCompleto),
         actions: [
           IconButton(
             icon: Icon(AppIcons.phone, color: AppColors.textOnDark),
@@ -64,9 +64,9 @@ class _DetalleScaffold extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            LeadDetalleStepper(idEstadoActual: detalle.idEstado),
-            _UltimaInteraccion(fechaHora: detalle.fechaUltimaInteraccion),
-            LeadDetalleInfoCard(detalle: detalle),
+            LeadDetalleStepper(idEstadoActual: detalle.lead.idEstado),
+            _UltimaInteraccion(fechaHora: detalle.lead.fechaHora),
+            LeadDetalleInfoCard(detalle: detalle.lead),
             const SizedBox(height: AppSpacing.md),
             LeadDetalleComentarios(comentarios: comentarios),
           ],

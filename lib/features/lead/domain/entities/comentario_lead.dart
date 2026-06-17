@@ -2,14 +2,16 @@
 
 class ComentarioLead {
   final int id;
-  final String texto;
-  final String fechaHora;
   final String autor;
+  final String texto;
+  final String actividad;
+  final String fechaHora;
 
   const ComentarioLead({
     required this.id,
-    required this.texto,
-    required this.fechaHora,
     required this.autor,
+    required this.texto,
+    required this.actividad,
+    required this.fechaHora,
   });
 }

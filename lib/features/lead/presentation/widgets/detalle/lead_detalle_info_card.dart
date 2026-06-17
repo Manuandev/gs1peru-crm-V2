@@ -5,7 +5,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadDetalleInfoCard extends StatelessWidget {
-  final LeadDetalleCompleto detalle;
+  final Lead detalle;
   const LeadDetalleInfoCard({super.key, required this.detalle});
 
   @override
@@ -20,31 +20,68 @@ class LeadDetalleInfoCard extends StatelessWidget {
       child: Column(
         children: [
           _InfoFila(
-            icono: AppIconsSocial.widgetCanal(detalle.idCanal, size: AppSizing.iconSm),
+            icono: AppIconsSocial.widgetCanal(
+              detalle.idCanal,
+              size: AppSizing.iconSm,
+            ),
             etiqueta: 'Origen',
             valor: detalle.canal,
           ),
-          const Divider(height: 1, indent: AppSpacing.md, endIndent: AppSpacing.md),
+          const Divider(
+            height: 1,
+            indent: AppSpacing.md,
+            endIndent: AppSpacing.md,
+          ),
           _InfoFila(
-            icono: Icon(AppIcons.interes, size: AppSizing.iconSm, color: AppColors.textSecondary),
+            icono: Icon(
+              AppIcons.interes,
+              size: AppSizing.iconSm,
+              color: AppColors.textSecondary,
+            ),
             etiqueta: 'Curso / Interés',
-            valor: detalle.interes ?? 'Sin interés',
+            valor: detalle.interes,
           ),
-          const Divider(height: 1, indent: AppSpacing.md, endIndent: AppSpacing.md),
+          const Divider(
+            height: 1,
+            indent: AppSpacing.md,
+            endIndent: AppSpacing.md,
+          ),
           _InfoFila(
-            icono: Icon(AppIcons.business, size: AppSizing.iconSm, color: AppColors.textSecondary),
+            icono: Icon(
+              AppIcons.business,
+              size: AppSizing.iconSm,
+              color: AppColors.textSecondary,
+            ),
             etiqueta: 'Empresa',
-            valor: detalle.nombreEmpresa.isEmpty ? 'Sin empresa' : detalle.nombreEmpresa,
+            valor: detalle.nombreEmpresa.isEmpty
+                ? 'Sin empresa'
+                : detalle.nombreEmpresa,
           ),
-          const Divider(height: 1, indent: AppSpacing.md, endIndent: AppSpacing.md),
+          const Divider(
+            height: 1,
+            indent: AppSpacing.md,
+            endIndent: AppSpacing.md,
+          ),
           _InfoFila(
-            icono: Icon(AppIcons.phone, size: AppSizing.iconSm, color: AppColors.textSecondary),
+            icono: Icon(
+              AppIcons.phone,
+              size: AppSizing.iconSm,
+              color: AppColors.textSecondary,
+            ),
             etiqueta: 'Teléfono',
-            valor: detalle.telefono,
+            valor: '${detalle.prefijo} ${detalle.numero}',
           ),
-          const Divider(height: 1, indent: AppSpacing.md, endIndent: AppSpacing.md),
+          const Divider(
+            height: 1,
+            indent: AppSpacing.md,
+            endIndent: AppSpacing.md,
+          ),
           _InfoFila(
-            icono: Icon(AppIcons.email, size: AppSizing.iconSm, color: AppColors.textSecondary),
+            icono: Icon(
+              AppIcons.email,
+              size: AppSizing.iconSm,
+              color: AppColors.textSecondary,
+            ),
             etiqueta: 'Correo',
             valor: detalle.correo,
           ),
@@ -85,9 +122,7 @@ class _InfoFila extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Text(valor, style: AppTextStyles.bodySmall),
-          ),
+          Expanded(child: Text(valor, style: AppTextStyles.bodySmall)),
         ],
       ),
     );

@@ -3,27 +3,23 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
-class LeadDetailModel extends LeadDetail {
-  const LeadDetailModel({
-    required super.idCreacion,
-    required super.documento,
-    required super.nombre,
-    required super.telefono,
-    required super.correo,
-    required super.oportunidad,
-  });
+class LeadDetalleModel extends LeadDetalle {
+  const LeadDetalleModel({required super.lead, required super.comentarios});
 
-  factory LeadDetailModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
+  factory LeadDetalleModel.parse(String rawResponse) {
+    final partes = rawResponse.split(AppConstants.sepListas);
+    final leadRaw = partes.isNotEmpty ? partes[0] : '';
+    final comentariosRaw = partes.length > 1 ? partes[1] : '';
 
-    return LeadDetailModel(
-      idCreacion: f(0),
-      documento: f(1),
-      nombre: f(2),
-      telefono: f(3),
-      correo: f(4),
-      oportunidad: f(5),
+    final lead = LeadModel.parse(leadRaw);
+
+    final comentarios = comentariosRaw.trim().isEmpty
+        ? <ComentarioLeadModel>[]
+        : ComentarioLeadModel.parseList(comentariosRaw);
+
+    return LeadDetalleModel(
+      lead: lead!,
+      comentarios: comentarios,
     );
   }
 }

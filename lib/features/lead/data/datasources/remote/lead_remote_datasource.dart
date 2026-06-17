@@ -12,7 +12,7 @@ class LeadRemoteDatasource {
 
   Future<List<LeadModel>> getLeads(String proceso) async {
     final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0,proceso].join(camp)}${sep}LS';
+        '${[_session.codUser, _session.isModerador ? 1 : 0, proceso].join(camp)}${sep}LS';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -24,4 +24,16 @@ class LeadRemoteDatasource {
     };
   }
 
+  Future<LeadDetalleModel> getLeadDetalle(int idLead) async {
+    final String body = '["$idLead"]${sep}DT';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => LeadDetalleModel.parse(data),
+      ApiEmpty() => throw const AppException('No se encontró el lead.'),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
 }

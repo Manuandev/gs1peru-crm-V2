@@ -23,37 +23,18 @@ class LeadDetalleComentarios extends StatelessWidget {
                 'Comentarios (${comentarios.length})',
                 style: AppTextStyles.titleSmall,
               ),
-              TextButton(
+              CustomTextButton(
+                text: 'Ver todos',
                 onPressed: () {},
-                child: Text(
-                  'Ver todos',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
               ),
             ],
           ),
-          ...visibles.map((c) => _ComentarioCard(comentario: c)),
-          const SizedBox(height: AppSpacing.sm),
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-              child: Row(
-                children: [
-                  Icon(AppIcons.add, size: AppSizing.iconSm, color: AppColors.primary),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Agregar comentario',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ...visibles.map((c) => _ComentarioBubble(comentario: c)),
+          const SizedBox(height: AppSpacing.xs),
+          CustomOutlinedButton(
+            text: 'Agregar comentario',
+            icon: const Icon(AppIcons.add),
+            onPressed: () {},
           ),
           const SizedBox(height: AppSpacing.xl),
         ],
@@ -62,9 +43,9 @@ class LeadDetalleComentarios extends StatelessWidget {
   }
 }
 
-class _ComentarioCard extends StatelessWidget {
+class _ComentarioBubble extends StatelessWidget {
   final ComentarioLead comentario;
-  const _ComentarioCard({required this.comentario});
+  const _ComentarioBubble({required this.comentario});
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +60,7 @@ class _ComentarioCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: AppSizing.avatarSm / 2,
+            radius: AppSizing.avatarRadiusSm,
             backgroundColor: AvatarUtils.color(comentario.autor),
             child: Text(
               AvatarUtils.initials(comentario.autor),

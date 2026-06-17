@@ -18,10 +18,12 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 - `LeadCardActions` (list/) → fila de botones (chat, favorito) en la parte inferior de cada card
 - `LeadListFilterChips` (list/) → chips horizontales de filtro con badges de conteo
 - `LeadDetalleView` (detalle/) → layout principal del detalle con todas las secciones
-- `LeadDetalleStepper` (detalle/) → stepper visual de estado del lead
-- `LeadDetalleInfoCard` (detalle/) → tarjeta con datos clave del lead
-- `LeadDetalleComentarios` (detalle/) → lista de comentarios del lead
-- `LeadDetalleActions` (detalle/) → botones de acción del detalle
+- `LeadDetalleStepper` (detalle/) → stepper visual de 4 etapas con header "ETAPA · X de 4 · Nombre"
+- `LeadInfoSectionCard` (detalle/) → card base reutilizable con título en mayúsculas + filas
+- `LeadContactoCard` (detalle/) → card CONTACTO: Teléfono (tappable) + Correo
+- `LeadContextoCard` (detalle/) → card CONTEXTO: Origen + Curso/Interés + Empresa
+- `LeadDetalleComentarios` (detalle/) → lista de comentarios del lead con burbuja y botón agregar
+- `LeadDetalleActions` (detalle/) → botones de acción del detalle (WhatsApp, Llamar, Recordatorio, Editar)
 
 ## SPs que consume
 - `[CRM].[SP_LeadsLst]` → lista de leads por tipo ('PO' o 'PA') y agente/moderador

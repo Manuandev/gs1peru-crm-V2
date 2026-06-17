@@ -31,33 +31,50 @@ class LeadDetalleStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actual = _indiceActual;
+    final colorActual = AppIconsSocial.colorEstado(idEstadoActual);
+
     return Container(
-      color: AppColors.surface,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.md,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (int i = 0; i < _pasos.length; i++) ...[
-            Expanded(
-              child: _PasoEtapa(
-                paso: _pasos[i],
-                isActivo: i == actual,
-                isCompletado: i < actual,
-              ),
-            ),
-            if (i < _pasos.length - 1)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm2),
-                child: Icon(
-                  AppIcons.forward,
-                  size: AppSizing.iconSm,
-                  color: AppColors.textDisabled,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'ETAPA',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
-          ],
+              Text(
+                '${actual + 1} de ${_pasos.length} · ${_pasos[actual].label}',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: colorActual,
+                  fontWeight: AppTextStyles.weightSemiBold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (int i = 0; i < _pasos.length; i++) ...[
+                Expanded(
+                  child: _PasoEtapa(
+                    paso: _pasos[i],
+                    isActivo: i == actual,
+                    isCompletado: i < actual,
+                  ),
+                ),
+                if (i < _pasos.length - 1) _Conector(completado: i < actual),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -69,6 +86,29 @@ class _DatoPaso {
   final String label;
   final FaIconData icon;
   const _DatoPaso({required this.id, required this.label, required this.icon});
+}
+
+// Línea horizontal delgada que conecta dos nodos del stepper.
+// El padding-top centra la línea con el centro del círculo de 40dp.
+class _Conector extends StatelessWidget {
+  final bool completado;
+  const _Conector({required this.completado});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: AppSpacing.md,
+      child: Padding(
+        padding: const EdgeInsets.only(
+          top: (AppSizing.stepperCircleSize - AppSizing.hairline) / 2,
+        ),
+        child: Container(
+          height: AppSizing.hairline,
+          color: completado ? AppColors.success : AppColors.border,
+        ),
+      ),
+    );
+  }
 }
 
 class _PasoEtapa extends StatelessWidget {

@@ -109,6 +109,8 @@ export 'presentation/widgets/app_error_view.dart';
 export 'presentation/widgets/app_loading_view.dart';
 export 'presentation/widgets/app_empty_view.dart';
 export 'presentation/widgets/app_snackbar.dart';
+
+export 'presentation/widgets/skeleton/skeleton_box.dart';
 // #endregion presentation
 
 export 'services/session_service.dart';

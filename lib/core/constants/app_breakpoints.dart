@@ -207,7 +207,7 @@ class AppSizing {
   static const double maxWidthWide = 1200.0;
 
   /// Ancho de la columna de etiqueta en filas de información de detalle: 96dp
-  /// Alinea etiqueta y valor en _InfoFila (LeadDetalleInfoCard)
+  /// Alinea etiqueta y valor en _InfoFila (LeadContactoCard / LeadContextoCard)
   static const double infoLabelWidth = 96.0;
 
   // ============================================================
@@ -431,4 +431,23 @@ class AppSizing {
 
   /// Diámetro del círculo de etapa en el stepper de detalle: 40dp — LeadDetalleStepper
   static const double stepperCircleSize = 40.0;
+
+  // ============================================================
+  // SKELETON — alturas y anchos de placeholders de carga
+  // ============================================================
+
+  /// Altura del skeleton para textos de cuerpo (bodySmall / labelSmall): 12dp
+  static const double skeletonLineHeight = 12.0;
+
+  /// Altura del skeleton para títulos (titleSmall / bodyMedium): 14dp
+  static const double skeletonTitleHeight = 14.0;
+
+  /// Ancho del skeleton del nombre en el AppBar del detalle: 150dp
+  static const double skeletonNameWidth = 150.0;
+
+  /// Ancho del skeleton para etiquetas cortas (labels de pasos, fechas): 40dp
+  static const double skeletonLabelWidth = 40.0;
+
+  /// Ancho del skeleton para textos de cuerpo de longitud media: 160dp
+  static const double skeletonTextWidth = 160.0;
 }

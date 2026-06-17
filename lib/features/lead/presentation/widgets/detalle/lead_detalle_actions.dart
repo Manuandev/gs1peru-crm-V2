@@ -5,7 +5,8 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class LeadDetalleActions extends StatelessWidget {
-  const LeadDetalleActions({super.key});
+  final VoidCallback onEditar;
+  const LeadDetalleActions({super.key, required this.onEditar});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +53,7 @@ class LeadDetalleActions extends StatelessWidget {
               _BotonAccion(
                 icono: Icon(AppIcons.edit, size: AppSizing.iconMd, color: AppColors.primary),
                 label: 'Editar',
-                onTap: () {},
+                onTap: onEditar,
               ),
             ],
           ),

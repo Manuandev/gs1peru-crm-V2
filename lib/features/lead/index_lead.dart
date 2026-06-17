@@ -42,3 +42,20 @@ export 'presentation/widgets/list/lead_list_view.dart';
 export 'presentation/widgets/list/lead_card_actions.dart';
 export 'presentation/widgets/list/lead_card.dart';
 export 'presentation/widgets/list/lead_list_filter_chips.dart';
+
+// Blocs + cubit movidos de chat → lead (ver CLAUDE.md del feature lead)
+export 'presentation/bloc/edit_lead/edit_lead_bloc.dart';
+export 'presentation/bloc/edit_lead/edit_lead_event.dart';
+export 'presentation/bloc/edit_lead/edit_lead_state.dart';
+export 'presentation/bloc/info_lead/info_lead_cubit.dart';
+export 'presentation/bloc/info_lead/info_lead_state.dart';
+export 'presentation/pages/edit_lead_page.dart';
+export 'presentation/widgets/edit_lead/edit_lead_view.dart';
+export 'presentation/widgets/edit_lead/edit_lead_portrait.dart';
+
+// Puente temporal — eliminar cuando InfoLeadCubit use LeadRepository
+export '../chat/domain/repositories/chat_repository.dart';
+export '../chat/domain/usecases/get_info_lead_usecase.dart';
+export '../chat/domain/usecases/update_lead_estado_usecase.dart';
+export '../chat/domain/usecases/update_lead_info_usecase.dart';
+export '../chat/domain/entities/info_lead.dart';

@@ -11,10 +11,26 @@ class LeadDetallePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => LeadDetalleBloc(
-        GetLeadDetalleUseCase(context.read<LeadRepository>()),
-      )..add(LeadDetalleStarted(idLead)),
+    // TODO: Esto es un puente temporal. Reusa InfoLeadCubit/InfoLead del
+    // feature chat porque edit_lead_page propio del feature lead todavía
+    // está incompleto (sus imports apuntan a chat). Cuando ese feature
+    // esté terminado, lead_detalle debe usar su propio Lead/LeadDetalleBloc
+    // para editar, sin depender de ChatRepository.
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (ctx) => InfoLeadCubit(
+            GetInfoUseCase(ctx.read<ChatRepository>()),
+            UpdateLeadEstadoUseCase(ctx.read<ChatRepository>()),
+            UpdateLeadInfoUseCase(ctx.read<ChatRepository>()),
+          )..load(idLead),
+        ),
+        BlocProvider(
+          create: (ctx) => LeadDetalleBloc(
+            GetLeadDetalleUseCase(ctx.read<LeadRepository>()),
+          )..add(LeadDetalleStarted(idLead)),
+        ),
+      ],
       child: LeadDetalleView(idLead: idLead),
     );
   }

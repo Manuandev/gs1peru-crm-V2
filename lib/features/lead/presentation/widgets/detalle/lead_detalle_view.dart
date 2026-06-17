@@ -48,7 +48,21 @@ class _DetalleScaffold extends StatelessWidget {
       bodyPadding: EdgeInsets.zero,
       title: detalle.lead.nombreCompleto,
       drawerSide: DrawerSide.none,
-      footer: const LeadDetalleActions(),
+      footer: LeadDetalleActions(
+        onEditar: () async {
+          final infoState = context.read<InfoLeadCubit>().state;
+          if (infoState is! InfoLeadSuccess) return;
+          await context.goToEditarLead(
+            lead: infoState.infoLead,
+            cubit: context.read<InfoLeadCubit>(),
+          );
+          if (context.mounted) {
+            context.read<LeadDetalleBloc>().add(
+              LeadDetalleRefresh(detalle.lead.idLead),
+            );
+          }
+        },
+      ),
       appBarLeadingButtons: [
         IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),

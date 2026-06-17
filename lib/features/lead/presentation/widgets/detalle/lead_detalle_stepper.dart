@@ -20,7 +20,7 @@ class LeadDetalleStepper extends StatelessWidget {
       label: 'Propuesta',
       icon: AppIconsSocial.etapaPropuesta,
     ),
-    _DatoPaso(id: '11', label: 'Cobranza', icon: AppIconsSocial.etapaGanado),
+    _DatoPaso(id: '05', label: 'Cobranza', icon: AppIconsSocial.etapaGanado),
   ];
 
   int get _indiceActual {

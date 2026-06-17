@@ -25,7 +25,7 @@ class LeadDetalleInfoCard extends StatelessWidget {
               size: AppSizing.iconSm,
             ),
             etiqueta: 'Origen',
-            valor: detalle.canal,
+            valor: detalle.canal.isEmpty ? 'Sin canal' : detalle.canal,
           ),
           const Divider(
             height: 1,
@@ -39,7 +39,7 @@ class LeadDetalleInfoCard extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
             etiqueta: 'Curso / Interés',
-            valor: detalle.interes,
+            valor: detalle.interes.isEmpty ? 'Sin interés' : detalle.interes,
           ),
           const Divider(
             height: 1,
@@ -69,7 +69,9 @@ class LeadDetalleInfoCard extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
             etiqueta: 'Teléfono',
-            valor: '${detalle.prefijo} ${detalle.numero}',
+            valor: detalle.numero.isEmpty
+                ? 'Sin teléfono'
+                : '${detalle.prefijo} ${detalle.numero}',
           ),
           const Divider(
             height: 1,
@@ -83,7 +85,7 @@ class LeadDetalleInfoCard extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
             etiqueta: 'Correo',
-            valor: detalle.correo,
+            valor: detalle.correo.isEmpty ? 'Sin correo' : detalle.correo,
           ),
         ],
       ),

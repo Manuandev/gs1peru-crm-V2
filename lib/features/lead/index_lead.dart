@@ -40,6 +40,7 @@ export 'presentation/widgets/detalle/lead_detalle_actions.dart';
 
 export 'presentation/widgets/list/lead_list_portrait.dart';
 export 'presentation/widgets/list/lead_list_view.dart';
+export 'presentation/widgets/list/lead_list_skeleton.dart';
 export 'presentation/widgets/list/lead_card_actions.dart';
 export 'presentation/widgets/list/lead_card.dart';
 export 'presentation/widgets/list/lead_list_filter_chips.dart';

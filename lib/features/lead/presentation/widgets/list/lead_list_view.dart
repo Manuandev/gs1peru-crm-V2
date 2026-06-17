@@ -29,7 +29,7 @@ class LeadListView extends StatelessWidget {
       body: BlocBuilder<LeadListBloc, LeadListState>(
         builder: (context, state) {
           if (state is LeadListLoading || state is LeadListInitial) {
-            return const Center(child: CircularProgressIndicator());
+            return const LeadListSkeleton();
           }
 
           if (state is LeadListError) {

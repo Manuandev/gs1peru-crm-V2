@@ -450,4 +450,14 @@ class AppSizing {
 
   /// Ancho del skeleton para textos de cuerpo de longitud media: 160dp
   static const double skeletonTextWidth = 160.0;
+
+  /// Altura del chip de filtro en skeleton: 30dp
+  /// Coincide con chipPaddingV * 2 (18) + labelMedium (~12) = 30dp — LeadListSkeleton
+  static const double skeletonChipHeight = 30.0;
+
+  /// Ancho del chip corto en skeleton (Todas, Nuevos, badge de estado): 72dp
+  static const double skeletonChipWidthSm = 72.0;
+
+  /// Ancho del chip largo en skeleton (Mis casos, En desarrollo): 96dp
+  static const double skeletonChipWidthMd = 96.0;
 }

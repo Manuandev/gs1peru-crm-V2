@@ -1,5 +1,6 @@
 // lib/features/lead/presentation/widgets/detalle/lead_detalle_view.dart
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -14,15 +15,13 @@ class LeadDetalleView extends StatelessWidget {
     return BlocBuilder<LeadDetalleBloc, LeadDetalleState>(
       builder: (context, state) {
         if (state is LeadDetalleInitial || state is LeadDetalleLoading) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Prospecto')),
-            body: const Center(child: CircularProgressIndicator()),
-          );
+          return const AppLoadingView();
         }
         if (state is LeadDetalleError) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Error')),
-            body: AppErrorView(message: state.mensaje, onRetry: () {}),
+          return AppErrorView(
+            message: state.message,
+            onRetry: () =>
+                context.read<LeadDetalleBloc>().add(LeadDetalleStarted(idLead)),
           );
         }
         if (state is LeadDetalleLoaded) {
@@ -45,21 +44,23 @@ class _DetalleScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(detalle.lead.nombreCompleto),
-        actions: [
-          IconButton(
-            icon: Icon(AppIcons.phone, color: AppColors.textOnDark),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(AppIcons.more, color: AppColors.textOnDark),
-            onPressed: () {},
-          ),
-        ],
-      ),
+    return BasePage(
+      bodyPadding: EdgeInsets.zero,
+      title: detalle.lead.nombreCompleto,
+      drawerSide: DrawerSide.none,
+      footer: const LeadDetalleActions(),
+      appBarLeadingButtons: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.goBack(),
+        ),
+      ],
+      appBarTrailingButtons: [
+        IconButton(
+          icon: Icon(AppIcons.phone, color: AppColors.textOnDark),
+          onPressed: () {},
+        ),
+      ],
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -72,7 +73,6 @@ class _DetalleScaffold extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const LeadDetalleActions(),
     );
   }
 }
@@ -84,8 +84,9 @@ class _UltimaInteraccion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fecha = DateFormatter.parseDate(fechaHora);
-    final elapsed =
-        fecha != null ? DateTime.now().difference(fecha) : Duration.zero;
+    final elapsed = fecha != null
+        ? DateTime.now().difference(fecha)
+        : Duration.zero;
 
     return Padding(
       padding: const EdgeInsets.symmetric(

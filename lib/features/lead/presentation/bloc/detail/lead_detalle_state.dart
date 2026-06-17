@@ -26,6 +26,6 @@ class LeadDetalleLoaded extends LeadDetalleState {
 }
 
 class LeadDetalleError extends LeadDetalleState {
-  final String mensaje;
-  const LeadDetalleError(this.mensaje);
+  final String message;
+  const LeadDetalleError(this.message);
 }

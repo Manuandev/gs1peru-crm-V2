@@ -141,7 +141,7 @@ class _LeadInfo extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xxs),
         Text(
-          '${lead.canal ?? 'Sin canal'} · ${lead.interes ?? 'Sin interés'}',
+          '${lead.canal} · ${lead.interes}',
           style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
           ),

@@ -25,7 +25,7 @@ class LeadRemoteDatasource {
   }
 
   Future<LeadDetalleModel> getLeadDetalle(int idLead) async {
-    final String body = '["$idLead"]${sep}DT';
+    final String body = '$idLead${sep}DT';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 

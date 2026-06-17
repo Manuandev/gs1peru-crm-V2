@@ -36,16 +36,16 @@ export 'presentation/bloc/chat_list/chat_list_bloc.dart';
 export 'presentation/bloc/chat_list/chat_list_event.dart';
 export 'presentation/bloc/chat_list/chat_list_state.dart';
 
-export 'presentation/bloc/edit_lead/edit_lead_bloc.dart';
-export 'presentation/bloc/edit_lead/edit_lead_event.dart';
-export 'presentation/bloc/edit_lead/edit_lead_state.dart';
+export '../lead/presentation/bloc/edit_lead/edit_lead_bloc.dart';
+export '../lead/presentation/bloc/edit_lead/edit_lead_event.dart';
+export '../lead/presentation/bloc/edit_lead/edit_lead_state.dart';
 
 export 'presentation/bloc/chat_detail/chat_detail_bloc.dart';
 export 'presentation/bloc/chat_detail/chat_detail_event.dart';
 export 'presentation/bloc/chat_detail/chat_detail_state.dart';
 
-export 'presentation/bloc/info_lead/info_lead_cubit.dart';
-export 'presentation/bloc/info_lead/info_lead_state.dart';
+export '../lead/presentation/bloc/info_lead/info_lead_cubit.dart';
+export '../lead/presentation/bloc/info_lead/info_lead_state.dart';
 
 export 'presentation/bloc/template/select_template_bloc.dart';
 export 'presentation/bloc/template/select_template_event.dart';
@@ -53,7 +53,7 @@ export 'presentation/bloc/template/select_template_state.dart';
 
 export 'presentation/pages/chat_list_page.dart';
 export 'presentation/pages/chat_detail_page.dart';
-export 'presentation/pages/edit_lead_page.dart';
+export '../lead/presentation/pages/edit_lead_page.dart';
 export 'presentation/pages/media_viewer_page.dart';
 export 'presentation/pages/select_template_page.dart';
 
@@ -87,8 +87,8 @@ export 'presentation/widgets/chat_detail/mensaje/message_list.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_parser.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_url_helper.dart';
 
-export 'presentation/widgets/edit_lead/edit_lead_view.dart';
-export 'presentation/widgets/edit_lead/edit_lead_portrait.dart';
+export '../lead/presentation/widgets/edit_lead/edit_lead_view.dart';
+export '../lead/presentation/widgets/edit_lead/edit_lead_portrait.dart';
 
 export 'presentation/widgets/chat_detail/template/select_template_view.dart';
 export 'presentation/widgets/chat_detail/template/select_template_portrait.dart';

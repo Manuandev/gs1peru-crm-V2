@@ -1,4 +1,4 @@
-// lib/features/lead/domain/entities/lead_detail.dart
+// lib/features/lead/domain/entities/lead_detalle.dart
 
 import 'package:app_crm/features/lead/index_lead.dart';
 

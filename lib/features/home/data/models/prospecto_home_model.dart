@@ -13,19 +13,18 @@ class ProspectoHomeModel extends ProspectoHome {
 
   factory ProspectoHomeModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
 
     return ProspectoHomeModel(
-        idLead: int.parse(f(0)),
-        nombre: f(1),
-        nombreEmpresa: f(2),
-        fechaHora: f(3),
+      idLead: ParseUtils.toInt(fields, 0),
+      nombre: ParseUtils.str(fields, 1),
+      nombreEmpresa: ParseUtils.str(fields, 2),
+      fechaHora: ParseUtils.str(fields, 3),
     );
   }
 
   static List<ProspectoHomeModel> parseList(String rawResponse) {
     return rawResponse
-        .split(AppConstants.sepRegistros) 
+        .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => ProspectoHomeModel.fromRawString(r))
         .toList();

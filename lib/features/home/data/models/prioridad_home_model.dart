@@ -17,17 +17,16 @@ class PrioridadHomeModel extends PrioridadHome {
 
   factory PrioridadHomeModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
 
     return PrioridadHomeModel(
-      idLead: int.parse(f(0)),
-      nombre: f(1),
-      telefono: f(2),
-      idEstado: f(3),
-      estado: f(4),
-      idCanal: int.tryParse(f(5)) ?? 0,
-      canal: f(6),
-      fechaHora: f(7),
+      idLead: ParseUtils.toInt(fields, 0),
+      nombre: ParseUtils.str(fields, 1),
+      telefono: ParseUtils.str(fields, 2),
+      idEstado: ParseUtils.str(fields, 3),
+      estado: ParseUtils.str(fields, 4),
+      idCanal: ParseUtils.toInt(fields, 5),
+      canal: ParseUtils.str(fields, 6),
+      fechaHora: ParseUtils.str(fields, 7),
     );
   }
 

@@ -32,18 +32,18 @@ class CobranzaDetalleModel extends CobranzaDetalle {
         : HistorialCobranzaModel.parseList(historialRaw);
 
     return CobranzaDetalleModel(
-    idCobranza:      ParseUtils.str(c, 0),
-    nombre:          ParseUtils.str(c, 1),
-    apellido:        ParseUtils.str(c, 2),
-    oportunidad:     ParseUtils.str(c, 3),
-    ejecutivo:       ParseUtils.str(c, 4),
-    montoTotal:      ParseUtils.toDouble(c, 5),
-    idEstado:        ParseUtils.toInt(c, 6),
-    estado:          ParseUtils.str(c, 7),
-    idCondicion:     ParseUtils.toInt(c, 8),
-    condicion:       ParseUtils.str(c, 9),
-    fechaSolicitud:  ParseUtils.str(c, 10),
-    tipoComprobante: ParseUtils.str(c, 11),
+      idCobranza: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+      apellido: ParseUtils.str(c, 2),
+      oportunidad: ParseUtils.str(c, 3),
+      ejecutivo: ParseUtils.str(c, 4),
+      montoTotal: ParseUtils.toDouble(c, 5),
+      idEstado: ParseUtils.toInt(c, 6),
+      estado: ParseUtils.str(c, 7),
+      idCondicion: ParseUtils.toInt(c, 8),
+      condicion: ParseUtils.str(c, 9),
+      fechaSolicitud: ParseUtils.str(c, 10),
+      tipoComprobante: ParseUtils.str(c, 11),
       historial: historialCobranza,
     );
   }

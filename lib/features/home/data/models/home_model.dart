@@ -5,12 +5,12 @@ import 'package:app_crm/features/home/index_home.dart';
 
 class HomeModel extends Home {
   const HomeModel({
-    required super.totConversaciones,
+    required super.totLeadsNuevos,
+    required super.totLeadsDesarrollo,
     required super.totProspectos,
     required super.totPropuestas,
     required super.totCobranza,
-    required super.totLeadsNuevos,
-    required super.totLeadsDesarrollo,
+    required super.totConversaciones,
     required super.totNotificaciones,
     required super.prioridades,
     required super.prospectos,
@@ -33,12 +33,7 @@ class HomeModel extends Home {
     final prospectosRaw = partes.length > 2 ? partes[2] : '';
 
     // 2) Parsear totales
-    final campos = totalesRaw.split(AppConstants.sepCampos);
-    int t(int i) {
-      if (i >= campos.length) return 0;
-      final v = campos[i].trim();
-      return v.isEmpty ? 0 : int.tryParse(v) ?? 0;
-    }
+    final c = totalesRaw.split(AppConstants.sepCampos);
 
     // 3) Parsear lista de prioridades
     final prioridades = prioridadesRaw.trim().isEmpty
@@ -50,13 +45,13 @@ class HomeModel extends Home {
         : ProspectoHomeModel.parseList(prospectosRaw);
 
     return HomeModel(
-      totConversaciones: t(0),
-      totProspectos: t(1),
-      totPropuestas: t(2),
-      totCobranza: t(3),
-      totLeadsNuevos: t(4),
-      totLeadsDesarrollo: t(5),
-      totNotificaciones: t(6),
+      totLeadsNuevos: ParseUtils.toInt(c, 0),
+      totLeadsDesarrollo: ParseUtils.toInt(c, 1),
+      totProspectos: ParseUtils.toInt(c, 2),
+      totPropuestas: ParseUtils.toInt(c, 3),
+      totCobranza: ParseUtils.toInt(c, 4),
+      totConversaciones: ParseUtils.toInt(c, 5),
+      totNotificaciones: ParseUtils.toInt(c, 6),
       prioridades: prioridades,
       prospectos: prospectos,
     );

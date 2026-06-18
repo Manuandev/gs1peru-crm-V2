@@ -154,6 +154,37 @@ class AppColors {
   static const Color brandTerracottaAccessible = Color(0xFFAB5A2F);
 
   // ============================================================
+  // COLORES GS1 — User Interface Colours
+  // ============================================================
+
+  /// UI 1 — Fondo más claro (casi blanco azulado)
+  static const Color ui1 = Color(0xFFF0F5FA);
+
+  /// UI 2 — Fondo claro azulado
+  static const Color ui2 = Color(0xFFE5F0FC);
+
+  /// UI 3 — Azul muy suave
+  static const Color ui3 = Color(0xFFC4D7ED);
+
+  /// UI 4 — Gris muy claro (blanco roto)
+  static const Color ui4 = Color(0xFFE5E8EB);
+
+  /// UI 5 — Gris azulado medio
+  static const Color ui5 = Color(0xFFA6B0BB);
+
+  /// UI 6 — Gris medio oscuro
+  static const Color ui6 = Color(0xFF696D73);
+
+  /// UI 7 — Gris oscuro
+  static const Color ui7 = Color(0xFF414345);
+
+  /// UI 8 — Casi negro
+  static const Color ui8 = Color(0xFF262626);
+
+  /// Danger — Rojo de peligro/error GS1
+  static const Color danger = Color(0xFFBA1B23);
+
+  // ============================================================
   // COLORES DE ESTADO
   // ============================================================
 

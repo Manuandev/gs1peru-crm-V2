@@ -191,8 +191,8 @@ class AppColors {
   /// Color para éxitos
   static const Color success = Color(0xFF4CAF50); // Verde
 
-  /// Color para errores
-  static const Color error = Color(0xFFF44336); // Rojo
+  /// Color para errores — ℹ️ Para error semántico GS1 usar AppColors.danger
+  static const Color error = Color(0xFFBA1B23); // Rojo GS1 danger
 
   /// Color para advertencias
   static const Color warning = Color(0xFFFF9800); // Naranja
@@ -204,8 +204,8 @@ class AppColors {
   // COLORES DE FONDO
   // ============================================================
 
-  /// Fondo principal de la app (para modo claro)
-  static const Color background = Color(0xFFF8F9FB);
+  /// Fondo principal de la app (para modo claro) — alias de ui1
+  static const Color background = Color(0xFFF0F5FA);
 
   /// Fondo principal de la app (para modo oscuro)
   static const Color backgroundDark = Color(0xFF121212);
@@ -217,14 +217,14 @@ class AppColors {
   // COLORES DE TEXTO
   // ============================================================
 
-  /// Texto principal
-  static const Color textPrimary = Color(0xFF1A1A1A); // Negro
+  /// Texto principal — alias de ui8
+  static const Color textPrimary = Color(0xFF262626); // Casi negro
 
-  /// Texto secundario (menos importante)
-  static const Color textSecondary = Color(0xFF757575); // Gris
+  /// Texto secundario (menos importante) — alias de ui6
+  static const Color textSecondary = Color(0xFF696D73); // Gris medio
 
-  /// Texto deshabilitado
-  static const Color textDisabled = Color(0xFFBDBDBD); // Gris claro
+  /// Texto deshabilitado — alias de ui5
+  static const Color textDisabled = Color(0xFFA6B0BB); // Gris azulado
 
   /// Texto en fondos oscuros
   static const Color textOnDark = Color(0xFFFFFFFF); // Blanco
@@ -233,30 +233,31 @@ class AppColors {
   // COLORES DE BORDES
   // ============================================================
 
-  /// Borde normal
-  static const Color border = Color(0xFFE0E0E0); // Gris muy claro
+  /// Borde normal — alias de ui4
+  static const Color border = Color(0xFFE5E8EB); // Gris muy claro
 
   /// Borde cuando está enfocado (puedes poner el que quieras - traes primary ya que se es parecido)
   //static const Color borderFocused = Color(0xFF2196F3); // Azul
   static const Color borderFocused = primary;
 
-  /// Borde de error
-  static const Color borderError = Color(0xFFF44336); // Rojo
+  // ⚠️ DEPRECADO — reemplazado por AppColors.danger (sin usos externos detectados)
+  // static const Color borderError = Color(0xFFBA1B23);
 
   // ============================================================
   // COLORES NEUTRALES (Grises)
   // ============================================================
 
-  static const Color grey50 = Color(0xFFFAFAFA);
-  static const Color grey100 = Color(0xFFF5F5F5);
-  static const Color grey200 = Color(0xFFEEEEEE);
-  static const Color grey300 = Color(0xFFE0E0E0);
-  static const Color grey400 = Color(0xFFBDBDBD);
+  // ℹ️ Aún en uso en: skeleton_box.dart, whatsapp_media_picker.dart, message_bubble.dart, app_error_view.dart, contacto_acciones_footer.dart, chat_detail_fases.dart
+  static const Color grey50 = Color(0xFFE5F0FC);   // → ui2
+  static const Color grey100 = Color(0xFFE5F0FC);  // → ui2
+  static const Color grey200 = Color(0xFFC4D7ED);  // → ui3
+  static const Color grey300 = Color(0xFFE5E8EB);  // → ui4
+  static const Color grey400 = Color(0xFFA6B0BB);  // → ui5
   static const Color grey500 = Color(0xFF9E9E9E);
-  static const Color grey600 = Color(0xFF757575);
+  static const Color grey600 = Color(0xFF696D73);  // → ui6
   static const Color grey700 = Color(0xFF616161);
-  static const Color grey800 = Color(0xFF424242);
-  static const Color grey900 = Color(0xFF212121);
+  static const Color grey800 = Color(0xFF414345);  // → ui7
+  static const Color grey900 = Color(0xFF262626);  // → ui8
 
   // ============================================================
   // COLORES CON OPACIDAD
@@ -325,22 +326,22 @@ class AppColors {
   /// Fondo del input
   static const Color inputBackground = Color(0xFFFFFFFF);
 
-  /// Borde normal input
-  static const Color inputBorder = grey300;
+  // ⚠️ DEPRECADO — reemplazado por AppColors.ui4 (sin usos externos detectados)
+  // static const Color inputBorder = ui4;
 
   /// Borde enfocado input
   static const Color inputFocused = primary;
 
-  /// Hint del input
-  static const Color inputHint = grey500;
+  // ⚠️ DEPRECADO — reemplazado por AppColors.ui5 (sin usos externos detectados)
+  // static const Color inputHint = ui5;
 
-  /// Texto dentro del input
-  static const Color inputText = grey900;
+  // ⚠️ DEPRECADO — reemplazado por AppColors.ui8 (sin usos externos detectados)
+  // static const Color inputText = ui8;
 
   // ============================================================
   // OTROS (CARDS - DIVIDERS)
   // ============================================================
-  static const Color divider = grey200;
+  static const Color divider = ui4;
   static const Color cardShadow = Color(0x14000000);
 
   /// Color del ícono de estrella/favorito activo (Amber 500 Material) — LeadCardActions

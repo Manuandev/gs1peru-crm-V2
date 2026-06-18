@@ -470,4 +470,8 @@ class AppSizing {
 
   /// Ancho del borde de acento izquierdo en LeadCard según el color del estado: 4dp
   static const double cardBorderEstadoAncho = 4.0;
+
+  /// Desplazamiento vertical de la sombra de una card en reposo: 2dp
+  /// Usado en BoxShadow.offset — ContactoDetalleHeader y cards con sombra suave
+  static const double shadowOffsetCardY = 2.0;
 }

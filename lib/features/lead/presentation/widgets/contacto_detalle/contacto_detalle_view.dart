@@ -83,45 +83,36 @@ class _ContactoScaffold extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ContactoDetalleHeader(contacto: contacto),
-            Container(
-              color: AppColors.primary,
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.sm,
-                AppSpacing.xs,
-                AppSpacing.sm,
-                AppSpacing.sm,
+            TabBar(
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(
+                  color: AppColors.primary,
+                  width: AppSizing.borderFocusWidth,
+                ),
               ),
-              child: TabBar(
-                indicator: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                labelColor: AppColors.textPrimary,
-                unselectedLabelColor: AppColors.white(
-                  AppColors.opacityOnPrimarySubtle,
-                ),
-                labelStyle: AppTextStyles.labelMedium.copyWith(
-                  fontWeight: AppTextStyles.weightSemiBold,
-                ),
-                unselectedLabelStyle: AppTextStyles.labelMedium,
-                tabs: [
-                  const Tab(text: 'Info'),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Negociaciones'),
-                        if (negociaciones.isNotEmpty) ...[
-                          const SizedBox(width: AppSpacing.xs),
-                          _ContadorBadge(count: negociaciones.length),
-                        ],
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: AppColors.transparent,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: AppTextStyles.labelLarge.copyWith(
+                fontWeight: AppTextStyles.weightBold,
+              ),
+              unselectedLabelStyle: AppTextStyles.labelLarge,
+              tabs: [
+                const Tab(text: 'Info'),
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Negociaciones'),
+                      if (negociaciones.isNotEmpty) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        _ContadorBadge(count: negociaciones.length),
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             Expanded(
               child: TabBarView(

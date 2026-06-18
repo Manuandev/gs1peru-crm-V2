@@ -29,6 +29,131 @@ class AppColors {
   //static const Color accent = Color(0xFFF58220);
 
   // ============================================================
+  // COLORES DE GS1 — GS1 Brand Colours (paleta completa)
+  // ============================================================
+
+  /// Azul corporativo GS1
+  static const Color brandBlue = Color(0xFF002C6C);
+
+  /// Naranja corporativo GS1
+  static const Color brandOrange = Color(0xFFF26334);
+
+  /// Raspberry
+  static const Color brandRaspberry = Color(0xFFF05587);
+
+  /// Purple
+  static const Color brandPurple = Color(0xFFBD80B7);
+
+  /// Lavender
+  static const Color brandLavender = Color(0xFFAF96D4);
+
+  /// Slate
+  static const Color brandSlate = Color(0xFF89AADB);
+
+  /// Sky
+  static const Color brandSky = Color(0xFF00B6DE);
+
+  /// Link
+  static const Color brandLink = Color(0xFF008DBD);
+
+  /// Mist
+  static const Color brandMist = Color(0xFF8DB9CA);
+
+  /// Teal
+  static const Color brandTeal = Color(0xFF22BCB9);
+
+  /// Mint
+  static const Color brandMint = Color(0xFF71B790);
+
+  /// Grass
+  static const Color brandGrass = Color(0xFF7AC143);
+
+  /// Forest
+  static const Color brandForest = Color(0xFF00AC4A);
+
+  /// Olive
+  static const Color brandOlive = Color(0xFF9DBB68);
+
+  /// Lime
+  static const Color brandLime = Color(0xFFC1D82F);
+
+  /// Gold
+  static const Color brandGold = Color(0xFFC4B000);
+
+  /// Peach
+  static const Color brandPeach = Color(0xFFFBB034);
+
+  /// Tangerine
+  static const Color brandTangerine = Color(0xFFFF8200);
+
+  /// Honey
+  static const Color brandHoney = Color(0xFFB78B20);
+
+  /// Terracotta
+  static const Color brandTerracotta = Color(0xFFD18158);
+
+  // ============================================================
+  // COLORES GS1 — Accessible Colours (mayor contraste WCAG)
+  // ============================================================
+
+  /// Accessible Orange
+  static const Color brandOrangeAccessible = Color(0xFFCD3C0D);
+
+  /// Accessible Raspberry
+  static const Color brandRaspberryAccessible = Color(0xFFD12B61);
+
+  /// Accessible Purple
+  static const Color brandPurpleAccessible = Color(0xFFA2539A);
+
+  /// Accessible Lavender
+  static const Color brandLavenderAccessible = Color(0xFF835CBC);
+
+  /// Accessible Slate
+  static const Color brandSlateAccessible = Color(0xFF3A70BF);
+
+  /// Accessible Sky
+  static const Color brandSkyAccessible = Color(0xFF007B93);
+
+  /// Accessible Link
+  static const Color brandLinkAccessible = Color(0xFF00799E);
+
+  /// Accessible Mist
+  static const Color brandMistAccessible = Color(0xFF41778C);
+
+  /// Accessible Teal
+  static const Color brandTealAccessible = Color(0xFF177C7A);
+
+  /// Accessible Mint
+  static const Color brandMintAccessible = Color(0xFF3F7C5A);
+
+  /// Accessible Grass
+  static const Color brandGrassAccessible = Color(0xFF417E12);
+
+  /// Accessible Forest
+  static const Color brandForestAccessible = Color(0xFF008037);
+
+  /// Accessible Olive
+  static const Color brandOliveAccessible = Color(0xFF677642);
+
+  /// Accessible Lime
+  static const Color brandLimeAccessible = Color(0xFF667800);
+
+  /// Accessible Gold
+  static const Color brandGoldAccessible = Color(0xFF826F00);
+
+  /// Accessible Peach
+  static const Color brandPeachAccessible = Color(0xFF9D6304);
+
+  /// Accessible Tangerine
+  static const Color brandTangerineAccessible = Color(0xFFA15700);
+
+  /// Accessible Honey
+  static const Color brandHoneyAccessible = Color(0xFF8D6B19);
+
+  /// Accessible Terracotta
+  static const Color brandTerracottaAccessible = Color(0xFFAB5A2F);
+
+  // ============================================================
   // COLORES DE ESTADO
   // ============================================================
 
@@ -48,7 +173,6 @@ class AppColors {
   // COLORES DE FONDO
   // ============================================================
 
-
   /// Fondo principal de la app (para modo claro)
   static const Color background = Color(0xFFF8F9FB);
 
@@ -57,7 +181,6 @@ class AppColors {
 
   /// Fondo de tarjetas y superficies
   static const Color surface = Color(0xFFFFFFFF); // Blanco
-
 
   // ============================================================
   // COLORES DE TEXTO
@@ -329,31 +452,37 @@ class AppColors {
 
   /// Ícono del campo Estado (blue 700)
   static const Color datoEstadoFg = Color(0xFF1976D2);
+
   /// Fondo del campo Estado (blue 50)
   static const Color datoEstadoBg = Color(0xFFE3F2FD);
 
   /// Ícono del campo Subestado (purple 700)
   static const Color datoSubestadoFg = Color(0xFF7B1FA2);
+
   /// Fondo del campo Subestado (purple 50)
   static const Color datoSubestadobg = Color(0xFFF3E5F5);
 
   /// Ícono del campo Campaña (teal 700)
   static const Color datoCampaniaFg = Color(0xFF00796B);
+
   /// Fondo del campo Campaña (teal 50)
   static const Color datoCampaniaBg = Color(0xFFE0F2F1);
 
   /// Ícono del campo Evento (orange 700)
   static const Color datoEventoFg = Color(0xFFF57C00);
+
   /// Fondo del campo Evento (orange 50)
   static const Color datoEventoBg = Color(0xFFFFF3E0);
 
   /// Ícono del campo Canal (pink 700)
   static const Color datoCanalFg = Color(0xFFC2185B);
+
   /// Fondo del campo Canal (pink 50)
   static const Color datoCanalBg = Color(0xFFFCE4EC);
 
   /// Ícono del campo Interés (green 700)
   static const Color datoInteresFg = Color(0xFF388E3C);
+
   /// Fondo del campo Interés (green 50)
   static const Color datoInteresBg = Color(0xFFE8F5E9);
 

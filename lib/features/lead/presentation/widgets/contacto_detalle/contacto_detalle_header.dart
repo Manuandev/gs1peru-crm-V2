@@ -13,19 +13,25 @@ class ContactoDetalleHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppColors.primary,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.md,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.cardShadow,
+            blurRadius: AppSizing.shadowBlurMd,
+            offset: const Offset(0, AppSizing.shadowOffsetCardY),
+          ),
+        ],
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: AppSizing.avatarRadiusMd,
+            radius: AppSizing.avatarRadiusXl,
             backgroundColor: AvatarUtils.color(contacto.nombreCompleto),
             child: Text(
               AvatarUtils.initials(contacto.nombreCompleto),
-              style: AppTextStyles.titleSmall.copyWith(
+              style: AppTextStyles.titleMedium.copyWith(
                 color: AppColors.textOnDark,
                 fontWeight: AppTextStyles.weightBold,
               ),
@@ -39,19 +45,30 @@ class ContactoDetalleHeader extends StatelessWidget {
               children: [
                 Text(
                   contacto.nombreCompleto,
-                  style: AppTextStyles.titleSmall.copyWith(
-                    color: AppColors.textOnDark,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: AppColors.textPrimary,
                     fontWeight: AppTextStyles.weightBold,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (_subtitulo.isNotEmpty) ...[
+                if (contacto.cargo.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    _subtitulo,
+                    contacto.cargo,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.white(AppColors.opacityOnPrimarySubtle),
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                if (contacto.empresa.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    contacto.empresa,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -63,13 +80,5 @@ class ContactoDetalleHeader extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String get _subtitulo {
-    final partes = [
-      if (contacto.cargo.isNotEmpty) contacto.cargo,
-      if (contacto.empresa.isNotEmpty) contacto.empresa,
-    ];
-    return partes.join(' · ');
   }
 }

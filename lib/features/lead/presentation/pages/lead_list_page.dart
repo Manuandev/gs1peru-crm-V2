@@ -17,6 +17,7 @@ class LeadListPage extends StatelessWidget {
         BlocProvider(
           create: (context) => LeadListBloc(
             GetLeadsUseCase(context.read<LeadRepository>()),
+            ToggleFavoritoLeadUseCase(context.read<LeadRepository>()),
           )..add(LeadListStarted(type)),
         ),
         BlocProvider(

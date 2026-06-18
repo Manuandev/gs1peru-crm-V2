@@ -24,6 +24,11 @@ class LeadRemoteDatasource {
     };
   }
 
+  Future<void> marcarFavorito(int idLead, bool isFavorito) async {
+    // TODO: conectar a ApiConstants.urlLeadsCud cuando se defina el SP/proceso
+    await Future.delayed(const Duration(milliseconds: 300));
+  }
+
   Future<LeadDetalleModel> getLeadDetalle(int idLead) async {
     final String body = '$idLead${sep}DT';
 

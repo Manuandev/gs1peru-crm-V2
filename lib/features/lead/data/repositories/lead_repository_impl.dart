@@ -13,4 +13,7 @@ class LeadRepositoryImpl implements LeadRepository {
   @override
   Future<LeadDetalleModel> getLeadDetalle(int idLead) => _remote.getLeadDetalle(idLead);
 
+  @override
+  Future<void> toggleFavorito(int idLead, bool isFavorito) =>
+      _remote.marcarFavorito(idLead, isFavorito);
 }

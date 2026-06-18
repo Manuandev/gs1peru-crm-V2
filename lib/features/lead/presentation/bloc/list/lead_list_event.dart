@@ -34,3 +34,13 @@ class LeadListFiltered extends LeadListEvent {
   @override
   List<Object?> get props => [filtro];
 }
+
+class ToggleFavoritoPressed extends LeadListEvent {
+  final int idLead;
+  final bool nuevoValor;
+
+  const ToggleFavoritoPressed({required this.idLead, required this.nuevoValor});
+
+  @override
+  List<Object?> get props => [idLead, nuevoValor];
+}

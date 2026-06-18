@@ -8,6 +8,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   final GetLeadsUseCase _getLeadsUseCase;
+  final ToggleFavoritoLeadUseCase _toggleFavoritoUseCase;
   final _session = SessionService();
 
   List<Lead> _allLeads = [];
@@ -15,13 +16,15 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   LeadType _currentType = LeadType.seguimientos;
   // StreamSubscription<WebSocketMessage>? _messageSubscription;
 
-  LeadListBloc(this._getLeadsUseCase) : super(const LeadListInitial()) {
+  LeadListBloc(this._getLeadsUseCase, this._toggleFavoritoUseCase)
+      : super(const LeadListInitial()) {
     _filtroActivo = _session.isModerador
         ? LeadListFiltro.todos
         : LeadListFiltro.misCasos;
     on<LeadListStarted>(_onStarted);
     on<LeadListRefresh>(_onRefresh);
     on<LeadListFiltered>(_onFiltered);
+    on<ToggleFavoritoPressed>(_onToggleFavorito);
   }
 
   Future<void> _onStarted(
@@ -64,6 +67,33 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   void _onFiltered(LeadListFiltered event, Emitter<LeadListState> emit) {
     _filtroActivo = event.filtro;
     _emitFiltered(emit);
+  }
+
+  Future<void> _onToggleFavorito(
+    ToggleFavoritoPressed event,
+    Emitter<LeadListState> emit,
+  ) async {
+    // Actualización optimista: cambia el ícono de inmediato
+    _allLeads = _allLeads
+        .map((l) => l.idLead == event.idLead
+            ? l.copyWith(isFavorito: event.nuevoValor)
+            : l)
+        .toList();
+    _emitFiltered(emit);
+
+    try {
+      await _toggleFavoritoUseCase(event.idLead, event.nuevoValor);
+    } catch (e, stackTrace) {
+      // Revertir si falla
+      _allLeads = _allLeads
+          .map((l) => l.idLead == event.idLead
+              ? l.copyWith(isFavorito: !event.nuevoValor)
+              : l)
+          .toList();
+      _emitFiltered(emit);
+      // TODO: mostrar AppSnackBar.error cuando se conecte al SP real
+      addError(e, stackTrace);
+    }
   }
 
   void _emitFiltered(Emitter<LeadListState> emit) {

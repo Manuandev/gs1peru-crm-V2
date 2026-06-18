@@ -74,7 +74,12 @@ class LeadListPortrait extends StatelessWidget {
                         ),
                         onWhatsAppTap: () {},
                         onChatTap: () {},
-                        onStarTap: () {},
+                        onStarTap: () => context.read<LeadListBloc>().add(
+                              ToggleFavoritoPressed(
+                                idLead: lead.idLead,
+                                nuevoValor: !lead.isFavorito,
+                              ),
+                            ),
                       ),
                     );
                   },

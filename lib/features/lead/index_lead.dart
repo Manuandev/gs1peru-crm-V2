@@ -19,6 +19,7 @@ export 'domain/repositories/lead_repository.dart';
 
 export 'domain/usecases/get_leads_usecase.dart';
 export 'domain/usecases/get_lead_detalle_usecase.dart';
+export 'domain/usecases/toggle_favorito_lead_usecase.dart';
 
 export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';

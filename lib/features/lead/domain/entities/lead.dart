@@ -33,6 +33,8 @@ class Lead {
   final String interes;
   // Conversacion abierta IB
   final bool ibChat;
+  // Monto de la negociación en soles
+  final double monto;
 
   String get nombreCompleto => '$nombre $apellido'.trim();
 
@@ -60,6 +62,7 @@ class Lead {
     required this.idInteres,
     required this.interes,
     required this.ibChat,
+    required this.monto,
   });
 
   Lead copyWith({
@@ -86,6 +89,7 @@ class Lead {
     int? idInteres,
     String? interes,
     bool? ibChat,
+    double? monto,
   }) {
     return Lead(
       idLead: idLead ?? this.idLead,
@@ -111,6 +115,7 @@ class Lead {
       idInteres: idInteres ?? this.idInteres,
       interes: interes ?? this.interes,
       ibChat: ibChat ?? this.ibChat,
+      monto: monto ?? this.monto,
     );
   }
 }

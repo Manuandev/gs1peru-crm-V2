@@ -68,9 +68,8 @@ class LeadListPortrait extends StatelessWidget {
                       child: LeadCard(
                         lead: lead,
                         modoCompacto: modoCompacto,
-                        onTap: () => context.goToDetalleLead(
-                          idLead: lead.idLead,
-                          type: type,
+                        onTap: () => context.goToDetalleContacto(
+                          idContacto: lead.idContacto,
                         ),
                         onWhatsAppTap: () {},
                         onChatTap: () {},

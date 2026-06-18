@@ -6,4 +6,8 @@ abstract class LeadRepository {
   Future<List<Lead>> getLeads(String proceso);
   Future<LeadDetalle> getLeadDetalle(int idLead);
   Future<void> toggleFavorito(int idLead, bool isFavorito);
+  // TODO: conectar a SP real cuando se defina — '[CRM].[SP_ContactoDetalleLst]'
+  Future<ContactoDetalle> obtenerDetalleContacto(int idContacto);
+  // TODO: conectar a SP real cuando se defina — '[CRM].[SP_NegociacionesPorContacto]'
+  Future<List<Lead>> obtenerNegociacionesDeContacto(int idContacto);
 }

@@ -1,16 +1,19 @@
 // lib/features/lead/index_lead.dart
 
 export 'data/datasources/remote/lead_remote_datasource.dart';
+export 'data/datasources/remote/contacto_detalle_remote_datasource.dart';
 
 export 'data/models/lead_model.dart';
 export 'data/models/lead_detalle_model.dart';
 export 'data/models/comentario_lead_model.dart';
+export 'data/models/contacto_detalle_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
 
 export 'domain/entities/lead.dart';
 export 'domain/entities/lead_detalle.dart';
 export 'domain/entities/comentario_lead.dart';
+export 'domain/entities/contacto_detalle.dart';
 
 export 'domain/enums/types_lead.dart';
 export 'domain/enums/lead_filtro.dart';
@@ -20,6 +23,8 @@ export 'domain/repositories/lead_repository.dart';
 export 'domain/usecases/get_leads_usecase.dart';
 export 'domain/usecases/get_lead_detalle_usecase.dart';
 export 'domain/usecases/toggle_favorito_lead_usecase.dart';
+export 'domain/usecases/obtener_detalle_contacto_usecase.dart';
+export 'domain/usecases/obtener_negociaciones_contacto_usecase.dart';
 
 export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';
@@ -30,8 +35,21 @@ export 'presentation/bloc/detail/lead_detalle_bloc.dart';
 export 'presentation/bloc/detail/lead_detalle_event.dart';
 export 'presentation/bloc/detail/lead_detalle_state.dart';
 
+export 'presentation/bloc/contacto_detalle/contacto_detalle_event.dart';
+export 'presentation/bloc/contacto_detalle/contacto_detalle_state.dart';
+export 'presentation/bloc/contacto_detalle/contacto_detalle_bloc.dart';
+
 export 'presentation/pages/lead_list_page.dart';
 export 'presentation/pages/lead_detalle_page.dart';
+export 'presentation/pages/contacto_detalle_page.dart';
+
+export 'presentation/widgets/contacto_detalle/contacto_detalle_header.dart';
+export 'presentation/widgets/contacto_detalle/contacto_detalle_skeleton.dart';
+export 'presentation/widgets/contacto_detalle/contacto_detalle_view.dart';
+export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';
+export 'presentation/widgets/contacto_detalle/contacto_negociacion_card.dart';
+export 'presentation/widgets/contacto_detalle/contacto_negociaciones_tab.dart';
+export 'presentation/widgets/contacto_detalle/contacto_acciones_footer.dart';
 
 export 'presentation/widgets/detalle/lead_detalle_view.dart';
 export 'presentation/widgets/detalle/lead_detalle_skeleton.dart';

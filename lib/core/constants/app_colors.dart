@@ -366,6 +366,11 @@ class AppColors {
       // ignore: deprecated_member_use
       success.withOpacity(opacity);
 
+  /// Info con opacidad — fondo suave del botón de teléfono en ContactoAccionesFooter
+  static Color infoWithOpacity(double opacity) =>
+      // ignore: deprecated_member_use
+      info.withOpacity(opacity);
+
   /// Secondary con opacidad — fondo suave del chip "Detracción" en PlanResumenCard
   static Color secondaryWithOpacity(double opacity) =>
       // ignore: deprecated_member_use

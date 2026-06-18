@@ -308,6 +308,9 @@ class AppIcons {
   /// Edificio — empresa, organización
   static const IconData business = Icons.business_outlined;
 
+  /// Documento de identidad — DNI, carnet, pasaporte
+  static const IconData documento = Icons.badge_outlined;
+
   /// Etiqueta de oferta — interés, curso del lead
   static const IconData interes = Icons.local_offer_outlined;
 

@@ -68,12 +68,12 @@ class AppIconsSocial {
   };
 
   static const Map<String, Color> _coloresEstado = {
-    "00": Color(0xFF2E7D32), // Nuevo
-    "01": Color(0xFF1565C0), // En desarrollo
-    "02": Color(0xFF6A1B9A), // Propuesta
+    "00": Color(0xFF2E7D32), // Nuevo        → verde
+    "01": Color(0xFFE65100), // En desarrollo → naranja
+    "02": Color(0xFF1565C0), // Propuesta     → azul
     "03": Color(0xFF00695C), // Ficha
-    "04": Color(0xFF37474F), // Cerrado
-    "05": Color(0xFFE65100), // Evaluando
+    "04": Color(0xFF7B1FA2), // Cobranza      → morado
+    "05": Color(0xFFF57C00), // Evaluando
     "07": Color(0xFF558B2F), // Prueba
     "08": Color(0xFFF57F17), // Pendiente
     "09": Color(0xFFAD1457), // Sin respuesta
@@ -86,12 +86,12 @@ class AppIconsSocial {
   };
 
   static const Map<String, Color> _bgEstado = {
-    "00": Color(0xFFE8F5E9),
-    "01": Color(0xFFE3F2FD),
-    "02": Color(0xFFF3E5F5),
+    "00": Color(0xFFE8F5E9), // Nuevo        → verde claro
+    "01": Color(0xFFFFF3E0), // En desarrollo → naranja claro
+    "02": Color(0xFFE3F2FD), // Propuesta     → azul claro
     "03": Color(0xFFE0F2F1),
-    "04": Color(0xFFECEFF1),
-    "05": Color(0xFFFFF3E0),
+    "04": Color(0xFFF3E5F5), // Cobranza      → morado claro
+    "05": Color(0xFFFFF8E1),
     "07": Color(0xFFF1F8E9),
     "08": Color(0xFFFFFDE7),
     "09": Color(0xFFFCE4EC),

@@ -254,6 +254,9 @@ class DateFormatter {
 
       case AppDateFormat.monthOnly:
         return 'MMMM';
+      case AppDateFormat.monthYear:
+        // "Mayo 2026"
+        return 'MMMM yyyy';
       case AppDateFormat.whatsapp:
         return '';
     }

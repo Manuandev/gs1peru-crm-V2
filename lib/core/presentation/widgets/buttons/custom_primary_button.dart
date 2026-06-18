@@ -58,6 +58,10 @@ class CustomPrimaryButton extends StatelessWidget {
   final double? height;
   // Padding personalizado. null = usa [AppSpacing.buttonPaddingHorizontal/Vertical]
   final EdgeInsetsGeometry? padding;
+  // Color de fondo personalizado. null = usa colorScheme.primary (azul corporativo)
+  final Color? backgroundColor;
+  // Color de texto/ícono personalizado. null = usa colorScheme.onPrimary (blanco)
+  final Color? foregroundColor;
 
   const CustomPrimaryButton({
     super.key,
@@ -67,8 +71,10 @@ class CustomPrimaryButton extends StatelessWidget {
     this.isEnabled = true,
     this.icon,
     this.width,
-    this.height, //= AppSizing.buttonHeight,
+    this.height,
     this.padding,
+    this.backgroundColor,
+    this.foregroundColor,
   });
 
   @override
@@ -78,12 +84,15 @@ class CustomPrimaryButton extends StatelessWidget {
 
     final bool enabled = isEnabled && !isLoading && onPressed != null;
 
-    final Color backgroundColor = enabled
-        ? colorScheme.primary
+    final Color resolvedBg = backgroundColor ?? colorScheme.primary;
+    final Color resolvedFg = foregroundColor ?? colorScheme.onPrimary;
+
+    final Color resolvedBackgroundColor = enabled
+        ? resolvedBg
         : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledBg);
 
-    final Color foregroundColor = enabled
-        ? colorScheme.onPrimary
+    final Color resolvedForegroundColor = enabled
+        ? resolvedFg
         : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledFg);
 
     return SizedBox(
@@ -92,10 +101,10 @@ class CustomPrimaryButton extends StatelessWidget {
       child: FilledButton(
         onPressed: enabled ? onPressed : null,
         style: FilledButton.styleFrom(
-          backgroundColor: backgroundColor,
-          disabledBackgroundColor: backgroundColor,
-          foregroundColor: foregroundColor,
-          disabledForegroundColor: foregroundColor,
+          backgroundColor: resolvedBackgroundColor,
+          disabledBackgroundColor: resolvedBackgroundColor,
+          foregroundColor: resolvedForegroundColor,
+          disabledForegroundColor: resolvedForegroundColor,
           padding:
               padding ??
               const EdgeInsets.symmetric(
@@ -113,7 +122,7 @@ class CustomPrimaryButton extends StatelessWidget {
                 width: AppSizing.iconMd,
                 child: CircularProgressIndicator(
                   strokeWidth: AppSizing.spinnerStrokeSmall,
-                  valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
+                  valueColor: AlwaysStoppedAnimation<Color>(resolvedForegroundColor),
                 ),
               )
             : icon != null
@@ -121,21 +130,21 @@ class CustomPrimaryButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconTheme(
-                    data: IconThemeData(color: foregroundColor),
+                    data: IconThemeData(color: resolvedForegroundColor),
                     child: icon!,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     text,
                     style: AppTextStyles.button.copyWith(
-                      color: foregroundColor,
+                      color: resolvedForegroundColor,
                     ),
                   ),
                 ],
               )
             : Text(
                 text,
-                style: AppTextStyles.button.copyWith(color: foregroundColor),
+                style: AppTextStyles.button.copyWith(color: resolvedForegroundColor),
               ),
       ),
     );

@@ -28,6 +28,7 @@ class LeadModel extends Lead {
     required super.idInteres,
     required super.interes,
     required super.ibChat,
+    required super.monto,
   });
 
   factory LeadModel.fromRawString(String raw) {
@@ -57,6 +58,8 @@ class LeadModel extends Lead {
       idInteres: ParseUtils.toInt(fields, 20),
       interes: ParseUtils.str(fields, 21),
       ibChat: ParseUtils.str(fields, 22) == '1' ? true : false,
+      // TODO: ajustar índice (23) cuando el SP incluya monto en su respuesta
+      monto: ParseUtils.toDouble(fields, 23),
     );
   }
 

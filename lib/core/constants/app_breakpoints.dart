@@ -346,6 +346,9 @@ class AppSizing {
   /// Ancho del borde fino (hairline visible): 0.5dp — chips no seleccionados
   static const double borderWidthThin = 0.5;
 
+  /// Ancho del borde discontinuo: 1.5dp — contenedor de estado vacío en ContactoNegociacionesTab
+  static const double borderWidthDashed = 1.5;
+
   /// Borde sutil: 0.8dp — separador entre barra de input y área de mensajes
   static const double borderWidthSubtle = 0.8;
 

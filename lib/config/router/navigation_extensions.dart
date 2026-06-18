@@ -91,6 +91,11 @@ extension NavigationExtensions on BuildContext {
   Future<List<AssetEntity>?> goToMediaPicker() =>
       _push<List<AssetEntity>>(AppRoutes.mediaPicker);
 
+  // ── Lead — detalle contacto ────────────────────────────────
+
+  Future<void> goToDetalleContacto({required int idContacto}) =>
+      _push(AppRoutes.detalleContacto, arguments: {'idContacto': idContacto});
+
   // ── Lead — detalle ─────────────────────────────────────────
 
   Future<void> goToDetalleLead({

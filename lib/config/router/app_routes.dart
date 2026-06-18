@@ -33,4 +33,6 @@ class AppRoutes {
   static const String planCredito = '/cobranza/plan-credito';
 
   static const String mediaPicker = '/media-picker';
+
+  static const String detalleContacto = '/leads/contacto';
 }

@@ -199,8 +199,8 @@ class _LeadCardState extends State<LeadCard> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  _LeadEstadoRow(lead: widget.lead),
+                  // const SizedBox(height: AppSpacing.xxs),
+                  // _LeadEstadoRow(lead: widget.lead),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
                     _subtitulo,
@@ -344,7 +344,11 @@ class _LeadEstadoRow extends StatelessWidget {
     final colorEstado = AppIconsSocial.colorEstado(lead.idEstado);
     return Row(
       children: [
-        Icon(AppIcons.circuloRelleno, size: AppSizing.iconXxs, color: colorEstado),
+        Icon(
+          AppIcons.circuloRelleno,
+          size: AppSizing.iconXxs,
+          color: colorEstado,
+        ),
         const SizedBox(width: AppSpacing.xs),
         Text(
           lead.estado,
@@ -352,7 +356,10 @@ class _LeadEstadoRow extends StatelessWidget {
         ),
         if (lead.idCanal > 0) ...[
           const SizedBox(width: AppSpacing.sm),
-          AppIconsSocial.widgetCanal(lead.idCanal, size: AppSizing.iconCanalInfo),
+          AppIconsSocial.widgetCanal(
+            lead.idCanal,
+            size: AppSizing.iconCanalInfo,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
@@ -407,11 +414,7 @@ class _IconoCompacto extends StatelessWidget {
   final Color color;
   final VoidCallback? onTap;
 
-  const _IconoCompacto({
-    required this.icon,
-    required this.color,
-    this.onTap,
-  });
+  const _IconoCompacto({required this.icon, required this.color, this.onTap});
 
   @override
   Widget build(BuildContext context) {

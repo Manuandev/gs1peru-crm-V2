@@ -128,7 +128,7 @@ class LeadContextoCard extends StatelessWidget {
             color: AppColors.textSecondary,
           ),
           etiqueta: 'Curso / Interés',
-          valor: lead.interes.isNotEmpty ? 'Sin interés' : lead.interes,
+          valor: lead.interes.isEmpty ? 'Sin interés' : lead.interes,
         ),
         const Divider(
           height: 1,

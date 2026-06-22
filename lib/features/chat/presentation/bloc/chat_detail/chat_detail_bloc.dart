@@ -114,7 +114,13 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       final merged = [...newMessages, ...currentState.messages];
 
       final seen = <String>{};
-      final unique = merged.where((m) => seen.add(m.idTokenMeta)).toList();
+      final unique = merged.where((m) {
+        // Clave de deduplicación: UUID si está disponible, si no usar idConversacionDet + contenido
+        final key = m.idTokenMeta.isNotEmpty
+            ? m.idTokenMeta
+            : 'fallback:${m.idConversacionDet}|${m.fechaHora}|${m.contenido.hashCode}';
+        return seen.add(key);
+      }).toList();
       unique.sort((a, b) {
         final fechaA = DateFormatter.parseDate(a.fechaHora) ?? DateTime(0);
         final fechaB = DateFormatter.parseDate(b.fechaHora) ?? DateTime(0);
@@ -501,20 +507,20 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final pendingIndex = _findPendingIndex(currentMessages, payload);
 
     if (pendingIndex != -1) {
-      // Asignar idMensaje real — desde aquí UPDATE_MENSAJE lo encuentra por id directo
+      // Asignar idTokenMeta real — desde aquí UPDATE_MENSAJE lo encuentra por id directo
       final pName = _removeExt(payload.nomArchivo);
       final pExt = _extractExt(payload.nomArchivo);
 
       currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
-        idMensaje: payload.idMensaje,
-        estado: 'sent',
-        idChatCab: payload.idChatCab,
-        nomArchivo: pName.isNotEmpty
+        idTokenMeta: payload.idTokenMeta,
+        estadoEntrega: 'sent',
+        idConversacionCab: int.tryParse(payload.idChatCab) ?? 0,
+        nombreArchivo: pName.isNotEmpty
             ? pName
-            : currentMessages[pendingIndex].nomArchivo,
-        extArchivo: pExt.isNotEmpty
+            : currentMessages[pendingIndex].nombreArchivo,
+        tipoArchivo: pExt.isNotEmpty
             ? pExt
-            : currentMessages[pendingIndex].extArchivo,
+            : currentMessages[pendingIndex].tipoArchivo,
       );
     } else {
       // Enviado desde otra sesión
@@ -523,19 +529,19 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
       currentMessages.add(
         ChatMessage(
-          idMensaje: payload.idMensaje,
-          fecha: payload.hora.isNotEmpty
+          idTokenMeta: payload.idTokenMeta,
+          fechaHora: payload.hora.isNotEmpty
               ? payload.hora
               : DateTime.now().toIso8601String(),
-          isEnviado: true,
-          mensaje: payload.mensaje,
+          direccionMensaje: 'ASE',
+          contenido: payload.mensaje,
           tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
-          estado: 'sent',
-          idChatDetArc: '',
-          nomArchivo: pName,
-          extArchivo: pExt,
-          idChatCab: payload.idChatCab,
-          idChatDet: '',
+          estadoEntrega: 'sent',
+          rutaArchivo: '',
+          nombreArchivo: pName,
+          tipoArchivo: pExt,
+          idConversacionCab: int.tryParse(payload.idChatCab) ?? 0,
+          idConversacionDet: 0,
         ),
       );
     }
@@ -600,10 +606,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     );
 
     return messages.lastIndexWhere((m) {
-      // Solo mensajes optimistas pendientes
-      if (m.estado != 'wait' || m.isEnviado != true) return false;
+      // Solo mensajes optimistas pendientes enviados por el asesor o IA
+      if (m.estadoEntrega != 'wait') return false;
+      if (m.direccionMensaje != 'ASE' && m.direccionMensaje != 'AIA') return false;
       // Solo los que aún tienen tempId (UUID) — no los ya confirmados
-      if (!uuidRegex.hasMatch(m.idMensaje)) return false;
+      if (!uuidRegex.hasMatch(m.idTokenMeta)) return false;
       // Mismo tipo — las plantillas se guardan localmente como 'text' o tipo de
       // archivo, pero el servidor responde con 'template'; no filtrar por tipo en ese caso
       if (payload.tipoMensaje.isNotEmpty &&
@@ -614,14 +621,14 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
       switch (payload.tipoMensaje) {
         case 'text':
-          return m.mensaje == payload.mensaje;
+          return m.contenido == payload.mensaje;
 
         case 'template':
           if (payload.nomArchivo.isEmpty) {
-            return m.mensaje == payload.mensaje;
+            return m.contenido == payload.mensaje;
           }
-          return m.nomArchivo == _removeExt(payload.nomArchivo) &&
-              m.extArchivo == _extractExt(payload.nomArchivo);
+          return m.nombreArchivo == _removeExt(payload.nomArchivo) &&
+              m.tipoArchivo == _extractExt(payload.nomArchivo);
 
         case 'image':
         case 'video':
@@ -629,11 +636,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         case 'document':
           if (payload.nomArchivo.isEmpty) return false;
 
-          return m.nomArchivo == _removeExt(payload.nomArchivo) &&
-              m.extArchivo == _extractExt(payload.nomArchivo);
+          return m.nombreArchivo == _removeExt(payload.nomArchivo) &&
+              m.tipoArchivo == _extractExt(payload.nomArchivo);
 
         default:
-          return m.mensaje == payload.mensaje;
+          return m.contenido == payload.mensaje;
       }
     });
   }

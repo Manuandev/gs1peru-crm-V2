@@ -172,7 +172,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       //     ? payload.fecha
       //     : DateTime.now().toIso8601String(),
       direccionMensaje: 'CLI',
-      idMensaje: payload.idMensaje,
+      idMensaje: payload.idTokenMeta,
       emit: emit,
     );
   }
@@ -197,7 +197,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
           ? payload.hora
           : DateTime.now().toIso8601String(),
       direccionMensaje: 'ASE',
-      idMensaje: payload.idMensaje,
+      idMensaje: payload.idTokenMeta,
       emit: emit,
     );
   }

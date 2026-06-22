@@ -66,11 +66,11 @@ class MessageList extends StatelessWidget {
 
         final showDateSeparator =
             previousMessage == null ||
-            !_isSameDay(message.fecha, previousMessage.fecha);
+            !_isSameDay(message.fechaHora, previousMessage.fechaHora);
 
         return Column(
           children: [
-            if (showDateSeparator) _DateSeparator(fecha: message.fecha),
+            if (showDateSeparator) _DateSeparator(fecha: message.fechaHora),
             MessageBubble(
               message: message,
               audioController: audioController,

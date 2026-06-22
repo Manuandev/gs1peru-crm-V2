@@ -2,15 +2,15 @@
 
 export 'data/datasources/remote/chat_remote_datasource.dart';
 
-export 'data/models/chat_model.dart';
-export 'data/models/chat_message_model.dart';
+export 'data/models/conversation_model.dart';
+export 'data/models/message_model.dart';
 export 'data/models/info_lead_model.dart';
 export 'data/models/template_model.dart';
 
 export 'data/repositories/chat_repository_impl.dart';
 
-export 'domain/entities/chat.dart';
-export 'domain/entities/chat_message.dart';
+export 'domain/entities/conversation.dart';
+export 'domain/entities/message.dart';
 export 'domain/entities/info_lead.dart';
 export 'domain/entities/template.dart';
 

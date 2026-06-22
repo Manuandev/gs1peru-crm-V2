@@ -61,10 +61,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   String _getChatCab() {
     final chatState = context.read<ChatDetailBloc>().state;
-    if (chatState is ChatDetailSuccess && chatState.messages.isNotEmpty) {
-      return chatState.messages.first.idChatCab;
-    }
-    return '';
+    final messages = switch (chatState) {
+      ChatDetailSuccess s => s.messages,
+      ChatDetailLoadingMore s => s.messages,
+      _ => <ChatMessage>[],
+    };
+    if (messages.isEmpty) return '';
+    return messages.first.idConversacionCab.toString();
   }
 
   void _onAudioReady(String path) {

@@ -74,6 +74,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     final state = context.read<ChatDetailBloc>().state;
     if (state is! ChatDetailSuccess || !state.hasMore || _isLoadingMore) return;
 
+    // Si el mensaje más antiguo no tiene UUID real no hay anchor válido para la paginación
+    final anchorToken = state.messages.first.idTokenMeta;
+    if (anchorToken.isEmpty) return;
+
     final now = DateTime.now();
     if (_lastLoadMoreTime != null &&
         now.difference(_lastLoadMoreTime!) <
@@ -87,7 +91,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     context.read<ChatDetailBloc>().add(
       ChatDetailMoreMessagesLoaded(
         idLead: widget.idLead,
-        idUltimoMensaje: state.messages.first.idMensaje,
+        idUltimoMensaje: anchorToken,
       ),
     );
   }
@@ -208,7 +212,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
           Expanded(
             child: Stack(
-              clipBehavior: Clip.none,
+              clipBehavior: Clip.hardEdge,
               children: [
                 // ── BlocConsumer ───────────────────────────
                 BlocConsumer<ChatDetailBloc, ChatDetailState>(
@@ -218,6 +222,10 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
                       if (_isInitialLoad) {
                         _isInitialLoad = false;
+                        // Garantizar que el scroll está al fondo (mensajes más recientes)
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _scroll.irAlFondo(animated: false);
+                        });
                       } else if (_isLoadingMore) {
                         // Fue carga de paginación, no hacemos scroll automático hacia abajo
                       } else {
@@ -226,7 +234,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                             state.messages.isNotEmpty) {
                           final nuevoMensaje = state.messages.last;
                           // Si yo lo envié O si estábamos al fondo (!showScrollDown)
-                          if (nuevoMensaje.isEnviado || !_showScrollDown) {
+                          if (nuevoMensaje.direccionMensaje == 'ASE' ||
+                              !_showScrollDown) {
                             Future.delayed(
                               const Duration(milliseconds: 150),
                               () {
@@ -344,10 +353,15 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           ),
 
           BlocBuilder<ChatDetailBloc, ChatDetailState>(
-            buildWhen: (prev, curr) =>
-                (prev is ChatDetailSuccess) != (curr is ChatDetailSuccess),
+            buildWhen: (prev, curr) {
+              // Solo reconstruir cuando pasa de "activo" (Success o LoadingMore) a "inactivo" o viceversa
+              final prevActivo = prev is ChatDetailSuccess || prev is ChatDetailLoadingMore;
+              final currActivo = curr is ChatDetailSuccess || curr is ChatDetailLoadingMore;
+              return prevActivo != currActivo;
+            },
             builder: (context, state) {
-              if (state is! ChatDetailSuccess) return const SizedBox.shrink();
+              final activo = state is ChatDetailSuccess || state is ChatDetailLoadingMore;
+              if (!activo) return const SizedBox.shrink();
               return ChatInputBar(audioController: _audioController);
             },
           ),

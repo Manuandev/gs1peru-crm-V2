@@ -7,19 +7,19 @@ class MessageUrlHelper {
   MessageUrlHelper._();
 
   /// URL base del archivo:
-  /// https://host/archivos_wsp_gs1/{idLead}/{idChatCab}/archivos_adjuntos/{nomArchivo}{extArchivo}
+  /// https://host/archivos_wsp_gs1/{idLead}/{idConversacionCab}/archivos_adjuntos/{nombreArchivo}{tipoArchivo}
   static String buildFileUrl(ChatMessage message, int idLead) {
     final base = EnvConfig.urlArchivos;
-    final cab = message.idChatCab;
-    final nombre = Uri.encodeComponent(message.nomArchivo);
-    final ext = Uri.encodeComponent(message.extArchivo);
+    final cab = message.idConversacionCab;
+    final nombre = Uri.encodeComponent(message.nombreArchivo);
+    final ext = Uri.encodeComponent(message.tipoArchivo);
     return '$base$idLead/$cab/archivos_adjuntos/$nombre$ext';
   }
 
   /// Determina si el tipo de mensaje es una imagen
   static bool isImage(ChatMessage message) {
     final tipo = message.tipo.toLowerCase();
-    final ext = message.extArchivo.toLowerCase().replaceAll('.', '');
+    final ext = message.tipoArchivo.toLowerCase().replaceAll('.', '');
     return tipo == 'image' ||
         ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].contains(ext);
   }
@@ -27,7 +27,7 @@ class MessageUrlHelper {
   /// Determina si el tipo de mensaje es un audio
   static bool isAudio(ChatMessage message) {
     final tipo = message.tipo.toLowerCase();
-    final ext = message.extArchivo.toLowerCase().replaceAll('.', '');
+    final ext = message.tipoArchivo.toLowerCase().replaceAll('.', '');
     return tipo == 'audio' ||
         ['mp3', 'm4a', 'aac', 'ogg', 'wav', 'opus'].contains(ext);
   }
@@ -35,7 +35,7 @@ class MessageUrlHelper {
   /// Determina si el tipo de mensaje es un video
   static bool isVideo(ChatMessage message) {
     final tipo = message.tipo.toLowerCase();
-    final ext = message.extArchivo.toLowerCase().replaceAll('.', '');
+    final ext = message.tipoArchivo.toLowerCase().replaceAll('.', '');
     return tipo == 'video' ||
         ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
   }
@@ -54,8 +54,8 @@ class MessageUrlHelper {
     if (isAudio(message)) return '🎵 Audio';
     if (isVideo(message)) return '🎥 Video';
     if (isDocument(message)) {
-      return '📄 ${message.nomArchivo}${message.extArchivo}';
+      return '📄 ${message.nombreArchivo}${message.tipoArchivo}';
     }
-    return message.mensaje;
+    return message.contenido;
   }
 }

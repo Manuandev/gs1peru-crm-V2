@@ -33,7 +33,7 @@ class ChatRemoteDatasource {
 
   Future<List<ChatModel>> getChats() async {
     final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}L';
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LS';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -49,7 +49,7 @@ class ChatRemoteDatasource {
     int idLead, {
     String? idUltimoMensaje, // null = primera carga
   }) async {
-    final String body = '${[idLead, idUltimoMensaje ?? ''].join(camp)}${sep}LD';
+    final String body = '${[idLead, idUltimoMensaje ?? ''].join(camp)}${sep}DT';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -87,7 +87,7 @@ class ChatRemoteDatasource {
     required String nombreCliente,
     required String apellidoCliente,
     required bool isExpirado,
-    required bool isCerrado, 
+    required bool isCerrado,
   }) {
     final user = _session.user;
     if (user == null) return false;

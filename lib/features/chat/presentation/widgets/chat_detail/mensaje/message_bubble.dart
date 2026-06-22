@@ -17,7 +17,7 @@ bool _isLocalFileHelper(ChatMessage msg) {
   if (msg.tipo == 'text' || msg.tipo == 'template' || msg.tipo == 'button') {
     return false;
   }
-  final m = msg.mensaje;
+  final m = msg.contenido;
   return m.isNotEmpty &&
       (m.startsWith('/') || m.startsWith('file://') || m.contains(r':\'));
 }
@@ -44,7 +44,8 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isEnviado = message.isEnviado;
+    final isEnviado = message.direccionMensaje == 'ASE' ||
+        message.direccionMensaje == 'AIA';
 
     final bubbleColor = isEnviado
         ? colorScheme.primary
@@ -91,8 +92,8 @@ class MessageBubble extends StatelessWidget {
                           bottom: 0,
                           right: 0,
                           child: _BubbleTimeRow(
-                            fecha: message.fecha,
-                            estado: message.estado,
+                            fecha: message.fechaHora,
+                            estado: message.estadoEntrega,
                             isEnviado: isEnviado,
                             isOverImage: true,
                             textColor: textColor,
@@ -106,8 +107,8 @@ class MessageBubble extends StatelessWidget {
                       children: [
                         _buildContent(context, textColor),
                         _BubbleTimeRow(
-                          fecha: message.fecha,
-                          estado: message.estado,
+                          fecha: message.fechaHora,
+                          estado: message.estadoEntrega,
                           isEnviado: isEnviado,
                           isOverImage: false,
                           textColor: textColor,
@@ -151,13 +152,14 @@ class MessageBubble extends StatelessWidget {
 
       case 'audio':
         final path = _isLocalFile
-            ? message.mensaje
+            ? message.contenido
             : MessageUrlHelper.buildFileUrl(message, idLead);
         return Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
           child: AudioPlayerWidget(
             audioPath: path,
-            isEnviado: message.isEnviado,
+            isEnviado: message.direccionMensaje == 'ASE' ||
+                message.direccionMensaje == 'AIA',
             audioController: audioController,
           ),
         );
@@ -193,13 +195,8 @@ class MessageBubble extends StatelessWidget {
       default:
         return Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
-
-          // child: Text(
-          //   message.mensaje,
-          //   style: TextStyle(fontSize: 14, color: textColor, height: 1.4),
-          // ),
           child: RichText(
-            text: TextSpan(children: parseMensaje(message.mensaje, textColor)),
+            text: TextSpan(children: parseMensaje(message.contenido, textColor)),
           ),
         );
     }
@@ -297,9 +294,9 @@ class _ImageContent extends StatelessWidget {
       PageRouteBuilder(
         pageBuilder: (_, _, _) => MediaViewerPage(
           url: urlOrPath,
-          fileName: '${message.nomArchivo}${message.extArchivo}',
+          fileName: '${message.nombreArchivo}${message.tipoArchivo}',
           senderName: nombre,
-          sentAt: message.fecha,
+          sentAt: message.fechaHora,
         ),
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
@@ -318,9 +315,9 @@ class _ImageContent extends StatelessWidget {
 
     if (_isLocal) {
       return GestureDetector(
-        onTap: () => _openViewer(context, message.mensaje),
+        onTap: () => _openViewer(context, message.contenido),
         child: Image.file(
-          File(message.mensaje),
+          File(message.contenido),
           width: size,
           height: size,
           fit: BoxFit.cover,
@@ -417,7 +414,7 @@ class _VideoContent extends StatelessWidget {
     );
 
     final url = _isLocal
-        ? message.mensaje
+        ? message.contenido
         : MessageUrlHelper.buildFileUrl(message, idLead);
 
     return GestureDetector(
@@ -426,9 +423,9 @@ class _VideoContent extends StatelessWidget {
           PageRouteBuilder(
             pageBuilder: (_, _, _) => MediaViewerPage(
               url: url,
-              fileName: '${message.nomArchivo}${message.extArchivo}',
+              fileName: '${message.nombreArchivo}${message.tipoArchivo}',
               senderName: nombre,
-              sentAt: message.fecha,
+              sentAt: message.fechaHora,
             ),
             transitionsBuilder: (_, animation, _, child) =>
                 FadeTransition(opacity: animation, child: child),
@@ -440,7 +437,7 @@ class _VideoContent extends StatelessWidget {
         isLocal: _isLocal,
         width: size,
         height: size * 0.65,
-        fileName: '${message.nomArchivo}${message.extArchivo}',
+        fileName: '${message.nombreArchivo}${message.tipoArchivo}',
       ),
     );
   }
@@ -643,7 +640,7 @@ class _DocumentContentState extends State<_DocumentContent> {
 
     // Archivo local recién seleccionado
     if (_isLocalFileHelper(widget.message)) {
-      await OpenFilex.open(widget.message.mensaje);
+      await OpenFilex.open(widget.message.contenido);
       return;
     }
 
@@ -655,7 +652,7 @@ class _DocumentContentState extends State<_DocumentContent> {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final fileName =
-          '${widget.message.nomArchivo}${widget.message.extArchivo}';
+          '${widget.message.nombreArchivo}${widget.message.tipoArchivo}';
       final savePath = '${dir.path}/$fileName';
 
       // Si ya existe localmente, abrir directo
@@ -687,9 +684,11 @@ class _DocumentContentState extends State<_DocumentContent> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final iconColor = widget.message.isEnviado
-        ? colorScheme.onPrimary
-        : colorScheme.primary;
+    final iconColor =
+        (widget.message.direccionMensaje == 'ASE' ||
+                widget.message.direccionMensaje == 'AIA')
+            ? colorScheme.onPrimary
+            : colorScheme.primary;
 
     return GestureDetector(
       onTap: _downloadAndOpen,
@@ -713,7 +712,7 @@ class _DocumentContentState extends State<_DocumentContent> {
                       color: iconColor,
                     )
                   : Icon(
-                      _iconForExt(widget.message.extArchivo),
+                      _iconForExt(widget.message.tipoArchivo),
                       size: AppSizing.iconFaLg,
                       color: iconColor,
                     ),
@@ -727,7 +726,7 @@ class _DocumentContentState extends State<_DocumentContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${widget.message.nomArchivo}${widget.message.extArchivo}',
+                    '${widget.message.nombreArchivo}${widget.message.tipoArchivo}',
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                     style: TextStyle(
@@ -778,20 +777,16 @@ class _TemplateContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasImage =
-        message.nomArchivo.isNotEmpty && MessageUrlHelper.isImage(message);
+        message.nombreArchivo.isNotEmpty && MessageUrlHelper.isImage(message);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // Texto del template
-        if (message.mensaje.isNotEmpty)
-          // Text(
-          //   message.mensaje,
-          //   style: TextStyle(fontSize: 14, color: textColor, height: 1.4),
-          // ),
+        if (message.contenido.isNotEmpty)
           RichText(
-            text: TextSpan(children: parseMensaje(message.mensaje, textColor)),
+            text: TextSpan(children: parseMensaje(message.contenido, textColor)),
           ),
 
         // Imagen del template

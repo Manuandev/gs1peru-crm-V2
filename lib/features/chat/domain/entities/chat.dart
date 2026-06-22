@@ -3,89 +3,258 @@
 import 'package:app_crm/index_dependencies.dart';
 
 class Chat extends Equatable {
-  final int idLead;
-  final String nombre;
-  final String apellido;
+  // Contacto
+  final int idContacto;
+  final String nombres;
+  final String? apellidoPaterno;
+  final String? apellidoMaterno;
+  final String? asesor;
+  //Empresa
+  final int idEmpresa;
+  final String ruc;
   final String nombreEmpresa;
-  final String telefono;
-  final String idEstado;
-  final String idMensaje;
-  final String mensaje;
-  final String tipoMensaje;
-  final String estado;
-  final String fechaHora;
+  final String direccionEmpresa;
+  // Numero
+  final int idNumero;
+  final String prefijoPais;
+  final String numero;
+  final bool isPrincipal;
   final bool isFavorito;
-  final bool isEnviado;
+  final bool isBloqueado;
+  // Conversación más reciente de ese número
+  final bool isExpirado;
+  final bool isCerrado;
+  // Lead más reciente de ese número
+  final int idLead;
+  final String modalidad;
+  // Info estado
+  final String idEstado;
+  final String idEstadoPadre;
+  final String idEstadoDescripcion;
+  // Info campaña
+  final int idCampania;
+  final String nombreCampania;
+  // Info oportunidad
+  final int idOportunidad;
+  final String nombreOportunidad;
+  // Info canal
   final int idCanal;
+  final String nombreCanal;
+  // Info interes
+  final int idInteres;
+  final String nombreInteres;
+  // Último mensaje
+  final String idTokenMeta;
+  final String tipo;
+  final String direccionMensaje; // AIA - ASISTENTE IA  / ASE - ASESOR / CLI - CLIENTE
+  final String contenido;
+  final String estadoEntrega;
+  final String fechaHora;
+  // Documento si tiene
+  final String archivoNombre;
+  final String archivoTipo;
 
-  String get nombreCompleto => '$nombre $apellido'.trim();
+  String get nombreCompleto =>
+      '$nombres $apellidoPaterno $apellidoMaterno'.trim();
 
   const Chat({
-    required this.idLead,
-    required this.nombre,
-    required this.apellido,
+    // Contacto
+    required this.idContacto,
+    required this.nombres,
+    required this.apellidoPaterno,
+    required this.apellidoMaterno,
+    required this.asesor,
+    //Empresa
+    required this.idEmpresa,
+    required this.ruc,
     required this.nombreEmpresa,
-    required this.telefono,
-    required this.idEstado,
-    required this.idMensaje,
-    required this.mensaje,
-    required this.tipoMensaje,
-    required this.estado,
-    required this.fechaHora,
+    required this.direccionEmpresa,
+    // Numero
+    required this.idNumero,
+    required this.prefijoPais,
+    required this.numero,
+    required this.isPrincipal,
     required this.isFavorito,
-    required this.isEnviado,
-    this.idCanal = 0,
+    required this.isBloqueado,
+    // Conversación más reciente de ese número
+    required this.isExpirado,
+    required this.isCerrado,
+    // Lead más reciente de ese número
+    required this.idLead,
+    required this.modalidad,
+    // Info estado
+    required this.idEstado,
+    required this.idEstadoPadre,
+    required this.idEstadoDescripcion,
+    // Info campaña
+    required this.idCampania,
+    required this.nombreCampania,
+    // Info oportunidad
+    required this.idOportunidad,
+    required this.nombreOportunidad,
+    // Info canal
+    required this.idCanal,
+    required this.nombreCanal,
+    // Info interes
+    required this.idInteres,
+    required this.nombreInteres,
+    // Último mensaje
+    required this.idTokenMeta,
+    required this.tipo,
+    required this.direccionMensaje,
+    required this.contenido,
+    required this.estadoEntrega,
+    required this.fechaHora,
+    // Documento si tiene
+    required this.archivoNombre,
+    required this.archivoTipo,
   });
 
   @override
   List<Object?> get props => [
-    idLead,
-    nombre,
-    apellido,
+    // Contacto
+    idContacto,
+    nombres,
+    apellidoPaterno,
+    apellidoMaterno,
+    asesor,
+    //Empresa
+    idEmpresa,
+    ruc,
     nombreEmpresa,
-    telefono,
-    idEstado,
-    idMensaje,
-    mensaje,
-    tipoMensaje,
-    estado,
-    fechaHora,
+    direccionEmpresa,
+    // Numero
+    idNumero,
+    prefijoPais,
+    numero,
+    isPrincipal,
     isFavorito,
-    isEnviado,
+    isBloqueado,
+    // Conversación más reciente de ese número
+    isExpirado,
+    isCerrado,
+    // Lead más reciente de ese número
+    idLead,
+    modalidad,
+    // Info estado
+    idEstado,
+    idEstadoPadre,
+    idEstadoDescripcion,
+    // Info campaña
+    idCampania,
+    nombreCampania,
+    // Info oportunidad
+    idOportunidad,
+    nombreOportunidad,
+    // Info canal
     idCanal,
+    nombreCanal,
+    // Info interes
+    idInteres,
+    nombreInteres,
+    // Último mensaje
+    idTokenMeta,
+    tipo,
+    direccionMensaje,
+    contenido,
+    estadoEntrega,
+    fechaHora,
+    // Documento si tiene
+    archivoNombre,
+    archivoTipo,
   ];
 
   Chat copyWith({
-    int? idLead,
-    String? nombre,
-    String? apellido,
+    int? idContacto,
+    String? nombres,
+    String? apellidoPaterno,
+    String? apellidoMaterno,
+    String? asesor,
+    int? idEmpresa,
+    String? ruc,
     String? nombreEmpresa,
-    String? telefono,
-    String? idEstado,
-    String? idMensaje,
-    String? mensaje,
-    String? tipoMensaje,
-    String? estado,
-    String? fechaHora,
+    String? direccionEmpresa,
+    int? idNumero,
+    String? prefijoPais,
+    String? numero,
+    bool? isPrincipal,
     bool? isFavorito,
-    bool? isEnviado,
+    bool? isBloqueado,
+    bool? isExpirado,
+    bool? isCerrado,
+    int? idLead,
+    String? modalidad,
+    String? idEstado,
+    String? idEstadoPadre,
+    String? idEstadoDescripcion,
+    int? idCampania,
+    String? nombreCampania,
+    int? idOportunidad,
+    String? nombreOportunidad,
     int? idCanal,
+    String? nombreCanal,
+    int? idInteres,
+    String? nombreInteres,
+    String? idTokenMeta,
+    String? tipo,
+    String? direccionMensaje,
+    String? contenido,
+    String? estadoEntrega,
+    String? fechaHora,
+    String? archivoNombre,
+    String? archivoTipo,
   }) {
     return Chat(
-      idLead: idLead ?? this.idLead,
-      nombre: nombre ?? this.nombre,
-      apellido: apellido ?? this.apellido,
+      // Contacto
+      idContacto: idContacto ?? this.idContacto,
+      nombres: nombres ?? this.nombres,
+      apellidoPaterno: apellidoPaterno ?? this.apellidoPaterno,
+      apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
+      asesor: asesor ?? this.asesor,
+      //Empresa
+      idEmpresa: idEmpresa ?? this.idEmpresa,
+      ruc: ruc ?? this.ruc,
       nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
-      telefono: telefono ?? this.telefono,
-      idEstado: idEstado ?? this.idEstado,
-      idMensaje: idMensaje ?? this.idMensaje,
-      mensaje: mensaje ?? this.mensaje,
-      tipoMensaje: tipoMensaje ?? this.tipoMensaje,
-      estado: estado ?? this.estado,
-      fechaHora: fechaHora ?? this.fechaHora,
+      direccionEmpresa: direccionEmpresa ?? this.direccionEmpresa,
+      // Numero
+      idNumero: idNumero ?? this.idNumero,
+      prefijoPais: prefijoPais ?? this.prefijoPais,
+      numero: numero ?? this.numero,
+      isPrincipal: isPrincipal ?? this.isPrincipal,
       isFavorito: isFavorito ?? this.isFavorito,
-      isEnviado: isEnviado ?? this.isEnviado,
+      isBloqueado: isBloqueado ?? this.isBloqueado,
+      //Conversación más reciente de ese número
+      isExpirado: isExpirado ?? this.isExpirado,
+      isCerrado: isCerrado ?? this.isCerrado,
+      // Lead más reciente de ese número
+      idLead: idLead ?? this.idLead,
+      modalidad: modalidad ?? this.modalidad,
+      //Info Estado
+      idEstado: idEstado ?? this.idEstado,
+      idEstadoPadre: idEstadoPadre ?? this.idEstadoPadre,
+      idEstadoDescripcion: idEstadoDescripcion ?? this.idEstadoDescripcion,
+      // Info Campaña
+      idCampania: idCampania ?? this.idCampania,
+      nombreCampania: nombreCampania ?? this.nombreCampania,
+      // Info oportunidad
+      idOportunidad: idOportunidad ?? this.idOportunidad,
+      nombreOportunidad: nombreOportunidad ?? this.nombreOportunidad,
+      // Info canal
       idCanal: idCanal ?? this.idCanal,
+      nombreCanal: nombreCanal ?? this.nombreCanal,
+      // Info interes
+      idInteres: idInteres ?? this.idInteres,
+      nombreInteres: nombreInteres ?? this.nombreInteres,
+      // Último mensaje
+      idTokenMeta: idTokenMeta ?? this.idTokenMeta,
+      tipo: tipo ?? this.tipo,
+      direccionMensaje: direccionMensaje ?? this.direccionMensaje,
+      contenido: contenido ?? this.contenido,
+      estadoEntrega: estadoEntrega ?? this.estadoEntrega,
+      fechaHora: fechaHora ?? this.fechaHora,
+      // Documento si tiene
+      archivoNombre: archivoNombre ?? this.archivoNombre,
+      archivoTipo: archivoTipo ?? this.archivoTipo,
     );
   }
 }

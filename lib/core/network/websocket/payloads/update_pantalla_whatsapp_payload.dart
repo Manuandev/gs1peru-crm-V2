@@ -15,7 +15,7 @@ class UpdatePantallaWhatsAppPayload {
   final int leadId;             // [2] ID del lead
   final String tipoMensaje;     // [3] text, image, video, audio, document
   final String idChatCab;       // [4] ID cabecera del chat
-  final String idMensaje;       // [5] ID único del mensaje (WhatsApp msg ID)
+  final String idTokenMeta;       // [5] ID único del mensaje (WhatsApp msg ID)
   final String hora;            // [6] Hora del envío
   final String nomArchivo;      // [7] Nombre del archivo adjunto
   final String telefono;        // [8] Número de teléfono
@@ -26,7 +26,7 @@ class UpdatePantallaWhatsAppPayload {
     required this.leadId,
     required this.tipoMensaje,
     required this.idChatCab,
-    required this.idMensaje,
+    required this.idTokenMeta,
     required this.hora,
     this.nomArchivo = '',
     this.telefono = '',
@@ -37,7 +37,7 @@ class UpdatePantallaWhatsAppPayload {
     if (message.records.isEmpty) return null;
     final f = message.records.first;
 
-    // Requerimos al menos hasta el índice 5 (idMensaje)
+    // Requerimos al menos hasta el índice 5 (idTokenMeta)
     if (f.length < 6) return null;
 
     return UpdatePantallaWhatsAppPayload(
@@ -46,7 +46,7 @@ class UpdatePantallaWhatsAppPayload {
       leadId: f.length > 2 ? (int.tryParse(f[2].trim()) ?? 0) : 0,
       tipoMensaje: f.length > 3 ? f[3].trim() : '',
       idChatCab: f.length > 4 ? f[4].trim() : '',
-      idMensaje: f.length > 5 ? f[5].trim() : '',
+      idTokenMeta: f.length > 5 ? f[5].trim() : '',
       hora: f.length > 6 ? f[6].trim() : '',
       nomArchivo: f.length > 7 ? f[7].trim() : '',
       telefono: f.length > 8 ? f[8].trim() : '',

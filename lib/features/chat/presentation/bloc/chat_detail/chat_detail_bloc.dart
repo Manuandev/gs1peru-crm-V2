@@ -73,14 +73,12 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
       final sorted = [...messages]
         ..sort((a, b) {
-          final fechaA = DateFormatter.parseDate(a.fecha) ?? DateTime(0);
-          final fechaB = DateFormatter.parseDate(b.fecha) ?? DateTime(0);
+          final fechaA = DateFormatter.parseDate(a.fechaHora) ?? DateTime(0);
+          final fechaB = DateFormatter.parseDate(b.fechaHora) ?? DateTime(0);
           final cmp = fechaA.compareTo(fechaB);
           if (cmp != 0) return cmp;
           // 👇 mismo minuto → ordena por idChatDet
-          return (int.tryParse(a.idChatDet) ?? 0).compareTo(
-            int.tryParse(b.idChatDet) ?? 0,
-          );
+          return (a.idConversacionDet).compareTo(b.idConversacionDet);
         });
 
       emit(ChatDetailSuccess(messages: sorted, hasMore: messages.isNotEmpty));
@@ -116,16 +114,14 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       final merged = [...newMessages, ...currentState.messages];
 
       final seen = <String>{};
-      final unique = merged.where((m) => seen.add(m.idMensaje)).toList();
+      final unique = merged.where((m) => seen.add(m.idTokenMeta)).toList();
       unique.sort((a, b) {
-        final fechaA = DateFormatter.parseDate(a.fecha) ?? DateTime(0);
-        final fechaB = DateFormatter.parseDate(b.fecha) ?? DateTime(0);
+        final fechaA = DateFormatter.parseDate(a.fechaHora) ?? DateTime(0);
+        final fechaB = DateFormatter.parseDate(b.fechaHora) ?? DateTime(0);
         final cmp = fechaA.compareTo(fechaB);
         if (cmp != 0) return cmp;
         // 👇 mismo minuto → ordena por idChatDet
-        return (int.tryParse(a.idChatDet) ?? 0).compareTo(
-          int.tryParse(b.idChatDet) ?? 0,
-        );
+        return (a.idConversacionDet).compareTo(b.idConversacionDet);
       });
 
       emit(
@@ -153,17 +149,17 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idMensaje: tempId,
-      fecha: DateTime.now().toIso8601String(),
-      isEnviado: true,
-      mensaje: event.mensaje.trim(),
+      idConversacionCab: int.parse(event.chatCab),
+      idConversacionDet: 0,
+      idTokenMeta: tempId,
+      fechaHora: DateTime.now().toIso8601String(),
+      direccionMensaje: 'ASE',
+      contenido: event.mensaje.trim(),
       tipo: 'text',
-      estado: 'wait',
-      idChatDetArc: '',
-      nomArchivo: '',
-      extArchivo: '',
-      idChatCab: event.chatCab,
-      idChatDet: '',
+      estadoEntrega: 'wait',
+      rutaArchivo: '',
+      tipoArchivo: 'text',
+      nombreArchivo: '',
     );
 
     emit(
@@ -202,17 +198,17 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         : 'text';
 
     final newMessage = ChatMessage(
-      idMensaje: tempId,
-      fecha: DateTime.now().toIso8601String(),
-      isEnviado: true,
-      mensaje: tieneArchivo ? event.template.rutaArchivo : mensajeFormateado,
+      idConversacionCab: int.parse(event.chatCab),
+      idConversacionDet: 0,
+      idTokenMeta: tempId,
+      fechaHora: DateTime.now().toIso8601String(),
+      direccionMensaje: 'ASE',
+      contenido: tieneArchivo ? event.template.rutaArchivo : mensajeFormateado,
       tipo: tipo,
-      estado: 'wait',
-      idChatDetArc: '',
-      nomArchivo: event.template.nombreArchivo,
-      extArchivo: event.template.extensionArchivo,
-      idChatCab: event.chatCab,
-      idChatDet: '',
+      estadoEntrega: 'wait',
+      rutaArchivo: '',
+      tipoArchivo: tipo,
+      nombreArchivo: event.template.nombreArchivo,
     );
 
     emit(
@@ -256,17 +252,17 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idMensaje: tempId,
-      fecha: DateTime.now().toIso8601String(),
-      isEnviado: true,
-      mensaje: event.audioPath,
+      idConversacionCab: int.parse(event.chatCab),
+      idConversacionDet: 0,
+      idTokenMeta: tempId,
+      fechaHora: DateTime.now().toIso8601String(),
+      direccionMensaje: 'ASE',
+      contenido: event.audioPath,
       tipo: 'audio',
-      estado: 'wait',
-      idChatDetArc: '',
-      nomArchivo: fileName,
-      extArchivo: 'm4a',
-      idChatCab: event.chatCab,
-      idChatDet: '',
+      estadoEntrega: 'wait',
+      rutaArchivo: '',
+      tipoArchivo: 'audio',
+      nombreArchivo: fileName,
     );
 
     emit(
@@ -305,17 +301,17 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idMensaje: tempId,
-      fecha: DateTime.now().toIso8601String(),
-      isEnviado: true,
-      mensaje: event.filePath,
+      idConversacionCab: int.parse(event.chatCab),
+      idConversacionDet: 0,
+      idTokenMeta: tempId,
+      fechaHora: DateTime.now().toIso8601String(),
+      direccionMensaje: 'ASE',
+      contenido: event.filePath,
       tipo: event.tipo,
-      estado: 'wait',
-      idChatDetArc: '',
-      nomArchivo: uniqueName,
-      extArchivo: event.fileExt,
-      idChatCab: event.chatCab,
-      idChatDet: '',
+      estadoEntrega: 'wait',
+      rutaArchivo: '',
+      tipoArchivo: event.tipo,
+      nombreArchivo: '$uniqueName${event.fileExt}',
     );
 
     emit(
@@ -366,17 +362,17 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
       currentMessages.add(
         ChatMessage(
-          idMensaje: tempId,
-          fecha: DateTime.now().toIso8601String(),
-          isEnviado: true,
-          mensaje: file.path,
+          idConversacionCab: int.parse(event.chatCab),
+          idConversacionDet: 0,
+          idTokenMeta: tempId,
+          fechaHora: DateTime.now().toIso8601String(),
+          direccionMensaje: 'ASE',
+          contenido: file.path,
           tipo: file.tipo,
-          estado: 'wait',
-          idChatDetArc: '',
-          nomArchivo: uniqueName,
-          extArchivo: file.ext,
-          idChatCab: event.chatCab,
-          idChatDet: '',
+          estadoEntrega: 'wait',
+          rutaArchivo: '',
+          tipoArchivo: file.tipo,
+          nombreArchivo: '$uniqueName${file.ext}',
         ),
       );
     }
@@ -408,9 +404,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (state is! ChatDetailSuccess) return;
     final currentState = state as ChatDetailSuccess;
     final messages = List<ChatMessage>.from(currentState.messages);
-    final idx = messages.indexWhere((m) => m.idMensaje == tempId);
+    final idx = messages.indexWhere((m) => m.idTokenMeta == tempId);
     if (idx != -1) {
-      messages[idx] = messages[idx].copyWith(estado: 'failed');
+      messages[idx] = messages[idx].copyWith(estadoEntrega: 'failed');
       emit(currentState.copyWith(messages: messages));
     }
   }
@@ -451,28 +447,32 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
     // Verificar si ya existe un mensaje con este idMensaje (evitar duplicados)
-    final exists = currentMessages.any((m) => m.idMensaje == payload.idMensaje);
+    final exists = currentMessages.any(
+      (m) => m.idTokenMeta == payload.idTokenMeta,
+    );
     if (exists) return;
 
     // Extraer extensión del nombre de archivo (e.g. 'doc.xlsx' → '.xlsx')
-    final extFromName = _extractExt(payload.nomArchivo);
-    final nameWithoutExt = _removeExt(payload.nomArchivo);
+    // final extFromName = _extractExt(payload.nomArchivo);
+    // final nameWithoutExt = _removeExt(payload.nomArchivo);
 
     // MENSAJE_WHATSAPP siempre es un mensaje del cliente → isEnviado = false
     final incomingMessage = ChatMessage(
-      idMensaje: payload.idMensaje,
-      fecha: payload.fecha.isNotEmpty
+      idConversacionCab: int.parse(payload.idChatCab),
+      idConversacionDet: 0,
+      idTokenMeta: payload.idTokenMeta,
+      fechaHora: payload.fecha.isNotEmpty
           ? payload.fecha
           : DateTime.now().toIso8601String(),
-      isEnviado: false, // Siempre false — el cliente envió este mensaje
-      mensaje: payload.mensaje,
+      direccionMensaje: 'CLI',
+      contenido: payload.mensaje,
       tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
-      estado: '', // Mensajes recibidos no tienen estado de checks
-      idChatDetArc: '',
-      nomArchivo: nameWithoutExt,
-      extArchivo: extFromName,
-      idChatCab: payload.idChatCab,
-      idChatDet: '',
+      estadoEntrega: '', // Mensajes recibidos no tienen estado de checks
+      rutaArchivo: '',
+      tipoArchivo: payload.tipoMensaje.isNotEmpty
+          ? payload.tipoMensaje
+          : 'text',
+      nombreArchivo: payload.nomArchivo,
     );
 
     currentMessages.add(incomingMessage);
@@ -494,7 +494,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
     // Evitar duplicados
-    if (currentMessages.any((m) => m.idMensaje == payload.idMensaje)) return;
+    if (currentMessages.any((m) => m.idTokenMeta == payload.idTokenMeta)) {
+      return;
+    }
 
     final pendingIndex = _findPendingIndex(currentMessages, payload);
 
@@ -558,14 +560,14 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     // Buscar el mensaje por su idMensaje
     final msgIndex = currentMessages.indexWhere(
-      (m) => m.idMensaje == payload.idMensaje,
+      (m) => m.idTokenMeta == payload.idMensaje,
     );
 
     if (msgIndex == -1) return; // Mensaje no encontrado, ignorar
 
     // Actualizar solo el estado del mensaje
     currentMessages[msgIndex] = currentMessages[msgIndex].copyWith(
-      estado: payload.estado,
+      estadoEntrega: payload.estado,
     );
 
     emit(currentState.copyWith(messages: currentMessages));

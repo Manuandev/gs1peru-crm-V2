@@ -80,9 +80,11 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
     final conteos = {
       ChatListFiltro.todos: _allChats.length,
-      ChatListFiltro.sinResponder: _allChats.where((c) => c.isEnviado).length,
+      ChatListFiltro.sinResponder: _allChats
+          .where((c) => c.direccionMensaje == 'CLI')
+          .length,
       ChatListFiltro.enDesarrollo: _allChats.where((c) {
-        if (c.isEnviado) return false;
+        if (c.direccionMensaje == 'CLI') return false;
         final fecha = DateFormatter.parseDate(c.fechaHora);
         if (fecha == null) return false;
         return ahora.difference(fecha).inHours < 72;
@@ -92,10 +94,10 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     var resultado = List<Chat>.from(_allChats);
 
     if (_filtroActivo == ChatListFiltro.sinResponder) {
-      resultado = resultado.where((c) => c.isEnviado).toList();
+      resultado = resultado.where((c) => c.direccionMensaje == 'CLI').toList();
     } else if (_filtroActivo == ChatListFiltro.enDesarrollo) {
       resultado = resultado.where((c) {
-        if (c.isEnviado) {
+        if (c.direccionMensaje == 'CLI') {
           return false;
         }
         final fecha = DateFormatter.parseDate(c.fechaHora);
@@ -110,10 +112,12 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       resultado = resultado
           .where(
             (c) =>
-                c.nombre.toLowerCase().contains(q) ||
-                c.apellido.toLowerCase().contains(q) ||
-                c.telefono.contains(q) ||
-                c.nombreEmpresa.toLowerCase().contains(q),
+                c.nombres.toLowerCase().contains(q) ||
+                c.apellidoPaterno!.toLowerCase().contains(q) ||
+                c.apellidoMaterno!.toLowerCase().contains(q) ||
+                c.nombreEmpresa.toLowerCase().contains(q) ||
+                c.nombreOportunidad.toLowerCase().contains(q) ||
+                c.numero.contains(q),
           )
           .toList();
     }
@@ -167,8 +171,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       // fechaHora: payload.fecha.isNotEmpty
       //     ? payload.fecha
       //     : DateTime.now().toIso8601String(),
-      isEnviado:
-          true, // FLG_ENTRADA = true → es mensaje de entrada (del cliente)
+      direccionMensaje: 'CLI',
       idMensaje: payload.idMensaje,
       emit: emit,
     );
@@ -193,8 +196,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       fechaHora: payload.hora.isNotEmpty
           ? payload.hora
           : DateTime.now().toIso8601String(),
-      isEnviado:
-          false, // FLG_ENTRADA = false → NO es entrada (lo enviamos nosotros)
+      direccionMensaje: 'ASE',
       idMensaje: payload.idMensaje,
       emit: emit,
     );
@@ -215,8 +217,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (idx == -1) return;
 
     // Solo actualizar si el idMensaje coincide con el último mensaje del chat
-    if (chats[idx].idMensaje == payload.idMensaje) {
-      chats[idx] = chats[idx].copyWith(estado: payload.estado);
+    if (chats[idx].idTokenMeta == payload.idMensaje) {
+      chats[idx] = chats[idx].copyWith(estadoEntrega: payload.estado);
       _allChats = chats;
       _emitFiltered(emit);
     }
@@ -230,7 +232,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     required String tipoMensaje,
     required String estado,
     required String fechaHora,
-    required bool isEnviado,
+    required String direccionMensaje,
     required String idMensaje,
     required Emitter<ChatListState> emit,
   }) {
@@ -240,12 +242,12 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
     // Actualizar el chat con los datos del nuevo mensaje
     final updatedChat = chats[idx].copyWith(
-      mensaje: mensaje,
-      tipoMensaje: tipoMensaje,
-      estado: estado,
+      contenido: mensaje,
+      tipo: tipoMensaje,
+      estadoEntrega: estado,
       fechaHora: fechaHora,
-      isEnviado: isEnviado,
-      idMensaje: idMensaje,
+      direccionMensaje: direccionMensaje,
+      idTokenMeta: idMensaje,
     );
 
     // Remover de su posición actual y poner al inicio (como WhatsApp)

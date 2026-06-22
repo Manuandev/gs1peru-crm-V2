@@ -96,11 +96,7 @@ class DeviceInfoService {
   static Map<String, String>? _cachedInfo;
 
   static void precargarEnBackground() {
-    _backgroundFuture ??= DeviceInfoService()._cargarTodoInterno().then((info) {
-      // ✅ Ubicación ya resuelta → ahora pide notificación
-      NotificationService.instance.requestPermissions();
-      return info; // ← retorna el Map
-    });
+    _backgroundFuture ??= DeviceInfoService()._cargarTodoInterno();
   }
 
   static Future<Map<String, String>> getInfoConTimeout() async {
@@ -204,15 +200,15 @@ class DeviceInfoService {
   // ② UBICACIÓN — GPS
   // ============================================================
 
+  /// Solo verifica si el permiso de ubicación ya está concedido — nunca lo solicita.
+  /// La solicitud al usuario siempre la hace SplashView para controlar el orden
+  /// de diálogos (ubicación primero, notificaciones después).
   Future<bool> solicitarPermisoUbicacion() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return false;
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
+      final permission = await Geolocator.checkPermission();
       return permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse;
     } catch (_) {

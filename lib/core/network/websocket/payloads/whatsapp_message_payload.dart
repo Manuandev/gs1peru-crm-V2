@@ -14,7 +14,7 @@ class WhatsAppMessagePayload {
   final int leadId;             // [2] ID del lead
   final String tipoMensaje;     // [3] text, image, video, audio, document
   final String idChatCab;       // [4] ID cabecera del chat
-  final String idMensaje;       // [5] ID único del mensaje (WhatsApp msg ID)
+  final String idTokenMeta;       // [5] ID único del mensaje (WhatsApp msg ID)
   final String fecha;           // [6] Fecha y hora del envío
   final String nomArchivo;      // [7] Nombre del archivo adjunto
   final bool flgCerrado;        // [8] Flag si el chat está cerrado
@@ -27,7 +27,7 @@ class WhatsAppMessagePayload {
     required this.leadId,
     required this.tipoMensaje,
     required this.idChatCab,
-    required this.idMensaje,
+    required this.idTokenMeta,
     required this.fecha,
     required this.telefono,
     this.nomArchivo = '',
@@ -49,7 +49,7 @@ class WhatsAppMessagePayload {
       leadId: f.length > 2 ? (int.tryParse(f[2].trim()) ?? 0) : 0,
       tipoMensaje: f.length > 3 ? f[3].trim() : '',
       idChatCab: f.length > 4 ? f[4].trim() : '',
-      idMensaje: f.length > 5 ? f[5].trim() : '',
+      idTokenMeta: f.length > 5 ? f[5].trim() : '',
       fecha: f.length > 6 ? f[6].trim() : '',
       nomArchivo: f.length > 7 ? f[7].trim() : '',
       flgCerrado: f.length > 8 ? f[8].trim() == '1' : false,

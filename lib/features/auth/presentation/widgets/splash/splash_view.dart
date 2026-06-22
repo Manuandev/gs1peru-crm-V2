@@ -99,10 +99,22 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
 
   /// Solicita permisos en background — NO bloquea el flujo del splash.
   /// El splash navega a Login/Home independientemente del resultado aquí.
+  ///
+  /// Orden garantizado: ubicación → notificaciones.
+  /// Android solo muestra un diálogo a la vez; sin este orden el de ubicación
+  /// se pierde si el de notificaciones aparece primero.
   Future<void> _solicitarPermisosEnBackground() async {
-    final manager = NotificationPermissionManager.instance;
-    final debeSolicitar = await manager.deberiaSolicitar();
-    if (!debeSolicitar || !mounted) return;
+    // ── 1. Ubicación ────────────────────────────────────────────
+    final locationManager = LocationPermissionManager.instance;
+    if (await locationManager.deberiaSolicitar()) {
+      await _solicitarPermisoUbicacion(locationManager);
+    }
+
+    if (!mounted) return;
+
+    // ── 2. Notificaciones (siempre después de ubicación) ────────
+    final notifManager = NotificationPermissionManager.instance;
+    if (!await notifManager.deberiaSolicitar() || !mounted) return;
 
     _solicitandoPermisos = true;
 
@@ -113,17 +125,37 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
     _solicitandoPermisos = false;
 
     if (concedido) {
-      await manager.guardarConcedido();
+      await notifManager.guardarConcedido();
     } else {
-      // Distinguir entre denegado explícitamente e ignorado/timeout
       final settings =
           await FirebaseMessaging.instance.getNotificationSettings();
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
-        await manager.guardarDenegado();
+        await notifManager.guardarDenegado();
       } else {
-        // notDetermined o provisional → usuario no respondió (ignorado)
-        await manager.guardarIgnorado();
+        await notifManager.guardarIgnorado();
       }
+    }
+  }
+
+  Future<void> _solicitarPermisoUbicacion(
+    LocationPermissionManager manager,
+  ) async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+
+      final permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        await manager.guardarConcedido();
+      } else if (permission == LocationPermission.deniedForever) {
+        await manager.guardarDenegadoPermanente();
+      } else {
+        await manager.guardarDenegado();
+      }
+    } catch (_) {
+      // Error de GPS — no bloquea el flujo
     }
   }
 

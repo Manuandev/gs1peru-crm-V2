@@ -115,6 +115,7 @@ export 'presentation/widgets/skeleton/skeleton_box.dart';
 
 export 'services/session_service.dart';
 export 'services/device_info_service.dart';
+export 'services/location_permission_manager.dart';
 
 export 'services/catalog_repository_impl.dart';
 export 'services/catalog_repository.dart';

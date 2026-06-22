@@ -14,7 +14,7 @@ class MessagePreview {
 }
 
 MessagePreview buildMessagePreview(Chat chat) {
-  switch (chat.tipoMensaje.toLowerCase()) {
+  switch (chat.tipo.toLowerCase()) {
     case 'audio':
       return MessagePreview(
         AppIcons.mic,
@@ -35,13 +35,13 @@ MessagePreview buildMessagePreview(Chat chat) {
       );
     case 'document':
       return MessagePreview(
-        fileIcon(chat.mensaje),
-        fileLabel(chat.mensaje),
-        color: fileColor(chat.mensaje),
+        fileIcon(chat.contenido),
+        fileLabel(chat.contenido),
+        color: fileColor(chat.contenido),
       );
     case 'text':
     default:
-      return MessagePreview(null, _cleanText(chat.mensaje));
+      return MessagePreview(null, _cleanText(chat.contenido));
   }
 }
 

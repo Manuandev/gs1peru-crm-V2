@@ -3,72 +3,74 @@
 import 'package:app_crm/index_dependencies.dart';
 
 class ChatMessage extends Equatable {
-  final String mensaje;
-  final String estado;
-  final String idMensaje;
-  final bool isEnviado;
+  // Detalle mensaje
+  final int idConversacionCab;
+  final int idConversacionDet;
+  final String idTokenMeta;
+  final String direccionMensaje; // AIA - ASISTENTE IA  / ASE - ASESOR / CLI - CLIENTE
   final String tipo;
-  final String fecha;
-  final String idChatDetArc;
-  final String nomArchivo;
-  final String extArchivo;
-  final String idChatCab;
-  final String idChatDet;
+  final String contenido;
+  final String estadoEntrega;
+  final String fechaHora;
+  // Documento si tiene
+  final String rutaArchivo;
+  final String tipoArchivo;
+  final String nombreArchivo;
 
   const ChatMessage({
-    required this.mensaje,
-    required this.estado,
-    required this.idMensaje,
-    required this.isEnviado,
+    required this.idConversacionCab,
+    required this.idConversacionDet,
+    required this.idTokenMeta,
+    required this.direccionMensaje,
     required this.tipo,
-    required this.fecha,
-    required this.idChatDetArc,
-    required this.nomArchivo,
-    required this.extArchivo,
-    required this.idChatCab,
-    required this.idChatDet,
+    required this.contenido,
+    required this.estadoEntrega,
+    required this.fechaHora,
+    required this.rutaArchivo,
+    required this.tipoArchivo,
+    required this.nombreArchivo,
   });
 
   @override
   List<Object?> get props => [
-    mensaje,
-    estado,
-    idMensaje,
-    isEnviado,
+    idConversacionCab,
+    idConversacionDet,
+    idTokenMeta,
+    direccionMensaje,
     tipo,
-    fecha,
-    idChatDetArc,
-    nomArchivo,
-    extArchivo,
-    idChatCab,
-    idChatDet,
+    contenido,
+    estadoEntrega,
+    fechaHora,
+    rutaArchivo,
+    tipoArchivo,
+    nombreArchivo,
   ];
 
   ChatMessage copyWith({
-    String? mensaje,
-    String? estado,
-    String? idMensaje,
-    bool? isEnviado,
+    int? idConversacionCab,
+    int? idConversacionDet,
+    String? idTokenMeta,
+    String? direccionMensaje,
     String? tipo,
-    String? fecha,
-    String? idChatDetArc,
-    String? nomArchivo,
-    String? extArchivo,
-    String? idChatCab,
-    String? idChatDet,
+    String? contenido,
+    String? estadoEntrega,
+    String? fechaHora,
+    String? rutaArchivo,
+    String? tipoArchivo,
+    String? nombreArchivo,
   }) {
     return ChatMessage(
-      mensaje: mensaje ?? this.mensaje,
-      estado: estado ?? this.estado,
-      idMensaje: idMensaje ?? this.idMensaje,
-      isEnviado: isEnviado ?? this.isEnviado,
+      idConversacionCab: idConversacionCab ?? this.idConversacionCab,
+      idConversacionDet: idConversacionDet ?? this.idConversacionDet,
+      idTokenMeta: idTokenMeta ?? this.idTokenMeta,
+      direccionMensaje: direccionMensaje ?? this.direccionMensaje,
       tipo: tipo ?? this.tipo,
-      fecha: fecha ?? this.fecha,
-      idChatDetArc: idChatDetArc ?? this.idChatDetArc,
-      nomArchivo: nomArchivo ?? this.nomArchivo,
-      extArchivo: extArchivo ?? this.extArchivo,
-      idChatCab: idChatCab ?? this.idChatCab,
-      idChatDet: idChatDet ?? this.idChatDet,
+      contenido: contenido ?? this.contenido,
+      estadoEntrega: estadoEntrega ?? this.estadoEntrega,
+      fechaHora: fechaHora ?? this.fechaHora,
+      rutaArchivo: rutaArchivo ?? this.rutaArchivo,
+      tipoArchivo: tipoArchivo ?? this.tipoArchivo,
+      nombreArchivo: nombreArchivo ?? this.nombreArchivo,
     );
   }
 }

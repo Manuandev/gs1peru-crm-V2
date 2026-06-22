@@ -60,7 +60,7 @@ class _ChatTileState extends State<ChatTile> {
   @override
   void didUpdateWidget(ChatTile oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.chat.mensaje != widget.chat.mensaje) {
+    if (oldWidget.chat.contenido != widget.chat.contenido) {
       setState(() => _updateElapsed());
       _startTimer();
     }
@@ -300,8 +300,7 @@ class _ColumnaFecha extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xxs),
-        // Sin respuesta (solo cuando el cliente envió el último mensaje)
-        if (chat.isEnviado)
+        if (chat.direccionMensaje == "CLI")
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.xs,
@@ -326,7 +325,7 @@ class _ColumnaFecha extends StatelessWidget {
         //   chat.idEstado,
         //   label: chat.estado,
         // ),
-        MessageStatusIcon(estado: chat.estado, color: Colors.grey),
+        MessageStatusIcon(estado: chat.estadoEntrega, color: Colors.grey),
       ],
     );
   }

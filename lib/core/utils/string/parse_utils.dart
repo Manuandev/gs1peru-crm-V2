@@ -13,4 +13,7 @@ class ParseUtils {
 
   static double toDouble(List<String> campos, int i) =>
       double.tryParse(str(campos, i)) ?? 0.0;
+
+  static bool toBool(List<String> campos, int i) =>
+      str(campos, i) == '1' || str(campos, i).toLowerCase() == 'true';
 }

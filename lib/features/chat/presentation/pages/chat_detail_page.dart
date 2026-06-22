@@ -7,8 +7,9 @@ import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatDetailPage extends StatelessWidget {
   final int idLead;
+  final Chat? conversacion;
 
-  const ChatDetailPage({super.key, required this.idLead});
+  const ChatDetailPage({super.key, required this.idLead, this.conversacion});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class ChatDetailPage extends StatelessWidget {
           ),
         ),
       ],
-      child: ChatDetailView(idLead: idLead),
+      child: ChatDetailView(idLead: idLead, conversacion: conversacion),
     );
   }
 }

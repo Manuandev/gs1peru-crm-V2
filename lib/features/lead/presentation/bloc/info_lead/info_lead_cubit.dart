@@ -27,6 +27,38 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     return super.close();
   }
 
+  // Inicializa desde la entidad Chat ya cargada en lista — sin llamada a API.
+  void seed(Chat chat) {
+    if (isClosed) return;
+    emit(InfoLeadSuccess(_infoLeadDesdeChat(chat)));
+  }
+
+  InfoLead _infoLeadDesdeChat(Chat chat) {
+    return InfoLead(
+      idLead: chat.idLead,
+      nombre: chat.nombres,
+      apellido: chat.apellidoPaterno ?? '',
+      nombreEmpresa: chat.nombreEmpresa,
+      telefono: chat.numero,
+      isFavorito: chat.isFavorito,
+      idEstado: chat.idEstado,
+      estado: chat.idEstadoDescripcion,
+      idSubEstado: '',
+      subEstado: '',
+      idCampania: chat.idCampania == 0 ? null : chat.idCampania,
+      campania: chat.nombreCampania.isEmpty ? null : chat.nombreCampania,
+      idEvento: null,
+      evento: null,
+      idCanal: chat.idCanal == 0 ? null : chat.idCanal,
+      canal: chat.nombreCanal.isEmpty ? null : chat.nombreCanal,
+      idInteres: chat.idInteres == 0 ? null : chat.idInteres,
+      interes: chat.nombreInteres.isEmpty ? null : chat.nombreInteres,
+      isBloqueado: chat.isBloqueado,
+      isExpirado: chat.isExpirado,
+      isCerrado: chat.isCerrado,
+    );
+  }
+
   Future<void> load(int idLead) async {
     if (isClosed) return;
 

@@ -22,8 +22,14 @@ class ChatListPortrait extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: ChatTile(
             chat: chat,
-            onTap: () => context.goToDetalleChat(idLead: chat.idLead),
-            onResponderTap: () => context.goToDetalleChat(idLead: chat.idLead),
+            onTap: () => context.goToDetalleChat(
+              idLead: chat.idLead,
+              conversacion: chat,
+            ),
+            onResponderTap: () => context.goToDetalleChat(
+              idLead: chat.idLead,
+              conversacion: chat,
+            ),
           ),
         );
       },

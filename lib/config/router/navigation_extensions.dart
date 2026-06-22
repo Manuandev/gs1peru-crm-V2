@@ -114,8 +114,11 @@ extension NavigationExtensions on BuildContext {
 
   // ── Chats ──────────────────────────────────────────────────
 
-  Future<void> goToDetalleChat({required int idLead}) =>
-      _push(AppRoutes.detalleChat, arguments: {'idLead': idLead});
+  Future<void> goToDetalleChat({required int idLead, Chat? conversacion}) =>
+      _push(AppRoutes.detalleChat, arguments: {
+        'idLead': idLead,
+        'conversacion': conversacion,
+      });
 
   Future<void> goToEditarLead({
     required InfoLead lead,

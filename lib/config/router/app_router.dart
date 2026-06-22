@@ -193,7 +193,10 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return ChatDetailPage(idLead: int.parse(args['idLead'].toString()));
+        return ChatDetailPage(
+          idLead: int.parse(args['idLead'].toString()),
+          conversacion: args['conversacion'] as Chat?,
+        );
       },
     ),
     AppRoutes.detalleEditarLead: RouteDefinition(

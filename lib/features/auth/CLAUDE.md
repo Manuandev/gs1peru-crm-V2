@@ -140,4 +140,36 @@ Logout (desde cualquier pantalla)
 |---|---|---|
 | `SplashPage` | `AppRoutes.splash` | fade |
 | `LoginPage` | `AppRoutes.login` | fade |
+| `RecuperarClavePage` | `AppRoutes.recuperarClave` | slideRight |
 | `ChangePasswordPage` | `AppRoutes.changePassword` | material |
+
+---
+
+## RecuperarClaveCubit — `presentation/bloc/recuperar_clave/`
+
+Gestiona el flujo de recuperación de clave por correo electrónico.
+
+**Estados:**
+```dart
+RecuperarClaveInitial   // estado inicial
+RecuperarClaveCargando  // llamada en curso
+RecuperarClaveExito     // correo enviado correctamente
+RecuperarClaveError(mensaje) // error de validación o de red
+```
+
+**Método principal:**
+```dart
+cubit.enviarCorreo(correo) // valida formato y llama al usecase
+```
+
+**UseCase:** `RecuperarClaveUseCase` → `AuthRepository.recuperarClave(correo)`
+
+**Datasource:** `AuthRemoteDatasource.recuperarClave()` — contiene `TODO(backend)` con la implementación simulada hasta que el equipo defina el endpoint.
+
+---
+
+## AuthOlaClipper — `presentation/widgets/login/login_ola_clipper.dart`
+
+Clipper genérico (renombrado desde `LoginOlaClipper`) reutilizado en:
+- `LoginView` (`_ZonaAzul`)
+- `RecuperarClaveView` (`_ZonaAzulRecuperar`)

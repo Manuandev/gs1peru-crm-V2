@@ -15,6 +15,7 @@ export 'domain/repositories/auth_repository.dart';
 export 'domain/usecases/login_usecase.dart';
 export 'domain/usecases/logout_usecase.dart';
 export 'domain/usecases/restore_session_usecase.dart';
+export 'domain/usecases/recuperar_clave_usecase.dart';
 
 // #region presentation/bloc
 export 'presentation/bloc/auth/auth_bloc.dart';
@@ -28,12 +29,16 @@ export 'presentation/bloc/login/login_state.dart';
 export 'presentation/bloc/splash/splash_bloc.dart';
 export 'presentation/bloc/splash/splash_event.dart';
 export 'presentation/bloc/splash/splash_state.dart';
+
+export 'presentation/bloc/recuperar_clave/recuperar_clave_cubit.dart';
+export 'presentation/bloc/recuperar_clave/recuperar_clave_state.dart';
 // #endregion presentation/bloc
 
 export 'presentation/controllers/login_form_controller.dart';
 
 export 'presentation/pages/login_page.dart';
 export 'presentation/pages/splash_page.dart';
+export 'presentation/pages/recuperar_clave_page.dart';
 
 // #region presentation/widgets
 // export 'presentation/widgets/login/login_landscape.dart';
@@ -43,6 +48,9 @@ export 'presentation/widgets/login/login_layout.dart';
 export 'presentation/widgets/login/login_ola_clipper.dart';
 export 'presentation/widgets/login/login_ilustracion_widget.dart';
 export 'presentation/widgets/login/login_divisor_widget.dart';
+
+export 'presentation/widgets/recuperar_clave/recuperar_clave_view.dart';
+export 'presentation/widgets/recuperar_clave/recuperar_clave_ilustracion_widget.dart';
 
 export 'presentation/widgets/splash/splash_landscape.dart';
 export 'presentation/widgets/splash/splash_portrait.dart';

@@ -487,4 +487,16 @@ class AppSizing {
   /// Desplazamiento vertical de la sombra de una card en reposo: 2dp
   /// Usado en BoxShadow.offset — ContactoDetalleHeader y cards con sombra suave
   static const double shadowOffsetCardY = 2.0;
+
+  // ============================================================
+  // AUTH — Cartilla flotante (login, recuperar clave)
+  // ============================================================
+
+  /// Radio de la cartilla flotante en pantallas de autenticación: 32dp
+  /// Borde redondeado superior del contenedor blanco que se monta sobre la zona azul.
+  static const double authCardRadius = 32.0;
+
+  /// Blur de la sombra de la cartilla flotante de auth: 24dp
+  /// Sombra con offset negativo en Y que da sensación de levitación sobre la zona azul.
+  static const double shadowBlurLg = 24.0;
 }

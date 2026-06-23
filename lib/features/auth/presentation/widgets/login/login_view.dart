@@ -2,10 +2,11 @@
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:flutter/material.dart';
 
-/// LoginView — rediseño completo con zona azul + ilustración + ola + zona blanca.
+/// LoginView — zona azul con ilustración + cartilla blanca flotante.
 ///
 /// La lógica de negocio (BLoC, handlers) vive aquí.
 /// Los sub-widgets de UI están extraídos a archivos en widgets/login/.
@@ -61,14 +62,16 @@ class _LoginViewState extends State<LoginView> {
   }
 
   void _handleForgotPassword() {
-    AppSnackBar.info(context, 'Contacta al administrador');
+    context.goToRecuperarClave();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: AppColors.surface,
+      // Fondo azul para que los bordes redondeados de la cartilla
+      // muestren el color primario en las esquinas superiores.
+      backgroundColor: AppColors.primary,
       body: BlocConsumer<LoginBloc, LoginState>(
         listenWhen: (_, current) =>
             current is LoginSuccess || current is LoginFailure,
@@ -130,15 +133,25 @@ class _CuerpoLogin extends StatelessWidget {
         // ── Zona azul con ilustración y ola ────────────────────────
         _ZonaAzul(),
 
-        // ── Zona blanca con formulario ─────────────────────────────
+        // ── Cartilla blanca flotante — se monta AppSpacing.xl sobre la ola ──
         Expanded(
-          child: _ZonaBlanca(
-            formController: formController,
-            esCargando: esCargando,
-            modoAutenticacion: modoAutenticacion,
-            onLogin: onLogin,
-            onGoogleLogin: onGoogleLogin,
-            onForgotPassword: onForgotPassword,
+          child: Container(
+            color: AppColors.surface,
+            child: SingleChildScrollView(
+              clipBehavior: Clip.none,
+              physics: const ClampingScrollPhysics(),
+              child: Transform.translate(
+                offset: const Offset(0, -AppSpacing.xl),
+                child: _CartillaBlanca(
+                  formController: formController,
+                  esCargando: esCargando,
+                  modoAutenticacion: modoAutenticacion,
+                  onLogin: onLogin,
+                  onGoogleLogin: onGoogleLogin,
+                  onForgotPassword: onForgotPassword,
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -154,11 +167,10 @@ class _ZonaAzul extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final alturaPantalla = MediaQuery.of(context).size.height;
-    // La zona azul ocupa ~42% de la pantalla con un mínimo razonable
     final alturaZona = (alturaPantalla * 0.42).clamp(220.0, 340.0);
 
     return ClipPath(
-      clipper: const LoginOlaClipper(),
+      clipper: const AuthOlaClipper(),
       child: Container(
         width: double.infinity,
         height: alturaZona,
@@ -180,7 +192,6 @@ class _ZonaAzul extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Logo GS1 blanco + texto "CRM Perú"
                       Row(
                         children: [
                           SizedBox(
@@ -202,7 +213,6 @@ class _ZonaAzul extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      // Título "Bienvenido"
                       Text(
                         'Bienvenido',
                         style: AppTextStyles.headlineLarge.copyWith(
@@ -211,7 +221,6 @@ class _ZonaAzul extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      // Subtítulo descriptivo
                       Text(
                         'Ingresa para gestionar conversaciones, prospectos y cobranzas.',
                         style: AppTextStyles.bodySmall.copyWith(
@@ -233,10 +242,10 @@ class _ZonaAzul extends StatelessWidget {
 }
 
 // ============================================================
-// ZONA BLANCA (formulario según modo de autenticación)
+// CARTILLA BLANCA FLOTANTE
 // ============================================================
 
-class _ZonaBlanca extends StatelessWidget {
+class _CartillaBlanca extends StatelessWidget {
   final LoginFormController formController;
   final bool esCargando;
   final ModoAutenticacion modoAutenticacion;
@@ -244,7 +253,7 @@ class _ZonaBlanca extends StatelessWidget {
   final VoidCallback onGoogleLogin;
   final VoidCallback onForgotPassword;
 
-  const _ZonaBlanca({
+  const _CartillaBlanca({
     required this.formController,
     required this.esCargando,
     required this.modoAutenticacion,
@@ -255,17 +264,31 @@ class _ZonaBlanca extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(AppSizing.authCardRadius),
+          topRight: Radius.circular(AppSizing.authCardRadius),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black(0.10),
+            blurRadius: AppSizing.shadowBlurLg,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        AppSpacing.sm,
-        AppSpacing.lg,
         AppSpacing.xl,
+        AppSpacing.lg,
+        AppSpacing.lg,
       ),
       child: Column(
         children: [
-          // ── Cabecera de la zona blanca ──────────────────────────
+          // ── Cabecera de la cartilla ─────────────────────────────
           Text(
             'Accede a tu cuenta',
             style: AppTextStyles.titleMedium.copyWith(

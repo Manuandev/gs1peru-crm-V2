@@ -28,6 +28,13 @@ class AuthRemoteDatasource {
     };
   }
 
+  Future<void> recuperarClave(String correo) async {
+    // TODO(backend): llamar al endpoint de recuperación de clave cuando el
+    // equipo defina la URL y parámetros exactos.
+    // Ejemplo: POST a ApiConstants.urlRecuperarClave con body {correo: correo}
+    await Future.delayed(const Duration(seconds: 2));
+  }
+
   Future<UserModel> loginWithGoogle({required String email}) async {
     final result = await _api.postSafe(
       ApiConstants.urlLoginGoogle,

@@ -104,6 +104,12 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  // ── RECUPERAR CLAVE ──────────────────────────────────────
+
+  @override
+  Future<void> recuperarClave(String correo) =>
+      _remote.recuperarClave(correo);
+
   // ── LOGOUT ───────────────────────────────────────────────
 
   @override

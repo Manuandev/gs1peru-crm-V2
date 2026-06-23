@@ -21,4 +21,7 @@ abstract class AuthRepository {
 
   /// Limpia memoria y SQLite.
   Future<void> logout();
+
+  /// Solicita recuperación de clave enviando credenciales al correo registrado.
+  Future<void> recuperarClave(String correo);
 }

@@ -13,6 +13,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String home = '/home';
   static const String changePassword = '/cambiar-contrasena';
+  static const String recuperarClave = '/recuperar-clave';
   static const String settings = '/settings';
 
   static const String chats = '/chats';

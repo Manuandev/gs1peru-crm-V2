@@ -84,6 +84,10 @@ class AppRouter {
       builder: (_) =>
           const Scaffold(body: Center(child: Text('Cambiar Contraseña'))),
     ),
+    AppRoutes.recuperarClave: RouteDefinition(
+      builder: (_) => const RecuperarClavePage(),
+      transition: TransitionType.slideRight,
+    ),
 
     // PRINCIPALES
     AppRoutes.home: RouteDefinition(builder: (_) => const HomePage()),

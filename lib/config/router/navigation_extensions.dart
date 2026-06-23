@@ -44,6 +44,7 @@ extension NavigationExtensions on BuildContext {
 
   Future<void> goToLogin() => clearAndPush(AppRoutes.login);
   Future<void> goToHome() => clearAndPush(AppRoutes.home);
+  Future<void> goToRecuperarClave() => _push(AppRoutes.recuperarClave);
 
   // ── Módulos principales ────────────────────────────────────
 

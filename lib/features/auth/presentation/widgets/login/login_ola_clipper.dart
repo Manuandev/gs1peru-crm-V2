@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 
-/// Recorta la zona azul del login con una curva tipo ola en el borde inferior.
+/// Recorta la zona azul de las pantallas de auth con una curva tipo ola en el borde inferior.
 ///
 /// La ola desciende ~30dp en los extremos y sube ~40dp en el centro,
-/// generando una transición suave hacia la zona blanca inferior.
-class LoginOlaClipper extends CustomClipper<Path> {
-  const LoginOlaClipper();
+/// generando una transición suave hacia la cartilla blanca inferior.
+/// Usada en LoginView y RecuperarClaveView.
+class AuthOlaClipper extends CustomClipper<Path> {
+  const AuthOlaClipper();
 
   @override
   Path getClip(Size size) {

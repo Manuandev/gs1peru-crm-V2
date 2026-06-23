@@ -5,9 +5,20 @@ import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
+/// Tarjeta de módulo con layout vertical para el dashboard del home.
+///
+/// Estructura visual:
+/// ┌──────────────────── [badge] ─┐
+/// │                              │
+/// │         [ícono]              │
+/// │                              │
+/// │  Nombre           [›]        │
+/// │  Descripción                 │
+/// └──────────────────────────────┘
 class DashboardCard extends StatelessWidget {
   final String label;
   final dynamic icon;
+  final String? descripcion;
   final int? badge;
   final VoidCallback? onTap;
 
@@ -15,6 +26,7 @@ class DashboardCard extends StatelessWidget {
     super.key,
     required this.label,
     required this.icon,
+    this.descripcion,
     this.badge,
     this.onTap,
   });
@@ -31,9 +43,12 @@ class DashboardCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizing.radiusLg),
         child: Stack(
           children: [
-            // ── CARD ─────────────────────────────────────────────
+            // ── CARD BASE ───────────────────────────────────────────
             Container(
               width: double.infinity,
+              constraints: const BoxConstraints(
+                minHeight: AppSizing.dashCardHeight,
+              ),
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(AppSizing.radiusLg),
@@ -45,44 +60,76 @@ class DashboardCard extends StatelessWidget {
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.md,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // ── ÍCONO ──────────────────────────────────────
-                  icon is IconData
-                      ? Icon(
-                          icon as IconData,
-                          color: textColor,
-                          size: AppSizing.iconLg,
-                        )
-                      : FaIcon(
-                          icon as FaIconData,
-                          color: textColor,
-                          size: AppSizing.iconFaLg,
+                  // ── ÍCONO centrado ──────────────────────────────
+                  Center(
+                    child: icon is IconData
+                        ? Icon(
+                            icon as IconData,
+                            color: textColor,
+                            size: AppSizing.iconXl,
+                          )
+                        : FaIcon(
+                            icon as FaIconData,
+                            color: textColor,
+                            size: AppSizing.iconLg,
+                          ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // ── NOMBRE + FLECHA ─────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              label,
+                              style: AppTextStyles.titleSmall.copyWith(
+                                color: textColor,
+                                fontWeight: AppTextStyles.weightBold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (descripcion != null) ...[
+                              const SizedBox(height: AppSpacing.xxs),
+                              Text(
+                                descripcion!,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: textColor.withValues(
+                                    alpha: AppColors.opacityOnPrimarySubtle,
+                                  ),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
                         ),
-                  const SizedBox(width: AppSpacing.sm),
-                  // ── LABEL ──────────────────────────────────────
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: textColor,
-                        fontWeight: AppTextStyles.weightBold,
-                        letterSpacing: AppTextStyles.letterSpacingXNarrow,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                    ),
+                      Icon(
+                        AppIcons.forward,
+                        color: textColor.withValues(
+                          alpha: AppColors.opacityOnPrimarySubtle,
+                        ),
+                        size: AppSizing.iconActionSm,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-            // ── BADGE: esquina superior derecha, dentro del card ──
+            // ── BADGE: esquina superior derecha ────────────────────
             if (badge != null && badge! > 0)
               Positioned(
                 top: AppSpacing.xs,
@@ -104,7 +151,7 @@ class DashboardCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      '$badge',
+                      badge! > 99 ? '99+' : '$badge',
                       style: AppTextStyles.labelSmall.copyWith(
                         color: textColor,
                         fontWeight: FontWeight.w800,

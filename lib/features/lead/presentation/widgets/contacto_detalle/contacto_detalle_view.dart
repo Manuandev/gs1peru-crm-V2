@@ -69,60 +69,62 @@ class _ContactoScaffold extends StatelessWidget {
             onPressed: () => context.goBack(),
           ),
         ],
-        appBarTrailingButtons: [
-          IconButton(
-            icon: const Icon(AppIcons.refresh),
-            color: AppColors.textOnDark,
-            onPressed: () => context.read<ContactoDetalleBloc>().add(
-              ContactoDetalleStarted(idContacto),
-            ),
-          ),
-        ],
         footer: ContactoAccionesFooter(contacto: contacto),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ContactoDetalleHeader(contacto: contacto),
-            TabBar(
-              indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  color: AppColors.primary,
-                  width: AppSizing.borderFocusWidth,
-                ),
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: AppColors.transparent,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: AppTextStyles.labelLarge.copyWith(
-                fontWeight: AppTextStyles.weightBold,
-              ),
-              unselectedLabelStyle: AppTextStyles.labelLarge,
-              tabs: [
-                const Tab(text: 'Info'),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Negociaciones'),
-                      if (negociaciones.isNotEmpty) ...[
-                        const SizedBox(width: AppSpacing.xs),
-                        _ContadorBadge(count: negociaciones.length),
-                      ],
-                    ],
+        body: RefreshIndicator(
+          color: AppColors.primary,
+          backgroundColor: AppColors.surface,
+          onRefresh: () async {
+            final bloc = context.read<ContactoDetalleBloc>();
+            bloc.add(ContactoDetalleStarted(idContacto));
+            await bloc.stream.firstWhere(
+              (s) => s is ContactoDetalleCargado || s is ContactoDetalleError,
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ContactoDetalleHeader(contacto: contacto),
+              TabBar(
+                indicator: const UnderlineTabIndicator(
+                  borderSide: BorderSide(
+                    color: AppColors.primary,
+                    width: AppSizing.borderFocusWidth,
                   ),
                 ),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  ContactoInfoTab(contacto: contacto),
-                  ContactoNegociacionesTab(negociaciones: negociaciones),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: AppColors.transparent,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textSecondary,
+                labelStyle: AppTextStyles.labelLarge.copyWith(
+                  fontWeight: AppTextStyles.weightBold,
+                ),
+                unselectedLabelStyle: AppTextStyles.labelLarge,
+                tabs: [
+                  const Tab(text: 'Info'),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Negociaciones'),
+                        if (negociaciones.isNotEmpty) ...[
+                          const SizedBox(width: AppSpacing.xs),
+                          _ContadorBadge(count: negociaciones.length),
+                        ],
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    ContactoInfoTab(contacto: contacto),
+                    ContactoNegociacionesTab(negociaciones: negociaciones),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

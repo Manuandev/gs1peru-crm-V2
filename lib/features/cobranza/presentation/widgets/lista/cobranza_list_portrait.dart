@@ -41,6 +41,7 @@ class CobranzaListPortrait extends StatelessWidget {
           child: cobranzas.isEmpty
               ? AppEmptyView(message: _mensajeVacio())
               : ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                   ),

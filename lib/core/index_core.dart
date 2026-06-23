@@ -83,8 +83,12 @@ export 'presentation/bloc/catalog/catalog_bloc.dart';
 export 'presentation/bloc/catalog/catalog_event.dart';
 export 'presentation/bloc/catalog/catalog_state.dart';
 
+export 'presentation/bloc/filtro/filtro_cubit.dart';
+export 'presentation/bloc/filtro/filtro_state.dart';
+
 export 'presentation/pages/base_page.dart';
 export 'presentation/pages/under_construction_page.dart';
+export 'presentation/widgets/footer_botton.dart';
 
 export 'presentation/widgets/buttons/custom_google_button.dart';
 export 'presentation/widgets/buttons/custom_outlined_button.dart';

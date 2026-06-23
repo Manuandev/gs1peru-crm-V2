@@ -44,6 +44,7 @@ class HomeLoaded extends HomeState {
   int get totNotificaciones => home.totNotificaciones;
   List<PrioridadHome> get prioridades => home.prioridades;
   List<ProspectoHome> get prospectos => home.prospectos;
+  List<AsesorHome> get asesores => home.asesores;
 
   @override
   List<Object?> get props => [home, usuario];

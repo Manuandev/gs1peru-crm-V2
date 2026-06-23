@@ -46,7 +46,7 @@ class LocalDatabase implements ILocalDatabase {
 
     _database = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -57,12 +57,13 @@ class LocalDatabase implements ILocalDatabase {
     // ── TABLA: session ───────────────────────────────────
     await db.execute('''
       CREATE TABLE session (
-        id         INTEGER PRIMARY KEY AUTOINCREMENT,
-        login_type TEXT NOT NULL,
-        username   TEXT,
-        password   TEXT,
-        email      TEXT,
-        expires_at TEXT NOT NULL,
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        login_type  TEXT NOT NULL,
+        username    TEXT,
+        password    TEXT,
+        email       TEXT,
+        id_token    TEXT,
+        expires_at  TEXT NOT NULL,
         remember_me INTEGER NOT NULL DEFAULT 0
       )
     ''');
@@ -82,8 +83,10 @@ class LocalDatabase implements ILocalDatabase {
   /// Incrementa el número en openDatabase → version: X
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Agregar columna remember_me a session para usuarios existentes
       await db.execute('ALTER TABLE session ADD COLUMN remember_me INTEGER NOT NULL DEFAULT 0');
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE session ADD COLUMN id_token TEXT');
     }
   }
 

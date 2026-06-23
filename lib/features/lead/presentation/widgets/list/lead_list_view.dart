@@ -28,36 +28,41 @@ class LeadListView extends StatelessWidget {
               onPressed: () =>
                   context.read<LeadListVistaCubit>().alternar(),
             ),
-            IconButton(
-              icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
-              onPressed: () =>
-                  context.read<LeadListBloc>().add(const LeadListRefresh()),
-            ),
           ],
-          body: BlocBuilder<LeadListBloc, LeadListState>(
-            builder: (context, state) {
-              if (state is LeadListLoading || state is LeadListInitial) {
-                return const LeadListSkeleton();
-              }
-
-              if (state is LeadListError) {
-                return AppErrorView(
-                  message: state.message,
-                  onRetry: () =>
-                      context.read<LeadListBloc>().add(const LeadListRefresh()),
-                );
-              }
-
-              if (state is LeadListSuccess) {
-                return LeadListPortrait(
-                  leads: state.leads,
-                  filtro: state.filtro,
-                  modoCompacto: modoCompacto,
-                );
-              }
-
-              return const SizedBox.shrink();
+          body: RefreshIndicator(
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
+            onRefresh: () async {
+              final bloc = context.read<LeadListBloc>();
+              bloc.add(const LeadListRefresh());
+              await bloc.stream
+                  .firstWhere((s) => s is LeadListSuccess || s is LeadListError);
             },
+            child: BlocBuilder<LeadListBloc, LeadListState>(
+              builder: (context, state) {
+                if (state is LeadListLoading || state is LeadListInitial) {
+                  return const LeadListSkeleton();
+                }
+
+                if (state is LeadListError) {
+                  return AppErrorView(
+                    message: state.message,
+                    onRetry: () =>
+                        context.read<LeadListBloc>().add(const LeadListRefresh()),
+                  );
+                }
+
+                if (state is LeadListSuccess) {
+                  return LeadListPortrait(
+                    leads: state.leads,
+                    filtro: state.filtro,
+                    modoCompacto: modoCompacto,
+                  );
+                }
+
+                return const SizedBox.shrink();
+              },
+            ),
           ),
         );
       },

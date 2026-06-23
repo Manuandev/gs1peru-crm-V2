@@ -90,6 +90,7 @@ class AppWidget extends StatelessWidget {
             ),
           ), // ✅ DrawerBloc va aquí
           BlocProvider<DrawerBloc>(create: (context) => DrawerBloc()),
+          BlocProvider<FiltroCubit>(create: (_) => FiltroCubit()),
           BlocProvider<CatalogsBloc>(
             create: (context) => CatalogsBloc(
               getData: GetCatalogsUseCase(context.read<CatalogsRepository>()),

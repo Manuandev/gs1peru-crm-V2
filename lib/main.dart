@@ -29,8 +29,6 @@ void main() async {
   // Si ya existen, no hace nada.
   await LocalDatabase().init();
 
-  // v7: initialize obligatorio antes de cualquier uso
-  // serverClientId omitido — idToken viene en authenticate() sin necesitarlo.
   await GoogleSignIn.instance.initialize(
     serverClientId:
         '948850885270-53j8a453k72iiqt38693tvqd3cs869l2.apps.googleusercontent.com',

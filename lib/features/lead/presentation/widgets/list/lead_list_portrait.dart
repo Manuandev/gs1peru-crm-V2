@@ -52,6 +52,7 @@ class LeadListPortrait extends StatelessWidget {
                   },
                 )
               : ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: leads.length,
                   itemBuilder: (context, index) {
                     final lead = leads[index];

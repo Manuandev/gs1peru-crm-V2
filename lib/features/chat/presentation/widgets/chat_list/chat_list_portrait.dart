@@ -14,7 +14,7 @@ class ChatListPortrait extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: state.chats.length,
       itemBuilder: (context, index) {
         final chat = state.chats[index];

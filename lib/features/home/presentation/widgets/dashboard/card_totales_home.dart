@@ -16,44 +16,67 @@ class CardTotalesHome extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card.filled(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: IntrinsicHeight(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _CardTotalItem(
-                icon: AppIconsSocial.etapaNuevo,
-                iconColor: AppIconsSocial.colorEstado("00"),
-                cantidad: state.totLeadsNuevos,
-                titulo: 'Nuevo',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ── Encabezado de sección ──────────────────────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Mi embudo de gestión',
+              style: AppTextStyles.titleMedium.copyWith(
+                fontWeight: AppTextStyles.weightBold,
               ),
-              _VerticalDivider(color: colorScheme.outlineVariant),
-              _CardTotalItem(
-                icon: AppIconsSocial.etapaEnDesarrollo,
-                iconColor: AppIconsSocial.colorEstado("01"),
-                cantidad: state.totLeadsDesarrollo,
-                titulo: 'Desarrollo',
+            ),
+            CustomTextButton(text: 'Ver detalle', onPressed: () {}),
+          ],
+        ),
+
+        const SizedBox(height: AppSpacing.xs),
+
+        // ── Card con los 4 totales ─────────────────────────────────
+        Card.filled(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: IntrinsicHeight(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _CardTotalItem(
+                    icon: AppIconsSocial.etapaNuevo,
+                    iconColor: AppIconsSocial.colorEstado("00"),
+                    cantidad: state.totLeadsNuevos,
+                    titulo: 'Nuevos',
+                  ),
+                  _VerticalDivider(color: colorScheme.outlineVariant),
+                  _CardTotalItem(
+                    icon: AppIconsSocial.etapaEnDesarrollo,
+                    iconColor: AppIconsSocial.colorEstado("01"),
+                    cantidad: state.totLeadsDesarrollo,
+                    titulo: 'En gestión',
+                  ),
+                  _VerticalDivider(color: colorScheme.outlineVariant),
+                  _CardTotalItem(
+                    icon: AppIconsSocial.etapaPropuesta,
+                    iconColor: AppIconsSocial.colorEstado("02"),
+                    cantidad: state.totPropuestas,
+                    titulo: 'Propuestas',
+                  ),
+                  _VerticalDivider(color: colorScheme.outlineVariant),
+                  _CardTotalItem(
+                    icon: AppIcons.moneda,
+                    iconColor: ColorUtils.fromName('Cobranza'),
+                    cantidad: state.totCobranza,
+                    titulo: 'Cobranza',
+                  ),
+                ],
               ),
-              _VerticalDivider(color: colorScheme.outlineVariant),
-              _CardTotalItem(
-                icon: AppIconsSocial.etapaPropuesta,
-                iconColor: AppIconsSocial.colorEstado("02"),
-                cantidad: state.totPropuestas,
-                titulo: 'Propuesta',
-              ),
-              _VerticalDivider(color: colorScheme.outlineVariant),
-              _CardTotalItem(
-                icon: AppIcons.moneda,
-                iconColor: ColorUtils.fromName('Cobranza'),
-                cantidad: state.totCobranza,
-                titulo: 'Cobranza',
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -94,16 +117,32 @@ class _CardTotalItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            titulo,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: iconColor.withValues(alpha: AppColors.opacityIconMuted),
-              fontWeight: AppTextStyles.weightSemiBold,
-              letterSpacing: AppTextStyles.letterSpacingNarrow,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  titulo,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: iconColor.withValues(
+                      alpha: AppColors.opacityIconMuted,
+                    ),
+                    fontWeight: AppTextStyles.weightSemiBold,
+                    letterSpacing: AppTextStyles.letterSpacingNarrow,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xxs),
+              Icon(
+                AppIcons.forward,
+                size: AppSizing.iconXxs,
+                color: iconColor.withValues(alpha: AppColors.opacityIconMuted),
+              ),
+            ],
           ),
         ],
       ),

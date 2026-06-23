@@ -32,6 +32,7 @@ class _ListaNegociaciones extends StatelessWidget {
     final grupos = _agruparPorMes(negociaciones);
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
         AppSpacing.md,

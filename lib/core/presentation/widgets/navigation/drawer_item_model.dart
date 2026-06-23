@@ -44,6 +44,9 @@ class DrawerItemModel {
   /// Badge numérico (notificaciones, contadores)
   final int? badge;
 
+  /// Descripción corta del módulo (usada en las tarjetas del dashboard)
+  final String? descripcion;
+
   const DrawerItemModel({
     required this.id,
     required this.icon,
@@ -52,6 +55,7 @@ class DrawerItemModel {
     this.onTap,
     this.showDividerAfter = false,
     this.badge,
+    this.descripcion,
   }) : assert(
           route != null || onTap != null,
           'DrawerItemModel necesita route o onTap',

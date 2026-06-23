@@ -12,6 +12,7 @@ class Home {
   
   final List<PrioridadHome> prioridades;
   final List<ProspectoHome> prospectos;
+  final List<AsesorHome> asesores;
 
   const Home({
     required this.totConversaciones,
@@ -23,5 +24,6 @@ class Home {
     required this.totNotificaciones,
     required this.prioridades,
     required this.prospectos,
+    required this.asesores,
   });
 }

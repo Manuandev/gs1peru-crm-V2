@@ -5,6 +5,7 @@ export 'data/datasources/remote/home_remote_datasource.dart';
 export 'data/models/home_model.dart';
 export 'data/models/prioridad_home_model.dart';
 export 'data/models/prospecto_home_model.dart';
+export 'data/models/asesor_home_model.dart';
 
 export 'data/models/notifications/notification_model.dart';
 export 'data/models/notifications/leads_model.dart';
@@ -15,6 +16,7 @@ export 'data/repositories/home_repository_impl.dart';
 export 'domain/entities/home.dart';
 export 'domain/entities/prioridad_home.dart';
 export 'domain/entities/prospecto_home.dart';
+export 'domain/entities/asesor_home.dart';
 
 export 'domain/entities/notifications/leads_notificaciones.dart';
 export 'domain/entities/notifications/recordatorio.dart';
@@ -57,3 +59,4 @@ export 'presentation/widgets/dashboard/sections/prioridad_section_home.dart';
 
 export 'presentation/widgets/dashboard/tiles/prospectos_tile_home.dart';
 export 'presentation/widgets/dashboard/sections/prospectos_section_home.dart';
+export 'presentation/widgets/dashboard/sections/asesor_section_home.dart';

@@ -489,6 +489,16 @@ class AppSizing {
   static const double shadowOffsetCardY = 2.0;
 
   // ============================================================
+  // DASHBOARD HOME — Tarjetas de módulos
+  // ============================================================
+
+  /// Altura mínima de cada tarjeta de módulo en el dashboard del home: 140dp
+  static const double dashCardHeight = 140.0;
+
+  /// Radio del bottom del header del home (transición azul → blanco): 28dp
+  static const double homeHeaderBottomRadius = 28.0;
+
+  // ============================================================
   // AUTH — Cartilla flotante (login, recuperar clave)
   // ============================================================
 

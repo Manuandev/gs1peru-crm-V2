@@ -46,113 +46,137 @@ class _DrawerContent extends StatelessWidget {
 
         return Drawer(
           child: SafeArea(
-            child: ListView(
-              padding: EdgeInsets.zero,
+            child: Column(
               children: [
                 _DrawerHeader(state: state),
                 const SizedBox(height: AppSpacing.xs),
 
-                // ── Ítems principales ──────────────────────────────
-                _DrawerItem(
-                  item: const DrawerItemModel(
-                    id: AppRoutes.home,
-                    icon: AppIcons.home,
-                    label: 'Inicio',
-                    route: AppRoutes.home,
+                // ── Ítems principales (scrollables) ───────────────
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      _DrawerItem(
+                        item: const DrawerItemModel(
+                          id: AppRoutes.home,
+                          icon: AppIcons.home,
+                          label: 'Inicio',
+                          route: AppRoutes.home,
+                        ),
+                        isActive: rutaActual == AppRoutes.home,
+                      ),
+                      _DrawerItem(
+                        item: DrawerItemModel(
+                          id: AppRoutes.chats,
+                          icon: AppIcons.message,
+                          label: 'Conversaciones',
+                          route: AppRoutes.chats,
+                          badge: state.conversaciones > 0
+                              ? state.conversaciones
+                              : null,
+                        ),
+                        isActive: rutaActual == AppRoutes.chats,
+                      ),
+                      _DrawerItem(
+                        item: const DrawerItemModel(
+                          id: AppRoutes.seguimiento,
+                          icon: AppIcons.users,
+                          label: 'Seguimiento',
+                          route: AppRoutes.seguimiento,
+                        ),
+                        isActive: rutaActual == AppRoutes.seguimiento,
+                      ),
+                      _DrawerItem(
+                        item: const DrawerItemModel(
+                          id: AppRoutes.contactos,
+                          icon: AppIcons.documento,
+                          label: 'Contactos',
+                          route: AppRoutes.contactos,
+                        ),
+                        isActive: rutaActual == AppRoutes.contactos,
+                      ),
+                      _DrawerItem(
+                        item: const DrawerItemModel(
+                          id: AppRoutes.solicitudes,
+                          icon: AppIcons.email,
+                          label: 'Solicitudes',
+                          route: AppRoutes.solicitudes,
+                        ),
+                        isActive: rutaActual == AppRoutes.solicitudes,
+                      ),
+                      _DrawerItem(
+                        item: const DrawerItemModel(
+                          id: AppRoutes.cobranza,
+                          icon: AppIcons.moneda,
+                          label: 'Cobranza',
+                          route: AppRoutes.cobranza,
+                        ),
+                        isActive: rutaActual == AppRoutes.cobranza,
+                      ),
+                    ],
                   ),
-                  isActive: rutaActual == AppRoutes.home,
-                ),
-                _DrawerItem(
-                  item: DrawerItemModel(
-                    id: AppRoutes.chats,
-                    icon: AppIcons.message,
-                    label: 'Conversaciones',
-                    route: AppRoutes.chats,
-                    badge: state.conversaciones > 0
-                        ? state.conversaciones
-                        : null,
-                  ),
-                  isActive: rutaActual == AppRoutes.chats,
-                ),
-                _DrawerItem(
-                  item: const DrawerItemModel(
-                    id: AppRoutes.seguimiento,
-                    icon: AppIcons.users,
-                    label: 'Seguimiento',
-                    route: AppRoutes.seguimiento,
-                  ),
-                  isActive: rutaActual == AppRoutes.seguimiento,
-                ),
-                _DrawerItem(
-                  item: const DrawerItemModel(
-                    id: AppRoutes.contactos,
-                    icon: AppIcons.documento,
-                    label: 'Contactos',
-                    route: AppRoutes.contactos,
-                  ),
-                  isActive: rutaActual == AppRoutes.contactos,
-                ),
-                _DrawerItem(
-                  item: const DrawerItemModel(
-                    id: AppRoutes.solicitudes,
-                    icon: AppIcons.email,
-                    label: 'Solicitudes',
-                    route: AppRoutes.solicitudes,
-                  ),
-                  isActive: rutaActual == AppRoutes.solicitudes,
-                ),
-                _DrawerItem(
-                  item: const DrawerItemModel(
-                    id: AppRoutes.cobranza,
-                    icon: AppIcons.moneda,
-                    label: 'Cobranza',
-                    route: AppRoutes.cobranza,
-                  ),
-                  isActive: rutaActual == AppRoutes.cobranza,
                 ),
 
-                // ── Sección "Accesos rápidos" — solo moderadores ───
+                // ── Sección inferior pineada al fondo ─────────────
                 if (state.isModerador) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.sm,
                     ),
-                    child: const Divider(color: AppColors.border),
+                    child: Divider(color: AppColors.border),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(
                       left: AppSpacing.lg,
                       bottom: AppSpacing.xs,
                     ),
-                    child: Text(
-                      'Accesos rápidos',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Accesos rápidos',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ),
-                  _DrawerItem(
-                    item: const DrawerItemModel(
-                      id: AppRoutes.misCasos,
-                      icon: AppIcons.user,
-                      label: 'Mis casos',
-                      route: AppRoutes.misCasos,
-                    ),
-                    isActive: rutaActual == AppRoutes.misCasos,
-                  ),
-                  _DrawerItem(
-                    item: const DrawerItemModel(
-                      id: AppRoutes.equipo,
-                      icon: AppIcons.users,
-                      label: 'Equipo',
-                      route: AppRoutes.equipo,
-                    ),
-                    isActive: rutaActual == AppRoutes.equipo,
+                  BlocBuilder<FiltroCubit, FiltroState>(
+                    builder: (context, filtroState) {
+                      final esMiEquipo =
+                          filtroState.vista == FiltroVista.miEquipo;
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _AccesoRapidoItem(
+                            icon: AppIcons.user,
+                            label: 'Mis casos',
+                            isSeleccionado: !esMiEquipo,
+                            onTap: () {
+                              context
+                                  .read<FiltroCubit>()
+                                  .cambiarVista(FiltroVista.misCasos);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          _AccesoRapidoItem(
+                            icon: AppIcons.users,
+                            label: 'Equipo',
+                            isSeleccionado: esMiEquipo,
+                            onTap: () {
+                              context
+                                  .read<FiltroCubit>()
+                                  .cambiarVista(FiltroVista.miEquipo);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
 
-                // ── Cerrar sesión — siempre visible ───────────────
+                // ── Cerrar sesión — siempre al fondo ──────────────
                 _DrawerItem(
                   item: DrawerItemModel(
                     id: '__logout__',
@@ -332,6 +356,106 @@ class _DrawerItem extends StatelessWidget {
     }
     if (isActive) return;
     if (item.route != null) context.clearAndPush(item.route!);
+  }
+}
+
+// ── Ítem de acción para "Accesos rápidos" ────────────────────────────────────
+// Muestra el ítem actualmente seleccionado como deshabilitado (opacidad + sin ripple).
+// El ítem no seleccionado es interactivo y llama a FiltroCubit al tapear.
+
+class _AccesoRapidoItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSeleccionado;
+  final VoidCallback onTap;
+
+  const _AccesoRapidoItem({
+    required this.icon,
+    required this.label,
+    required this.isSeleccionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Ítem seleccionado: mismo estilo que nav-ítem activo, sin ripple ni tap
+    if (isSeleccionado) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs,
+        ),
+        child: Material(
+          color: colorScheme.primary
+              .withValues(alpha: AppColors.opacityActiveItem),
+          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm + AppSpacing.xxs,
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: colorScheme.primary, size: AppSizing.iconNav),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: AppTextStyles.weightSemiBold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Ítem no seleccionado: interactivo con ripple
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+      child: Material(
+        color: AppColors.transparent,
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm + AppSpacing.xxs,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: colorScheme.onSurfaceVariant,
+                  size: AppSizing.iconNav,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: AppTextStyles.weightRegular,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

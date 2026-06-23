@@ -23,79 +23,76 @@ class ChatListView extends StatelessWidget {
       onSearch: (query) {
         context.read<ChatListBloc>().add(ChatListSearched(query));
       },
-      appBarPopupItems: const [
-        AppBarPopupItem(
-          value: 'refresh',
-          icon: AppIcons.refresh,
-          label: 'Actualizar',
-        ),
-      ],
-      onPopupSelected: (value) {
-        switch (value) {
-          case 'refresh':
-            context.read<ChatListBloc>().add(ChatListRefreshed());
-        }
-      },
-      body: Column(
-        children: [
-          // ── Chips de filtro ────────────────────────────
-          BlocBuilder<ChatListBloc, ChatListState>(
-            buildWhen: (prev, curr) => curr is ChatListSuccess,
-            builder: (context, state) {
-              if (state is! ChatListSuccess) return const SizedBox.shrink();
-              return ChatListFilterChips(
-                filtroActual: state.filtro,
-                conteos: state.conteos,
-                onFiltroTap: (filtro) {
-                  context.read<ChatListBloc>().add(ChatListFiltered(filtro));
-                },
-              );
-            },
-          ),
-
-          // ── Lista ──────────────────────────────────────
-          Expanded(
-            child: BlocConsumer<ChatListBloc, ChatListState>(
-              listenWhen: (previous, current) =>
-                  previous is ChatListSuccess && current is ChatListError,
-              listener: (context, state) {
-                if (state is ChatListError) {
-                  AppSnackBar.error(context, state.message);
-                }
-              },
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        onRefresh: () async {
+          final bloc = context.read<ChatListBloc>();
+          bloc.add(ChatListRefreshed());
+          await bloc.stream
+              .firstWhere((s) => s is ChatListSuccess || s is ChatListError);
+        },
+        child: Column(
+          children: [
+            // ── Chips de filtro ────────────────────────────
+            BlocBuilder<ChatListBloc, ChatListState>(
+              buildWhen: (prev, curr) => curr is ChatListSuccess,
               builder: (context, state) {
-                if (state is ChatListInitial || state is ChatListLoading) {
-                  return const AppLoadingView();
-                }
-
-                if (state is ChatListError) {
-                  return AppErrorView(
-                    message: state.message,
-                    onRetry: () =>
-                        context.read<ChatListBloc>().add(ChatListRefreshed()),
-                  );
-                }
-
-                if (state is ChatListSuccess) {
-                  if (state.chats.isEmpty) {
-                    return AppEmptyView(message: _emptyMessage(state.filtro));
-                  }
-
-                  return OrientationBuilder(
-                    builder: (context, orientation) {
-                      if (orientation == Orientation.landscape) {
-                        return ChatListPortrait(state: state);
-                      }
-                      return ChatListPortrait(state: state);
-                    },
-                  );
-                }
-
-                return const SizedBox.shrink();
+                if (state is! ChatListSuccess) return const SizedBox.shrink();
+                return ChatListFilterChips(
+                  filtroActual: state.filtro,
+                  conteos: state.conteos,
+                  onFiltroTap: (filtro) {
+                    context.read<ChatListBloc>().add(ChatListFiltered(filtro));
+                  },
+                );
               },
             ),
-          ),
-        ],
+
+            // ── Lista ──────────────────────────────────────
+            Expanded(
+              child: BlocConsumer<ChatListBloc, ChatListState>(
+                listenWhen: (previous, current) =>
+                    previous is ChatListSuccess && current is ChatListError,
+                listener: (context, state) {
+                  if (state is ChatListError) {
+                    AppSnackBar.error(context, state.message);
+                  }
+                },
+                builder: (context, state) {
+                  if (state is ChatListInitial || state is ChatListLoading) {
+                    return const AppLoadingView();
+                  }
+
+                  if (state is ChatListError) {
+                    return AppErrorView(
+                      message: state.message,
+                      onRetry: () =>
+                          context.read<ChatListBloc>().add(ChatListRefreshed()),
+                    );
+                  }
+
+                  if (state is ChatListSuccess) {
+                    if (state.chats.isEmpty) {
+                      return AppEmptyView(message: _emptyMessage(state.filtro));
+                    }
+
+                    return OrientationBuilder(
+                      builder: (context, orientation) {
+                        if (orientation == Orientation.landscape) {
+                          return ChatListPortrait(state: state);
+                        }
+                        return ChatListPortrait(state: state);
+                      },
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

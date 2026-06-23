@@ -6,12 +6,10 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
-/// Grid de tarjetas del dashboard con layout flexible.
+/// Grid de tarjetas de módulos para el dashboard del home.
 ///
+/// Muestra 4 módulos (sin Inicio ni Contactos).
 /// [itemsRow] controla cuántas tarjetas caben en cada fila.
-/// - La última fila reparte el espacio sobrante entre los items restantes.
-/// - Ejemplo: 5 items, itemsRow=3 → fila 1: 3 cards, fila 2: 2 cards
-///   (las 2 se reparten el ancho completo).
 class HomeMenuCards extends StatelessWidget {
   final HomeLoaded state;
 
@@ -41,10 +39,9 @@ class _FlexCards extends StatelessWidget {
       cobranzaBadge: state.totCobranza,
     );
 
-    // Excluir el item "Inicio" del dashboard
+    // Excluir Inicio y Contactos — el dashboard muestra solo los 4 módulos operativos
     final dashItems = items.where((i) => i.id != AppRoutes.home).toList();
 
-    // Dividir en filas de [itemsRow] elementos
     final List<List<DrawerItemModel>> rows = [];
     for (int i = 0; i < dashItems.length; i += itemsRow) {
       final end = (i + itemsRow > dashItems.length)
@@ -53,7 +50,7 @@ class _FlexCards extends StatelessWidget {
       rows.add(dashItems.sublist(i, end));
     }
 
-    return Column( 
+    return Column(
       children: [
         for (int r = 0; r < rows.length; r++) ...[
           if (r > 0) const SizedBox(height: AppSpacing.sm),
@@ -65,6 +62,7 @@ class _FlexCards extends StatelessWidget {
                   child: DashboardCard(
                     label: rows[r][c].label,
                     icon: rows[r][c].icon,
+                    descripcion: rows[r][c].descripcion,
                     badge: rows[r][c].badge,
                     onTap: () {
                       final route = rows[r][c].route;

@@ -14,6 +14,7 @@ class HomeModel extends Home {
     required super.totNotificaciones,
     required super.prioridades,
     required super.prospectos,
+    required super.asesores,
   });
 
   /// Parsea la respuesta completa del SP.
@@ -31,11 +32,12 @@ class HomeModel extends Home {
     final totalesRaw = partes.isNotEmpty ? partes[0] : '';
     final prioridadesRaw = partes.length > 1 ? partes[1] : '';
     final prospectosRaw = partes.length > 2 ? partes[2] : '';
+    final asesoresRaw = partes.length > 3 ? partes[3] : '';
 
     // 2) Parsear totales
     final c = totalesRaw.split(AppConstants.sepCampos);
 
-    // 3) Parsear lista de prioridades
+    // 3) Parsear listas
     final prioridades = prioridadesRaw.trim().isEmpty
         ? <PrioridadHomeModel>[]
         : PrioridadHomeModel.parseList(prioridadesRaw);
@@ -43,6 +45,10 @@ class HomeModel extends Home {
     final prospectos = prospectosRaw.trim().isEmpty
         ? <ProspectoHomeModel>[]
         : ProspectoHomeModel.parseList(prospectosRaw);
+
+    final asesores = asesoresRaw.trim().isEmpty
+        ? <AsesorHomeModel>[]
+        : AsesorHomeModel.parseList(asesoresRaw);
 
     return HomeModel(
       totLeadsNuevos: ParseUtils.toInt(c, 0),
@@ -54,6 +60,7 @@ class HomeModel extends Home {
       totNotificaciones: ParseUtils.toInt(c, 6),
       prioridades: prioridades,
       prospectos: prospectos,
+      asesores: asesores,
     );
   }
 }

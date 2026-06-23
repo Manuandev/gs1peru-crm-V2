@@ -36,30 +36,35 @@ class AppMenuItems {
       icon: AppIcons.message,
       label: 'Conversaciones',
       route: AppRoutes.chats,
+      descripcion: 'Responde rápido y convierte más leads',
     ),
     DrawerItemModel(
       id: AppRoutes.seguimiento,
       icon: AppIcons.users,
       label: 'Seguimiento',
       route: AppRoutes.seguimiento,
+      descripcion: 'Gestiona y da seguimiento a tus leads',
     ),
     DrawerItemModel(
       id: AppRoutes.contactos,
       icon: AppIcons.documento,
       label: 'Contactos',
       route: AppRoutes.contactos,
+      descripcion: 'Gestiona tus contactos con GS1',
     ),
     DrawerItemModel(
       id: AppRoutes.solicitudes,
       icon: AppIcons.email,
       label: 'Solicitudes',
       route: AppRoutes.solicitudes,
+      descripcion: 'Revisa y gestiona las solicitudes',
     ),
     DrawerItemModel(
       id: AppRoutes.cobranza,
       icon: AppIcons.moneda,
       label: 'Cobranza',
       route: AppRoutes.cobranza,
+      descripcion: 'Controla pagos y da seguimiento',
     ),
   ];
 
@@ -78,6 +83,7 @@ class AppMenuItems {
         label: 'Conversaciones',
         route: AppRoutes.chats,
         badge: conversacionesBadge,
+        descripcion: 'Responde rápido y convierte más leads',
       ),
       DrawerItemModel(
         id: AppRoutes.seguimiento,
@@ -85,18 +91,21 @@ class AppMenuItems {
         label: 'Seguimiento',
         route: AppRoutes.seguimiento,
         badge: prospectosBadge,
+        descripcion: 'Gestiona y da seguimiento a tus leads',
       ),
       DrawerItemModel(
         id: AppRoutes.contactos,
         icon: AppIcons.documento,
         label: 'Contactos',
         route: AppRoutes.contactos,
+        descripcion: 'Gestiona tus contactos con GS1',
       ),
       DrawerItemModel(
         id: AppRoutes.solicitudes,
         icon: AppIcons.email,
         label: 'Solicitudes',
         route: AppRoutes.solicitudes,
+        descripcion: 'Revisa y gestiona las solicitudes',
       ),
       DrawerItemModel(
         id: AppRoutes.cobranza,
@@ -104,6 +113,7 @@ class AppMenuItems {
         label: 'Cobranza',
         route: AppRoutes.cobranza,
         badge: cobranzaBadge,
+        descripcion: 'Controla pagos y da seguimiento',
       ),
     ];
   }

@@ -7,29 +7,6 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
-/// HomeView — Vista principal del Home
-///
-/// PROPÓSITO:
-/// - Renderizar el estado del [HomeBloc] en pantalla
-/// - Mostrar loading, error o el contenido principal según el estado
-/// - No hace navegación directamente (eso lo hace [HomePage] vía BlocListener)
-///
-/// ESTADOS QUE MANEJA:
-/// - [HomeInitial] / [HomeLoading]  → Spinner centrado
-/// - [HomeError]                    → Mensaje de error + botón reintentar
-/// - [HomeLoaded]                   → Layout completo con [BasePage]
-///
-/// REGLA DE ESTILO:
-/// NO hardcodea íconos, colores ni tamaños.
-/// Usa únicamente constantes del design system:
-///   - Íconos  → [AppIcons]
-///   - Espacios → [AppSpacing], [AppSizing]
-///   - Texto   → [AppTextStyles]
-///
-/// ESTRUCTURA:
-/// - [HomeView]     → BlocBuilder principal
-/// - [_HomeBody]    → Contenido del scroll principal
-/// - [_HomeFooter]  → Barra inferior fija con versión
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
@@ -37,21 +14,24 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       onLogout: () => context.logoutWithConfirmation(context),
-      titleWidget: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          if (state is HomeLoaded) {
-            final nombre = state.usuario.userApe.split(' ');
-
-            return Text(
-              'Hola, ${nombre[0]} 👋',
-              style: AppTextStyles.titleMedium,
-            );
-          }
-          return const Text('Inicio', style: AppTextStyles.titleMedium);
-        },
+      // Logo GS1 + "CRM Perú" igual que el header del drawer
+      titleWidget: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(AppImages.logoGs1PeruBlanco, height: AppSizing.avatarSm * 0.65),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            'CRM Perú',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.textOnDark,
+              fontWeight: AppTextStyles.weightBold,
+            ),
+          ),
+        ],
       ),
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
+        // ── Notificaciones con badge ───────────────────────────
         Stack(
           clipBehavior: Clip.none,
           children: [
@@ -95,81 +75,41 @@ class HomeView extends StatelessWidget {
             ),
           ],
         ),
-        IconButton(
-          icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
-          onPressed: () {
-            context.read<HomeBloc>().add(HomeRefresh());
+      ],
+      // Sin padding para que el header azul llegue hasta los bordes
+      bodyPadding: EdgeInsets.zero,
+      showBottomNav: true,
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        onRefresh: () async {
+          final bloc = context.read<HomeBloc>();
+          bloc.add(HomeRefresh());
+          await bloc.stream
+              .firstWhere((s) => s is HomeLoaded || s is HomeError);
+        },
+        child: BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, state) {
+            if (state is HomeInitial || state is HomeLoading) {
+              return const AppLoadingView();
+            }
+
+            if (state is HomeError) {
+              return AppErrorView(
+                message: state.message,
+                onRetry: () => context.read<HomeBloc>().add(HomeRefresh()),
+              );
+            }
+
+            if (state is HomeLoaded) {
+              return HomePortrait(state: state);
+            }
+
+            return const SizedBox.shrink();
           },
         ),
-      ],
-      body: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          if (state is HomeInitial || state is HomeLoading) {
-            return const AppLoadingView();
-          }
-
-          if (state is HomeError) {
-            return AppErrorView(
-              message: state.message,
-              onRetry: () => context.read<HomeBloc>().add(HomeRefresh()),
-            );
-          }
-
-          if (state is HomeLoaded) {
-            return OrientationBuilder(
-              builder: (context, orientation) {
-                if (orientation == Orientation.landscape) {
-                  return HomePortrait(state: state);
-                }
-                return HomePortrait(state: state);
-              },
-            );
-          }
-
-          return const SizedBox.shrink();
-        },
       ),
     );
   }
 }
 
-// ============================================================
-// Cuerpo principal del Home
-// ============================================================
-
-/// _HomeBody — Contenido scrollable de la pantalla de inicio
-///
-/// Recibe el [HomeLoaded] para mostrar datos del usuario.
-/// Espacio reservado para los widgets reales del home (cards, estadísticas, etc.)
-// ============================================================
-// Footer fijo del Home
-// ============================================================
-// _HomeFooter — Barra inferior fija con información de versión
-//
-// Se muestra siempre en la parte inferior de la pantalla de inicio.
-// Usa colores del tema de Material 3 para adaptarse a dark/light mode.
-// Por si es necesario mostrar otro footer en una pantalla
-// class _HomeFooter extends StatelessWidget {
-//   const _HomeFooter();
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.symmetric(
-//         horizontal: AppSpacing.lg,
-//         vertical: AppSpacing.sm,
-//       ),
-//       decoration: BoxDecoration(
-//         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-//         border: Border(
-//           top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-//         ),
-//       ),
-//       child: Text(
-//         'v1.0.0 — Mi App',
-//         style: AppTextStyles.labelSmall,
-//         textAlign: TextAlign.center,
-//       ),
-//     );
-//   }
-// }

@@ -66,11 +66,13 @@ class AuthRepositoryImpl implements AuthRepository {
     ApiClient().setToken(user.token);
     SessionService().setUser(user);
 
-    // Google siempre persiste en SQLite — el correo es suficiente para re-auth
+    // Google persiste email + idToken en SQLite para restaurar sesión en el Splash.
+    // El idToken expira en ~1h; si está vencido al restaurar, se limpia y vuelve al login.
     await _local.saveSession(
       SessionModel(
         loginType: LoginType.google,
-        email: correo,
+        email:     correo,
+        idToken:   accessToken,
         expiresAt: DateTime.now().add(const Duration(days: 30)),
       ),
     );
@@ -100,10 +102,21 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // Detecta el tipo y re-autentica con el método correcto
     if (entity.isGoogle) {
-      // Los access tokens de Google son de corta vida y no se persisten.
-      // Limpiar sesión → LoginPage → usuario toca "Ingresar con Google".
-      await _local.clearSession();
-      return null;
+      // Intenta restaurar con el idToken guardado. Si expiró o el backend lo
+      // rechaza, limpia la sesión y retorna null → LoginPage → usuario toca Google.
+      if (entity.idToken == null || entity.email == null) {
+        await _local.clearSession();
+        return null;
+      }
+      try {
+        return await loginWithGoogle(
+          accessToken: entity.idToken!,
+          correo:      entity.email!,
+        );
+      } on AppException {
+        await _local.clearSession();
+        return null;
+      }
     } else {
       return login(
         username: entity.username!,

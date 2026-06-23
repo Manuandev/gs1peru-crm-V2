@@ -8,16 +8,18 @@ class SessionModel {
   final String? username;
   final String? password;
   final String? email;
+  final String? idToken;
   final DateTime expiresAt;
   final bool rememberMe;
 
   const SessionModel({
     required this.loginType,
-    required this.expiresAt, 
+    required this.expiresAt,
     this.rememberMe = false,
     this.username,
     this.password,
     this.email,
+    this.idToken,
   });
 
   factory SessionModel.fromMap(Map<String, dynamic> map) {
@@ -25,29 +27,32 @@ class SessionModel {
       loginType: map['login_type'] == 'google'
           ? LoginType.google
           : LoginType.credentials,
-      username:  map['username'] as String?,
-      password:  map['password'] as String?,
-      email:     map['email'] as String?,
-      expiresAt: DateTime.parse(map['expires_at'] as String),
+      username:   map['username'] as String?,
+      password:   map['password'] as String?,
+      email:      map['email'] as String?,
+      idToken:    map['id_token'] as String?,
+      expiresAt:  DateTime.parse(map['expires_at'] as String),
       rememberMe: (map['remember_me'] as int?) == 1,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'login_type': loginType == LoginType.google ? 'google' : 'credentials',
-        'username':   username,
-        'password':   password,
-        'email':      email,
-        'expires_at': expiresAt.toIso8601String(),
+        'login_type':  loginType == LoginType.google ? 'google' : 'credentials',
+        'username':    username,
+        'password':    password,
+        'email':       email,
+        'id_token':    idToken,
+        'expires_at':  expiresAt.toIso8601String(),
         'remember_me': rememberMe ? 1 : 0,
       };
 
   SessionEntity toEntity() => SessionEntity(
-        loginType: loginType,
-        username:  username,
-        password:  password,
-        email:     email,
-        expiresAt: expiresAt,
+        loginType:  loginType,
+        username:   username,
+        password:   password,
+        email:      email,
+        idToken:    idToken,
+        expiresAt:  expiresAt,
         rememberMe: rememberMe,
       );
 }

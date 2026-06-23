@@ -17,7 +17,12 @@ class NotificationsPortrait extends StatelessWidget {
         state.leadsNuevos.isEmpty &&
         state.recordatorios.isEmpty;
 
-    if (empty) return const _EmptyNotifications();
+    if (empty) {
+      return const SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        child: _EmptyNotifications(),
+      );
+    }
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),

@@ -103,8 +103,12 @@ class BasePage extends StatelessWidget {
 
   final VoidCallback? onPop;
 
-  /// Widget fijo al fondo (footer). null para no mostrar.
+  /// Widget fijo al fondo (footer). Tiene prioridad sobre [showBottomNav].
   final Widget? footer;
+
+  /// Muestra [AppBottomNavWidget] global como footer.
+  /// Ignorado si [footer] no es null.
+  final bool showBottomNav;
 
   /// FloatingActionButton
   final Widget? floatingActionButton;
@@ -143,6 +147,7 @@ class BasePage extends StatelessWidget {
     required this.body,
     this.onPop,
     this.footer,
+    this.showBottomNav = false,
     this.floatingActionButton,
     this.floatingActionButtonLocation,
     this.backgroundColor,
@@ -216,9 +221,9 @@ class BasePage extends StatelessWidget {
                     ),
                   ),
 
-                  // Footer automático pero RESPONSIVE
+                  // Footer: explícito > showBottomNav > estándar
                   if (!isLandscape)
-                    footer ?? const _FooterPages()
+                    footer ?? (showBottomNav ? const AppBottomNavWidget() : const _FooterPages())
                   else
                     _FooterCompact(),
                 ],

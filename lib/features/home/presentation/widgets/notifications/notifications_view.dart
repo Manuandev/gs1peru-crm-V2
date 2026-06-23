@@ -22,42 +22,45 @@ class NotificationsView extends StatelessWidget {
           onPressed: () => context.goBack(),
         ),
       ],
-      appBarTrailingButtons: [
-        IconButton(
-          icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
-          onPressed: () {
-            context.read<NotificationsBloc>().add(NotificationsRefresh());
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        onRefresh: () async {
+          final bloc = context.read<NotificationsBloc>();
+          bloc.add(NotificationsRefresh());
+          await bloc.stream.firstWhere(
+            (s) => s is NotificationsLoaded || s is NotificationsError,
+          );
+        },
+        child: BlocBuilder<NotificationsBloc, NotificationsState>(
+          builder: (context, state) {
+            if (state is NotificationsInitial || state is NotificationsLoading) {
+              return const AppLoadingView();
+            }
+
+            if (state is NotificationsError) {
+              return AppErrorView(
+                message: state.message,
+                onRetry: () =>
+                    context.read<NotificationsBloc>().add(NotificationsRefresh()),
+              );
+            }
+
+            if (state is NotificationsLoaded) {
+              return OrientationBuilder(
+                builder: (context, orientation) {
+                  if (orientation == Orientation.landscape) {
+                    return NotificationsPortrait(state: state);
+                    // return NotificationsLandscape(state: state);
+                  }
+                  return NotificationsPortrait(state: state);
+                },
+              );
+            }
+
+            return const SizedBox.shrink();
           },
         ),
-      ],
-      body: BlocBuilder<NotificationsBloc, NotificationsState>(
-        builder: (context, state) {
-          if (state is NotificationsInitial || state is NotificationsLoading) {
-            return const AppLoadingView();
-          }
-
-          if (state is NotificationsError) {
-            return AppErrorView(
-              message: state.message,
-              onRetry: () =>
-                  context.read<NotificationsBloc>().add(NotificationsRefresh()),
-            );
-          }
-
-          if (state is NotificationsLoaded) {
-            return OrientationBuilder(
-              builder: (context, orientation) {
-                if (orientation == Orientation.landscape) {
-                  return NotificationsPortrait(state: state);
-                  // return NotificationsLandscape(state: state);
-                }
-                return NotificationsPortrait(state: state);
-              },
-            );
-          }
-
-          return const SizedBox.shrink();
-        },
       ),
     );
   }

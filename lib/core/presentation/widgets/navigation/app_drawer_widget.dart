@@ -1,10 +1,4 @@
 // lib/core/presentation/widgets/navigation/app_drawer_widget.dart
-//
-// ✅ FIX: Ya NO importa nada de features/auth.
-//    El logout se resuelve con el callback onLogout que
-//    cada page pasa desde su propio contexto.
-//    core → auth  ❌  (eliminado)
-//    page → auth  ✅  (la page conoce AuthBloc, no el drawer)
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -13,12 +7,11 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class AppDrawerWidget extends StatelessWidget {
+  // Parámetros mantenidos para compatibilidad con BasePage.
+  // La nueva implementación los ignora: la estructura del drawer
+  // está hardcodeada y derivada del DrawerLoaded state.
   final List<DrawerItemModel>? items;
-
-  /// ✅ Callback de logout — lo pasa cada page que usa BasePage.
-  /// La lógica de AuthBloc vive en la page, no aquí.
   final VoidCallback? onLogout;
-
   final VoidCallback? onSettings;
   final bool showSettings;
   final bool showLogout;
@@ -34,30 +27,14 @@ class AppDrawerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DrawerContent(
-      items: items,
-      onLogout: onLogout,
-      onSettings: onSettings,
-      showSettings: showSettings,
-      showLogout: showLogout,
-    );
+    return const _DrawerContent();
   }
 }
 
-class _DrawerContent extends StatelessWidget {
-  final List<DrawerItemModel>? items;
-  final VoidCallback? onLogout;
-  final VoidCallback? onSettings;
-  final bool showSettings;
-  final bool showLogout;
+// ── Contenido del drawer ───────────────────────────────────────────────────────
 
-  const _DrawerContent({
-    this.items,
-    this.onLogout,
-    this.onSettings,
-    this.showSettings = true,
-    this.showLogout = true,
-  });
+class _DrawerContent extends StatelessWidget {
+  const _DrawerContent();
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +42,7 @@ class _DrawerContent extends StatelessWidget {
       builder: (context, state) {
         if (state is! DrawerLoaded) return const SizedBox.shrink();
 
-        final String? currentRoute = ModalRoute.of(context)?.settings.name;
-        final List<DrawerItemModel> menuItems = _resolveItems(state);
+        final String? rutaActual = ModalRoute.of(context)?.settings.name;
 
         return Drawer(
           child: SafeArea(
@@ -75,37 +51,117 @@ class _DrawerContent extends StatelessWidget {
               children: [
                 _DrawerHeader(state: state),
                 const SizedBox(height: AppSpacing.xs),
-                ...menuItems.map(
-                  (item) => _DrawerItem(
-                    item: item,
-                    isActive: item.id == currentRoute,
+
+                // ── Ítems principales ──────────────────────────────
+                _DrawerItem(
+                  item: const DrawerItemModel(
+                    id: AppRoutes.home,
+                    icon: AppIcons.home,
+                    label: 'Inicio',
+                    route: AppRoutes.home,
                   ),
+                  isActive: rutaActual == AppRoutes.home,
                 ),
-                const Divider(height: AppSizing.hairline),
-                if (showSettings)
-                  _DrawerItem(
-                    item: DrawerItemModel(
-                      id: AppRoutes.settings,
-                      icon: AppIcons.settings,
-                      label: 'Configuración',
-                      onTap: onSettings ?? () => context.goToSettings(),
-                    ),
-                    isActive: currentRoute == AppRoutes.settings,
+                _DrawerItem(
+                  item: DrawerItemModel(
+                    id: AppRoutes.chats,
+                    icon: AppIcons.message,
+                    label: 'Conversaciones',
+                    route: AppRoutes.chats,
+                    badge: state.conversaciones > 0
+                        ? state.conversaciones
+                        : null,
                   ),
-                if (showLogout)
-                  _DrawerItem(
-                    item: DrawerItemModel(
-                      id: '__logout__',
-                      icon: AppIcons.logout,
-                      label: 'Cerrar sesión',
-                      // ✅ Solo ejecuta el callback que viene de la page.
-                      // Quien sabe de AuthBloc es la page, no el drawer.
-                      // onTap: onLogout ?? () {},
-                      onTap: () => context.logoutWithConfirmation(context),
-                    ),
-                    isActive: false,
-                    isDestructive: true,
+                  isActive: rutaActual == AppRoutes.chats,
+                ),
+                _DrawerItem(
+                  item: const DrawerItemModel(
+                    id: AppRoutes.seguimiento,
+                    icon: AppIcons.users,
+                    label: 'Seguimiento',
+                    route: AppRoutes.seguimiento,
                   ),
+                  isActive: rutaActual == AppRoutes.seguimiento,
+                ),
+                _DrawerItem(
+                  item: const DrawerItemModel(
+                    id: AppRoutes.contactos,
+                    icon: AppIcons.documento,
+                    label: 'Contactos',
+                    route: AppRoutes.contactos,
+                  ),
+                  isActive: rutaActual == AppRoutes.contactos,
+                ),
+                _DrawerItem(
+                  item: const DrawerItemModel(
+                    id: AppRoutes.solicitudes,
+                    icon: AppIcons.email,
+                    label: 'Solicitudes',
+                    route: AppRoutes.solicitudes,
+                  ),
+                  isActive: rutaActual == AppRoutes.solicitudes,
+                ),
+                _DrawerItem(
+                  item: const DrawerItemModel(
+                    id: AppRoutes.cobranza,
+                    icon: AppIcons.moneda,
+                    label: 'Cobranza',
+                    route: AppRoutes.cobranza,
+                  ),
+                  isActive: rutaActual == AppRoutes.cobranza,
+                ),
+
+                // ── Sección "Accesos rápidos" — solo moderadores ───
+                if (state.isModerador) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: const Divider(color: AppColors.border),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: AppSpacing.lg,
+                      bottom: AppSpacing.xs,
+                    ),
+                    child: Text(
+                      'Accesos rápidos',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  _DrawerItem(
+                    item: const DrawerItemModel(
+                      id: AppRoutes.misCasos,
+                      icon: AppIcons.user,
+                      label: 'Mis casos',
+                      route: AppRoutes.misCasos,
+                    ),
+                    isActive: rutaActual == AppRoutes.misCasos,
+                  ),
+                  _DrawerItem(
+                    item: const DrawerItemModel(
+                      id: AppRoutes.equipo,
+                      icon: AppIcons.users,
+                      label: 'Equipo',
+                      route: AppRoutes.equipo,
+                    ),
+                    isActive: rutaActual == AppRoutes.equipo,
+                  ),
+                ],
+
+                // ── Cerrar sesión — siempre visible ───────────────
+                _DrawerItem(
+                  item: DrawerItemModel(
+                    id: '__logout__',
+                    icon: AppIcons.logout,
+                    label: 'Cerrar sesión',
+                    onTap: () => context.logoutWithConfirmation(context),
+                  ),
+                  isActive: false,
+                ),
                 const SizedBox(height: AppSpacing.sm),
               ],
             ),
@@ -114,136 +170,80 @@ class _DrawerContent extends StatelessWidget {
       },
     );
   }
-
-  List<DrawerItemModel> _resolveItems(DrawerState state) {
-    if (items != null) return items!;
-    if (state is! DrawerLoaded) return AppMenuItems.mainItems;
-
-    return AppMenuItems.withBadges(
-      conversacionesBadge: state.conversaciones,
-      prospectosBadge: state.prospectos,
-      propuestasBadge: state.propuestas,
-      cobranzaBadge: state.cobranzas,
-    );
-  }
 }
 
-// ============================================================
-// Header del drawer
-// ============================================================
+// ── Header rediseñado: logo GS1 + "CRM Perú" + rol ───────────────────────────
 
 class _DrawerHeader extends StatelessWidget {
-  final DrawerState state;
+  final DrawerLoaded state;
   const _DrawerHeader({required this.state});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final size = MediaQuery.of(context).size;
-
-    final compact = size.width > size.height && size.height < AppBreakpoints.compactHeight;
-    final avatarRadius = compact ? AppSizing.drawerAvatarRadiusCompact : AppSizing.drawerAvatarRadius;
-    final verticalPadding = compact ? AppSpacing.md : AppSpacing.xl;
-
-    if (state is! DrawerLoaded) return const SizedBox.shrink();
-    final loaded = state as DrawerLoaded;
-
-    Widget avatar() => CircleAvatar(
-      radius: avatarRadius,
-      backgroundColor: colorScheme.onPrimary,
-      backgroundImage: loaded.userAvatarUrl != null
-          ? NetworkImage(loaded.userAvatarUrl!)
-          : null,
-      child: loaded.userAvatarUrl == null
-          ? Icon(
-              AppIcons.user,
-              size: compact ? AppSizing.iconMd : AppSizing.iconLg,
-              color: colorScheme.primary,
-            )
-          : null,
-    );
+    final String rol = state.isModerador ? 'Supervisor' : 'Asesor';
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        verticalPadding,
+        AppSpacing.xl,
         AppSpacing.lg,
         AppSpacing.lg,
       ),
-      color: colorScheme.primary,
-      child: compact
-          ? Row(
-              children: [
-                avatar(),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    loaded.userApe,
-                    style: AppTextStyles.titleMedium.copyWith(
-                      color: colorScheme.onPrimary,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+      color: AppColors.primary,
+      child: Row(
+        children: [
+          SvgPicture.asset(
+            AppImages.logoGs1PeruBlanco,
+            height: AppSizing.avatarSm,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CRM Perú',
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: AppColors.textOnDark,
+                  fontWeight: AppTextStyles.weightBold,
+                ),
+              ),
+              Text(
+                rol,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textOnDark.withValues(
+                    alpha: AppColors.opacityOnPrimarySubtle,
                   ),
                 ),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                avatar(),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  loaded.userApe,
-                  style: AppTextStyles.titleMedium.copyWith(
-                    color: colorScheme.onPrimary,
-                  ),
-                ),
-                if (loaded.userSubtitle != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    loaded.userSubtitle!,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: colorScheme.onPrimary.withValues(
-                        alpha: AppColors.opacityOnPrimarySubtle,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ============================================================
-// Ítem del drawer
-// ============================================================
+// ── Ítem del drawer ───────────────────────────────────────────────────────────
 
 class _DrawerItem extends StatelessWidget {
   final DrawerItemModel item;
   final bool isActive;
-  final bool isDestructive;
 
   const _DrawerItem({
     required this.item,
     required this.isActive,
-    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final iconColor = isDestructive
-        ? colorScheme.error
-        : isActive
+    final iconColor = isActive
         ? colorScheme.primary
         : colorScheme.onSurfaceVariant;
 
-    final textColor = isDestructive
-        ? colorScheme.error
-        : isActive
+    final textColor = isActive
         ? colorScheme.primary
         : colorScheme.onSurface;
 
@@ -274,7 +274,7 @@ class _DrawerItem extends StatelessWidget {
                   children: [
                     item.icon is IconData
                         ? Icon(
-                            item.icon,
+                            item.icon as IconData,
                             color: iconColor,
                             size: AppSizing.iconNav,
                           )
@@ -335,9 +335,7 @@ class _DrawerItem extends StatelessWidget {
   }
 }
 
-// ============================================================
-// Badge numérico
-// ============================================================
+// ── Badge numérico ────────────────────────────────────────────────────────────
 
 class _Badge extends StatelessWidget {
   final int count;

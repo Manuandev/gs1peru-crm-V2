@@ -8,16 +8,12 @@ class DrawerStarted extends DrawerEvent {}
 /// Actualizar badges (sin recargar todo)
 class DrawerBadgesUpdated extends DrawerEvent {
   final int? conversaciones;
-  // final int? pendingReminders;
-  // final int? newLeads;
   final int? prospectos;
-  final int? propuestas;
   final int? cobranza;
 
   DrawerBadgesUpdated({
     this.conversaciones,
     this.prospectos,
-    this.propuestas,
     this.cobranza,
   });
 }

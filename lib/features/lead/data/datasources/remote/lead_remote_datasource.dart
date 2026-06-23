@@ -10,9 +10,9 @@ class LeadRemoteDatasource {
   final sep = AppConstants.sepListas;
   final camp = AppConstants.sepCampos;
 
-  Future<List<LeadModel>> getLeads(String proceso) async {
+  Future<List<LeadModel>> getLeads() async {
     final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0, proceso].join(camp)}${sep}LS';
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LS';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 

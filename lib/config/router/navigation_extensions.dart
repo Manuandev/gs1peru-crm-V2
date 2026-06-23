@@ -6,7 +6,6 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
 
 extension NavigationExtensions on BuildContext {
   // ── Primitivos (no usar directamente desde features) ───────
@@ -49,7 +48,10 @@ extension NavigationExtensions on BuildContext {
   // ── Módulos principales ────────────────────────────────────
 
   Future<void> goToSeguimiento() => clearAndPush(AppRoutes.seguimiento);
-  Future<void> goToPropuestas() => clearAndPush(AppRoutes.propuestas);
+  Future<void> goToContactos() => clearAndPush(AppRoutes.contactos);
+  Future<void> goToSolicitudes() => clearAndPush(AppRoutes.solicitudes);
+  Future<void> goToMisCasos() => clearAndPush(AppRoutes.misCasos);
+  Future<void> goToEquipo() => clearAndPush(AppRoutes.equipo);
   Future<void> goToChats() => clearAndPush(AppRoutes.chats);
   Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
   Future<void> goToDetalleCobranza({required String numSol}) =>
@@ -99,15 +101,8 @@ extension NavigationExtensions on BuildContext {
 
   // ── Lead — detalle ─────────────────────────────────────────
 
-  Future<void> goToDetalleLead({
-    required int idLead,
-    required LeadType type,
-  }) => _push(
-    type == LeadType.seguimientos
-        ? AppRoutes.detalleSeguimiento
-        : AppRoutes.detallePropuesta,
-    arguments: {'idLead': idLead},
-  );
+  Future<void> goToDetalleLead({required int idLead}) =>
+      _push(AppRoutes.detalleSeguimiento, arguments: {'idLead': idLead});
 
   // ── Home ───────────────────────────────────────────────────
 

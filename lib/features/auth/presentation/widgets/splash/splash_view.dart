@@ -150,7 +150,10 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
       });
     } else if (state is SplashSessionNotFound) {
       if (state.message != null) {
-        AppSnackBar.error(context, state.message!);
+        final mensaje = state.message!;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) AppSnackBar.error(context, mensaje);
+        });
       }
     }
     // SplashError: el carrusel se muestra igualmente

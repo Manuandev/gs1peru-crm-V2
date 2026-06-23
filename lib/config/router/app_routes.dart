@@ -18,8 +18,13 @@ class AppRoutes {
 
   static const String chats = '/chats';
   static const String seguimiento = '/seguimiento';
-  static const String propuestas = '/propuestas';
+  static const String contactos = '/contactos';
+  static const String solicitudes = '/solicitudes';
   static const String cobranza = '/cobranza';
+
+  // Accesos rápidos — solo visibles para moderadores en el drawer
+  static const String misCasos = '/mis-casos';
+  static const String equipo = '/equipo';
 
   static const String notifications = '/home/notifications';
 
@@ -28,7 +33,6 @@ class AppRoutes {
   static const String templates = '/chats/templates';
 
   static const String detalleSeguimiento = '/seguimiento/detalle';
-  static const String detallePropuesta = '/propuestas/detalle';
   static const String detalleCobranza = '/cobranza/detalle';
   static const String facturarCobranza = '/cobranza/facturar';
   static const String planCredito = '/cobranza/plan-credito';

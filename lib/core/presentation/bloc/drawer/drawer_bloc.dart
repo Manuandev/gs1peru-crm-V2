@@ -13,10 +13,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
   }
 
   void _onDrawerStarted(DrawerStarted event, Emitter<DrawerState> emit) {
-    // Sin async, sin Loading — los datos están en memoria, es instantáneo
     final user = _session.user!;
-
-    // Preservar badges si ya había un estado cargado
     final previous = state is DrawerLoaded ? state as DrawerLoaded : null;
 
     emit(
@@ -24,9 +21,9 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
         userName: user.codUser,
         userApe: user.userApe,
         userSubtitle: user.correoUser,
+        isModerador: user.isModerador,
         conversaciones: previous?.conversaciones ?? 0,
         prospectos: previous?.prospectos ?? 0,
-        propuestas: previous?.propuestas ?? 0,
         cobranzas: previous?.cobranzas ?? 0,
       ),
     );
@@ -39,14 +36,10 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
     final current = state;
     if (current is! DrawerLoaded) return;
 
-    // copyWithBadges — no repetimos todos los campos
     emit(
       current.copyWithBadges(
         conversaciones: event.conversaciones,
-        // pendingReminders: event.prospectos,
-        // newLeads: event.propuestas,
         prospectos: event.prospectos,
-        propuestas: event.propuestas,
         cobranzas: event.cobranza,
       ),
     );

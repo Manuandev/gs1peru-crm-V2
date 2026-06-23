@@ -8,9 +8,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListView extends StatelessWidget {
-  final LeadType type;
-
-  const LeadListView({super.key, required this.type});
+  const LeadListView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +16,7 @@ class LeadListView extends StatelessWidget {
       builder: (context, modoCompacto) {
         return BasePage(
           onPop: () => context.goToHome(),
-          title: type == LeadType.seguimientos ? 'Seguimientos' : 'Propuestas',
+          title: 'Seguimientos',
           drawerSide: DrawerSide.left,
           appBarTrailingButtons: [
             IconButton(
@@ -33,7 +31,7 @@ class LeadListView extends StatelessWidget {
             IconButton(
               icon: Icon(AppIcons.refresh, color: AppColors.textOnDark),
               onPressed: () =>
-                  context.read<LeadListBloc>().add(LeadListRefresh(type)),
+                  context.read<LeadListBloc>().add(const LeadListRefresh()),
             ),
           ],
           body: BlocBuilder<LeadListBloc, LeadListState>(
@@ -46,14 +44,13 @@ class LeadListView extends StatelessWidget {
                 return AppErrorView(
                   message: state.message,
                   onRetry: () =>
-                      context.read<LeadListBloc>().add(LeadListRefresh(type)),
+                      context.read<LeadListBloc>().add(const LeadListRefresh()),
                 );
               }
 
               if (state is LeadListSuccess) {
                 return LeadListPortrait(
                   leads: state.leads,
-                  type: type,
                   filtro: state.filtro,
                   modoCompacto: modoCompacto,
                 );

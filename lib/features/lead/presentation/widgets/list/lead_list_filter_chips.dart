@@ -9,14 +9,12 @@ class LeadListFilterChips extends StatelessWidget {
   final LeadListFiltro filtroActual;
   final Map<LeadListFiltro, int> conteos;
   final void Function(LeadListFiltro) onFiltroTap;
-  final LeadType type;
 
   const LeadListFilterChips({
     super.key,
     required this.filtroActual,
     required this.conteos,
     required this.onFiltroTap,
-    required this.type,
   });
 
   @override
@@ -31,15 +29,10 @@ class LeadListFilterChips extends StatelessWidget {
       (filtro: LeadListFiltro.enDesarrollo, label: 'En desarrollo'),
     ];
 
-    final chips = todosChips.where((c) {
-      if (c.filtro == LeadListFiltro.todos && !isModerador) return false;
-      if (type == LeadType.propuestas &&
-          (c.filtro == LeadListFiltro.nuevos ||
-              c.filtro == LeadListFiltro.enDesarrollo)) {
-        return false;
-      }
-      return true;
-    }).toList();
+    // El chip "Todas" solo lo ve el moderador
+    final chips = todosChips
+        .where((c) => !(c.filtro == LeadListFiltro.todos && !isModerador))
+        .toList();
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),

@@ -7,8 +7,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPage extends StatelessWidget {
-  final LeadType type;
-  const LeadListPage({super.key, required this.type});
+  const LeadListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +17,7 @@ class LeadListPage extends StatelessWidget {
           create: (context) => LeadListBloc(
             GetLeadsUseCase(context.read<LeadRepository>()),
             ToggleFavoritoLeadUseCase(context.read<LeadRepository>()),
-          )..add(LeadListStarted(type)),
+          )..add(const LeadListStarted()),
         ),
         BlocProvider(
           create: (_) => LeadListVistaCubit()..cargar(),
@@ -30,7 +29,7 @@ class LeadListPage extends StatelessWidget {
             AppSnackBar.error(context, state.message);
           }
         },
-        child: LeadListView(type: type),
+        child: const LeadListView(),
       ),
     );
   }

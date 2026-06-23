@@ -38,7 +38,6 @@ class _FlexCards extends StatelessWidget {
     final items = AppMenuItems.withBadges(
       conversacionesBadge: state.totConversaciones,
       prospectosBadge: state.totProspectos,
-      propuestasBadge: state.totPropuestas,
       cobranzaBadge: state.totCobranza,
     );
 

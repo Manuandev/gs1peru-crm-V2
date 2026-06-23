@@ -13,8 +13,6 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
   List<Lead> _allLeads = [];
   late LeadListFiltro _filtroActivo;
-  LeadType _currentType = LeadType.seguimientos;
-  // StreamSubscription<WebSocketMessage>? _messageSubscription;
 
   LeadListBloc(this._getLeadsUseCase, this._toggleFavoritoUseCase)
       : super(const LeadListInitial()) {
@@ -32,7 +30,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     Emitter<LeadListState> emit,
   ) async {
     emit(const LeadListLoading());
-    await _loadData(event.type, emit);
+    await _loadData(emit);
   }
 
   Future<void> _onRefresh(
@@ -40,22 +38,12 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     Emitter<LeadListState> emit,
   ) async {
     emit(const LeadListLoading());
-    await _loadData(event.type, emit);
+    await _loadData(emit);
   }
 
-  Future<void> _loadData(LeadType type, Emitter<LeadListState> emit) async {
-    _currentType = type;
-
-    if (_currentType == LeadType.propuestas &&
-        (_filtroActivo == LeadListFiltro.nuevos ||
-            _filtroActivo == LeadListFiltro.enDesarrollo)) {
-      _filtroActivo = LeadListFiltro.misCasos;
-    }
-
+  Future<void> _loadData(Emitter<LeadListState> emit) async {
     try {
-      final leads = await _getLeadsUseCase(
-        type == LeadType.seguimientos ? 'PO' : 'PA',
-      );
+      final leads = await _getLeadsUseCase();
       _allLeads = leads;
       _emitFiltered(emit);
     } catch (e, stackTrace) {
@@ -91,7 +79,6 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
               : l)
           .toList();
       _emitFiltered(emit);
-      // TODO: mostrar AppSnackBar.error cuando se conecte al SP real
       addError(e, stackTrace);
     }
   }
@@ -124,7 +111,6 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
         leads: resultado,
         filtro: _filtroActivo,
         conteos: conteos,
-        type: _currentType,
       ),
     );
   }

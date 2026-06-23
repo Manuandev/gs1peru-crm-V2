@@ -15,7 +15,6 @@ export 'domain/entities/lead_detalle.dart';
 export 'domain/entities/comentario_lead.dart';
 export 'domain/entities/contacto_detalle.dart';
 
-export 'domain/enums/types_lead.dart';
 export 'domain/enums/lead_filtro.dart';
 
 export 'domain/repositories/lead_repository.dart';

@@ -3,25 +3,21 @@
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 
-/// Ítems del menú principal (Drawer)
+/// Ítems del menú principal (Drawer y dashboard)
 ///
 /// PROPÓSITO:
-/// - Un solo lugar donde viven todos los ítems del drawer
+/// - Un solo lugar donde viven todos los ítems navegables
 /// - Cada pantalla importa de aquí lo que necesita
 /// - Si cambia una ruta o un ícono → se cambia SOLO aquí
 ///
-/// USO en home_page.dart:
-/// drawerItems: AppMenuItems.mainItems,
-///
-/// USO con badge dinámico (ej: chats con 3 mensajes):
-/// drawerItems: AppMenuItems.withBadges(chatsBadge: 3),
+/// NOTA: el drawer ya no consume withBadges() directamente —
+/// su estructura está hardcodeada en AppDrawerWidget para soportar
+/// la sección condicional por isModerador. withBadges() se usa
+/// en HomeMenuCards (dashboard) y otros widgets de contadores.
 class AppMenuItems {
   AppMenuItems._();
 
-  // ============================================================
-  // ÍTEMS PRINCIPALES
-  // Orden en que aparecen en el drawer
-  // ============================================================
+  // ── Ítem de inicio ─────────────────────────────────────────────────────────
 
   static const DrawerItemModel home = DrawerItemModel(
     id: AppRoutes.home,
@@ -31,12 +27,7 @@ class AppMenuItems {
     showDividerAfter: true,
   );
 
-  // ============================================================
-  // LISTA COMPLETA EN ORDEN
-  // Úsala cuando quieras mostrar todos los módulos
-  // ============================================================
-
-  // static const List<DrawerItemModel> mainItems = [home];
+  // ── Lista estática (sin badges) — para contextos sin estado ────────────────
 
   static const List<DrawerItemModel> mainItems = [
     home,
@@ -48,15 +39,21 @@ class AppMenuItems {
     ),
     DrawerItemModel(
       id: AppRoutes.seguimiento,
-      icon: AppIcons.user,
+      icon: AppIcons.users,
       label: 'Seguimiento',
       route: AppRoutes.seguimiento,
     ),
     DrawerItemModel(
-      id: AppRoutes.propuestas,
-      icon: AppIconsSocial.etapaPropuesta,
-      label: 'Propuestas',
-      route: AppRoutes.propuestas,
+      id: AppRoutes.contactos,
+      icon: AppIcons.documento,
+      label: 'Contactos',
+      route: AppRoutes.contactos,
+    ),
+    DrawerItemModel(
+      id: AppRoutes.solicitudes,
+      icon: AppIcons.email,
+      label: 'Solicitudes',
+      route: AppRoutes.solicitudes,
     ),
     DrawerItemModel(
       id: AppRoutes.cobranza,
@@ -66,21 +63,11 @@ class AppMenuItems {
     ),
   ];
 
-  // ============================================================
-  // CON BADGES DINÁMICOS
-  // Úsala cuando tengas contadores en tiempo real
-  //
-  // USO:
-  // drawerItems: AppMenuItems.withBadges(
-  //   chatsBadge: unreadMessages,
-  //   recordatoriosBadge: pendingReminders,
-  // ),
-  // ============================================================
+  // ── Con badges dinámicos — usar en HomeMenuCards ────────────────────────────
 
   static List<DrawerItemModel> withBadges({
     int? conversacionesBadge,
     int? prospectosBadge,
-    int? propuestasBadge,
     int? cobranzaBadge,
   }) {
     return [
@@ -94,17 +81,22 @@ class AppMenuItems {
       ),
       DrawerItemModel(
         id: AppRoutes.seguimiento,
-        icon: AppIcons.user,
+        icon: AppIcons.users,
         label: 'Seguimiento',
         route: AppRoutes.seguimiento,
         badge: prospectosBadge,
       ),
       DrawerItemModel(
-        id: AppRoutes.propuestas,
-        icon: AppIconsSocial.etapaPropuesta,
-        label: 'Propuestas',
-        route: AppRoutes.propuestas,
-        badge: propuestasBadge,
+        id: AppRoutes.contactos,
+        icon: AppIcons.documento,
+        label: 'Contactos',
+        route: AppRoutes.contactos,
+      ),
+      DrawerItemModel(
+        id: AppRoutes.solicitudes,
+        icon: AppIcons.email,
+        label: 'Solicitudes',
+        route: AppRoutes.solicitudes,
       ),
       DrawerItemModel(
         id: AppRoutes.cobranza,

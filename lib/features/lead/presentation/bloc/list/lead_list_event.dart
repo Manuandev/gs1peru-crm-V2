@@ -12,19 +12,11 @@ abstract class LeadListEvent extends Equatable {
 }
 
 class LeadListStarted extends LeadListEvent {
-  final LeadType type;
-  const LeadListStarted(this.type);
-
-  @override
-  List<Object?> get props => [type];
+  const LeadListStarted();
 }
 
 class LeadListRefresh extends LeadListEvent {
-  final LeadType type;
-  const LeadListRefresh(this.type);
-
-  @override
-  List<Object?> get props => [type];
+  const LeadListRefresh();
 }
 
 class LeadListFiltered extends LeadListEvent {

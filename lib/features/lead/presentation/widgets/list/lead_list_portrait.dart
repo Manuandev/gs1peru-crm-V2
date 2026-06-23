@@ -9,14 +9,12 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPortrait extends StatelessWidget {
   final List<Lead> leads;
-  final LeadType type;
   final LeadListFiltro filtro;
   final bool modoCompacto;
 
   const LeadListPortrait({
     super.key,
     required this.leads,
-    required this.type,
     required this.filtro,
     this.modoCompacto = false,
   });
@@ -36,7 +34,6 @@ class LeadListPortrait extends StatelessWidget {
               onFiltroTap: (filtro) {
                 context.read<LeadListBloc>().add(LeadListFiltered(filtro));
               },
-              type: type,
             );
           },
         ),
@@ -46,14 +43,9 @@ class LeadListPortrait extends StatelessWidget {
           child: leads.isEmpty
               ? AppEmptyView(
                   message: switch (filtro) {
-                    LeadListFiltro.todos =>
-                      type == LeadType.seguimientos
-                          ? 'No hay seguimientos.'
-                          : 'No hay propuestas.',
+                    LeadListFiltro.todos => 'No hay seguimientos.',
                     LeadListFiltro.misCasos =>
-                      type == LeadType.seguimientos
-                          ? 'No tienes seguimientos asignados.'
-                          : 'No tienes propuestas asignadas.',
+                      'No tienes seguimientos asignados.',
                     LeadListFiltro.nuevos => 'No hay seguimientos nuevos.',
                     LeadListFiltro.enDesarrollo =>
                       'No hay seguimientos en desarrollo.',

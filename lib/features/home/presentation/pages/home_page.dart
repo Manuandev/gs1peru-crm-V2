@@ -44,7 +44,6 @@ class HomePage extends StatelessWidget {
               context.updateBadge(
                 conversaciones: state.totConversaciones,
                 prospectos: state.totProspectos,
-                propuestas: state.totPropuestas,
                 cobranza: state.totCobranza,
               );
             }

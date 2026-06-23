@@ -6,5 +6,5 @@ class GetLeadsUseCase {
   final LeadRepository _repository;
   const GetLeadsUseCase(this._repository);
 
-  Future<List<Lead>> call(String proceso) => _repository.getLeads(proceso);
+  Future<List<Lead>> call() => _repository.getLeads();
 }

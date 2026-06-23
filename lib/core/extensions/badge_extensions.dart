@@ -9,18 +9,13 @@ extension BadgeExtension on BuildContext {
   void updateBadge({
     int? conversaciones,
     int? prospectos,
-    int? propuestas,
     int? cobranza,
   }) {
     read<DrawerBloc>().add(
       DrawerBadgesUpdated(
         conversaciones: conversaciones,
         prospectos: prospectos,
-        propuestas: propuestas,
         cobranza: cobranza,
-        // newLead: leads,
-        // pendingReminders: reminders,
-        // unreadChats: chats,
       ),
     );
   }

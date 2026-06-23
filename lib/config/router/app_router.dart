@@ -95,22 +95,24 @@ class AppRouter {
     AppRoutes.settings: RouteDefinition(builder: (_) => const SettingsPage()),
 
     AppRoutes.seguimiento: RouteDefinition(
-      builder: (_) => const LeadListPage(type: LeadType.seguimientos),
+      builder: (_) => const LeadListPage(),
     ),
-    AppRoutes.propuestas: RouteDefinition(
-      builder: (_) => const LeadListPage(type: LeadType.propuestas),
+    AppRoutes.contactos: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (_) => const UnderConstructionPage(routeName: 'Contactos'),
     ),
-
-    // PENDIENTES — en construcción
-    // AppRoutes.prospectos: RouteDefinition(
-    //   builder: (_) => const UnderConstructionPage(routeName: 'Prospectos'),
-    //   transition: TransitionType.fade,
-    // ),
-
-    // AppRoutes.propuestas: RouteDefinition(
-    //   builder: (_) => const UnderConstructionPage(routeName: 'Propuestas'),
-    //   transition: TransitionType.fade,
-    // ),
+    AppRoutes.solicitudes: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (_) => const UnderConstructionPage(routeName: 'Solicitudes'),
+    ),
+    AppRoutes.misCasos: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (_) => const UnderConstructionPage(routeName: 'Mis casos'),
+    ),
+    AppRoutes.equipo: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (_) => const UnderConstructionPage(routeName: 'Equipo'),
+    ),
     AppRoutes.cobranza: RouteDefinition(
       builder: (_) => const CobranzaListPage(),
     ),
@@ -172,13 +174,6 @@ class AppRouter {
 
     // SEGUIMIENTO / PROPUESTAS — detalle de lead
     AppRoutes.detalleSeguimiento: RouteDefinition(
-      transition: TransitionType.slideRight,
-      builder: (context) {
-        final args = _requireArgs<Map<String, dynamic>>(context);
-        return LeadDetallePage(idLead: args['idLead'] as int);
-      },
-    ),
-    AppRoutes.detallePropuesta: RouteDefinition(
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);

@@ -10,7 +10,7 @@ class LeadRepositoryImpl implements LeadRepository {
   LeadRepositoryImpl(this._remote);
 
   @override
-  Future<List<LeadModel>> getLeads(String proceso) => _remote.getLeads(proceso);
+  Future<List<LeadModel>> getLeads() => _remote.getLeads();
 
   @override
   Future<LeadDetalleModel> getLeadDetalle(int idLead) =>

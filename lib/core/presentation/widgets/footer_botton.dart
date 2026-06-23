@@ -26,50 +26,10 @@ class AppBottomNavWidget extends StatelessWidget {
             ? state.conversaciones
             : null;
 
-        return NavigationBar(
-          selectedIndex: indiceActivo,
-          onDestinationSelected: (i) => _navegar(context, i, indiceActivo),
-          destinations: [
-            // Inicio
-            const NavigationDestination(
-              icon: Icon(AppIcons.home),
-              selectedIcon: Icon(AppIcons.homeFilled),
-              label: 'Inicio',
-            ),
-
-            // Chats con badge de conversaciones pendientes
-            NavigationDestination(
-              icon: Badge(
-                isLabelVisible: badgeChats != null,
-                label: badgeChats != null ? Text('$badgeChats') : null,
-                child: const Icon(AppIcons.message),
-              ),
-              selectedIcon: Badge(
-                isLabelVisible: badgeChats != null,
-                label: badgeChats != null ? Text('$badgeChats') : null,
-                child: const Icon(AppIcons.message),
-              ),
-              label: 'Chats',
-            ),
-
-            // Seguimiento
-            const NavigationDestination(
-              icon: Icon(AppIcons.users),
-              label: 'Seguimiento',
-            ),
-
-            // Solicitudes
-            const NavigationDestination(
-              icon: Icon(AppIcons.email),
-              label: 'Solicitudes',
-            ),
-
-            // Cobranza
-            const NavigationDestination(
-              icon: Icon(AppIcons.moneda),
-              label: 'Cobranza',
-            ),
-          ],
+        return _BarraNavegacion(
+          indiceActivo: indiceActivo,
+          badgeChats: badgeChats,
+          alSeleccionar: (i) => _navegar(context, i, indiceActivo),
         );
       },
     );
@@ -100,5 +60,142 @@ class AppBottomNavWidget extends StatelessWidget {
       case 4:
         context.goToCobranza();
     }
+  }
+}
+
+// ── Contenedor de la barra ──────────────────────────────────────────────────
+
+class _BarraNavegacion extends StatelessWidget {
+  final int indiceActivo;
+  final int? badgeChats;
+  final void Function(int) alSeleccionar;
+
+  const _BarraNavegacion({
+    required this.indiceActivo,
+    required this.badgeChats,
+    required this.alSeleccionar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(color: AppColors.border),
+        ),
+      ),
+      child: Row(
+        children: [
+          _ItemNav(
+            icono: AppIcons.home,
+            etiqueta: 'Inicio',
+            activo: indiceActivo == 0,
+            alTap: () => alSeleccionar(0),
+          ),
+          _ItemNav(
+            icono: AppIcons.message,
+            etiqueta: 'Chats',
+            badge: badgeChats,
+            activo: indiceActivo == 1,
+            alTap: () => alSeleccionar(1),
+          ),
+          _ItemNav(
+            icono: AppIcons.users,
+            etiqueta: 'Seguimiento',
+            activo: indiceActivo == 2,
+            alTap: () => alSeleccionar(2),
+          ),
+          _ItemNav(
+            icono: AppIcons.email,
+            etiqueta: 'Solicitudes',
+            activo: indiceActivo == 3,
+            alTap: () => alSeleccionar(3),
+          ),
+          _ItemNav(
+            icono: AppIcons.moneda,
+            etiqueta: 'Cobranza',
+            activo: indiceActivo == 4,
+            alTap: () => alSeleccionar(4),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Ítem individual de la barra ─────────────────────────────────────────────
+
+class _ItemNav extends StatelessWidget {
+  final IconData icono;
+  final String etiqueta;
+  final int? badge;
+  final bool activo;
+  final VoidCallback alTap;
+
+  const _ItemNav({
+    required this.icono,
+    required this.etiqueta,
+    this.badge,
+    required this.activo,
+    required this.alTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = activo ? AppColors.primary : AppColors.textSecondary;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: alTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Ícono con badge opcional
+                  badge != null
+                      ? Badge(
+                          label: Text('$badge'),
+                          child: Icon(
+                            icono,
+                            color: color,
+                            size: AppSizing.iconNav,
+                          ),
+                        )
+                      : Icon(icono, color: color, size: AppSizing.iconNav),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    etiqueta,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: color,
+                      fontWeight: activo
+                          ? AppTextStyles.weightSemiBold
+                          : AppTextStyles.weightRegular,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Barrita indicadora inferior del ítem activo
+            activo
+                ? Container(
+                    height: AppSizing.navIndicatorHeight,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(AppSizing.radiusXxs),
+                      ),
+                    ),
+                  )
+                : const SizedBox(height: AppSizing.navIndicatorHeight),
+          ],
+        ),
+      ),
+    );
   }
 }

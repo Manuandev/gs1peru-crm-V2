@@ -16,6 +16,7 @@ class CobranzaListView extends StatelessWidget {
       bodyPadding: EdgeInsets.zero,
       title: 'Cobranzas',
       drawerSide: DrawerSide.left,
+      showBottomNav: true,
       body: RefreshIndicator(
         color: AppColors.primary,
         backgroundColor: AppColors.surface,
@@ -29,7 +30,7 @@ class CobranzaListView extends StatelessWidget {
         child: BlocBuilder<CobranzaListBloc, CobranzaListState>(
           builder: (context, state) {
             if (state is CobranzaListLoading || state is CobranzaListInitial) {
-              return const Center(child: CircularProgressIndicator());
+              return const AppLoadingView();
             }
 
             if (state is CobranzaListError) {

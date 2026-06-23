@@ -16,29 +16,35 @@ class CardTotalesHome extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // ── Encabezado de sección ──────────────────────────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Mi embudo de gestión',
-              style: AppTextStyles.titleMedium.copyWith(
-                fontWeight: AppTextStyles.weightBold,
-              ),
+    return Card.filled(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Encabezado dentro de la card ──────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
             ),
-            CustomTextButton(text: 'Ver detalle', onPressed: () {}),
-          ],
-        ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Mi embudo de gestión',
+                  style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: AppTextStyles.weightSemiBold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                CustomTextButton(text: 'Ver detalle', onPressed: () {}),
+              ],
+            ),
+          ),
 
-        const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
 
-        // ── Card con los 4 totales ─────────────────────────────────
-        Card.filled(
-          child: Padding(
+          // ── Los 4 totales ──────────────────────────────────────────
+          Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: IntrinsicHeight(
               child: Row(
@@ -75,8 +81,8 @@ class CardTotalesHome extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

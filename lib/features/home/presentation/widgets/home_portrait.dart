@@ -144,9 +144,9 @@ class _HomeHeader extends StatelessWidget {
         ),
       ),
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
         AppSpacing.md,
-        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.md,
         AppSpacing.xl,
       ),
       child: Column(

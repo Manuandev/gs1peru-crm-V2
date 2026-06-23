@@ -45,13 +45,13 @@ class AppMenuItems {
       route: AppRoutes.seguimiento,
       descripcion: 'Gestiona y da seguimiento a tus leads',
     ),
-    DrawerItemModel(
-      id: AppRoutes.contactos,
-      icon: AppIcons.documento,
-      label: 'Contactos',
-      route: AppRoutes.contactos,
-      descripcion: 'Gestiona tus contactos con GS1',
-    ),
+    // DrawerItemModel(
+    //   id: AppRoutes.contactos,
+    //   icon: AppIcons.documento,
+    //   label: 'Contactos',
+    //   route: AppRoutes.contactos,
+    //   descripcion: 'Gestiona tus contactos con GS1',
+    // ),
     DrawerItemModel(
       id: AppRoutes.solicitudes,
       icon: AppIcons.email,
@@ -93,13 +93,13 @@ class AppMenuItems {
         badge: prospectosBadge,
         descripcion: 'Gestiona y da seguimiento a tus leads',
       ),
-      DrawerItemModel(
-        id: AppRoutes.contactos,
-        icon: AppIcons.documento,
-        label: 'Contactos',
-        route: AppRoutes.contactos,
-        descripcion: 'Gestiona tus contactos con GS1',
-      ),
+      // DrawerItemModel(
+      //   id: AppRoutes.contactos,
+      //   icon: AppIcons.documento,
+      //   label: 'Contactos',
+      //   route: AppRoutes.contactos,
+      //   descripcion: 'Gestiona tus contactos con GS1',
+      // ),
       DrawerItemModel(
         id: AppRoutes.solicitudes,
         icon: AppIcons.email,

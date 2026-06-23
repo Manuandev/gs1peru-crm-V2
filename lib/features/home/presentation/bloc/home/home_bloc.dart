@@ -28,6 +28,8 @@
 // - IHomeRepository → (cuando exista) para cargar datos del home
 // ============================================================
 
+import 'dart:async';
+
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -36,12 +38,21 @@ import 'package:app_crm/features/home/index_home.dart';
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetHomeUseCase _getData;
   final _session = SessionService();
+  late final StreamSubscription<FiltroState> _filtroSub;
 
   HomeBloc({required GetHomeUseCase getData})
     : _getData = getData,
       super(const HomeInitial()) {
     on<HomeStarted>(_onStarted);
     on<HomeRefresh>(_onRefresh);
+    // Recarga automática cuando el moderador cambia entre "Mis casos" / "Equipo"
+    _filtroSub = FiltroCubit.instance.stream.listen((_) => add(HomeRefresh()));
+  }
+
+  @override
+  Future<void> close() {
+    _filtroSub.cancel();
+    return super.close();
   }
 
   Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit) async {
@@ -57,7 +68,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _loadData(Emitter<HomeState> emit) async {
     try {
       final home = await _getData.call();
-
       emit(HomeLoaded(home: home, usuario: _session.user!));
     } on AppException catch (e) {
       emit(HomeError(e.message));

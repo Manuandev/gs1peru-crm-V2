@@ -23,6 +23,7 @@ class ChatListView extends StatelessWidget {
       onSearch: (query) {
         context.read<ChatListBloc>().add(ChatListSearched(query));
       },
+      showBottomNav: true,
       body: RefreshIndicator(
         color: AppColors.primary,
         backgroundColor: AppColors.surface,

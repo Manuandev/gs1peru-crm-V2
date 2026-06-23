@@ -5,7 +5,9 @@ import 'package:app_crm/index_dependencies.dart';
 import 'filtro_state.dart';
 
 class FiltroCubit extends Cubit<FiltroState> {
-  FiltroCubit() : super(const FiltroState());
+  static final FiltroCubit instance = FiltroCubit._();
+
+  FiltroCubit._() : super(const FiltroState());
 
   void cambiarVista(FiltroVista nueva) {
     if (state.vista == nueva) return;

@@ -14,17 +14,15 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       onLogout: () => context.logoutWithConfirmation(context),
-      // Logo GS1 + "CRM Perú" igual que el header del drawer
       titleWidget: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(AppImages.logoGs1PeruBlanco, height: AppSizing.avatarSm * 0.65),
+          SvgPicture.asset(AppImages.logoGs1PeruBlanco, height: AppSizing.iconLg),
           const SizedBox(width: AppSpacing.xs),
           Text(
             'CRM Perú',
             style: AppTextStyles.titleMedium.copyWith(
               color: AppColors.textOnDark,
-              fontWeight: AppTextStyles.weightBold,
             ),
           ),
         ],

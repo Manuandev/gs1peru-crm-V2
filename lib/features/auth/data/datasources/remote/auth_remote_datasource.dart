@@ -39,7 +39,7 @@ class AuthRemoteDatasource {
     required String correo,
   }) async {
     final info = await DeviceInfoService.getInfoConTimeout();
-    final fecha = _formatearFecha(DateTime.now());
+    final fecha = DateTime.now();
 
     final body = [
       accessToken,
@@ -67,20 +67,7 @@ class AuthRemoteDatasource {
     try {
       return UserModel.fromRawString(data);
     } on FormatException catch (e) {
-      // El SP retorna ERROR¯<mensaje descriptivo> — fromRawString lo convierte
-      // en FormatException(mensaje). Lo reempaquetamos como AppException para
-      // que el bloc lo muestre directamente sin prefijo "Error inesperado".
       throw AppException(e.message);
     }
-  }
-
-  String _formatearFecha(DateTime fecha) {
-    final y = fecha.year.toString().padLeft(4, '0');
-    final m = fecha.month.toString().padLeft(2, '0');
-    final d = fecha.day.toString().padLeft(2, '0');
-    final h = fecha.hour.toString().padLeft(2, '0');
-    final min = fecha.minute.toString().padLeft(2, '0');
-    final s = fecha.second.toString().padLeft(2, '0');
-    return '$y-$m-$d $h:$min:$s.000';
   }
 }

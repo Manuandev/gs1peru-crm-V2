@@ -499,6 +499,13 @@ class AppSizing {
   static const double homeHeaderBottomRadius = 28.0;
 
   // ============================================================
+  // NAVEGACIÓN INFERIOR — AppBottomNavWidget
+  // ============================================================
+
+  /// Grosor de la barrita indicadora del ítem activo en [AppBottomNavWidget]: 3dp
+  static const double navIndicatorHeight = 3.0;
+
+  // ============================================================
   // AUTH — Cartilla flotante (login, recuperar clave)
   // ============================================================
 

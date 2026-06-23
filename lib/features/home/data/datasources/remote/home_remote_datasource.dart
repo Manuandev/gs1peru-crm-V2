@@ -11,8 +11,10 @@ class HomeRemoteDatasource {
   final camp = AppConstants.sepCampos;
 
   Future<HomeModel> getData() async {
+    final esEquipo = _session.isModerador &&
+        FiltroCubit.instance.state.vista == FiltroVista.miEquipo;
     final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}L';
+        '${[_session.codUser, esEquipo ? 1 : 0].join(camp)}${sep}L';
 
     final result = await _api.postSafe(ApiConstants.urlHomeLst, body);
 

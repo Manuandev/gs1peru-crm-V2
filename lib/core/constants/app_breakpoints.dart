@@ -289,6 +289,19 @@ class AppSizing {
   static const double searchDialogContent = 420.0;
 
   // ============================================================
+  // LOGIN — Zona azul + ilustración decorativa
+  // ============================================================
+
+  /// Tamaño del logo GS1 en la zona azul del login: 44dp
+  static const double loginLogoSize = 44.0;
+
+  /// Ancho del SizedBox contenedor de la ilustración nativa: 160dp
+  static const double loginIlustracionWidth = 160.0;
+
+  /// Alto del SizedBox contenedor de la ilustración nativa: 140dp
+  static const double loginIlustracionHeight = 140.0;
+
+  // ============================================================
   // SPLASH — Indicador de carga (dots)
   // ============================================================
 

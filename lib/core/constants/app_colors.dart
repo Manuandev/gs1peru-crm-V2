@@ -552,6 +552,11 @@ class AppColors {
       // ignore: deprecated_member_use
       purple.withOpacity(opacity);
 
+  /// Violeta-morado para el badge de dólar en la ilustración del login
+  /// TODO(diseño): validar con el equipo de diseño si este color debe
+  /// pertenecer a la paleta oficial de GS1 Perú antes de propagarlo.
+  static const Color accentPurple = Color(0xFF7B61FF);
+
   // ============================================================
   // SNACKBAR / TOAST — Paletas semánticas modo oscuro
   // Fondos oscuros consistentes para notificaciones en ambos temas.

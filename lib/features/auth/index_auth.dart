@@ -7,6 +7,7 @@ export 'data/models/session_model.dart';
 
 export 'data/repositories/auth_repository_impl.dart';
 
+export 'domain/entities/modo_autenticacion.dart';
 export 'domain/entities/session_entity.dart';
 
 export 'domain/repositories/auth_repository.dart';
@@ -39,6 +40,9 @@ export 'presentation/pages/splash_page.dart';
 // export 'presentation/widgets/login/login_portrait.dart';
 export 'presentation/widgets/login/login_view.dart';
 export 'presentation/widgets/login/login_layout.dart';
+export 'presentation/widgets/login/login_ola_clipper.dart';
+export 'presentation/widgets/login/login_ilustracion_widget.dart';
+export 'presentation/widgets/login/login_divisor_widget.dart';
 
 export 'presentation/widgets/splash/splash_landscape.dart';
 export 'presentation/widgets/splash/splash_portrait.dart';

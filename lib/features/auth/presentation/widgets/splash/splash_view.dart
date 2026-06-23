@@ -3,31 +3,26 @@
 // SPLASH VIEW
 // ============================================================
 //
-// RESPONSABILIDADES:
-// - Mostrar la UI/animación del splash
-// - Garantizar un tiempo mínimo de visualización (para la animación)
-// - Solicitar permisos de notificación sin bloquear el flujo principal
-// - Escuchar el resultado del SplashBloc
-// - Notificar al AuthBloc (que vive en el root) para que navegue
-//
 // PATRÓN DE NAVEGACIÓN:
-// SplashView NO navega directamente.
-//   SplashBloc emite estado
-//     → SplashView notifica AuthBloc
-//       → AuthBloc cambia estado
-//         → AppWidget BlocListener navega
+//   SplashBloc emite SplashSessionFound
+//     → SplashView guarda userId/username, NO navega aún
+//     → El usuario recorre el carrusel y toca "Empezar"
+//       → _alEmpezar() dispara AuthSessionRestored
+//         → AppWidget BlocListener llama context.goToHome()
 //
-// PERMISOS DE NOTIFICACIÓN:
-// Se solicitan en segundo plano después del primer frame (hay UI visible).
-// El flujo del splash NO espera la respuesta del diálogo — siempre continúa.
-// El timeout de 30s garantiza que el diálogo ignorado no bloquee nada.
+//   SplashBloc emite SplashSessionNotFound
+//     → SplashView muestra error si existe
+//     → El usuario toca "Empezar"
+//       → _alEmpezar() llama context.goToLogin()
 // ============================================================
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
+import 'package:app_crm/features/auth/presentation/widgets/splash/onboarding_carousel.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -37,28 +32,25 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
-  /// Controla si el tiempo mínimo de animación ya pasó.
-  bool _minTimerDone = false;
-
-  /// Guarda el estado del SplashBloc si llegó antes de que terminara el timer.
+  /// Estado del SplashBloc recibido antes del primer frame.
   SplashState? _pendingState;
 
   /// Indica que hay un diálogo de permisos en curso.
-  /// Se usa en [didChangeAppLifecycleState] para re-verificar al volver.
   bool _solicitandoPermisos = false;
 
-  static const Duration _minDuration = Duration(milliseconds: 2500);
+  /// Datos de sesión guardados cuando SplashBloc responde SessionFound.
+  /// Solo se usan cuando el usuario pulsa "Empezar" en el último slide.
+  String? _sessionUserId;
+  String? _sessionUsername;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _startMinTimer();
 
-    // Los permisos se piden después del primer frame (ya hay UI visible).
-    // No bloqueamos initState — el splash se muestra inmediatamente.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _solicitarPermisosEnBackground();
+      if (_pendingState != null) _procesarEstadoSplash(_pendingState!);
     });
   }
 
@@ -68,13 +60,10 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────
+  // ── Lifecycle ──────────────────────────────────────────────────
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Si el usuario volvió al primer plano mientras el diálogo estaba abierto,
-    // re-verificamos el permiso. El timeout ya puede haber disparado (ignorado),
-    // pero si el usuario aceptó en ese momento, configuramos los listeners ahora.
     if (state == AppLifecycleState.resumed && _solicitandoPermisos) {
       _verificarPermisoAlVolver();
     }
@@ -89,51 +78,39 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
 
     if (concedido) {
       await NotificationPermissionManager.instance.guardarConcedido();
-      // Llama init() que detecta el permiso ya concedido y activa los listeners
-      // sin mostrar ningún diálogo al usuario
       await FirebaseNotificationService.instance.init();
     }
   }
 
-  // ── Permisos ──────────────────────────────────────────────────
+  // ── Permisos ───────────────────────────────────────────────────
 
-  /// Solicita permisos en background — NO bloquea el flujo del splash.
-  /// El splash navega a Login/Home independientemente del resultado aquí.
-  ///
-  /// Orden garantizado: ubicación → notificaciones.
-  /// Android solo muestra un diálogo a la vez; sin este orden el de ubicación
-  /// se pierde si el de notificaciones aparece primero.
   Future<void> _solicitarPermisosEnBackground() async {
-    // ── 1. Ubicación ────────────────────────────────────────────
-    final locationManager = LocationPermissionManager.instance;
-    if (await locationManager.deberiaSolicitar()) {
-      await _solicitarPermisoUbicacion(locationManager);
+    final notifManager = NotificationPermissionManager.instance;
+    if (await notifManager.deberiaSolicitar() && mounted) {
+      _solicitandoPermisos = true;
+      final concedido = await NotificationService.instance.requestPermissions();
+
+      if (!mounted) return;
+      _solicitandoPermisos = false;
+
+      if (concedido) {
+        await notifManager.guardarConcedido();
+      } else {
+        final settings =
+            await FirebaseMessaging.instance.getNotificationSettings();
+        if (settings.authorizationStatus == AuthorizationStatus.denied) {
+          await notifManager.guardarDenegado();
+        } else {
+          await notifManager.guardarIgnorado();
+        }
+      }
     }
 
     if (!mounted) return;
 
-    // ── 2. Notificaciones (siempre después de ubicación) ────────
-    final notifManager = NotificationPermissionManager.instance;
-    if (!await notifManager.deberiaSolicitar() || !mounted) return;
-
-    _solicitandoPermisos = true;
-
-    // timeout = 30s: si el usuario ignora el diálogo más de 30s, avanzamos
-    final concedido = await NotificationService.instance.requestPermissions();
-
-    if (!mounted) return;
-    _solicitandoPermisos = false;
-
-    if (concedido) {
-      await notifManager.guardarConcedido();
-    } else {
-      final settings =
-          await FirebaseMessaging.instance.getNotificationSettings();
-      if (settings.authorizationStatus == AuthorizationStatus.denied) {
-        await notifManager.guardarDenegado();
-      } else {
-        await notifManager.guardarIgnorado();
-      }
+    final locationManager = LocationPermissionManager.instance;
+    if (await locationManager.deberiaSolicitar()) {
+      await _solicitarPermisoUbicacion(locationManager);
     }
   }
 
@@ -159,84 +136,61 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
     }
   }
 
-  // ── Timer mínimo ──────────────────────────────────────────────
+  // ── Estado del SplashBloc ──────────────────────────────────────
 
-  void _startMinTimer() {
-    Future.delayed(_minDuration, () {
-      if (!mounted) return;
-      setState(() => _minTimerDone = true);
-
-      if (_pendingState != null) {
-        _notifyAuthBloc(_pendingState!);
-      }
-    });
-  }
-
-  // ── Navegación ────────────────────────────────────────────────
-
-  void _notifyAuthBloc(SplashState state) {
+  void _procesarEstadoSplash(SplashState state) {
     if (!mounted) return;
 
     if (state is SplashSessionFound) {
-      context.read<AuthBloc>().add(
-        AuthSessionRestored(userId: state.userId, username: state.username),
-      );
+      // Guardamos los datos de sesión, pero NO navegamos todavía.
+      // La navegación ocurre cuando el usuario pulsa "Empezar".
+      setState(() {
+        _sessionUserId = state.userId;
+        _sessionUsername = state.username;
+      });
     } else if (state is SplashSessionNotFound) {
       if (state.message != null) {
         AppSnackBar.error(context, state.message!);
       }
+    }
+    // SplashError: el carrusel se muestra igualmente
+  }
+
+  // ── Callback para "Empezar" ────────────────────────────────────
+
+  void _alEmpezar() {
+    if (!mounted) return;
+    if (_sessionUserId != null && _sessionUsername != null) {
+      // Hay sesión: restaurarla en AuthBloc → AppWidget navega a Home
       context.read<AuthBloc>().add(
-        AuthSessionEmpty(
-          prefillUsername: state.prefillUsername,
-          prefillPassword: state.prefillPassword,
+        AuthSessionRestored(
+          userId: _sessionUserId!,
+          username: _sessionUsername!,
         ),
       );
-    } else if (state is SplashError) {
-      context.read<AuthBloc>().add(const AuthSessionEmpty());
+    } else {
+      // Sin sesión: ir a Login
+      context.goToLogin();
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────
+  // ── Build ───────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocListener<SplashBloc, SplashState>(
-        listenWhen: (_, current) =>
-            current is SplashSessionFound ||
-            current is SplashSessionNotFound ||
-            current is SplashError,
+    return BlocListener<SplashBloc, SplashState>(
+      listenWhen: (_, current) =>
+          current is SplashSessionFound ||
+          current is SplashSessionNotFound ||
+          current is SplashError,
 
-        listener: (context, state) {
-          if (!_minTimerDone) {
-            _pendingState = state;
-            return;
-          }
-          _notifyAuthBloc(state);
-        },
+      listener: (context, state) {
+        if (!mounted) return;
+        _pendingState = state;
+        _procesarEstadoSplash(state);
+      },
 
-        child: OrientationBuilder(
-          builder: (context, orientation) {
-            final esLandscape = orientation == Orientation.landscape;
-
-            return Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.primaryLight],
-                ),
-              ),
-              child: SafeArea(
-                child: esLandscape
-                    ? const SplashLandscape()
-                    : const SplashPortrait(),
-              ),
-            );
-          },
-        ),
-      ),
+      child: OnboardingCarousel(alEmpezar: _alEmpezar),
     );
   }
 }

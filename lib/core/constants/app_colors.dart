@@ -291,6 +291,13 @@ class AppColors {
   /// Extremo claro del gradiente del Splash (azul GS1 medio)
   static const Color primaryLight = Color(0xFF003E73);
 
+  // ============================================================
+  // ONBOARDING CAROUSEL
+  // ============================================================
+
+  /// Morado vibrante — elementos flotantes del carrusel de onboarding (slides 1, 2, 6)
+  static const Color onboardingPurple = Color(0xFF7B61FF);
+
   // ── Anillos decorativos del Splash (blanco semitransparente sobre fondo oscuro)
 
   /// Blanco 15% — anillo exterior del Splash

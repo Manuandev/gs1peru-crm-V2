@@ -43,4 +43,14 @@ export 'presentation/widgets/login/login_layout.dart';
 export 'presentation/widgets/splash/splash_landscape.dart';
 export 'presentation/widgets/splash/splash_portrait.dart';
 export 'presentation/widgets/splash/splash_view.dart';
+
+export 'presentation/widgets/splash/dots_indicador.dart';
+export 'presentation/widgets/splash/onboarding_carousel.dart';
+export 'presentation/widgets/splash/onboarding_slide_base.dart';
+export 'presentation/widgets/splash/onboarding_slide1.dart';
+export 'presentation/widgets/splash/onboarding_slide2.dart';
+export 'presentation/widgets/splash/onboarding_slide3.dart';
+export 'presentation/widgets/splash/onboarding_slide4.dart';
+export 'presentation/widgets/splash/onboarding_slide5.dart';
+export 'presentation/widgets/splash/onboarding_slide6.dart';
 // #endregion presentation/widgets

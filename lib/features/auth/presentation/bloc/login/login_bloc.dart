@@ -10,13 +10,13 @@ import 'package:app_crm/features/auth/index_auth.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   final LoginUsecase _loginUsecase;
-  final AuthRepository _authRepository;
+  final LoginConGoogleUsecase _loginConGoogleUsecase;
 
   LoginBloc({
     required LoginUsecase loginUsecase,
-    required AuthRepository authRepository,
+    required LoginConGoogleUsecase loginConGoogleUsecase,
   }) : _loginUsecase = loginUsecase,
-       _authRepository = authRepository,
+       _loginConGoogleUsecase = loginConGoogleUsecase,
        super(const LoginInitial()) {
     on<LoginSubmitted>(_onLoginSubmitted);
     on<LoginWithGoogleSubmitted>(_onLoginWithGoogleSubmitted);
@@ -29,13 +29,13 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(const LoginLoading());
 
     try {
-      final user = await _loginUsecase(
+      final usuario = await _loginUsecase(
         username: event.username,
         password: event.password,
         rememberSession: event.rememberSession,
       );
 
-      emit(LoginSuccess(userId: user.userId, username: user.fullName));
+      emit(LoginSuccess(userId: usuario.userId, username: usuario.fullName));
     } on AppException catch (e) {
       emit(LoginFailure(e.message));
     } catch (e, stackTrace) {
@@ -51,8 +51,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     emit(const LoginLoading());
 
     try {
-      // v7: singleton + authenticate()
-      // Solo funciona en Android/iOS — en esta app es mobile, ok
       if (!GoogleSignIn.instance.supportsAuthenticate()) {
         emit(
           const LoginFailure(
@@ -62,16 +60,26 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         return;
       }
 
-      // Abre el selector de cuentas Google
-      final googleUser = await GoogleSignIn.instance.authenticate();
+      // Abre el selector nativo de cuentas Google
+      final cuenta = await GoogleSignIn.instance.authenticate();
 
-      final user = await _authRepository.loginWithGoogle(
-        email: googleUser.email,
+      // idToken no requiere serverClientId — viene incluido en authenticate().
+      // El backend valida con Google tokeninfo usando este token.
+      final idToken = cuenta.authentication.idToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        emit(const LoginFailure('No se pudo obtener el token de Google'));
+        return;
+      }
+
+      final usuario = await _loginConGoogleUsecase(
+        accessToken: idToken,
+        correo: cuenta.email,
       );
 
-      emit(LoginSuccess(userId: user.userId, username: user.fullName));
+      emit(LoginSuccess(userId: usuario.userId, username: usuario.fullName));
     } on GoogleSignInException catch (e) {
-      // Canceló la selección
+      // Usuario canceló el selector → no mostrar nada, volver al estado inicial
       if (e.code == GoogleSignInExceptionCode.canceled) {
         emit(const LoginInitial());
         return;
@@ -80,7 +88,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         LoginFailure('Error de Google: ${e.description ?? e.code.toString()}'),
       );
     } on AppException catch (e) {
-      emit(LoginFailure(e.message)); // ← posicional
+      emit(LoginFailure(e.message));
     } catch (e, stackTrace) {
       addError(e, stackTrace);
       emit(const LoginFailure('Error inesperado al iniciar con Google'));

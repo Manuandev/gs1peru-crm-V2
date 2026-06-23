@@ -14,7 +14,7 @@ class ApiConstants {
 
   // ========== SEGURIDAD ==========
   static const String login = 'Seguridad/ValidarLoginAppCRM';
-  static const String loginGoogle = 'Seguridad/ValidarLoginGoogleAppCRM';
+  static const String loginGoogle = 'Seguridad/ValidarLoginGoogleApp';
 
   // ========== LISTAS ==========
   static const String lstListas = 'Listas/SPListasLSTApp';

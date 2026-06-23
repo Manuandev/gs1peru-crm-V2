@@ -14,7 +14,10 @@ abstract class AuthRepository {
     bool rememberSession = false,
   });
 
-  Future<UserModel> loginWithGoogle({required String email});
+  Future<UserModel> loginWithGoogle({
+    required String accessToken,
+    required String correo,
+  });
 
   /// Splash: intenta re-login automático con credenciales guardadas en SQLite.
   Future<UserModel?> tryRestoreSession();

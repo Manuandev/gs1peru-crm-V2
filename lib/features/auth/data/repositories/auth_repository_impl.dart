@@ -54,17 +54,23 @@ class AuthRepositoryImpl implements AuthRepository {
   // ── LOGIN GOOGLE ─────────────────────────────────────────
 
   @override
-  Future<UserModel> loginWithGoogle({required String email}) async {
-    final user = await _remote.loginWithGoogle(email: email);
+  Future<UserModel> loginWithGoogle({
+    required String accessToken,
+    required String correo,
+  }) async {
+    final user = await _remote.loginWithGoogle(
+      accessToken: accessToken,
+      correo: correo,
+    );
     _currentUser = user;
     ApiClient().setToken(user.token);
     SessionService().setUser(user);
 
-    // Google siempre guarda en SQLite sin importar el checkbox
+    // Google siempre persiste en SQLite — el correo es suficiente para re-auth
     await _local.saveSession(
       SessionModel(
         loginType: LoginType.google,
-        email: email,
+        email: correo,
         expiresAt: DateTime.now().add(const Duration(days: 30)),
       ),
     );
@@ -94,7 +100,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // Detecta el tipo y re-autentica con el método correcto
     if (entity.isGoogle) {
-      return loginWithGoogle(email: entity.email!);
+      // Los access tokens de Google son de corta vida y no se persisten.
+      // Limpiar sesión → LoginPage → usuario toca "Ingresar con Google".
+      await _local.clearSession();
+      return null;
     } else {
       return login(
         username: entity.username!,

@@ -13,6 +13,7 @@ export 'domain/entities/session_entity.dart';
 export 'domain/repositories/auth_repository.dart';
 
 export 'domain/usecases/login_usecase.dart';
+export 'domain/usecases/login_con_google_usecase.dart';
 export 'domain/usecases/logout_usecase.dart';
 export 'domain/usecases/restore_session_usecase.dart';
 export 'domain/usecases/recuperar_clave_usecase.dart';

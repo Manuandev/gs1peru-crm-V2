@@ -30,9 +30,10 @@ void main() async {
   await LocalDatabase().init();
 
   // v7: initialize obligatorio antes de cualquier uso
+  // serverClientId omitido — idToken viene en authenticate() sin necesitarlo.
   await GoogleSignIn.instance.initialize(
     serverClientId:
-        '1090773672718-buupi5ospput8t9dv861eqfchvthh9rs.apps.googleusercontent.com',
+        '948850885270-53j8a453k72iiqt38693tvqd3cs869l2.apps.googleusercontent.com',
   );
 
   // ✅ Cargar tema guardado antes de renderizar

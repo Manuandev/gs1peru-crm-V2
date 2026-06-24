@@ -34,8 +34,13 @@ class AppTextStyles {
   // Un solo lugar para cambiar todos los tamaños.
   // ============================================================
 
+  /// Micro: 6px — texto de badge de notificaciones en AppBar
+  static const double sizeXxs6 = 6.0;
+  static const double sizeXxs7 = 7.0;
+  static const double sizeXxs8 = 8.0;
+
   /// Micro: 9px — texto de badge de notificaciones en AppBar
-  static const double sizeXxs = 9.0;
+  static const double sizeXxs9 = 9.0;
 
   /// Sub: 10px — texto de apoyo muy pequeño (ej: "sin respuesta" en PrioridadTile)
   static const double sizeSub = 10.0;
@@ -47,7 +52,8 @@ class AppTextStyles {
   /// Intermedio entre sizeSm y sizeMd: 13px — timer elapsed en PrioridadTile
   static const double sizeSmPlus = 13.0;
 
-  static const double sizeBase = 15.0; // Intermedio: tablet (entre sizeMd y sizeLg)
+  static const double sizeBase =
+      15.0; // Intermedio: tablet (entre sizeMd y sizeLg)
   static const double sizeLg = 16.0; // Base: inputs, botones
   static const double sizeXl = 18.0;
   static const double size2xl = 22.0;
@@ -149,6 +155,31 @@ class AppTextStyles {
 
   static const TextStyle labelSmall = TextStyle(
     fontSize: sizeXs,
+    fontWeight: weightMedium,
+  );
+
+  static const TextStyle labelExtraSmall = TextStyle(
+    fontSize: sizeSub,
+    fontWeight: weightMedium,
+  );
+
+  static const TextStyle labelVerySmall9 = TextStyle(
+    fontSize: sizeXxs9,
+    fontWeight: weightMedium,
+  );
+
+  static const TextStyle labelVerySmall8 = TextStyle(
+    fontSize: sizeXxs8,
+    fontWeight: weightMedium,
+  );
+
+  static const TextStyle labelVerySmall7 = TextStyle(
+    fontSize: sizeXxs7,
+    fontWeight: weightMedium,
+  );
+
+  static const TextStyle labelVerySmall6 = TextStyle(
+    fontSize: sizeXxs6,
     fontWeight: weightMedium,
   );
 
@@ -274,8 +305,5 @@ class AppTextStyles {
 
   /// Cuerpo de notificación: 12sp regular h1.4
   /// Texto principal del mensaje en el snackbar
-  static const TextStyle snackBody = TextStyle(
-    fontSize: sizeSm,
-    height: 1.4,
-  );
+  static const TextStyle snackBody = TextStyle(fontSize: sizeSm, height: 1.4);
 }

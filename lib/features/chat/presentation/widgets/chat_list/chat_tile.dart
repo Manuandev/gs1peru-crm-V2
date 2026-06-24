@@ -55,36 +55,57 @@ class ChatTile extends StatelessWidget {
 
             // ── Fila de acciones ──────────────────────────────────────
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  width: AppSizing.botonVerChat,
-                  child: CustomOutlinedButton(
-                    text: 'Ver chat',
-                    onPressed: onTap,
-                    height: AppSizing.buttonHeightSmall,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _ChipInfo(
+                      icon: AppIcons.lightning,
+                      label: 'Derivado por IA',
+                      bgColor: AppColors.datoSubestadobg,
+                      fgColor: AppColors.datoSubestadoFg,
                     ),
-                  ),
+                    const SizedBox(width: AppSpacing.xs),
+                    _ChipInfo(
+                      icon: AppIcons.ia,
+                      label: 'Bot atendió 6 mensajes',
+                      bgColor: AppColors.datoEstadoBg,
+                      fgColor: AppColors.datoEstadoFg,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                SizedBox(
-                  child: InkWell(
-                    onTap: () => LauncherUtils.abrirTelefono(chat.numero),
-                    borderRadius: BorderRadius.circular(
-                      AppSizing.radiusCircular,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xs),
-                      child: Icon(
-                        AppIcons.phone,
-                        size: AppSizing.iconMd,
-                        color: AppColors.primary,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      width: AppSizing.botonVerChat,
+                      child: CustomOutlinedButton(
+                        text: 'Ver chat',
+                        onPressed: onTap,
+                        height: AppSizing.buttonHeightSmall,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: AppSpacing.xs,
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: AppSpacing.xs),
+                    InkWell(
+                      onTap: () => LauncherUtils.abrirTelefono(chat.numero),
+                      borderRadius: BorderRadius.circular(
+                        AppSizing.radiusCircular,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        child: Icon(
+                          AppIcons.phone,
+                          size: AppSizing.iconMd,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -97,6 +118,8 @@ class ChatTile extends StatelessWidget {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Avatar con ícono del canal superpuesto (Stack — esquina inferior derecha)
+// Siempre muestra el badge; usa idCanal=1 (WhatsApp) como fallback mientras
+// el modelo no envíe el canal real.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AvatarConCanal extends StatelessWidget {
@@ -105,6 +128,8 @@ class _AvatarConCanal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final idCanal = chat.idCanal > 0 ? chat.idCanal : 1;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -119,32 +144,31 @@ class _AvatarConCanal extends StatelessWidget {
             ),
           ),
         ),
-        if (chat.idCanal > 0)
-          Positioned(
-            bottom: -2,
-            right: -2,
-            child: Container(
-              width: AppSizing.avatarCanalBadge,
-              height: AppSizing.avatarCanalBadge,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.surface,
-                border: Border.all(
-                  color: AppColors.border,
-                  width: AppSizing.canalBadgeBorder,
-                ),
+        Positioned(
+          bottom: -2,
+          right: -2,
+          child: Container(
+            width: AppSizing.avatarCanalBadge,
+            height: AppSizing.avatarCanalBadge,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surface,
+              border: Border.all(
+                color: AppColors.border,
+                width: AppSizing.canalBadgeBorder,
               ),
-              alignment: Alignment.center,
-              child: AppIconsSocial.widgetCanal(chat.idCanal, size: 14),
             ),
+            alignment: Alignment.center,
+            child: AppIconsSocial.widgetCanal(idCanal, size: 14),
           ),
+        ),
       ],
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Info central: nombre + chip canal, oportunidad, empresa, mensaje
+// Info central: nombre + chip canal, oportunidad, empresa, mensaje, chips IA
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _InfoChat extends StatelessWidget {
@@ -154,6 +178,7 @@ class _InfoChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final preview = buildMessagePreview(chat);
+    final idCanal = chat.idCanal > 0 ? chat.idCanal : 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,10 +197,8 @@ class _InfoChat extends StatelessWidget {
                 maxLines: 1,
               ),
             ),
-            if (chat.idCanal > 0) ...[
-              const SizedBox(width: AppSpacing.xs),
-              _ChipCanal(idCanal: chat.idCanal),
-            ],
+            const SizedBox(width: AppSpacing.xs),
+            _ChipCanal(idCanal: idCanal),
           ],
         ),
 
@@ -264,6 +287,13 @@ class _InfoDerecha extends StatelessWidget {
             ),
             textAlign: TextAlign.end,
           ),
+          Text(
+            'sin respuesta',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.end,
+          ),
           const SizedBox(height: AppSpacing.xxs),
           AppIconsSocial.chipEstado(
             chat.idEstadoEfectivo,
@@ -312,6 +342,53 @@ class _ChipCanal extends StatelessWidget {
           fontWeight: AppTextStyles.weightSemiBold,
           height: 1,
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chip informativo pequeño: ícono + texto con fondo de color suave
+// Usado para "Derivado por IA" y "Bot atendió N mensajes"
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChipInfo extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color bgColor;
+  final Color fgColor;
+
+  const _ChipInfo({
+    required this.icon,
+    required this.label,
+    required this.bgColor,
+    required this.fgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppSizing.radiusXs),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: AppSizing.iconSm, color: fgColor),
+          const SizedBox(width: AppSpacing.xxs),
+          Text(
+            label,
+            style: AppTextStyles.labelVerySmall8.copyWith(
+              color: fgColor,
+              height: 1,
+            ),
+          ),
+        ],
       ),
     );
   }

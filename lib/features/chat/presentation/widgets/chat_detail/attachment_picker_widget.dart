@@ -376,7 +376,7 @@ class _StagedFileChip extends StatelessWidget {
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.labelSmall.copyWith(
-                fontSize: AppTextStyles.sizeXxs,
+                fontSize: AppTextStyles.sizeXxs9,
                 fontWeight: AppTextStyles.weightBold,
                 color: colorScheme.onSurfaceVariant,
               ),

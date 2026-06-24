@@ -61,7 +61,7 @@ class HomeView extends StatelessWidget {
                       count > 99 ? '99+' : '$count',
                       style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textOnDark,
-                        fontSize: AppTextStyles.sizeXxs,
+                        fontSize: AppTextStyles.sizeXxs9,
                         fontWeight: AppTextStyles.weightBold,
                         height: 1,
                       ),

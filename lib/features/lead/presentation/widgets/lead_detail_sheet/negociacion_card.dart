@@ -5,22 +5,22 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class NegociacionCard extends StatelessWidget {
-  final NegociacionFake negociacion;
-  final VoidCallback? onGenerarSolicitud;
-  final VoidCallback? onEditarNegociacion;
+  final Lead lead;
+  final VoidCallback onEditarLead;
+  final VoidCallback onGenerarSolicitud;
 
   const NegociacionCard({
     super.key,
-    required this.negociacion,
-    this.onGenerarSolicitud,
-    this.onEditarNegociacion,
+    required this.lead,
+    required this.onEditarLead,
+    required this.onGenerarSolicitud,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -28,12 +28,113 @@ class NegociacionCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _CuerpoCard(negociacion: negociacion),
-          const Divider(color: AppColors.border, height: AppSpacing.lg),
-          _BotonesAccion(
-            onGenerarSolicitud: onGenerarSolicitud,
-            onEditarNegociacion: onEditarNegociacion,
+          // Zona superior: nombre+estado (izq) y datos del canal (der)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Zona izquierda: ícono + evento + chip estado
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _AvatarCanal(idCanal: lead.idCanal),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            lead.evento,
+                            style: AppTextStyles.labelMedium,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: AppSpacing.xxs),
+                          AppIconsSocial.chipEstado(
+                            lead.idEstado,
+                            label: lead.estado,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              // Zona derecha: filas de datos compactas
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _FilaDato(
+                      icono: AppIconsSocial.widgetCanal(
+                        lead.idCanal,
+                        size: AppSizing.iconSm,
+                      ),
+                      etiqueta: 'Canal',
+                      valor: lead.canal,
+                      colorValor: AppIconsSocial.colorCanal(lead.idCanal),
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    _FilaDato(
+                      icono: const Icon(
+                        AppIcons.moneda,
+                        size: AppSizing.iconSm,
+                        color: AppColors.textSecondary,
+                      ),
+                      etiqueta: 'Monto',
+                      valor: 'S/ ${lead.monto.toStringAsFixed(2)}',
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    _FilaDato(
+                      icono: const Icon(
+                        AppIcons.calendar,
+                        size: AppSizing.iconSm,
+                        color: AppColors.textSecondary,
+                      ),
+                      etiqueta: 'Actualizado',
+                      valor: lead.fechaHora.formatDate(AppDateFormat.shortDate),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // Botones compactos
+          Row(
+            children: [
+              Expanded(
+                child: CustomOutlinedButton(
+                  text: 'Generar solicitud',
+                  onPressed: onGenerarSolicitud,
+                  height: AppSizing.buttonHeightSmall,
+                  textStyle: AppTextStyles.buttonSmall,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xxs,
+                  ),
+                  borderColor: AppColors.border,
+                  borderWidth: AppSizing.hairline,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: CustomPrimaryButton(
+                  text: 'Editar lead',
+                  onPressed: onEditarLead,
+                  height: AppSizing.buttonHeightSmall,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xxs,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -42,74 +143,8 @@ class NegociacionCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Cuerpo: dos mitades horizontales al 50%
+// Ícono circular del canal con fondo translúcido
 // ─────────────────────────────────────────────────────────────────────────────
-
-class _CuerpoCard extends StatelessWidget {
-  final NegociacionFake negociacion;
-  const _CuerpoCard({required this.negociacion});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _MitadIzquierda(negociacion: negociacion)),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(child: _MitadDerecha(negociacion: negociacion)),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Mitad izquierda: ícono canal + info textual
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _MitadIzquierda extends StatelessWidget {
-  final NegociacionFake negociacion;
-  const _MitadIzquierda({required this.negociacion});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _AvatarCanal(idCanal: negociacion.idCanal),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                negociacion.nombre,
-                style: AppTextStyles.labelMedium,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                negociacion.empresa,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              AppIconsSocial.chipEstado(
-                negociacion.idEstado,
-                label: negociacion.estado,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Avatar circular con ícono del canal ─────────────────────────────────────
 
 class _AvatarCanal extends StatelessWidget {
   final int idCanal;
@@ -136,53 +171,17 @@ class _AvatarCanal extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Mitad derecha: canal, cantidad y última actualización
+// Fila compacta: [ícono]  etiqueta  valor
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _MitadDerecha extends StatelessWidget {
-  final NegociacionFake negociacion;
-  const _MitadDerecha({required this.negociacion});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorCanal = AppIconsSocial.colorCanal(negociacion.idCanal);
-    final nombreCanal = CanalHelper.get(negociacion.idCanal).nombre;
-    final personas = negociacion.cantidad == 1
-        ? '${negociacion.cantidad} persona'
-        : '${negociacion.cantidad} personas';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        _DatoColumna(
-          etiqueta: 'Canal',
-          valor: nombreCanal,
-          colorValor: colorCanal,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _DatoColumna(
-          etiqueta: 'Personas',
-          valor: personas,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _DatoColumna(
-          etiqueta: 'Actualizado',
-          valor: negociacion.ultimaActualizacion,
-          colorValor: AppColors.textSecondary,
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Dato con etiqueta superior y valor inferior ──────────────────────────────
-
-class _DatoColumna extends StatelessWidget {
+class _FilaDato extends StatelessWidget {
+  final Widget icono;
   final String etiqueta;
   final String valor;
   final Color? colorValor;
 
-  const _DatoColumna({
+  const _FilaDato({
+    required this.icono,
     required this.etiqueta,
     required this.valor,
     this.colorValor,
@@ -190,59 +189,31 @@ class _DatoColumna extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          etiqueta,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          valor,
-          style: AppTextStyles.labelMedium.copyWith(
-            color: colorValor ?? AppColors.textPrimary,
-            fontWeight: AppTextStyles.weightSemiBold,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Fila de botones de acción
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _BotonesAccion extends StatelessWidget {
-  final VoidCallback? onGenerarSolicitud;
-  final VoidCallback? onEditarNegociacion;
-
-  const _BotonesAccion({
-    this.onGenerarSolicitud,
-    this.onEditarNegociacion,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
+        icono,
+        const SizedBox(width: AppSpacing.xxs),
         Expanded(
-          child: CustomSecondaryButton(
-            text: 'Generar solicitud',
-            onPressed: onGenerarSolicitud ?? () {},
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: CustomPrimaryButton(
-            text: 'Editar negociación',
-            onPressed: onEditarNegociacion ?? () {},
+          child: RichText(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '$etiqueta  ',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                TextSpan(
+                  text: valor,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: colorValor ?? AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

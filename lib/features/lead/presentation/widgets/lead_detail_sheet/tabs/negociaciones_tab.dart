@@ -1,5 +1,5 @@
 // lib/features/lead/presentation/widgets/lead_detail_sheet/tabs/negociaciones_tab.dart
- 
+
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -62,7 +62,7 @@ class _NegociacionesTabState extends State<NegociacionesTab>
 enum _FiltroNeg { todas, activa, ganadas }
 
 class _ListaNegociaciones extends StatefulWidget {
-  final List<NegociacionFake> negociaciones;
+  final List<Lead> negociaciones;
   final int idNumero;
 
   const _ListaNegociaciones({
@@ -77,21 +77,17 @@ class _ListaNegociaciones extends StatefulWidget {
 class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   _FiltroNeg _filtro = _FiltroNeg.todas;
 
+  void _editarLead() {
+    context.goBack();
+    context.goToEditarLead(idNumero: widget.idNumero);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.negociaciones.isEmpty) {
       return const _EstadoVacio();
     }
 
-    // ── LÓGICA DE FILTRO ──────────────────────────────────────────────────
-    // Aquí filtra widget.negociaciones según _filtro antes de renderizar.
-    // Ejemplo cuando implementes:
-    //   final visibles = switch (_filtro) {
-    //     _FiltroNeg.todas   => widget.negociaciones,
-    //     _FiltroNeg.activa  => widget.negociaciones.where((n) => n.idEstado == X),
-    //     _FiltroNeg.ganadas => widget.negociaciones.where((n) => n.idEstado == Y),
-    //   }.toList();
-    // Por ahora muestra todo:
     final visibles = widget.negociaciones;
 
     return ListView(
@@ -102,7 +98,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
         AppSpacing.xxl,
       ),
       children: [
-        // ── Header: chips de filtro ────────────────────────────────────────
+        // ── Chips de filtro ───────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: Row(
@@ -129,26 +125,16 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
           ),
         ),
 
-        // ── Cards ──────────────────────────────────────────────────────────
+        // ── Cards ─────────────────────────────────────────────────────────────
         ...visibles.map(
-          (n) => NegociacionCard(
-            negociacion: n,
+          (lead) => NegociacionCard(
+            lead: lead,
             onGenerarSolicitud: () {},
-            onEditarNegociacion: () {
-              NavigationService.goBack();
-              NavigationService.navigateTo(
-                AppRoutes.detalleEditarLead,
-                arguments: {
-                  'idNumero': widget.idNumero,
-                  'lead': null,
-                  'cubit': null,
-                },
-              );
-            },
+            onEditarLead: _editarLead,
           ),
         ),
 
-        // ── Info banner ────────────────────────────────────────────────────
+        // ── Info banner ───────────────────────────────────────────────────────
         Container(
           padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(

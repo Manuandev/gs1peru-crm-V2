@@ -1,30 +1,7 @@
 // lib/features/lead/presentation/cubit/negociaciones/negociaciones_state.dart
 
 import 'package:app_crm/index_dependencies.dart';
-
-enum AccionNegociacion { seleccionada, verPropuesta, generarSolicitud }
-
-class NegociacionFake {
-  final String nombre;
-  final String empresa;
-  final int idCanal;
-  final int cantidad;
-  final String ultimaActualizacion;
-  final String idEstado;
-  final String estado;
-  final AccionNegociacion accion;
-
-  const NegociacionFake({
-    required this.nombre,
-    required this.empresa,
-    required this.idCanal,
-    required this.cantidad,
-    required this.ultimaActualizacion,
-    required this.idEstado,
-    required this.estado,
-    required this.accion,
-  });
-}
+import 'package:app_crm/features/lead/domain/entities/lead.dart';
 
 sealed class NegociacionesState extends Equatable {
   const NegociacionesState();
@@ -42,7 +19,7 @@ class NegociacionesLoading extends NegociacionesState {
 }
 
 class NegociacionesSuccess extends NegociacionesState {
-  final List<NegociacionFake> negociaciones;
+  final List<Lead> negociaciones;
 
   const NegociacionesSuccess({required this.negociaciones});
 

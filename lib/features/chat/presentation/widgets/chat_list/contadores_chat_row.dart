@@ -27,7 +27,9 @@ class ContadoresChatRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -48,7 +50,7 @@ class ContadoresChatRow extends StatelessWidget {
             ),
             _Separador(color: colorScheme.outlineVariant),
             _ContadorItem(
-              icon: AppIcons.fileOutlined,
+              icon: AppIcons.fileWord,
               iconColor: AppIconsSocial.colorEstado('02'),
               cantidad: contadores.conPropuesta,
               titulo: 'Con propuesta',
@@ -89,7 +91,11 @@ class _ContadorItem extends StatelessWidget {
         children: [
           icon is IconData
               ? Icon(icon as IconData, color: iconColor, size: AppSizing.iconMd)
-              : FaIcon(icon as FaIconData, color: iconColor, size: AppSizing.iconActionSm),
+              : FaIcon(
+                  icon as FaIconData,
+                  color: iconColor,
+                  size: AppSizing.iconActionSm,
+                ),
           const SizedBox(height: AppSpacing.xxs),
           Text(
             '$cantidad',
@@ -102,7 +108,8 @@ class _ContadorItem extends StatelessWidget {
           Text(
             titulo,
             style: AppTextStyles.labelSmall.copyWith(
-              fontSize: AppTextStyles.sizeXs, // 11px — garantiza que los labels más largos quepan en 2 líneas
+              fontSize: AppTextStyles
+                  .sizeXs, // 11px — garantiza que los labels más largos quepan en 2 líneas
               color: iconColor.withValues(alpha: AppColors.opacityIconMuted),
               fontWeight: AppTextStyles.weightSemiBold,
             ),

@@ -64,6 +64,39 @@ class ChatDetailAppBar extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.xxs),
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: AppSpacing.xs),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandForest,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  if (true) ...[
+                    Text(
+                      'Derivado IA • ',
+                      style: AppTextStyles.labelVerySmall8.copyWith(
+                        color: colorScheme.onPrimary.withValues(
+                          alpha: AppColors.opacityOnPrimarySubtle,
+                        ),
+                      ),
+                    ),
+                  ],
+                  Text(
+                    'Ultima respuesta hace 2 min',
+                    style: AppTextStyles.labelVerySmall8.copyWith(
+                      color: colorScheme.onPrimary.withValues(
+                        alpha: AppColors.opacityOnPrimarySubtle,
+                      ),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ],
           ),
         ),

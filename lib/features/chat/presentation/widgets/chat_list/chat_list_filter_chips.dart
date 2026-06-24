@@ -37,7 +37,6 @@ class ChatListFilterChips extends StatelessWidget {
         child: Row(
           children: chips.map((chip) {
             final isSelected = filtroActual == chip.filtro;
-            final count = conteos[chip.filtro] ?? 0;
 
             return Padding(
               padding: const EdgeInsets.only(right: AppSpacing.sm),
@@ -76,6 +75,18 @@ class ChatListFilterChips extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (_mostrarBadge(chip.filtro))
+                        Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(right: AppSpacing.xs),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.white(0.6)
+                                : _badgeColor(chip.filtro),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       Text(
                         chip.label,
                         style: TextStyle(
@@ -86,42 +97,6 @@ class ChatListFilterChips extends StatelessWidget {
                               : colorScheme.onSurface,
                         ),
                       ),
-                      if (count > 0) ...[
-                        const SizedBox(width: AppSpacing.chipGap),
-                        // Badge circular con tamaño mínimo garantizado
-                        Container(
-                          constraints: const BoxConstraints(
-                            minWidth: AppSizing.mensajesBadgeSize,
-                            minHeight: AppSizing.mensajesBadgeSize,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.chipGap,
-                            vertical: AppSpacing.xxs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.white(0.35)
-                                : _badgeColor(chip.filtro),
-                            shape: count < 10
-                                ? BoxShape
-                                      .circle // perfecto círculo para 1 dígito
-                                : BoxShape.rectangle,
-                            borderRadius: count >= 10
-                                ? BorderRadius.circular(AppSizing.radiusCircular)
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '$count',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                fontWeight: AppTextStyles.weightBold,
-                                color: AppColors.textOnDark,
-                                height: 1,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -133,13 +108,21 @@ class ChatListFilterChips extends StatelessWidget {
     );
   }
 
+  bool _mostrarBadge(ChatListFiltro filtro) {
+    return switch (filtro) {
+      ChatListFiltro.todos => false,
+      ChatListFiltro.sinResponder => false,
+      _ => true,
+    };
+  }
+
   Color _badgeColor(ChatListFiltro filtro) {
     return switch (filtro) {
-      ChatListFiltro.sinResponder => AppColors.error,
-      ChatListFiltro.enDesarrollo => AppColors.warning,
-      ChatListFiltro.conPropuesta => AppColors.success,
-      ChatListFiltro.enCobranza  => AppColors.secondary,
-      ChatListFiltro.todos       => AppColors.primary,
+      ChatListFiltro.sinResponder => AppColors.secondary,
+      ChatListFiltro.enDesarrollo => AppColors.success,
+      ChatListFiltro.conPropuesta => AppColors.info,
+      ChatListFiltro.enCobranza => AppColors.secondary,
+      ChatListFiltro.todos => AppColors.secondary,
     };
   }
 }

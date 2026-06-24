@@ -103,7 +103,7 @@ class ChatTile extends StatelessWidget {
                         ),
                       ),
                       child: InkWell(
-                        onTap: () => LauncherUtils.abrirTelefono(chat.numero),
+                        onTap: () => LauncherUtils.abrirTelefono('${chat.prefijoPais} ${chat.numero}'),
                         borderRadius: BorderRadius.circular(
                           AppSizing.radiusCircular,
                         ),
@@ -192,7 +192,7 @@ class _InfoChat extends StatelessWidget {
     final preview = buildMessagePreview(chat);
     final idCanal = chat.idCanal > 0 ? chat.idCanal : 1;
 
-    return Column(
+    return Column( 
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Nombre + chip canal
@@ -219,8 +219,9 @@ class _InfoChat extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxs),
           Text(
             chat.nombreOportunidad,
-            style: AppTextStyles.labelMedium.copyWith(
+            style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
+              fontWeight: AppTextStyles.weightBold,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -285,42 +286,63 @@ class _InfoDerecha extends StatelessWidget {
     final elapsed = ahora.difference(fechaUltimoMensaje);
     final colorTiempo = ElapsedTimeUtils.colorFromElapsed(elapsed);
 
-    return SizedBox(
-      width: AppSizing.anchoChatDerecha,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            ElapsedTimeUtils.formatHyM(elapsed),
-            style: AppTextStyles.labelMedium.copyWith(
-              color: colorTiempo,
-              fontWeight: AppTextStyles.weightBold,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Columna 1: tiempo transcurrido
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              ElapsedTimeUtils.formatHyM(elapsed),
+              style: AppTextStyles.labelMedium.copyWith(
+                color: colorTiempo,
+                fontWeight: AppTextStyles.weightBold,
+              ),
+              textAlign: TextAlign.end,
             ),
-            textAlign: TextAlign.end,
-          ),
-          Text(
-            'sin respuesta',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
+            const SizedBox(width: AppSpacing.xxs),
+
+            Text(
+              ElapsedTimeUtils.formatHyM(elapsed),
+              style: AppTextStyles.labelMedium.copyWith(
+                color: colorTiempo,
+                fontWeight: AppTextStyles.weightBold,
+              ),
+              textAlign: TextAlign.start,
             ),
-            textAlign: TextAlign.end,
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          AppIconsSocial.chipEstado(
-            chat.idEstadoEfectivo,
-            label: chat.descEstadoEfectiva,
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            chat.fechaHora.formatDate(AppDateFormat.hourMinute),
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
+            Text(
+              'sin respuesta',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.end,
             ),
-            textAlign: TextAlign.end,
-          ),
-        ],
-      ),
+          ],
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        // Columna 2: estado + hora del mensaje
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIconsSocial.chipEstado(
+              chat.idEstadoEfectivo,
+              label: chat.descEstadoEfectiva,
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              chat.fechaHora.formatDate(AppDateFormat.hourMinute),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.end,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

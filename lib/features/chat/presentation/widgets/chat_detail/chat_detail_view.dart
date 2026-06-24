@@ -115,7 +115,6 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       ),
       drawerSide: DrawerSide.none,
       footer: const SizedBox.shrink(),
-      // 👇 botón back
       appBarLeadingButtons: [
         IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -123,63 +122,44 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         ),
       ],
 
-      // 👇 estrella + 3 puntos
       appBarTrailingButtons: [
-        BlocBuilder<InfoLeadCubit, InfoLeadState>(
-          buildWhen: (prev, curr) {
-            if (curr is! InfoLeadSuccess) return false;
-            if (prev is! InfoLeadSuccess) return true;
-            return (prev).infoLead.isFavorito != (curr).infoLead.isFavorito;
-          },
-          builder: (context, state) {
-            final favorito = state is InfoLeadSuccess
-                ? state.infoLead.isFavorito
-                : false;
-            return IconButton(
-              icon: Icon(
-                favorito ? Icons.star_rounded : Icons.star_border_rounded,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              onPressed: state is InfoLeadSuccess
-                  ? () =>
-                        context.read<InfoLeadCubit>().updateFavorito(!favorito)
-                  : null,
-            );
-          },
+        IconButton(
+          icon: const Icon(AppIcons.phone, color: AppColors.background),
+          onPressed: () => LauncherUtils.abrirTelefono(
+            '${widget.conversacion!.prefijoPais} ${widget.conversacion!.numero}',
+          ),
         ),
       ],
 
-      // 👇 3 puntos via appBarPopupItems
       appBarPopupItems: [
         AppBarPopupItem(
-          value: 'bloquear',
-          icon: Icons.block,
-          label: 'Bloquear',
+          value: 'datos',
+          icon: Icons.assignment_outlined,
+          label: 'Datos',
+          subtitle: 'Información del lead',
+          showDividerAfter: false,
         ),
         AppBarPopupItem(
-          value: 'editarLead',
-          icon: Icons.edit,
-          label: 'Editar lead',
+          value: 'negociaciones',
+          icon: Icons.handshake_outlined,
+          label: 'Negociaciones',
+          subtitle: 'Gestiona sus negociaciones',
+        ),
+        AppBarPopupItem(
+          value: 'historial',
+          icon: Icons.history_outlined,
+          label: 'Historial',
+          subtitle: 'Actividades y mensajes',
         ),
       ],
       onPopupSelected: (value) {
         switch (value) {
-          case 'bloquear':
+          case 'datos':
             // acción bloquear
             break;
-          case 'editarLead':
-            final infoLead =
-                context.read<InfoLeadCubit>().state is InfoLeadSuccess
-                ? (context.read<InfoLeadCubit>().state as InfoLeadSuccess)
-                      .infoLead
-                : null;
-            if (infoLead != null) {
-              context.goToEditarLead(
-                lead: infoLead,
-                cubit: context.read<InfoLeadCubit>(),
-              );
-            }
-
+          case 'negociaciones':
+            break;
+          case 'historial':
             break;
         }
       },
@@ -350,22 +330,24 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             ),
           ),
 
-          BlocBuilder<InfoLeadCubit, InfoLeadState>(
-            buildWhen: (prev, curr) => curr is InfoLeadSuccess,
-            builder: (context, state) => state is InfoLeadSuccess
-                ? ChatDetailDatosLead(infoLead: state.infoLead)
-                : const SizedBox.shrink(),
-          ),
-
+          // BlocBuilder<InfoLeadCubit, InfoLeadState>(
+          //   buildWhen: (prev, curr) => curr is InfoLeadSuccess,
+          //   builder: (context, state) => state is InfoLeadSuccess
+          //       ? ChatDetailDatosLead(infoLead: state.infoLead)
+          //       : const SizedBox.shrink(),
+          // ),
           BlocBuilder<ChatDetailBloc, ChatDetailState>(
             buildWhen: (prev, curr) {
               // Solo reconstruir cuando pasa de "activo" (Success o LoadingMore) a "inactivo" o viceversa
-              final prevActivo = prev is ChatDetailSuccess || prev is ChatDetailLoadingMore;
-              final currActivo = curr is ChatDetailSuccess || curr is ChatDetailLoadingMore;
+              final prevActivo =
+                  prev is ChatDetailSuccess || prev is ChatDetailLoadingMore;
+              final currActivo =
+                  curr is ChatDetailSuccess || curr is ChatDetailLoadingMore;
               return prevActivo != currActivo;
             },
             builder: (context, state) {
-              final activo = state is ChatDetailSuccess || state is ChatDetailLoadingMore;
+              final activo =
+                  state is ChatDetailSuccess || state is ChatDetailLoadingMore;
               if (!activo) return const SizedBox.shrink();
               return ChatInputBar(audioController: _audioController);
             },

@@ -52,6 +52,9 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   /// Requerido cuando [notificationCount] no es null.
   final VoidCallback? onNotification;
 
+  // En el widget, agrega el parámetro:
+  final VoidCallback? onTapTitle;
+
   const CustomAppBar({
     super.key,
     this.title,
@@ -66,6 +69,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.onSearch,
     this.notificationCount,
     this.onNotification,
+    this.onTapTitle,
   }) : assert(
          title != null || titleWidget != null,
          'CustomAppBar necesita title o titleWidget',
@@ -78,7 +82,8 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   State<CustomAppBar> createState() => _CustomAppBarState();
 }
 
-class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMixin {
+class _CustomAppBarState extends State<CustomAppBar>
+    with TickerProviderStateMixin {
   bool _isSearching = false;
   final _searchController = TextEditingController();
 
@@ -99,9 +104,10 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
       duration: const Duration(milliseconds: 1600),
       vsync: this,
     );
-    _pulseScaleAnim = Tween<double>(begin: 0.8, end: 1.7).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeOut),
-    );
+    _pulseScaleAnim = Tween<double>(
+      begin: 0.8,
+      end: 1.7,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeOut));
     _pulseOpacityAnim = Tween<double>(
       begin: AppColors.opacitySubtle,
       end: 0.0,
@@ -111,9 +117,10 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _menuRotAnim = Tween<double>(begin: 0.0, end: 0.25).animate(
-      CurvedAnimation(parent: _menuCtrl, curve: Curves.easeInOut),
-    );
+    _menuRotAnim = Tween<double>(
+      begin: 0.0,
+      end: 0.25,
+    ).animate(CurvedAnimation(parent: _menuCtrl, curve: Curves.easeInOut));
 
     if ((widget.notificationCount ?? 0) > 0) {
       _pulseCtrl.repeat();
@@ -155,10 +162,13 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
     return AppBar(
       backgroundColor: widget.backgroundColor ?? colorScheme.primary,
       foregroundColor: colorScheme.onPrimary,
-      elevation: widget.showElevation ? AppSizing.elevationMedium : AppSizing.elevationNone,
+      elevation: widget.showElevation
+          ? AppSizing.elevationMedium
+          : AppSizing.elevationNone,
       centerTitle: false,
       automaticallyImplyLeading: widget.drawerSide == DrawerSide.left,
       leading: _isSearching ? _buildBackButton() : _buildLeading(context),
+      titleSpacing: 0,
 
       title: _isSearching
           ? Container(
@@ -180,7 +190,9 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
                       decoration: InputDecoration(
                         hintText: 'Buscar...',
                         hintStyle: AppTextStyles.bodyLarge.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: AppColors.opacityHint),
+                          color: colorScheme.onSurface.withValues(
+                            alpha: AppColors.opacityHint,
+                          ),
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -205,11 +217,15 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
                           widget.onSearch?.call('');
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                          ),
                           child: Icon(
                             AppIcons.close,
                             size: AppSizing.iconActionSm,
-                            color: colorScheme.onSurface.withValues(alpha: AppColors.opacityHint),
+                            color: colorScheme.onSurface.withValues(
+                              alpha: AppColors.opacityHint,
+                            ),
                           ),
                         ),
                       );
@@ -218,11 +234,17 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
                 ],
               ),
             )
-          : widget.titleWidget ??
-              Text(
-                widget.title!,
-                style: AppTextStyles.titleLarge.copyWith(color: colorScheme.onPrimary),
-              ),
+          : GestureDetector(
+              onTap: widget.onTapTitle, // si es null, no hace nada
+              child:
+                  widget.titleWidget ??
+                  Text(
+                    widget.title!,
+                    style: AppTextStyles.titleLarge.copyWith(
+                      color: colorScheme.onPrimary,
+                    ),
+                  ),
+            ),
 
       actions: _isSearching ? null : _buildActions(context),
     );
@@ -304,10 +326,15 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
       style: ButtonStyle(
         overlayColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.pressed)) {
-            return colorScheme.onPrimary.withValues(alpha: AppColors.opacityPressedOnDark);
+            return colorScheme.onPrimary.withValues(
+              alpha: AppColors.opacityPressedOnDark,
+            );
           }
-          if (states.contains(WidgetState.hovered) || states.contains(WidgetState.focused)) {
-            return colorScheme.onPrimary.withValues(alpha: AppColors.opacityActiveItem);
+          if (states.contains(WidgetState.hovered) ||
+              states.contains(WidgetState.focused)) {
+            return colorScheme.onPrimary.withValues(
+              alpha: AppColors.opacityActiveItem,
+            );
           }
           return null;
         }),
@@ -363,11 +390,15 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
               top: -AppSpacing.xs,
               child: Container(
                 height: AppSizing.notifBadgeSize,
-                constraints: const BoxConstraints(minWidth: AppSizing.notifBadgeSize),
+                constraints: const BoxConstraints(
+                  minWidth: AppSizing.notifBadgeSize,
+                ),
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
                 decoration: const BoxDecoration(
                   color: AppColors.error,
-                  borderRadius: BorderRadius.all(Radius.circular(AppSizing.radiusCircular)),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(AppSizing.radiusCircular),
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -405,7 +436,11 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: RotationTransition(
           turns: _menuRotAnim,
-          child: Icon(AppIcons.more, color: colorScheme.onPrimary, size: AppSizing.iconMd),
+          child: Icon(
+            AppIcons.more,
+            color: colorScheme.onPrimary,
+            size: AppSizing.iconMd,
+          ),
         ),
       ),
       itemBuilder: (context) {
@@ -416,9 +451,32 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
               value: item.value,
               child: Row(
                 children: [
-                  Icon(item.icon, size: AppSizing.iconNav, color: colorScheme.primary),
+                  Icon(
+                    item.icon,
+                    size: AppSizing.iconNav,
+                    color: colorScheme.primary,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
-                  Text(item.label, style: AppTextStyles.bodyMedium),
+                  if (item.subtitle != null)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(item.label, style: AppTextStyles.bodyMedium),
+                          Text(
+                            item.subtitle!,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: AppColors.opacityHint,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Text(item.label, style: AppTextStyles.bodyMedium),
                 ],
               ),
             ),

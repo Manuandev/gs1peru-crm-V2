@@ -74,12 +74,14 @@ class AppBarPopupItem {
   final String value;
   final dynamic icon;
   final String label;
+  final String? subtitle;  
   final bool showDividerAfter;
 
   const AppBarPopupItem({
     required this.value,
     required this.icon,
     required this.label,
+    this.subtitle,
     this.showDividerAfter = false,
   });
 }

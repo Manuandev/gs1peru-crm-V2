@@ -48,9 +48,17 @@ class CustomOutlinedButton extends StatelessWidget {
   final Color? borderColor;
   final Color? textColor;
 
+  /// Estilo de texto personalizado. Null = usa [AppTextStyles.buttonSecondary].
+  /// Útil para botones compactos que necesitan letra más pequeña.
+  final TextStyle? textStyle;
+
   /// Padding interno del botón. Null = usa el default estándar (buttonPaddingH/V).
   /// Útil para botones compactos dentro de tiles o tarjetas.
   final EdgeInsetsGeometry? contentPadding;
+
+  /// Grosor del borde. Null = usa [AppSizing.borderFocusWidth] (2dp).
+  /// Útil para variantes compactas que requieren línea más delgada.
+  final double? borderWidth;
 
   const CustomOutlinedButton({
     super.key,
@@ -63,7 +71,9 @@ class CustomOutlinedButton extends StatelessWidget {
     this.height,
     this.borderColor,
     this.textColor,
+    this.textStyle,
     this.contentPadding,
+    this.borderWidth,
   });
 
   @override
@@ -89,7 +99,7 @@ class CustomOutlinedButton extends StatelessWidget {
         onPressed: enabled ? onPressed : null,
         style: OutlinedButton.styleFrom(
           foregroundColor: effectiveTextColor,
-          side: BorderSide(color: effectiveBorderColor, width: AppSizing.borderFocusWidth),
+          side: BorderSide(color: effectiveBorderColor, width: borderWidth ?? AppSizing.borderFocusWidth),
           padding: contentPadding ?? const EdgeInsets.symmetric(
             horizontal: AppSpacing.buttonPaddingHorizontal,
             vertical: AppSpacing.buttonPaddingVertical,
@@ -118,7 +128,7 @@ class CustomOutlinedButton extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     text,
-                    style: AppTextStyles.buttonSecondary.copyWith(
+                    style: (textStyle ?? AppTextStyles.buttonSecondary).copyWith(
                       color: effectiveTextColor,
                     ),
                   ),
@@ -126,7 +136,7 @@ class CustomOutlinedButton extends StatelessWidget {
               )
             : Text(
                 text,
-                style: AppTextStyles.buttonSecondary.copyWith(
+                style: (textStyle ?? AppTextStyles.buttonSecondary).copyWith(
                   color: effectiveTextColor,
                 ),
               ),

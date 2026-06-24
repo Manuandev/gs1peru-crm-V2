@@ -83,25 +83,37 @@ class ChatTile extends StatelessWidget {
                       child: CustomOutlinedButton(
                         text: 'Ver chat',
                         onPressed: onTap,
-                        height: AppSizing.buttonHeightSmall,
+                        textStyle: AppTextStyles.buttonSmall,
+                        height: AppSizing.buttonHeightCompact,
+                        borderColor: AppColors.border,
+                        borderWidth: AppSizing.hairline,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.xs,
-                          vertical: AppSpacing.xs,
+                          vertical: AppSpacing.xxs,
                         ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    InkWell(
-                      onTap: () => LauncherUtils.abrirTelefono(chat.numero),
-                      borderRadius: BorderRadius.circular(
-                        AppSizing.radiusCircular,
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.border,
+                          width: AppSizing.hairline,
+                        ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.xs),
-                        child: Icon(
-                          AppIcons.phone,
-                          size: AppSizing.iconMd,
-                          color: AppColors.primary,
+                      child: InkWell(
+                        onTap: () => LauncherUtils.abrirTelefono(chat.numero),
+                        borderRadius: BorderRadius.circular(
+                          AppSizing.radiusCircular,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xs),
+                          child: Icon(
+                            AppIcons.phone,
+                            size: AppSizing.iconActionSm,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),

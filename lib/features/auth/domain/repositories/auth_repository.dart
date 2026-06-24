@@ -26,5 +26,5 @@ abstract class AuthRepository {
   Future<void> logout();
 
   /// Solicita recuperación de clave enviando credenciales al correo registrado.
-  Future<void> recuperarClave(String correo);
+  Future<CrudResult> recuperarClave(String correo);
 }

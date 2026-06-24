@@ -2,10 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/features/auth/domain/repositories/auth_repository.dart';
-import 'package:app_crm/features/auth/domain/usecases/recuperar_clave_usecase.dart';
-import 'package:app_crm/features/auth/presentation/bloc/recuperar_clave/recuperar_clave_cubit.dart';
-import 'package:app_crm/features/auth/presentation/widgets/recuperar_clave/recuperar_clave_view.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 
 class RecuperarClavePage extends StatelessWidget {
   const RecuperarClavePage({super.key});
@@ -13,7 +10,7 @@ class RecuperarClavePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => RecuperarClaveCubit(
+      create: (_) => RecuperarClaveBloc(
         RecuperarClaveUseCase(context.read<AuthRepository>()),
       ),
       child: const RecuperarClaveView(),

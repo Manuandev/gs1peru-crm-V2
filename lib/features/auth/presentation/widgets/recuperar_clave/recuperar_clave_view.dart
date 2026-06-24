@@ -1,14 +1,11 @@
 // lib/features/auth/presentation/widgets/recuperar_clave/recuperar_clave_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/features/auth/presentation/bloc/recuperar_clave/recuperar_clave_cubit.dart';
-import 'package:app_crm/features/auth/presentation/bloc/recuperar_clave/recuperar_clave_state.dart';
-import 'package:app_crm/features/auth/presentation/widgets/login/login_divisor_widget.dart';
-import 'package:app_crm/features/auth/presentation/widgets/login/login_ola_clipper.dart';
-import 'recuperar_clave_ilustracion_widget.dart';
+import 'package:app_crm/features/auth/index_auth.dart';
 
 /// RecuperarClaveView — pantalla "Olvidé mi clave".
 ///
@@ -35,7 +32,7 @@ class _RecuperarClaveViewState extends State<RecuperarClaveView> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.primary,
-      body: BlocConsumer<RecuperarClaveCubit, RecuperarClaveState>(
+      body: BlocConsumer<RecuperarClaveBloc, RecuperarClaveState>(
         listener: (context, state) {
           if (state is RecuperarClaveExito) {
             AppSnackBar.success(
@@ -68,8 +65,8 @@ class _RecuperarClaveViewState extends State<RecuperarClaveView> {
                         correoController: _correoController,
                         estaCargando: estaCargando,
                         onEnviar: () => context
-                            .read<RecuperarClaveCubit>()
-                            .enviarCorreo(_correoController.text),
+                            .read<RecuperarClaveBloc>()
+                            .add(RecuperarClaveSubmitted(_correoController.text)),
                       ),
                     ),
                   ),

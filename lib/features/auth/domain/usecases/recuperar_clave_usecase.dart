@@ -1,5 +1,6 @@
 // lib/features/auth/domain/usecases/recuperar_clave_usecase.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
 class RecuperarClaveUseCase {
@@ -7,5 +8,5 @@ class RecuperarClaveUseCase {
 
   const RecuperarClaveUseCase(this._repository);
 
-  Future<void> call(String correo) => _repository.recuperarClave(correo);
+  Future<CrudResult> call(String correo) => _repository.recuperarClave(correo);
 }

@@ -47,7 +47,7 @@ class DashboardCard extends StatelessWidget {
             Container(
               width: double.infinity,
               constraints: const BoxConstraints(
-                minHeight: AppSizing.dashCardHeight,
+                minHeight: AppSizing.dashListCardHeight,
               ),
               decoration: BoxDecoration(
                 color: color,
@@ -60,27 +60,27 @@ class DashboardCard extends StatelessWidget {
                   ),
                 ],
               ),
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.sm2),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // ── ÍCONO centrado ──────────────────────────────
-                  Center(
-                    child: icon is IconData
-                        ? Icon(
-                            icon as IconData,
-                            color: textColor,
-                            size: AppSizing.iconXl,
-                          )
-                        : FaIcon(
-                            icon as FaIconData,
-                            color: textColor,
-                            size: AppSizing.iconLg,
-                          ),
+                  Row(
+                    children: [
+                      icon is IconData
+                          ? Icon(
+                              icon as IconData,
+                              color: textColor,
+                              size: AppSizing.iconLg,
+                            )
+                          : FaIcon(
+                              icon as FaIconData,
+                              color: textColor,
+                              size: AppSizing.iconLg,
+                            ),
+                    ],
                   ),
 
-                  const SizedBox(height: AppSpacing.sm),
+                  const SizedBox(height: AppSpacing.xs),
 
                   // ── NOMBRE + FLECHA ─────────────────────────────
                   Row(
@@ -93,7 +93,7 @@ class DashboardCard extends StatelessWidget {
                           children: [
                             Text(
                               label,
-                              style: AppTextStyles.titleSmall.copyWith(
+                              style: AppTextStyles.titleSmall2.copyWith(
                                 color: textColor,
                                 fontWeight: AppTextStyles.weightBold,
                               ),
@@ -104,7 +104,7 @@ class DashboardCard extends StatelessWidget {
                               const SizedBox(height: AppSpacing.xxs),
                               Text(
                                 descripcion!,
-                                style: AppTextStyles.bodySmall.copyWith(
+                                style: AppTextStyles.labelVerySmall8.copyWith(
                                   color: textColor.withValues(
                                     alpha: AppColors.opacityOnPrimarySubtle,
                                   ),
@@ -116,6 +116,12 @@ class DashboardCard extends StatelessWidget {
                           ],
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
                       Icon(
                         AppIcons.forward,
                         color: textColor.withValues(

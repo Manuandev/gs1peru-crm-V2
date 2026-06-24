@@ -33,9 +33,6 @@ class HomePortrait extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header azul con saludo ─────────────────────────────
-          _HomeHeader(state: state),
-
           // ── Contenido con padding estándar ────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -50,7 +47,6 @@ class HomePortrait extends StatelessWidget {
 
                 // ── Grid de módulos ──────────────────────────────
                 HomeMenuCards(state: state),
-                const SizedBox(height: AppSpacing.md),
 
                 // ── Prioridad ahora ──────────────────────────────
                 Row(
@@ -65,7 +61,7 @@ class HomePortrait extends StatelessWidget {
                     CustomTextButton(text: 'Ver todas', onPressed: () {}),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xxs),
+
                 Text(
                   'Casos sin respuesta o con seguimiento vencido',
                   style: AppTextStyles.bodySmall.copyWith(
@@ -74,7 +70,6 @@ class HomePortrait extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 PrioridadSectionHome(prioridades: state.prioridades),
-                const SizedBox(height: AppSpacing.md),
 
                 // ── Sección inferior condicional ─────────────────
                 BlocBuilder<FiltroCubit, FiltroState>(
@@ -115,58 +110,6 @@ class HomePortrait extends StatelessWidget {
 
                 const SizedBox(height: AppSpacing.lg),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Header azul del home ──────────────────────────────────────────────────────
-
-class _HomeHeader extends StatelessWidget {
-  final HomeLoaded state;
-
-  const _HomeHeader({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final primerNombre = state.usuario.userApe.split(' ').first;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(AppSizing.homeHeaderBottomRadius),
-          bottomRight: Radius.circular(AppSizing.homeHeaderBottomRadius),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.xl,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Hola, $primerNombre 👋',
-            style: AppTextStyles.titleLarge.copyWith(
-              color: AppColors.textOnDark,
-              fontWeight: AppTextStyles.weightBold,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            'Gestiona tus leads y conversaciones',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textOnDark.withValues(
-                alpha: AppColors.opacityOnPrimarySubtle,
-              ),
             ),
           ),
         ],

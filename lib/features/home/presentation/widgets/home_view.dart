@@ -14,18 +14,32 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       onLogout: () => context.logoutWithConfirmation(context),
-      titleWidget: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SvgPicture.asset(AppImages.logoGs1PeruBlanco, height: AppSizing.iconLg),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            'CRM Perú',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: AppColors.textOnDark,
-            ),
-          ),
-        ],
+      titleWidget: BlocBuilder<HomeBloc, HomeState>(
+        builder: (context, state) {
+          if (state is! HomeLoaded) return const SizedBox.shrink();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hola, ${state.usuario.userApe.split(" ").first} 👋',
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: AppColors.textOnDark,
+                  fontWeight: AppTextStyles.weightBold,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                'Gestiona tus leads y conversaciones',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textOnDark.withValues(
+                    alpha: AppColors.opacityOnPrimarySubtle,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
@@ -83,8 +97,9 @@ class HomeView extends StatelessWidget {
         onRefresh: () async {
           final bloc = context.read<HomeBloc>();
           bloc.add(HomeRefresh());
-          await bloc.stream
-              .firstWhere((s) => s is HomeLoaded || s is HomeError);
+          await bloc.stream.firstWhere(
+            (s) => s is HomeLoaded || s is HomeError,
+          );
         },
         child: BlocBuilder<HomeBloc, HomeState>(
           builder: (context, state) {
@@ -110,4 +125,3 @@ class HomeView extends StatelessWidget {
     );
   }
 }
-

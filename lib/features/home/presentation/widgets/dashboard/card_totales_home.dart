@@ -1,5 +1,6 @@
 // lib/features/home/presentation/widgets/dashboard/card_totales_home.dart
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
@@ -36,7 +37,10 @@ class CardTotalesHome extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                CustomTextButton(text: 'Ver detalle', onPressed: () {}),
+                CustomTextButton(
+                  text: 'Ver detalle',
+                  onPressed: () => context.goToSeguimiento(),
+                ),
               ],
             ),
           ),

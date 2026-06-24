@@ -81,9 +81,7 @@ class _BarraNavegacion extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.border),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Row(
         children: [
@@ -106,12 +104,12 @@ class _BarraNavegacion extends StatelessWidget {
             activo: indiceActivo == 2,
             alTap: () => alSeleccionar(2),
           ),
-          _ItemNav(
-            icono: AppIcons.email,
-            etiqueta: 'Solicitudes',
-            activo: indiceActivo == 3,
-            alTap: () => alSeleccionar(3),
-          ),
+          // _ItemNav(
+          //   icono: AppIcons.email,
+          //   etiqueta: 'Solicitudes',
+          //   activo: indiceActivo == 3,
+          //   alTap: () => alSeleccionar(3),
+          // ),
           _ItemNav(
             icono: AppIcons.moneda,
             etiqueta: 'Cobranza',

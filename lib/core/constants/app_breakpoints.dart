@@ -144,6 +144,9 @@ class AppSizing {
   /// Ligeramente más pequeño que iconMd para equilibrio visual en listas.
   static const double iconNav = 22.0;
 
+  
+  static const double iconNav2 = 26.0;
+
   /// Ícono grande: 32px — iconos en headers y estados vacíos
   static const double iconLg = 32.0;
 
@@ -501,7 +504,10 @@ class AppSizing {
   // DASHBOARD HOME — Tarjetas de módulos
   // ============================================================
 
-  /// Altura mínima de cada tarjeta de módulo en el dashboard del home: 140dp
+  /// Altura de la tarjeta de estadística de lista de leads: 130dp
+  static const double dashListCardHeight = 120.0;
+
+  /// Altura de la tarjeta de estadística del home (contactos, empresas, documentos): 140dp
   static const double dashCardHeight = 140.0;
 
   /// Radio del bottom del header del home (transición azul → blanco): 28dp

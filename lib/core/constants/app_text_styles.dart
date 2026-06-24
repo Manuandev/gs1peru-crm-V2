@@ -125,6 +125,12 @@ class AppTextStyles {
     fontWeight: weightSemiBold,
   );
 
+
+  static const TextStyle titleSmall2 = TextStyle(
+    fontSize: sizeXs,
+    fontWeight: weightSemiBold,
+  );
+
   // --- Body ---
   static const TextStyle bodyLarge = TextStyle(
     fontSize: sizeLg,

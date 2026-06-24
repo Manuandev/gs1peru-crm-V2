@@ -18,7 +18,7 @@ class HomeMenuCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
-      mobile: (context) => _FlexCards(state: state, itemsRow: 2),
+      mobile: (context) => _FlexCards(state: state, itemsRow: 3),
       tablet: (context) => _FlexCards(state: state, itemsRow: 3),
       desktop: (context) => _FlexCards(state: state, itemsRow: 4),
     );
@@ -40,7 +40,9 @@ class _FlexCards extends StatelessWidget {
     );
 
     // Excluir Inicio y Contactos — el dashboard muestra solo los 4 módulos operativos
-    final dashItems = items.where((i) => i.id != AppRoutes.home).toList();
+    final dashItems = items
+        .where((i) => i.id != AppRoutes.home && i.id != AppRoutes.solicitudes)
+        .toList();
 
     final List<List<DrawerItemModel>> rows = [];
     for (int i = 0; i < dashItems.length; i += itemsRow) {

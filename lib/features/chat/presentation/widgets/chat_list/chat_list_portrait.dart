@@ -15,18 +15,14 @@ class ChatListPortrait extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: state.chats.length,
+      itemCount: state.conversaciones.length,
       itemBuilder: (context, index) {
-        final chat = state.chats[index];
+        final chat = state.conversaciones[index];
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: ChatTile(
             chat: chat,
             onTap: () => context.goToDetalleChat(
-              idLead: chat.idLead,
-              conversacion: chat,
-            ),
-            onResponderTap: () => context.goToDetalleChat(
               idLead: chat.idLead,
               conversacion: chat,
             ),

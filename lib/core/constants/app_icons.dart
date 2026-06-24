@@ -475,6 +475,13 @@ class AppIcons {
   static const IconData vistaCompacta = Icons.view_list;
 
   // ============================================================
+  // INTELIGENCIA ARTIFICIAL
+  // ============================================================
+
+  /// Robot / IA — conversación derivada por inteligencia artificial (ChatListContadores)
+  static const IconData ia = Icons.smart_toy_outlined;
+
+  // ============================================================
   // COBRANZA
   // ============================================================
 

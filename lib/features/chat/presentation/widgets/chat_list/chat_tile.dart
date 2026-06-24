@@ -1,87 +1,26 @@
 // lib/features/chat/presentation/widgets/chat_list/chat_tile.dart
 
-import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
-class ChatTile extends StatefulWidget {
+class ChatTile extends StatelessWidget {
   final Chat chat;
-  final int mensajesNoLeidos;
   final VoidCallback? onTap;
-  final VoidCallback? onResponderTap;
-  final VoidCallback? onEtiquetarTap;
 
-  const ChatTile({
-    super.key,
-    required this.chat,
-    this.mensajesNoLeidos = 0,
-    this.onTap,
-    this.onResponderTap,
-    this.onEtiquetarTap,
-  });
-
-  @override
-  State<ChatTile> createState() => _ChatTileState();
-}
-
-class _ChatTileState extends State<ChatTile> {
-  Duration _elapsed = Duration.zero;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _updateElapsed();
-    _startTimer();
-  }
-
-  void _updateElapsed() {
-    final fecha = DateFormatter.parseDate(widget.chat.fechaHora);
-    if (fecha == null) return;
-    _elapsed = DateTime.now().difference(fecha);
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    if (_elapsed.inSeconds < 60) {
-      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        setState(() => _updateElapsed());
-        if (_elapsed.inSeconds >= 60) _startTimer();
-      });
-    } else {
-      _timer = Timer.periodic(const Duration(minutes: 1), (_) {
-        setState(() => _updateElapsed());
-      });
-    }
-  }
-
-  @override
-  void didUpdateWidget(ChatTile oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.chat.contenido != widget.chat.contenido) {
-      setState(() => _updateElapsed());
-      _startTimer();
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
+  const ChatTile({super.key, required this.chat, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          AppSpacing.md,
-          AppSpacing.xs,
           AppSpacing.sm,
+          AppSpacing.sm,
+          AppSpacing.sm,
+          AppSpacing.xs,
         ),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -98,35 +37,57 @@ class _ChatTileState extends State<ChatTile> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Fila principal ───────────────────────────────────────────
+            // ── Fila principal ────────────────────────────────────────
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _AvatarConCanal(chat: widget.chat),
+                _AvatarConCanal(chat: chat),
                 const SizedBox(width: AppSpacing.sm),
-                Expanded(child: _InfoChat(chat: widget.chat)),
-                const SizedBox(width: AppSpacing.sm),
-                _ColumnaFecha(chat: widget.chat, elapsed: _elapsed),
-                const SizedBox(width: AppSpacing.xxs),
-                const Icon(
-                  AppIcons.chevronRight,
-                  size: AppSizing.iconSm,
-                  color: AppColors.textDisabled,
-                ),
+                Expanded(child: _InfoChat(chat: chat)),
+                const SizedBox(width: AppSpacing.xs),
+                _InfoDerecha(chat: chat),
               ],
             ),
 
-            const SizedBox(height: AppSpacing.sm),
-            // const Divider(height: 1, thickness: 0.5, color: AppColors.border),
-            // const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.xs),
+            const Divider(height: 1, thickness: 0.5, color: AppColors.border),
+            const SizedBox(height: AppSpacing.xxs),
 
-            // // ── Barra de acciones ────────────────────────────────────────
-            // _BarraAcciones(
-            //   chat: widget.chat,
-            //   mensajesNoLeidos: widget.mensajesNoLeidos,
-            //   onResponderTap: widget.onResponderTap,
-            //   onEtiquetarTap: widget.onEtiquetarTap,
-            // ),
+            // ── Fila de acciones ──────────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  width: AppSizing.botonVerChat,
+                  child: CustomOutlinedButton(
+                    text: 'Ver chat',
+                    onPressed: onTap,
+                    height: AppSizing.buttonHeightSmall,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                SizedBox(
+                  child: InkWell(
+                    onTap: () => LauncherUtils.abrirTelefono(chat.numero),
+                    borderRadius: BorderRadius.circular(
+                      AppSizing.radiusCircular,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xs),
+                      child: Icon(
+                        AppIcons.phone,
+                        size: AppSizing.iconMd,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -135,12 +96,11 @@ class _ChatTileState extends State<ChatTile> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Avatar con badge del canal en esquina inferior derecha
+// Avatar con ícono del canal superpuesto (Stack — esquina inferior derecha)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AvatarConCanal extends StatelessWidget {
   final Chat chat;
-
   const _AvatarConCanal({required this.chat});
 
   @override
@@ -149,20 +109,20 @@ class _AvatarConCanal extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         CircleAvatar(
-          radius: AppSizing.avatarRadiusMd,
+          radius: AppSizing.avatarRadiusSm,
           backgroundColor: AvatarUtils.color(chat.nombreCompleto),
           child: Text(
             AvatarUtils.initials(chat.nombreCompleto),
-            style: AppTextStyles.labelMedium.copyWith(
+            style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textOnDark,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
         if (chat.idCanal > 0)
           Positioned(
-            bottom: -1,
-            right: -1,
+            bottom: -2,
+            right: -2,
             child: Container(
               width: AppSizing.avatarCanalBadge,
               height: AppSizing.avatarCanalBadge,
@@ -175,10 +135,7 @@ class _AvatarConCanal extends StatelessWidget {
                 ),
               ),
               alignment: Alignment.center,
-              child: AppIconsSocial.widgetCanal(
-                chat.idCanal,
-                size: AppSizing.iconCanalBadge,
-              ),
+              child: AppIconsSocial.widgetCanal(chat.idCanal, size: 14),
             ),
           ),
       ],
@@ -187,31 +144,29 @@ class _AvatarConCanal extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Info central: nombre + canal, empresa, último mensaje
+// Info central: nombre + chip canal, oportunidad, empresa, mensaje
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _InfoChat extends StatelessWidget {
   final Chat chat;
-
   const _InfoChat({required this.chat});
 
   @override
   Widget build(BuildContext context) {
     final preview = buildMessagePreview(chat);
-    final canalNombre = CanalHelper.get(chat.idCanal).nombre;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Nombre + ícono de canal + nombre del canal
+        // Nombre + chip canal
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Flexible(
               child: Text(
                 chat.nombreCompleto,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
@@ -219,33 +174,40 @@ class _InfoChat extends StatelessWidget {
             ),
             if (chat.idCanal > 0) ...[
               const SizedBox(width: AppSpacing.xs),
-              AppIconsSocial.widgetCanal(
-                chat.idCanal,
-                size: AppSizing.iconCanalInfo,
-              ),
-              const SizedBox(width: AppSpacing.xxs),
-              Text(
-                canalNombre,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              _ChipCanal(idCanal: chat.idCanal),
             ],
           ],
         ),
-        if (chat.nombreEmpresa.isNotEmpty) ...[
+
+        // Oportunidad
+        if (chat.nombreOportunidad.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            chat.nombreEmpresa,
-            style: AppTextStyles.bodySmall.copyWith(
+            chat.nombreOportunidad,
+            style: AppTextStyles.labelMedium.copyWith(
               color: AppColors.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ],
+
+        // Empresa
+        if (chat.nombreEmpresa.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            chat.nombreEmpresa,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+
         const SizedBox(height: AppSpacing.xxs),
-        // Último mensaje con ícono de tipo si aplica
+
+        // Preview del último mensaje (natural ellipsis)
         Row(
           children: [
             if (preview.icon != null) ...[
@@ -261,7 +223,7 @@ class _InfoChat extends StatelessWidget {
                 preview.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodySmall.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: preview.color ?? AppColors.textSecondary,
                 ),
               ),
@@ -274,59 +236,83 @@ class _InfoChat extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Columna derecha: hora + chip "sin respuesta" o estado de entrega + chip etapa
+// Info derecha: tiempo sin respuesta + badge estado + hora del último mensaje
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _ColumnaFecha extends StatelessWidget {
+class _InfoDerecha extends StatelessWidget {
   final Chat chat;
-  final Duration elapsed;
-
-  const _ColumnaFecha({required this.chat, required this.elapsed});
+  const _InfoDerecha({required this.chat});
 
   @override
   Widget build(BuildContext context) {
-    final colorElapsed = ElapsedTimeUtils.colorFromElapsed(elapsed);
-    final textoElapsed = ElapsedTimeUtils.formatHyM(elapsed);
+    final ahora = DateTime.now();
+    final fechaUltimoMensaje = DateTime.tryParse(chat.fechaHora) ?? ahora;
+    final elapsed = ahora.difference(fechaUltimoMensaje);
+    final colorTiempo = ElapsedTimeUtils.colorFromElapsed(elapsed);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // Hora
-        Text(
-          chat.fechaHora.formatSinHoy(),
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+    return SizedBox(
+      width: AppSizing.anchoChatDerecha,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            ElapsedTimeUtils.formatHyM(elapsed),
+            style: AppTextStyles.labelMedium.copyWith(
+              color: colorTiempo,
+              fontWeight: AppTextStyles.weightBold,
+            ),
+            textAlign: TextAlign.end,
           ),
+          const SizedBox(height: AppSpacing.xxs),
+          AppIconsSocial.chipEstado(
+            chat.idEstadoEfectivo,
+            label: chat.descEstadoEfectiva,
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            chat.fechaHora.formatDate(AppDateFormat.hourMinute),
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.end,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chip del canal de origen (píldora con color del canal)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChipCanal extends StatelessWidget {
+  final int idCanal;
+  const _ChipCanal({required this.idCanal});
+
+  @override
+  Widget build(BuildContext context) {
+    final nombre = CanalHelper.get(idCanal).nombre;
+    final color = AppIconsSocial.colorCanal(idCanal);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSizing.radiusXs),
+      ),
+      child: Text(
+        nombre,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: color,
+          fontWeight: AppTextStyles.weightSemiBold,
+          height: 1,
         ),
-        const SizedBox(height: AppSpacing.xxs),
-        if (chat.direccionMensaje == "CLI")
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xs,
-              vertical: AppSpacing.xxs,
-            ),
-            decoration: BoxDecoration(
-              color: colorElapsed.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSizing.radiusXs),
-            ),
-            child: Text(
-              'Sin respuesta $textoElapsed',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: colorElapsed,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        const SizedBox(height: AppSpacing.xxs),
-
-        // Chip de etapa del lead
-        // AppIconsSocial.chipEstado(
-        //   chat.idEstado,
-        //   label: chat.estado,
-        // ),
-        MessageStatusIcon(estado: chat.estadoEntrega, color: Colors.grey),
-      ],
+      ),
     );
   }
 }

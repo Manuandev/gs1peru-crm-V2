@@ -1,4 +1,5 @@
 // lib/features/chat/presentation/widgets/chat_list/chat_list_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
@@ -12,45 +13,90 @@ class ChatListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      bodyPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
+      bodyPadding: EdgeInsets.zero,
+      titleWidget: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Mis conversaciones',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.textOnDark,
+              fontWeight: AppTextStyles.weightSemiBold,
+            ),
+          ),
+          Text(
+            'Ordenadas por última interacción',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.white(0.75),
+            ),
+          ),
+        ],
       ),
-      title: 'Mis conversaciones',
       onPop: () => context.goToHome(),
       drawerSide: DrawerSide.left,
-      // ── Búsqueda integrada en el AppBar (ícono de lupa) ──
       onSearch: (query) {
         context.read<ChatListBloc>().add(ChatListSearched(query));
       },
+      // Botón de filtro avanzado (abre endDrawer derecho)
+      appBarTrailingButtons: [
+        BlocBuilder<ChatListBloc, ChatListState>(
+          buildWhen: (prev, curr) {
+            final prevHas = prev is ChatListSuccess && prev.tieneFiltroAvanzado;
+            final currHas = curr is ChatListSuccess && curr.tieneFiltroAvanzado;
+            return prevHas != currHas;
+          },
+          builder: (context, state) {
+            final tieneAvanzado = state is ChatListSuccess && state.tieneFiltroAvanzado;
+            return Builder(
+              builder: (ctx) => IconButton(
+                tooltip: 'Filtrar',
+                icon: Icon(
+                  AppIcons.filter,
+                  color: tieneAvanzado ? AppColors.secondary : AppColors.textOnDark,
+                ),
+                onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+              ),
+            );
+          },
+        ),
+      ],
       showBottomNav: true,
+      // Panel lateral derecho para filtros avanzados
+      endDrawerWidget: const FiltroChatDrawer(),
       body: RefreshIndicator(
         color: AppColors.primary,
         backgroundColor: AppColors.surface,
         onRefresh: () async {
           final bloc = context.read<ChatListBloc>();
           bloc.add(ChatListRefreshed());
-          await bloc.stream
-              .firstWhere((s) => s is ChatListSuccess || s is ChatListError);
+          await bloc.stream.firstWhere(
+            (s) => s is ChatListSuccess || s is ChatListError,
+          );
         },
         child: Column(
           children: [
-            // ── Chips de filtro ────────────────────────────
+            // ── Sección fija: chips + contadores ──────────────────
             BlocBuilder<ChatListBloc, ChatListState>(
               buildWhen: (prev, curr) => curr is ChatListSuccess,
               builder: (context, state) {
                 if (state is! ChatListSuccess) return const SizedBox.shrink();
-                return ChatListFilterChips(
-                  filtroActual: state.filtro,
-                  conteos: state.conteos,
-                  onFiltroTap: (filtro) {
-                    context.read<ChatListBloc>().add(ChatListFiltered(filtro));
-                  },
+                return Column(
+                  children: [
+                    ChatListFilterChips(
+                      filtroActual: state.filtro,
+                      conteos: state.conteos,
+                      onFiltroTap: (filtro) {
+                        context.read<ChatListBloc>().add(ChatListFiltered(filtro));
+                      },
+                    ),
+                    ContadoresChatRow(contadores: state.contadores),
+                  ],
                 );
               },
             ),
 
-            // ── Lista ──────────────────────────────────────
+            // ── Lista scrollable ───────────────────────────────────
             Expanded(
               child: BlocConsumer<ChatListBloc, ChatListState>(
                 listenWhen: (previous, current) =>
@@ -74,17 +120,17 @@ class ChatListView extends StatelessWidget {
                   }
 
                   if (state is ChatListSuccess) {
-                    if (state.chats.isEmpty) {
+                    if (state.conversaciones.isEmpty) {
                       return AppEmptyView(message: _emptyMessage(state.filtro));
                     }
 
-                    return OrientationBuilder(
-                      builder: (context, orientation) {
-                        if (orientation == Orientation.landscape) {
-                          return ChatListPortrait(state: state);
-                        }
-                        return ChatListPortrait(state: state);
-                      },
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      child: OrientationBuilder(
+                        builder: (context, _) => ChatListPortrait(state: state),
+                      ),
                     );
                   }
 
@@ -99,13 +145,12 @@ class ChatListView extends StatelessWidget {
   }
 
   String _emptyMessage(ChatListFiltro filtro) {
-    switch (filtro) {
-      case ChatListFiltro.sinResponder:
-        return '¡Todo al día! No hay chats sin responder.';
-      case ChatListFiltro.enDesarrollo:
-        return 'No hay chats en desarrollo.';
-      case ChatListFiltro.todos:
-        return 'No hay chats abiertos y/o disponibles.';
-    }
+    return switch (filtro) {
+      ChatListFiltro.todos => 'No hay chats abiertos y/o disponibles.',
+      ChatListFiltro.sinResponder => '¡Todo al día! No hay chats sin responder.',
+      ChatListFiltro.enDesarrollo => 'No hay chats en desarrollo.',
+      ChatListFiltro.conPropuesta => 'No hay conversaciones con propuesta enviada.',
+      ChatListFiltro.enCobranza => 'No hay conversaciones en proceso de cobranza.',
+    };
   }
 }

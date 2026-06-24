@@ -36,6 +36,29 @@ class ChatListFiltered extends ChatListEvent {
   List<Object?> get props => [filtro];
 }
 
+/// Aplica los filtros del panel lateral derecho.
+class ChatListFiltroAvanzadoAplicado extends ChatListEvent {
+  final String nombre;
+  final String empresa;
+  final String numero;
+  final String oportunidadId;
+
+  const ChatListFiltroAvanzadoAplicado({
+    this.nombre = '',
+    this.empresa = '',
+    this.numero = '',
+    this.oportunidadId = '',
+  });
+
+  @override
+  List<Object?> get props => [nombre, empresa, numero, oportunidadId];
+}
+
+/// Limpia todos los filtros avanzados del panel lateral.
+class ChatListFiltroAvanzadoLimpiado extends ChatListEvent {
+  const ChatListFiltroAvanzadoLimpiado();
+}
+
 /// Evento disparado cuando llega un mensaje por WebSocket (envío o recepción).
 class ChatListIncomingMessageReceived extends ChatListEvent {
   final WebSocketMessage message;

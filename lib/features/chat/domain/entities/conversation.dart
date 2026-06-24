@@ -54,6 +54,17 @@ class Chat extends Equatable {
   final String archivoNombre;
   final String archivoTipo;
 
+  // EP.DESCRIPCION — índice 22 — descripción del estado padre (vacía si no tiene padre)
+  final String descEstadoPadre;
+
+  /// Retorna el id del estado a mostrar en UI: padre si existe, directo si no.
+  String get idEstadoEfectivo =>
+      idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
+
+  /// Retorna la descripción del estado efectivo.
+  String get descEstadoEfectiva =>
+      idEstadoPadre.isNotEmpty ? descEstadoPadre : idEstadoDescripcion;
+
   String get nombreCompleto =>
       '$nombres $apellidoPaterno $apellidoMaterno'.trim();
 
@@ -108,6 +119,8 @@ class Chat extends Equatable {
     // Documento si tiene
     required this.archivoNombre,
     required this.archivoTipo,
+    // EP.DESCRIPCION — índice 22
+    this.descEstadoPadre = '',
   });
 
   @override
@@ -162,6 +175,7 @@ class Chat extends Equatable {
     // Documento si tiene
     archivoNombre,
     archivoTipo,
+    descEstadoPadre,
   ];
 
   Chat copyWith({
@@ -203,6 +217,7 @@ class Chat extends Equatable {
     String? fechaHora,
     String? archivoNombre,
     String? archivoTipo,
+    String? descEstadoPadre,
   }) {
     return Chat(
       // Contacto
@@ -255,6 +270,7 @@ class Chat extends Equatable {
       // Documento si tiene
       archivoNombre: archivoNombre ?? this.archivoNombre,
       archivoTipo: archivoTipo ?? this.archivoTipo,
+      descEstadoPadre: descEstadoPadre ?? this.descEstadoPadre,
     );
   }
 }

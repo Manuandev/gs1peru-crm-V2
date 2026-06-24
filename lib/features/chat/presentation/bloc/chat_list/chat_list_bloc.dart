@@ -14,18 +14,23 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   String _lastSearchQuery = '';
   ChatListFiltro _filtroActivo = ChatListFiltro.todos;
 
+  // Filtros avanzados del panel lateral
+  String _filtroNombre = '';
+  String _filtroEmpresa = '';
+  String _filtroNumero = '';
+  String _filtroOportunidadId = '';
+
   ChatListBloc(this._getChats) : super(const ChatListInitial()) {
     on<ChatListStarted>(_onStarted);
     on<ChatListRefreshed>(_onRefreshed);
     on<ChatListSearched>(_onSearched);
     on<ChatListFiltered>(_onFiltered);
+    on<ChatListFiltroAvanzadoAplicado>(_onFiltroAvanzadoAplicado);
+    on<ChatListFiltroAvanzadoLimpiado>(_onFiltroAvanzadoLimpiado);
     on<ChatListIncomingMessageReceived>(_onIncomingMessageReceived);
 
-    // Suscripción al stream de WebSocket — igual que ChatDetailBloc
     _messageSubscription = MessageDispatcher.instance.stream.listen((message) {
-      if (!isClosed) {
-        add(ChatListIncomingMessageReceived(message));
-      }
+      if (!isClosed) add(ChatListIncomingMessageReceived(message));
     });
   }
 
@@ -35,27 +40,21 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     return super.close();
   }
 
-  Future<void> _onStarted(
-    ChatListStarted event,
-    Emitter<ChatListState> emit,
-  ) async {
+  // ── Carga ────────────────────────────────────────────────────────────────
+
+  Future<void> _onStarted(ChatListStarted event, Emitter<ChatListState> emit) async {
     emit(const ChatListLoading());
     await _loadData(emit);
   }
 
-  Future<void> _onRefreshed(
-    ChatListRefreshed event,
-    Emitter<ChatListState> emit,
-  ) async {
+  Future<void> _onRefreshed(ChatListRefreshed event, Emitter<ChatListState> emit) async {
     emit(const ChatListLoading());
     await _loadData(emit);
   }
 
   Future<void> _loadData(Emitter<ChatListState> emit) async {
     try {
-      final chats = await _getChats();
-      _allChats = chats;
-
+      _allChats = await _getChats();
       _emitFiltered(emit);
     } on AppException catch (e) {
       emit(ChatListError(e.message));
@@ -64,6 +63,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       emit(const ChatListError('Ocurrió un error inesperado.'));
     }
   }
+
+  // ── Filtros ──────────────────────────────────────────────────────────────
 
   void _onSearched(ChatListSearched event, Emitter<ChatListState> emit) {
     _lastSearchQuery = event.query;
@@ -75,63 +76,148 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     _emitFiltered(emit);
   }
 
-  void _emitFiltered(Emitter<ChatListState> emit) {
-    final ahora = DateTime.now();
+  void _onFiltroAvanzadoAplicado(
+    ChatListFiltroAvanzadoAplicado event,
+    Emitter<ChatListState> emit,
+  ) {
+    _filtroNombre = event.nombre;
+    _filtroEmpresa = event.empresa;
+    _filtroNumero = event.numero;
+    _filtroOportunidadId = event.oportunidadId;
+    _emitFiltered(emit);
+  }
 
-    final conteos = {
-      ChatListFiltro.todos: _allChats.length,
-      ChatListFiltro.sinResponder: _allChats
+  void _onFiltroAvanzadoLimpiado(
+    ChatListFiltroAvanzadoLimpiado event,
+    Emitter<ChatListState> emit,
+  ) {
+    _filtroNombre = '';
+    _filtroEmpresa = '';
+    _filtroNumero = '';
+    _filtroOportunidadId = '';
+    _emitFiltered(emit);
+  }
+
+  // ── Emisión filtrada ─────────────────────────────────────────────────────
+
+  void _emitFiltered(Emitter<ChatListState> emit) {
+    // Contadores siempre calculados sobre la lista completa
+    final contadores = _calcularContadores(_allChats);
+
+    // Conteos por chip (también desde la lista completa)
+    final conteos = _calcularConteos(_allChats);
+
+    // Aplicar filtros en orden: chip → búsqueda → avanzados
+    var resultado = _aplicarFiltroChip(List<Chat>.from(_allChats));
+    resultado = _aplicarBusqueda(resultado);
+    resultado = _aplicarFiltrosAvanzados(resultado);
+
+    emit(ChatListSuccess(
+      contadores: contadores,
+      conversaciones: resultado,
+      filtro: _filtroActivo,
+      conteos: conteos,
+      filtroNombre: _filtroNombre,
+      filtroEmpresa: _filtroEmpresa,
+      filtroNumero: _filtroNumero,
+      filtroOportunidadId: _filtroOportunidadId,
+    ));
+  }
+
+  ContadoresChat _calcularContadores(List<Chat> chats) {
+    // TODO: confirmar códigos '02' y '04' con BD (provisional)
+    return ContadoresChat(
+      sinResponder: chats.where((c) => c.direccionMensaje == 'CLI').length,
+      derivadasPorIA: chats.where((c) => c.direccionMensaje == 'AIA').length,
+      conPropuesta: chats.where((c) => c.idEstadoEfectivo == '02').length,
+      enCobranza: chats.where((c) => c.idEstadoEfectivo == '04').length,
+    );
+  }
+
+  Map<ChatListFiltro, int> _calcularConteos(List<Chat> chats) {
+    final ahora = DateTime.now();
+    return {
+      ChatListFiltro.todos: chats.length,
+      ChatListFiltro.sinResponder: chats
           .where((c) => c.direccionMensaje == 'CLI')
           .length,
-      ChatListFiltro.enDesarrollo: _allChats.where((c) {
+      ChatListFiltro.enDesarrollo: chats.where((c) {
         if (c.direccionMensaje == 'CLI') return false;
         final fecha = DateFormatter.parseDate(c.fechaHora);
         if (fecha == null) return false;
         return ahora.difference(fecha).inHours < 72;
       }).length,
+      ChatListFiltro.conPropuesta: chats
+          .where((c) => c.idEstadoEfectivo == '02')
+          .length,
+      ChatListFiltro.enCobranza: chats
+          .where((c) => c.idEstadoEfectivo == '04')
+          .length,
     };
+  }
 
-    var resultado = List<Chat>.from(_allChats);
+  List<Chat> _aplicarFiltroChip(List<Chat> chats) {
+    final ahora = DateTime.now();
+    return switch (_filtroActivo) {
+      ChatListFiltro.todos => chats,
+      ChatListFiltro.sinResponder =>
+        chats.where((c) => c.direccionMensaje == 'CLI').toList(),
+      ChatListFiltro.enDesarrollo => chats.where((c) {
+          if (c.direccionMensaje == 'CLI') return false;
+          final fecha = DateFormatter.parseDate(c.fechaHora);
+          if (fecha == null) return false;
+          return ahora.difference(fecha).inHours < 72;
+        }).toList(),
+      ChatListFiltro.conPropuesta =>
+        chats.where((c) => c.idEstadoEfectivo == '02').toList(),
+      ChatListFiltro.enCobranza =>
+        chats.where((c) => c.idEstadoEfectivo == '04').toList(),
+    };
+  }
 
-    if (_filtroActivo == ChatListFiltro.sinResponder) {
-      resultado = resultado.where((c) => c.direccionMensaje == 'CLI').toList();
-    } else if (_filtroActivo == ChatListFiltro.enDesarrollo) {
-      resultado = resultado.where((c) {
-        if (c.direccionMensaje == 'CLI') {
-          return false;
-        }
-        final fecha = DateFormatter.parseDate(c.fechaHora);
-        if (fecha == null) return false;
-        return ahora.difference(fecha).inHours < 72;
-      }).toList();
-    }
-
-    // filtro búsqueda
+  List<Chat> _aplicarBusqueda(List<Chat> chats) {
     final q = _lastSearchQuery.toLowerCase().trim();
-    if (q.isNotEmpty) {
+    if (q.isEmpty) return chats;
+    return chats.where((c) =>
+      c.nombres.toLowerCase().contains(q) ||
+      (c.apellidoPaterno?.toLowerCase().contains(q) ?? false) ||
+      (c.apellidoMaterno?.toLowerCase().contains(q) ?? false) ||
+      c.nombreEmpresa.toLowerCase().contains(q) ||
+      c.nombreOportunidad.toLowerCase().contains(q) ||
+      c.numero.contains(q),
+    ).toList();
+  }
+
+  List<Chat> _aplicarFiltrosAvanzados(List<Chat> chats) {
+    var resultado = chats;
+
+    if (_filtroNombre.isNotEmpty) {
+      final q = _filtroNombre.toLowerCase();
       resultado = resultado
-          .where(
-            (c) =>
-                c.nombres.toLowerCase().contains(q) ||
-                c.apellidoPaterno!.toLowerCase().contains(q) ||
-                c.apellidoMaterno!.toLowerCase().contains(q) ||
-                c.nombreEmpresa.toLowerCase().contains(q) ||
-                c.nombreOportunidad.toLowerCase().contains(q) ||
-                c.numero.contains(q),
-          )
+          .where((c) => c.nombreCompleto.toLowerCase().contains(q))
+          .toList();
+    }
+    if (_filtroEmpresa.isNotEmpty) {
+      final q = _filtroEmpresa.toLowerCase();
+      resultado = resultado
+          .where((c) => c.nombreEmpresa.toLowerCase().contains(q))
+          .toList();
+    }
+    if (_filtroNumero.isNotEmpty) {
+      resultado = resultado
+          .where((c) => c.numero.contains(_filtroNumero))
+          .toList();
+    }
+    if (_filtroOportunidadId.isNotEmpty) {
+      resultado = resultado
+          .where((c) => c.idOportunidad.toString() == _filtroOportunidadId)
           .toList();
     }
 
-    emit(
-      ChatListSuccess(
-        chats: resultado,
-        filtro: _filtroActivo,
-        conteos: conteos,
-      ),
-    );
+    return resultado;
   }
 
-  // ── Router de mensajes entrantes ───────────────────────────────────────────
+  // ── WebSocket ────────────────────────────────────────────────────────────
 
   void _onIncomingMessageReceived(
     ChatListIncomingMessageReceived event,
@@ -151,47 +237,30 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     }
   }
 
-  // ── MENSAJE_WHATSAPP — Mensaje entrante del cliente ────────────────────────
-
-  void _handleMensajeWhatsApp(
-    WebSocketMessage message,
-    Emitter<ChatListState> emit,
-  ) {
+  void _handleMensajeWhatsApp(WebSocketMessage message, Emitter<ChatListState> emit) {
     final payload = WhatsAppMessagePayload.fromMessage(message);
     if (payload == null) return;
 
     _updateChatInList(
       leadId: payload.leadId,
       mensaje: payload.mensaje,
-      tipoMensaje: payload.tipoMensaje.isNotEmpty
-          ? payload.tipoMensaje
-          : 'text',
+      tipoMensaje: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
       estado: '',
       fechaHora: DateTime.now().toIso8601String(),
-      // fechaHora: payload.fecha.isNotEmpty
-      //     ? payload.fecha
-      //     : DateTime.now().toIso8601String(),
       direccionMensaje: 'CLI',
       idMensaje: payload.idTokenMeta,
       emit: emit,
     );
   }
 
-  // ── UPDATE_PANTALLA_WHATSAPP — Confirmación de nuestro mensaje enviado ─────
-
-  void _handleUpdatePantalla(
-    WebSocketMessage message,
-    Emitter<ChatListState> emit,
-  ) {
+  void _handleUpdatePantalla(WebSocketMessage message, Emitter<ChatListState> emit) {
     final payload = UpdatePantallaWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
 
     _updateChatInList(
       leadId: payload.leadId,
       mensaje: payload.mensaje,
-      tipoMensaje: payload.tipoMensaje.isNotEmpty
-          ? payload.tipoMensaje
-          : 'text',
+      tipoMensaje: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
       estado: 'sent',
       fechaHora: payload.hora.isNotEmpty
           ? payload.hora
@@ -202,29 +271,20 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     );
   }
 
-  // ── UPDATE_MENSAJE_WHATSAPP — Cambio de estado (sent → delivered → read) ──
-
-  void _handleUpdateMensaje(
-    WebSocketMessage message,
-    Emitter<ChatListState> emit,
-  ) {
+  void _handleUpdateMensaje(WebSocketMessage message, Emitter<ChatListState> emit) {
     final payload = UpdateMensajeWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
 
-    // Solo actualizar el estado del chat, no el mensaje ni la fecha
     final chats = List<Chat>.from(_allChats);
     final idx = chats.indexWhere((c) => c.idLead == payload.leadId);
     if (idx == -1) return;
 
-    // Solo actualizar si el idMensaje coincide con el último mensaje del chat
     if (chats[idx].idTokenMeta == payload.idMensaje) {
       chats[idx] = chats[idx].copyWith(estadoEntrega: payload.estado);
       _allChats = chats;
       _emitFiltered(emit);
     }
   }
-
-  // ── Helper: actualizar un chat en la lista y moverlo al inicio ────────────
 
   void _updateChatInList({
     required int leadId,
@@ -238,9 +298,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   }) {
     final chats = List<Chat>.from(_allChats);
     final idx = chats.indexWhere((c) => c.idLead == leadId);
-    if (idx == -1) return; // Lead no está en la lista, ignorar
+    if (idx == -1) return;
 
-    // Actualizar el chat con los datos del nuevo mensaje
     final updatedChat = chats[idx].copyWith(
       contenido: mensaje,
       tipo: tipoMensaje,
@@ -250,10 +309,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       idTokenMeta: idMensaje,
     );
 
-    // Remover de su posición actual y poner al inicio (como WhatsApp)
     chats.removeAt(idx);
     chats.insert(0, updatedChat);
-
     _allChats = chats;
     _emitFiltered(emit);
   }

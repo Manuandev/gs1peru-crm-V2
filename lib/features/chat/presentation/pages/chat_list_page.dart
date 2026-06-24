@@ -18,7 +18,7 @@ class ChatListPage extends StatelessWidget {
       child: BlocListener<ChatListBloc, ChatListState>(
         listener: (context, state) {
           if (state is ChatListSuccess) {
-            context.updateBadge(conversaciones: state.chats.length);
+            context.updateBadge(conversaciones: state.conversaciones.length);
           }
         },
         child: const ChatListView(),

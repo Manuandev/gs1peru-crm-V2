@@ -31,8 +31,9 @@ class ChatModel extends Chat {
     required super.modalidad,
     // Info estado
     required super.idEstado,
-    required super.idEstadoPadre,
     required super.idEstadoDescripcion,
+    required super.idEstadoPadre,
+    super.descEstadoPadre = '',
     // Info campaña
     required super.idCampania,
     required super.nombreCampania,
@@ -57,6 +58,27 @@ class ChatModel extends Chat {
     required super.archivoTipo,
   });
 
+  // Índices del SP (código LS):
+  //  0  ID_CONTACTO          19  LE.ID_ESTADO
+  //  1  NOMBRES              20  LE.DESCRIPCION   (idEstadoDescripcion)
+  //  2  APELLIDO_P           21  EP.ID_ESTADO     (idEstadoPadre)
+  //  3  APELLIDO_M           22  EP.DESCRIPCION   (descEstadoPadre)
+  //  4  ASESOR_PRINCIPAL     23  CP.ID_CAMPANIA
+  //  5  ID_EMPRESA           24  CP.NOMBRE
+  //  6  RUC                  25  OP.ID_OPORTUNIDAD
+  //  7  EM.NOMBRE            26  OP.NOMBRE
+  //  8  EM.DIRECCION         27  CN.ID_CANAL
+  //  9  ID_NUMERO            28  CN.DESCRIPCION
+  // 10  PREFIJO_PAIS         29  IT.ID_INTERES
+  // 11  NUMERO               30  IT.DESCRIPCION
+  // 12  IB_PRINCIPAL         31  ID_TOKEN_META
+  // 13  IB_FAVORITO          32  TIPO
+  // 14  IB_BLOQUEADO         33  DIRECCION
+  // 15  IB_EXPIRADO          34  CONTENIDO
+  // 16  IB_CERRADO           35  ESTADO_ENTREGA
+  // 17  ID_LEAD              36  FC_USUARIO_C
+  // 18  MODALIDAD            37  ARCHIVO_NOMBRE
+  //                          38  ARCHIVO_TIPO
   factory ChatModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -67,7 +89,7 @@ class ChatModel extends Chat {
       apellidoPaterno: ParseUtils.str(fields, 2),
       apellidoMaterno: ParseUtils.str(fields, 3),
       asesor: ParseUtils.str(fields, 4),
-      //Empresa
+      // Empresa
       idEmpresa: ParseUtils.toInt(fields, 5),
       ruc: ParseUtils.str(fields, 6),
       nombreEmpresa: ParseUtils.str(fields, 7),
@@ -87,30 +109,31 @@ class ChatModel extends Chat {
       modalidad: ParseUtils.str(fields, 18),
       // Info estado
       idEstado: ParseUtils.str(fields, 19),
-      idEstadoPadre: ParseUtils.str(fields, 20),
-      idEstadoDescripcion: ParseUtils.str(fields, 21),
+      idEstadoDescripcion: ParseUtils.str(fields, 20), // LE.DESCRIPCION
+      idEstadoPadre: ParseUtils.str(fields, 21), // EP.ID_ESTADO
+      descEstadoPadre: ParseUtils.str(fields, 22), // EP.DESCRIPCION (nuevo)
       // Info campaña
-      idCampania: ParseUtils.toInt(fields, 22),
-      nombreCampania: ParseUtils.str(fields, 23),
+      idCampania: ParseUtils.toInt(fields, 23),
+      nombreCampania: ParseUtils.str(fields, 24),
       // Info oportunidad
-      idOportunidad: ParseUtils.toInt(fields, 24),
-      nombreOportunidad: ParseUtils.str(fields, 25),
+      idOportunidad: ParseUtils.toInt(fields, 25),
+      nombreOportunidad: ParseUtils.str(fields, 26),
       // Info canal
-      idCanal: ParseUtils.toInt(fields, 26),
-      nombreCanal: ParseUtils.str(fields, 27),
+      idCanal: ParseUtils.toInt(fields, 27),
+      nombreCanal: ParseUtils.str(fields, 28),
       // Info interes
-      idInteres: ParseUtils.toInt(fields, 28),
-      nombreInteres: ParseUtils.str(fields, 29),
+      idInteres: ParseUtils.toInt(fields, 29),
+      nombreInteres: ParseUtils.str(fields, 30),
       // Último mensaje
-      idTokenMeta: ParseUtils.str(fields, 30),
-      tipo: ParseUtils.str(fields, 31),
-      direccionMensaje: ParseUtils.str(fields, 32),
-      contenido: ParseUtils.str(fields, 33),
-      estadoEntrega: ParseUtils.str(fields, 34),
-      fechaHora: ParseUtils.str(fields, 35),
+      idTokenMeta: ParseUtils.str(fields, 31),
+      tipo: ParseUtils.str(fields, 32),
+      direccionMensaje: ParseUtils.str(fields, 33),
+      contenido: ParseUtils.str(fields, 34),
+      estadoEntrega: ParseUtils.str(fields, 35),
+      fechaHora: ParseUtils.str(fields, 36),
       // Documento si tiene
-      archivoNombre: ParseUtils.str(fields, 36),
-      archivoTipo: ParseUtils.str(fields, 37),
+      archivoNombre: ParseUtils.str(fields, 37),
+      archivoTipo: ParseUtils.str(fields, 38),
     );
   }
 

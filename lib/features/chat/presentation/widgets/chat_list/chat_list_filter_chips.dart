@@ -25,6 +25,8 @@ class ChatListFilterChips extends StatelessWidget {
       (filtro: ChatListFiltro.todos, label: 'Todas'),
       (filtro: ChatListFiltro.sinResponder, label: 'Sin responder'),
       (filtro: ChatListFiltro.enDesarrollo, label: 'En desarrollo'),
+      (filtro: ChatListFiltro.conPropuesta, label: 'Con propuesta'),
+      (filtro: ChatListFiltro.enCobranza, label: 'En cobranza'),
     ];
 
     return Container(
@@ -132,13 +134,12 @@ class ChatListFilterChips extends StatelessWidget {
   }
 
   Color _badgeColor(ChatListFiltro filtro) {
-    switch (filtro) {
-      case ChatListFiltro.sinResponder:
-        return AppColors.error;
-      case ChatListFiltro.enDesarrollo:
-        return AppColors.warning;
-      default:
-        return AppColors.primary;
-    }
+    return switch (filtro) {
+      ChatListFiltro.sinResponder => AppColors.error,
+      ChatListFiltro.enDesarrollo => AppColors.warning,
+      ChatListFiltro.conPropuesta => AppColors.success,
+      ChatListFiltro.enCobranza  => AppColors.secondary,
+      ChatListFiltro.todos       => AppColors.primary,
+    };
   }
 }

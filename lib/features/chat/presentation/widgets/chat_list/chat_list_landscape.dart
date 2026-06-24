@@ -20,9 +20,9 @@ class ChatListLandscape extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 720),
         child: ListView.builder(
           physics: const BouncingScrollPhysics(),
-          itemCount: state.chats.length,
+          itemCount: state.conversaciones.length,
           itemBuilder: (context, index) {
-            final chat = state.chats[index];
+            final chat = state.conversaciones[index];
             return ChatTile(
               chat: chat,
               onTap: () => context.goToDetalleChat(idLead: chat.idLead),

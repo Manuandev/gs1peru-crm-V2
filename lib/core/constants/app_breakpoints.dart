@@ -184,6 +184,12 @@ class AppSizing {
   /// Altura de botón pequeño: 36px
   static const double buttonHeightSmall = 36.0;
 
+  /// Ancho del botón "Ver chat" en ChatTile — acota el ancho en Row sin Expanded
+  static const double botonVerChat = 88.0;
+
+  /// Ancho fijo de la columna derecha en ChatTile (tiempo + badge estado + hora)
+  static const double anchoChatDerecha = 90.0;
+
   /// Altura de botón grande: 56px
   static const double buttonHeightLarge = 56.0;
 

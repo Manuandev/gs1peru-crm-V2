@@ -48,6 +48,10 @@ class CustomOutlinedButton extends StatelessWidget {
   final Color? borderColor;
   final Color? textColor;
 
+  /// Padding interno del botón. Null = usa el default estándar (buttonPaddingH/V).
+  /// Útil para botones compactos dentro de tiles o tarjetas.
+  final EdgeInsetsGeometry? contentPadding;
+
   const CustomOutlinedButton({
     super.key,
     required this.text,
@@ -56,9 +60,10 @@ class CustomOutlinedButton extends StatelessWidget {
     this.isEnabled = true,
     this.icon,
     this.width,
-    this.height,// = AppSizing.buttonHeight,
+    this.height,
     this.borderColor,
     this.textColor,
+    this.contentPadding,
   });
 
   @override
@@ -85,7 +90,7 @@ class CustomOutlinedButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: effectiveTextColor,
           side: BorderSide(color: effectiveBorderColor, width: AppSizing.borderFocusWidth),
-          padding: const EdgeInsets.symmetric(
+          padding: contentPadding ?? const EdgeInsets.symmetric(
             horizontal: AppSpacing.buttonPaddingHorizontal,
             vertical: AppSpacing.buttonPaddingVertical,
           ),

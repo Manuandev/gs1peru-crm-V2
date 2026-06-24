@@ -121,8 +121,13 @@ class BasePage extends StatelessWidget {
 
   /// Padding del body. null para sin padding.
   final EdgeInsetsGeometry? bodyPadding;
-  // BasePage — añade el parámetro
   final void Function(String query)? onSearch;
+
+  /// Widget custom para el endDrawer (panel lateral derecho).
+  /// Cuando se provee, reemplaza el AppDrawerWidget en el slot endDrawer
+  /// independientemente de [drawerSide]. Permite coexistir un drawer izquierdo
+  /// de navegación con un panel lateral derecho personalizado (ej: filtros).
+  final Widget? endDrawerWidget;
 
   const BasePage({
     super.key,
@@ -153,6 +158,7 @@ class BasePage extends StatelessWidget {
     this.backgroundColor,
     this.bodyPadding,
     this.onSearch,
+    this.endDrawerWidget,
   }) : assert(
          title != null || titleWidget != null,
          'BasePage necesita title o titleWidget',
@@ -192,8 +198,8 @@ class BasePage extends StatelessWidget {
       // left drawer → drawer
       drawer: drawerSide == DrawerSide.left ? drawer : null,
 
-      // right drawer → endDrawer
-      endDrawer: drawerSide == DrawerSide.right ? drawer : null,
+      // right drawer → endDrawer (endDrawerWidget tiene prioridad sobre DrawerSide.right)
+      endDrawer: endDrawerWidget ?? (drawerSide == DrawerSide.right ? drawer : null),
 
       // ── BODY + FOOTER ──────────────────────────────────────
       body: SafeArea(

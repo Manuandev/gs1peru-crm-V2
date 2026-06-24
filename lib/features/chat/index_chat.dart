@@ -64,6 +64,8 @@ export 'presentation/widgets/chat_list/chat_tile.dart';
 export 'presentation/widgets/chat_list/message_preview_utils.dart';
 export 'presentation/widgets/chat_list/chat_list_search.dart';
 export 'presentation/widgets/chat_list/chat_list_filter_chips.dart';
+export 'presentation/widgets/chat_list/contadores_chat_row.dart';
+export 'presentation/widgets/chat_list/filtro_chat_drawer.dart';
 
 export 'presentation/widgets/chat_detail/chat_detail_view.dart';
 

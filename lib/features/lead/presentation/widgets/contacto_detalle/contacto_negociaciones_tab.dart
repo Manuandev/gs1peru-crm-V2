@@ -182,11 +182,11 @@ class _ContenedorIcono extends StatelessWidget {
         strokeWidth: AppSizing.borderWidthDashed,
       ),
       child: SizedBox(
-        width: 96,
-        height: 96,
+        width: AppSizing.emptyStateContainer,
+        height: AppSizing.emptyStateContainer,
         child: Center(
           child: Icon(
-            Icons.inbox_outlined,
+            AppIcons.inbox,
             size: AppSizing.iconXl,
             color: AppColors.grey400,
           ),

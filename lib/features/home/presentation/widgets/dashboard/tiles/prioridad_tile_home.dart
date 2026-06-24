@@ -150,7 +150,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                     color: AppIconsSocial.colorCanal(1),
                     onTap: () {
                       context.goToDetalleChatDesdeHome(
-                        idLead: prioridad.idLead,
+                        idNumero: prioridad.idLead,
                       );
                     },
                     tooltip: 'WhatsApp',

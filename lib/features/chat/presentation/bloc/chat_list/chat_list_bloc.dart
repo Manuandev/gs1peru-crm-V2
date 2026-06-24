@@ -254,7 +254,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     _updateChatInList(
-      leadId: payload.leadId,
+      idNumero: payload.idNumero,
       mensaje: payload.mensaje,
       tipoMensaje: payload.tipoMensaje.isNotEmpty
           ? payload.tipoMensaje
@@ -275,7 +275,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     _updateChatInList(
-      leadId: payload.leadId,
+      idNumero: payload.idNumero,
       mensaje: payload.mensaje,
       tipoMensaje: payload.tipoMensaje.isNotEmpty
           ? payload.tipoMensaje
@@ -298,7 +298,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     final chats = List<Chat>.from(_allChats);
-    final idx = chats.indexWhere((c) => c.idLead == payload.leadId);
+    final idx = chats.indexWhere((c) => c.idNumero == payload.idNumero);
     if (idx == -1) return;
 
     if (chats[idx].idTokenMeta == payload.idMensaje) {
@@ -309,7 +309,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   }
 
   void _updateChatInList({
-    required int leadId,
+    required int idNumero,
     required String mensaje,
     required String tipoMensaje,
     required String estado,
@@ -319,7 +319,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     required Emitter<ChatListState> emit,
   }) {
     final chats = List<Chat>.from(_allChats);
-    final idx = chats.indexWhere((c) => c.idLead == leadId);
+    final idx = chats.indexWhere((c) => c.idNumero == idNumero);
     if (idx == -1) return;
 
     final updatedChat = chats[idx].copyWith(

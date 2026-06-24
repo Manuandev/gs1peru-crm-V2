@@ -17,11 +17,24 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   final _errorController = StreamController<String>.broadcast();
   Stream<String> get errores => _errorController.stream;
 
+  int? _idNumero;
+  StreamSubscription<int>? _updateSub;
+
   InfoLeadCubit(this._getInfo, this._updateEstado, this._updateInfo)
-    : super(const InfoLeadInitial());
+    : super(const InfoLeadInitial()) {
+    _updateSub = LeadUpdateNotifier.instance.stream.listen((idLead) {
+      final s = state;
+      if (s is InfoLeadSuccess &&
+          s.infoLead.idLead == idLead &&
+          _idNumero != null) {
+        load(_idNumero!);
+      }
+    });
+  }
 
   @override
   Future<void> close() {
+    _updateSub?.cancel();
     _successController.close();
     _errorController.close();
     return super.close();
@@ -31,6 +44,12 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   void seed(Chat chat) {
     if (isClosed) return;
     emit(InfoLeadSuccess(_infoLeadDesdeChat(chat)));
+  }
+
+  // Inicializa directamente desde un InfoLead ya cargado (ej. desde EditLeadPage sin cubit compartido).
+  void seedLead(InfoLead lead) {
+    if (isClosed) return;
+    emit(InfoLeadSuccess(lead));
   }
 
   InfoLead _infoLeadDesdeChat(Chat chat) {
@@ -59,12 +78,12 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     );
   }
 
-  Future<void> load(int idLead) async {
+  Future<void> load(int idNumero) async {
     if (isClosed) return;
-
+    _idNumero = idNumero;
     emit(const InfoLeadLoading());
     try {
-      final info = await _getInfo(idLead);
+      final info = await _getInfo(idNumero);
       if (isClosed) return;
       emit(InfoLeadSuccess(info));
     } on AppException catch (e) {
@@ -82,7 +101,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   }
 
   Future<void> updateEstado({
-    required int idLead,
+    required int idNumero,
     required String idEstado,
     required String estado,
   }) async {
@@ -95,7 +114,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     );
 
     try {
-      final result = await _updateEstado(idLead, idEstado);
+      final result = await _updateEstado(idNumero, idEstado);
 
       if (isClosed) return;
 

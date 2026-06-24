@@ -9,8 +9,7 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class EditLeadView extends StatefulWidget {
-  final InfoLead lead;
-  const EditLeadView({super.key, required this.lead});
+  const EditLeadView({super.key});
 
   @override
   State<EditLeadView> createState() => _EditLeadViewState();
@@ -48,7 +47,7 @@ class _EditLeadViewState extends State<EditLeadView> {
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [
         IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: const Icon(AppIcons.backIos),
           onPressed: () => context.goBack(),
         ),
       ],

@@ -11,7 +11,7 @@ import 'package:app_crm/core/index_core.dart';
 class WhatsAppMessagePayload {
   final String mensaje;         // [0] Contenido del mensaje
   final String codAsesor;       // [1] Código del asesor asignado
-  final int leadId;             // [2] ID del lead
+  final int idNumero;           // [2] ID del número del contacto
   final String tipoMensaje;     // [3] text, image, video, audio, document
   final String idChatCab;       // [4] ID cabecera del chat
   final String idTokenMeta;       // [5] ID único del mensaje (WhatsApp msg ID)
@@ -24,7 +24,7 @@ class WhatsAppMessagePayload {
   const WhatsAppMessagePayload({
     required this.mensaje,
     required this.codAsesor,
-    required this.leadId,
+    required this.idNumero,
     required this.tipoMensaje,
     required this.idChatCab,
     required this.idTokenMeta,
@@ -46,7 +46,7 @@ class WhatsAppMessagePayload {
     return WhatsAppMessagePayload(
       mensaje: f[0].trim(),
       codAsesor: f.length > 1 ? f[1].trim() : '',
-      leadId: f.length > 2 ? (int.tryParse(f[2].trim()) ?? 0) : 0,
+      idNumero: f.length > 2 ? (int.tryParse(f[2].trim()) ?? 0) : 0,
       tipoMensaje: f.length > 3 ? f[3].trim() : '',
       idChatCab: f.length > 4 ? f[4].trim() : '',
       idTokenMeta: f.length > 5 ? f[5].trim() : '',

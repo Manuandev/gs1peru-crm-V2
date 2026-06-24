@@ -10,7 +10,7 @@ import 'package:app_crm/core/index_core.dart';
 /// Esta trama se recibe cuando un mensaje cambia de estado:
 ///   wait → sent → delivered → read
 class UpdateMensajeWhatsAppPayload {
-  final int leadId;             // [0] ID del lead
+  final int idNumero;           // [0] ID del número del contacto
   final String idMensaje;       // [1] ID del mensaje a actualizar
   final String codAsesor;       // [2] Código del asesor
   final String estado;          // [3] Nuevo estado: sent, delivered, read, failed
@@ -19,7 +19,7 @@ class UpdateMensajeWhatsAppPayload {
   final String telefono;        // [6] Teléfono
 
   const UpdateMensajeWhatsAppPayload({
-    required this.leadId,
+    required this.idNumero,
     required this.idMensaje,
     required this.codAsesor,
     required this.estado,
@@ -37,7 +37,7 @@ class UpdateMensajeWhatsAppPayload {
     if (f.length < 4) return null;
 
     return UpdateMensajeWhatsAppPayload(
-      leadId: int.tryParse(f[0].trim()) ?? 0,
+      idNumero: int.tryParse(f[0].trim()) ?? 0,
       idMensaje: f.length > 1 ? f[1].trim() : '',
       codAsesor: f.length > 2 ? f[2].trim() : '',
       estado: f.length > 3 ? f[3].trim() : '',

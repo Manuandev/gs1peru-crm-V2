@@ -528,4 +528,30 @@ class AppSizing {
 
   /// Altura de la pastillita de arrastre (drag handle) en bottom sheets: 4dp
   static const double dragHandleHeight = 4.0;
+
+  // ============================================================
+  // HISTORIAL — Círculo del actor
+  // ============================================================
+
+  /// Diámetro del contenedor circular que muestra el ícono del actor en HistorialTab: 32dp
+  static const double actorCircleSize = 32.0;
+
+  /// Grosor del borde del círculo del actor en HistorialTab: 1.5dp
+  static const double actorCircleBorder = 1.5;
+
+  // ============================================================
+  // EMPTY STATE — Contenedor de ícono
+  // ============================================================
+
+  /// Contenedor cuadrado grande de ícono en estados vacíos: 96dp
+  /// Usado en ContactoNegociacionesTab cuando no hay negociaciones registradas
+  static const double emptyStateContainer = 96.0;
+
+  // ============================================================
+  // TAB BAR
+  // ============================================================
+
+  /// Altura de la barra de pestañas (TabBar): 48dp
+  /// Coincide con kMinInteractiveDimension — usado en skeletons de pantallas con tabs
+  static const double tabBarHeight = 48.0;
 }

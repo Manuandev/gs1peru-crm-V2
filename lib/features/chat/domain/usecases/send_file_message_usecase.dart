@@ -11,7 +11,7 @@ class SendFileMessageUseCase {
     required String filePath,
     required String fileName,
     required String tipo,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
   }) {
@@ -19,7 +19,7 @@ class SendFileMessageUseCase {
       filePath: filePath,
       fileName: fileName,
       tipo: tipo,
-      idLead: idLead,
+      idNumero: idNumero,
       numero: numero,
       chatCab: chatCab,
     );

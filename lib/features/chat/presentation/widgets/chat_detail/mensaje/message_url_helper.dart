@@ -8,12 +8,12 @@ class MessageUrlHelper {
 
   /// URL base del archivo:
   /// https://host/archivos_wsp_gs1/{idLead}/{idConversacionCab}/archivos_adjuntos/{nombreArchivo}{tipoArchivo}
-  static String buildFileUrl(ChatMessage message, int idLead) {
+  static String buildFileUrl(ChatMessage message, int idNumero) {
     final base = EnvConfig.urlArchivos;
     final cab = message.idConversacionCab;
     final nombre = Uri.encodeComponent(message.nombreArchivo);
     final ext = Uri.encodeComponent(message.tipoArchivo);
-    return '$base$idLead/$cab/archivos_adjuntos/$nombre$ext';
+    return '$base$idNumero/$cab/archivos_adjuntos/$nombre$ext';
   }
 
   /// Determina si el tipo de mensaje es una imagen

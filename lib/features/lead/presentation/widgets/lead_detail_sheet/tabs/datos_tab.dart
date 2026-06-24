@@ -1,14 +1,15 @@
 // lib/features/lead/presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart
 
+import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
 
 class DatosTab extends StatelessWidget {
   final InfoLead infoLead;
+  final int idNumero;
 
-  const DatosTab({super.key, required this.infoLead});
+  const DatosTab({super.key, required this.infoLead, required this.idNumero});
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +180,11 @@ class DatosTab extends StatelessWidget {
               Navigator.of(context, rootNavigator: true).pop();
               NavigationService.navigateTo(
                 AppRoutes.detalleEditarLead,
-                arguments: {'lead': infoLead, 'cubit': null},
+                arguments: {
+                  'idNumero': idNumero,
+                  'lead': null,
+                  'cubit': null,
+                },
               );
             },
           ),
@@ -214,7 +219,7 @@ class _InfoCard extends StatelessWidget {
             pares[i],
             if (i < pares.length - 1)
               const Divider(
-                height: 1,
+                height: AppSizing.hairline,
                 indent: AppSpacing.md,
                 endIndent: AppSpacing.md,
               ),

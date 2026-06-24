@@ -4,17 +4,17 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 abstract class ChatRepository {
-  Future<InfoLead> getInfoLead(int idLead);
+  Future<InfoLead> getInfoLead(int idNumero);
   Future<List<Chat>> getChats();
 
   Future<List<ChatMessage>> getChatMessages(
-    int idLead, {
+    int idNumero, {
     String? idUltimoMensaje,
   });
 
   bool sendWhatsAppMessage(
     String mensaje,
-    String idLead,
+    String idNumero,
     String numero,
     String chatCab,
   );
@@ -23,12 +23,12 @@ abstract class ChatRepository {
     required String filePath,
     required String fileName,
     required String tipo,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
   });
 
-  Future<CrudResult> updateEstado(int idLead, String idEstado);
+  Future<CrudResult> updateEstado(int idNumero, String idEstado);
 
   Future<CrudResult> updateLeadCompleto(InfoLead lead);
 
@@ -37,7 +37,7 @@ abstract class ChatRepository {
   bool sendWhatsAppTemplateMessage({
     required Template template,
     required String mensajeFormateado,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
     required String nombreCliente,

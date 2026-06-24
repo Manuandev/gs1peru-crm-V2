@@ -10,31 +10,31 @@ class ChatRepositoryImpl implements ChatRepository {
   const ChatRepositoryImpl(this._datasource);
 
   @override
-  Future<InfoLead> getInfoLead(int idLead) => _datasource.getInfoLead(idLead);
+  Future<InfoLead> getInfoLead(int idNumero) => _datasource.getInfoLead(idNumero);
 
   @override
   Future<List<Chat>> getChats() => _datasource.getChats();
 
   @override
   Future<List<ChatMessage>> getChatMessages(
-    int idLead, {
+    int idNumero, {
     String? idUltimoMensaje,
-  }) => _datasource.getChatMessages(idLead, idUltimoMensaje: idUltimoMensaje);
+  }) => _datasource.getChatMessages(idNumero, idUltimoMensaje: idUltimoMensaje);
 
   @override
   bool sendWhatsAppMessage(
     String mensaje,
-    String idLead,
+    String idNumero,
     String numero,
     String chatCab,
-  ) => _datasource.sendWhatsAppMessage(mensaje, idLead, numero, chatCab);
+  ) => _datasource.sendWhatsAppMessage(mensaje, idNumero, numero, chatCab);
 
   @override
   Future<bool> uploadAndSendFileMessage({
     required String filePath,
     required String fileName,
     required String tipo,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
   }) async {
@@ -42,15 +42,15 @@ class ChatRepositoryImpl implements ChatRepository {
       filePath: filePath,
       fileName: fileName,
       tipo: tipo,
-      idLead: idLead,
+      idNumero: idNumero,
       numero: numero,
       chatCab: chatCab,
     );
   }
 
   @override
-  Future<CrudResult> updateEstado(int idLead, String idEstado) =>
-      _datasource.updateEstado(idLead, idEstado);
+  Future<CrudResult> updateEstado(int idNumero, String idEstado) =>
+      _datasource.updateEstado(idNumero, idEstado);
 
   @override
   Future<CrudResult> updateLeadCompleto(InfoLead lead) =>
@@ -63,7 +63,7 @@ class ChatRepositoryImpl implements ChatRepository {
   bool sendWhatsAppTemplateMessage({
     required Template template,
     required String mensajeFormateado,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
     required String nombreCliente,
@@ -73,7 +73,7 @@ class ChatRepositoryImpl implements ChatRepository {
   }) => _datasource.sendWhatsAppTemplateMessage(
     template: template,
     mensajeFormateado: mensajeFormateado,
-    idLead: idLead,
+    idNumero: idNumero,
     numero: numero,
     chatCab: chatCab,
     nombreCliente: nombreCliente,

@@ -193,7 +193,7 @@ class AppRouter {
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
         return ChatDetailPage(
-          idLead: int.parse(args['idLead'].toString()),
+          idNumero: int.parse(args['idNumero'].toString()),
           conversacion: args['conversacion'] as Chat?,
         );
       },
@@ -202,11 +202,35 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        final cubit = args['cubit'] as InfoLeadCubit?;
-        final page = EditLeadPage(lead: args['lead'] as InfoLead);
-        return cubit != null
-            ? BlocProvider.value(value: cubit, child: page)
-            : page;
+        final idNumero = args['idNumero'] as int?;
+        final existingCubit = args['cubit'] as InfoLeadCubit?;
+        final lead = args['lead'] as InfoLead?;
+
+        // Siempre se necesita un InfoLeadCubit en el árbol para EditLeadView.
+        Widget infoLeadProvider(Widget child) {
+          if (existingCubit != null) {
+            return BlocProvider.value(value: existingCubit, child: child);
+          }
+          return BlocProvider<InfoLeadCubit>(
+            create: (ctx) {
+              final cubit = InfoLeadCubit(
+                GetInfoUseCase(ctx.read<ChatRepository>()),
+                UpdateLeadEstadoUseCase(ctx.read<ChatRepository>()),
+                UpdateLeadInfoUseCase(ctx.read<ChatRepository>()),
+              );
+              if (idNumero != null) {
+                cubit.load(idNumero);
+              } else if (lead != null) {
+                cubit.seedLead(lead);
+              }
+              return cubit;
+            },
+            child: child,
+          );
+        }
+
+        final idNav = idNumero ?? lead?.idLead ?? 0;
+        return infoLeadProvider(EditLeadPage(idNumero: idNav));
       },
     ),
     AppRoutes.templates: RouteDefinition<Template>(

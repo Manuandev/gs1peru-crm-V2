@@ -16,6 +16,7 @@ export 'domain/entities/comentario_lead.dart';
 export 'domain/entities/contacto_detalle.dart';
 
 export 'domain/enums/lead_filtro.dart';
+export 'domain/enums/lead_detail_tab_enum.dart';
 
 export 'domain/repositories/lead_repository.dart';
 
@@ -42,13 +43,16 @@ export 'presentation/pages/lead_list_page.dart';
 export 'presentation/pages/lead_detalle_page.dart';
 export 'presentation/pages/contacto_detalle_page.dart';
 
-export 'presentation/widgets/contacto_detalle/contacto_detalle_header.dart';
-export 'presentation/widgets/contacto_detalle/contacto_detalle_skeleton.dart';
-export 'presentation/widgets/contacto_detalle/contacto_detalle_view.dart';
-export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';
-export 'presentation/widgets/contacto_detalle/contacto_negociacion_card.dart';
 export 'presentation/widgets/contacto_detalle/contacto_negociaciones_tab.dart';
+export 'presentation/widgets/contacto_detalle/contacto_detalle_skeleton.dart';
+export 'presentation/widgets/contacto_detalle/contacto_negociacion_card.dart';
 export 'presentation/widgets/contacto_detalle/contacto_acciones_footer.dart';
+export 'presentation/widgets/contacto_detalle/contacto_detalle_header.dart';
+export 'presentation/widgets/contacto_detalle/contacto_detalle_view.dart';
+export 'presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart';
+export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';
+export 'presentation/widgets/lead_detail_sheet/negociacion_card.dart';
+export 'presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart';
 
 export 'presentation/widgets/detalle/lead_detalle_view.dart';
 export 'presentation/widgets/detalle/lead_detalle_skeleton.dart';
@@ -74,12 +78,6 @@ export 'presentation/pages/edit_lead_page.dart';
 export 'presentation/widgets/edit_lead/edit_lead_view.dart';
 export 'presentation/widgets/edit_lead/edit_lead_portrait.dart';
 
-// Puente temporal — eliminar cuando InfoLeadCubit use LeadRepository
-export '../chat/domain/repositories/chat_repository.dart';
-export '../chat/domain/usecases/get_info_lead_usecase.dart';
-export '../chat/domain/usecases/update_lead_estado_usecase.dart';
-export '../chat/domain/usecases/update_lead_info_usecase.dart';
-export '../chat/domain/entities/info_lead.dart';
 
 // Cubits de LeadDetailSheet
 export 'presentation/cubit/negociaciones/negociaciones_state.dart';
@@ -87,8 +85,7 @@ export 'presentation/cubit/negociaciones/negociaciones_cubit.dart';
 export 'presentation/cubit/historial/historial_lead_state.dart';
 export 'presentation/cubit/historial/historial_lead_cubit.dart';
 
-// LeadDetailSheet — bottom sheet con tabs Datos / Negociaciones / Historial
-export 'presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart';
 export 'presentation/widgets/lead_detail_sheet/tabs/negociaciones_tab.dart';
-export 'presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart';
-export 'presentation/widgets/lead_detail_sheet/lead_detail_sheet.dart';
+export 'presentation/widgets/lead_detail_sheet/lead_detail_sheet_view.dart';
+
+

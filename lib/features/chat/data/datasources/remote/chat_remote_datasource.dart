@@ -16,8 +16,8 @@ class ChatRemoteDatasource {
   String _orEmpty(dynamic val) =>
       (val == null || val == 0) ? '' : val.toString();
 
-  Future<InfoLeadModel> getInfoLead(int idLead) async {
-    final String body = '${[idLead].join(camp)}${sep}D';
+  Future<InfoLeadModel> getInfoLead(int idNumero) async {
+    final String body = '${[idNumero].join(camp)}${sep}D';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -46,10 +46,10 @@ class ChatRemoteDatasource {
   }
 
   Future<List<ChatMessageModel>> getChatMessages(
-    int idLead, {
+    int idNumero, {
     String? idUltimoMensaje, // null = primera carga
   }) async {
-    final String body = '${[idLead, idUltimoMensaje ?? ''].join(camp)}${sep}DT';
+    final String body = '${[idNumero, idUltimoMensaje ?? ''].join(camp)}${sep}DT';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -63,7 +63,7 @@ class ChatRemoteDatasource {
 
   bool sendWhatsAppMessage(
     String mensaje,
-    String idLead,
+    String idNumero,
     String numero,
     String chatCab,
   ) {
@@ -72,7 +72,7 @@ class ChatRemoteDatasource {
 
     final String body =
         '${user.token}$sep'
-        '${[idLead, '', user.codUser, mensaje, 'text', numero, 0, '', chatCab, '', '', '', user.codUser, ''].join(camp)}'
+        '${[idNumero, '', user.codUser, mensaje, 'text', numero, 0, '', chatCab, '', '', '', user.codUser, ''].join(camp)}'
         '${sep}CA';
 
     return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");
@@ -81,7 +81,7 @@ class ChatRemoteDatasource {
   bool sendWhatsAppTemplateMessage({
     required Template template,
     required String mensajeFormateado,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
     required String nombreCliente,
@@ -93,7 +93,7 @@ class ChatRemoteDatasource {
     if (user == null) return false;
 
     final vars = [
-      idLead, // VAR01
+      idNumero, // VAR01
       template.nombre, // VAR02
       user.codUser, // VAR03
       mensajeFormateado, // VAR04
@@ -120,7 +120,7 @@ class ChatRemoteDatasource {
     required String filePath,
     required String fileName,
     required String tipo,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
   }) async {
@@ -136,7 +136,7 @@ class ChatRemoteDatasource {
       final fileExt = dotIndex != -1 ? fileName.substring(dotIndex) : '';
 
       final cabecera = [
-        idLead,
+        idNumero,
         '',
         user.codUser,
         '',
@@ -213,11 +213,11 @@ class ChatRemoteDatasource {
     }
   }
 
-  Future<CrudResult> updateEstado(int idLead, String idEstado) async {
+  Future<CrudResult> updateEstado(int idNumero, String idEstado) async {
     final ip = await _deviceInfo.getLocalIp();
 
     final String body =
-        '${[idLead, idEstado, _session.codUser, ip].join(camp)}${sep}UE';
+        '${[idNumero, idEstado, _session.codUser, ip].join(camp)}${sep}UE';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsCud, body);
 

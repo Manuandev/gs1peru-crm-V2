@@ -11,18 +11,13 @@ class ChatListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          ChatListBloc(GetChatsUseCase(context.read<ChatRepository>()))
-            ..add(const ChatListStarted()),
-      child: BlocListener<ChatListBloc, ChatListState>(
-        listener: (context, state) {
-          if (state is ChatListSuccess) {
-            context.updateBadge(conversaciones: state.conversaciones.length);
-          }
-        },
-        child: const ChatListView(),
-      ),
+    return BlocListener<ChatListBloc, ChatListState>(
+      listener: (context, state) {
+        if (state is ChatListSuccess) {
+          context.updateBadge(conversaciones: state.conversaciones.length);
+        }
+      },
+      child: const ChatListView(),
     );
   }
 }

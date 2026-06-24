@@ -450,6 +450,9 @@ class AppIcons {
   /// Editar nota — empty state cuando no hay plantillas
   static const IconData editNote = Icons.edit_note_rounded;
 
+  /// Bandeja vacía — empty state cuando no hay negociaciones registradas (ContactoNegociacionesTab)
+  static const IconData inbox = Icons.inbox_outlined;
+
   // ── Acordeón / secciones expandibles ────────────────────────────────────
 
   /// Check redondeado — ítem activo en selector de álbum (WhatsAppMediaPicker)

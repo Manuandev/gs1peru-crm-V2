@@ -139,7 +139,7 @@ class LocalNotificationService {
         title: 'Lead $leadId',
         body: mensajes.last,
         route: AppRoutes.detalleChat,
-        payload: {'idLead': leadId.toString()},
+        payload: {'idNumero': leadId.toString()},
       ).toPayloadString(),
     );
   }
@@ -197,7 +197,7 @@ class LocalNotificationService {
     final p = WhatsAppMessagePayload.fromMessage(parsed);
     if (p == null) return;
     await showWhatsApp(
-      leadId: p.leadId,
+      leadId: p.idNumero,
       mensaje: _textoMensaje(p.tipoMensaje, p.mensaje),
     );
   }

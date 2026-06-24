@@ -10,7 +10,7 @@ class MessageList extends StatelessWidget {
   final ScrollController scrollController;
   final bool isLoadingMore;
   final AudioController audioController;
-  final int idLead;
+  final int idNumero;
   final String nombre;
 
   const MessageList({
@@ -19,7 +19,7 @@ class MessageList extends StatelessWidget {
     required this.scrollController,
     required this.audioController,
     this.isLoadingMore = false,
-    required this.idLead,
+    required this.idNumero,
     required this.nombre,
   });
 
@@ -74,7 +74,7 @@ class MessageList extends StatelessWidget {
             MessageBubble(
               message: message,
               audioController: audioController,
-              idLead: idLead,
+              idNumero: idNumero,
               nombre: nombre,
             ),
           ],

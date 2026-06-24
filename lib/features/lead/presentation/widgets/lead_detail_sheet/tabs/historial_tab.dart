@@ -67,7 +67,7 @@ class _ListaHistorial extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       itemCount: eventos.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: AppSizing.hairline),
       itemBuilder: (_, index) => _HistorialItem(item: eventos[index]),
     );
   }
@@ -107,14 +107,14 @@ class _HistorialItem extends StatelessWidget {
         children: [
           // ── Ícono circular del actor ─────────────────────────────────────
           Container(
-            width: 32,
-            height: 32,
+            width: AppSizing.actorCircleSize,
+            height: AppSizing.actorCircleSize,
             decoration: BoxDecoration(
               color: colorActor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
               border: Border.all(
                 color: colorActor.withValues(alpha: 0.35),
-                width: 1.5,
+                width: AppSizing.actorCircleBorder,
               ),
             ),
             child: Icon(
@@ -179,14 +179,14 @@ class _EstadoVacio extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: AppSizing.iconXxl,
+              height: AppSizing.iconXxl,
               decoration: BoxDecoration(
                 color: AppColors.grey100,
                 borderRadius: BorderRadius.circular(AppSizing.radiusXl),
               ),
               child: const Icon(
-                Icons.history_outlined,
+                AppIcons.historial,
                 size: AppSizing.iconXl,
                 color: AppColors.grey400,
               ),

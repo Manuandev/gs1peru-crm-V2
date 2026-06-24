@@ -25,14 +25,14 @@ bool _isLocalFileHelper(ChatMessage msg) {
 class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final AudioController audioController;
-  final int idLead;
+  final int idNumero;
   final String nombre;
 
   const MessageBubble({
     super.key,
     required this.message,
     required this.audioController,
-    required this.idLead,
+    required this.idNumero,
     required this.nombre,
   });
 
@@ -148,12 +148,12 @@ class MessageBubble extends StatelessWidget {
   Widget _buildContent(BuildContext context, Color textColor) {
     switch (message.tipo) {
       case 'image':
-        return _ImageContent(message: message, idLead: idLead, nombre: nombre);
+        return _ImageContent(message: message, idNumero: idNumero, nombre: nombre);
 
       case 'audio':
         final path = _isLocalFile
             ? message.contenido
-            : MessageUrlHelper.buildFileUrl(message, idLead);
+            : MessageUrlHelper.buildFileUrl(message, idNumero);
         return Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
           child: AudioPlayerWidget(
@@ -165,14 +165,14 @@ class MessageBubble extends StatelessWidget {
         );
 
       case 'video':
-        return _VideoContent(message: message, idLead: idLead, nombre: nombre);
+        return _VideoContent(message: message, idNumero: idNumero, nombre: nombre);
 
       case 'document':
         return Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
           child: _DocumentContent(
             message: message,
-            idLead: idLead,
+            idNumero: idNumero,
             textColor: textColor,
           ),
         );
@@ -182,7 +182,7 @@ class MessageBubble extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
           child: _TemplateContent(
             message: message,
-            idLead: idLead,
+            idNumero: idNumero,
             textColor: textColor,
             audioController: audioController,
             nombre: nombre,
@@ -278,12 +278,12 @@ class _BubbleTimeRow extends StatelessWidget {
 
 class _ImageContent extends StatelessWidget {
   final ChatMessage message;
-  final int idLead;
+  final int idNumero;
   final String nombre;
 
   const _ImageContent({
     required this.message,
-    required this.idLead,
+    required this.idNumero,
     required this.nombre,
   });
 
@@ -326,7 +326,7 @@ class _ImageContent extends StatelessWidget {
       );
     }
 
-    final url = MessageUrlHelper.buildFileUrl(message, idLead);
+    final url = MessageUrlHelper.buildFileUrl(message, idNumero);
     return GestureDetector(
       onTap: () => _openViewer(context, url),
       child: CachedNetworkImage(
@@ -393,12 +393,12 @@ class _ImageErrorBox extends StatelessWidget {
 
 class _VideoContent extends StatelessWidget {
   final ChatMessage message;
-  final int idLead;
+  final int idNumero;
   final String nombre;
 
   const _VideoContent({
     required this.message,
-    required this.idLead,
+    required this.idNumero,
     required this.nombre,
   });
 
@@ -415,7 +415,7 @@ class _VideoContent extends StatelessWidget {
 
     final url = _isLocal
         ? message.contenido
-        : MessageUrlHelper.buildFileUrl(message, idLead);
+        : MessageUrlHelper.buildFileUrl(message, idNumero);
 
     return GestureDetector(
       onTap: () {
@@ -608,12 +608,12 @@ class _VideoThumbnailWidgetState extends State<_VideoThumbnailWidget> {
 
 class _DocumentContent extends StatefulWidget {
   final ChatMessage message;
-  final int idLead;
+  final int idNumero;
   final Color textColor;
 
   const _DocumentContent({
     required this.message,
-    required this.idLead,
+    required this.idNumero,
     required this.textColor,
   });
 
@@ -661,7 +661,7 @@ class _DocumentContentState extends State<_DocumentContent> {
         return;
       }
 
-      final url = MessageUrlHelper.buildFileUrl(widget.message, widget.idLead);
+      final url = MessageUrlHelper.buildFileUrl(widget.message, widget.idNumero);
 
       await Dio().download(
         url,
@@ -761,14 +761,14 @@ class _DocumentContentState extends State<_DocumentContent> {
 
 class _TemplateContent extends StatelessWidget {
   final ChatMessage message;
-  final int idLead;
+  final int idNumero;
   final Color textColor;
   final AudioController audioController;
   final String nombre;
 
   const _TemplateContent({
     required this.message,
-    required this.idLead,
+    required this.idNumero,
     required this.textColor,
     required this.audioController,
     required this.nombre,
@@ -796,7 +796,7 @@ class _TemplateContent extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             child: _ImageContent(
               message: message,
-              idLead: idLead,
+              idNumero: idNumero,
               nombre: nombre,
             ),
           ),

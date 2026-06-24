@@ -130,6 +130,7 @@ export 'theme/theme_cubit.dart';
 // #region utils
 export 'utils/responsive_helper.dart';
 export 'utils/elapsed_time_utils.dart';
+export 'utils/lead_update_notifier.dart';
 
 export 'utils/date/date_extensions.dart';
 export 'utils/date/date_formats.dart';

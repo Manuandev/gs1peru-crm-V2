@@ -93,7 +93,7 @@ class _TabBarSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.surface,
-      height: 48,
+      height: AppSizing.tabBarHeight,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -169,7 +169,7 @@ class _CardSkeleton extends StatelessWidget {
             const _FilaSkeleton(),
             if (i < filas - 1)
               const Divider(
-                height: 1,
+                height: AppSizing.hairline,
                 indent: AppSpacing.md,
                 endIndent: AppSpacing.md,
               ),

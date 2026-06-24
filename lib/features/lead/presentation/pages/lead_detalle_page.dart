@@ -1,5 +1,6 @@
 // lib/features/lead/presentation/pages/lead_detalle_page.dart
 
+import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';

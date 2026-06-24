@@ -6,6 +6,6 @@ class GetChatMessagesUseCase {
   final ChatRepository repository;
   const GetChatMessagesUseCase(this.repository);
 
-  Future<List<ChatMessage>> call(int idLead, {String? idUltimoMensaje}) =>
-      repository.getChatMessages(idLead, idUltimoMensaje: idUltimoMensaje);
+  Future<List<ChatMessage>> call(int idNumero, {String? idUltimoMensaje}) =>
+      repository.getChatMessages(idNumero, idUltimoMensaje: idUltimoMensaje);
 }

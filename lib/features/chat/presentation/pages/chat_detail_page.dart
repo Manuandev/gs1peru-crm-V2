@@ -6,10 +6,10 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatDetailPage extends StatelessWidget {
-  final int idLead;
+  final int idNumero;
   final Chat? conversacion;
 
-  const ChatDetailPage({super.key, required this.idLead, this.conversacion});
+  const ChatDetailPage({super.key, required this.idNumero, this.conversacion});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class ChatDetailPage extends StatelessWidget {
             SendChatMessageUseCase(context.read<ChatRepository>()),
             SendFileMessageUseCase(context.read<ChatRepository>()),
             SendTemplateMessageUseCase(context.read<ChatRepository>()),
-          )..add(ChatDetailStarted(idLead)),
+          )..add(ChatDetailStarted(idNumero)),
         ),
         BlocProvider(
           create: (_) => InfoLeadCubit(
@@ -31,7 +31,7 @@ class ChatDetailPage extends StatelessWidget {
           ),
         ),
       ],
-      child: ChatDetailView(idLead: idLead, conversacion: conversacion),
+      child: ChatDetailView(idNumero: idNumero, conversacion: conversacion),
     );
   }
 }

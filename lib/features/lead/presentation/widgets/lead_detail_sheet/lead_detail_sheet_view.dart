@@ -1,22 +1,23 @@
-// lib/features/lead/presentation/widgets/lead_detail_sheet/lead_detail_sheet.dart
+// lib/features/lead/presentation/widgets/lead_detail_sheet/lead_detail_sheet_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-
-enum LeadDetailTab { datos, negociaciones, historial }
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class LeadDetailSheet extends StatefulWidget {
   final LeadDetailTab initialTab;
   final InfoLead infoLead;
   final int leadId;
+  final int idNumero;
 
   const LeadDetailSheet({
     super.key,
     required this.initialTab,
     required this.infoLead,
     required this.leadId,
+    required this.idNumero,
   });
 
   static Future<void> show(
@@ -24,14 +25,14 @@ class LeadDetailSheet extends StatefulWidget {
     required LeadDetailTab initialTab,
     required InfoLead infoLead,
     required int leadId,
+    int idNumero = 0,
   }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       useRootNavigator: false,
       builder: (_) => MultiBlocProvider(
-        // 👈 mueve el MultiBlocProvider AQUÍ afuera
         providers: [
           BlocProvider(create: (_) => NegociacionesCubit()),
           BlocProvider(create: (_) => HistorialLeadCubit()),
@@ -40,6 +41,7 @@ class LeadDetailSheet extends StatefulWidget {
           initialTab: initialTab,
           infoLead: infoLead,
           leadId: leadId,
+          idNumero: idNumero,
         ),
       ),
     );
@@ -105,8 +107,8 @@ class _LeadDetailSheetState extends State<LeadDetailSheet>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  DatosTab(infoLead: widget.infoLead),
-                  NegociacionesTab(leadId: widget.leadId),
+                  DatosTab(infoLead: widget.infoLead, idNumero: widget.idNumero),
+                  NegociacionesTab(leadId: widget.leadId, idNumero: widget.idNumero),
                   HistorialTab(leadId: widget.leadId),
                 ],
               ),

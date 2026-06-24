@@ -110,18 +110,19 @@ extension NavigationExtensions on BuildContext {
 
   // ── Chats ──────────────────────────────────────────────────
 
-  Future<void> goToDetalleChat({required int idLead, Chat? conversacion}) =>
+  Future<void> goToDetalleChat({required int idNumero, Chat? conversacion}) =>
       _push(AppRoutes.detalleChat, arguments: {
-        'idLead': idLead,
+        'idNumero': idNumero,
         'conversacion': conversacion,
       });
 
   Future<void> goToEditarLead({
-    required InfoLead? lead,
+    int? idNumero,
+    InfoLead? lead,
     InfoLeadCubit? cubit,
   }) => _push(
     AppRoutes.detalleEditarLead,
-    arguments: {'lead': lead, 'cubit': cubit},
+    arguments: {'idNumero': idNumero, 'lead': lead, 'cubit': cubit},
   );
 
   /// Retorna el [Template] seleccionado, o null si el usuario canceló.
@@ -130,11 +131,11 @@ extension NavigationExtensions on BuildContext {
 
   /// Navega a un chat desde home: limpia el stack, pone ChatList como base
   /// y apila ChatDetail encima para que el back funcione correctamente.
-  Future<void> goToDetalleChatDesdeHome({required int idLead}) {
+  Future<void> goToDetalleChatDesdeHome({required int idNumero}) {
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return Future.value();
     state.pushNamedAndRemoveUntil(AppRoutes.chats, (_) => false);
-    state.pushNamed(AppRoutes.detalleChat, arguments: {'idLead': idLead});
+    state.pushNamed(AppRoutes.detalleChat, arguments: {'idNumero': idNumero});
     return Future.value();
   }
 

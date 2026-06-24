@@ -21,31 +21,31 @@ class ChatDetailIncomingMessageReceived extends ChatDetailEvent {
 }
 
 class ChatDetailStarted extends ChatDetailEvent {
-  final int idLead;
-  const ChatDetailStarted(this.idLead);
+  final int idNumero;
+  const ChatDetailStarted(this.idNumero);
 
   @override
-  List<Object?> get props => [idLead];
+  List<Object?> get props => [idNumero];
 }
 
 class ChatDetailRefreshed extends ChatDetailEvent {
-  final int idLead;
-  const ChatDetailRefreshed(this.idLead);
+  final int idNumero;
+  const ChatDetailRefreshed(this.idNumero);
 
   @override
-  List<Object?> get props => [idLead];
+  List<Object?> get props => [idNumero];
 }
 
 class ChatDetailMoreMessagesLoaded extends ChatDetailEvent {
-  final int idLead;
+  final int idNumero;
   final String idUltimoMensaje;
   const ChatDetailMoreMessagesLoaded({
-    required this.idLead,
+    required this.idNumero,
     required this.idUltimoMensaje,
   });
 
   @override
-  List<Object?> get props => [idLead, idUltimoMensaje];
+  List<Object?> get props => [idNumero, idUltimoMensaje];
 }
 
 class ChatDetailTextMessageSent extends ChatDetailEvent {

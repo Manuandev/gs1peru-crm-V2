@@ -96,6 +96,11 @@ class AppWidget extends StatelessWidget {
               getData: GetCatalogsUseCase(context.read<CatalogsRepository>()),
             ),
           ),
+          BlocProvider<ChatListBloc>(
+            create: (context) => ChatListBloc(
+              GetChatsUseCase(context.read<ChatRepository>()),
+            )..add(const ChatListStarted()),
+          ),
         ],
         child: BlocListener<AuthBloc, AuthState>(
           // Solo reacciona a cambios de autenticación relevantes para navegar

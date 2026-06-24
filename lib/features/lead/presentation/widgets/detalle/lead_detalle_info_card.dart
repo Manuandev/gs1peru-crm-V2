@@ -42,7 +42,7 @@ class LeadInfoSectionCard extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: AppSizing.hairline),
           ...filas,
         ],
       ),
@@ -79,7 +79,7 @@ class LeadContactoCard extends StatelessWidget {
                 ),
         ),
         const Divider(
-          height: 1,
+          height: AppSizing.hairline,
           indent: AppSpacing.md,
           endIndent: AppSpacing.md,
         ),
@@ -117,7 +117,7 @@ class LeadContextoCard extends StatelessWidget {
           valor: lead.canal.isEmpty ? 'Sin canal' : lead.canal,
         ),
         const Divider(
-          height: 1,
+          height: AppSizing.hairline,
           indent: AppSpacing.md,
           endIndent: AppSpacing.md,
         ),
@@ -131,7 +131,7 @@ class LeadContextoCard extends StatelessWidget {
           valor: lead.interes.isEmpty ? 'Sin interés' : lead.interes,
         ),
         const Divider(
-          height: 1,
+          height: AppSizing.hairline,
           indent: AppSpacing.md,
           endIndent: AppSpacing.md,
         ),

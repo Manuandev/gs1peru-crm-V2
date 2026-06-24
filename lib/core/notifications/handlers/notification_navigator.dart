@@ -43,12 +43,12 @@ class NotificationNavigator {
   }
 
   void _goChat(AppNotification notif) {
-    final idLead = notif.payload?['idLead'] ?? '';
+    final idNumero = notif.payload?['idNumero'] ?? '';
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return;
 
     state.pushNamedAndRemoveUntil(AppRoutes.chats, (r) => false);
-    state.pushNamed(AppRoutes.detalleChat, arguments: {'idLead': idLead});
+    state.pushNamed(AppRoutes.detalleChat, arguments: {'idNumero': idNumero});
   }
 
   void _goLead(AppNotification notif) {

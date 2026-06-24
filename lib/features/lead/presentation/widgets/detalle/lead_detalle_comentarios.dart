@@ -66,7 +66,7 @@ class _ComentarioBubble extends StatelessWidget {
               AvatarUtils.initials(comentario.autor),
               style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textOnDark,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTextStyles.weightSemiBold,
               ),
             ),
           ),

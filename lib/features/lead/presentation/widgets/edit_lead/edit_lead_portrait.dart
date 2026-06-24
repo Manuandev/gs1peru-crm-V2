@@ -152,6 +152,16 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     }
 
     if (mounted) setState(() => _isLoading = false);
+
+    // Notifica a todos los InfoLeadCubit que muestran este lead para que recarguen.
+    LeadUpdateNotifier.instance.notify(widget.lead.idLead);
+
+    if (mounted) {
+      // ignore: use_build_context_synchronously
+      context.read<ChatListBloc>().add(const ChatListRefreshed());
+      // ignore: use_build_context_synchronously
+      context.goBack();
+    }
   }
 
   @override

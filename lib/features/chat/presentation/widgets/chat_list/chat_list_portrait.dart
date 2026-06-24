@@ -23,7 +23,7 @@ class ChatListPortrait extends StatelessWidget {
           child: ChatTile(
             chat: chat,
             onTap: () => context.goToDetalleChat(
-              idLead: chat.idLead,
+              idNumero: chat.idNumero,
               conversacion: chat,
             ),
           ),

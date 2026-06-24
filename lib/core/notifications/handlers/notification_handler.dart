@@ -60,7 +60,7 @@ class NotificationHandler {
     if (p == null) return null;
 
     LocalNotificationService.instance.showWhatsApp(
-      leadId: p.leadId,
+      leadId: p.idNumero,
       mensaje: _bodyPorTipo(p.tipoMensaje, p.mensaje),
     );
 

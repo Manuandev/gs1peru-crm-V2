@@ -16,7 +16,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
   final _session = SessionService();
 
-  int? _currentLeadId;
+  int? _currentIdNumero;
 
   ChatDetailBloc(
     this._getChatMessages,
@@ -53,10 +53,10 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     ChatDetailStarted event,
     Emitter<ChatDetailState> emit,
   ) async {
-    _currentLeadId = event.idLead;
-    LocalNotificationService.instance.clearLead(event.idLead);
+    _currentIdNumero = event.idNumero;
+    LocalNotificationService.instance.clearLead(event.idNumero);
     emit(const ChatDetailLoading());
-    await _loadMessages(event.idLead, emit);
+    await _loadMessages(event.idNumero, emit);
   }
 
   Future<void> _onRefreshed(
@@ -64,7 +64,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     Emitter<ChatDetailState> emit,
   ) async {
     emit(const ChatDetailLoading());
-    await _loadMessages(event.idLead, emit);
+    await _loadMessages(event.idNumero, emit);
   }
 
   Future<void> _loadMessages(int idLead, Emitter<ChatDetailState> emit) async {
@@ -107,7 +107,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     try {
       final newMessages = await _getChatMessages(
-        event.idLead,
+        event.idNumero,
         idUltimoMensaje: event.idUltimoMensaje,
       );
 
@@ -174,10 +174,10 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentLeadId != null) {
+    if (_currentIdNumero != null) {
       _sendChatMessage(
         event.mensaje.trim(),
-        _currentLeadId.toString(),
+        _currentIdNumero.toString(),
         event.numero,
         event.chatCab,
       );
@@ -223,11 +223,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentLeadId != null) {
+    if (_currentIdNumero != null) {
       _sendTemplateMessage(
         template: event.template,
         mensajeFormateado: mensajeFormateado,
-        idLead: _currentLeadId.toString(),
+        idNumero: _currentIdNumero.toString(),
         numero: event.numero,
         chatCab: event.chatCab,
         nombreCliente: event.nombreCliente,
@@ -277,12 +277,12 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentLeadId != null) {
+    if (_currentIdNumero != null) {
       final success = await _sendFileMessage(
         filePath: event.audioPath,
         fileName: fileName,
         tipo: 'audio',
-        idLead: _currentLeadId.toString(),
+        idNumero: _currentIdNumero.toString(),
         numero: event.numero,
         chatCab: event.chatCab,
       );
@@ -326,12 +326,12 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentLeadId != null) {
+    if (_currentIdNumero != null) {
       final success = await _sendFileMessage(
         filePath: event.filePath,
         fileName: '$uniqueName${event.fileExt}',
         tipo: event.tipo,
-        idLead: _currentLeadId.toString(),
+        idNumero: _currentIdNumero.toString(),
         numero: event.numero,
         chatCab: event.chatCab,
       );
@@ -386,7 +386,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     emit((state as ChatDetailSuccess).copyWith(messages: currentMessages));
 
     // 2. Enviar todos en paralelo
-    if (_currentLeadId == null) return;
+    if (_currentIdNumero == null) return;
 
     final futures = List.generate(event.files.length, (i) async {
       final file = event.files[i];
@@ -394,7 +394,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         filePath: file.path,
         fileName: '${uniqueNames[i]}${file.ext}',
         tipo: file.tipo,
-        idLead: _currentLeadId.toString(),
+        idNumero: _currentIdNumero.toString(),
         numero: event.numero,
         chatCab: event.chatCab,
       );
@@ -448,7 +448,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (payload == null) return;
 
     // Solo procesamos si pertenece a este lead
-    if (payload.leadId != _currentLeadId) return;
+    if (payload.idNumero != _currentIdNumero) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
@@ -495,7 +495,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final currentState = state as ChatDetailSuccess;
     final payload = UpdatePantallaWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
-    if (payload.leadId != _currentLeadId) return;
+    if (payload.idNumero != _currentIdNumero) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
@@ -560,7 +560,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (payload == null) return;
 
     // Solo procesamos si pertenece a este lead
-    if (payload.leadId != _currentLeadId) return;
+    if (payload.idNumero != _currentIdNumero) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 

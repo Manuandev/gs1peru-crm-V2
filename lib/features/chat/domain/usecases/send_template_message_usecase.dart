@@ -10,7 +10,7 @@ class SendTemplateMessageUseCase {
   bool call({
     required Template template,
     required String mensajeFormateado,
-    required String idLead,
+    required String idNumero,
     required String numero,
     required String chatCab,
     required String nombreCliente,
@@ -21,7 +21,7 @@ class SendTemplateMessageUseCase {
     return _repository.sendWhatsAppTemplateMessage(
       template: template,
       mensajeFormateado: mensajeFormateado,
-      idLead: idLead,
+      idNumero: idNumero,
       numero: numero,
       chatCab: chatCab,
       nombreCliente: nombreCliente,

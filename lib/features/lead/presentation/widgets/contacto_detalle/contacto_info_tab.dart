@@ -122,7 +122,7 @@ class _InfoCard extends StatelessWidget {
             filas[i],
             if (i < filas.length - 1)
               const Divider(
-                height: 1,
+                height: AppSizing.hairline,
                 indent: AppSpacing.md,
                 endIndent: AppSpacing.md,
               ),
@@ -183,7 +183,7 @@ class _InfoFila extends StatelessWidget {
                   etiqueta.toUpperCase(),
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
-                    letterSpacing: 0.3,
+                    letterSpacing: AppTextStyles.letterSpacingNarrow,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),

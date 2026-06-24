@@ -10,9 +10,9 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailView extends StatefulWidget {
-  final int idLead;
+  final int idNumero;
   final Chat? conversacion;
-  const ChatDetailView({super.key, required this.idLead, this.conversacion});
+  const ChatDetailView({super.key, required this.idNumero, this.conversacion});
 
   @override
   State<ChatDetailView> createState() => _ChatDetailViewState();
@@ -35,12 +35,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   void initState() {
     super.initState();
     _scroll.controller.addListener(_onScroll);
-    AppRouteObserver.instance.setActiveLead(widget.idLead);
+    AppRouteObserver.instance.setActiveLead(widget.idNumero);
     final cubit = context.read<InfoLeadCubit>();
     if (widget.conversacion != null) {
       cubit.seed(widget.conversacion!);
     } else {
-      cubit.load(widget.idLead);
+      cubit.load(widget.idNumero);
     }
     _subs.addAll([
       cubit.successes.listen(
@@ -96,7 +96,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
     context.read<ChatDetailBloc>().add(
       ChatDetailMoreMessagesLoaded(
-        idLead: widget.idLead,
+        idNumero: widget.idNumero,
         idUltimoMensaje: anchorToken,
       ),
     );
@@ -126,9 +126,11 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       appBarTrailingButtons: [
         IconButton(
           icon: const Icon(AppIcons.phone, color: AppColors.background),
-          onPressed: () => LauncherUtils.abrirTelefono(
-            '${widget.conversacion!.prefijoPais} ${widget.conversacion!.numero}',
-          ),
+          onPressed: widget.conversacion == null
+              ? null
+              : () => LauncherUtils.abrirTelefono(
+                    '${widget.conversacion!.prefijoPais} ${widget.conversacion!.numero}',
+                  ),
         ),
       ],
 
@@ -173,6 +175,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           initialTab: tab,
           infoLead: infoLead,
           leadId: infoLead.idLead,
+          idNumero: widget.idNumero,
         );
       },
       body: Column(
@@ -197,7 +200,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
 
                       if (context.mounted) {
                         context.read<InfoLeadCubit>().updateEstado(
-                          idLead: widget.idLead,
+                          idNumero: widget.idNumero,
                           idEstado: estado.id,
                           estado: estado.label,
                         );
@@ -263,8 +266,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                         onRetry: () {
                           _isInitialLoad = true;
                           context.read<ChatDetailBloc>().add(
-                            ChatDetailRefreshed(widget.idLead),
+                            ChatDetailRefreshed(widget.idNumero),
                           );
+
                         },
                       );
                     }
@@ -300,7 +304,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                           scrollController: _scroll.controller,
                           isLoadingMore: isLoadingMore,
                           audioController: _audioController,
-                          idLead: widget.idLead,
+                          idNumero: widget.idNumero,
                           nombre: nombre,
                         );
                       },

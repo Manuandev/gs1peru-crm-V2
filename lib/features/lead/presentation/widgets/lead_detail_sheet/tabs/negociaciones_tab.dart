@@ -1,15 +1,20 @@
 // lib/features/lead/presentation/widgets/lead_detail_sheet/tabs/negociaciones_tab.dart
-
+ 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/lead/presentation/cubit/negociaciones/negociaciones_cubit.dart';
-import 'package:app_crm/features/lead/presentation/cubit/negociaciones/negociaciones_state.dart';
+import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class NegociacionesTab extends StatefulWidget {
   final int leadId;
+  final int idNumero;
 
-  const NegociacionesTab({super.key, required this.leadId});
+  const NegociacionesTab({
+    super.key,
+    required this.leadId,
+    required this.idNumero,
+  });
 
   @override
   State<NegociacionesTab> createState() => _NegociacionesTabState();
@@ -32,8 +37,8 @@ class _NegociacionesTabState extends State<NegociacionesTab>
     return BlocBuilder<NegociacionesCubit, NegociacionesState>(
       builder: (context, state) {
         return switch (state) {
-          NegociacionesInitial() || NegociacionesLoading() =>
-            const AppLoadingView(),
+          NegociacionesInitial() ||
+          NegociacionesLoading() => const AppLoadingView(),
           NegociacionesError(:final mensaje) => AppErrorView(
             message: mensaje,
             onRetry: () => context
@@ -42,6 +47,7 @@ class _NegociacionesTabState extends State<NegociacionesTab>
           ),
           NegociacionesSuccess(:final negociaciones) => _ListaNegociaciones(
             negociaciones: negociaciones,
+            idNumero: widget.idNumero,
           ),
         };
       },
@@ -53,20 +59,40 @@ class _NegociacionesTabState extends State<NegociacionesTab>
 // Lista con header + cards + info banner
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _ListaNegociaciones extends StatelessWidget {
-  final List<NegociacionFake> negociaciones;
+enum _FiltroNeg { todas, activa, ganadas }
 
-  const _ListaNegociaciones({required this.negociaciones});
+class _ListaNegociaciones extends StatefulWidget {
+  final List<NegociacionFake> negociaciones;
+  final int idNumero;
+
+  const _ListaNegociaciones({
+    required this.negociaciones,
+    required this.idNumero,
+  });
+
+  @override
+  State<_ListaNegociaciones> createState() => _ListaNegociacionesState();
+}
+
+class _ListaNegociacionesState extends State<_ListaNegociaciones> {
+  _FiltroNeg _filtro = _FiltroNeg.todas;
 
   @override
   Widget build(BuildContext context) {
-    if (negociaciones.isEmpty) {
+    if (widget.negociaciones.isEmpty) {
       return const _EstadoVacio();
     }
 
-    final seleccionada = negociaciones
-        .where((n) => n.accion == AccionNegociacion.seleccionada)
-        .length;
+    // ── LÓGICA DE FILTRO ──────────────────────────────────────────────────
+    // Aquí filtra widget.negociaciones según _filtro antes de renderizar.
+    // Ejemplo cuando implementes:
+    //   final visibles = switch (_filtro) {
+    //     _FiltroNeg.todas   => widget.negociaciones,
+    //     _FiltroNeg.activa  => widget.negociaciones.where((n) => n.idEstado == X),
+    //     _FiltroNeg.ganadas => widget.negociaciones.where((n) => n.idEstado == Y),
+    //   }.toList();
+    // Por ahora muestra todo:
+    final visibles = widget.negociaciones;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -76,22 +102,49 @@ class _ListaNegociaciones extends StatelessWidget {
         AppSpacing.xxl,
       ),
       children: [
-        // ── Header de conteos ──────────────────────────────────────────────
+        // ── Header: chips de filtro ────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: Text(
-            '${seleccionada > 0 ? '1 conversación' : '0 conversaciones'} • ${negociaciones.length} negociaciones',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+          child: Row(
+            children: [
+              const Spacer(),
+              _FiltroChip(
+                label: 'Todas',
+                seleccionado: _filtro == _FiltroNeg.todas,
+                onTap: () => setState(() => _filtro = _FiltroNeg.todas),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              _FiltroChip(
+                label: 'Activa',
+                seleccionado: _filtro == _FiltroNeg.activa,
+                onTap: () => setState(() => _filtro = _FiltroNeg.activa),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              _FiltroChip(
+                label: 'Ganadas',
+                seleccionado: _filtro == _FiltroNeg.ganadas,
+                onTap: () => setState(() => _filtro = _FiltroNeg.ganadas),
+              ),
+            ],
           ),
         ),
 
         // ── Cards ──────────────────────────────────────────────────────────
-        ...negociaciones.map(
-          (n) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: NegociacionCard(negociacion: n),
+        ...visibles.map(
+          (n) => NegociacionCard(
+            negociacion: n,
+            onGenerarSolicitud: () {},
+            onEditarNegociacion: () {
+              NavigationService.goBack();
+              NavigationService.navigateTo(
+                AppRoutes.detalleEditarLead,
+                arguments: {
+                  'idNumero': widget.idNumero,
+                  'lead': null,
+                  'cubit': null,
+                },
+              );
+            },
           ),
         ),
 
@@ -101,9 +154,7 @@ class _ListaNegociaciones extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.info.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-            border: Border.all(
-              color: AppColors.info.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,243 +182,6 @@ class _ListaNegociaciones extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tarjeta de negociación
-// ─────────────────────────────────────────────────────────────────────────────
-
-class NegociacionCard extends StatelessWidget {
-  final NegociacionFake negociacion;
-
-  const NegociacionCard({super.key, required this.negociacion});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorEstado = AppIconsSocial.colorEstado(negociacion.idEstado);
-    final bgEstado = AppIconsSocial.bgEstado(negociacion.idEstado);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: AppSizing.shadowBlurXs,
-            offset: Offset(0, AppSizing.shadowOffsetCardY),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Ícono del curso/evento ───────────────────────────────────────
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: bgEstado,
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            child: Icon(
-              AppIcons.interes,
-              size: AppSizing.iconMd,
-              color: colorEstado,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-
-          // ── Contenido ───────────────────────────────────────────────────
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  negociacion.nombre,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: AppTextStyles.weightSemiBold,
-                  ),
-                ),
-                Text(
-                  negociacion.empresa,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                AppIconsSocial.chipEstado(
-                  negociacion.idEstado,
-                  label: negociacion.estado,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    AppIconsSocial.widgetCanal(
-                      negociacion.idCanal,
-                      size: AppSizing.iconXs,
-                    ),
-                    const SizedBox(width: AppSpacing.xxs),
-                    Text(
-                      'Canal',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Icon(
-                      AppIcons.users,
-                      size: AppSizing.iconXs,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: AppSpacing.xxs),
-                    Text(
-                      '${negociacion.cantidad} ${negociacion.cantidad == 1 ? 'persona' : 'personas'}',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Row(
-                  children: [
-                    Icon(
-                      AppIcons.calendar,
-                      size: AppSizing.iconXs,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: AppSpacing.xxs),
-                    Text(
-                      negociacion.ultimaActualizacion,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-
-          // ── Botón de acción ─────────────────────────────────────────────
-          _AccionWidget(accion: negociacion.accion, colorEstado: colorEstado),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Widget de acción según estado de la negociación
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _AccionWidget extends StatelessWidget {
-  final AccionNegociacion accion;
-  final Color colorEstado;
-
-  const _AccionWidget({required this.accion, required this.colorEstado});
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (accion) {
-      AccionNegociacion.seleccionada => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.success,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.success, width: 2),
-            ),
-            child: const Icon(
-              AppIcons.check,
-              color: AppColors.textOnDark,
-              size: AppSizing.iconMd,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            'Seleccionada',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.success,
-            ),
-          ),
-        ],
-      ),
-      AccionNegociacion.verPropuesta => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          SizedBox(
-            height: AppSizing.buttonHeightSmall,
-            child: OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                ),
-                textStyle: AppTextStyles.labelSmall,
-              ),
-              child: const Text('Ver propuesta'),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          SizedBox(
-            height: AppSizing.buttonHeightSmall,
-            child: OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                ),
-                foregroundColor: AppColors.textSecondary,
-                side: const BorderSide(color: AppColors.border),
-                textStyle: AppTextStyles.labelSmall,
-              ),
-              child: const Text('Seleccionar'),
-            ),
-          ),
-        ],
-      ),
-      AccionNegociacion.generarSolicitud => SizedBox(
-        width: 80,
-        child: ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.success,
-            foregroundColor: AppColors.textOnDark,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xs,
-              vertical: AppSpacing.xs,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(AppIcons.fileFactura, size: AppSizing.iconActionSm),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                'Generar\nsolicitud',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textOnDark,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    };
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Estado vacío
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -383,14 +197,14 @@ class _EstadoVacio extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: AppSizing.iconXxl,
+              height: AppSizing.iconXxl,
               decoration: BoxDecoration(
                 color: AppColors.grey100,
                 borderRadius: BorderRadius.circular(AppSizing.radiusXl),
               ),
               child: const Icon(
-                Icons.handshake_outlined,
+                AppIcons.negociacion,
                 size: AppSizing.iconXl,
                 color: AppColors.grey400,
               ),
@@ -411,6 +225,56 @@ class _EstadoVacio extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chip de filtro compacto
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FiltroChip extends StatelessWidget {
+  final String label;
+  final bool seleccionado;
+  final VoidCallback onTap;
+
+  const _FiltroChip({
+    required this.label,
+    required this.seleccionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs,
+        ),
+        decoration: BoxDecoration(
+          color: seleccionado
+              ? color.withValues(alpha: 0.08)
+              : AppColors.transparent,
+          borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+          border: Border.all(
+            color: seleccionado ? color : AppColors.border,
+            width: AppSizing.hairline,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: seleccionado ? color : AppColors.textSecondary,
+            fontWeight: seleccionado
+                ? AppTextStyles.weightSemiBold
+                : AppTextStyles.weightRegular,
+          ),
         ),
       ),
     );

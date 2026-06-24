@@ -1,4 +1,4 @@
-// lib/core/constants/app_breakpoints.dart
+﻿// lib/core/constants/app_breakpoints.dart
 
 /// Breakpoints para Responsive Design
 ///
@@ -525,4 +525,7 @@ class AppSizing {
   /// Blur de la sombra de la cartilla flotante de auth: 24dp
   /// Sombra con offset negativo en Y que da sensación de levitación sobre la zona azul.
   static const double shadowBlurLg = 24.0;
+
+  /// Altura de la pastillita de arrastre (drag handle) en bottom sheets: 4dp
+  static const double dragHandleHeight = 4.0;
 }

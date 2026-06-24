@@ -1,4 +1,4 @@
-// lib/core/constants/app_icons.dart
+﻿// lib/core/constants/app_icons.dart
 
 import 'package:flutter/material.dart';
 
@@ -501,4 +501,15 @@ class AppIcons {
 
   /// Lista alternativa — ícono del campo Subestado en datos del lead
   static const IconData listAlt = Icons.list_alt_rounded;
+
+  // ── LeadDetailSheet — tabs y popup del chat ──────────────────────────────
+
+  /// Datos del lead — tab Datos en LeadDetailSheet y popup del chat
+  static const IconData datosLead = Icons.assignment_outlined;
+
+  /// Negociación / acuerdo — tab Negociaciones en LeadDetailSheet y popup del chat
+  static const IconData negociacion = Icons.handshake_outlined;
+
+  /// Historial de actividades — tab Historial en LeadDetailSheet y popup del chat
+  static const IconData historial = Icons.history_outlined;
 }

@@ -7,6 +7,7 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailView extends StatefulWidget {
   final int idLead;
@@ -153,15 +154,26 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         ),
       ],
       onPopupSelected: (value) {
-        switch (value) {
-          case 'datos':
-            // acción bloquear
-            break;
-          case 'negociaciones':
-            break;
-          case 'historial':
-            break;
-        }
+        final infoLead =
+            context.read<InfoLeadCubit>().state is InfoLeadSuccess
+                ? (context.read<InfoLeadCubit>().state as InfoLeadSuccess)
+                    .infoLead
+                : null;
+        if (infoLead == null) return;
+
+        final tab = switch (value) {
+          'datos' => LeadDetailTab.datos,
+          'negociaciones' => LeadDetailTab.negociaciones,
+          'historial' => LeadDetailTab.historial,
+          _ => LeadDetailTab.datos,
+        };
+
+        LeadDetailSheet.show(
+          context,
+          initialTab: tab,
+          infoLead: infoLead,
+          leadId: infoLead.idLead,
+        );
       },
       body: Column(
         children: [

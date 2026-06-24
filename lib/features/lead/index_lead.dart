@@ -80,3 +80,15 @@ export '../chat/domain/usecases/get_info_lead_usecase.dart';
 export '../chat/domain/usecases/update_lead_estado_usecase.dart';
 export '../chat/domain/usecases/update_lead_info_usecase.dart';
 export '../chat/domain/entities/info_lead.dart';
+
+// Cubits de LeadDetailSheet
+export 'presentation/cubit/negociaciones/negociaciones_state.dart';
+export 'presentation/cubit/negociaciones/negociaciones_cubit.dart';
+export 'presentation/cubit/historial/historial_lead_state.dart';
+export 'presentation/cubit/historial/historial_lead_cubit.dart';
+
+// LeadDetailSheet — bottom sheet con tabs Datos / Negociaciones / Historial
+export 'presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart';
+export 'presentation/widgets/lead_detail_sheet/tabs/negociaciones_tab.dart';
+export 'presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart';
+export 'presentation/widgets/lead_detail_sheet/lead_detail_sheet.dart';

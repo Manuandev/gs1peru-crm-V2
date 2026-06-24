@@ -10,6 +10,7 @@ import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/settings/index_settings.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 // ── Tipos de transición ────────────────────────────────────────
 
@@ -102,8 +103,7 @@ class AppRouter {
       builder: (_) => const UnderConstructionPage(routeName: 'Contactos'),
     ),
     AppRoutes.solicitudes: RouteDefinition(
-      transition: TransitionType.slideRight,
-      builder: (_) => const UnderConstructionPage(routeName: 'Solicitudes'),
+      builder: (_) => const SolicitudListPage(),
     ),
     AppRoutes.misCasos: RouteDefinition(
       transition: TransitionType.slideRight,

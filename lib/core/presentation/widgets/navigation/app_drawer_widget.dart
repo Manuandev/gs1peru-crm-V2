@@ -153,9 +153,9 @@ class _DrawerContent extends StatelessWidget {
                             label: 'Mis casos',
                             isSeleccionado: !esMiEquipo,
                             onTap: () {
-                              context
-                                  .read<FiltroCubit>()
-                                  .cambiarVista(FiltroVista.misCasos);
+                              context.read<FiltroCubit>().cambiarVista(
+                                FiltroVista.misCasos,
+                              );
                               Navigator.of(context).pop();
                             },
                           ),
@@ -164,9 +164,9 @@ class _DrawerContent extends StatelessWidget {
                             label: 'Equipo',
                             isSeleccionado: esMiEquipo,
                             onTap: () {
-                              context
-                                  .read<FiltroCubit>()
-                                  .cambiarVista(FiltroVista.miEquipo);
+                              context.read<FiltroCubit>().cambiarVista(
+                                FiltroVista.miEquipo,
+                              );
                               Navigator.of(context).pop();
                             },
                           ),
@@ -254,10 +254,7 @@ class _DrawerItem extends StatelessWidget {
   final DrawerItemModel item;
   final bool isActive;
 
-  const _DrawerItem({
-    required this.item,
-    required this.isActive,
-  });
+  const _DrawerItem({required this.item, required this.isActive});
 
   @override
   Widget build(BuildContext context) {
@@ -267,9 +264,7 @@ class _DrawerItem extends StatelessWidget {
         ? colorScheme.primary
         : colorScheme.onSurfaceVariant;
 
-    final textColor = isActive
-        ? colorScheme.primary
-        : colorScheme.onSurface;
+    final textColor = isActive ? colorScheme.primary : colorScheme.onSurface;
 
     final bgColor = isActive
         ? colorScheme.primary.withValues(alpha: AppColors.opacityActiveItem)
@@ -388,8 +383,9 @@ class _AccesoRapidoItem extends StatelessWidget {
           vertical: AppSpacing.xxs,
         ),
         child: Material(
-          color: colorScheme.primary
-              .withValues(alpha: AppColors.opacityActiveItem),
+          color: colorScheme.primary.withValues(
+            alpha: AppColors.opacityActiveItem,
+          ),
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
           child: Padding(
             padding: const EdgeInsets.symmetric(

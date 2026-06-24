@@ -6,9 +6,10 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class SelectTemplateView extends StatefulWidget {
-  final InfoLead lead;
+  final Lead lead;
 
   const SelectTemplateView({super.key, required this.lead});
 

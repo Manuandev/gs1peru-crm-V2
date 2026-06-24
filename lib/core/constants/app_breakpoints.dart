@@ -560,4 +560,14 @@ class AppSizing {
   /// Altura de la barra de pestañas (TabBar): 48dp
   /// Coincide con kMinInteractiveDimension — usado en skeletons de pantallas con tabs
   static const double tabBarHeight = 48.0;
+
+  // ============================================================
+  // BOTTOM SHEET HANDLE
+  // ============================================================
+
+  /// Ancho del handle del bottom sheet: 40dp
+  static const double sheetHandleWidth = 40.0;
+
+  /// Alto del handle del bottom sheet: 4dp
+  static const double sheetHandleHeight = 4.0;
 }

@@ -2,9 +2,10 @@
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 abstract class ChatRepository {
-  Future<InfoLead> getInfoLead(int idNumero);
+  Future<Lead> getInfoLead(int idNumero);
   Future<List<Chat>> getChats();
 
   Future<List<ChatMessage>> getChatMessages(
@@ -30,7 +31,7 @@ abstract class ChatRepository {
 
   Future<CrudResult> updateEstado(int idNumero, String idEstado);
 
-  Future<CrudResult> updateLeadCompleto(InfoLead lead);
+  Future<CrudResult> updateLeadCompleto(Lead lead);
 
   Future<List<Template>> getTemplates();
 

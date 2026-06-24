@@ -77,9 +77,9 @@ class _ListaNegociaciones extends StatefulWidget {
 class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   _FiltroNeg _filtro = _FiltroNeg.todas;
 
-  void _editarLead() {
+  void _editarLead(int idLead) {
     context.goBack();
-    context.goToEditarLead(idNumero: widget.idNumero);
+    context.goToEditarLead(idLead: idLead);
   }
 
   @override
@@ -130,7 +130,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
           (lead) => NegociacionCard(
             lead: lead,
             onGenerarSolicitud: () {},
-            onEditarLead: _editarLead,
+            onEditarLead: () => _editarLead(lead.idLead),
           ),
         ),
 

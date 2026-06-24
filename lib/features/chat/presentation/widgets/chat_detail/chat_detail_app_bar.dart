@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailAppBar extends StatelessWidget {
-  final InfoLead infoLead;
-  const ChatDetailAppBar({super.key, required this.infoLead});
+  final Lead lead;
+  const ChatDetailAppBar({super.key, required this.lead});
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +18,9 @@ class ChatDetailAppBar extends StatelessWidget {
         // ── Avatar con iniciales ──
         CircleAvatar(
           radius: AppSizing.avatarRadiusAppBar,
-          backgroundColor: infoLead.nombreCompleto.avatarColor,
+          backgroundColor: lead.nombreCompleto.avatarColor,
           child: Text(
-            infoLead.nombreCompleto.initials,
+            lead.nombreCompleto.initials,
             style: AppTextStyles.titleSmall.copyWith(
               fontWeight: AppTextStyles.weightBold,
               color: AppColors.textOnDark,
@@ -36,7 +36,7 @@ class ChatDetailAppBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                infoLead.nombreCompleto,
+                lead.nombreCompleto,
                 style: AppTextStyles.titleMedium.copyWith(
                   color: colorScheme.onPrimary,
                   fontWeight: AppTextStyles.weightBold,
@@ -54,7 +54,7 @@ class ChatDetailAppBar extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
-                    infoLead.canal ?? 'Sin canal',
+                    lead.canal.isEmpty ? 'Sin canal' : lead.canal,
                     style: AppTextStyles.labelSmall.copyWith(
                       color: colorScheme.onPrimary.withValues(
                         alpha: AppColors.opacityOnPrimarySubtle,

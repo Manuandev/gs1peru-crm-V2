@@ -24,7 +24,8 @@ class LeadDetallePage extends StatelessWidget {
             GetInfoUseCase(ctx.read<ChatRepository>()),
             UpdateLeadEstadoUseCase(ctx.read<ChatRepository>()),
             UpdateLeadInfoUseCase(ctx.read<ChatRepository>()),
-          )..load(idLead),
+            GetLeadDetalleUseCase(ctx.read<LeadRepository>()),
+          )..cargarPorIdLead(idLead),
         ),
         BlocProvider(
           create: (ctx) => LeadDetalleBloc(

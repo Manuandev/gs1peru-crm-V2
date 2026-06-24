@@ -1,8 +1,8 @@
 // lib/features/chat/data/repositories/chat_repository_impl.dart
-//lib\features\chat\data\repositories\chat_repository_impl.dart
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final ChatRemoteDatasource _datasource;
@@ -10,7 +10,7 @@ class ChatRepositoryImpl implements ChatRepository {
   const ChatRepositoryImpl(this._datasource);
 
   @override
-  Future<InfoLead> getInfoLead(int idNumero) => _datasource.getInfoLead(idNumero);
+  Future<Lead> getInfoLead(int idNumero) => _datasource.getInfoLead(idNumero);
 
   @override
   Future<List<Chat>> getChats() => _datasource.getChats();
@@ -53,7 +53,7 @@ class ChatRepositoryImpl implements ChatRepository {
       _datasource.updateEstado(idNumero, idEstado);
 
   @override
-  Future<CrudResult> updateLeadCompleto(InfoLead lead) =>
+  Future<CrudResult> updateLeadCompleto(Lead lead) =>
       _datasource.updateLeadCompleto(lead);
 
   @override

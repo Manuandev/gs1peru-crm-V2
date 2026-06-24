@@ -5,8 +5,8 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class EditLeadPage extends StatelessWidget {
-  final int idNumero;
-  const EditLeadPage({super.key, required this.idNumero});
+  final int idLead;
+  const EditLeadPage({super.key, required this.idLead});
 
   @override
   Widget build(BuildContext context) {

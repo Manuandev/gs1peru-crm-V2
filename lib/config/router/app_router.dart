@@ -202,9 +202,8 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        final idNumero = args['idNumero'] as int?;
+        final idLead = args['idLead'] as int? ?? 0;
         final existingCubit = args['cubit'] as InfoLeadCubit?;
-        final lead = args['lead'] as InfoLead?;
 
         // Siempre se necesita un InfoLeadCubit en el árbol para EditLeadView.
         Widget infoLeadProvider(Widget child) {
@@ -212,25 +211,17 @@ class AppRouter {
             return BlocProvider.value(value: existingCubit, child: child);
           }
           return BlocProvider<InfoLeadCubit>(
-            create: (ctx) {
-              final cubit = InfoLeadCubit(
-                GetInfoUseCase(ctx.read<ChatRepository>()),
-                UpdateLeadEstadoUseCase(ctx.read<ChatRepository>()),
-                UpdateLeadInfoUseCase(ctx.read<ChatRepository>()),
-              );
-              if (idNumero != null) {
-                cubit.load(idNumero);
-              } else if (lead != null) {
-                cubit.seedLead(lead);
-              }
-              return cubit;
-            },
+            create: (ctx) => InfoLeadCubit(
+              GetInfoUseCase(ctx.read<ChatRepository>()),
+              UpdateLeadEstadoUseCase(ctx.read<ChatRepository>()),
+              UpdateLeadInfoUseCase(ctx.read<ChatRepository>()),
+              GetLeadDetalleUseCase(ctx.read<LeadRepository>()),
+            )..cargarPorIdLead(idLead),
             child: child,
           );
         }
 
-        final idNav = idNumero ?? lead?.idLead ?? 0;
-        return infoLeadProvider(EditLeadPage(idNumero: idNav));
+        return infoLeadProvider(EditLeadPage(idLead: idLead));
       },
     ),
     AppRoutes.templates: RouteDefinition<Template>(
@@ -238,7 +229,7 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return SelectTemplatePage(lead: args['lead'] as InfoLead);
+        return SelectTemplatePage(lead: args['lead'] as Lead);
       },
     ),
   };

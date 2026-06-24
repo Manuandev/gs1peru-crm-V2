@@ -4,6 +4,7 @@
 import 'dart:io';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatRemoteDatasource {
   final ApiClient _api = ApiClient();
@@ -229,7 +230,7 @@ class ChatRemoteDatasource {
     };
   }
 
-  Future<CrudResult> updateLeadCompleto(InfoLead lead) async {
+  Future<CrudResult> updateLeadCompleto(Lead lead) async {
     final ip = await _deviceInfo.getLocalIp();
 
     final String body =

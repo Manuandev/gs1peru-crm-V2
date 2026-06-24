@@ -1,8 +1,7 @@
-// lib/features/chat/presentation/bloc/info_lead/info_lead_state.dart
+// lib/features/lead/presentation/bloc/info_lead/info_lead_state.dart
 
 import 'package:app_crm/index_dependencies.dart';
-
-import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 sealed class InfoLeadState extends Equatable {
   const InfoLeadState();
@@ -20,11 +19,22 @@ class InfoLeadLoading extends InfoLeadState {
 }
 
 class InfoLeadSuccess extends InfoLeadState {
-  final InfoLead infoLead;
-  const InfoLeadSuccess(this.infoLead);
+  final Lead lead;
+  // Flags de conversación WhatsApp — pertenecen al número, no al lead.
+  // Se almacenan aquí para que ChatInputBar pueda leerlos sin que Lead los cargue.
+  final bool isBloqueado;
+  final bool isExpirado;
+  final bool isCerrado;
+
+  const InfoLeadSuccess(
+    this.lead, {
+    this.isBloqueado = false,
+    this.isExpirado = false,
+    this.isCerrado = false,
+  });
 
   @override
-  List<Object?> get props => [infoLead];
+  List<Object?> get props => [lead, isBloqueado, isExpirado, isCerrado];
 }
 
 class InfoLeadFailure extends InfoLeadState {

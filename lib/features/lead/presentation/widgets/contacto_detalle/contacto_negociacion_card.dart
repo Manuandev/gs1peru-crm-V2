@@ -94,9 +94,9 @@ class ContactoNegociacionCard extends StatelessWidget {
                           //     ),
                           //     child: Icon(AppIcons.notification, size: AppSizing.iconSm, color: AppColors.textOnDark),
                           //   ),
-                          if (lead.monto > 0)
+                          if ((lead.precioBase ?? 0) > 0)
                             Text(
-                              _formatMonto(lead.monto),
+                              _formatMonto(lead.precioBase ?? 0),
                               style: AppTextStyles.labelMedium.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: AppTextStyles.weightSemiBold,

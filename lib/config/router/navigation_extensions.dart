@@ -6,6 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 extension NavigationExtensions on BuildContext {
   // ── Primitivos (no usar directamente desde features) ───────
@@ -117,16 +118,15 @@ extension NavigationExtensions on BuildContext {
       });
 
   Future<void> goToEditarLead({
-    int? idNumero,
-    InfoLead? lead,
+    required int idLead,
     InfoLeadCubit? cubit,
   }) => _push(
     AppRoutes.detalleEditarLead,
-    arguments: {'idNumero': idNumero, 'lead': lead, 'cubit': cubit},
+    arguments: {'idLead': idLead, 'cubit': cubit},
   );
 
   /// Retorna el [Template] seleccionado, o null si el usuario canceló.
-  Future<Template?> goToTemplates({required InfoLead lead}) =>
+  Future<Template?> goToTemplates({required Lead lead}) =>
       _push<Template>(AppRoutes.templates, arguments: {'lead': lead});
 
   /// Navega a un chat desde home: limpia el stack, pone ChatList como base

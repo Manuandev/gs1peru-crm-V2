@@ -242,7 +242,7 @@ class _LeadCardState extends State<LeadCard> {
                 const SizedBox(width: AppSpacing.xs),
                 Column(
                   children: [
-                    if (widget.lead.ibChat) ...[
+                    if (widget.lead.tieneConversacionAbierta == true) ...[
                       _IconoCompacto(
                         icon: AppIcons.chat,
                         color: AppColors.primary,

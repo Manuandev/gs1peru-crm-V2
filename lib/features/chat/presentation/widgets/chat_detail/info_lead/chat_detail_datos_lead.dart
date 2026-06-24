@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailDatosLead extends StatefulWidget {
-  final InfoLead infoLead;
-  const ChatDetailDatosLead({super.key, required this.infoLead});
+  final Lead lead;
+  const ChatDetailDatosLead({super.key, required this.lead});
 
   @override
   State<ChatDetailDatosLead> createState() => _ChatDetailDatosLeadState();
@@ -64,7 +64,7 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
           // ── Contenido expandible ──
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
-            secondChild: _DatosLeadContenido(infoLead: widget.infoLead),
+            secondChild: _DatosLeadContenido(lead: widget.lead),
             crossFadeState: _expandido
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
@@ -77,8 +77,8 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
 }
 
 class _DatosLeadContenido extends StatelessWidget {
-  final InfoLead infoLead;
-  const _DatosLeadContenido({required this.infoLead});
+  final Lead lead;
+  const _DatosLeadContenido({required this.lead});
 
   @override
   Widget build(BuildContext context) {
@@ -96,14 +96,14 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: AppIcons.flag,
                 label: 'Estado',
-                valor: infoLead.estado,
+                valor: lead.estado,
                 iconColor: AppColors.datoEstadoFg,
                 iconBackground: AppColors.datoEstadoBg,
               ),
               _DatoItem(
                 icon: AppIcons.listAlt,
                 label: 'Subestado',
-                valor: infoLead.subEstado,
+                valor: lead.subEstado ?? '',
                 iconColor: AppColors.datoSubestadoFg,
                 iconBackground: AppColors.datoSubestadobg,
               ),
@@ -115,14 +115,14 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: AppIcons.campaign,
                 label: 'Campaña',
-                valor: infoLead.campania ?? '',
+                valor: lead.campania,
                 iconColor: AppColors.datoCampaniaFg,
                 iconBackground: AppColors.datoCampaniaBg,
               ),
               _DatoItem(
                 icon: AppIcons.calendar,
                 label: 'Evento',
-                valor: infoLead.evento ?? '',
+                valor: lead.evento,
                 iconColor: AppColors.datoEventoFg,
                 iconBackground: AppColors.datoEventoBg,
               ),
@@ -134,33 +134,20 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: AppIcons.share,
                 label: 'Canal',
-                valor: infoLead.canal ?? '',
+                valor: lead.canal,
                 iconColor: AppColors.datoCanalFg,
                 iconBackground: AppColors.datoCanalBg,
               ),
               _DatoItem(
                 icon: AppIcons.users,
                 label: 'Interés',
-                valor: infoLead.interes ?? '',
+                valor: lead.interes,
                 iconColor: AppColors.datoInteresFg,
                 iconBackground: AppColors.datoInteresBg,
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-
-          // ── Botón Editar lead ──
-          // Align(
-          //   alignment: Alignment.centerRight,
-          //   child: CustomOutlinedButton(
-          //     text: 'Editar lead',
-          //     icon: const Icon(Icons.edit_rounded, size: AppSizing.iconSm),
-          //     onPressed: () => context.goToEditarLead(
-          //       lead: infoLead,
-          //       cubit: context.read<InfoLeadCubit>(),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );

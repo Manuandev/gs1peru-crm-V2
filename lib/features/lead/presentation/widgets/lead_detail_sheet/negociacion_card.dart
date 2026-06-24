@@ -87,7 +87,7 @@ class NegociacionCard extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                       etiqueta: 'Monto',
-                      valor: 'S/ ${lead.monto.toStringAsFixed(2)}',
+                      valor: 'S/ ${(lead.precioBase ?? 0.0).toStringAsFixed(2)}',
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     _FilaDato(

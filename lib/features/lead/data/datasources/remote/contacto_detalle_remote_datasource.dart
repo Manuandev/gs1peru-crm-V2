@@ -59,8 +59,7 @@ class ContactoDetalleRemoteDatasource {
         canal: 'WhatsApp',
         idInteres: 1,
         interes: 'Diseño',
-        ibChat: true,
-        monto: 0.0,
+        tieneConversacionAbierta: true,
       ),
       LeadModel(
         idLead: 1002,
@@ -85,8 +84,6 @@ class ContactoDetalleRemoteDatasource {
         canal: 'Instagram',
         idInteres: 1,
         interes: 'Diseño',
-        ibChat: false,
-        monto: 0.0,
       ),
       LeadModel(
         idLead: 1003,
@@ -111,8 +108,7 @@ class ContactoDetalleRemoteDatasource {
         canal: 'Web',
         idInteres: 1,
         interes: 'Diseño',
-        ibChat: false,
-        monto: 50.0,
+        precioBase: 50.0,
       ),
       LeadModel(
         idLead: 1004,
@@ -137,8 +133,7 @@ class ContactoDetalleRemoteDatasource {
         canal: 'WhatsApp',
         idInteres: 1,
         interes: 'Diseño',
-        ibChat: false,
-        monto: 50.0,
+        precioBase: 50.0,
       ),
     ];
   }

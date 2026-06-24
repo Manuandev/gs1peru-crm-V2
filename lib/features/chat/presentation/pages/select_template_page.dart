@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class SelectTemplatePage extends StatelessWidget {
-  final InfoLead lead;
+  final Lead lead;
 
   const SelectTemplatePage({super.key, required this.lead});
 

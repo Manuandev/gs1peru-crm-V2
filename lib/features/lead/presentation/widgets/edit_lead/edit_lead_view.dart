@@ -53,6 +53,15 @@ class _EditLeadViewState extends State<EditLeadView> {
       ],
       body: BlocBuilder<InfoLeadCubit, InfoLeadState>(
         builder: (context, infoState) {
+          if (infoState is InfoLeadLoading || infoState is InfoLeadInitial) {
+            return const AppLoadingView();
+          }
+          if (infoState is InfoLeadFailure) {
+            return AppErrorView(
+              message: infoState.message,
+              onRetry: () => context.goBack(),
+            );
+          }
           if (infoState is! InfoLeadSuccess) return const AppLoadingView();
 
           return BlocBuilder<EditLeadBloc, EditLeadState>(
@@ -69,7 +78,7 @@ class _EditLeadViewState extends State<EditLeadView> {
               }
               if (state is EditLeadLoaded) {
                 return EditLeadPortrait(
-                  lead: infoState.infoLead,
+                  lead: infoState.lead,
                 ); // ← del cubit
               }
               return const SizedBox.shrink();

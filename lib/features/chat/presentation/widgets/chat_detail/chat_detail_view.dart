@@ -111,7 +111,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       titleWidget: BlocBuilder<InfoLeadCubit, InfoLeadState>(
         buildWhen: (prev, curr) => curr is InfoLeadSuccess,
         builder: (context, state) => state is InfoLeadSuccess
-            ? ChatDetailAppBar(infoLead: state.infoLead)
+            ? ChatDetailAppBar(lead: state.lead)
             : const SizedBox.shrink(),
       ),
       drawerSide: DrawerSide.none,
@@ -156,12 +156,9 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         ),
       ],
       onPopupSelected: (value) {
-        final infoLead =
-            context.read<InfoLeadCubit>().state is InfoLeadSuccess
-                ? (context.read<InfoLeadCubit>().state as InfoLeadSuccess)
-                    .infoLead
-                : null;
-        if (infoLead == null) return;
+        final s = context.read<InfoLeadCubit>().state;
+        if (s is! InfoLeadSuccess) return;
+        final lead = s.lead;
 
         final tab = switch (value) {
           'datos' => LeadDetailTab.datos,
@@ -173,8 +170,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         LeadDetailSheet.show(
           context,
           initialTab: tab,
-          infoLead: infoLead,
-          leadId: infoLead.idLead,
+          lead: lead,
+          leadId: lead.idLead,
           idNumero: widget.idNumero,
         );
       },
@@ -184,11 +181,11 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             buildWhen: (prev, curr) {
               if (curr is! InfoLeadSuccess) return false;
               if (prev is! InfoLeadSuccess) return true;
-              return (prev).infoLead.idEstado != (curr).infoLead.idEstado;
+              return (prev).lead.idEstado != (curr).lead.idEstado;
             },
             builder: (context, state) => state is InfoLeadSuccess
                 ? ChatDetailFases(
-                    idEstadoActual: state.infoLead.idEstado,
+                    idEstadoActual: state.lead.idEstado,
                     onEstadoTap: (estado) async {
                       final confirmar = await context.showConfirmDialog(
                         title: 'Confirmar cambio',
@@ -291,12 +288,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                       buildWhen: (prev, curr) {
                         if (curr is! InfoLeadSuccess) return false;
                         if (prev is! InfoLeadSuccess) return true;
-                        return prev.infoLead.nombreCompleto !=
-                            curr.infoLead.nombreCompleto;
+                        return prev.lead.nombreCompleto !=
+                            curr.lead.nombreCompleto;
                       },
                       builder: (context, infoState) {
                         final nombre = infoState is InfoLeadSuccess
-                            ? infoState.infoLead.nombreCompleto
+                            ? infoState.lead.nombreCompleto
                             : '';
 
                         return MessageList(

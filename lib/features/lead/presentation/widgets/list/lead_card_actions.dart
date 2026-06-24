@@ -32,7 +32,7 @@ class LeadCardActions extends StatelessWidget {
         //   onTap: onWhatsAppTap,
         // ),
         // const SizedBox(width: AppSpacing.md),
-        if (lead.ibChat) ...[
+        if (lead.tieneConversacionAbierta == true) ...[
           _LeadActionButton(
             icon: AppIcons.chat,
             color: AppColors.primary,

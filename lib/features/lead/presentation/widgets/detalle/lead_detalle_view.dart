@@ -65,7 +65,7 @@ class _DetalleScaffold extends StatelessWidget {
           final infoState = context.read<InfoLeadCubit>().state;
           if (infoState is! InfoLeadSuccess) return;
           await context.goToEditarLead(
-            lead: infoState.infoLead,
+            idLead: infoState.lead.idLead,
             cubit: context.read<InfoLeadCubit>(),
           );
           if (context.mounted) {

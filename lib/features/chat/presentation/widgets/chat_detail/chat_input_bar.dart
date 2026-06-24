@@ -54,7 +54,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   String _getNumero() {
     final infoState = context.read<InfoLeadCubit>().state;
     if (infoState is InfoLeadSuccess) {
-      return infoState.infoLead.telefono.replaceAll(RegExp(r'[^0-9]'), '');
+      return infoState.lead.numero.replaceAll(RegExp(r'[^0-9]'), '');
     }
     return '';
   }
@@ -108,21 +108,21 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final infoState = context.read<InfoLeadCubit>().state;
     if (infoState is! InfoLeadSuccess) return;
 
-    final template = await context.goToTemplates(lead: infoState.infoLead);
+    final template = await context.goToTemplates(lead: infoState.lead);
     if (template == null || !context.mounted) return;
 
-    final info = infoState.infoLead;
+    final lead = infoState.lead;
 
     // ignore: use_build_context_synchronously
     context.read<ChatDetailBloc>().add(
       ChatDetailTemplateMessageSent(
         template: template,
-        numero: info.telefono.replaceAll(RegExp(r'[^0-9]'), ''),
+        numero: lead.numero.replaceAll(RegExp(r'[^0-9]'), ''),
         chatCab: _getChatCab(),
-        nombreCliente: info.nombre,
-        apellidoCliente: info.apellido,
-        isExpirado: info.isExpirado,
-        isCerrado: info.isCerrado,
+        nombreCliente: lead.nombre,
+        apellidoCliente: lead.apellido,
+        isExpirado: infoState.isExpirado,
+        isCerrado: infoState.isCerrado,
       ),
     );
   }
@@ -166,11 +166,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
             buildWhen: (prev, curr) {
               if (curr is! InfoLeadSuccess) return false;
               if (prev is! InfoLeadSuccess) return true;
-              return prev.infoLead.isExpirado != curr.infoLead.isExpirado;
+              return prev.isExpirado != curr.isExpirado;
             },
             builder: (context, state) {
               final expirado = state is InfoLeadSuccess
-                  ? state.infoLead.isExpirado
+                  ? state.isExpirado
                   : false;
 
               if (expirado) {

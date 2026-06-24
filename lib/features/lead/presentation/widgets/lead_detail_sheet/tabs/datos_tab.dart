@@ -1,20 +1,20 @@
 // lib/features/lead/presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart
 
-import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class DatosTab extends StatelessWidget {
-  final InfoLead infoLead;
+  final Lead lead;
   final int idNumero;
 
-  const DatosTab({super.key, required this.infoLead, required this.idNumero});
+  const DatosTab({super.key, required this.lead, required this.idNumero});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final colorEstado = AppIconsSocial.colorEstado(infoLead.idEstado);
+    final colorEstado = AppIconsSocial.colorEstado(lead.idEstado);
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -32,7 +32,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Nombres',
-                  valor: infoLead.nombre.isEmpty ? '—' : infoLead.nombre,
+                  valor: lead.nombre.isEmpty ? '—' : lead.nombre,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -41,7 +41,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Apellidos',
-                  valor: infoLead.apellido.isEmpty ? '—' : infoLead.apellido,
+                  valor: lead.apellido.isEmpty ? '—' : lead.apellido,
                 ),
               ),
               _ParFila(
@@ -52,9 +52,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Empresa',
-                  valor: infoLead.nombreEmpresa.isEmpty
-                      ? '—'
-                      : infoLead.nombreEmpresa,
+                  valor: lead.nombreEmpresa.isEmpty ? '—' : lead.nombreEmpresa,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -83,9 +81,7 @@ class DatosTab extends StatelessWidget {
                     color: AppColors.success,
                   ),
                   etiqueta: 'Celular',
-                  valor: infoLead.telefono.isEmpty
-                      ? '—'
-                      : infoLead.telefono,
+                  valor: lead.numero.isEmpty ? '—' : lead.numero,
                 ),
               ),
               _ParFila(
@@ -96,15 +92,15 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Campaña',
-                  valor: infoLead.campania ?? '—',
+                  valor: lead.campania.isEmpty ? '—' : lead.campania,
                 ),
                 derecha: _CampoDato(
                   icono: AppIconsSocial.widgetCanal(
-                    infoLead.idCanal ?? 0,
+                    lead.idCanal,
                     size: AppSizing.iconActionSm,
                   ),
                   etiqueta: 'Canal',
-                  valor: infoLead.canal ?? '—',
+                  valor: lead.canal.isEmpty ? '—' : lead.canal,
                 ),
               ),
               _ParFila(
@@ -115,7 +111,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Curso / Evento',
-                  valor: infoLead.evento ?? '—',
+                  valor: lead.evento.isEmpty ? '—' : lead.evento,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -124,7 +120,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Interés',
-                  valor: infoLead.interes ?? '—',
+                  valor: lead.interes.isEmpty ? '—' : lead.interes,
                 ),
               ),
               _ParFila(
@@ -135,7 +131,7 @@ class DatosTab extends StatelessWidget {
                     color: colorEstado,
                   ),
                   etiqueta: 'Estado',
-                  valor: infoLead.estado.isEmpty ? '—' : infoLead.estado,
+                  valor: lead.estado.isEmpty ? '—' : lead.estado,
                   valorColor: colorEstado,
                 ),
                 derecha: _CampoDato(
@@ -145,9 +141,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Subestado',
-                  valor: infoLead.subEstado.isEmpty
-                      ? '—'
-                      : infoLead.subEstado,
+                  valor: (lead.subEstado ?? '').isEmpty ? '—' : lead.subEstado!,
                 ),
               ),
               _ParFila(

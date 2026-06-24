@@ -117,8 +117,8 @@ extension NavigationExtensions on BuildContext {
       });
 
   Future<void> goToEditarLead({
-    required InfoLead lead,
-    required InfoLeadCubit cubit,
+    required InfoLead? lead,
+    InfoLeadCubit? cubit,
   }) => _push(
     AppRoutes.detalleEditarLead,
     arguments: {'lead': lead, 'cubit': cubit},

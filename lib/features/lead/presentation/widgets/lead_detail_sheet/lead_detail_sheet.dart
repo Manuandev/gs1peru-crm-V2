@@ -29,11 +29,18 @@ class LeadDetailSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      useRootNavigator: true,
-      builder: (_) => LeadDetailSheet(
-        initialTab: initialTab,
-        infoLead: infoLead,
-        leadId: leadId,
+      useRootNavigator: false,
+      builder: (_) => MultiBlocProvider(
+        // 👈 mueve el MultiBlocProvider AQUÍ afuera
+        providers: [
+          BlocProvider(create: (_) => NegociacionesCubit()),
+          BlocProvider(create: (_) => HistorialLeadCubit()),
+        ],
+        child: LeadDetailSheet(
+          initialTab: initialTab,
+          infoLead: infoLead,
+          leadId: leadId,
+        ),
       ),
     );
   }
@@ -66,54 +73,45 @@ class _LeadDetailSheetState extends State<LeadDetailSheet>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => NegociacionesCubit()),
-        BlocProvider(create: (_) => HistorialLeadCubit()),
-      ],
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.80,
-        minChildSize: 0.40,
-        maxChildSize: 0.95,
-        builder: (_, _) => Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppSizing.radiusLg),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.80,
+      minChildSize: 0.40,
+      maxChildSize: 0.95,
+      builder: (sheetContext, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppSizing.radiusLg),
+          ),
+        ),
+        child: Column(
+          children: [
+            const _DragHandle(),
+            TabBar(
+              controller: _tabController,
+              tabs: const [
+                Tab(icon: Icon(AppIcons.datosLead), text: 'Datos'),
+                Tab(icon: Icon(AppIcons.negociacion), text: 'Negociaciones'),
+                Tab(icon: Icon(AppIcons.historial), text: 'Historial'),
+              ],
+              labelColor: colorScheme.primary,
+              unselectedLabelColor: colorScheme.onSurface.withValues(
+                alpha: AppColors.opacityHint,
+              ),
+              indicatorColor: colorScheme.primary,
+              labelStyle: AppTextStyles.labelMedium,
             ),
-          ),
-          child: Column(
-            children: [
-              const _DragHandle(),
-              TabBar(
+            Expanded(
+              child: TabBarView(
                 controller: _tabController,
-                tabs: const [
-                  Tab(icon: Icon(AppIcons.datosLead), text: 'Datos'),
-                  Tab(
-                    icon: Icon(AppIcons.negociacion),
-                    text: 'Negociaciones',
-                  ),
-                  Tab(icon: Icon(AppIcons.historial), text: 'Historial'),
+                children: [
+                  DatosTab(infoLead: widget.infoLead),
+                  NegociacionesTab(leadId: widget.leadId),
+                  HistorialTab(leadId: widget.leadId),
                 ],
-                labelColor: colorScheme.primary,
-                unselectedLabelColor: colorScheme.onSurface.withValues(
-                  alpha: AppColors.opacityHint,
-                ),
-                indicatorColor: colorScheme.primary,
-                labelStyle: AppTextStyles.labelMedium,
               ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    DatosTab(infoLead: widget.infoLead),
-                    NegociacionesTab(leadId: widget.leadId),
-                    HistorialTab(leadId: widget.leadId),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

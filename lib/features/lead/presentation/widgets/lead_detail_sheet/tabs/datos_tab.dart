@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class DatosTab extends StatelessWidget {
@@ -175,8 +176,11 @@ class DatosTab extends StatelessWidget {
             text: 'Editar lead',
             icon: const Icon(AppIcons.edit),
             onPressed: () {
-              Navigator.pop(context);
-              // TODO: navegar a EditarLeadPage cuando esté disponible
+              Navigator.of(context, rootNavigator: true).pop();
+              NavigationService.navigateTo(
+                AppRoutes.detalleEditarLead,
+                arguments: {'lead': infoLead, 'cubit': null},
+              );
             },
           ),
           const SizedBox(height: AppSpacing.md),

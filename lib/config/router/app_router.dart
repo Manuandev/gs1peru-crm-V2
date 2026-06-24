@@ -202,10 +202,11 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return BlocProvider.value(
-          value: args['cubit'] as InfoLeadCubit,
-          child: EditLeadPage(lead: args['lead'] as InfoLead),
-        );
+        final cubit = args['cubit'] as InfoLeadCubit?;
+        final page = EditLeadPage(lead: args['lead'] as InfoLead);
+        return cubit != null
+            ? BlocProvider.value(value: cubit, child: page)
+            : page;
       },
     ),
     AppRoutes.templates: RouteDefinition<Template>(

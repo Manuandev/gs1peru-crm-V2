@@ -45,6 +45,7 @@ export 'package:permission_handler/permission_handler.dart';
 export 'package:flutter_localizations/flutter_localizations.dart';
 export 'package:geolocator/geolocator.dart' hide ServiceStatus;
 export 'package:geocoding/geocoding.dart';
+export 'package:country_picker/country_picker.dart';
 
 // ─── Device Info & Network Info ──────────────────────────────────
 export 'package:device_info_plus/device_info_plus.dart';

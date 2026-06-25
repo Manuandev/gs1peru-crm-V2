@@ -1,33 +1,13 @@
 // lib/features/lead/presentation/widgets/edit_lead/agregar_numero_panel.dart
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app_crm/core/index_core.dart';
 
-class _PrefijoPais with Comboable {
-  final String codigo;
-  final String pais;
-  const _PrefijoPais({required this.codigo, required this.pais});
-
-  @override
-  List<dynamic> get fields => [codigo, '$codigo  $pais'];
-}
-
-const _prefijosDisponibles = [
-  _PrefijoPais(codigo: '+51',  pais: 'Perú'),
-  _PrefijoPais(codigo: '+1',   pais: 'USA'),
-  _PrefijoPais(codigo: '+57',  pais: 'Colombia'),
-  _PrefijoPais(codigo: '+54',  pais: 'Argentina'),
-  _PrefijoPais(codigo: '+56',  pais: 'Chile'),
-  _PrefijoPais(codigo: '+52',  pais: 'México'),
-  _PrefijoPais(codigo: '+593', pais: 'Ecuador'),
-  _PrefijoPais(codigo: '+55',  pais: 'Brasil'),
-  _PrefijoPais(codigo: '+34',  pais: 'España'),
-];
-
-/// Fila inline para ingresar un número adicional: [combo prefijo] [input número].
-/// Se muestra directamente debajo del teléfono principal al pulsar "+".
-/// Sin contenedor, sin botones extra — la confirmación ocurre al guardar el form.
+/// Fila inline para ingresar un número adicional: [selector país] [input número].
+/// Se muestra debajo del teléfono principal al pulsar "+".
+/// La longitud esperada se deduce del número de ejemplo del país seleccionado.
 class AgregarNumeroPanel extends StatefulWidget {
   final VoidCallback onCancelar;
   final void Function(String prefijo, String numero) onAgregar;
@@ -43,8 +23,15 @@ class AgregarNumeroPanel extends StatefulWidget {
 }
 
 class _AgregarNumeroPanelState extends State<AgregarNumeroPanel> {
-  _PrefijoPais? _prefijo = _prefijosDisponibles.first;
+  Country? _pais;
   final _numCtrl = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _pais = CountryParser.parseCountryCode('PE');
+  }
 
   @override
   void dispose() {
@@ -52,45 +39,131 @@ class _AgregarNumeroPanelState extends State<AgregarNumeroPanel> {
     super.dispose();
   }
 
+  void _abrirSelectorPais() {
+    showCountryPicker(
+      context: context,
+      showPhoneCode: true,
+      onSelect: (country) => setState(() {
+        _pais = country;
+        _formKey.currentState?.validate();
+      }),
+    );
+  }
+
+  // Longitud esperada deducida del número de ejemplo del país (solo dígitos)
+  int get _longitudEsperada {
+    final ejemplo = (_pais?.example ?? '').replaceAll(RegExp(r'\D'), '');
+    return ejemplo.length;
+  }
+
+  String? _validarNumero(String? value) {
+    final numero = value?.trim() ?? '';
+    if (numero.isEmpty) return 'Ingresa el número';
+
+    final longitud = _longitudEsperada;
+    if (longitud > 0) {
+      if (numero.length < longitud) return 'Mín. $longitud dígitos';
+      // +1 de tolerancia para países con longitudes variables
+      if (numero.length > longitud + 1) return 'Máx. ${longitud + 1} dígitos';
+    } else {
+      if (numero.length < 5) return 'Muy corto (mín. 5 dígitos)';
+      if (numero.length > 15) return 'Muy largo (máx. 15 dígitos)';
+    }
+    return null;
+  }
+
   void _agregar() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     final numero = _numCtrl.text.trim();
-    if (numero.isEmpty || _prefijo == null) return;
+    if (_pais == null) return;
     // TODO: conectar SP de agregar número cuando esté disponible.
-    widget.onAgregar(_prefijo!.codigo, numero);
+    widget.onAgregar('+${_pais!.phoneCode}', numero);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Combo de índice (prefijo de país)
-        SizedBox(
-          width: 112,
-          child: CustomComboField<_PrefijoPais>(
-            data:         _prefijosDisponibles,
-            label:        'Prefijo',
-            initialValue: _prefijo?.codigo,
-            onChanged:    (item) => setState(() => _prefijo = item),
-            dense:        true,
+    final ejemplo = _pais?.example;
+
+    return Form(
+      key: _formKey,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SelectorPais(
+            pais: _pais,
+            onTap: _abrirSelectorPais,
           ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        // Input del número
-        Expanded(
-          child: CustomTextField(
-            label:        'Número',
-            controller:   _numCtrl,
-            keyboardType: TextInputType.phone,
-            dense:        true,
-            textInputAction: TextInputAction.done,
-            onSubmitted:  (_) => _agregar(),
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: CustomTextField(
+              label: 'Número',
+              hint: ejemplo != null && ejemplo.isNotEmpty ? 'Ej: $ejemplo' : null,
+              controller: _numCtrl,
+              keyboardType: TextInputType.phone,
+              dense: true,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _agregar(),
+              validator: _validarNumero,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectorPais extends StatelessWidget {
+  final Country? pais;
+  final VoidCallback onTap;
+
+  const _SelectorPais({required this.pais, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 42,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
         ),
-      ],
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          border: Border.all(color: colorScheme.outline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (pais != null) ...[
+              Text(pais!.flagEmoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                '+${pais!.phoneCode}',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ] else
+              Text(
+                'País',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            const SizedBox(width: AppSpacing.xxs),
+            Icon(
+              AppIcons.forward,
+              size: AppSizing.iconSm,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

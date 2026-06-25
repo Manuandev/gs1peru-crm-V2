@@ -50,6 +50,7 @@ dependencies:
   uuid: ^4.5.3
   path: ^1.9.1
   photo_manager: ^3.9.0
+  country_picker: ^2.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

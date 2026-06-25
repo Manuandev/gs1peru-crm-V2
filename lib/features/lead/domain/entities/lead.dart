@@ -3,7 +3,7 @@
 // Entidad unificada de lead.
 // Fuentes de datos:
 //   - CSV_LEADS_LST_APP  (tasks LS y DT sección 1)  → LeadModel
-//   - CSV_WHATSAPP_LST_APP (tasks D y LS)            → InfoLeadModel
+//   - CSV_WHATSAPP_LST_APP (task LS)                 → ChatModel + LeadModel
 
 import 'package:app_crm/index_dependencies.dart';
 

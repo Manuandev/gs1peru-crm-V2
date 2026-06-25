@@ -5,6 +5,7 @@ import 'package:app_crm/features/home/index_home.dart';
 
 class PrioridadHomeModel extends PrioridadHome {
   const PrioridadHomeModel({
+    required super.idNumero,
     required super.idLead,
     required super.nombre,
     required super.telefono,
@@ -19,14 +20,15 @@ class PrioridadHomeModel extends PrioridadHome {
     final fields = raw.split(AppConstants.sepCampos);
 
     return PrioridadHomeModel(
-      idLead: ParseUtils.toInt(fields, 0),
-      nombre: ParseUtils.str(fields, 1),
-      telefono: ParseUtils.str(fields, 2),
-      idEstado: ParseUtils.str(fields, 3),
-      estado: ParseUtils.str(fields, 4),
-      idCanal: ParseUtils.toInt(fields, 5),
-      canal: ParseUtils.str(fields, 6),
-      fechaHora: ParseUtils.str(fields, 7),
+      idNumero: ParseUtils.toInt(fields, 0),
+      idLead: ParseUtils.toInt(fields, 1),
+      nombre: ParseUtils.str(fields, 2),
+      telefono: ParseUtils.str(fields, 3),
+      idEstado: ParseUtils.str(fields, 4),
+      estado: ParseUtils.str(fields, 5),
+      idCanal: ParseUtils.toInt(fields, 6),
+      canal: ParseUtils.str(fields, 7),
+      fechaHora: ParseUtils.str(fields, 8),
     );
   }
 

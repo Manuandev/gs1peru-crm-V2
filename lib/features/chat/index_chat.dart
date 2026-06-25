@@ -4,7 +4,6 @@ export 'data/datasources/remote/chat_remote_datasource.dart';
 
 export 'data/models/conversation_model.dart';
 export 'data/models/message_model.dart';
-export 'data/models/info_lead_model.dart';
 export 'data/models/template_model.dart';
 
 export 'data/repositories/chat_repository_impl.dart';

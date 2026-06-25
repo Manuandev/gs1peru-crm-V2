@@ -1,5 +1,6 @@
 // lib/features/home/domain/entities/prioridad_home.dart
 class PrioridadHome {
+  final int idNumero;
   final int idLead;
   final String nombre;
   final String telefono;
@@ -10,6 +11,7 @@ class PrioridadHome {
   final String fechaHora;
 
   const PrioridadHome({
+    required this.idNumero,
     required this.idLead,
     required this.nombre,
     required this.telefono,

@@ -194,6 +194,7 @@ class AppRouter {
         final args = _requireArgs<Map<String, dynamic>>(context);
         return ChatDetailPage(
           idNumero: int.parse(args['idNumero'].toString()),
+          idLead: args['idLead'] as int?,
           conversacion: args['conversacion'] as Chat?,
         );
       },

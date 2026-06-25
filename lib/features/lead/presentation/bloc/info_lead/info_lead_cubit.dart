@@ -21,7 +21,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   final _errorController = StreamController<String>.broadcast();
   Stream<String> get errores => _errorController.stream;
 
-  int? _idNumero;
+  int? _idLead;
   StreamSubscription<LeadUpdate>? _updateSub;
 
   InfoLeadCubit(this._getInfo, this._updateEstado, this._updateInfo, [
@@ -31,8 +31,8 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       final s = state;
       if (s is InfoLeadSuccess &&
           s.lead.idLead == update.idLead &&
-          _idNumero != null) {
-        load(_idNumero!);
+          _idLead != null) {
+        load(_idLead!);
       }
     });
   }
@@ -113,24 +113,26 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     }
   }
 
-  Future<void> load(int idNumero) async {
+  Future<void> load(int idLead) async {
     if (isClosed) return;
-    _idNumero = idNumero;
+    _idLead = idLead;
+
+    // Preservar flags de conversación antes de entrar en loading
+    final prev = state;
+    final prevBloqueado = prev is InfoLeadSuccess ? prev.isBloqueado : false;
+    final prevExpirado  = prev is InfoLeadSuccess ? prev.isExpirado  : false;
+    final prevCerrado   = prev is InfoLeadSuccess ? prev.isCerrado   : false;
+
     emit(const InfoLeadLoading());
     try {
-      final info = await _getInfo(idNumero);
+      final lead = await _getInfo(idLead);
       if (isClosed) return;
-      // InfoLeadModel extiende Lead y provee los flags de conversación
-      if (info is InfoLeadModel) {
-        emit(InfoLeadSuccess(
-          info,
-          isBloqueado: info.isBloqueado,
-          isExpirado:  info.isExpirado,
-          isCerrado:   info.isCerrado,
-        ));
-      } else {
-        emit(InfoLeadSuccess(info));
-      }
+      emit(InfoLeadSuccess(
+        lead,
+        isBloqueado: prevBloqueado,
+        isExpirado:  prevExpirado,
+        isCerrado:   prevCerrado,
+      ));
     } on AppException catch (e) {
       emit(InfoLeadFailure(e.message));
     } catch (e, stackTrace) {

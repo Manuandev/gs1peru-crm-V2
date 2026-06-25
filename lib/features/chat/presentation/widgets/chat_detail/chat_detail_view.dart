@@ -11,8 +11,9 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailView extends StatefulWidget {
   final int idNumero;
+  final int? idLead;
   final Chat? conversacion;
-  const ChatDetailView({super.key, required this.idNumero, this.conversacion});
+  const ChatDetailView({super.key, required this.idNumero, this.idLead, this.conversacion});
 
   @override
   State<ChatDetailView> createState() => _ChatDetailViewState();
@@ -39,8 +40,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
     final cubit = context.read<InfoLeadCubit>();
     if (widget.conversacion != null) {
       cubit.seed(widget.conversacion!);
-    } else {
-      cubit.load(widget.idNumero);
+    } else if (widget.idLead != null) {
+      cubit.load(widget.idLead!);
     }
     _subs.addAll([
       cubit.successes.listen(

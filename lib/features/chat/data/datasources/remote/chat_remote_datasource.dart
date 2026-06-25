@@ -17,13 +17,19 @@ class ChatRemoteDatasource {
   String _orEmpty(dynamic val) =>
       (val == null || val == 0) ? '' : val.toString();
 
-  Future<InfoLeadModel> getInfoLead(int idNumero) async {
-    final String body = '${[idNumero].join(camp)}${sep}D';
+  Lead _parsePrimerLead(String seccion) {
+    final leads = LeadModel.parseList(seccion);
+    if (leads.isEmpty) throw const AppException('No se encontró información del lead.');
+    return leads.first;
+  }
 
-    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
+  Future<Lead> getInfoLead(int idLead) async {
+    final String body = '${[idLead].join(camp)}${sep}DT';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
     return switch (result) {
-      ApiSuccess(:final data) => InfoLeadModel.parse(data),
+      ApiSuccess(:final data) => _parsePrimerLead(data.split(sep)[0]),
       ApiEmpty() => throw const AppException(
         'No se encontró información del lead.',
       ),

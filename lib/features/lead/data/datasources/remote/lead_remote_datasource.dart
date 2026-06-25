@@ -86,4 +86,18 @@ class LeadRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  Future<List<NegociacionLeadModel>> getLeadNegociaciones(int idLead) async {
+    final String body = '$idLead${sep}LN';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+
+    return switch (result) {
+      ApiSuccess(:final data) => NegociacionLeadModel.parseList(data),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
 }

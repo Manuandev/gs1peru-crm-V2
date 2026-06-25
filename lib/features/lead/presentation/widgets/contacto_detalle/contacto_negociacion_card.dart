@@ -5,13 +5,13 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoNegociacionCard extends StatelessWidget {
-  final Lead lead;
+  final NegociacionLead negociacion;
 
-  const ContactoNegociacionCard({super.key, required this.lead});
+  const ContactoNegociacionCard({super.key, required this.negociacion});
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = AppIconsSocial.colorEstado(lead.idEstado);
+    final colorEstado = AppIconsSocial.colorEstado(negociacion.idEstado);
 
     return Container(
       decoration: BoxDecoration(
@@ -50,13 +50,15 @@ class ContactoNegociacionCard extends StatelessWidget {
                       Row(
                         children: [
                           AppIconsSocial.widgetCanal(
-                            lead.idCanal,
+                            negociacion.idCanal,
                             size: AppSizing.iconXs,
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Expanded(
                             child: Text(
-                              lead.evento.isNotEmpty ? lead.evento : lead.canal,
+                              negociacion.nombreOportunidad.isNotEmpty
+                                  ? negociacion.nombreOportunidad
+                                  : negociacion.descripcionCanal,
                               style: AppTextStyles.bodySmall.copyWith(
                                 fontWeight: AppTextStyles.weightSemiBold,
                               ),
@@ -65,7 +67,7 @@ class ContactoNegociacionCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            lead.fechaHora.formatSinHoy(),
+                            negociacion.fechaHora.formatSinHoy(),
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -73,30 +75,16 @@ class ContactoNegociacionCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      // Fila: chip estado + monto
                       Row(
                         children: [
                           AppIconsSocial.chipEstado(
-                            lead.idEstado,
-                            label: lead.estado,
+                            negociacion.idEstado,
+                            label: negociacion.descripcionEstado,
                           ),
                           const Spacer(),
-                          // TODO: mostrar campanita de notificaciones (lead.notificaciones)
-                          // if (lead.notificaciones > 0)
-                          //   Container(
-                          //     padding: EdgeInsets.symmetric(
-                          //       horizontal: AppSpacing.xs,
-                          //       vertical: AppSpacing.xxs,
-                          //     ),
-                          //     decoration: BoxDecoration(
-                          //       color: AppColors.error,
-                          //       borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-                          //     ),
-                          //     child: Icon(AppIcons.notification, size: AppSizing.iconSm, color: AppColors.textOnDark),
-                          //   ),
-                          if ((lead.precioBase ?? 0) > 0)
+                          if (negociacion.precioBase > 0)
                             Text(
-                              _formatMonto(lead.precioBase ?? 0),
+                              _formatMonto(negociacion.precioBase),
                               style: AppTextStyles.labelMedium.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: AppTextStyles.weightSemiBold,

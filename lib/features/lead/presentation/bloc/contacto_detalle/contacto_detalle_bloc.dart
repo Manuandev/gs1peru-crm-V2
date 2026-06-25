@@ -7,11 +7,11 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class ContactoDetalleBloc
     extends Bloc<ContactoDetalleEvent, ContactoDetalleState> {
   final ObtenerDetalleContactoUseCase _obtenerDetalle;
-  final ObtenerNegociacionesContactoUseCase _obtenerNegociaciones;
+  final ObtenerNegociacionesUseCase _obtenerNegociaciones;
 
   ContactoDetalleBloc({
     required ObtenerDetalleContactoUseCase obtenerDetalle,
-    required ObtenerNegociacionesContactoUseCase obtenerNegociaciones,
+    required ObtenerNegociacionesUseCase obtenerNegociaciones,
   })  : _obtenerDetalle = obtenerDetalle,
         _obtenerNegociaciones = obtenerNegociaciones,
         super(const ContactoDetalleInitial()) {

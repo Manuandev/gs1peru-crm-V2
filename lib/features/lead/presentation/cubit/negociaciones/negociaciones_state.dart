@@ -1,7 +1,7 @@
 // lib/features/lead/presentation/cubit/negociaciones/negociaciones_state.dart
 
 import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/features/lead/domain/entities/lead.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 sealed class NegociacionesState extends Equatable {
   const NegociacionesState();
@@ -19,7 +19,7 @@ class NegociacionesLoading extends NegociacionesState {
 }
 
 class NegociacionesSuccess extends NegociacionesState {
-  final List<Lead> negociaciones;
+  final List<NegociacionLead> negociaciones;
 
   const NegociacionesSuccess({required this.negociaciones});
 

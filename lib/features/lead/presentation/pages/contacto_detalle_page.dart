@@ -16,7 +16,7 @@ class ContactoDetallePage extends StatelessWidget {
         obtenerDetalle: ObtenerDetalleContactoUseCase(
           context.read<LeadRepository>(),
         ),
-        obtenerNegociaciones: ObtenerNegociacionesContactoUseCase(
+        obtenerNegociaciones: ObtenerNegociacionesUseCase(
           context.read<LeadRepository>(),
         ),
       )..add(ContactoDetalleStarted(idContacto)),

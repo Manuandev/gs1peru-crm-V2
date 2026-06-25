@@ -26,7 +26,7 @@ class ChatRemoteDatasource {
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
     return switch (result) {
-      ApiSuccess(:final data) => _parsePrimerLead(data.split(sep)[0]),
+      ApiSuccess(:final data) => _parsePrimerLead(data),
       ApiEmpty() => throw const AppException(
         'No se encontró información del lead.',
       ),

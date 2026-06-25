@@ -5,13 +5,13 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class NegociacionCard extends StatelessWidget {
-  final Lead lead;
+  final NegociacionLead negociacion;
   final VoidCallback onEditarLead;
   final VoidCallback onGenerarSolicitud;
 
   const NegociacionCard({
     super.key,
-    required this.lead,
+    required this.negociacion,
     required this.onEditarLead,
     required this.onGenerarSolicitud,
   });
@@ -39,7 +39,7 @@ class NegociacionCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _AvatarCanal(idCanal: lead.idCanal),
+                    _AvatarCanal(idCanal: negociacion.idCanal),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Column(
@@ -47,15 +47,15 @@ class NegociacionCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            lead.evento,
+                            negociacion.nombreOportunidad,
                             style: AppTextStyles.labelMedium,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: AppSpacing.xxs),
                           AppIconsSocial.chipEstado(
-                            lead.idEstado,
-                            label: lead.estado,
+                            negociacion.idEstado,
+                            label: negociacion.descripcionEstado,
                           ),
                         ],
                       ),
@@ -72,12 +72,14 @@ class NegociacionCard extends StatelessWidget {
                   children: [
                     _FilaDato(
                       icono: AppIconsSocial.widgetCanal(
-                        lead.idCanal,
+                        negociacion.idCanal,
                         size: AppSizing.iconSm,
                       ),
                       etiqueta: 'Canal',
-                      valor: lead.canal,
-                      colorValor: AppIconsSocial.colorCanal(lead.idCanal),
+                      valor: negociacion.descripcionCanal,
+                      colorValor: AppIconsSocial.colorCanal(
+                        negociacion.idCanal,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     _FilaDato(
@@ -87,7 +89,8 @@ class NegociacionCard extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                       etiqueta: 'Monto',
-                      valor: 'S/ ${(lead.precioBase ?? 0.0).toStringAsFixed(2)}',
+                      valor:
+                          'S/ ${(negociacion.precioBase).toStringAsFixed(2)}',
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     _FilaDato(
@@ -97,7 +100,9 @@ class NegociacionCard extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                       etiqueta: 'Actualizado',
-                      valor: lead.fechaHora.formatDate(AppDateFormat.shortDate),
+                      valor: negociacion.fechaHora.formatDate(
+                        AppDateFormat.shortDate,
+                      ),
                     ),
                   ],
                 ),

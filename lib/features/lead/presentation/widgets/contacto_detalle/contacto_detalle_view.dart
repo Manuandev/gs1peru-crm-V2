@@ -46,7 +46,7 @@ class ContactoDetalleView extends StatelessWidget {
 
 class _ContactoScaffold extends StatelessWidget {
   final ContactoDetalle contacto;
-  final List<Lead> negociaciones;
+  final List<NegociacionLead> negociaciones;
   final int idContacto;
 
   const _ContactoScaffold({

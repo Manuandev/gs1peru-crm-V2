@@ -5,7 +5,6 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadRepositoryImpl implements LeadRepository {
   final LeadRemoteDatasource _remote;
-  // TODO: reemplazar por inyección cuando se defina el SP real de contactos
   final _contactoRemote = ContactoDetalleRemoteDatasource();
 
   LeadRepositoryImpl(this._remote);
@@ -30,6 +29,6 @@ class LeadRepositoryImpl implements LeadRepository {
       _contactoRemote.obtenerDetalleContacto(idContacto);
 
   @override
-  Future<List<LeadModel>> obtenerNegociacionesDeContacto(int idContacto) =>
-      _contactoRemote.obtenerNegociacionesDeContacto(idContacto);
+  Future<List<NegociacionLeadModel>> obtenerNegociaciones(int idLead) =>
+      _remote.getLeadNegociaciones(idLead);
 }

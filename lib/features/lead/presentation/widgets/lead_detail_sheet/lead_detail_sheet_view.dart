@@ -36,7 +36,12 @@ class LeadDetailSheet extends StatefulWidget {
       useRootNavigator: false,
       builder: (_) => MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => NegociacionesCubit()),
+          BlocProvider(
+            create: (_) => NegociacionesCubit(
+              obtenerNegociacionesUseCase:
+                  ObtenerNegociacionesUseCase(LeadRepositoryImpl(LeadRemoteDatasource())),
+            ),
+          ),
           BlocProvider(create: (_) => HistorialLeadCubit()),
         ],
         child: LeadDetailSheet(

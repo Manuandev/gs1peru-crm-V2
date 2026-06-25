@@ -5,7 +5,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoNegociacionesTab extends StatelessWidget {
-  final List<Lead> negociaciones;
+  final List<NegociacionLead> negociaciones;
 
   const ContactoNegociacionesTab({super.key, required this.negociaciones});
 
@@ -23,7 +23,7 @@ class ContactoNegociacionesTab extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ListaNegociaciones extends StatelessWidget {
-  final List<Lead> negociaciones;
+  final List<NegociacionLead> negociaciones;
 
   const _ListaNegociaciones({required this.negociaciones});
 
@@ -49,10 +49,10 @@ class _ListaNegociaciones extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _MesHeader(mes: grupo.mes),
-            ...grupo.leads.map(
-              (lead) => Padding(
+            ...grupo.negociaciones.map(
+              (negociacion) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: ContactoNegociacionCard(lead: lead),
+                child: ContactoNegociacionCard(negociacion: negociacion),
               ),
             ),
           ],
@@ -61,22 +61,22 @@ class _ListaNegociaciones extends StatelessWidget {
     );
   }
 
-  List<_GrupoMes> _agruparPorMes(List<Lead> leads) {
-    final mapa = <String, List<Lead>>{};
-    for (final lead in leads) {
-      final mes = lead.fechaHora.formatDate(AppDateFormat.monthYear);
-      mapa.putIfAbsent(mes, () => []).add(lead);
+  List<_GrupoMes> _agruparPorMes(List<NegociacionLead> negociaciones) {
+    final mapa = <String, List<NegociacionLead>>{};
+    for (final negociacion in negociaciones) {
+      final mes = negociacion.fechaHora.formatDate(AppDateFormat.monthYear);
+      mapa.putIfAbsent(mes, () => []).add(negociacion);
     }
     return mapa.entries
-        .map((e) => _GrupoMes(mes: e.key, leads: e.value))
+        .map((e) => _GrupoMes(mes: e.key, negociaciones: e.value))
         .toList();
   }
 }
 
 class _GrupoMes {
   final String mes;
-  final List<Lead> leads;
-  const _GrupoMes({required this.mes, required this.leads});
+  final List<NegociacionLead> negociaciones;
+  const _GrupoMes({required this.mes, required this.negociaciones});
 }
 
 class _MesHeader extends StatelessWidget {

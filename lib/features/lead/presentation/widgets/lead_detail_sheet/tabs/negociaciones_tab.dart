@@ -62,7 +62,7 @@ class _NegociacionesTabState extends State<NegociacionesTab>
 enum _FiltroNeg { todas, activa, ganadas }
 
 class _ListaNegociaciones extends StatefulWidget {
-  final List<Lead> negociaciones;
+  final List<NegociacionLead> negociaciones;
   final int idNumero;
 
   const _ListaNegociaciones({
@@ -79,7 +79,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
 
   void _editarLead(int idLead) {
     if (idLead == 0) return;
-    context.goBack();
+    // context.goBack();
     context.goToEditarLead(idLead: idLead);
   }
 
@@ -128,10 +128,10 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
 
         // ── Cards ─────────────────────────────────────────────────────────────
         ...visibles.map(
-          (lead) => NegociacionCard(
-            lead: lead,
+          (negociacion) => NegociacionCard(
+            negociacion: negociacion,
             onGenerarSolicitud: () {},
-            onEditarLead: () => _editarLead(lead.idLead),
+            onEditarLead: () => _editarLead(negociacion.idLead),
           ),
         ),
 

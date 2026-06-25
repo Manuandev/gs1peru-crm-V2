@@ -39,6 +39,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   bool _mostrarAgregarNumero = false;
   bool _isLoading            = false;
+  bool _combosInicializados  = false;
 
   final _fmt = NumberFormat('#,##0.00', 'es_PE');
 
@@ -56,10 +57,16 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _cantidadCtrl.addListener(_recalcular);
     _precioBaseCtrl.addListener(_recalcular);
     _descuentoCtrl.addListener(_recalcular);
+  }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_combosInicializados) return;
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is! CatalogsLoaded) return;
     _inicializarCombos(catalogState);
+    _combosInicializados = true;
   }
 
   void _inicializarCombos(CatalogsLoaded state) {
@@ -105,7 +112,11 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     if (widget.lead == old.lead) return;
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is! CatalogsLoaded) return;
-    setState(() => _inicializarCombos(catalogState));
+    setState(() {
+      _combosInicializados = false;
+      _inicializarCombos(catalogState);
+      _combosInicializados = true;
+    });
   }
 
   @override

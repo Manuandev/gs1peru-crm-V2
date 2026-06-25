@@ -8,7 +8,7 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class NegociacionesCubit extends Cubit<NegociacionesState> {
-  final ObtenerNegociacionesUseCase obtenerNegociacionesUseCase;
+  final GetNegociacionesLead obtenerNegociacionesUseCase;
   
   NegociacionesCubit({required this.obtenerNegociacionesUseCase})
     : super(const NegociacionesInitial());

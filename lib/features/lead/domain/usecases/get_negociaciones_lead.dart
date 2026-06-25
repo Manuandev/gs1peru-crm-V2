@@ -2,10 +2,10 @@
 
 import 'package:app_crm/features/lead/index_lead.dart';
 
-class ObtenerNegociacionesUseCase {
+class GetNegociacionesLead {
   final LeadRepository _repository;
 
-  ObtenerNegociacionesUseCase(this._repository);
+  GetNegociacionesLead(this._repository);
 
   Future<List<NegociacionLead>> call(int idLead) =>
       _repository.obtenerNegociaciones(idLead);

@@ -39,7 +39,7 @@ class LeadDetailSheet extends StatefulWidget {
           BlocProvider(
             create: (_) => NegociacionesCubit(
               obtenerNegociacionesUseCase:
-                  ObtenerNegociacionesUseCase(LeadRepositoryImpl(LeadRemoteDatasource())),
+                  GetNegociacionesLead(LeadRepositoryImpl(LeadRemoteDatasource())),
             ),
           ),
           BlocProvider(create: (_) => HistorialLeadCubit()),

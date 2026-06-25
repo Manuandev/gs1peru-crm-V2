@@ -114,6 +114,10 @@ export 'presentation/widgets/app_loading_view.dart';
 export 'presentation/widgets/app_empty_view.dart';
 export 'presentation/widgets/app_snackbar.dart';
 
+export 'presentation/widgets/form_section_title.dart';
+export 'presentation/widgets/form_field_row.dart';
+export 'presentation/widgets/form_save_bar.dart';
+
 export 'presentation/widgets/skeleton/skeleton_box.dart';
 // #endregion presentation
 

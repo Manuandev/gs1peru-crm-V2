@@ -77,6 +77,9 @@ export 'presentation/bloc/info_lead/info_lead_state.dart';
 export 'presentation/pages/edit_lead_page.dart';
 export 'presentation/widgets/edit_lead/edit_lead_view.dart';
 export 'presentation/widgets/edit_lead/edit_lead_portrait.dart';
+export 'presentation/widgets/edit_lead/lead_edit_header_card.dart';
+export 'presentation/widgets/edit_lead/negociacion_resumen_card.dart';
+export 'presentation/widgets/edit_lead/agregar_numero_panel.dart';
 
 
 // Cubits de LeadDetailSheet

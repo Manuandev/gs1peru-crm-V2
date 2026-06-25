@@ -172,7 +172,7 @@ class DatosTab extends StatelessWidget {
             text: 'Editar lead',
             icon: const Icon(AppIcons.edit),
             onPressed: () {
-              Navigator.of(context, rootNavigator: true).pop();
+              NavigationService.goBack();
               NavigationService.navigateTo(
                 AppRoutes.detalleEditarLead,
                 arguments: {'idLead': lead.idLead, 'cubit': cubit},

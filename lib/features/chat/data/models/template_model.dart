@@ -17,19 +17,17 @@ class TemplateModel extends Template {
   });
 
   factory TemplateModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return TemplateModel(
-      idPlantilla: int.parse(f(0)),
-      nombre: f(1),
-      idCampania: int.parse(f(2)),
-      idEvento: int.parse(f(3)),
-      detalle: f(4),
-      rutaArchivo: f(5),
-      nombreArchivo: f(6),
-      extensionArchivo: f(7),
-      isBoton: f(8) == '1',
+      idPlantilla:      ParseUtils.toInt(c, 0),
+      nombre:           ParseUtils.str(c, 1),
+      idCampania:       ParseUtils.toInt(c, 2),
+      idEvento:         ParseUtils.toInt(c, 3),
+      detalle:          ParseUtils.str(c, 4),
+      rutaArchivo:      ParseUtils.str(c, 5),
+      nombreArchivo:    ParseUtils.str(c, 6),
+      extensionArchivo: ParseUtils.str(c, 7),
+      isBoton:          ParseUtils.toBool(c, 8),
     );
   }
 

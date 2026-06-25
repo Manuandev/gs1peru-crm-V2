@@ -22,25 +22,23 @@ class RecordatorioModel extends Recordatorio {
   });
 
   factory RecordatorioModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return RecordatorioModel(
-      idLead: int.parse(f(0)),
-      nombre: f(1),
-      nombreEmpresa: f(2),
-      telefono: f(3),
-      asignadoA: f(4),
-      comentario: f(5),
-      accion: f(6),
-      aviso: f(7),
-      fechaHora: f(8),
-      idCampania: f(9),
-      campania: f(10),
-      idEvento: f(11),
-      evento: f(12),
-      idCanal: f(13),
-      canal: f(14),
+      idLead:       ParseUtils.toInt(c, 0),
+      nombre:       ParseUtils.str(c, 1),
+      nombreEmpresa: ParseUtils.str(c, 2),
+      telefono:     ParseUtils.str(c, 3),
+      asignadoA:    ParseUtils.str(c, 4),
+      comentario:   ParseUtils.str(c, 5),
+      accion:       ParseUtils.str(c, 6),
+      aviso:        ParseUtils.str(c, 7),
+      fechaHora:    ParseUtils.str(c, 8),
+      idCampania:   ParseUtils.str(c, 9),
+      campania:     ParseUtils.str(c, 10),
+      idEvento:     ParseUtils.str(c, 11),
+      evento:       ParseUtils.str(c, 12),
+      idCanal:      ParseUtils.str(c, 13),
+      canal:        ParseUtils.str(c, 14),
     );
   }
 

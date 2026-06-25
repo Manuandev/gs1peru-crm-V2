@@ -19,22 +19,20 @@ class LeadNuevoModel extends LeadNuevo {
   });
 
   factory LeadNuevoModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return LeadNuevoModel(
-      idLead: int.parse(f(0)),
-      nombre: f(1),
-      nombreEmpresa: f(2),
-      telefono: f(3),
-      asignadoA: f(4),
-      fechaHora: f(5),
-      idCampania: f(6),
-      campania: f(7),
-      idEvento: f(8),
-      evento: f(9),
-      idCanal: f(10),
-      canal: f(11),
+      idLead:       ParseUtils.toInt(c, 0),
+      nombre:       ParseUtils.str(c, 1),
+      nombreEmpresa: ParseUtils.str(c, 2),
+      telefono:     ParseUtils.str(c, 3),
+      asignadoA:    ParseUtils.str(c, 4),
+      fechaHora:    ParseUtils.str(c, 5),
+      idCampania:   ParseUtils.str(c, 6),
+      campania:     ParseUtils.str(c, 7),
+      idEvento:     ParseUtils.str(c, 8),
+      evento:       ParseUtils.str(c, 9),
+      idCanal:      ParseUtils.str(c, 10),
+      canal:        ParseUtils.str(c, 11),
     );
   }
 
@@ -66,22 +64,20 @@ class LeadReasignadoModel extends LeadReasignado {
   });
 
   factory LeadReasignadoModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return LeadReasignadoModel(
-      idLead: int.parse(f(0)),
-      nombre: f(1),
-      nombreEmpresa: f(2),
-      telefono: f(3),
-      asignadoA: f(4),
-      fechaHora: f(5),
-      idCampania: f(6),
-      campania: f(7),
-      idEvento: f(8),
-      evento: f(9),
-      idCanal: f(10),
-      canal: f(11),
+      idLead:       ParseUtils.toInt(c, 0),
+      nombre:       ParseUtils.str(c, 1),
+      nombreEmpresa: ParseUtils.str(c, 2),
+      telefono:     ParseUtils.str(c, 3),
+      asignadoA:    ParseUtils.str(c, 4),
+      fechaHora:    ParseUtils.str(c, 5),
+      idCampania:   ParseUtils.str(c, 6),
+      campania:     ParseUtils.str(c, 7),
+      idEvento:     ParseUtils.str(c, 8),
+      evento:       ParseUtils.str(c, 9),
+      idCanal:      ParseUtils.str(c, 10),
+      canal:        ParseUtils.str(c, 11),
     );
   }
 

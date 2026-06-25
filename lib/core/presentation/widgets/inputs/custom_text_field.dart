@@ -160,7 +160,7 @@ class CustomTextField extends StatelessWidget {
       focusNode: focusNode,
       obscureText: obscureText,
 
-      style: (dense ? AppTextStyles.bodyMedium : AppTextStyles.inputText).copyWith(color: textColor),
+      style: (dense ? AppTextStyles.bodySmall : AppTextStyles.inputText).copyWith(color: textColor),
       decoration: InputDecoration(
         // Textos del campo
         labelText: label,

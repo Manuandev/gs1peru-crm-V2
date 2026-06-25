@@ -79,8 +79,11 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
 
   void _editarLead(int idLead) {
     if (idLead == 0) return;
-    // context.goBack();
-    context.goToEditarLead(idLead: idLead);
+    NavigationService.goBack();
+    NavigationService.navigateTo(
+      AppRoutes.detalleEditarLead,
+      arguments: {'idLead': idLead},
+    );
   }
 
   @override

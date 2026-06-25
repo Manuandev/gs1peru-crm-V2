@@ -11,6 +11,7 @@ export 'constants/app_images.dart';
 export 'constants/app_menu_items.dart';
 export 'constants/app_spacing.dart';
 export 'constants/app_icons_social.dart';
+export 'constants/app_currencies.dart';
 // #endregion constants
 
 // #region database
@@ -43,6 +44,7 @@ export 'mixins/double_back_to_exit_mixin.dart';
 export 'models/combo_item.dart';
 export 'models/user_model.dart';
 export 'models/catalog_item.dart';
+export 'models/moneda_item.dart';
 // #endregion models
 
 export 'navigation/app_route_observer.dart';

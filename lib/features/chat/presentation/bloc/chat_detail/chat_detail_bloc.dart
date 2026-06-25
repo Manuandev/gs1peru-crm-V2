@@ -155,7 +155,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idConversacionCab: int.parse(event.chatCab),
+      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -204,7 +204,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         : 'text';
 
     final newMessage = ChatMessage(
-      idConversacionCab: int.parse(event.chatCab),
+      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -258,7 +258,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idConversacionCab: int.parse(event.chatCab),
+      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -307,7 +307,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idConversacionCab: int.parse(event.chatCab),
+      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -368,7 +368,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
       currentMessages.add(
         ChatMessage(
-          idConversacionCab: int.parse(event.chatCab),
+          idConversacionCab: int.tryParse(event.chatCab) ?? 0,
           idConversacionDet: 0,
           idTokenMeta: tempId,
           fechaHora: DateTime.now().toIso8601String(),
@@ -462,9 +462,13 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     // final extFromName = _extractExt(payload.nomArchivo);
     // final nameWithoutExt = _removeExt(payload.nomArchivo);
 
+    // nomArchivo llega con extensión incluida ("foto.jpeg") — separar como hace BD
+    final pName = _removeExt(payload.nomArchivo);
+    final pExt = _extractExt(payload.nomArchivo);
+
     // MENSAJE_WHATSAPP siempre es un mensaje del cliente → isEnviado = false
     final incomingMessage = ChatMessage(
-      idConversacionCab: int.parse(payload.idChatCab),
+      idConversacionCab: int.tryParse(payload.idChatCab) ?? 0,
       idConversacionDet: 0,
       idTokenMeta: payload.idTokenMeta,
       fechaHora: payload.fecha.isNotEmpty
@@ -473,12 +477,10 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       direccionMensaje: 'CLI',
       contenido: payload.mensaje,
       tipo: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
-      estadoEntrega: '', // Mensajes recibidos no tienen estado de checks
+      estadoEntrega: '',
       rutaArchivo: '',
-      tipoArchivo: payload.tipoMensaje.isNotEmpty
-          ? payload.tipoMensaje
-          : 'text',
-      nombreArchivo: payload.nomArchivo,
+      tipoArchivo: pExt,
+      nombreArchivo: pName,
     );
 
     currentMessages.add(incomingMessage);

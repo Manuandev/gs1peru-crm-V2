@@ -79,10 +79,8 @@ class CampaniaItemModel extends CampaniaItem {
   const CampaniaItemModel({required super.id, required super.nombre});
 
   factory CampaniaItemModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
-    return CampaniaItemModel(id: int.parse(f(0)), nombre: f(1));
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return CampaniaItemModel(id: ParseUtils.toInt(c, 0), nombre: ParseUtils.str(c, 1));
   }
 
   static List<CampaniaItemModel> parseList(String rawResponse) {
@@ -117,13 +115,11 @@ class OportunidadItemModel extends OportunidadItem {
   });
 
   factory OportunidadItemModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return OportunidadItemModel(
-      idEvento: int.parse(f(0)),
-      idCampania: int.parse(f(1)),
-      nombre: f(2),
+      idEvento:   ParseUtils.toInt(c, 0),
+      idCampania: ParseUtils.toInt(c, 1),
+      nombre:     ParseUtils.str(c, 2),
     );
   }
 
@@ -149,10 +145,8 @@ class CanalItemModel extends CanalItem {
   const CanalItemModel({required super.id, required super.nombre});
 
   factory CanalItemModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
-    return CanalItemModel(id: int.parse(f(0)), nombre: f(1));
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return CanalItemModel(id: ParseUtils.toInt(c, 0), nombre: ParseUtils.str(c, 1));
   }
 
   static List<CanalItemModel> parseList(String rawResponse) {
@@ -177,10 +171,8 @@ class InteresItemModel extends InteresItem {
   const InteresItemModel({required super.id, required super.nombre});
 
   factory InteresItemModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
-    return InteresItemModel(id: int.parse(f(0)), nombre: f(1));
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return InteresItemModel(id: ParseUtils.toInt(c, 0), nombre: ParseUtils.str(c, 1));
   }
 
   static List<InteresItemModel> parseList(String rawResponse) {
@@ -215,12 +207,11 @@ class EstadoItemModel extends EstadoItem {
   });
 
   factory EstadoItemModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-    final padre = f(2);
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    final padre = ParseUtils.str(c, 1);
     return EstadoItemModel(
-      id:      f(0),
-      nombre:  f(1),
+      id:      ParseUtils.str(c, 0),
+      nombre:  ParseUtils.str(c, 2),
       idPadre: padre.isEmpty ? null : padre,
     );
   }

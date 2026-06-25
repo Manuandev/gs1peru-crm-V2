@@ -5,24 +5,27 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 
 /// Resumen financiero de la negociación: subtotal, descuento y total.
-/// Se muestra en la sección financiera del formulario de edición de lead.
+/// Descuento es un monto absoluto (no porcentaje).
+/// Se muestra siempre, incluso cuando los valores son cero.
 class NegociacionResumenCard extends StatelessWidget {
   final double subtotal;
-  final double descuento;
+  /// Monto a descontar (absoluto, no porcentaje).
+  final double montoDescuento;
   final double costoFinal;
+  final String simbolo;
 
   const NegociacionResumenCard({
     super.key,
     required this.subtotal,
-    required this.descuento,
+    required this.montoDescuento,
     required this.costoFinal,
+    this.simbolo = 'S/',
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final fmt         = NumberFormat('#,##0.00', 'es_PE');
-    final montoDesc   = subtotal * (descuento / 100);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -62,29 +65,28 @@ class NegociacionResumenCard extends StatelessWidget {
                   children: [
                     Text('Subtotal', style: AppTextStyles.bodySmall),
                     Text(
-                      'S/ ${fmt.format(subtotal)}',
+                      '$simbolo ${fmt.format(subtotal)}',
                       style: AppTextStyles.bodySmall,
                     ),
                   ],
                 ),
-                if (descuento > 0)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Descuento (${descuento.toStringAsFixed(0)}%)',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.error,
-                        ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Descuento',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: montoDescuento > 0 ? AppColors.error : AppColors.textSecondary,
                       ),
-                      Text(
-                        '- S/ ${fmt.format(montoDesc)}',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.error,
-                        ),
+                    ),
+                    Text(
+                      '- $simbolo ${fmt.format(montoDescuento)}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: montoDescuento > 0 ? AppColors.error : AppColors.textSecondary,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -99,7 +101,7 @@ class NegociacionResumenCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'S/ ${fmt.format(costoFinal)}',
+                '$simbolo ${fmt.format(costoFinal)}',
                 style: AppTextStyles.titleMedium.copyWith(
                   color:      colorScheme.primary,
                   fontWeight: AppTextStyles.weightBold,

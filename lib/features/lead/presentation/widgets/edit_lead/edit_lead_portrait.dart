@@ -21,21 +21,25 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   EstadoItem?           _estado;
   EstadoItem?           _subEstado;
   List<EstadoItem>      _subEstadosFiltrados = [];
-  CampaniaItem?         _campania;
-  OportunidadItem?      _evento;
   CanalItem?            _canal;
   InteresItem?          _interes;
-  List<OportunidadItem> _eventosFiltrados = [];
-  int                   _eventoKey = 0;
 
-  // Controladores de texto
+  // Moneda (de AppCurrencies)
+  MonedaItem _monedaItem = AppCurrencies.pen;
+
+  // Controladores de texto — editables
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _apellidoPCtrl;
   late final TextEditingController _apellidoMCtrl;
-  late final TextEditingController _correoCtrl;
   late final TextEditingController _cantidadCtrl;
   late final TextEditingController _precioBaseCtrl;
   late final TextEditingController _descuentoCtrl;
+
+  // Controladores solo-lectura (no se editan, sin listeners)
+  late final TextEditingController _campaniaCtrl;
+  late final TextEditingController _eventoCtrl;
+  late final TextEditingController _empresaCtrl;
+  late final TextEditingController _correoCtrl;
 
   bool _mostrarAgregarNumero = false;
   bool _isLoading            = false;
@@ -46,17 +50,17 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   @override
   void initState() {
     super.initState();
-    _nombreCtrl     = TextEditingController(text: widget.lead.nombre);
-    _apellidoPCtrl  = TextEditingController(text: widget.lead.apellidoPaterno);
-    _apellidoMCtrl  = TextEditingController(text: widget.lead.apellidoMaterno);
-    _correoCtrl     = TextEditingController(text: widget.lead.correo);
-    _cantidadCtrl   = TextEditingController(text: _fmtDouble(widget.lead.cantidad));
-    _precioBaseCtrl = TextEditingController(text: _fmtDouble(widget.lead.precioBase));
-    _descuentoCtrl  = TextEditingController(text: _fmtDouble(widget.lead.descuento));
-
-    _cantidadCtrl.addListener(_recalcular);
-    _precioBaseCtrl.addListener(_recalcular);
-    _descuentoCtrl.addListener(_recalcular);
+    final l = widget.lead;
+    _nombreCtrl     = TextEditingController(text: l.nombre);
+    _apellidoPCtrl  = TextEditingController(text: l.apellidoPaterno);
+    _apellidoMCtrl  = TextEditingController(text: l.apellidoMaterno);
+    _cantidadCtrl   = TextEditingController(text: _fmtDouble(l.cantidad));
+    _precioBaseCtrl = TextEditingController(text: _fmtDouble(l.precioBase));
+    _descuentoCtrl  = TextEditingController(text: _fmtDouble(l.descuento));
+    _campaniaCtrl   = TextEditingController(text: l.campania);
+    _eventoCtrl     = TextEditingController(text: l.evento);
+    _empresaCtrl    = TextEditingController(text: l.nombreEmpresa);
+    _correoCtrl     = TextEditingController(text: l.correo);
   }
 
   @override
@@ -70,19 +74,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   }
 
   void _inicializarCombos(CatalogsLoaded state) {
-    _campania = state.campanias
-        .where((e) => e.id == widget.lead.idCampania)
-        .firstOrNull;
-    _evento = state.oportunidades
-        .where((e) => e.idEvento == widget.lead.idEvento)
-        .firstOrNull;
     _canal = state.canales
         .where((e) => e.id == widget.lead.idCanal)
         .firstOrNull;
     _interes = state.intereses
         .where((e) => e.id == widget.lead.idInteres)
         .firstOrNull;
-    _eventosFiltrados = _filtrarEventos(state.oportunidades, widget.lead.idCampania);
 
     if (state.estados.isNotEmpty) {
       final tienePadre = widget.lead.idEstadoPadre?.isNotEmpty ?? false;
@@ -124,10 +121,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _nombreCtrl.dispose();
     _apellidoPCtrl.dispose();
     _apellidoMCtrl.dispose();
-    _correoCtrl.dispose();
     _cantidadCtrl.dispose();
     _precioBaseCtrl.dispose();
     _descuentoCtrl.dispose();
+    _campaniaCtrl.dispose();
+    _eventoCtrl.dispose();
+    _empresaCtrl.dispose();
+    _correoCtrl.dispose();
     super.dispose();
   }
 
@@ -136,53 +136,31 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   String _fmtDouble(double? v) =>
       (v == null || v == 0) ? '' : v.toStringAsFixed(2);
 
-  List<OportunidadItem> _filtrarEventos(
-    List<OportunidadItem> oportunidades,
-    int? idCampania,
-  ) {
-    if (idCampania == null) return oportunidades;
-    return oportunidades.where((e) => e.idCampania == idCampania).toList();
-  }
-
   double get _cantidad   => double.tryParse(_cantidadCtrl.text)   ?? 0;
   double get _precioBase => double.tryParse(_precioBaseCtrl.text) ?? 0;
   double get _descuento  => double.tryParse(_descuentoCtrl.text)  ?? 0;
   double get _subtotal   => _precioBase * _cantidad;
-  double get _costoFinal => _subtotal * (1 - _descuento / 100);
+  double get _costoFinal => _subtotal - _descuento;
 
-  void _recalcular() => setState(() {});
+  String get _simbolo => _monedaItem.simbolo;
 
   // ── Cambios detectados ────────────────────────────────────────────────────
 
   bool get _hayCambios {
     final l = widget.lead;
-    return _campania?.id             != l.idCampania          ||
-        _evento?.idEvento            != l.idEvento            ||
-        _canal?.id                   != l.idCanal             ||
-        _interes?.id                 != l.idInteres           ||
+    return _canal?.id                  != l.idCanal           ||
+        _interes?.id                   != l.idInteres         ||
         (_estado != null && _subEstado?.id != l.idEstado)     ||
         (_estado != null && _estado?.id    != l.idEstado && _subEstado == null) ||
-        _nombreCtrl.text.trim()      != l.nombre              ||
-        _apellidoPCtrl.text.trim()   != l.apellidoPaterno     ||
-        _apellidoMCtrl.text.trim()   != l.apellidoMaterno     ||
-        _correoCtrl.text.trim()      != l.correo              ||
-        _cantidadCtrl.text           != _fmtDouble(l.cantidad)   ||
-        _precioBaseCtrl.text         != _fmtDouble(l.precioBase) ||
-        _descuentoCtrl.text          != _fmtDouble(l.descuento);
+        _nombreCtrl.text.trim()        != l.nombre            ||
+        _apellidoPCtrl.text.trim()     != l.apellidoPaterno   ||
+        _apellidoMCtrl.text.trim()     != l.apellidoMaterno   ||
+        _cantidadCtrl.text             != _fmtDouble(l.cantidad)   ||
+        _precioBaseCtrl.text           != _fmtDouble(l.precioBase) ||
+        _descuentoCtrl.text            != _fmtDouble(l.descuento);
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────────
-
-  void _onCampaniaChanged(CampaniaItem? item) {
-    final catalogState = context.read<CatalogsBloc>().state;
-    if (catalogState is! CatalogsLoaded) return;
-    setState(() {
-      _campania = item;
-      _eventoKey++;
-      _evento = null;
-      _eventosFiltrados = _filtrarEventos(catalogState.oportunidades, item?.id);
-    });
-  }
 
   void _onEstadoChanged(EstadoItem? item) {
     final catalogState = context.read<CatalogsBloc>().state;
@@ -219,11 +197,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         idEstadoPadre:          tieneSubEstado ? _estado?.id     : null,
         descripcionEstadoPadre: tieneSubEstado ? _estado?.nombre : null,
         clearEstadoPadre:       !tieneSubEstado,
-        idCampania:             _campania?.id,
-        campania:               _campania?.nombre,
-        idEvento:               _evento?.idEvento,
-        evento:                 _evento?.nombre,
-        clearEvento:            _evento == null,
         idCanal:                _canal?.id,
         canal:                  _canal?.nombre,
         idInteres:              _interes?.id,
@@ -231,7 +204,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         nombre:                 _nombreCtrl.text.trim(),
         apellidoPaterno:        _apellidoPCtrl.text.trim(),
         apellidoMaterno:        _apellidoMCtrl.text.trim(),
-        correo:                 _correoCtrl.text.trim(),
         cantidad:               double.tryParse(_cantidadCtrl.text),
         precioBase:             double.tryParse(_precioBaseCtrl.text),
         descuento:              double.tryParse(_descuentoCtrl.text),
@@ -259,7 +231,30 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   @override
   Widget build(BuildContext context) {
     final catalogState = context.watch<CatalogsBloc>().state;
+    if (catalogState is CatalogsError) {
+      return AppErrorView(
+        message: 'No se pudieron cargar los catálogos.',
+        onRetry: () =>
+            context.read<CatalogsBloc>().add(const CatalogsLoadRequested()),
+      );
+    }
     if (catalogState is! CatalogsLoaded) return const AppLoadingView();
+
+    // ListenableBuilder para el botón Guardar — reacciona a cambios en campos de texto
+    final formSaveBar = ListenableBuilder(
+      listenable: Listenable.merge([
+        _nombreCtrl, _apellidoPCtrl, _apellidoMCtrl,
+        _cantidadCtrl, _precioBaseCtrl, _descuentoCtrl,
+      ]),
+      builder: (context, _) => FormSaveBar(
+        onCancelar:   () => context.goBack(),
+        onGuardar:    _guardar,
+        isLoading:    _isLoading,
+        isEnabled:    _hayCambios,
+        iconoGuardar: const Icon(AppIcons.save),
+        textoGuardar: 'Guardar cambios',
+      ),
+    );
 
     return Column(
       children: [
@@ -267,23 +262,18 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              LeadEditHeaderCard(lead: widget.lead),
-              const SizedBox(height: AppSpacing.lg),
               _buildSeccionProspecto(catalogState),
               const SizedBox(height: AppSpacing.lg),
-              _buildSeccionFinanciera(),
+              // ListenableBuilder para la sección financiera — solo ella se reconstruye al tipear
+              ListenableBuilder(
+                listenable: Listenable.merge([_cantidadCtrl, _precioBaseCtrl, _descuentoCtrl]),
+                builder: (context, _) => _buildSeccionFinanciera(),
+              ),
               const SizedBox(height: AppSpacing.xl),
             ],
           ),
         ),
-        FormSaveBar(
-          onCancelar:   () => context.goBack(),
-          onGuardar:    _guardar,
-          isLoading:    _isLoading,
-          isEnabled:    _hayCambios,
-          iconoGuardar: const Icon(AppIcons.save),
-          textoGuardar: 'Guardar',
-        ),
+        formSaveBar,
       ],
     );
   }
@@ -291,7 +281,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── Sección Información del prospecto ─────────────────────────────────────
 
   Widget _buildSeccionProspecto(CatalogsLoaded state) {
-    final hayEstados = state.estados.isNotEmpty;
+    final colorScheme = Theme.of(context).colorScheme;
+    final hayEstados  = state.estados.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,31 +292,26 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
         // Estado | Subestado
         FormFieldRow(
-          izquierdo: _buildComboEstado(state, hayEstados),
-          derecho:   _buildComboSubEstado(state, hayEstados),
+          izquierdo: _buildComboEstado(state, hayEstados, colorScheme),
+          derecho:   _buildComboSubEstado(state, hayEstados, colorScheme),
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // Campaña | Evento
+        // Campaña (read-only) | Evento (read-only)
         FormFieldRow(
-          izquierdo: CustomComboField<CampaniaItem>(
-            enabled:      !_isLoading,
-            data:         state.campanias,
-            label:        'Campaña',
-            initialValue: _campania?.id.toString(),
-            onChanged:    _onCampaniaChanged,
-            dense:        true,
+          izquierdo: CustomTextField(
+            label:      'Campaña',
+            controller: _campaniaCtrl,
+            enabled:    false,
+            dense:      true,
+            prefixIcon: Icon(AppIcons.campaign, color: colorScheme.primary, size: AppSizing.iconActionSm),
           ),
-          derecho: CustomComboField<OportunidadItem>(
-            key:          ValueKey(_eventoKey),
-            data:         _eventosFiltrados,
-            idIndex:      0,
-            labelIndex:   2,
-            label:        'Evento',
-            initialValue: _evento?.idEvento.toString(),
-            onChanged:    (item) => setState(() => _evento = item),
-            enabled:      _eventosFiltrados.isNotEmpty && !_isLoading,
-            dense:        true,
+          derecho: CustomTextField(
+            label:      'Evento',
+            controller: _eventoCtrl,
+            enabled:    false,
+            dense:      true,
+            prefixIcon: Icon(AppIcons.calendar, color: colorScheme.secondary, size: AppSizing.iconActionSm),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -339,6 +325,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             initialValue: _canal?.id.toString(),
             onChanged:    (item) => setState(() => _canal = item),
             dense:        true,
+            prefixIcon:   CanalHelper.icon(
+              _canal?.id ?? widget.lead.idCanal,
+              size: AppSizing.iconActionSm,
+            ),
           ),
           derecho: CustomComboField<InteresItem>(
             enabled:      !_isLoading,
@@ -347,11 +337,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             initialValue: _interes?.id.toString(),
             onChanged:    (item) => setState(() => _interes = item),
             dense:        true,
+            prefixIcon:   Icon(AppIcons.interes, color: colorScheme.primary, size: AppSizing.iconActionSm),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // Nombres (ancho completo)
+        // Nombres
         CustomTextField(
           label:              'Nombres',
           controller:         _nombreCtrl,
@@ -381,26 +372,27 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // Empresa (read-only) | Cargo (futuro)
+        // Empresa | Cargo (ambos read-only)
         FormFieldRow(
           izquierdo: CustomTextField(
             label:      'Empresa',
-            controller: TextEditingController(text: widget.lead.nombreEmpresa),
+            controller: _empresaCtrl,
             enabled:    false,
-            prefixIcon: const Icon(AppIcons.users),
+            prefixIcon: const Icon(AppIcons.business),
             dense:      true,
           ),
           derecho: CustomTextField(
             label:      'Cargo',
             controller: TextEditingController(),
             enabled:    false,
+            prefixIcon: const Icon(AppIcons.documento),
             hint:       'Próximamente',
             dense:      true,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // Teléfono: [campo read-only] [+ externo]
+        // Teléfono: campo + botón agregar
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -410,38 +402,33 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           ],
         ),
 
-        // Fila nueva: [combo prefijo] [input número] — sin contenedor
         if (_mostrarAgregarNumero) ...[
           const SizedBox(height: AppSpacing.xs),
           AgregarNumeroPanel(
             onCancelar: () => setState(() => _mostrarAgregarNumero = false),
-            onAgregar:  (_, _) => setState(() => _mostrarAgregarNumero = false),
+            onAgregar:  (prefijo, numero) => setState(() => _mostrarAgregarNumero = false),
           ),
         ],
 
         const SizedBox(height: AppSpacing.sm),
 
-        // Correo (ancho completo)
+        // Correo (read-only)
         CustomTextField(
-          label:        'Correo',
-          controller:   _correoCtrl,
-          enabled:      !_isLoading,
-          prefixIcon:   const Icon(AppIcons.email),
-          keyboardType: TextInputType.emailAddress,
-          dense:        true,
-          suffixIcon:   _correoCtrl.text.isNotEmpty
-              ? IconButton(
-                  icon:     const Icon(AppIcons.close),
-                  iconSize: AppSizing.iconActionSm,
-                  onPressed: () => setState(() => _correoCtrl.clear()),
-                )
-              : null,
+          label:      'Correo',
+          controller: _correoCtrl,
+          enabled:    false,
+          prefixIcon: const Icon(AppIcons.email),
+          dense:      true,
         ),
       ],
     );
   }
 
-  Widget _buildComboEstado(CatalogsLoaded state, bool hayEstados) {
+  Widget _buildComboEstado(CatalogsLoaded state, bool hayEstados, ColorScheme colorScheme) {
+    final colorEstado = AppIconsSocial.colorEstado(
+      _estado?.id ?? widget.lead.idEstado,
+    );
+
     if (!hayEstados) {
       return CustomTextField(
         label:      'Estado',
@@ -458,18 +445,20 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       initialValue: _estado?.id,
       onChanged:    _onEstadoChanged,
       dense:        true,
+      prefixIcon:   Icon(AppIcons.flag, color: colorEstado, size: AppSizing.iconActionSm),
     );
   }
 
-  Widget _buildComboSubEstado(CatalogsLoaded state, bool hayEstados) {
+  Widget _buildComboSubEstado(CatalogsLoaded state, bool hayEstados, ColorScheme colorScheme) {
     if (!hayEstados) {
       return CustomTextField(
-        label:      'Subestado',
+        label:   'Subestado',
         controller: TextEditingController(
           text: widget.lead.descripcionEstadoPadre ?? widget.lead.estado,
         ),
-        enabled: false,
-        dense:   true,
+        enabled:   false,
+        dense:     true,
+        prefixIcon: Icon(AppIcons.listAlt, color: colorScheme.primary, size: AppSizing.iconActionSm),
       );
     }
     return CustomComboField<EstadoItem>(
@@ -479,6 +468,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       initialValue: _subEstado?.id,
       onChanged:    (item) => setState(() => _subEstado = item),
       dense:        true,
+      prefixIcon:   Icon(AppIcons.listAlt, color: colorScheme.primary, size: AppSizing.iconActionSm),
     );
   }
 
@@ -488,8 +478,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       controller: TextEditingController(
         text: '${widget.lead.prefijo} ${widget.lead.numero}',
       ),
-      enabled: false,
-      dense:   true,
+      enabled:    false,
+      prefixIcon: const Icon(AppIcons.phone),
+      dense:      true,
     );
   }
 
@@ -513,7 +504,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         ),
         child: Icon(
           _mostrarAgregarNumero ? AppIcons.close : AppIcons.add,
-          size: AppSizing.iconActionSm,
+          size:  AppSizing.iconActionSm,
           color: _mostrarAgregarNumero
               ? colorScheme.error
               : colorScheme.primary,
@@ -525,18 +516,46 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── Sección Financiera ────────────────────────────────────────────────────
 
   Widget _buildSeccionFinanciera() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const FormSectionTitle('Información financiera'),
         const SizedBox(height: AppSpacing.md),
 
-        // Cantidad | Precio base
+        // Moneda | Cantidad
         FormFieldRow(
-          izquierdo: CustomTextField(
+          izquierdo: CustomComboField<MonedaItem>(
+            data:         AppCurrencies.all,
+            label:        'Moneda',
+            initialValue: _monedaItem.codigo,
+            onChanged:    (item) => setState(() => _monedaItem = item ?? AppCurrencies.pen),
+            enabled:      !_isLoading,
+            dense:        true,
+            prefixIcon:   Icon(AppIcons.moneda, color: colorScheme.primary, size: AppSizing.iconActionSm),
+          ),
+          derecho: CustomTextField(
             label:        'Cantidad',
             controller:   _cantidadCtrl,
             enabled:      !_isLoading,
+            dense:        true,
+            prefixIcon:   Icon(AppIcons.receipt, color: colorScheme.primary, size: AppSizing.iconActionSm),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        // Precio base | Descuento
+        FormFieldRow(
+          izquierdo: CustomTextField(
+            label:        'Precio base',
+            controller:   _precioBaseCtrl,
+            enabled:      !_isLoading,
+            prefixText:   '$_simbolo ',
             dense:        true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
@@ -544,10 +563,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             ],
           ),
           derecho: CustomTextField(
-            label:        'Precio base',
-            controller:   _precioBaseCtrl,
+            label:        'Descuento',
+            controller:   _descuentoCtrl,
             enabled:      !_isLoading,
-            prefixText:   'S/ ',
+            prefixText:   '$_simbolo ',
             dense:        true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
@@ -557,37 +576,24 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // Descuento | Costo final
-        FormFieldRow(
-          izquierdo: CustomTextField(
-            label:        'Descuento',
-            controller:   _descuentoCtrl,
-            enabled:      !_isLoading,
-            suffixText:   '%',
-            dense:        true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-            ],
+        // Costo final (ancho completo, calculado, read-only)
+        CustomTextField(
+          label:      'Costo final',
+          controller: TextEditingController(
+            text: '$_simbolo ${_fmt.format(_costoFinal)}',
           ),
-          derecho: CustomTextField(
-            label:      'Costo final',
-            controller: TextEditingController(
-              text: _costoFinal > 0 ? 'S/ ${_fmt.format(_costoFinal)}' : '',
-            ),
-            enabled:    false,
-            prefixText: _costoFinal > 0 ? null : 'S/ ',
-            dense:      true,
-          ),
+          enabled: false,
+          dense:   true,
         ),
         const SizedBox(height: AppSpacing.md),
 
-        if (_subtotal > 0)
-          NegociacionResumenCard(
-            subtotal:   _subtotal,
-            descuento:  _descuento,
-            costoFinal: _costoFinal,
-          ),
+        // Resumen siempre visible
+        NegociacionResumenCard(
+          subtotal:       _subtotal,
+          montoDescuento: _descuento,
+          costoFinal:     _costoFinal,
+          simbolo:        _simbolo,
+        ),
       ],
     );
   }

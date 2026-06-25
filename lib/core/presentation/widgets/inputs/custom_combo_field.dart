@@ -31,6 +31,8 @@ class CustomComboField<T extends Comboable> extends StatefulWidget {
   final String? Function(String?)? validator;
   // Si true: reduce padding interno — ideal para formularios densos
   final bool dense;
+  // Ícono prefijo dentro del campo
+  final Widget? prefixIcon;
 
   const CustomComboField({
     super.key,
@@ -44,6 +46,7 @@ class CustomComboField<T extends Comboable> extends StatefulWidget {
     this.enabled = true,
     this.validator,
     this.dense = false,
+    this.prefixIcon,
   });
 
   @override
@@ -88,6 +91,7 @@ class _CustomComboFieldState<T extends Comboable>
         enabled: widget.enabled,
         border: const OutlineInputBorder(),
         isDense: widget.dense,
+        prefixIcon: widget.prefixIcon,
         contentPadding: widget.dense
             ? const EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm,
@@ -129,7 +133,7 @@ class _CustomComboFieldState<T extends Comboable>
               child: Text(
                 _getLabel(item),
                 style: widget.dense
-                    ? AppTextStyles.bodyMedium
+                    ? AppTextStyles.bodySmall
                     : AppTextStyles.bodyLarge,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,

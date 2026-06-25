@@ -37,6 +37,7 @@ class AppRoutes {
   static const String fichaCompletarSolicitud = '/solicitudes/completar';
   static const String fichaParticipantesSolicitud = '/solicitudes/participantes';
   static const String fichaFacturacionSolicitud = '/solicitudes/facturacion';
+  static const String fichaResumenSolicitud = '/solicitudes/resumen';
 
   static const String detalleCobranza = '/cobranza/detalle';
   static const String facturarCobranza = '/cobranza/facturar';

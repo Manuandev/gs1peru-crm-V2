@@ -82,6 +82,14 @@ extension NavigationExtensions on BuildContext {
         arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
       );
 
+  Future<void> goToFichaResumenSolicitud({
+    required Solicitud solicitud,
+    required bool modoEdicion,
+  }) => _push(
+        AppRoutes.fichaResumenSolicitud,
+        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+      );
+
   Future<void> goToDetalleCobranza({required String numSol}) =>
       _push(AppRoutes.detalleCobranza, arguments: {'numSol': numSol});
 

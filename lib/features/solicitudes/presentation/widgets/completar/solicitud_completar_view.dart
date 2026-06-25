@@ -6,6 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
+import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart';
 
 class SolicitudCompletarView extends StatefulWidget {
   final Solicitud solicitud;
@@ -507,84 +508,63 @@ class _SeccionInfoComercial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 12,
-          ),
-          labelStyle: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-          hintStyle: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textDisabled,
-          ),
-          floatingLabelStyle: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.primary,
-            fontWeight: AppTextStyles.weightMedium,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              const Icon(
-                Icons.business_rounded,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          children: [
+            const Icon(
+              Icons.business_rounded,
+              color: AppColors.primary,
+              size: AppSizing.iconMd,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              'Información comercial',
+              style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.primary,
-                size: AppSizing.iconMd,
+                fontWeight: AppTextStyles.weightSemiBold,
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                'Información comercial',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: AppTextStyles.weightSemiBold,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              '(opcional)',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: AppTextStyles.weightRegular,
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                '(opcional)',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: AppTextStyles.weightRegular,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
 
-          // RUC + Razón social
-          Row(
-            children: [
-              Expanded(
-                child: CustomTextField(
-                  label: 'RUC',
-                  hint: 'Ingrese el RUC',
-                  controller: ctrlRuc,
-                  keyboardType: TextInputType.number,
-                  enabled: habilitado,
-                ),
+        // RUC + Razón social
+        Row(
+          children: [
+            Expanded(
+              child: SolicitudTextField(
+                label: 'RUC',
+                hint: 'Ingrese el RUC',
+                controller: ctrlRuc,
+                keyboardType: TextInputType.number,
+                enabled: habilitado,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomTextField(
-                  label: 'Razón social',
-                  hint: 'Ingrese la razón social',
-                  controller: ctrlRazonSocial,
-                  enabled: habilitado,
-                  isUpperCase: true,
-                  textCapitalization: TextCapitalization.words,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: SolicitudTextField(
+                label: 'Razón social',
+                hint: 'Ingrese la razón social',
+                controller: ctrlRazonSocial,
+                enabled: habilitado,
+                isUpperCase: true,
+                textCapitalization: TextCapitalization.words,
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -625,191 +605,165 @@ class _SeccionDatosSolicitante extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 12,
-          ),
-          labelStyle: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-          hintStyle: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textDisabled,
-          ),
-          floatingLabelStyle: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.primary,
-            fontWeight: AppTextStyles.weightMedium,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              const Icon(
-                Icons.person_rounded,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          children: [
+            const Icon(
+              Icons.person_rounded,
+              color: AppColors.primary,
+              size: AppSizing.iconMd,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              'Datos del solicitante',
+              style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.primary,
-                size: AppSizing.iconMd,
+                fontWeight: AppTextStyles.weightSemiBold,
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                'Datos del solicitante',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: AppTextStyles.weightSemiBold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
 
-          // Fila 1: Tipo documento + Número documento
-          Row(
-            children: [
-              Expanded(
-                child: CustomComboSearchField(
-                  label: 'Tipo documento *',
-                  data: _tiposDoc,
-                  displayIndex: 1,
-                  enabled: habilitado,
-                ),
+        // Fila 1: Tipo documento + Número documento
+        Row(
+          children: [
+            Expanded(
+              child: SolicitudComboField(
+                label: 'Tipo documento *',
+                data: _tiposDoc,
+                enabled: habilitado,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomTextField(
-                  label: 'Número documento *',
-                  controller: ctrlNumDoc,
-                  keyboardType: TextInputType.number,
-                  enabled: habilitado,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: SolicitudTextField(
+                label: 'Número documento *',
+                controller: ctrlNumDoc,
+                keyboardType: TextInputType.number,
+                enabled: habilitado,
               ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
 
-          // Fila 2: Nacionalidad + Sexo
-          Row(
-            children: [
-              Expanded(
-                child: CustomComboSearchField(
-                  label: 'Nacionalidad *',
-                  data: _nacionalidades,
-                  displayIndex: 1,
-                  enabled: habilitado,
-                ),
+        // Fila 2: Nacionalidad + Sexo
+        Row(
+          children: [
+            Expanded(
+              child: SolicitudComboField(
+                label: 'Nacionalidad *',
+                data: _nacionalidades,
+                enabled: habilitado,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomComboSearchField(
-                  label: 'Sexo *',
-                  data: _sexos,
-                  displayIndex: 1,
-                  enabled: habilitado,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: SolicitudComboField(
+                label: 'Sexo *',
+                data: _sexos,
+                enabled: habilitado,
               ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
 
-          // Nombres
-          CustomTextField(
-            label: 'Nombres *',
-            controller: ctrlNombres,
-            enabled: habilitado,
-            isUpperCase: true,
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: AppSpacing.xs),
+        // Nombres
+        SolicitudTextField(
+          label: 'Nombres *',
+          controller: ctrlNombres,
+          enabled: habilitado,
+          isUpperCase: true,
+          textCapitalization: TextCapitalization.words,
+        ),
+        const SizedBox(height: AppSpacing.xs),
 
-          // Fila 3: Apellido paterno + Apellido materno
-          Row(
-            children: [
-              Expanded(
-                child: CustomTextField(
-                  label: 'Apellido paterno *',
-                  controller: ctrlApellidoPaterno,
-                  enabled: habilitado,
-                  isUpperCase: true,
-                  textCapitalization: TextCapitalization.words,
-                ),
+        // Fila 3: Apellido paterno + Apellido materno
+        Row(
+          children: [
+            Expanded(
+              child: SolicitudTextField(
+                label: 'Apellido paterno *',
+                controller: ctrlApellidoPaterno,
+                enabled: habilitado,
+                isUpperCase: true,
+                textCapitalization: TextCapitalization.words,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomTextField(
-                  label: 'Apellido materno',
-                  controller: ctrlApellidoMaterno,
-                  enabled: habilitado,
-                  isUpperCase: true,
-                  textCapitalization: TextCapitalization.words,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: SolicitudTextField(
+                label: 'Apellido materno',
+                controller: ctrlApellidoMaterno,
+                enabled: habilitado,
+                isUpperCase: true,
+                textCapitalization: TextCapitalization.words,
               ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
 
-          // Cargo
-          CustomTextField(
-            label: 'Cargo *',
-            controller: ctrlCargo,
-            enabled: habilitado,
-            isUpperCase: true,
-            textCapitalization: TextCapitalization.sentences,
-          ),
-          const SizedBox(height: AppSpacing.xs),
+        // Cargo
+        SolicitudTextField(
+          label: 'Cargo *',
+          controller: ctrlCargo,
+          enabled: habilitado,
+          isUpperCase: true,
+          textCapitalization: TextCapitalization.sentences,
+        ),
+        const SizedBox(height: AppSpacing.xs),
 
-          // Fila 4: Celular + Correo
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _CampoCelular(
-                  controller: ctrlCelular,
-                  habilitado: habilitado,
-                ),
+        // Fila 4: Celular + Correo
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _CampoCelular(
+                controller: ctrlCelular,
+                habilitado: habilitado,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomTextField(
-                  label: 'Correo *',
-                  controller: ctrlCorreo,
-                  keyboardType: TextInputType.emailAddress,
-                  enabled: habilitado,
-                  isUpperCase: true,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: SolicitudTextField(
+                label: 'Correo *',
+                controller: ctrlCorreo,
+                keyboardType: TextInputType.emailAddress,
+                enabled: habilitado,
+                isUpperCase: true,
               ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
 
-          // Fila 5: Campaña + Evento
-          Row(
-            children: [
-              Expanded(
-                child: CustomComboSearchField(
-                  label: 'Campaña *',
-                  data: _campanas,
-                  displayIndex: 1,
-                  enabled: habilitado,
-                ),
+        // Fila 5: Campaña + Evento
+        Row(
+          children: [
+            Expanded(
+              child: SolicitudComboField(
+                label: 'Campaña *',
+                data: _campanas,
+                enabled: habilitado,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomComboSearchField(
-                  label: 'Evento *',
-                  data: _eventos,
-                  displayIndex: 1,
-                  enabled: habilitado,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: SolicitudComboField(
+                label: 'Evento *',
+                data: _eventos,
+                enabled: habilitado,
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -867,7 +821,7 @@ class _CampoCelular extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
-            child: CustomTextField(
+            child: SolicitudTextField(
               label: 'Celular *',
               controller: controller,
               keyboardType: TextInputType.phone,

@@ -27,15 +27,12 @@ class SolicitudDetalleView extends StatelessWidget {
           ),
         ),
       ],
-      footer: _BotonesDetalle(solicitud: solicitud),
       body: Column(
         children: [
           // ── Header azul — conectado con el AppBar ─────────────
           const _DetalleHeader(),
 
           // ── Indicador de pasos — superpuesto al header ─────────
-          // Transform.translate no afecta layout: visualmente sube
-          // 16 px sobre el header sin romper el flujo del Column.
           Transform.translate(
             offset: const Offset(0, -AppSpacing.md),
             child: Padding(
@@ -44,9 +41,7 @@ class SolicitudDetalleView extends StatelessWidget {
             ),
           ),
 
-          // ── Contenido scrollable — también sube 16 px para ────
-          // eliminar el hueco que deja el transform del indicador.
-          // padding.top = md compensa el recorte del SingleChildScrollView.
+          // ── Contenido scrollable ───────────────────────────────
           Expanded(
             child: Transform.translate(
               offset: const Offset(0, -AppSpacing.md),
@@ -75,6 +70,9 @@ class SolicitudDetalleView extends StatelessWidget {
               ),
             ),
           ),
+
+          // ── Botones de acción fijos al pie ─────────────────────
+          _BotonesDetalle(solicitud: solicitud),
         ],
       ),
     );

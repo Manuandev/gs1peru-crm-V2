@@ -24,11 +24,14 @@ export 'presentation/pages/solicitud_detalle_page.dart';
 export 'presentation/pages/solicitud_completar_page.dart';
 export 'presentation/pages/solicitud_participantes_page.dart';
 export 'presentation/pages/solicitud_facturacion_page.dart';
+export 'presentation/pages/solicitud_resumen_page.dart';
 
 export 'presentation/widgets/detail/solicitud_detalle_view.dart';
 export 'presentation/widgets/completar/solicitud_completar_view.dart';
 export 'presentation/widgets/completar/solicitud_participantes_view.dart';
 export 'presentation/widgets/completar/solicitud_facturacion_view.dart';
+export 'presentation/widgets/completar/solicitud_resumen_view.dart';
+export 'presentation/widgets/completar/solicitud_inputs.dart';
 export 'presentation/widgets/list/solicitud_list_view.dart';
 export 'presentation/widgets/list/solicitud_list_portrait.dart';
 export 'presentation/widgets/list/solicitud_card.dart';

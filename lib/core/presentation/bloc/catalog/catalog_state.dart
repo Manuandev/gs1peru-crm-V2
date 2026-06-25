@@ -23,13 +23,14 @@ class CatalogsLoaded extends CatalogsState {
 
   const CatalogsLoaded({required this.listas});
 
-  List<CampaniaItem> get campanias => listas.campanias;
+  List<CampaniaItem>    get campanias    => listas.campanias;
   List<OportunidadItem> get oportunidades => listas.oportunidades;
-  List<CanalItem> get canales => listas.canales;
-  List<InteresItem> get intereses => listas.intereses;
+  List<CanalItem>       get canales      => listas.canales;
+  List<InteresItem>     get intereses    => listas.intereses;
+  List<EstadoItem>      get estados      => listas.estados;
 
   @override
-  List<Object?> get props => [campanias, oportunidades, canales, intereses];
+  List<Object?> get props => [campanias, oportunidades, canales, intereses, estados];
 }
 
 class CatalogsError extends CatalogsState {

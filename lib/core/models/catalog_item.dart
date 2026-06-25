@@ -7,12 +7,15 @@ class ListasGenericas {
   final List<OportunidadItem> oportunidades;
   final List<CanalItem> canales;
   final List<InteresItem> intereses;
+  // Parte [4] del SP lstListas. Vacío hasta que el SP devuelva la sección.
+  final List<EstadoItem> estados;
 
   const ListasGenericas({
     required this.campanias,
     required this.oportunidades,
     required this.canales,
     required this.intereses,
+    this.estados = const [],
   });
 }
 
@@ -22,14 +25,16 @@ class ListasGenericasModel extends ListasGenericas {
     required super.oportunidades,
     required super.canales,
     required super.intereses,
+    super.estados,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
     final partes = rawResponse.split(AppConstants.sepListas);
-    final campaniasRaw = partes.isNotEmpty ? partes[0] : '';
-    final oportunidadesRaw = partes.length > 1 ? partes[1] : '';
-    final canalesRaw = partes.length > 2 ? partes[2] : '';
-    final interesesRaw = partes.length > 3 ? partes[3] : '';
+    final campaniasRaw    = partes.isNotEmpty    ? partes[0] : '';
+    final oportunidadesRaw = partes.length > 1   ? partes[1] : '';
+    final canalesRaw      = partes.length > 2    ? partes[2] : '';
+    final interesesRaw    = partes.length > 3    ? partes[3] : '';
+    final estadosRaw      = partes.length > 4    ? partes[4] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -47,11 +52,16 @@ class ListasGenericasModel extends ListasGenericas {
         ? <InteresItemModel>[]
         : InteresItemModel.parseList(interesesRaw);
 
+    final estados = estadosRaw.trim().isEmpty
+        ? <EstadoItemModel>[]
+        : EstadoItemModel.parseList(estadosRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
       canales: canales,
       intereses: intereses,
+      estados: estados,
     );
   }
 }
@@ -178,6 +188,48 @@ class InteresItemModel extends InteresItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => InteresItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+// SP lstListas parte [4]: idEstado ¦ descripcion ¦ idEstadoPadre (vacío si es padre)
+class EstadoItem with Comboable {
+  final String  id;
+  final String  nombre;
+  /// null → estado principal; non-null → es subestado de [idPadre].
+  final String? idPadre;
+
+  const EstadoItem({required this.id, required this.nombre, this.idPadre});
+
+  bool get esPadre => idPadre == null || idPadre!.isEmpty;
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+class EstadoItemModel extends EstadoItem {
+  const EstadoItemModel({
+    required super.id,
+    required super.nombre,
+    super.idPadre,
+  });
+
+  factory EstadoItemModel.fromRawString(String raw) {
+    final fields = raw.split(AppConstants.sepCampos);
+    String f(int i) => i < fields.length ? fields[i].trim() : '';
+    final padre = f(2);
+    return EstadoItemModel(
+      id:      f(0),
+      nombre:  f(1),
+      idPadre: padre.isEmpty ? null : padre,
+    );
+  }
+
+  static List<EstadoItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => EstadoItemModel.fromRawString(r))
         .toList();
   }
 }

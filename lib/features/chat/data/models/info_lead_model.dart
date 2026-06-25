@@ -18,7 +18,8 @@ class InfoLeadModel extends Lead {
     required super.idLead,
     required super.idContacto,
     required super.nombre,
-    required super.apellido,
+    required super.apellidoPaterno,
+    required super.apellidoMaterno,
     required super.nombreEmpresa,
     required super.asesor,
     required super.fechaHora,
@@ -56,21 +57,20 @@ class InfoLeadModel extends Lead {
   factory InfoLeadModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
-    // Nombre de contacto compuesto desde campos del SP de chats
     final nombres   = ParseUtils.str(fields, 1);
     final apellidoP = ParseUtils.str(fields, 2);
     final apellidoM = ParseUtils.str(fields, 3);
-    final apellido  = '$apellidoP $apellidoM'.trim();
     final nombreContacto = '$nombres $apellidoP $apellidoM'.trim();
 
     return InfoLeadModel(
       // 00 → idContacto
-      idContacto:  ParseUtils.toInt(fields, 0),
+      idContacto:      ParseUtils.toInt(fields, 0),
       // 01 → nombres
-      nombre:      nombres,
-      // 02 + 03 → apellidoP + apellidoM
-      apellido:    apellido,
-      nombreContacto: nombreContacto.isEmpty ? null : nombreContacto,
+      nombre:          nombres,
+      // 02 → apellidoPaterno  03 → apellidoMaterno
+      apellidoPaterno: apellidoP,
+      apellidoMaterno: apellidoM,
+      nombreContacto:  nombreContacto.isEmpty ? null : nombreContacto,
       // 04 → asesorPrincipal
       asesor:      ParseUtils.str(fields, 4),
       // 05 → idEmpresa (ignorado — sin campo en Lead)

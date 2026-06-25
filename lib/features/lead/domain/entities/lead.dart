@@ -14,7 +14,8 @@ class Lead extends Equatable {
 
   // ── Contacto ──────────────────────────────────────────────────
   final String  nombre;
-  final String  apellido;
+  final String  apellidoPaterno;
+  final String  apellidoMaterno;
   final String  nombreEmpresa;
   final String  asesor;
   final String  fechaHora;
@@ -45,12 +46,10 @@ class Lead extends Equatable {
   final String interes;
 
   // ── Conversación WhatsApp ─────────────────────────────────────
-  // Indica si hay una conversación abierta asociada a este lead.
   final bool? tieneConversacionAbierta;
 
   // ── Campos adicionales del SP de chats ────────────────────────
-  // Solo se poblán cuando el lead proviene del chat SP (task D).
-  final String? nombreContacto;      // nombres + apellidoP + apellidoM concatenados
+  final String? nombreContacto;
   final String? modalidad;
   final String? idEstadoPadre;
   final String? descripcionEstadoPadre;
@@ -60,20 +59,23 @@ class Lead extends Equatable {
   // ── Campos económicos ─────────────────────────────────────────
   final double? precioBase;
   final double? precio;
-  // TODO: activar cuando columna exista en CRM.T_LEAD (el SP devuelve 0 hardcodeado)
   final double? cantidad;
-  // TODO: activar cuando columna exista en CRM.T_LEAD (el SP devuelve 0 hardcodeado)
   final double? descuento;
 
   // ── Getters de conveniencia ───────────────────────────────────
 
-  String get nombreCompleto => '$nombre $apellido'.trim();
+  /// Apellidos combinados — compatible con código existente.
+  String get apellido => '$apellidoPaterno $apellidoMaterno'.trim();
+
+  String get nombreCompleto =>
+      '$nombre $apellidoPaterno $apellidoMaterno'.trim();
 
   const Lead({
     required this.idLead,
     required this.idContacto,
     required this.nombre,
-    required this.apellido,
+    required this.apellidoPaterno,
+    required this.apellidoMaterno,
     required this.nombreEmpresa,
     required this.asesor,
     required this.fechaHora,
@@ -110,7 +112,8 @@ class Lead extends Equatable {
         idLead,
         idContacto,
         nombre,
-        apellido,
+        apellidoPaterno,
+        apellidoMaterno,
         nombreEmpresa,
         asesor,
         fechaHora,
@@ -146,7 +149,8 @@ class Lead extends Equatable {
     int?     idLead,
     int?     idContacto,
     String?  nombre,
-    String?  apellido,
+    String?  apellidoPaterno,
+    String?  apellidoMaterno,
     String?  nombreEmpresa,
     String?  asesor,
     String?  fechaHora,
@@ -170,6 +174,7 @@ class Lead extends Equatable {
     String?  nombreContacto,
     String?  modalidad,
     String?  idEstadoPadre,
+    bool     clearEstadoPadre = false,
     String?  descripcionEstadoPadre,
     String?  idSubEstado,
     String?  subEstado,
@@ -182,7 +187,8 @@ class Lead extends Equatable {
       idLead:                   idLead          ?? this.idLead,
       idContacto:               idContacto      ?? this.idContacto,
       nombre:                   nombre          ?? this.nombre,
-      apellido:                 apellido        ?? this.apellido,
+      apellidoPaterno:          apellidoPaterno ?? this.apellidoPaterno,
+      apellidoMaterno:          apellidoMaterno ?? this.apellidoMaterno,
       nombreEmpresa:            nombreEmpresa   ?? this.nombreEmpresa,
       asesor:                   asesor          ?? this.asesor,
       fechaHora:                fechaHora       ?? this.fechaHora,
@@ -204,8 +210,8 @@ class Lead extends Equatable {
       tieneConversacionAbierta: tieneConversacionAbierta ?? this.tieneConversacionAbierta,
       nombreContacto:           nombreContacto  ?? this.nombreContacto,
       modalidad:                modalidad       ?? this.modalidad,
-      idEstadoPadre:            idEstadoPadre   ?? this.idEstadoPadre,
-      descripcionEstadoPadre:   descripcionEstadoPadre ?? this.descripcionEstadoPadre,
+      idEstadoPadre:            clearEstadoPadre ? null : (idEstadoPadre ?? this.idEstadoPadre),
+      descripcionEstadoPadre:   clearEstadoPadre ? null : (descripcionEstadoPadre ?? this.descripcionEstadoPadre),
       idSubEstado:              idSubEstado     ?? this.idSubEstado,
       subEstado:                subEstado       ?? this.subEstado,
       precioBase:               precioBase      ?? this.precioBase,

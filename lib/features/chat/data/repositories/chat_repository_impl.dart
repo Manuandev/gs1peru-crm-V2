@@ -53,10 +53,6 @@ class ChatRepositoryImpl implements ChatRepository {
       _datasource.updateEstado(idNumero, idEstado);
 
   @override
-  Future<CrudResult> updateLeadCompleto(Lead lead) =>
-      _datasource.updateLeadCompleto(lead);
-
-  @override
   Future<List<Template>> getTemplates() => _datasource.getTemplates();
 
   @override

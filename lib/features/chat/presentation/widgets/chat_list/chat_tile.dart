@@ -83,7 +83,7 @@ class ChatTile extends StatelessWidget {
                       child: CustomOutlinedButton(
                         text: 'Ver chat',
                         onPressed: onTap,
-                        textStyle: AppTextStyles.buttonSmall,
+                        textStyle: AppTextStyles.labelMedium,
                         height: AppSizing.buttonHeightCompact,
                         borderColor: AppColors.border,
                         borderWidth: AppSizing.hairline,

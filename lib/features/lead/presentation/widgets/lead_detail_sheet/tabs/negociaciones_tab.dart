@@ -78,6 +78,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   _FiltroNeg _filtro = _FiltroNeg.todas;
 
   void _editarLead(int idLead) {
+    if (idLead == 0) return;
     context.goBack();
     context.goToEditarLead(idLead: idLead);
   }

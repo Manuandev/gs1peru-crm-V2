@@ -215,7 +215,7 @@ class AppRouter {
             create: (ctx) => InfoLeadCubit(
               GetInfoUseCase(ctx.read<ChatRepository>()),
               UpdateLeadEstadoUseCase(ctx.read<ChatRepository>()),
-              UpdateLeadInfoUseCase(ctx.read<ChatRepository>()),
+              UpdateLeadInfoUseCase(ctx.read<LeadRepository>()),
               GetLeadDetalleUseCase(ctx.read<LeadRepository>()),
             )..cargarPorIdLead(idLead),
             child: child,

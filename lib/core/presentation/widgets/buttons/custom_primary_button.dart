@@ -62,6 +62,8 @@ class CustomPrimaryButton extends StatelessWidget {
   final Color? backgroundColor;
   // Color de texto/ícono personalizado. null = usa colorScheme.onPrimary (blanco)
   final Color? foregroundColor;
+  // Estilo de texto personalizado. null = usa AppTextStyles.button (16px bold)
+  final TextStyle? textStyle;
 
   const CustomPrimaryButton({
     super.key,
@@ -75,6 +77,7 @@ class CustomPrimaryButton extends StatelessWidget {
     this.padding,
     this.backgroundColor,
     this.foregroundColor,
+    this.textStyle,
   });
 
   @override
@@ -133,18 +136,28 @@ class CustomPrimaryButton extends StatelessWidget {
                     data: IconThemeData(color: resolvedForegroundColor),
                     child: icon!,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    text,
-                    style: AppTextStyles.button.copyWith(
-                      color: resolvedForegroundColor,
+                  const SizedBox(width: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      text,
+                      style: (textStyle ?? AppTextStyles.button).copyWith(
+                        color: resolvedForegroundColor,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               )
             : Text(
                 text,
-                style: AppTextStyles.button.copyWith(color: resolvedForegroundColor),
+                style: (textStyle ?? AppTextStyles.button).copyWith(color: resolvedForegroundColor),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
               ),
       ),
     );

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app_crm/core/index_core.dart';
 
-// Prefijos de país disponibles para selección de número.
 class _PrefijoPais with Comboable {
   final String codigo;
   final String pais;
@@ -26,8 +25,9 @@ const _prefijosDisponibles = [
   _PrefijoPais(codigo: '+34',  pais: 'España'),
 ];
 
-/// Panel inline para agregar un número de teléfono al lead.
-/// Gestiona internamente el prefijo y el número ingresado.
+/// Fila inline para ingresar un número adicional: [combo prefijo] [input número].
+/// Se muestra directamente debajo del teléfono principal al pulsar "+".
+/// Sin contenedor, sin botones extra — la confirmación ocurre al guardar el form.
 class AgregarNumeroPanel extends StatefulWidget {
   final VoidCallback onCancelar;
   final void Function(String prefijo, String numero) onAgregar;
@@ -61,67 +61,36 @@ class _AgregarNumeroPanelState extends State<AgregarNumeroPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color:        AppColors.surfaceLightVariant,
-        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        border:       Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Nuevo número',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Combo de índice (prefijo de país)
+        SizedBox(
+          width: 112,
+          child: CustomComboField<_PrefijoPais>(
+            data:         _prefijosDisponibles,
+            label:        'Prefijo',
+            initialValue: _prefijo?.codigo,
+            onChanged:    (item) => setState(() => _prefijo = item),
+            dense:        true,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 130,
-                child: CustomComboField<_PrefijoPais>(
-                  data:         _prefijosDisponibles,
-                  label:        'Prefijo',
-                  initialValue: _prefijo?.codigo,
-                  onChanged:    (item) => setState(() => _prefijo = item),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomTextField(
-                  label:        'Número',
-                  controller:   _numCtrl,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                ),
-              ),
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        // Input del número
+        Expanded(
+          child: CustomTextField(
+            label:        'Número',
+            controller:   _numCtrl,
+            keyboardType: TextInputType.phone,
+            dense:        true,
+            textInputAction: TextInputAction.done,
+            onSubmitted:  (_) => _agregar(),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              const Spacer(),
-              CustomOutlinedButton(
-                text:      'Cancelar',
-                height:    AppSizing.buttonHeightSmall,
-                onPressed: widget.onCancelar,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              CustomPrimaryButton(
-                text:      'Agregar',
-                height:    AppSizing.buttonHeightSmall,
-                onPressed: _agregar,
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -14,9 +14,6 @@ class ChatRemoteDatasource {
   final sep = AppConstants.sepListas;
   final camp = AppConstants.sepCampos;
 
-  String _orEmpty(dynamic val) =>
-      (val == null || val == 0) ? '' : val.toString();
-
   Lead _parsePrimerLead(String seccion) {
     final leads = LeadModel.parseList(seccion);
     if (leads.isEmpty) throw const AppException('No se encontró información del lead.');
@@ -227,43 +224,6 @@ class ChatRemoteDatasource {
         '${[idNumero, idEstado, _session.codUser, ip].join(camp)}${sep}UE';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsCud, body);
-
-    return switch (result) {
-      ApiSuccess(:final data) => parseCrudResponse(data),
-      ApiEmpty() => const CrudEmpty(),
-      ApiNoInternet() => const CrudNoInternet(),
-      ApiError(:final message) => CrudError(message),
-    };
-  }
-
-  Future<CrudResult> updateLeadCompleto(Lead lead) async {
-    final ip     = await _deviceInfo.getLocalIp();
-    final coords = await _deviceInfo.getCoordenadasString();
-
-    final String body = [
-      lead.idContacto,                   // field1  ID_CONTACTO
-      lead.idLead,                       // field2  ID_LEAD
-      lead.idEstado,                     // field3  ID_ESTADO
-      _orEmpty(lead.idCampania),         // field4  ID_CAMPANIA
-      _orEmpty(lead.idEvento),           // field5  ID_OPORTUNIDAD
-      _orEmpty(lead.idCanal),            // field6  ID_CANAL
-      _orEmpty(lead.idInteres),          // field7  ID_INTERES
-      lead.nombre,                       // field8  NOMBRES
-      lead.apellidoPaterno,              // field9  APELLIDO_P
-      lead.apellidoMaterno,              // field10 APELLIDO_M
-      lead.correo,                       // field11 CORREO
-      lead.prefijo,                      // field12 PREFIJO_NM
-      lead.numero,                       // field13 NUMERO
-      _orEmpty(lead.precioBase),         // field14 PRECIO_BASE
-      _orEmpty(lead.precio),             // field15 PRECIO (costoFinal calculado)
-      _orEmpty(lead.cantidad),           // field16 CANTIDAD
-      _orEmpty(lead.descuento),          // field17 DESCUENTO
-      _session.codUser,                  // field18 ID_USUARIO
-      ip,                                // field19 IP_USUARIO
-      coords,                            // field20 LL_USUARIO
-    ].join(camp);
-
-    final result = await _api.postSafe(ApiConstants.urlLeadsCud, '$body${sep}U');
 
     return switch (result) {
       ApiSuccess(:final data) => parseCrudResponse(data),

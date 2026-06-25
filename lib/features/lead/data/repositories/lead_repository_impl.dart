@@ -1,5 +1,6 @@
 // lib/features/lead/data/repositories/lead_repository_impl.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadRepositoryImpl implements LeadRepository {
@@ -19,6 +20,10 @@ class LeadRepositoryImpl implements LeadRepository {
   @override
   Future<void> toggleFavorito(int idLead, bool isFavorito) =>
       _remote.marcarFavorito(idLead, isFavorito);
+
+  @override
+  Future<CrudResult> updateLeadCompleto(Lead lead) =>
+      _remote.updateLeadCompleto(lead);
 
   @override
   Future<ContactoDetalleModel> obtenerDetalleContacto(int idContacto) =>

@@ -8,8 +8,9 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class DatosTab extends StatelessWidget {
   final Lead lead;
   final int idNumero;
+  final InfoLeadCubit? cubit;
 
-  const DatosTab({super.key, required this.lead, required this.idNumero});
+  const DatosTab({super.key, required this.lead, required this.idNumero, this.cubit});
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +175,7 @@ class DatosTab extends StatelessWidget {
               Navigator.of(context, rootNavigator: true).pop();
               NavigationService.navigateTo(
                 AppRoutes.detalleEditarLead,
-                arguments: {'idLead': lead.idLead, 'cubit': null},
+                arguments: {'idLead': lead.idLead, 'cubit': cubit},
               );
             },
           ),

@@ -165,7 +165,7 @@ class _LeadDetailSheetState extends State<LeadDetailSheet>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    DatosTab(lead: widget.lead, idNumero: widget.idNumero),
+                    DatosTab(lead: widget.lead, idNumero: widget.idNumero, cubit: widget.cubit),
                     NegociacionesTab(leadId: widget.leadId, idNumero: widget.idNumero),
                     HistorialTab(leadId: widget.leadId),
                   ],

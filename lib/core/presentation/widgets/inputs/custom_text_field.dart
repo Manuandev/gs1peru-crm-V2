@@ -91,6 +91,8 @@ class CustomTextField extends StatelessWidget {
   final bool isUpperCase;
   // Callback al tocar el campo
   final VoidCallback? onTap;
+  // Si true: reduce padding interno y altura del campo — ideal para formularios densos
+  final bool dense;
 
   const CustomTextField({
     super.key,
@@ -119,6 +121,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.isUpperCase = false,
     this.onTap,
+    this.dense = false,
   });
 
   @override
@@ -157,7 +160,7 @@ class CustomTextField extends StatelessWidget {
       focusNode: focusNode,
       obscureText: obscureText,
 
-      style: AppTextStyles.inputText.copyWith(color: textColor),
+      style: (dense ? AppTextStyles.bodyMedium : AppTextStyles.inputText).copyWith(color: textColor),
       decoration: InputDecoration(
         // Textos del campo
         labelText: label,
@@ -178,10 +181,16 @@ class CustomTextField extends StatelessWidget {
             : colorScheme.surfaceContainerHighest,
 
         // ── PADDING INTERNO ────
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
+        isDense: dense,
+        contentPadding: dense
+            ? const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm2,
+              )
+            : const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
 
         // ── BORDES ───────────────
         // Borde normal

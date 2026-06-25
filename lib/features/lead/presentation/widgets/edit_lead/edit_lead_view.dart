@@ -44,6 +44,7 @@ class _EditLeadViewState extends State<EditLeadView> {
   Widget build(BuildContext context) {
     return BasePage(
       title: 'Editar lead',
+      bodyPadding: EdgeInsets.zero,
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [
         IconButton(
@@ -77,9 +78,7 @@ class _EditLeadViewState extends State<EditLeadView> {
                 );
               }
               if (state is EditLeadLoaded) {
-                return EditLeadPortrait(
-                  lead: infoState.lead,
-                ); // ← del cubit
+                return EditLeadPortrait(lead: infoState.lead); // ← del cubit
               }
               return const SizedBox.shrink();
             },

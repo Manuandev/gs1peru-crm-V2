@@ -266,11 +266,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           ),
         ),
         FormSaveBar(
-          onCancelar:   () => context.goBack(),
-          onGuardar:    _guardar,
-          isLoading:    _isLoading,
-          isEnabled:    _hayCambios,
-          iconoGuardar: const Icon(AppIcons.save),
+          onCancelar:    () => context.goBack(),
+          onGuardar:     _guardar,
+          isLoading:     _isLoading,
+          isEnabled:     _hayCambios,
+          iconoGuardar:  const Icon(AppIcons.save),
+          textoGuardar:  'Guardar cambios',
+          textStyleGuardar: AppTextStyles.buttonSmall,
         ),
       ],
     );
@@ -292,7 +294,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           izquierdo: _buildComboEstado(state, hayEstados),
           derecho:   _buildComboSubEstado(state, hayEstados),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
         // Campaña | Evento
         FormFieldRow(
@@ -302,6 +304,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             label:        'Campaña',
             initialValue: _campania?.id.toString(),
             onChanged:    _onCampaniaChanged,
+            dense:        true,
           ),
           derecho: CustomComboField<OportunidadItem>(
             key:          ValueKey(_eventoKey),
@@ -312,9 +315,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             initialValue: _evento?.idEvento.toString(),
             onChanged:    (item) => setState(() => _evento = item),
             enabled:      _eventosFiltrados.isNotEmpty && !_isLoading,
+            dense:        true,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
         // Canal | Interés
         FormFieldRow(
@@ -324,6 +328,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             label:        'Canal',
             initialValue: _canal?.id.toString(),
             onChanged:    (item) => setState(() => _canal = item),
+            dense:        true,
           ),
           derecho: CustomComboField<InteresItem>(
             enabled:      !_isLoading,
@@ -331,9 +336,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             label:        'Interés',
             initialValue: _interes?.id.toString(),
             onChanged:    (item) => setState(() => _interes = item),
+            dense:        true,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
         // Nombres (ancho completo)
         CustomTextField(
@@ -342,8 +348,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           enabled:            !_isLoading,
           prefixIcon:         const Icon(AppIcons.user),
           textCapitalization: TextCapitalization.words,
+          dense:              true,
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
         // Apellido Paterno | Apellido Materno
         FormFieldRow(
@@ -352,15 +359,17 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             controller:         _apellidoPCtrl,
             enabled:            !_isLoading,
             textCapitalization: TextCapitalization.words,
+            dense:              true,
           ),
           derecho: CustomTextField(
             label:              'Apellido Materno',
             controller:         _apellidoMCtrl,
             enabled:            !_isLoading,
             textCapitalization: TextCapitalization.words,
+            dense:              true,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
         // Empresa (read-only) | Cargo (futuro)
         FormFieldRow(
@@ -369,42 +378,55 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             controller: TextEditingController(text: widget.lead.nombreEmpresa),
             enabled:    false,
             prefixIcon: const Icon(AppIcons.users),
+            dense:      true,
           ),
           derecho: CustomTextField(
             label:      'Cargo',
             controller: TextEditingController(),
             enabled:    false,
             hint:       'Próximamente',
+            dense:      true,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
-        // Teléfono | Correo
-        FormFieldRow(
-          izquierdo: _buildCampoTelefono(),
-          derecho: CustomTextField(
-            label:        'Correo',
-            controller:   _correoCtrl,
-            enabled:      !_isLoading,
-            prefixIcon:   const Icon(AppIcons.email),
-            keyboardType: TextInputType.emailAddress,
-            suffixIcon:   _correoCtrl.text.isNotEmpty
-                ? IconButton(
-                    icon:     const Icon(AppIcons.close),
-                    iconSize: AppSizing.iconActionSm,
-                    onPressed: () => setState(() => _correoCtrl.clear()),
-                  )
-                : null,
-          ),
+        // Teléfono: [campo read-only] [+ externo]
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: _buildCampoTelefono()),
+            const SizedBox(width: AppSpacing.xs),
+            _buildToggleTelefonoBtn(),
+          ],
         ),
 
+        // Fila nueva: [combo prefijo] [input número] — sin contenedor
         if (_mostrarAgregarNumero) ...[
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           AgregarNumeroPanel(
             onCancelar: () => setState(() => _mostrarAgregarNumero = false),
             onAgregar:  (_, _) => setState(() => _mostrarAgregarNumero = false),
           ),
         ],
+
+        const SizedBox(height: AppSpacing.sm),
+
+        // Correo (ancho completo)
+        CustomTextField(
+          label:        'Correo',
+          controller:   _correoCtrl,
+          enabled:      !_isLoading,
+          prefixIcon:   const Icon(AppIcons.email),
+          keyboardType: TextInputType.emailAddress,
+          dense:        true,
+          suffixIcon:   _correoCtrl.text.isNotEmpty
+              ? IconButton(
+                  icon:     const Icon(AppIcons.close),
+                  iconSize: AppSizing.iconActionSm,
+                  onPressed: () => setState(() => _correoCtrl.clear()),
+                )
+              : null,
+        ),
       ],
     );
   }
@@ -416,6 +438,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         controller: TextEditingController(text: widget.lead.estado),
         enabled:    false,
         prefixIcon: AppIconsSocial.widgetEstado(widget.lead.idEstado),
+        dense:      true,
       );
     }
     return CustomComboField<EstadoItem>(
@@ -424,6 +447,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       label:        'Estado',
       initialValue: _estado?.id,
       onChanged:    _onEstadoChanged,
+      dense:        true,
     );
   }
 
@@ -435,6 +459,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           text: widget.lead.descripcionEstadoPadre ?? widget.lead.estado,
         ),
         enabled: false,
+        dense:   true,
       );
     }
     return CustomComboField<EstadoItem>(
@@ -443,6 +468,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       label:        'Subestado',
       initialValue: _subEstado?.id,
       onChanged:    (item) => setState(() => _subEstado = item),
+      dense:        true,
     );
   }
 
@@ -452,17 +478,36 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       controller: TextEditingController(
         text: '${widget.lead.prefijo} ${widget.lead.numero}',
       ),
-      enabled:    false,
-      prefixIcon: const Icon(AppIcons.phone),
-      suffixIcon: IconButton(
-        icon:     const Icon(AppIcons.add),
-        iconSize: AppSizing.iconActionSm,
-        tooltip:  'Agregar número',
-        onPressed: _isLoading
-            ? null
-            : () => setState(
-                  () => _mostrarAgregarNumero = !_mostrarAgregarNumero,
-                ),
+      enabled: false,
+      dense:   true,
+    );
+  }
+
+  Widget _buildToggleTelefonoBtn() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: _isLoading
+          ? null
+          : () => setState(() => _mostrarAgregarNumero = !_mostrarAgregarNumero),
+      borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xs),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: _mostrarAgregarNumero
+                ? colorScheme.error
+                : colorScheme.primary,
+            width: AppSizing.hairline,
+          ),
+        ),
+        child: Icon(
+          _mostrarAgregarNumero ? AppIcons.close : AppIcons.add,
+          size: AppSizing.iconActionSm,
+          color: _mostrarAgregarNumero
+              ? colorScheme.error
+              : colorScheme.primary,
+        ),
       ),
     );
   }
@@ -482,6 +527,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             label:        'Cantidad',
             controller:   _cantidadCtrl,
             enabled:      !_isLoading,
+            dense:        true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
@@ -492,13 +538,14 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             controller:   _precioBaseCtrl,
             enabled:      !_isLoading,
             prefixText:   'S/ ',
+            dense:        true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
 
         // Descuento | Costo final
         FormFieldRow(
@@ -507,6 +554,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             controller:   _descuentoCtrl,
             enabled:      !_isLoading,
             suffixText:   '%',
+            dense:        true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
@@ -519,6 +567,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             ),
             enabled:    false,
             prefixText: _costoFinal > 0 ? null : 'S/ ',
+            dense:      true,
           ),
         ),
         const SizedBox(height: AppSpacing.md),

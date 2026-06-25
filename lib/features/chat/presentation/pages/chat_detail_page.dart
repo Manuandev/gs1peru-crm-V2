@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailPage extends StatelessWidget {
   final int idNumero;
@@ -28,7 +29,7 @@ class ChatDetailPage extends StatelessWidget {
           create: (_) => InfoLeadCubit(
             GetInfoUseCase(context.read<ChatRepository>()),
             UpdateLeadEstadoUseCase(context.read<ChatRepository>()),
-            UpdateLeadInfoUseCase(context.read<ChatRepository>()),
+            UpdateLeadInfoUseCase(context.read<LeadRepository>()),
           ),
         ),
       ],

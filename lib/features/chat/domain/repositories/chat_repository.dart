@@ -31,8 +31,6 @@ abstract class ChatRepository {
 
   Future<CrudResult> updateEstado(int idNumero, String idEstado);
 
-  Future<CrudResult> updateLeadCompleto(Lead lead);
-
   Future<List<Template>> getTemplates();
 
   bool sendWhatsAppTemplateMessage({

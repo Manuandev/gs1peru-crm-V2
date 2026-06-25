@@ -29,6 +29,8 @@ class CustomComboField<T extends Comboable> extends StatefulWidget {
   final void Function(T? item)? onChanged;
   final bool enabled;
   final String? Function(String?)? validator;
+  // Si true: reduce padding interno — ideal para formularios densos
+  final bool dense;
 
   const CustomComboField({
     super.key,
@@ -41,6 +43,7 @@ class CustomComboField<T extends Comboable> extends StatefulWidget {
     this.onChanged,
     this.enabled = true,
     this.validator,
+    this.dense = false,
   });
 
   @override
@@ -84,28 +87,50 @@ class _CustomComboFieldState<T extends Comboable>
         labelText: widget.label,
         enabled: widget.enabled,
         border: const OutlineInputBorder(),
+        isDense: widget.dense,
+        contentPadding: widget.dense
+            ? const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm2,
+              )
+            : null,
       ),
-      items: widget.data
-          .map(
-            (item) => DropdownMenuItem<T>(
-              value: item,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      items: widget.data.asMap().entries.map((entry) {
+        final index = entry.key;
+        final item  = entry.value;
+        return DropdownMenuItem<T>(
+          value: item,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (index > 0)
+                const Divider(height: 1, thickness: 0.5, color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.sm,
+                  horizontal: AppSpacing.xxs,
+                ),
                 child: Text(
                   _getLabel(item),
+                  style: AppTextStyles.bodyMedium,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                 ),
               ),
-            ),
-          )
-          .toList(),
+            ],
+          ),
+        );
+      }).toList(),
       selectedItemBuilder: (context) => widget.data
           .map(
             (item) => Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 _getLabel(item),
+                style: widget.dense
+                    ? AppTextStyles.bodyMedium
+                    : AppTextStyles.bodyLarge,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),

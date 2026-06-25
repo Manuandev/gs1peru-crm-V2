@@ -13,6 +13,8 @@ class FormSaveBar extends StatelessWidget {
   final String textoCancelar;
   final String textoGuardar;
   final Widget? iconoGuardar;
+  // Estilo de texto del botón Guardar. null = usa AppTextStyles.button (16px bold)
+  final TextStyle? textStyleGuardar;
 
   const FormSaveBar({
     super.key,
@@ -23,6 +25,7 @@ class FormSaveBar extends StatelessWidget {
     this.textoCancelar = 'Cancelar',
     this.textoGuardar = 'Guardar cambios',
     this.iconoGuardar,
+    this.textStyleGuardar,
   });
 
   @override
@@ -58,6 +61,7 @@ class FormSaveBar extends StatelessWidget {
               isLoading: isLoading,
               isEnabled: isEnabled && !isLoading,
               icon:      iconoGuardar,
+              textStyle: textStyleGuardar,
             ),
           ),
         ],

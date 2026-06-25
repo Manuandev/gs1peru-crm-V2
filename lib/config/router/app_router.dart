@@ -114,6 +114,36 @@ class AppRouter {
         );
       },
     ),
+    AppRoutes.fichaCompletarSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudCompletarPage(
+          solicitud: args['solicitud'] as Solicitud,
+          modoEdicion: args['modoEdicion'] as bool,
+        );
+      },
+    ),
+    AppRoutes.fichaParticipantesSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudParticipantesPage(
+          solicitud: args['solicitud'] as Solicitud,
+          modoEdicion: args['modoEdicion'] as bool,
+        );
+      },
+    ),
+    AppRoutes.fichaFacturacionSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudFacturacionPage(
+          solicitud: args['solicitud'] as Solicitud,
+          modoEdicion: args['modoEdicion'] as bool,
+        );
+      },
+    ),
     AppRoutes.misCasos: RouteDefinition(
       transition: TransitionType.slideRight,
       builder: (_) => const UnderConstructionPage(routeName: 'Mis casos'),

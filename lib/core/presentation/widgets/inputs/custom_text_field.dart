@@ -91,6 +91,8 @@ class CustomTextField extends StatelessWidget {
   final bool isUpperCase;
   // Callback al tocar el campo
   final VoidCallback? onTap;
+  // Padding interno del campo — si no se pasa, hereda del Theme (compacto) o usa el default estándar
+  final EdgeInsetsGeometry? contentPadding;
 
   const CustomTextField({
     super.key,
@@ -119,6 +121,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.isUpperCase = false,
     this.onTap,
+    this.contentPadding,
   });
 
   @override
@@ -178,10 +181,13 @@ class CustomTextField extends StatelessWidget {
             : colorScheme.surfaceContainerHighest,
 
         // ── PADDING INTERNO ────
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
+        // Prioridad: parámetro explícito → Theme compacto → default estándar
+        contentPadding: contentPadding ??
+            Theme.of(context).inputDecorationTheme.contentPadding ??
+            const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
 
         // ── BORDES ───────────────
         // Borde normal

@@ -31,6 +31,12 @@ class AppImages {
   static const String logoGs1PeruBlanco = 'assets/images/logo_gs1_blanco.svg';
   static const String logoGoogle = 'assets/icons/google_logo.svg';
 
+  // ── Iconos de canales sociales ─────────────────────────────────────────────
+  static const String iconFacebook = 'assets/icons/facebook_icon.png';
+  static const String iconInstagram = 'assets/icons/instagram_icon.png';
+  static const String iconLinkedin = 'assets/icons/linkedin_icon.png';
+  static const String iconLogistica = 'assets/icons/logistica_icon.png';
+
   // ── Logo dependiente del tema ──────────────────────────────────────────────
   /// Devuelve el logo correcto según el brillo del tema actual.
   /// Uso: AppImages.logoTheme(context)

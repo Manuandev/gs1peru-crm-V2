@@ -174,7 +174,7 @@ class SolicitudCard extends StatelessWidget {
                           Row(
                             children: [
                               Image.asset(
-                                'assets/icons/whatsapp_logo.png',
+                                'assets/icons/whatsapp_icon.png',
                                 width: 16,
                                 height: 16,
                               ),
@@ -239,89 +239,91 @@ class SolicitudCard extends StatelessWidget {
 
           // ── Botones ───────────────────────────────────────────────
           if (mostrarBotones)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              0,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onVer,
-                    icon: Icon(
-                      AppIcons.visibility,
-                      size: AppSizing.iconActionSm,
-                      color: AppColors.primary,
-                    ),
-                    label: Text(
-                      'Ver',
-                      style: AppTextStyles.labelMedium.copyWith(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                0,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onVer,
+                      icon: Icon(
+                        AppIcons.visibility,
+                        size: AppSizing.iconActionSm,
                         color: AppColors.primary,
                       ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.border),
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
+                      label: Text(
+                        'Ver',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.primary,
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                    ),
-                  ),
-                ),
-                if (accion != SolicitudAccionTipo.ninguna) ...[
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: accion == SolicitudAccionTipo.cobranza
-                        ? FilledButton.icon(
-                            onPressed: onAccion,
-                            icon: Icon(
-                              AppIcons.edit,
-                              size: AppSizing.iconActionSm,
-                            ),
-                            label: const Text('Completar'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(
-                                AppSizing.buttonHeightSmall,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSizing.radiusMd,
-                                ),
-                              ),
-                            ),
-                          )
-                        : FilledButton.icon(
-                            onPressed: onAccion ?? () {},
-                            icon: Icon(
-                              AppIcons.checkCircle,
-                              size: AppSizing.iconActionSm,
-                            ),
-                            label: const Text('Validar'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.secondary,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size.fromHeight(
-                                AppSizing.buttonHeightSmall,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSizing.radiusMd,
-                                ),
-                              ),
-                            ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.border),
+                        minimumSize: const Size.fromHeight(
+                          AppSizing.buttonHeightSmall,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSizing.radiusMd,
                           ),
+                        ),
+                      ),
+                    ),
                   ),
+                  if (accion != SolicitudAccionTipo.ninguna) ...[
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: accion == SolicitudAccionTipo.cobranza
+                          ? FilledButton.icon(
+                              onPressed: onAccion,
+                              icon: Icon(
+                                AppIcons.edit,
+                                size: AppSizing.iconActionSm,
+                              ),
+                              label: const Text('Completar'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size.fromHeight(
+                                  AppSizing.buttonHeightSmall,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizing.radiusMd,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : FilledButton.icon(
+                              onPressed: onAccion ?? () {},
+                              icon: Icon(
+                                AppIcons.checkCircle,
+                                size: AppSizing.iconActionSm,
+                              ),
+                              label: const Text('Validar'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size.fromHeight(
+                                  AppSizing.buttonHeightSmall,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizing.radiusMd,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );

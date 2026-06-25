@@ -27,7 +27,7 @@ class SolicitudDetalleView extends StatelessWidget {
           ),
         ),
       ],
-      footer: const _BotonesDetalle(),
+      footer: _BotonesDetalle(solicitud: solicitud),
       body: Column(
         children: [
           // ── Header azul — conectado con el AppBar ─────────────
@@ -558,7 +558,9 @@ class _EntradaHistorial extends StatelessWidget {
 // ── Botones de acción al pie ──────────────────────────────────────────────────
 
 class _BotonesDetalle extends StatelessWidget {
-  const _BotonesDetalle();
+  final Solicitud solicitud;
+
+  const _BotonesDetalle({required this.solicitud});
 
   @override
   Widget build(BuildContext context) {
@@ -577,7 +579,10 @@ class _BotonesDetalle extends StatelessWidget {
         children: [
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () => context.goToFichaCompletarSolicitud(
+                solicitud: solicitud,
+                modoEdicion: true,
+              ),
               icon: const Icon(AppIcons.edit, size: AppSizing.iconActionSm),
               label: const Text('Editar ficha'),
               style: OutlinedButton.styleFrom(
@@ -593,7 +598,10 @@ class _BotonesDetalle extends StatelessWidget {
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: FilledButton.icon(
-              onPressed: () {},
+              onPressed: () => context.goToFichaCompletarSolicitud(
+                solicitud: solicitud,
+                modoEdicion: false,
+              ),
               icon: const Icon(
                 AppIcons.forward,
                 size: AppSizing.iconActionSm,

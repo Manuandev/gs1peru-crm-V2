@@ -36,3 +36,12 @@ class ToggleFavoritoPressed extends LeadListEvent {
   @override
   List<Object?> get props => [idLead, nuevoValor];
 }
+
+/// Parcha un lead en memoria tras edición exitosa (vía [LeadUpdateNotifier]).
+class LeadListLeadUpdated extends LeadListEvent {
+  final Lead lead;
+  const LeadListLeadUpdated(this.lead);
+
+  @override
+  List<Object?> get props => [lead];
+}

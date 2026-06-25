@@ -1,10 +1,9 @@
 // lib/features/lead/domain/entities/lead.dart
 //
-// Entidad unificada de lead — absorbe los campos de InfoLead (chat) y
-// los campos propios del SP de seguimiento (leads list).
+// Entidad unificada de lead.
 // Fuentes de datos:
 //   - CSV_LEADS_LST_APP  (tasks LS y DT sección 1)  → LeadModel
-//   - CSV_WHATSAPP_LST_APP (task D)                  → InfoLeadModel
+//   - CSV_WHATSAPP_LST_APP (tasks D y LS)            → InfoLeadModel
 
 import 'package:app_crm/index_dependencies.dart';
 

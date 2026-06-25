@@ -5,11 +5,13 @@ import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   final GetChatsUseCase _getChats;
   List<Chat> _allChats = [];
   StreamSubscription<WebSocketMessage>? _messageSubscription;
+  StreamSubscription<LeadUpdate>? _leadUpdateSubscription;
 
   String _lastSearchQuery = '';
   ChatListFiltro _filtroActivo = ChatListFiltro.todos;
@@ -28,15 +30,22 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     on<ChatListFiltroAvanzadoAplicado>(_onFiltroAvanzadoAplicado);
     on<ChatListFiltroAvanzadoLimpiado>(_onFiltroAvanzadoLimpiado);
     on<ChatListIncomingMessageReceived>(_onIncomingMessageReceived);
+    on<ChatListLeadUpdated>(_onLeadUpdated);
 
     _messageSubscription = MessageDispatcher.instance.stream.listen((message) {
       if (!isClosed) add(ChatListIncomingMessageReceived(message));
+    });
+
+    _leadUpdateSubscription = LeadUpdateNotifier.instance.stream.listen((update) {
+      final lead = update.updatedLead as Lead?;
+      if (!isClosed && lead != null) add(ChatListLeadUpdated(lead));
     });
   }
 
   @override
   Future<void> close() {
     _messageSubscription?.cancel();
+    _leadUpdateSubscription?.cancel();
     return super.close();
   }
 
@@ -101,6 +110,33 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     _filtroEmpresa = '';
     _filtroNumero = '';
     _filtroOportunidadId = '';
+    _emitFiltered(emit);
+  }
+
+  // ── Parche en memoria tras edición de lead ───────────────────────────────
+
+  void _onLeadUpdated(
+    ChatListLeadUpdated event,
+    Emitter<ChatListState> emit,
+  ) {
+    final lead = event.lead;
+    _allChats = _allChats.map((c) {
+      if (c.idLead != lead.idLead) return c;
+      return c.copyWith(
+        idEstado:            lead.idEstado,
+        idEstadoDescripcion: lead.estado,
+        idEstadoPadre:       lead.idEstadoPadre ?? '',
+        descEstadoPadre:     lead.descripcionEstadoPadre ?? '',
+        idCampania:          lead.idCampania,
+        nombreCampania:      lead.campania,
+        idOportunidad:       lead.idEvento,
+        nombreOportunidad:   lead.evento,
+        idCanal:             lead.idCanal,
+        nombreCanal:         lead.canal,
+        idInteres:           lead.idInteres,
+        nombreInteres:       lead.interes,
+      );
+    }).toList();
     _emitFiltered(emit);
   }
 

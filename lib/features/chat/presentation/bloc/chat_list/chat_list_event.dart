@@ -4,6 +4,7 @@ import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 abstract class ChatListEvent extends Equatable {
   const ChatListEvent();
@@ -66,4 +67,13 @@ class ChatListIncomingMessageReceived extends ChatListEvent {
 
   @override
   List<Object?> get props => [message];
+}
+
+/// Parcha el [Chat] que contiene ese lead en memoria tras edición exitosa.
+class ChatListLeadUpdated extends ChatListEvent {
+  final Lead lead;
+  const ChatListLeadUpdated(this.lead);
+
+  @override
+  List<Object?> get props => [lead];
 }

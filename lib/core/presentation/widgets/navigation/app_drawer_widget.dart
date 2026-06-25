@@ -118,63 +118,63 @@ class _DrawerContent extends StatelessWidget {
                 ),
 
                 // ── Sección inferior pineada al fondo ─────────────
-                if (state.isModerador) ...[
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Divider(color: AppColors.border),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: AppSpacing.lg,
-                      bottom: AppSpacing.xs,
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Accesos rápidos',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  BlocBuilder<FiltroCubit, FiltroState>(
-                    builder: (context, filtroState) {
-                      final esMiEquipo =
-                          filtroState.vista == FiltroVista.miEquipo;
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _AccesoRapidoItem(
-                            icon: AppIcons.user,
-                            label: 'Mis casos',
-                            isSeleccionado: !esMiEquipo,
-                            onTap: () {
-                              context.read<FiltroCubit>().cambiarVista(
-                                FiltroVista.misCasos,
-                              );
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          _AccesoRapidoItem(
-                            icon: AppIcons.users,
-                            label: 'Equipo',
-                            isSeleccionado: esMiEquipo,
-                            onTap: () {
-                              context.read<FiltroCubit>().cambiarVista(
-                                FiltroVista.miEquipo,
-                              );
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+                // if (state.isModerador) ...[
+                //   const Padding(
+                //     padding: EdgeInsets.symmetric(
+                //       horizontal: AppSpacing.lg,
+                //       vertical: AppSpacing.sm,
+                //     ),
+                //     child: Divider(color: AppColors.border),
+                //   ),
+                //   Padding(
+                //     padding: const EdgeInsets.only(
+                //       left: AppSpacing.lg,
+                //       bottom: AppSpacing.xs,
+                //     ),
+                //     child: Align(
+                //       alignment: Alignment.centerLeft,
+                //       child: Text(
+                //         'Accesos rápidos',
+                //         style: AppTextStyles.labelSmall.copyWith(
+                //           color: AppColors.textSecondary,
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                //   BlocBuilder<FiltroCubit, FiltroState>(
+                //     builder: (context, filtroState) {
+                //       final esMiEquipo =
+                //           filtroState.vista == FiltroVista.miEquipo;
+                //       return Column(
+                //         mainAxisSize: MainAxisSize.min,
+                //         children: [
+                //           _AccesoRapidoItem(
+                //             icon: AppIcons.user,
+                //             label: 'Mis casos',
+                //             isSeleccionado: !esMiEquipo,
+                //             onTap: () {
+                //               context.read<FiltroCubit>().cambiarVista(
+                //                 FiltroVista.misCasos,
+                //               );
+                //               Navigator.of(context).pop();
+                //             },
+                //           ),
+                //           _AccesoRapidoItem(
+                //             icon: AppIcons.users,
+                //             label: 'Equipo',
+                //             isSeleccionado: esMiEquipo,
+                //             onTap: () {
+                //               context.read<FiltroCubit>().cambiarVista(
+                //                 FiltroVista.miEquipo,
+                //               );
+                //               Navigator.of(context).pop();
+                //             },
+                //           ),
+                //         ],
+                //       );
+                //     },
+                //   ),
+                // ],
 
                 // ── Cerrar sesión — siempre al fondo ──────────────
                 _DrawerItem(
@@ -358,102 +358,102 @@ class _DrawerItem extends StatelessWidget {
 // Muestra el ítem actualmente seleccionado como deshabilitado (opacidad + sin ripple).
 // El ítem no seleccionado es interactivo y llama a FiltroCubit al tapear.
 
-class _AccesoRapidoItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isSeleccionado;
-  final VoidCallback onTap;
+// class _AccesoRapidoItem extends StatelessWidget {
+//   final IconData icon;
+//   final String label;
+//   final bool isSeleccionado;
+//   final VoidCallback onTap;
 
-  const _AccesoRapidoItem({
-    required this.icon,
-    required this.label,
-    required this.isSeleccionado,
-    required this.onTap,
-  });
+//   const _AccesoRapidoItem({
+//     required this.icon,
+//     required this.label,
+//     required this.isSeleccionado,
+//     required this.onTap,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+//   @override
+//   Widget build(BuildContext context) {
+//     final colorScheme = Theme.of(context).colorScheme;
 
-    // Ítem seleccionado: mismo estilo que nav-ítem activo, sin ripple ni tap
-    if (isSeleccionado) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xxs,
-        ),
-        child: Material(
-          color: colorScheme.primary.withValues(
-            alpha: AppColors.opacityActiveItem,
-          ),
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm + AppSpacing.xxs,
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: colorScheme.primary, size: AppSizing.iconNav),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: AppTextStyles.weightSemiBold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+//     // Ítem seleccionado: mismo estilo que nav-ítem activo, sin ripple ni tap
+//     if (isSeleccionado) {
+//       return Padding(
+//         padding: const EdgeInsets.symmetric(
+//           horizontal: AppSpacing.sm,
+//           vertical: AppSpacing.xxs,
+//         ),
+//         child: Material(
+//           color: colorScheme.primary.withValues(
+//             alpha: AppColors.opacityActiveItem,
+//           ),
+//           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+//           child: Padding(
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: AppSpacing.md,
+//               vertical: AppSpacing.sm + AppSpacing.xxs,
+//             ),
+//             child: Row(
+//               children: [
+//                 Icon(icon, color: colorScheme.primary, size: AppSizing.iconNav),
+//                 const SizedBox(width: AppSpacing.md),
+//                 Expanded(
+//                   child: Text(
+//                     label,
+//                     style: AppTextStyles.bodyMedium.copyWith(
+//                       color: colorScheme.primary,
+//                       fontWeight: AppTextStyles.weightSemiBold,
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ),
+//       );
+//     }
 
-    // Ítem no seleccionado: interactivo con ripple
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xxs,
-      ),
-      child: Material(
-        color: AppColors.transparent,
-        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm + AppSpacing.xxs,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: colorScheme.onSurfaceVariant,
-                  size: AppSizing.iconNav,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: AppTextStyles.weightRegular,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+//     // Ítem no seleccionado: interactivo con ripple
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(
+//         horizontal: AppSpacing.sm,
+//         vertical: AppSpacing.xxs,
+//       ),
+//       child: Material(
+//         color: AppColors.transparent,
+//         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+//         child: InkWell(
+//           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+//           onTap: onTap,
+//           child: Padding(
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: AppSpacing.md,
+//               vertical: AppSpacing.sm + AppSpacing.xxs,
+//             ),
+//             child: Row(
+//               children: [
+//                 Icon(
+//                   icon,
+//                   color: colorScheme.onSurfaceVariant,
+//                   size: AppSizing.iconNav,
+//                 ),
+//                 const SizedBox(width: AppSpacing.md),
+//                 Expanded(
+//                   child: Text(
+//                     label,
+//                     style: AppTextStyles.bodyMedium.copyWith(
+//                       color: colorScheme.onSurface,
+//                       fontWeight: AppTextStyles.weightRegular,
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // ── Badge numérico ────────────────────────────────────────────────────────────
 

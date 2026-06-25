@@ -13,6 +13,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
   List<Lead> _allLeads = [];
   late LeadListFiltro _filtroActivo;
+  StreamSubscription<LeadUpdate>? _updateSub;
 
   LeadListBloc(this._getLeadsUseCase, this._toggleFavoritoUseCase)
       : super(const LeadListInitial()) {
@@ -23,6 +24,18 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     on<LeadListRefresh>(_onRefresh);
     on<LeadListFiltered>(_onFiltered);
     on<ToggleFavoritoPressed>(_onToggleFavorito);
+    on<LeadListLeadUpdated>(_onLeadUpdated);
+
+    _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
+      final lead = update.updatedLead as Lead?;
+      if (!isClosed && lead != null) add(LeadListLeadUpdated(lead));
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _updateSub?.cancel();
+    return super.close();
   }
 
   Future<void> _onStarted(
@@ -81,6 +94,16 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
       _emitFiltered(emit);
       addError(e, stackTrace);
     }
+  }
+
+  void _onLeadUpdated(
+    LeadListLeadUpdated event,
+    Emitter<LeadListState> emit,
+  ) {
+    _allLeads = _allLeads
+        .map((l) => l.idLead == event.lead.idLead ? event.lead : l)
+        .toList();
+    _emitFiltered(emit);
   }
 
   void _emitFiltered(Emitter<LeadListState> emit) {

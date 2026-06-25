@@ -173,6 +173,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           lead: lead,
           leadId: lead.idLead,
           idNumero: widget.idNumero,
+          cubit: context.read<InfoLeadCubit>(),
         );
       },
       body: Column(

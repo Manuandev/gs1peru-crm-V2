@@ -58,27 +58,30 @@ class ChatModel extends Chat {
     required super.archivoTipo,
   });
 
-  // Índices del SP (código LS):
-  //  0  ID_CONTACTO          19  LE.ID_ESTADO
-  //  1  NOMBRES              20  LE.DESCRIPCION   (idEstadoDescripcion)
-  //  2  APELLIDO_P           21  EP.ID_ESTADO     (idEstadoPadre)
-  //  3  APELLIDO_M           22  EP.DESCRIPCION   (descEstadoPadre)
-  //  4  ASESOR_PRINCIPAL     23  CP.ID_CAMPANIA
-  //  5  ID_EMPRESA           24  CP.NOMBRE
-  //  6  RUC                  25  OP.ID_OPORTUNIDAD
-  //  7  EM.NOMBRE            26  OP.NOMBRE
-  //  8  EM.DIRECCION         27  CN.ID_CANAL
-  //  9  ID_NUMERO            28  CN.DESCRIPCION
-  // 10  PREFIJO_PAIS         29  IT.ID_INTERES
-  // 11  NUMERO               30  IT.DESCRIPCION
-  // 12  IB_PRINCIPAL         31  ID_TOKEN_META
-  // 13  IB_FAVORITO          32  TIPO
-  // 14  IB_BLOQUEADO         33  DIRECCION
-  // 15  IB_EXPIRADO          34  CONTENIDO
-  // 16  IB_CERRADO           35  ESTADO_ENTREGA
-  // 17  ID_LEAD              36  FC_USUARIO_C
-  // 18  MODALIDAD            37  ARCHIVO_NOMBRE
-  //                          38  ARCHIVO_TIPO
+  // Índices del SP CSV_WHATSAPP_LST_APP (task LS):
+  //  0  CT.ID_CONTACTO       23  LE.ID_ESTADO
+  //  1  CT.NOMBRES           24  LE.DESCRIPCION    (idEstadoDescripcion)
+  //  2  CT.APELLIDO_P        25  EP.ID_ESTADO      (idEstadoPadre)
+  //  3  CT.APELLIDO_M        26  EP.DESCRIPCION    (descEstadoPadre)
+  //  4  CT.ASESOR_PRINCIPAL  27  CP.ID_CAMPANIA
+  //  5  EM.ID_EMPRESA        28  CP.NOMBRE
+  //  6  EM.RUC               29  OP.ID_OPORTUNIDAD
+  //  7  EM.NOMBRE            30  OP.NOMBRE
+  //  8  EM.DIRECCION         31  CN.ID_CANAL
+  //  9  NM.ID_NUMERO         32  CN.DESCRIPCION
+  // 10  NM.PREFIJO_PAIS      33  IT.ID_INTERES
+  // 11  NM.NUMERO            34  IT.DESCRIPCION
+  // 12  NM.IB_PRINCIPAL      35  CD.ID_TOKEN_META
+  // 13  NM.IB_FAVORITO       36  CD.TIPO
+  // 14  NM.IB_BLOQUEADO      37  CD.DIRECCION
+  // 15  CC.IB_EXPIRADO       38  CD.CONTENIDO
+  // 16  CC.IB_CERRADO        39  CD.ESTADO_ENTREGA
+  // 17  LD.ID_LEAD           40  CD.FC_USUARIO_C
+  // 18  LD.MODALIDAD         41  CO.ARCHIVO_NOMBRE
+  // 19  LD.DC_PRECIO_BASE    42  CO.ARCHIVO_TIPO
+  // 20  LD.DC_PRECIO
+  // 21  0 (CANTIDAD)         — ignorados en ChatModel
+  // 22  0 (DESCUENTO)
   factory ChatModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -107,33 +110,34 @@ class ChatModel extends Chat {
       // Lead más reciente de ese número
       idLead: ParseUtils.toInt(fields, 17),
       modalidad: ParseUtils.str(fields, 18),
+      // 19-22: precio_base, precio, cantidad, descuento — no aplican en ChatModel
       // Info estado
-      idEstado: ParseUtils.str(fields, 19),
-      idEstadoDescripcion: ParseUtils.str(fields, 20), // LE.DESCRIPCION
-      idEstadoPadre: ParseUtils.str(fields, 21), // EP.ID_ESTADO
-      descEstadoPadre: ParseUtils.str(fields, 22), // EP.DESCRIPCION (nuevo)
+      idEstado: ParseUtils.str(fields, 23),
+      idEstadoDescripcion: ParseUtils.str(fields, 24),
+      idEstadoPadre: ParseUtils.str(fields, 25),
+      descEstadoPadre: ParseUtils.str(fields, 26),
       // Info campaña
-      idCampania: ParseUtils.toInt(fields, 23),
-      nombreCampania: ParseUtils.str(fields, 24),
+      idCampania: ParseUtils.toInt(fields, 27),
+      nombreCampania: ParseUtils.str(fields, 28),
       // Info oportunidad
-      idOportunidad: ParseUtils.toInt(fields, 25),
-      nombreOportunidad: ParseUtils.str(fields, 26),
+      idOportunidad: ParseUtils.toInt(fields, 29),
+      nombreOportunidad: ParseUtils.str(fields, 30),
       // Info canal
-      idCanal: ParseUtils.toInt(fields, 27),
-      nombreCanal: ParseUtils.str(fields, 28),
+      idCanal: ParseUtils.toInt(fields, 31),
+      nombreCanal: ParseUtils.str(fields, 32),
       // Info interes
-      idInteres: ParseUtils.toInt(fields, 29),
-      nombreInteres: ParseUtils.str(fields, 30),
+      idInteres: ParseUtils.toInt(fields, 33),
+      nombreInteres: ParseUtils.str(fields, 34),
       // Último mensaje
-      idTokenMeta: ParseUtils.str(fields, 31),
-      tipo: ParseUtils.str(fields, 32),
-      direccionMensaje: ParseUtils.str(fields, 33),
-      contenido: ParseUtils.str(fields, 34),
-      estadoEntrega: ParseUtils.str(fields, 35),
-      fechaHora: ParseUtils.str(fields, 36),
+      idTokenMeta: ParseUtils.str(fields, 35),
+      tipo: ParseUtils.str(fields, 36),
+      direccionMensaje: ParseUtils.str(fields, 37),
+      contenido: ParseUtils.str(fields, 38),
+      estadoEntrega: ParseUtils.str(fields, 39),
+      fechaHora: ParseUtils.str(fields, 40),
       // Documento si tiene
-      archivoNombre: ParseUtils.str(fields, 37),
-      archivoTipo: ParseUtils.str(fields, 38),
+      archivoNombre: ParseUtils.str(fields, 41),
+      archivoTipo: ParseUtils.str(fields, 42),
     );
   }
 

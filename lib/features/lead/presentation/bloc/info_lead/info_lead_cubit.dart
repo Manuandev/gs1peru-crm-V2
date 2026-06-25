@@ -22,15 +22,15 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   Stream<String> get errores => _errorController.stream;
 
   int? _idNumero;
-  StreamSubscription<int>? _updateSub;
+  StreamSubscription<LeadUpdate>? _updateSub;
 
   InfoLeadCubit(this._getInfo, this._updateEstado, this._updateInfo, [
     this._getLeadDetalle,
   ]) : super(const InfoLeadInitial()) {
-    _updateSub = LeadUpdateNotifier.instance.stream.listen((idLead) {
+    _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
       final s = state;
       if (s is InfoLeadSuccess &&
-          s.lead.idLead == idLead &&
+          s.lead.idLead == update.idLead &&
           _idNumero != null) {
         load(_idNumero!);
       }

@@ -2,17 +2,31 @@
 
 import 'dart:async';
 
-/// Emite el [idLead] de cualquier lead que acaba de ser editado.
-/// Cualquier [InfoLeadCubit] que esté mostrando ese lead recibe la señal
-/// y recarga automáticamente sus datos.
+/// Payload que viaja por el notifier cada vez que se edita un lead.
+///
+/// [updatedLead] es `Object?` para evitar dependencia core → features/lead.
+/// Los suscriptores en features/lead y features/chat castean a `Lead`.
+class LeadUpdate {
+  final int idLead;
+  final Object? updatedLead;
+  const LeadUpdate(this.idLead, {this.updatedLead});
+}
+
+/// Bus de comunicación entre [EditLeadPortrait] y los BLoCs de lista.
+///
+/// Emite un [LeadUpdate] cada vez que un lead se guarda exitosamente.
+/// [LeadListBloc] y [ChatListBloc] suscriben para parchear en memoria.
+/// [InfoLeadCubit] suscribe para recargar cuando corresponde.
 class LeadUpdateNotifier {
   LeadUpdateNotifier._();
   static final instance = LeadUpdateNotifier._();
 
-  final _controller = StreamController<int>.broadcast();
-  Stream<int> get stream => _controller.stream;
+  final _controller = StreamController<LeadUpdate>.broadcast();
+  Stream<LeadUpdate> get stream => _controller.stream;
 
-  void notify(int idLead) {
-    if (!_controller.isClosed) _controller.add(idLead);
+  void notify(int idLead, {Object? updatedLead}) {
+    if (!_controller.isClosed) {
+      _controller.add(LeadUpdate(idLead, updatedLead: updatedLead));
+    }
   }
 }

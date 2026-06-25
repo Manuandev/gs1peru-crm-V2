@@ -10,6 +10,7 @@ class LeadDetailSheet extends StatefulWidget {
   final Lead lead;
   final int leadId;
   final int idNumero;
+  final InfoLeadCubit? cubit;
 
   const LeadDetailSheet({
     super.key,
@@ -17,6 +18,7 @@ class LeadDetailSheet extends StatefulWidget {
     required this.lead,
     required this.leadId,
     required this.idNumero,
+    this.cubit,
   });
 
   static Future<void> show(
@@ -25,6 +27,7 @@ class LeadDetailSheet extends StatefulWidget {
     required Lead lead,
     required int leadId,
     int idNumero = 0,
+    InfoLeadCubit? cubit,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -41,6 +44,7 @@ class LeadDetailSheet extends StatefulWidget {
           lead: lead,
           leadId: leadId,
           idNumero: idNumero,
+          cubit: cubit,
         ),
       ),
     );

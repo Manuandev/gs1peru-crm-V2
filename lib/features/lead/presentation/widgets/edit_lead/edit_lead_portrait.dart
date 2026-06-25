@@ -7,7 +7,6 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
 
 class EditLeadPortrait extends StatefulWidget {
   final Lead lead;
@@ -154,12 +153,14 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
     if (mounted) setState(() => _isLoading = false);
 
-    // Notifica a todos los InfoLeadCubit que muestran este lead para que recarguen.
-    LeadUpdateNotifier.instance.notify(widget.lead.idLead);
-
     if (mounted) {
       // ignore: use_build_context_synchronously
-      context.read<ChatListBloc>().add(const ChatListRefreshed());
+      final cubitState = context.read<InfoLeadCubit>().state;
+      final updatedLead = cubitState is InfoLeadSuccess ? cubitState.lead : null;
+      LeadUpdateNotifier.instance.notify(
+        widget.lead.idLead,
+        updatedLead: updatedLead,
+      );
       // ignore: use_build_context_synchronously
       context.goBack();
     }

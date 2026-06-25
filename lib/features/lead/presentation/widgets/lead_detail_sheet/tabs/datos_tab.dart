@@ -174,11 +174,7 @@ class DatosTab extends StatelessWidget {
               Navigator.of(context, rootNavigator: true).pop();
               NavigationService.navigateTo(
                 AppRoutes.detalleEditarLead,
-                arguments: {
-                  'idNumero': idNumero,
-                  'lead': null,
-                  'cubit': null,
-                },
+                arguments: {'idLead': lead.idLead, 'cubit': null},
               );
             },
           ),

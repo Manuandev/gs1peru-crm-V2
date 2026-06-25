@@ -11,7 +11,6 @@ export 'data/repositories/chat_repository_impl.dart';
 
 export 'domain/entities/conversation.dart';
 export 'domain/entities/message.dart';
-export 'domain/entities/info_lead.dart';
 export 'domain/entities/template.dart';
 
 export 'domain/enums/media_type.dart';

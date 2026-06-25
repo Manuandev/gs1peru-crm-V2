@@ -3,18 +3,23 @@
 // SPLASH VIEW
 // ============================================================
 //
-// PATRÓN DE NAVEGACIÓN:
-//   SplashBloc emite SplashSessionFound
-//     → SplashView guarda userId/username, NO navega aún
-//     → El usuario recorre el carrusel y toca "Empezar"
-//       → _alEmpezar() dispara AuthSessionRestored
-//         → AppWidget BlocListener llama context.goToHome()
+// TABLA DE ESTADOS (buildWhen filtra solo los primeros tres):
 //
-//   SplashBloc emite SplashSessionNotFound
-//     → SplashView muestra error si existe
-//     → El usuario toca "Empezar"
-//       → _alEmpezar() llama context.goToLogin()
+// Estado BLoC              Builder muestra                    Listener hace
+// ─────────────────────────────────────────────────────────────────────────
+// SplashInitial          → primera slide estática             —
+// SplashLoading          → primera slide estática             —
+// SplashMostrarOnboarding→ carrusel completo e interactivo    —
+// SplashSessionFound     → (sin rebuild)                      AuthSessionRestored → Home
+// SplashSessionNotFound  → (sin rebuild)                      goToLogin()
+// SplashError            → (sin rebuild)                      goToLogin()
+//
+// PATRÓN _pendingState:
+// El BLoC puede emitir SplashSessionFound/NotFound antes del primer frame.
+// _pendingState guarda el estado y addPostFrameCallback lo procesa de forma segura.
 // ============================================================
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -22,7 +27,6 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
-import 'package:app_crm/features/auth/presentation/widgets/splash/onboarding_carousel.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -32,16 +36,12 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
-  /// Estado del SplashBloc recibido antes del primer frame.
+  /// Estado de navegación recibido antes del primer frame.
+  /// Se procesa en addPostFrameCallback para garantizar que el Navigator esté listo.
   SplashState? _pendingState;
 
   /// Indica que hay un diálogo de permisos en curso.
   bool _solicitandoPermisos = false;
-
-  /// Datos de sesión guardados cuando SplashBloc responde SessionFound.
-  /// Solo se usan cuando el usuario pulsa "Empezar" en el último slide.
-  String? _sessionUserId;
-  String? _sessionUsername;
 
   @override
   void initState() {
@@ -136,43 +136,38 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
     }
   }
 
-  // ── Estado del SplashBloc ──────────────────────────────────────
+  // ── Navegación al completar el onboarding ──────────────────────
 
-  void _procesarEstadoSplash(SplashState state) {
-    if (!mounted) return;
-
-    if (state is SplashSessionFound) {
-      // Guardamos los datos de sesión, pero NO navegamos todavía.
-      // La navegación ocurre cuando el usuario pulsa "Empezar".
-      setState(() {
-        _sessionUserId = state.userId;
-        _sessionUsername = state.username;
-      });
-    } else if (state is SplashSessionNotFound) {
-      if (state.message != null) {
-        final mensaje = state.message!;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) AppSnackBar.error(context, mensaje);
-        });
-      }
-    }
-    // SplashError: el carrusel se muestra igualmente
+  /// Llamado por OnboardingCarousel cuando el usuario pulsa "Finalizar".
+  /// Guarda el flag en SQLite y navega a Login.
+  void _alFinalizarOnboarding() {
+    unawaited(_guardarFlagYNavegar());
   }
 
-  // ── Callback para "Empezar" ────────────────────────────────────
-
-  void _alEmpezar() {
+  Future<void> _guardarFlagYNavegar() async {
+    await LocalDatabase().setSetting('onboarding_completado', 'true');
     if (!mounted) return;
-    if (_sessionUserId != null && _sessionUsername != null) {
-      // Hay sesión: restaurarla en AuthBloc → AppWidget navega a Home
+    context.goToLogin();
+  }
+
+  // ── Procesamiento de estados de navegación ─────────────────────
+
+  void _procesarEstadoSplash(SplashState estado) {
+    if (!mounted) return;
+
+    if (estado is SplashSessionFound) {
       context.read<AuthBloc>().add(
         AuthSessionRestored(
-          userId: _sessionUserId!,
-          username: _sessionUsername!,
+          userId: estado.userId,
+          username: estado.username,
         ),
       );
-    } else {
-      // Sin sesión: ir a Login
+    } else if (estado is SplashSessionNotFound) {
+      if (estado.message != null) {
+        AppSnackBar.error(context, estado.message!);
+      }
+      context.goToLogin();
+    } else if (estado is SplashError) {
       context.goToLogin();
     }
   }
@@ -181,7 +176,8 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<SplashBloc, SplashState>(
+    return BlocConsumer<SplashBloc, SplashState>(
+      // Solo dispara la navegación — el builder no se toca con estos estados
       listenWhen: (_, current) =>
           current is SplashSessionFound ||
           current is SplashSessionNotFound ||
@@ -193,7 +189,22 @@ class _SplashViewState extends State<SplashView> with WidgetsBindingObserver {
         _procesarEstadoSplash(state);
       },
 
-      child: OnboardingCarousel(alEmpezar: _alEmpezar),
+      // Solo los tres estados que cambian la UI del splash
+      buildWhen: (_, current) =>
+          current is SplashInitial ||
+          current is SplashLoading ||
+          current is SplashMostrarOnboarding,
+
+      builder: (context, state) {
+        if (state is SplashMostrarOnboarding) {
+          return OnboardingCarousel(
+            alEmpezar: _alFinalizarOnboarding,
+            soloMostrarPrimeraSlide: false,
+          );
+        }
+        // SplashInitial / SplashLoading → primera slide estática sin controles
+        return const OnboardingCarousel(soloMostrarPrimeraSlide: true);
+      },
     );
   }
 }

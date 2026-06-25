@@ -10,7 +10,7 @@ class AppConstants {
   AppConstants._();
 
   static const version = '1.0';
-  static const nombreApp = 'GS1 Perú - CRM';
+  static const nombreApp = 'GS1 CRM';
 
   // Separador para serialización de sesión en cadena
   // Usa un carácter que NUNCA aparecerá en los datos

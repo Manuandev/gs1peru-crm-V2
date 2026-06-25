@@ -76,6 +76,13 @@ class AppWidget extends StatelessWidget {
         RepositoryProvider<CobranzaRepository>(
           create: (_) => CobranzaRepositoryImpl(CobranzaRemoteDatasource()),
         ),
+
+        // ── CONFIGURACION REPOSITORY ──────────────────────────
+        RepositoryProvider<ConfiguracionRepository>(
+          create: (_) => ConfiguracionRepositoryImpl(
+            ConfiguracionRemoteDatasource(),
+          ),
+        ),
       ],
 
       child: MultiBlocProvider(

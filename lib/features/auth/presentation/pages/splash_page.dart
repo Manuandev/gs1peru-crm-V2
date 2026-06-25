@@ -4,12 +4,12 @@
 // ============================================================
 //
 // RESPONSABILIDADES:
-// - Crear el SplashBloc con sus dependencias
+// - Crear el SplashBloc con sus dependencias inyectadas desde el árbol
 // - Disparar SplashCheckSessionRequested al iniciar
 //
 // NO HACE:
 // - UI            → SplashView
-// - Navegación    → SplashView notifica al AuthBloc, AppWidget navega
+// - Navegación    → SplashView escucha al bloc y navega
 // - Lógica sesión → SplashBloc
 //
 // ESTRUCTURA:
@@ -20,7 +20,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 
 class SplashPage extends StatelessWidget {
@@ -32,6 +32,9 @@ class SplashPage extends StatelessWidget {
       create: (context) => SplashBloc(
         restoreSessionUsecase: RestoreSessionUsecase(
           context.read<AuthRepository>(),
+        ),
+        obtenerConfiguracionUseCase: ObtenerConfiguracionUseCase(
+          context.read<ConfiguracionRepository>(),
         ),
       )..add(const SplashCheckSessionRequested()),
       child: const SplashView(),

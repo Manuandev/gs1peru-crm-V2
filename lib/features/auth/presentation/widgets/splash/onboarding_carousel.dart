@@ -10,13 +10,24 @@ import 'package:app_crm/features/auth/presentation/widgets/splash/onboarding_sli
 import 'package:app_crm/features/auth/presentation/widgets/splash/onboarding_slide5.dart';
 import 'package:app_crm/features/auth/presentation/widgets/splash/onboarding_slide6.dart';
 
-/// Carrusel de 6 slides con SOLO el footer (dots + botón) fijo.
-/// El logo GS1 vive dentro de cada slide (zona azul, sobre el título).
-/// [alEmpezar] se invoca cuando el usuario pulsa "Empezar" en el último slide.
+/// Carrusel de 6 slides con footer fijo (dots + botón).
+///
+/// [soloMostrarPrimeraSlide] — cuando es `true`, muestra únicamente la primera
+/// slide de forma estática, sin gestos de swipe ni footer. Se usa como
+/// pantalla de carga mientras el SplashBloc resuelve la sesión (escenarios 2/3).
+///
+/// [alEmpezar] — callback invocado cuando el usuario pulsa "Finalizar" en el
+/// último slide. Puede ser `null` cuando [soloMostrarPrimeraSlide] es `true`,
+/// ya que en ese modo nunca se invoca.
 class OnboardingCarousel extends StatefulWidget {
-  const OnboardingCarousel({super.key, required this.alEmpezar});
+  const OnboardingCarousel({
+    super.key,
+    this.alEmpezar,
+    this.soloMostrarPrimeraSlide = false,
+  });
 
-  final VoidCallback alEmpezar;
+  final VoidCallback? alEmpezar;
+  final bool soloMostrarPrimeraSlide;
 
   @override
   State<OnboardingCarousel> createState() => _OnboardingCarouselState();
@@ -39,7 +50,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
   void _empezar() {
     if (!mounted) return;
-    widget.alEmpezar();
+    widget.alEmpezar?.call();
   }
 
   Widget _buildContenido() {
@@ -56,12 +67,20 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    // Modo estático: primera slide sin controles (pantalla de carga para usuarios recurrentes)
+    if (widget.soloMostrarPrimeraSlide) {
+      return const Material(
+        color: Colors.white,
+        child: SafeArea(child: OnboardingSlide1()),
+      );
+    }
+
     return Material(
       color: Colors.white,
       child: SafeArea(
         child: Column(
           children: [
-            // ── Contenido: toda la zona visible (slide completo) ─────
+            // ── Contenido: zona deslizable ───────────────────────────
             Expanded(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -87,7 +106,7 @@ class _OnboardingCarouselState extends State<OnboardingCarousel> {
               indice: _indice,
               total: _total,
               sobreFondoAzul: _esSlide1,
-              botonTexto: _esUltimo ? 'Empezar' : 'Continuar',
+              botonTexto: _esUltimo ? 'Finalizar' : 'Continuar',
               alContinuar: _esUltimo ? _empezar : _siguiente,
             ),
           ],

@@ -4,15 +4,17 @@
 // ============================================================
 //
 // FLUJO:
-// SplashInitial → SplashLoading → SplashSessionFound
-//                              └→ SplashSessionNotFound
+// SplashInitial → SplashLoading → SplashMostrarOnboarding  (primer ingreso)
+//                              └→ SplashSessionFound        (recurrente con sesión)
+//                              └→ SplashSessionNotFound     (recurrente sin sesión)
 //                              └→ SplashError
 //
 // QUÉ HACE LA VIEW CON CADA ESTADO:
-// - SplashLoading         → muestra animación (esperando el timer mínimo)
-// - SplashSessionFound    → notifica AuthBloc con AuthSessionRestored
-// - SplashSessionNotFound → notifica AuthBloc con AuthSessionEmpty
-// - SplashError           → notifica AuthBloc con AuthSessionEmpty (va al Login)
+// - SplashLoading           → primera slide estática (pantalla de carga)
+// - SplashMostrarOnboarding → carrusel completo e interactivo
+// - SplashSessionFound      → listener dispara AuthSessionRestored → Home
+// - SplashSessionNotFound   → listener navega a Login
+// - SplashError             → listener navega a Login
 // ============================================================
 
 import 'package:app_crm/index_dependencies.dart';
@@ -29,10 +31,17 @@ class SplashInitial extends SplashState {
   const SplashInitial();
 }
 
-/// Consultando el repositorio local.
-/// La View muestra la animación del splash en este estado.
+/// Consultando SQLite y el backend.
+/// La View muestra la primera slide del carrusel de forma estática (sin botones).
 class SplashLoading extends SplashState {
   const SplashLoading();
+}
+
+/// El usuario nunca completó el onboarding (onboarding_completado == null).
+/// La View muestra el carrusel completo e interactivo.
+/// Al finalizar → setSetting('onboarding_completado', 'true') → goToLogin()
+class SplashMostrarOnboarding extends SplashState {
+  const SplashMostrarOnboarding();
 }
 
 /// Se encontró una sesión válida en el almacenamiento local.

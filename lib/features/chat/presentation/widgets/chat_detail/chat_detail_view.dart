@@ -111,9 +111,26 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       bodyPadding: EdgeInsets.zero,
       titleWidget: BlocBuilder<InfoLeadCubit, InfoLeadState>(
         buildWhen: (prev, curr) => curr is InfoLeadSuccess,
-        builder: (context, state) => state is InfoLeadSuccess
-            ? ChatDetailAppBar(lead: state.lead)
-            : const SizedBox.shrink(),
+        builder: (context, infoState) {
+          if (infoState is! InfoLeadSuccess) return const SizedBox.shrink();
+          return BlocSelector<ChatDetailBloc, ChatDetailState, String?>(
+            selector: (state) {
+              final msgs = switch (state) {
+                ChatDetailSuccess s => s.messages,
+                ChatDetailLoadingMore s => s.messages,
+                _ => <ChatMessage>[],
+              };
+              for (var i = msgs.length - 1; i >= 0; i--) {
+                if (msgs[i].direccionMensaje == 'CLI') return msgs[i].fechaHora;
+              }
+              return null;
+            },
+            builder: (context, fechaUltimaRespuesta) => ChatDetailAppBar(
+              lead: infoState.lead,
+              fechaUltimaRespuesta: fechaUltimaRespuesta,
+            ),
+          );
+        },
       ),
       drawerSide: DrawerSide.none,
       footer: const SizedBox.shrink(),

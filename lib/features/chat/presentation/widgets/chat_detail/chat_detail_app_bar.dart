@@ -7,11 +7,21 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailAppBar extends StatelessWidget {
   final Lead lead;
-  const ChatDetailAppBar({super.key, required this.lead});
+  final String? fechaUltimaRespuesta;
+  const ChatDetailAppBar({super.key, required this.lead, this.fechaUltimaRespuesta});
+
+  Duration? _elapsedTime() {
+    if (fechaUltimaRespuesta == null || fechaUltimaRespuesta!.isEmpty) return null;
+    final fecha = DateTime.tryParse(fechaUltimaRespuesta!.trim());
+    if (fecha == null) return null;
+    final elapsed = DateTime.now().difference(fecha);
+    return elapsed.isNegative ? Duration.zero : elapsed;
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final elapsed = _elapsedTime();
 
     return Row(
       children: [
@@ -76,25 +86,15 @@ class ChatDetailAppBar extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  if (true) ...[
+                  if (elapsed != null) ...[
                     Text(
-                      'Derivado IA • ',
+                      'Última respuesta hace ${ElapsedTimeUtils.formatHyM(elapsed)}',
                       style: AppTextStyles.labelVerySmall8.copyWith(
-                        color: colorScheme.onPrimary.withValues(
-                          alpha: AppColors.opacityOnPrimarySubtle,
-                        ),
+                        color: ElapsedTimeUtils.colorFromElapsed(elapsed),
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                  Text(
-                    'Ultima respuesta hace 2 min',
-                    style: AppTextStyles.labelVerySmall8.copyWith(
-                      color: colorScheme.onPrimary.withValues(
-                        alpha: AppColors.opacityOnPrimarySubtle,
-                      ),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ],
               ),
             ],

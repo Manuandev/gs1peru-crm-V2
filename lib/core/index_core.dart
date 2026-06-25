@@ -21,6 +21,15 @@ export 'database/local_database.dart';
 export 'domain/enums/enums_core.dart';
 export 'domain/usecases/get_catalogs_usecase.dart';
 
+// #region configuracion
+export 'domain/entities/app_configuracion.dart';
+export 'domain/repositories/configuracion_repository.dart';
+export 'domain/usecases/obtener_configuracion_usecase.dart';
+export 'network/configuracion_remote_datasource.dart';
+export 'data/repositories/configuracion_repository_impl.dart';
+export 'services/configuracion_service.dart';
+// #endregion configuracion
+
 export 'errors/app_exception.dart';
 
 export 'extensions/badge_extensions.dart';

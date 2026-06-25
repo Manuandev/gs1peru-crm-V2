@@ -199,7 +199,8 @@ class BasePage extends StatelessWidget {
       drawer: drawerSide == DrawerSide.left ? drawer : null,
 
       // right drawer → endDrawer (endDrawerWidget tiene prioridad sobre DrawerSide.right)
-      endDrawer: endDrawerWidget ?? (drawerSide == DrawerSide.right ? drawer : null),
+      endDrawer:
+          endDrawerWidget ?? (drawerSide == DrawerSide.right ? drawer : null),
 
       // ── BODY + FOOTER ──────────────────────────────────────
       body: SafeArea(
@@ -229,7 +230,10 @@ class BasePage extends StatelessWidget {
 
                   // Footer: explícito > showBottomNav > estándar
                   if (!isLandscape)
-                    footer ?? (showBottomNav ? const AppBottomNavWidget() : const _FooterPages())
+                    footer ??
+                        (showBottomNav
+                            ? const AppBottomNavWidget()
+                            : const _FooterPages())
                   else
                     _FooterCompact(),
                 ],

@@ -17,51 +17,109 @@ class SolicitudListView extends StatelessWidget {
       title: 'Solicitudes',
       drawerSide: DrawerSide.left,
       bodyPadding: EdgeInsets.zero,
-      body: RefreshIndicator(
+      onSearch: (query) {
+        context.read<SolicitudListBloc>().add(SolicitudListSearched(query));
+      },
+      body: Column(
+        children: [
+          // ── Header azul — siempre visible, no espera datos ────
+          const _SolicitudHeader(),
+
+          // ── Contenido scrollable con pull-to-refresh ──────────
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              onRefresh: () async {
+                final bloc = context.read<SolicitudListBloc>();
+                bloc.add(const SolicitudListRefresh());
+                await bloc.stream.firstWhere(
+                  (s) => s is SolicitudListSuccess || s is SolicitudListError,
+                );
+              },
+              child: BlocBuilder<SolicitudListBloc, SolicitudListState>(
+                builder: (context, state) {
+                  if (state is SolicitudListLoading ||
+                      state is SolicitudListInitial) {
+                    return const SolicitudListSkeleton();
+                  }
+
+                  if (state is SolicitudListError) {
+                    return AppErrorView(
+                      message: state.message,
+                      onRetry: () => context.read<SolicitudListBloc>().add(
+                        const SolicitudListRefresh(),
+                      ),
+                    );
+                  }
+
+                  if (state is SolicitudListSuccess) {
+                    return Column(
+                      children: [
+                        // Indicadores superpuestos sobre el header
+                        Transform.translate(
+                          offset: const Offset(0, -AppSpacing.md),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: _IndicadoresRow(state: state),
+                          ),
+                        ),
+
+                        // ── Tabs de filtro + lista ──────────────
+                        Expanded(
+                          child: Transform.translate(
+                            offset: const Offset(0, -AppSpacing.md),
+                            child: SolicitudListPortrait(
+                              solicitudes: state.solicitudes,
+                              filtro: state.filtro,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Header azul — siempre visible ────────────────────────────────────────────
+
+class _SolicitudHeader extends StatelessWidget {
+  const _SolicitudHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
         color: AppColors.primary,
-        backgroundColor: AppColors.surface,
-        onRefresh: () async {
-          final bloc = context.read<SolicitudListBloc>();
-          bloc.add(const SolicitudListRefresh());
-          await bloc.stream.firstWhere(
-            (s) => s is SolicitudListSuccess || s is SolicitudListError,
-          );
-        },
-        child: BlocBuilder<SolicitudListBloc, SolicitudListState>(
-          builder: (context, state) {
-            if (state is SolicitudListLoading ||
-                state is SolicitudListInitial) {
-              return const SolicitudListSkeleton();
-            }
-
-            if (state is SolicitudListError) {
-              return AppErrorView(
-                message: state.message,
-                onRetry: () => context.read<SolicitudListBloc>().add(
-                  const SolicitudListRefresh(),
-                ),
-              );
-            }
-
-            if (state is SolicitudListSuccess) {
-              return Column(
-                children: [
-                  // ── Indicadores tipo dashboard ──────────────────
-                  _IndicadoresRow(state: state),
-
-                  // ── Tabs de filtro + lista ──────────────────────
-                  Expanded(
-                    child: SolicitudListPortrait(
-                      solicitudes: state.solicitudes,
-                      filtro: state.filtro,
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            return const SizedBox.shrink();
-          },
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(AppSizing.homeHeaderBottomRadius),
+          bottomRight: Radius.circular(AppSizing.homeHeaderBottomRadius),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.lg,
+      ),
+      child: Text(
+        ' Solicitudes pendientes por completar y validar',
+        style: AppTextStyles.titleSmall.copyWith(
+          color: AppColors.textOnDark,
+          fontWeight: AppTextStyles.weightRegular,
+          fontSize: 14,
         ),
       ),
     );
@@ -78,7 +136,6 @@ class _IndicadoresRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -161,11 +218,11 @@ class _IndicadorItem extends StatelessWidget {
         children: [
           // Ícono con fondo suave — contenedor cuadrado redondeado
           Container(
-            width: 28,
-            height: 28,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+              borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
             ),
             child: Icon(icono, size: 20, color: color),
           ),
@@ -200,6 +257,9 @@ class _IndicadorItem extends StatelessWidget {
 class _VerticalDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, color: AppColors.border);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      child: Container(width: 1, color: AppColors.border),
+    );
   }
 }

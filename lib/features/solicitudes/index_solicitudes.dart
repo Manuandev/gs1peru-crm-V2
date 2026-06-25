@@ -20,7 +20,9 @@ export 'presentation/bloc/list/solicitud_list_event.dart';
 export 'presentation/bloc/list/solicitud_list_state.dart';
 
 export 'presentation/pages/solicitud_list_page.dart';
+export 'presentation/pages/solicitud_detalle_page.dart';
 
+export 'presentation/widgets/detail/solicitud_detalle_view.dart';
 export 'presentation/widgets/list/solicitud_list_view.dart';
 export 'presentation/widgets/list/solicitud_list_portrait.dart';
 export 'presentation/widgets/list/solicitud_card.dart';

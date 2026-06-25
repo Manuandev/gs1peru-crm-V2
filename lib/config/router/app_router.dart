@@ -105,6 +105,15 @@ class AppRouter {
     AppRoutes.solicitudes: RouteDefinition(
       builder: (_) => const SolicitudListPage(),
     ),
+    AppRoutes.detalleSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudDetallePage(
+          solicitud: args['solicitud'] as Solicitud,
+        );
+      },
+    ),
     AppRoutes.misCasos: RouteDefinition(
       transition: TransitionType.slideRight,
       builder: (_) => const UnderConstructionPage(routeName: 'Mis casos'),

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
@@ -54,13 +55,20 @@ class SolicitudListPortrait extends StatelessWidget {
                     AppSpacing.md,
                     AppSpacing.xs,
                     AppSpacing.md,
-                    AppSpacing.md,
+                    AppSpacing.xxs,
                   ),
                   itemCount: solicitudes.length,
                   itemBuilder: (context, index) {
+                    final s = solicitudes[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: SolicitudCard(solicitud: solicitudes[index]),
+                      child: SolicitudCard(
+                        solicitud: s,
+                        onVer: () =>
+                            context.goToDetalleSolicitud(solicitud: s),
+                        onAccion: () =>
+                            context.goToDetalleSolicitud(solicitud: s),
+                      ),
                     );
                   },
                 ),
@@ -112,7 +120,7 @@ class _SolicitudFilterTabs extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: seleccionado
                         ? AppColors.primary
-                        : AppColors.transparent,
+                        : AppColors.grey300.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(
                       AppSizing.radiusCircular,
                     ),

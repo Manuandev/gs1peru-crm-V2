@@ -9,12 +9,14 @@ class SolicitudCard extends StatelessWidget {
   final Solicitud solicitud;
   final VoidCallback? onVer;
   final VoidCallback? onAccion;
+  final bool mostrarBotones;
 
   const SolicitudCard({
     super.key,
     required this.solicitud,
     this.onVer,
     this.onAccion,
+    this.mostrarBotones = true,
   });
 
   // ── Color por estado ─────────────────────────────────────────────
@@ -208,7 +210,7 @@ class SolicitudCard extends StatelessWidget {
                           Row(
                             children: [
                               Icon(
-                                AppIcons.agent,
+                                AppIcons.user,
                                 size: AppSizing.iconActionSm,
                                 color: AppColors.primary,
                               ),
@@ -236,6 +238,7 @@ class SolicitudCard extends StatelessWidget {
           ),
 
           // ── Botones ───────────────────────────────────────────────
+          if (mostrarBotones)
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -275,7 +278,7 @@ class SolicitudCard extends StatelessWidget {
                   Expanded(
                     child: accion == SolicitudAccionTipo.cobranza
                         ? FilledButton.icon(
-                            onPressed: () {},
+                            onPressed: onAccion,
                             icon: Icon(
                               AppIcons.edit,
                               size: AppSizing.iconActionSm,

@@ -25,3 +25,11 @@ class SolicitudListFiltered extends SolicitudListEvent {
   @override
   List<Object?> get props => [filtro];
 }
+
+class SolicitudListSearched extends SolicitudListEvent {
+  final String query;
+  const SolicitudListSearched(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}

@@ -33,6 +33,8 @@ class AppRoutes {
   static const String templates = '/chats/templates';
 
   static const String detalleSeguimiento = '/seguimiento/detalle';
+  static const String detalleSolicitud = '/solicitudes/detalle';
+
   static const String detalleCobranza = '/cobranza/detalle';
   static const String facturarCobranza = '/cobranza/facturar';
   static const String planCredito = '/cobranza/plan-credito';

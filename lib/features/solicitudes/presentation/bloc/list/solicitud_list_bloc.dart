@@ -10,12 +10,14 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
 
   List<Solicitud> _allSolicitudes = [];
   SolicitudFiltro _filtroActivo = SolicitudFiltro.todas;
+  String _lastSearchQuery = '';
 
   SolicitudListBloc(this._getSolicitudesUseCase)
       : super(const SolicitudListInitial()) {
     on<SolicitudListStarted>(_onStarted);
     on<SolicitudListRefresh>(_onRefresh);
     on<SolicitudListFiltered>(_onFiltered);
+    on<SolicitudListSearched>(_onSearched);
   }
 
   Future<void> _onStarted(
@@ -53,8 +55,16 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     _emitFiltered(emit);
   }
 
+  void _onSearched(
+    SolicitudListSearched event,
+    Emitter<SolicitudListState> emit,
+  ) {
+    _lastSearchQuery = event.query;
+    _emitFiltered(emit);
+  }
+
   void _emitFiltered(Emitter<SolicitudListState> emit) {
-    final resultado = switch (_filtroActivo) {
+    var resultado = switch (_filtroActivo) {
       SolicitudFiltro.todas => List<Solicitud>.from(_allSolicitudes),
       SolicitudFiltro.asesores => _allSolicitudes
           .where((s) => s.asesor == _session.codUser)
@@ -66,6 +76,20 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
           .where((s) => s.idEstado == '03')
           .toList(),
     };
+
+    final q = _lastSearchQuery.toLowerCase().trim();
+    if (q.isNotEmpty) {
+      resultado = resultado
+          .where(
+            (s) =>
+                s.nombre.toLowerCase().contains(q) ||
+                s.apellido.toLowerCase().contains(q) ||
+                s.nombreEmpresa.toLowerCase().contains(q) ||
+                s.telefono.contains(q) ||
+                s.idSolicitud.toString().contains(q),
+          )
+          .toList();
+    }
 
     emit(SolicitudListSuccess(
       solicitudes: resultado,

@@ -6,6 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
 
 extension NavigationExtensions on BuildContext {
   // ── Primitivos (no usar directamente desde features) ───────
@@ -54,6 +55,9 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToEquipo() => clearAndPush(AppRoutes.equipo);
   Future<void> goToChats() => clearAndPush(AppRoutes.chats);
   Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
+  Future<void> goToDetalleSolicitud({required Solicitud solicitud}) =>
+      _push(AppRoutes.detalleSolicitud, arguments: {'solicitud': solicitud});
+
   Future<void> goToDetalleCobranza({required String numSol}) =>
       _push(AppRoutes.detalleCobranza, arguments: {'numSol': numSol});
 

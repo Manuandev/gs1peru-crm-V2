@@ -33,7 +33,7 @@ class AppMenuItems {
     home,
     DrawerItemModel(
       id: AppRoutes.chats,
-      icon: AppIcons.message,
+      icon: AppIcons.chatDots,
       label: 'Conversaciones',
       route: AppRoutes.chats,
       descripcion: 'Responde rápido y convierte más leads',
@@ -79,7 +79,7 @@ class AppMenuItems {
       home,
       DrawerItemModel(
         id: AppRoutes.chats,
-        icon: AppIcons.message,
+        icon: AppIcons.chat,
         label: 'Conversaciones',
         route: AppRoutes.chats,
         badge: conversacionesBadge,

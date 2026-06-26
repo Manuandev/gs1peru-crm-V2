@@ -35,7 +35,6 @@ class DashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = ColorUtils.fromName(label);
     final textColor = ColorUtils.textColorOn(color);
-    final badgeBg = ColorUtils.badgeColor(color);
 
     return GestureDetector(
       onTap: onTap,
@@ -82,54 +81,47 @@ class DashboardCard extends StatelessWidget {
 
                   const SizedBox(height: AppSpacing.xs),
 
-                  // ── NOMBRE + FLECHA ─────────────────────────────
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              label,
-                              style: AppTextStyles.titleSmall2.copyWith(
-                                color: textColor,
-                                fontWeight: AppTextStyles.weightBold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            if (descripcion != null) ...[
-                              const SizedBox(height: AppSpacing.xxs),
-                              Text(
-                                descripcion!,
-                                style: AppTextStyles.labelVerySmall8.copyWith(
-                                  color: textColor.withValues(
-                                    alpha: AppColors.opacityOnPrimarySubtle,
-                                  ),
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
+                  // ── NOMBRE + DESCRIPCIÓN ─────────────────────────
+                  Text(
+                    label,
+                    style: AppTextStyles.titleSmall2.copyWith(
+                      color: textColor,
+                      fontWeight: AppTextStyles.weightBold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Icon(
-                        AppIcons.forward,
+                  if (descripcion != null) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      descripcion!,
+                      style: AppTextStyles.labelVerySmall8.copyWith(
                         color: textColor.withValues(
                           alpha: AppColors.opacityOnPrimarySubtle,
                         ),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.xs),
+
+                  // ── FLECHA CIRCULAR ──────────────────────────────
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      width: AppSizing.iconMd,
+                      height: AppSizing.iconMd,
+                      decoration: BoxDecoration(
+                        color: textColor.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        AppIcons.chevronRight,
+                        color: textColor,
                         size: AppSizing.iconActionSm,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -143,24 +135,24 @@ class DashboardCard extends StatelessWidget {
                 child: Container(
                   constraints: const BoxConstraints(
                     minWidth: AppSizing.iconMd,
-                    minHeight: AppSizing.iconActionSm,
+                    minHeight: AppSizing.iconMd,
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.chipGap,
                     vertical: AppSpacing.xxs,
                   ),
                   decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(
-                      AppSizing.radiusCircular,
+                    color: AppColors.surface.withValues(
+                      alpha: AppColors.opacityOnPrimarySubtle,
                     ),
+                    borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
                   ),
                   child: Center(
                     child: Text(
                       badge! > 99 ? '99+' : '$badge',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: textColor,
-                        fontWeight: FontWeight.w800,
+                        color: color,
+                        fontWeight: AppTextStyles.weightBold,
                       ),
                     ),
                   ),

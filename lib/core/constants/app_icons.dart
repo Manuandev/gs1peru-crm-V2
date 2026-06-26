@@ -136,6 +136,9 @@ class AppIcons {
   /// Burbuja de chat — conversación
   static const IconData chat = Icons.chat_bubble_outline;
 
+  /// Burbuja con puntos (...) — ícono de módulo Conversaciones en dashboard
+  static const IconData chatDots = Icons.textsms_rounded;
+
   /// Campana outline — notificaciones inactivas
   static const IconData notification = Icons.notifications_outlined;
 

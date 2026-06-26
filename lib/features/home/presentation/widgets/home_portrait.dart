@@ -7,20 +7,6 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 /// Layout principal del Home en orientación portrait.
-///
-/// ESTRUCTURA:
-/// ```
-/// SingleChildScrollView
-/// └── Column
-///     ├── _HomeHeader          (saludo + subtítulo, fondo primary con curva)
-///     └── Padding(horizontal)
-///         ├── CardTotalesHome  ("Mi embudo de gestión")
-///         ├── HomeMenuCards    (grid 2×2 de módulos)
-///         ├── "Prioridad ahora" + PrioridadSectionHome
-///         └── [condicional]
-///             ├── ProspectosSectionHome  (asesor / moderador en misCasos)
-///             └── AsesorSectionHome      (moderador en miEquipo)
-/// ```
 class HomePortrait extends StatelessWidget {
   final HomeLoaded state;
 
@@ -33,17 +19,16 @@ class HomePortrait extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Card embudo sobre fondo con ola azul ──────────────
+          _HomeWaveCard(state: state),
+
           // ── Contenido con padding estándar ────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: AppSpacing.md),
-
-                // ── Mi embudo de gestión ─────────────────────────
-                CardTotalesHome(state: state),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
 
                 // ── Grid de módulos ──────────────────────────────
                 HomeMenuCards(state: state),
@@ -61,7 +46,6 @@ class HomePortrait extends StatelessWidget {
                     CustomTextButton(text: 'Ver todas', onPressed: () {}),
                   ],
                 ),
-
                 Text(
                   'Casos sin respuesta o con seguimiento vencido',
                   style: AppTextStyles.bodySmall.copyWith(
@@ -116,4 +100,50 @@ class HomePortrait extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Fondo con ola + CardTotalesHome encima ────────────────────────────────────
+// La ola azul se pinta de arriba hasta la mitad del widget.
+// El card es el child y tapa la ola excepto en los márgenes laterales.
+class _HomeWaveCard extends StatelessWidget {
+  final HomeLoaded state;
+
+  const _HomeWaveCard({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return CustomPaint(
+      painter: _HomeWavePainter(colorScheme.primary),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          top: AppSpacing.md,
+          bottom: AppSpacing.xs,
+        ),
+        child: CardTotalesHome(state: state),
+      ),
+    );
+  }
+}
+
+class _HomeWavePainter extends CustomPainter {
+  final Color color;
+  const _HomeWavePainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const ola = AppSpacing.xl;
+    final mitad = size.height / 2;
+    final path = Path()
+      ..lineTo(0, mitad)
+      ..quadraticBezierTo(size.width / 2, mitad + ola, size.width, mitad)
+      ..lineTo(size.width, 0)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_HomeWavePainter old) => old.color != color;
 }

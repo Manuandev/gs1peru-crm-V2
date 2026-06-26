@@ -44,48 +44,49 @@ class HomeView extends StatelessWidget {
       drawerSide: DrawerSide.left,
       appBarTrailingButtons: [
         // ── Notificaciones con badge ───────────────────────────
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              icon: Icon(AppIcons.notification, color: AppColors.textOnDark),
-              onPressed: () => context.goToNotifications(),
-            ),
-            Positioned(
-              top: AppSpacing.chipGap,
-              right: AppSpacing.chipGap,
-              child: BlocBuilder<HomeBloc, HomeState>(
-                builder: (context, state) {
-                  if (state is! HomeLoaded) return const SizedBox.shrink();
+        BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, state) {
+            final count = state is HomeLoaded ? state.totNotificaciones : 0;
+            final iconData = count > 0
+                ? AppIcons.notificationFilled
+                : AppIcons.notification;
 
-                  final count = state.totNotificaciones;
-                  if (count == 0) return const SizedBox.shrink();
-
-                  return Container(
-                    padding: const EdgeInsets.all(AppSpacing.badgePadding),
-                    decoration: const BoxDecoration(
-                      color: AppColors.error,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: AppSizing.iconSm,
-                      minHeight: AppSizing.iconSm,
-                    ),
-                    child: Text(
-                      count > 99 ? '99+' : '$count',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textOnDark,
-                        fontSize: AppTextStyles.sizeXxs9,
-                        fontWeight: AppTextStyles.weightBold,
-                        height: 1,
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  icon: Icon(iconData, color: AppColors.textOnDark),
+                  onPressed: () => context.goToNotifications(),
+                ),
+                if (count > 0)
+                  Positioned(
+                    top: AppSpacing.chipGap,
+                    right: AppSpacing.chipGap,
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSpacing.badgePadding),
+                      decoration: const BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
                       ),
-                      textAlign: TextAlign.center,
+                      constraints: const BoxConstraints(
+                        minWidth: AppSizing.iconSm,
+                        minHeight: AppSizing.iconSm,
+                      ),
+                      child: Text(
+                        count > 99 ? '99+' : '$count',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.textOnDark,
+                          fontSize: AppTextStyles.sizeXxs9,
+                          fontWeight: AppTextStyles.weightBold,
+                          height: 1,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+              ],
+            );
+          },
         ),
       ],
       // Sin padding para que el header azul llegue hasta los bordes

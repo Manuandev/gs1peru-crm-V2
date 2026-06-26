@@ -2,7 +2,6 @@
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
-import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
@@ -18,14 +17,15 @@ class CardTotalesHome extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Card.filled(
+      margin: EdgeInsets.zero,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Encabezado dentro de la card ──────────────────────────
+          // ── Encabezado ──────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
+              vertical: AppSpacing.sm,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -37,49 +37,70 @@ class CardTotalesHome extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                CustomTextButton(
-                  text: 'Ver detalle',
-                  onPressed: () => context.goToSeguimiento(),
+                GestureDetector(
+                  onTap: () => context.goToSeguimiento(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Ver detalle',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: AppTextStyles.weightSemiBold,
+                        ),
+                      ),
+                      Icon(
+                        AppIcons.chevronRight,
+                        size: AppSizing.iconSm,
+                        color: colorScheme.primary,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: AppSpacing.sm),
-
           // ── Los 4 totales ──────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            padding: const EdgeInsets.only(
+              bottom: AppSpacing.sm,
+              top: AppSpacing.xxs,
+            ),
             child: IntrinsicHeight(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _CardTotalItem(
-                    icon: AppIconsSocial.etapaNuevo,
-                    iconColor: AppIconsSocial.colorEstado("00"),
+                    icon: AppIcons.leadNuevo,
+                    iconColor: AppIconsSocial.colorEstado('00'),
                     cantidad: state.totLeadsNuevos,
                     titulo: 'Nuevos',
+                    onTap: () => context.goToSeguimiento(),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
-                    icon: AppIconsSocial.etapaEnDesarrollo,
-                    iconColor: AppIconsSocial.colorEstado("01"),
+                    icon: AppIcons.accessTime,
+                    iconColor: AppIconsSocial.colorEstado('01'),
                     cantidad: state.totLeadsDesarrollo,
                     titulo: 'En gestión',
+                    onTap: () => context.goToSeguimiento(),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
-                    icon: AppIconsSocial.etapaPropuesta,
-                    iconColor: AppIconsSocial.colorEstado("02"),
+                    icon: AppIcons.datosLead,
+                    iconColor: AppIconsSocial.colorEstado('02'),
                     cantidad: state.totPropuestas,
                     titulo: 'Propuestas',
+                    onTap: () => context.goToSeguimiento(),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
                     icon: AppIcons.moneda,
-                    iconColor: ColorUtils.fromName('Cobranza'),
+                    iconColor: AppIconsSocial.colorEstado('04'),
                     cantidad: state.totCobranza,
                     titulo: 'Cobranza',
+                    onTap: () => context.goToCobranza(),
                   ),
                 ],
               ),
@@ -92,69 +113,61 @@ class CardTotalesHome extends StatelessWidget {
 }
 
 class _CardTotalItem extends StatelessWidget {
-  final dynamic icon;
+  final IconData icon;
   final Color iconColor;
   final int cantidad;
   final String titulo;
+  final VoidCallback onTap;
 
   const _CardTotalItem({
     required this.icon,
     required this.iconColor,
     required this.cantidad,
     required this.titulo,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorMuted = iconColor.withValues(alpha: AppColors.opacityIconMuted);
+
     return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          icon is IconData
-              ? Icon(icon as IconData, color: iconColor, size: AppSizing.iconLg)
-              : FaIcon(
-                  icon as FaIconData,
-                  color: iconColor,
-                  size: AppSizing.iconLg,
-                ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            cantidad.toString(),
-            style: AppTextStyles.titleMedium.copyWith(
-              fontWeight: AppTextStyles.weightBold,
-              color: iconColor,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: iconColor, size: AppSizing.iconLg),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              titulo,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: colorMuted,
+                fontWeight: AppTextStyles.weightSemiBold,
+                letterSpacing: AppTextStyles.letterSpacingNarrow,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  titulo,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: iconColor.withValues(
-                      alpha: AppColors.opacityIconMuted,
-                    ),
-                    fontWeight: AppTextStyles.weightSemiBold,
-                    letterSpacing: AppTextStyles.letterSpacingNarrow,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              cantidad.toString(),
+              style: AppTextStyles.titleMedium.copyWith(
+                fontWeight: AppTextStyles.weightBold,
+                color: iconColor,
               ),
-              const SizedBox(width: AppSpacing.xxs),
-              Icon(
-                AppIcons.forward,
-                size: AppSizing.iconXxs,
-                color: iconColor.withValues(alpha: AppColors.opacityIconMuted),
-              ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            Icon(
+              AppIcons.chevronRight,
+              size: AppSizing.iconXxs,
+              color: colorMuted,
+            ),
+          ],
+        ),
       ),
     );
   }

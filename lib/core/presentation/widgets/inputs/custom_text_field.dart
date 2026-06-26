@@ -5,93 +5,58 @@ import 'package:flutter/services.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
-/// CustomTextField — Input de texto base reutilizable
-///
-/// PROPÓSITO:
-/// - Encapsula la configuración visual estándar de todos los TextFormField de la app
-/// - Garantiza que todos los inputs tengan el mismo look & feel
-/// - Expone solo las propiedades que necesitan variar entre instancias
-///
-/// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
-/// - Espaciado → [AppSpacing.md] para contentPadding
-/// - Radios    → [AppSizing.radiusMd] para bordes redondeados
-/// - Tipografía→ [AppTextStyles.inputText] para el texto que escribe el usuario
-///
-/// WIDGETS QUE LO EXTIENDEN:
-/// - [CustomPasswordField] — agrega toggle de visibilidad
-/// - [CustomEmailField]    — agrega validación de formato de email
-///
-/// USO BÁSICO:
-/// ```dart
-/// CustomTextField(
-///   label: 'Nombre',
-///   hint: 'Ej: Juan Pérez',
-///   controller: _nameController,
-///   validator: (value) => value!.isEmpty ? 'Campo requerido' : null,
-/// )
-/// ```
-///
-/// USO CON ÍCONO Y ACCIÓN:
-/// ```dart
-/// CustomTextField(
-///   label: 'Buscar',
-///   prefixIcon: const Icon(AppIcons.search),
-///   textInputAction: TextInputAction.search,
-///   onSubmitted: (value) => _doSearch(value),
-/// )
-/// ```
+// ── Estilos compartidos compactos ─────────────────────────────────────────────
+
+const _kLabelStyle = TextStyle(
+  fontSize: AppTextStyles.sizeXs,
+  color: AppColors.textSecondary,
+);
+
+const _kHintStyle = TextStyle(
+  fontSize: AppTextStyles.sizeXs,
+  color: AppColors.textDisabled,
+);
+
+const _kFloatingLabelStyle = TextStyle(
+  fontSize: AppTextStyles.sizeXs,
+  color: AppColors.primary,
+  fontWeight: FontWeight.w600,
+);
+
+const _kContentPadding = EdgeInsets.symmetric(
+  horizontal: AppSpacing.sm,
+  vertical: AppSpacing.sm2,
+);
+
+// ── CustomTextField ───────────────────────────────────────────────────────────
+
 class CustomTextField extends StatelessWidget {
-  // Texto del label flotante (se mueve arriba al enfocar)
   final String? label;
-  // Texto de ayuda dentro del campo cuando está vacío
   final String? hint;
-  // Texto auxiliar debajo del campo (desaparece cuando hay error)
   final String? helperText;
-  // Controlador del texto — conecta el campo con la lógica del formulario
   final TextEditingController? controller;
-  // Función de validación. Devuelve `null` si es válido, o el mensaje de error.
   final String? Function(String?)? validator;
-  // Callback al cambiar el texto (cada tecla pulsada)
   final void Function(String)? onChanged;
-  // Callback al presionar la tecla de acción del teclado
   final void Function(String)? onSubmitted;
-  // Tipo de teclado: text, number, emailAddress, phone, etc.
   final TextInputType? keyboardType;
-  // Acción del botón de acción del teclado: next, done, search, etc.
   final TextInputAction? textInputAction;
-  // Si el campo acepta interacción del usuario
   final bool enabled;
-  // Si solo se puede leer (sin editar) — útil para campos de selección
   final bool readOnly;
-  // Máximo de caracteres permitidos (muestra contador abajo)
   final int? maxLength;
-  // Número máximo de líneas (1 = una sola línea)
   final int? maxLines;
-  // Número mínimo de líneas (para áreas de texto expandibles)
   final int? minLines;
-  // Widget al inicio del campo (ej: `Icon(AppIcons.user)`)
   final Widget? prefixIcon;
-  // Widget al final del campo (ej: botón de toggle de contraseña)
   final Widget? suffixIcon;
-  // Texto fijo al inicio (ej: '$' para monedas)
   final String? prefixText;
-  // Texto fijo al final (ej: 'kg' para unidades)
   final String? suffixText;
-  // Formateadores de entrada (ej: solo números, mayúsculas, etc.)
   final List<TextInputFormatter>? inputFormatters;
-  // Si el texto se autocorrige automáticamente
   final bool autocorrect;
-  // Capitalización automática del texto
   final TextCapitalization textCapitalization;
-  // FocusNode para controlar el foco desde el padre
   final FocusNode? focusNode;
-  // Si el texto se muestra oculto (contraseña) — úsalo vía [CustomPasswordField]
   final bool obscureText;
-  // Si el texto ingresado debe convertirse automáticamente a mayúsculas
   final bool isUpperCase;
-  // Callback al tocar el campo
   final VoidCallback? onTap;
-  // Si true: reduce padding interno y altura del campo — ideal para formularios densos
+  // Mantenido por compatibilidad — el estilo compacto es ahora el default
   final bool dense;
 
   const CustomTextField({
@@ -126,18 +91,14 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final textColor = enabled
-        ? theme.textTheme.bodyLarge?.color
-        : theme.disabledColor;
+    final colorScheme = Theme.of(context).colorScheme;
+    final disabledColor = Theme.of(context).disabledColor;
 
     List<TextInputFormatter>? formatters = inputFormatters;
     if (isUpperCase) {
       final uppercaseFormatter = _UpperCaseTextFormatter();
-      formatters = formatters != null 
-          ? [...formatters, uppercaseFormatter] 
+      formatters = formatters != null
+          ? [...formatters, uppercaseFormatter]
           : [uppercaseFormatter];
     }
 
@@ -159,75 +120,56 @@ class CustomTextField extends StatelessWidget {
       textCapitalization: textCapitalization,
       focusNode: focusNode,
       obscureText: obscureText,
-
-      style: (dense ? AppTextStyles.bodySmall : AppTextStyles.inputText).copyWith(color: textColor),
+      style: AppTextStyles.inputTextCompact.copyWith(
+        color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
+      ),
       decoration: InputDecoration(
-        // Textos del campo
         labelText: label,
         hintText: hint,
         helperText: helperText,
-
-        // Íconos y decoradores
+        labelStyle: _kLabelStyle,
+        hintStyle: _kHintStyle,
+        floatingLabelStyle: _kFloatingLabelStyle,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         prefixText: prefixText,
         suffixText: suffixText,
-
-        // ── FONDO ───
-        // 🔹 Usamos el tema global
         filled: true,
         fillColor: enabled
             ? colorScheme.surface
             : colorScheme.surfaceContainerHighest,
-
-        // ── PADDING INTERNO ────
-        isDense: dense,
-        contentPadding: dense
-            ? const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.sm2,
-              )
-            : const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.md,
-              ),
-
-        // ── BORDES ───────────────
-        // Borde normal
+        isDense: true,
+        contentPadding: _kContentPadding,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           borderSide: BorderSide(color: colorScheme.outline),
         ),
-
-        // Borde cuando está habilitado
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           borderSide: BorderSide(color: colorScheme.outline),
         ),
-
-        // Borde cuando está enfocado
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          borderSide: BorderSide(color: colorScheme.primary, width: AppSizing.borderFocusWidth),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          borderSide: BorderSide(
+            color: colorScheme.primary,
+            width: AppSizing.borderFocusWidth,
+          ),
         ),
-
-        // Borde cuando hay error
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           borderSide: BorderSide(color: colorScheme.error),
         ),
-
-        // Borde cuando está enfocado y hay error
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          borderSide: BorderSide(color: colorScheme.error, width: AppSizing.borderFocusWidth),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          borderSide: BorderSide(
+            color: colorScheme.error,
+            width: AppSizing.borderFocusWidth,
+          ),
         ),
-
-        // Borde cuando está deshabilitado
         disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           // ignore: deprecated_member_use
-          borderSide: BorderSide(color: theme.disabledColor.withOpacity(0.4)),
+          borderSide: BorderSide(color: disabledColor.withOpacity(0.4)),
         ),
       ),
     );

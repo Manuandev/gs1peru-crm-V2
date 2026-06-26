@@ -199,9 +199,16 @@ static const TextStyle bodySub = TextStyle(
   // Sin color → hereda del tema (blanco en dark, negro en light)
   // ============================================================
 
-  /// Texto que escribe el usuario
+  /// Texto que escribe el usuario (tamaño estándar — login/onboarding)
   static const TextStyle inputText = TextStyle(
     fontSize: sizeLg,
+    fontWeight: weightRegular,
+    // SIN color → Flutter lo hereda del tema
+  );
+
+  /// Texto compacto para inputs de formularios densos (11px)
+  static const TextStyle inputTextCompact = TextStyle(
+    fontSize: sizeXs,
     fontWeight: weightRegular,
     // SIN color → Flutter lo hereda del tema
   );

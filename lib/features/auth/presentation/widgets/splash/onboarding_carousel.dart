@@ -156,14 +156,14 @@ class _FooterCarousel extends StatelessWidget {
           sobreFondoAzul
               ? CustomPrimaryButton(
                   text: botonTexto,
-                  icon: const Icon(AppIcons.forward),
+                  icon: AppIcons.forward,
                   backgroundColor: Colors.white,
                   foregroundColor: AppColors.primary,
                   onPressed: alContinuar,
                 )
               : CustomPrimaryButton(
                   text: botonTexto,
-                  icon: const Icon(AppIcons.forward),
+                  icon: AppIcons.forward,
                   onPressed: alContinuar,
                 ),
         ],

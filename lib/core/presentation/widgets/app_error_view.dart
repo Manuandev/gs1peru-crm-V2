@@ -48,7 +48,7 @@ class AppErrorView extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             CustomPrimaryButton(
               text: 'Reintentar',
-              icon: const Icon(AppIcons.refresh),
+              icon: AppIcons.refresh,
               onPressed: onRetry,
               width: null,
             ),

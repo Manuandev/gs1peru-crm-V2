@@ -170,7 +170,7 @@ class DatosTab extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           CustomOutlinedButton(
             text: 'Editar lead',
-            icon: const Icon(AppIcons.edit),
+            icon: AppIcons.edit,
             onPressed: () {
               NavigationService.goBack();
               NavigationService.navigateTo(

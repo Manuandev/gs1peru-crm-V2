@@ -82,26 +82,80 @@ class _CustomComboFieldState<T extends Comboable>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    // ignore: deprecated_member_use
+    final disabledColor = Theme.of(context).disabledColor.withOpacity(0.4);
+
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+      borderSide: BorderSide(color: colorScheme.outline),
+    );
+
     return DropdownButtonFormField<T>(
       initialValue: _selected,
       isExpanded: true,
-      hint: widget.hint != null ? Text(widget.hint!) : null,
+      hint: widget.hint != null
+          ? Text(
+              widget.hint!,
+              style: const TextStyle(
+                fontSize: AppTextStyles.sizeXs,
+                color: AppColors.textDisabled,
+              ),
+            )
+          : null,
+      style: AppTextStyles.inputTextCompact.copyWith(
+        color: widget.enabled ? AppColors.textPrimary : AppColors.textSecondary,
+      ),
       decoration: InputDecoration(
         labelText: widget.label,
         enabled: widget.enabled,
-        border: const OutlineInputBorder(),
-        isDense: widget.dense,
+        labelStyle: const TextStyle(
+          fontSize: AppTextStyles.sizeXs,
+          color: AppColors.textSecondary,
+        ),
+        floatingLabelStyle: const TextStyle(
+          fontSize: AppTextStyles.sizeXs,
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
+        ),
         prefixIcon: widget.prefixIcon,
-        contentPadding: widget.dense
-            ? const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.sm2,
-              )
-            : null,
+        filled: true,
+        fillColor: widget.enabled
+            ? colorScheme.surface
+            : colorScheme.surfaceContainerHighest,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm2,
+        ),
+        border: border,
+        enabledBorder: border,
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          borderSide: BorderSide(
+            color: colorScheme.primary,
+            width: AppSizing.borderFocusWidth,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          borderSide: BorderSide(
+            color: colorScheme.error,
+            width: AppSizing.borderFocusWidth,
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          borderSide: BorderSide(color: disabledColor),
+        ),
       ),
       items: widget.data.asMap().entries.map((entry) {
         final index = entry.key;
-        final item  = entry.value;
+        final item = entry.value;
         return DropdownMenuItem<T>(
           value: item,
           child: Column(
@@ -112,12 +166,12 @@ class _CustomComboFieldState<T extends Comboable>
                 const Divider(height: 1, thickness: 0.5, color: AppColors.border),
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
                   horizontal: AppSpacing.xxs,
                 ),
                 child: Text(
                   _getLabel(item),
-                  style: AppTextStyles.bodyMedium,
+                  style: AppTextStyles.inputTextCompact,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2,
                 ),
@@ -132,9 +186,7 @@ class _CustomComboFieldState<T extends Comboable>
               alignment: Alignment.centerLeft,
               child: Text(
                 _getLabel(item),
-                style: widget.dense
-                    ? AppTextStyles.bodySmall
-                    : AppTextStyles.bodyLarge,
+                style: AppTextStyles.inputTextCompact,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -149,8 +201,8 @@ class _CustomComboFieldState<T extends Comboable>
           : null,
       validator: widget.validator != null
           ? (_) => widget.validator!(
-              _selected != null ? _getId(_selected as T) : null,
-            )
+                _selected != null ? _getId(_selected as T) : null,
+              )
           : null,
     );
   }

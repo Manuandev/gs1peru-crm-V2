@@ -33,7 +33,7 @@ class LeadDetalleComentarios extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           CustomOutlinedButton(
             text: 'Agregar comentario',
-            icon: const Icon(AppIcons.add),
+            icon: AppIcons.add,
             onPressed: () {},
           ),
           const SizedBox(height: AppSpacing.xl),

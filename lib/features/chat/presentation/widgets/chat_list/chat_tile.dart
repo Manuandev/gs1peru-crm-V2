@@ -114,7 +114,7 @@ class ChatTile extends StatelessWidget {
                         height: AppSizing.buttonHeightCompact,
                         borderColor: AppColors.border,
                         borderWidth: AppSizing.hairline,
-                        contentPadding: const EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.xs,
                           vertical: AppSpacing.xxs,
                         ),

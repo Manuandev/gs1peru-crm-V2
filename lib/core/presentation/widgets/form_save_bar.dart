@@ -12,7 +12,7 @@ class FormSaveBar extends StatelessWidget {
   final bool isEnabled;
   final String textoCancelar;
   final String textoGuardar;
-  final Widget? iconoGuardar;
+  final IconData? iconoGuardar;
   // Estilo de texto del botón Guardar. null = usa AppTextStyles.button (16px bold)
   final TextStyle? textStyleGuardar;
 

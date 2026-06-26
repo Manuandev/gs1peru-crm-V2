@@ -251,7 +251,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         onGuardar:    _guardar,
         isLoading:    _isLoading,
         isEnabled:    _hayCambios,
-        iconoGuardar: const Icon(AppIcons.save),
+        iconoGuardar: AppIcons.save,
         textoGuardar: 'Guardar cambios',
       ),
     );

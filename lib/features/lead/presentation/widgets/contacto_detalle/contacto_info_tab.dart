@@ -78,7 +78,7 @@ class ContactoInfoTab extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           CustomOutlinedButton(
             text: 'Editar contacto',
-            icon: const Icon(AppIcons.edit),
+            icon: AppIcons.edit,
             // TODO: navegar a pantalla de edición de contacto cuando esté disponible
             onPressed: () {},
           ),

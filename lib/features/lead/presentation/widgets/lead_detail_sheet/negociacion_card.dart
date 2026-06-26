@@ -119,7 +119,7 @@ class NegociacionCard extends StatelessWidget {
                   onPressed: onGenerarSolicitud,
                   height: AppSizing.buttonHeightSmall,
                   textStyle: AppTextStyles.buttonSmall,
-                  contentPadding: const EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
                     vertical: AppSpacing.xxs,
                   ),

@@ -61,6 +61,97 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
   String _display(ComboItem item) =>
       item.field(widget.displayIndex) ?? item.descripcion;
 
+  InputDecoration _buildDecoration(
+    BuildContext context,
+    TextEditingController controller,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    // ignore: deprecated_member_use
+    final disabledColor = Theme.of(context).disabledColor.withOpacity(0.4);
+
+    return InputDecoration(
+      labelText: widget.label,
+      hintText: widget.hint,
+      labelStyle: const TextStyle(
+        fontSize: AppTextStyles.sizeXs,
+        color: AppColors.textSecondary,
+      ),
+      hintStyle: const TextStyle(
+        fontSize: AppTextStyles.sizeXs,
+        color: AppColors.textDisabled,
+      ),
+      floatingLabelStyle: const TextStyle(
+        fontSize: AppTextStyles.sizeXs,
+        color: AppColors.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm2,
+      ),
+      isDense: true,
+      filled: true,
+      fillColor: widget.enabled
+          ? colorScheme.surface
+          : colorScheme.surfaceContainerHighest,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        borderSide: BorderSide(color: colorScheme.outline),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        borderSide: BorderSide(color: colorScheme.outline),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        borderSide: BorderSide(
+          color: colorScheme.primary,
+          width: AppSizing.borderFocusWidth,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        borderSide: BorderSide(color: colorScheme.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        borderSide: BorderSide(
+          color: colorScheme.error,
+          width: AppSizing.borderFocusWidth,
+        ),
+      ),
+      disabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        borderSide: BorderSide(color: disabledColor),
+      ),
+      suffixIconConstraints: const BoxConstraints(maxHeight: 38, maxWidth: 36),
+      suffixIcon: AnimatedBuilder(
+        animation: controller,
+        builder: (_, _) => Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.sm),
+          child: controller.text.isNotEmpty
+              ? GestureDetector(
+                  onTap: () {
+                    controller.clear();
+                    _selected = null;
+                    widget.onChanged?.call(null);
+                  },
+                  child: const Icon(
+                    AppIcons.close,
+                    size: AppSizing.iconSm,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              : const Icon(
+                  Icons.expand_more_rounded,
+                  size: AppSizing.iconMd,
+                  color: AppColors.textSecondary,
+                ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Autocomplete<ComboItem>(
@@ -83,24 +174,12 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
           controller: controller,
           focusNode: focusNode,
           enabled: widget.enabled,
-          decoration: InputDecoration(
-            labelText: widget.label,
-            hintText: widget.hint,
-            border: const OutlineInputBorder(),
-            suffixIcon: AnimatedBuilder(
-              animation: controller,
-              builder: (_, _) => controller.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(AppIcons.close, size: AppSizing.iconActionSm),
-                      onPressed: () {
-                        controller.clear();
-                        _selected = null;
-                        widget.onChanged?.call(null);
-                      },
-                    )
-                  : const Icon(AppIcons.search, size: AppSizing.iconActionSm),
-            ),
+          style: AppTextStyles.inputTextCompact.copyWith(
+            color: widget.enabled
+                ? AppColors.textPrimary
+                : AppColors.textSecondary,
           ),
+          decoration: _buildDecoration(context, controller),
           validator: widget.validator != null
               ? (_) => widget.validator!(_selected?.id)
               : null,
@@ -120,12 +199,18 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
               padding: EdgeInsets.zero,
               shrinkWrap: true,
               itemCount: options.length,
-              separatorBuilder: (_, _) => const Divider(height: AppSizing.hairline, indent: AppSpacing.md),
+              separatorBuilder: (_, _) => const Divider(
+                height: AppSizing.hairline,
+                indent: AppSpacing.md,
+              ),
               itemBuilder: (_, i) {
                 final item = options.elementAt(i);
                 return ListTile(
                   dense: true,
-                  title: Text(_display(item)),
+                  title: Text(
+                    _display(item),
+                    style: AppTextStyles.inputTextCompact,
+                  ),
                   onTap: () => onSelected(item),
                 );
               },

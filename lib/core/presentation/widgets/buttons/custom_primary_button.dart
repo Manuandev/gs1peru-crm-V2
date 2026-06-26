@@ -3,66 +3,19 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import '_icon_resolver.dart';
 
-/// CustomPrimaryButton — Botón principal de acción de la app
-///
-/// PROPÓSITO:
-/// - Botón relleno (FilledButton) con el color primario de la marca
-/// - Maneja estados: habilitado, deshabilitado, cargando
-/// - Soporta ícono opcional a la izquierda del texto
-///
-/// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
-/// - Espaciado   → [AppSpacing.buttonPaddingHorizontal/Vertical]
-/// - Tamaños     → [AppSizing.buttonHeight], [AppSizing.radiusMd], [AppSizing.elevationMedium]
-/// - Tipografía  → [AppTextStyles.button]
-///
-/// USO BÁSICO:
-/// ```dart
-/// CustomPrimaryButton(
-///   text: 'INICIAR SESIÓN',
-///   onPressed: _handleLogin,
-/// )
-/// ```
-///
-/// CON ESTADO DE CARGA:
-/// ```dart
-/// CustomPrimaryButton(
-///   text: 'GUARDAR',
-///   onPressed: _save,
-///   isLoading: state is SavingState,
-/// )
-/// ```
-///
-/// CON ÍCONO:
-/// ```dart
-/// CustomPrimaryButton(
-///   text: 'SUBIR ARCHIVO',
-///   icon: Icon(AppIcons.upload, color: colorScheme.onSurface),
-///   onPressed: _uploadFile,
-/// )
-/// ```
 class CustomPrimaryButton extends StatelessWidget {
-  // Texto del botón (en mayúsculas por convención)
   final String text;
-  // Callback al presionar. null = deshabilita el botón.
   final VoidCallback? onPressed;
-  // Si true: muestra un CircularProgressIndicator y deshabilita el botón
   final bool isLoading;
-  // Si false: fuerza el estado deshabilitado independientemente de [onPressed]
   final bool isEnabled;
-  // Ícono opcional a la izquierda del texto
-  final Widget? icon;
-  // Ancho del botón. null = ancho completo del padre (double.infinity)
+  final IconData? icon;
   final double? width;
-  // Alto del botón (default: [AppSizing.buttonHeight] = 48px)
   final double? height;
-  // Padding personalizado. null = usa [AppSpacing.buttonPaddingHorizontal/Vertical]
   final EdgeInsetsGeometry? padding;
-  // Color de fondo personalizado. null = usa colorScheme.primary (azul corporativo)
   final Color? backgroundColor;
-  // Color de texto/ícono personalizado. null = usa colorScheme.onPrimary (blanco)
   final Color? foregroundColor;
-  // Estilo de texto personalizado. null = usa AppTextStyles.button (16px bold)
   final TextStyle? textStyle;
 
   const CustomPrimaryButton({
@@ -82,84 +35,62 @@ class CustomPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final bool enabled = isEnabled && !isLoading && onPressed != null;
 
-    final Color resolvedBg = backgroundColor ?? colorScheme.primary;
-    final Color resolvedFg = foregroundColor ?? colorScheme.onPrimary;
+    final Color resolvedBg = backgroundColor ?? AppColors.primary;
+    final Color resolvedFg = foregroundColor ?? AppColors.textOnDark;
 
-    final Color resolvedBackgroundColor = enabled
-        ? resolvedBg
-        : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledBg);
+    final buttonStyle = ElevatedButton.styleFrom(
+      backgroundColor: enabled
+          ? resolvedBg
+          : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledBg),
+      foregroundColor: enabled
+          ? resolvedFg
+          : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledFg),
+      disabledBackgroundColor:
+          colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledBg),
+      disabledForegroundColor:
+          colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledFg),
+      minimumSize: Size.fromHeight(height ?? AppSizing.buttonHeightSmall),
+      padding: padding,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+      ),
+      textStyle: (textStyle ??
+              AppTextStyles.labelMedium.copyWith(
+                fontWeight: AppTextStyles.weightSemiBold,
+              ))
+          .copyWith(inherit: true),
+      elevation: AppSizing.elevationLow,
+    );
 
-    final Color resolvedForegroundColor = enabled
-        ? resolvedFg
-        : colorScheme.onSurface.withValues(alpha: AppColors.opacityDisabledFg);
+    final Widget child = isLoading
+        ? SizedBox(
+            height: AppSizing.iconMd,
+            width: AppSizing.iconMd,
+            child: CircularProgressIndicator(
+              strokeWidth: AppSizing.spinnerStrokeSmall,
+              valueColor: AlwaysStoppedAnimation<Color>(resolvedFg),
+            ),
+          )
+        : Text(text, maxLines: 1, overflow: TextOverflow.ellipsis);
 
     return SizedBox(
       width: width ?? double.infinity,
-      height: height,
-      child: FilledButton(
-        onPressed: enabled ? onPressed : null,
-        style: FilledButton.styleFrom(
-          backgroundColor: resolvedBackgroundColor,
-          disabledBackgroundColor: resolvedBackgroundColor,
-          foregroundColor: resolvedForegroundColor,
-          disabledForegroundColor: resolvedForegroundColor,
-          padding:
-              padding ??
-              const EdgeInsets.symmetric(
-                horizontal: AppSpacing.buttonPaddingHorizontal,
-                vertical: AppSpacing.buttonPaddingVertical,
-              ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          ),
-          elevation: AppSizing.elevationMedium,
-        ),
-        child: isLoading
-            ? SizedBox(
-                height: AppSizing.iconMd,
-                width: AppSizing.iconMd,
-                child: CircularProgressIndicator(
-                  strokeWidth: AppSizing.spinnerStrokeSmall,
-                  valueColor: AlwaysStoppedAnimation<Color>(resolvedForegroundColor),
-                ),
-              )
-            : icon != null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconTheme(
-                    data: IconThemeData(color: resolvedForegroundColor),
-                    child: icon!,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Flexible(
-                    child: Text(
-                      text,
-                      style: (textStyle ?? AppTextStyles.button).copyWith(
-                        color: resolvedForegroundColor,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              )
-            : Text(
-                text,
-                style: (textStyle ?? AppTextStyles.button).copyWith(color: resolvedForegroundColor),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
-              ),
-      ),
+      child: icon != null && !isLoading
+          ? ElevatedButton.icon(
+              onPressed: enabled ? onPressed : null,
+              style: buttonStyle,
+              icon: resolveIcon(icon!, AppSizing.iconActionSm, resolvedFg),
+              label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
+            )
+          : ElevatedButton(
+              onPressed: enabled ? onPressed : null,
+              style: buttonStyle,
+              child: child,
+            ),
     );
   }
 }

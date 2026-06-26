@@ -1,63 +1,22 @@
 // lib/core/presentation/widgets/buttons/custom_outlined_button.dart
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
 
-/// CustomOutlinedButton — Botón con borde visible y sin relleno
-///
-/// PROPÓSITO:
-/// - Botón outlined (borde + texto de color primario, sin relleno de fondo)
-/// - Usado para acciones secundarias o de "cancelar" junto al botón primario
-/// - Maneja estados: habilitado, deshabilitado, cargando
-///
-/// DEPENDENCIAS DEL SISTEMA DE DISEÑO:
-/// - Espaciado   → [AppSpacing.buttonPaddingHorizontal/Vertical]
-/// - Tamaños     → [AppSizing.buttonHeight], [AppSizing.radiusMd]
-/// - Tipografía  → [AppTextStyles.buttonSecondary]
-///
-/// CUÁNDO USARLO:
-/// - Acción de cancelar / volver
-/// - Acción "menos importante" al lado de un botón primario
-/// - Cuando el fondo debe mantenerse visible (tarjetas con imagen)
-///
-/// USO BÁSICO:
-/// ```dart
-/// CustomOutlinedButton(
-///   text: 'CANCELAR',
-///   onPressed: () => Navigator.pop(context),
-/// )
-/// ```
-///
-/// CON COLOR CUSTOM (ej: borde de error):
-/// ```dart
-/// CustomOutlinedButton(
-///   text: 'ELIMINAR',
-///   borderColor: colorScheme.error,
-///   textColor: colorScheme.error,
-///   onPressed: _confirmDelete,
-/// )
-/// ```
+import 'package:app_crm/core/index_core.dart';
+import '_icon_resolver.dart';
+
 class CustomOutlinedButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool isEnabled;
-  final Widget? icon;
+  final IconData? icon;
   final double? width;
   final double? height;
   final Color? borderColor;
-  final Color? textColor;
-
-  /// Estilo de texto personalizado. Null = usa [AppTextStyles.buttonSecondary].
-  /// Útil para botones compactos que necesitan letra más pequeña.
+  final Color? foregroundColor;
   final TextStyle? textStyle;
-
-  /// Padding interno del botón. Null = usa el default estándar (buttonPaddingH/V).
-  /// Útil para botones compactos dentro de tiles o tarjetas.
-  final EdgeInsetsGeometry? contentPadding;
-
-  /// Grosor del borde. Null = usa [AppSizing.borderFocusWidth] (2dp).
-  /// Útil para variantes compactas que requieren línea más delgada.
+  final EdgeInsetsGeometry? padding;
   final double? borderWidth;
 
   const CustomOutlinedButton({
@@ -70,77 +29,68 @@ class CustomOutlinedButton extends StatelessWidget {
     this.width,
     this.height,
     this.borderColor,
-    this.textColor,
+    this.foregroundColor,
     this.textStyle,
-    this.contentPadding,
+    this.padding,
     this.borderWidth,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final bool enabled = isEnabled && !isLoading && onPressed != null;
 
-    final Color effectiveTextColor =
-        textColor ?? (enabled ? colorScheme.primary : theme.disabledColor);
+    final Color resolvedFg = foregroundColor ??
+        (enabled ? colorScheme.primary : Theme.of(context).disabledColor);
 
-    final Color effectiveBorderColor =
-        borderColor ??
+    final Color resolvedBorder = borderColor ??
         (enabled
             ? colorScheme.primary
-            : theme.disabledColor.withValues(alpha: AppColors.opacityDisabledBorder));
+            : Theme.of(context)
+                .disabledColor
+                .withValues(alpha: AppColors.opacityDisabledBorder));
+
+    final buttonStyle = OutlinedButton.styleFrom(
+      foregroundColor: resolvedFg,
+      side: BorderSide(color: resolvedBorder, width: borderWidth ?? 1.0),
+      minimumSize: Size.fromHeight(height ?? AppSizing.buttonHeightSmall),
+      padding: padding,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+      ),
+      textStyle: (textStyle ??
+              AppTextStyles.labelMedium.copyWith(
+                fontWeight: AppTextStyles.weightSemiBold,
+              ))
+          .copyWith(inherit: true),
+    );
+
+    final Widget child = isLoading
+        ? SizedBox(
+            height: AppSizing.iconMd,
+            width: AppSizing.iconMd,
+            child: CircularProgressIndicator(
+              strokeWidth: AppSizing.spinnerStrokeSmall,
+              valueColor: AlwaysStoppedAnimation<Color>(resolvedFg),
+            ),
+          )
+        : Text(text, maxLines: 1, overflow: TextOverflow.ellipsis);
 
     return SizedBox(
       width: width ?? double.infinity,
-      height: height,
-      child: OutlinedButton(
-        onPressed: enabled ? onPressed : null,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: effectiveTextColor,
-          side: BorderSide(color: effectiveBorderColor, width: borderWidth ?? AppSizing.borderFocusWidth),
-          padding: contentPadding ?? const EdgeInsets.symmetric(
-            horizontal: AppSpacing.buttonPaddingHorizontal,
-            vertical: AppSpacing.buttonPaddingVertical,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          ),
-        ),
-        child: isLoading
-            ? SizedBox(
-                height: AppSizing.iconMd,
-                width: AppSizing.iconMd,
-                child: CircularProgressIndicator(
-                  strokeWidth: AppSizing.spinnerStrokeSmall,
-                  valueColor: AlwaysStoppedAnimation<Color>(effectiveTextColor),
-                ),
-              )
-            : icon != null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconTheme(
-                    data: IconThemeData(color: effectiveTextColor),
-                    child: icon!,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    text,
-                    style: (textStyle ?? AppTextStyles.buttonSecondary).copyWith(
-                      color: effectiveTextColor,
-                    ),
-                  ),
-                ],
-              )
-            : Text(
-                text,
-                style: (textStyle ?? AppTextStyles.buttonSecondary).copyWith(
-                  color: effectiveTextColor,
-                ),
-              ),
-      ),
+      child: icon != null && !isLoading
+          ? OutlinedButton.icon(
+              onPressed: enabled ? onPressed : null,
+              style: buttonStyle,
+              icon: resolveIcon(icon!, AppSizing.iconActionSm, resolvedFg),
+              label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
+            )
+          : OutlinedButton(
+              onPressed: enabled ? onPressed : null,
+              style: buttonStyle,
+              child: child,
+            ),
     );
   }
 }

@@ -124,11 +124,7 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
         // ── Botón validar plan ───────────────────────────────
         CustomPrimaryButton(
           text: 'Validar plan de crédito',
-          icon: Icon(
-            AppIcons.escudo,
-            size: AppSizing.iconMd,
-            color: AppColors.textOnDark,
-          ),
+          icon: AppIcons.escudo,
           isEnabled: widget.state.fechaVencimiento.isNotEmpty,
           onPressed: () => context.read<CobranzaFacturaBloc>().add(
             const PlanValidarPressed(),

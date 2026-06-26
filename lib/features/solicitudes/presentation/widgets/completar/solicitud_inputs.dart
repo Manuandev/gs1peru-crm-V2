@@ -118,15 +118,11 @@ class SolicitudTextField extends StatelessWidget {
             : Theme.of(context).colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -148,9 +144,8 @@ class SolicitudTextField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          // ignore: deprecated_member_use
           borderSide: BorderSide(
-            color: Theme.of(context).disabledColor.withOpacity(0.4),
+            color: Theme.of(context).disabledColor.withValues(alpha: 0.4),
           ),
         ),
       ),
@@ -288,7 +283,7 @@ class _SolicitudComboFieldState extends State<SolicitudComboField> {
               borderRadius: BorderRadius.circular(AppSizing.radiusSm),
               // ignore: deprecated_member_use
               borderSide: BorderSide(
-                color: Theme.of(context).disabledColor.withOpacity(0.4),
+                color: Theme.of(context).disabledColor.withValues(alpha: 0.4),
               ),
             ),
             suffixIconConstraints: const BoxConstraints(
@@ -347,10 +342,7 @@ class _SolicitudComboFieldState extends State<SolicitudComboField> {
                 final item = options.elementAt(i);
                 return ListTile(
                   dense: true,
-                  title: Text(
-                    _display(item),
-                    style: _kInputStyle,
-                  ),
+                  title: Text(_display(item), style: _kInputStyle),
                   onTap: () => onSelected(item),
                 );
               },
@@ -369,9 +361,8 @@ class _UpperCaseFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
-  ) =>
-      TextEditingValue(
-        text: newValue.text.toUpperCase(),
-        selection: newValue.selection,
-      );
+  ) => TextEditingValue(
+    text: newValue.text.toUpperCase(),
+    selection: newValue.selection,
+  );
 }

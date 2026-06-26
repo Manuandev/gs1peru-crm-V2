@@ -19,6 +19,8 @@ export 'presentation/bloc/list/solicitud_list_bloc.dart';
 export 'presentation/bloc/list/solicitud_list_event.dart';
 export 'presentation/bloc/list/solicitud_list_state.dart';
 
+export 'presentation/bloc/participantes/participantes_cubit.dart';
+
 export 'presentation/pages/solicitud_list_page.dart';
 export 'presentation/pages/solicitud_detalle_page.dart';
 export 'presentation/pages/solicitud_completar_page.dart';
@@ -29,6 +31,7 @@ export 'presentation/pages/solicitud_resumen_page.dart';
 export 'presentation/widgets/detail/solicitud_detalle_view.dart';
 export 'presentation/widgets/completar/solicitud_completar_view.dart';
 export 'presentation/widgets/completar/solicitud_participantes_view.dart';
+export 'presentation/widgets/completar/participante_form_sheet.dart';
 export 'presentation/widgets/completar/solicitud_facturacion_view.dart';
 export 'presentation/widgets/completar/solicitud_resumen_view.dart';
 export 'presentation/widgets/completar/solicitud_inputs.dart';

@@ -118,15 +118,11 @@ class SolicitudTextField extends StatelessWidget {
             : Theme.of(context).colorScheme.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline,
-          ),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -347,10 +343,7 @@ class _SolicitudComboFieldState extends State<SolicitudComboField> {
                 final item = options.elementAt(i);
                 return ListTile(
                   dense: true,
-                  title: Text(
-                    _display(item),
-                    style: _kInputStyle,
-                  ),
+                  title: Text(_display(item), style: _kInputStyle),
                   onTap: () => onSelected(item),
                 );
               },
@@ -369,11 +362,10 @@ class _UpperCaseFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
-  ) =>
-      TextEditingValue(
-        text: newValue.text.toUpperCase(),
-        selection: newValue.selection,
-      );
+  ) => TextEditingValue(
+    text: newValue.text.toUpperCase(),
+    selection: newValue.selection,
+  );
 }
 
 // ── SolicitudToggleTipoPersona (pill jurídica/natural) ────────────────────────

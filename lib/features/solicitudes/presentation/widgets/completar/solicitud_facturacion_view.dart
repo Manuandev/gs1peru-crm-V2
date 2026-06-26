@@ -208,9 +208,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: SolicitudBotonBorrador(onPressed: () {}),
-                    ),
+                    Expanded(child: SolicitudBotonBorrador(onPressed: () {})),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: SolicitudBotonContinuar(
@@ -255,10 +253,7 @@ class _ItemResumen extends StatelessWidget {
         Container(
           width: AppSizing.iconMd,
           height: AppSizing.iconMd,
-          decoration: BoxDecoration(
-            color: colorFondo,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: colorFondo, shape: BoxShape.circle),
           child: Icon(icono, color: colorIcono, size: AppSizing.iconSm),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -598,4 +593,3 @@ class _SeccionInfoComplementaria extends StatelessWidget {
     );
   }
 }
-

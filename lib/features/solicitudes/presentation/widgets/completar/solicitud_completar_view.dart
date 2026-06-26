@@ -241,9 +241,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: SolicitudBotonBorrador(onPressed: () {}),
-                ),
+                Expanded(child: SolicitudBotonBorrador(onPressed: () {})),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: SolicitudBotonContinuar(

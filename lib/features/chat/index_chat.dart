@@ -77,6 +77,7 @@ export 'presentation/widgets/chat_detail/chat_detail_scroll_controller.dart';
 
 export 'presentation/widgets/chat_detail/info_lead/chat_detail_datos_lead.dart';
 export 'presentation/widgets/chat_detail/info_lead/chat_detail_fases.dart';
+export 'presentation/widgets/chat_detail/info_lead/chat_ia_banner.dart';
 
 export 'presentation/widgets/chat_detail/audio/audio_player_widget.dart';
 export 'presentation/widgets/chat_detail/audio/audio_recorder_widget.dart';

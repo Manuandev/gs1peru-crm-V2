@@ -526,6 +526,22 @@ class AppColors {
   static const Color datoInteresBg = Color(0xFFE8F5E9);
 
   // ============================================================
+  // IA BANNER — ChatDetailPage, banner informativo de bot
+  // ============================================================
+
+  /// Fondo del banner de IA — lavanda suave (deep-purple 50)
+  static const Color iaBannerBg = Color(0xFFEDE7F6);
+
+  /// Color del ícono sparkle y texto secundario del banner — deep-purple 700
+  static const Color iaBannerFg = Color(0xFF512DA8);
+
+  /// Fondo del contenedor del ícono sparkle — deep-purple 100
+  static const Color iaBannerIconBg = Color(0xFFD1C4E9);
+
+  /// Fondo del badge "Transferido a ti" — deep-purple 200
+  static const Color iaBannerBadgeBg = Color(0xFFB39DDB);
+
+  // ============================================================
   // OPACIDADES SEMÁNTICAS COBRANZA — helpers para fondos suaves de iconos
   // ============================================================
 

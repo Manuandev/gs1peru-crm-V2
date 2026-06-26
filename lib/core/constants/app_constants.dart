@@ -20,4 +20,9 @@ class AppConstants {
   static const String sepComodin = '¨';
   static const String sepComodin2 = '±';
   static const String sepComodin3 = '¶';
+
+  // Límites de caracteres en ChatTile
+  static const int maxCharsNombreChat = 15;
+  static const int maxCharsLineaMensaje = 25;
+  static const int maxCharsMensajeChat = 50;
 }

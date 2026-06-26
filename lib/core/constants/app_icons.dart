@@ -484,6 +484,9 @@ class AppIcons {
   /// Robot / IA — conversación derivada por inteligencia artificial (ChatListContadores)
   static const IconData ia = Icons.smart_toy_outlined;
 
+  /// Destellos / sparkle — conversaciones derivadas por IA en ContadoresChatRow
+  static const IconData sparkle = Icons.auto_awesome;
+
   // ============================================================
   // COBRANZA
   // ============================================================

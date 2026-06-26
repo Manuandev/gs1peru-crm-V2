@@ -47,13 +47,16 @@ class ChatListView extends StatelessWidget {
             return prevHas != currHas;
           },
           builder: (context, state) {
-            final tieneAvanzado = state is ChatListSuccess && state.tieneFiltroAvanzado;
+            final tieneAvanzado =
+                state is ChatListSuccess && state.tieneFiltroAvanzado;
             return Builder(
               builder: (ctx) => IconButton(
                 tooltip: 'Filtrar',
                 icon: Icon(
                   AppIcons.filter,
-                  color: tieneAvanzado ? AppColors.secondary : AppColors.textOnDark,
+                  color: tieneAvanzado
+                      ? AppColors.secondary
+                      : AppColors.textOnDark,
                 ),
                 onPressed: () => Scaffold.of(ctx).openEndDrawer(),
               ),
@@ -87,7 +90,9 @@ class ChatListView extends StatelessWidget {
                       filtroActual: state.filtro,
                       conteos: state.conteos,
                       onFiltroTap: (filtro) {
-                        context.read<ChatListBloc>().add(ChatListFiltered(filtro));
+                        context.read<ChatListBloc>().add(
+                          ChatListFiltered(filtro),
+                        );
                       },
                     ),
                     ContadoresChatRow(contadores: state.contadores),
@@ -147,10 +152,13 @@ class ChatListView extends StatelessWidget {
   String _emptyMessage(ChatListFiltro filtro) {
     return switch (filtro) {
       ChatListFiltro.todos => 'No hay chats abiertos y/o disponibles.',
-      ChatListFiltro.sinResponder => '¡Todo al día! No hay chats sin responder.',
+      ChatListFiltro.sinResponder =>
+        '¡Todo al día! No hay chats sin responder.',
       ChatListFiltro.enDesarrollo => 'No hay chats en desarrollo.',
-      ChatListFiltro.conPropuesta => 'No hay conversaciones con propuesta enviada.',
-      ChatListFiltro.enCobranza => 'No hay conversaciones en proceso de cobranza.',
+      ChatListFiltro.conPropuesta =>
+        'No hay conversaciones con propuesta enviada.',
+      ChatListFiltro.enCobranza =>
+        'No hay conversaciones en proceso de cobranza.',
     };
   }
 }

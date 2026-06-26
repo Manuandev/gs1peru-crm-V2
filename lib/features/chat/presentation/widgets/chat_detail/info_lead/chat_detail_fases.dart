@@ -6,17 +6,15 @@ import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatDetailFases extends StatelessWidget {
   final String idEstadoActual;
-  final void Function(LeadEstado estado) onEstadoTap;
 
-  const ChatDetailFases({
-    super.key,
-    required this.idEstadoActual,
-    required this.onEstadoTap,
-  });
+  const ChatDetailFases({super.key, required this.idEstadoActual});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final estados = LeadEstado.values;
+    final indexActivo = estados.indexWhere((e) => e.id == idEstadoActual);
+    final activoEfectivo = indexActivo < 0 ? 0 : indexActivo;
 
     return Container(
       color: colorScheme.surface,
@@ -24,83 +22,96 @@ class ChatDetailFases extends StatelessWidget {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Fase del lead', style: AppTextStyles.titleSmall),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: LeadEstado.values.map((estado) {
-              final isActivo = estado.id == idEstadoActual;
-              final isUltimo = estado == LeadEstado.values.last;
+      child: Row(
+        children: List.generate(estados.length * 2 - 1, (i) {
+          // índices pares → paso; índices impares → línea
+          if (i.isOdd) {
+            final pasoIzq = i ~/ 2;
+            final lineaActiva = pasoIzq < activoEfectivo;
+            return Expanded(
+              child: Container(
+                height: AppSizing.chatStepperLineHeight,
+                color: lineaActiva ? colorScheme.primary : AppColors.grey300,
+              ),
+            );
+          }
 
-              return Expanded(
-                child: Row(
-                  children: [
-                    // ── Círculo + label ──
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => onEstadoTap(estado),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: AppSizing.faseIndicatorSize,
-                              height: AppSizing.faseIndicatorSize,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isActivo
-                                    ? AppColors.success
-                                    : AppColors.transparent,
-                                border: Border.all(
-                                  color: isActivo
-                                      ? AppColors.success
-                                      : AppColors.grey400,
-                                  width: AppSizing.borderFocusWidth,
-                                ),
-                              ),
-                              child: isActivo
-                                  ? const Icon(
-                                      AppIcons.circuloRelleno,
-                                      color: AppColors.textOnDark,
-                                      size: AppSizing.indicatorDotSize,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              estado.label,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: isActivo
-                                    ? AppColors.success
-                                    : AppColors.grey600,
-                                fontWeight: isActivo
-                                    ? AppTextStyles.weightBold
-                                    : AppTextStyles.weightRegular,
-                              ),
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+          final index = i ~/ 2;
+          final estado = estados[index];
+          final isActivo = index == activoEfectivo;
+          final isPasado = index < activoEfectivo;
 
-                    // ── Línea conectora ──
-                    if (!isUltimo)
-                      Expanded(
-                        child: Container(
-                          height: AppSizing.borderFocusWidth,
-                          margin: const EdgeInsets.only(bottom: AppSpacing.mdLg),
-                          color: AppColors.grey300,
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
+          return _PasoStepper(
+            numero: index + 1,
+            label: estado.label,
+            isActivo: isActivo,
+            isPasado: isPasado,
+            colorActivo: colorScheme.primary,
+          );
+        }),
       ),
+    );
+  }
+}
+
+class _PasoStepper extends StatelessWidget {
+  final int numero;
+  final String label;
+  final bool isActivo;
+  final bool isPasado;
+  final Color colorActivo;
+
+  const _PasoStepper({
+    required this.numero,
+    required this.label,
+    required this.isActivo,
+    required this.isPasado,
+    required this.colorActivo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final circleFill = isActivo ? colorActivo : AppColors.surface;
+    final circleBorder = isActivo || isPasado ? colorActivo : AppColors.grey400;
+    final numberColor = isActivo ? AppColors.textOnDark : (isPasado ? colorActivo : AppColors.grey400);
+    final labelColor = isActivo ? colorActivo : AppColors.grey500;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label arriba
+        Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: labelColor,
+            fontWeight: isActivo ? AppTextStyles.weightBold : AppTextStyles.weightRegular,
+          ),
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+
+        // Círculo con número
+        Container(
+          width: AppSizing.chatStepperCircleSize,
+          height: AppSizing.chatStepperCircleSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: circleFill,
+            border: Border.all(color: circleBorder, width: AppSizing.borderFocusWidth),
+          ),
+          child: Center(
+            child: Text(
+              '$numero',
+              style: AppTextStyles.titleSmall.copyWith(
+                color: numberColor,
+                fontWeight: AppTextStyles.weightBold,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

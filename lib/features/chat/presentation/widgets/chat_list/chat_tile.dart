@@ -41,11 +41,38 @@ class ChatTile extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _AvatarConCanal(chat: chat),
+                CircleAvatar(
+                  radius: AppSizing.avatarRadiusSm,
+                  backgroundColor: AvatarUtils.color(chat.nombreCompleto),
+                  child: Icon(
+                    AppIcons.user,
+                    size: AppSizing.iconMd,
+                    color: AppColors.textOnDark,
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(child: _InfoChat(chat: chat)),
-                const SizedBox(width: AppSpacing.xs),
+                const SizedBox(width: AppSpacing.sm),
                 _InfoDerecha(chat: chat),
+                const SizedBox(width: AppSpacing.sm),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppIconsSocial.chipEstado(
+                      chat.idEstadoEfectivo,
+                      label: chat.descEstadoEfectiva,
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      chat.fechaHora.formatDate(AppDateFormat.hourMinute),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                  ],
+                ),
               ],
             ),
 
@@ -103,7 +130,9 @@ class ChatTile extends StatelessWidget {
                         ),
                       ),
                       child: InkWell(
-                        onTap: () => LauncherUtils.abrirTelefono('${chat.prefijoPais} ${chat.numero}'),
+                        onTap: () => LauncherUtils.abrirTelefono(
+                          '${chat.prefijoPais} ${chat.numero}',
+                        ),
                         borderRadius: BorderRadius.circular(
                           AppSizing.radiusCircular,
                         ),
@@ -129,57 +158,6 @@ class ChatTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Avatar con ícono del canal superpuesto (Stack — esquina inferior derecha)
-// Siempre muestra el badge; usa idCanal=1 (WhatsApp) como fallback mientras
-// el modelo no envíe el canal real.
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _AvatarConCanal extends StatelessWidget {
-  final Chat chat;
-  const _AvatarConCanal({required this.chat});
-
-  @override
-  Widget build(BuildContext context) {
-    final idCanal = chat.idCanal > 0 ? chat.idCanal : 1;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        CircleAvatar(
-          radius: AppSizing.avatarRadiusSm,
-          backgroundColor: AvatarUtils.color(chat.nombreCompleto),
-          child: Text(
-            AvatarUtils.initials(chat.nombreCompleto),
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textOnDark,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: -2,
-          right: -2,
-          child: Container(
-            width: AppSizing.avatarCanalBadge,
-            height: AppSizing.avatarCanalBadge,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.surface,
-              border: Border.all(
-                color: AppColors.border,
-                width: AppSizing.canalBadgeBorder,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: AppIconsSocial.widgetCanal(idCanal, size: 14),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Info central: nombre + chip canal, oportunidad, empresa, mensaje, chips IA
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -191,8 +169,18 @@ class _InfoChat extends StatelessWidget {
   Widget build(BuildContext context) {
     final preview = buildMessagePreview(chat);
     final idCanal = chat.idCanal > 0 ? chat.idCanal : 1;
+    final nombre = chat.nombreCompleto.length > AppConstants.maxCharsNombreChat
+        ? '${chat.nombreCompleto.substring(0, AppConstants.maxCharsNombreChat)}...'
+        : chat.nombreCompleto;
+    final mensajeRaw = preview.label;
+    final mensajeTrunc = mensajeRaw.length > AppConstants.maxCharsMensajeChat
+        ? '${mensajeRaw.substring(0, AppConstants.maxCharsMensajeChat)}...'
+        : mensajeRaw;
+    final mensaje = mensajeTrunc.length > AppConstants.maxCharsLineaMensaje
+        ? '${mensajeTrunc.substring(0, AppConstants.maxCharsLineaMensaje)}\n${mensajeTrunc.substring(AppConstants.maxCharsLineaMensaje)}'
+        : mensajeTrunc;
 
-    return Column( 
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Nombre + chip canal
@@ -201,7 +189,7 @@ class _InfoChat extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                chat.nombreCompleto,
+                nombre,
                 style: AppTextStyles.bodySmall.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -210,7 +198,7 @@ class _InfoChat extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
-            _ChipCanal(idCanal: idCanal),
+            AppIconsSocial.widgetCanal(idCanal, size: AppSizing.iconSm),
           ],
         ),
 
@@ -256,8 +244,8 @@ class _InfoChat extends StatelessWidget {
             ],
             Expanded(
               child: Text(
-                preview.label,
-                maxLines: 1,
+                mensaje,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.labelSmall.copyWith(
                   color: preview.color ?? AppColors.textSecondary,
@@ -286,97 +274,35 @@ class _InfoDerecha extends StatelessWidget {
     final elapsed = ahora.difference(fechaUltimoMensaje);
     final colorTiempo = ElapsedTimeUtils.colorFromElapsed(elapsed);
 
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Columna 1: tiempo transcurrido
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              ElapsedTimeUtils.formatHyM(elapsed),
-              style: AppTextStyles.labelMedium.copyWith(
-                color: colorTiempo,
-                fontWeight: AppTextStyles.weightBold,
-              ),
-              textAlign: TextAlign.end,
-            ),
-            const SizedBox(width: AppSpacing.xxs),
-
-            Text(
-              ElapsedTimeUtils.formatHyM(elapsed),
-              style: AppTextStyles.labelMedium.copyWith(
-                color: colorTiempo,
-                fontWeight: AppTextStyles.weightBold,
-              ),
-              textAlign: TextAlign.start,
-            ),
-            Text(
-              'sin respuesta',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.end,
-            ),
-          ],
+        Text(
+          ElapsedTimeUtils.formatHyM(elapsed),
+          style: AppTextStyles.labelMedium.copyWith(
+            color: colorTiempo,
+            fontWeight: AppTextStyles.weightBold,
+          ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(width: AppSpacing.xs),
-        // Columna 2: estado + hora del mensaje
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppIconsSocial.chipEstado(
-              chat.idEstadoEfectivo,
-              label: chat.descEstadoEfectiva,
-            ),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              chat.fechaHora.formatDate(AppDateFormat.hourMinute),
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.end,
-            ),
-          ],
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          'sin respuesta',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+          textAlign: TextAlign.start,
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          ElapsedTimeUtils.formatHyM(elapsed),
+          style: AppTextStyles.labelMedium.copyWith(
+            color: colorTiempo,
+            fontWeight: AppTextStyles.weightBold,
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Chip del canal de origen (píldora con color del canal)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _ChipCanal extends StatelessWidget {
-  final int idCanal;
-  const _ChipCanal({required this.idCanal});
-
-  @override
-  Widget build(BuildContext context) {
-    final nombre = CanalHelper.get(idCanal).nombre;
-    final color = AppIconsSocial.colorCanal(idCanal);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: AppSpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSizing.radiusXs),
-      ),
-      child: Text(
-        nombre,
-        style: AppTextStyles.labelSmall.copyWith(
-          color: color,
-          fontWeight: AppTextStyles.weightSemiBold,
-          height: 1,
-        ),
-      ),
     );
   }
 }

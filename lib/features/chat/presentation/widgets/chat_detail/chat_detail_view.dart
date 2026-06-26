@@ -13,7 +13,12 @@ class ChatDetailView extends StatefulWidget {
   final int idNumero;
   final int? idLead;
   final Chat? conversacion;
-  const ChatDetailView({super.key, required this.idNumero, this.idLead, this.conversacion});
+  const ChatDetailView({
+    super.key,
+    required this.idNumero,
+    this.idLead,
+    this.conversacion,
+  });
 
   @override
   State<ChatDetailView> createState() => _ChatDetailViewState();
@@ -127,7 +132,12 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             },
             builder: (context, fechaUltimaRespuesta) => ChatDetailAppBar(
               lead: infoState.lead,
+              idCanal: widget.conversacion?.idCanal ?? 1,
               fechaUltimaRespuesta: fechaUltimaRespuesta,
+              onTap: () => context.goToEditarLead(
+                idLead: infoState.lead.idLead,
+                cubit: context.read<InfoLeadCubit>(),
+              ),
             ),
           );
         },
@@ -147,8 +157,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
           onPressed: widget.conversacion == null
               ? null
               : () => LauncherUtils.abrirTelefono(
-                    '${widget.conversacion!.prefijoPais} ${widget.conversacion!.numero}',
-                  ),
+                  '${widget.conversacion!.prefijoPais} ${widget.conversacion!.numero}',
+                ),
         ),
       ],
 
@@ -196,36 +206,27 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       },
       body: Column(
         children: [
-          BlocBuilder<InfoLeadCubit, InfoLeadState>(
-            buildWhen: (prev, curr) {
-              if (curr is! InfoLeadSuccess) return false;
-              if (prev is! InfoLeadSuccess) return true;
-              return (prev).lead.idEstado != (curr).lead.idEstado;
-            },
-            builder: (context, state) => state is InfoLeadSuccess
-                ? ChatDetailFases(
-                    idEstadoActual: state.lead.idEstado,
-                    onEstadoTap: (estado) async {
-                      final confirmar = await context.showConfirmDialog(
-                        title: 'Confirmar cambio',
-                        message:
-                            '¿Deseas cambiar el estado a "${estado.label}"?',
-                      );
-
-                      if (!confirmar) return;
-
-                      if (context.mounted) {
-                        context.read<InfoLeadCubit>().updateEstado(
-                          idNumero: widget.idNumero,
-                          idEstado: estado.id,
-                          estado: estado.label,
-                        );
-                      }
-                    },
-                  )
-                : const SizedBox.shrink(),
+          // ── Banner + fases: blanco puro para que la ola y las fases sean continuos ──
+          ColoredBox(
+            color: AppColors.surface,
+            child: Column(
+              children: [
+                const _OndaBanner(),
+                BlocBuilder<InfoLeadCubit, InfoLeadState>(
+                  buildWhen: (prev, curr) {
+                    if (curr is! InfoLeadSuccess) return false;
+                    if (prev is! InfoLeadSuccess) return true;
+                    return (prev).lead.idEstado != (curr).lead.idEstado;
+                  },
+                  builder: (context, state) => state is InfoLeadSuccess
+                      ? ChatDetailFases(idEstadoActual: state.lead.idEstado)
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
           ),
 
+          // ── Mensajes: fondo original del scaffold ──
           Expanded(
             child: Stack(
               clipBehavior: Clip.hardEdge,
@@ -284,7 +285,6 @@ class _ChatDetailViewState extends State<ChatDetailView> {
                           context.read<ChatDetailBloc>().add(
                             ChatDetailRefreshed(widget.idNumero),
                           );
-
                         },
                       );
                     }
@@ -362,15 +362,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             ),
           ),
 
-          // BlocBuilder<InfoLeadCubit, InfoLeadState>(
-          //   buildWhen: (prev, curr) => curr is InfoLeadSuccess,
-          //   builder: (context, state) => state is InfoLeadSuccess
-          //       ? ChatDetailDatosLead(infoLead: state.infoLead)
-          //       : const SizedBox.shrink(),
-          // ),
           BlocBuilder<ChatDetailBloc, ChatDetailState>(
             buildWhen: (prev, curr) {
-              // Solo reconstruir cuando pasa de "activo" (Success o LoadingMore) a "inactivo" o viceversa
               final prevActivo =
                   prev is ChatDetailSuccess || prev is ChatDetailLoadingMore;
               final currActivo =
@@ -388,4 +381,55 @@ class _ChatDetailViewState extends State<ChatDetailView> {
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Banner IA: ClipPath recorta el contenedor azul con ola convexa en la base.
+// El scaffold blanco queda expuesto debajo — transición limpia azul → blanco.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _OndaBanner extends StatelessWidget {
+  const _OndaBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Stack(
+      children: [
+        // Fondo azul recortado con ola — detrás de la cartilla
+        Positioned.fill(
+          child: ClipPath(
+            clipper: _OndaClipper(),
+            child: ColoredBox(color: colorScheme.primary),
+          ),
+        ),
+        // Cartilla encima, sin recortar
+        const Padding(
+          padding: EdgeInsets.only(bottom: AppSpacing.sm2),
+          child: ChatIaBanner(),
+        ),
+      ],
+    );
+  }
+}
+
+// Recorta el rectángulo dejando el borde inferior como ola convexa hacia abajo.
+class _OndaClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    const ola = 28.0;
+    return Path()
+      ..lineTo(0, size.height - ola)
+      ..quadraticBezierTo(
+        size.width / 2,
+        size.height,
+        size.width,
+        size.height - ola,
+      )
+      ..lineTo(size.width, 0)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(_OndaClipper old) => false;
 }

@@ -460,6 +460,12 @@ class AppSizing {
   /// Diámetro del círculo de etapa en el stepper de detalle: 40dp — LeadDetalleStepper
   static const double stepperCircleSize = 40.0;
 
+  /// Diámetro del círculo numerado en el stepper de ChatDetailFases: 32dp
+  static const double chatStepperCircleSize = 32.0;
+
+  /// Grosor de la línea conectora entre pasos en ChatDetailFases: 2dp
+  static const double chatStepperLineHeight = 2.0;
+
   // ============================================================
   // SKELETON — alturas y anchos de placeholders de carga
   // ============================================================

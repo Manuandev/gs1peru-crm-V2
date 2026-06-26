@@ -148,6 +148,11 @@ class AppTextStyles {
     fontWeight: weightRegular,
   );
 
+static const TextStyle bodySub = TextStyle(
+    fontSize: sizeSub,
+    fontWeight: weightRegular,
+  );
+
   // --- Label ---
   static const TextStyle labelLarge = TextStyle(
     fontSize: sizeMd,

@@ -8,7 +8,16 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class ChatDetailAppBar extends StatelessWidget {
   final Lead lead;
   final String? fechaUltimaRespuesta;
-  const ChatDetailAppBar({super.key, required this.lead, this.fechaUltimaRespuesta});
+  final int idCanal;
+  final VoidCallback? onTap;
+
+  const ChatDetailAppBar({
+    super.key,
+    required this.lead,
+    required this.idCanal,
+    this.fechaUltimaRespuesta,
+    this.onTap,
+  });
 
   Duration? _elapsedTime() {
     if (fechaUltimaRespuesta == null || fechaUltimaRespuesta!.isEmpty) return null;
@@ -25,34 +34,66 @@ class ChatDetailAppBar extends StatelessWidget {
 
     return Row(
       children: [
-        // ── Avatar con iniciales ──
-        CircleAvatar(
-          radius: AppSizing.avatarRadiusAppBar,
-          backgroundColor: lead.nombreCompleto.avatarColor,
-          child: Text(
-            lead.nombreCompleto.initials,
-            style: AppTextStyles.titleSmall.copyWith(
-              fontWeight: AppTextStyles.weightBold,
-              color: AppColors.textOnDark,
+        // ── Avatar con badge de canal ──
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            CircleAvatar(
+              radius: AppSizing.avatarRadiusAppBar,
+              backgroundColor: AvatarUtils.color(lead.nombreCompleto),
+              child: Icon(
+                AppIcons.user,
+                size: AppSizing.iconMd,
+                color: AppColors.textOnDark,
+              ),
             ),
-          ),
+            if (idCanal > 0)
+              Positioned(
+                bottom: -2,
+                right: -2,
+                child: Container(
+                  width: AppSizing.avatarCanalBadge,
+                  height: AppSizing.avatarCanalBadge,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.surface,
+                      width: AppSizing.canalBadgeBorder,
+                    ),
+                  ),
+                  child: Center(
+                    child: AppIconsSocial.widgetCanal(
+                      idCanal,
+                      size: AppSizing.iconCanalBadge,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(width: AppSpacing.smPlus),
 
-        // ── Nombre + canal ──
+        // ── Nombre + canal + estado ──
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                lead.nombreCompleto,
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: colorScheme.onPrimary,
-                  fontWeight: AppTextStyles.weightBold,
+              // Nombre clickeable → EditLead
+              GestureDetector(
+                onTap: onTap,
+                child: Text(
+                  lead.nombreCompleto,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: colorScheme.onPrimary,
+                    fontWeight: AppTextStyles.weightBold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
+
+              // Campaña / canal
               Row(
                 children: [
                   Icon(
@@ -63,17 +104,21 @@ class ChatDetailAppBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    lead.canal.isEmpty ? 'Sin canal' : lead.canal,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: colorScheme.onPrimary.withValues(
-                        alpha: AppColors.opacityOnPrimarySubtle,
+                  Expanded(
+                    child: Text(
+                      lead.canal.isEmpty ? 'Sin canal' : lead.canal,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: colorScheme.onPrimary.withValues(
+                          alpha: AppColors.opacityOnPrimarySubtle,
+                        ),
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
+
+              // Punto verde + "Derivado por IA · Última respuesta hace X"
               const SizedBox(height: AppSpacing.xxs),
               Row(
                 children: [
@@ -81,20 +126,24 @@ class ChatDetailAppBar extends StatelessWidget {
                     width: 8,
                     height: 8,
                     margin: const EdgeInsets.only(right: AppSpacing.xs),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.brandForest,
                       shape: BoxShape.circle,
                     ),
                   ),
-                  if (elapsed != null) ...[
-                    Text(
-                      'Última respuesta hace ${ElapsedTimeUtils.formatHyM(elapsed)}',
+                  Expanded(
+                    child: Text(
+                      elapsed != null
+                          ? 'Derivado por IA · Última respuesta hace ${ElapsedTimeUtils.formatHyM(elapsed)}'
+                          : 'Derivado por IA',
                       style: AppTextStyles.labelVerySmall8.copyWith(
-                        color: ElapsedTimeUtils.colorFromElapsed(elapsed),
+                        color: colorScheme.onPrimary.withValues(
+                          alpha: AppColors.opacityOnPrimarySubtle,
+                        ),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ],
+                  ),
                 ],
               ),
             ],

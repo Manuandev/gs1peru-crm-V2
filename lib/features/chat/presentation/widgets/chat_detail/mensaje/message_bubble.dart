@@ -44,8 +44,8 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isEnviado = message.direccionMensaje == 'ASE' ||
-        message.direccionMensaje == 'AIA';
+    final isEnviado =
+        message.direccionMensaje == 'ASE' || message.direccionMensaje == 'AIA';
 
     final bubbleColor = isEnviado
         ? colorScheme.primary
@@ -79,7 +79,9 @@ class MessageBubble extends StatelessWidget {
           ),
           child: Padding(
             // Estilo WhatsApp: un ligero padding (2px) para fotos/videos, o 0 para texto.
-            padding: _isMediaMsg ? const EdgeInsets.all(AppSpacing.xxs) : EdgeInsets.zero,
+            padding: _isMediaMsg
+                ? const EdgeInsets.all(AppSpacing.xxs)
+                : EdgeInsets.zero,
             child: ClipRRect(
               borderRadius: _isMediaMsg
                   ? _innerBubbleRadius(isEnviado)
@@ -126,8 +128,12 @@ class MessageBubble extends StatelessWidget {
     return BorderRadius.only(
       topLeft: const Radius.circular(AppSizing.radiusLg),
       topRight: const Radius.circular(AppSizing.radiusLg),
-      bottomLeft: Radius.circular(isEnviado ? AppSizing.radiusLg : AppSizing.radiusXs),
-      bottomRight: Radius.circular(isEnviado ? AppSizing.radiusXs : AppSizing.radiusLg),
+      bottomLeft: Radius.circular(
+        isEnviado ? AppSizing.radiusLg : AppSizing.radiusXs,
+      ),
+      bottomRight: Radius.circular(
+        isEnviado ? AppSizing.radiusXs : AppSizing.radiusLg,
+      ),
     );
   }
 
@@ -137,10 +143,14 @@ class MessageBubble extends StatelessWidget {
       topLeft: const Radius.circular(AppSizing.radiusBubbleInner),
       topRight: const Radius.circular(AppSizing.radiusBubbleInner),
       bottomLeft: Radius.circular(
-        isEnviado ? AppSizing.radiusBubbleInner : AppSizing.radiusBubbleTipInner,
+        isEnviado
+            ? AppSizing.radiusBubbleInner
+            : AppSizing.radiusBubbleTipInner,
       ),
       bottomRight: Radius.circular(
-        isEnviado ? AppSizing.radiusBubbleTipInner : AppSizing.radiusBubbleInner,
+        isEnviado
+            ? AppSizing.radiusBubbleTipInner
+            : AppSizing.radiusBubbleInner,
       ),
     );
   }
@@ -148,28 +158,47 @@ class MessageBubble extends StatelessWidget {
   Widget _buildContent(BuildContext context, Color textColor) {
     switch (message.tipo) {
       case 'image':
-        return _ImageContent(message: message, idNumero: idNumero, nombre: nombre);
+        return _ImageContent(
+          message: message,
+          idNumero: idNumero,
+          nombre: nombre,
+        );
 
       case 'audio':
         final path = _isLocalFile
             ? message.contenido
             : MessageUrlHelper.buildFileUrl(message, idNumero);
         return Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm2,
+            AppSpacing.sm,
+            AppSpacing.sm2,
+            AppSpacing.xs,
+          ),
           child: AudioPlayerWidget(
             audioPath: path,
-            isEnviado: message.direccionMensaje == 'ASE' ||
+            isEnviado:
+                message.direccionMensaje == 'ASE' ||
                 message.direccionMensaje == 'AIA',
             audioController: audioController,
           ),
         );
 
       case 'video':
-        return _VideoContent(message: message, idNumero: idNumero, nombre: nombre);
+        return _VideoContent(
+          message: message,
+          idNumero: idNumero,
+          nombre: nombre,
+        );
 
       case 'document':
         return Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm2,
+            AppSpacing.sm,
+            AppSpacing.sm2,
+            AppSpacing.xs,
+          ),
           child: _DocumentContent(
             message: message,
             idNumero: idNumero,
@@ -179,7 +208,12 @@ class MessageBubble extends StatelessWidget {
 
       case 'template':
         return Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm2,
+            AppSpacing.sm,
+            AppSpacing.sm2,
+            AppSpacing.xs,
+          ),
           child: _TemplateContent(
             message: message,
             idNumero: idNumero,
@@ -194,9 +228,16 @@ class MessageBubble extends StatelessWidget {
       case 'button':
       default:
         return Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm2,
+            AppSpacing.sm,
+            AppSpacing.sm2,
+            AppSpacing.xs,
+          ),
           child: RichText(
-            text: TextSpan(children: parseMensaje(message.contenido, textColor)),
+            text: TextSpan(
+              children: parseMensaje(message.contenido, textColor),
+            ),
           ),
         );
     }
@@ -250,7 +291,12 @@ class _BubbleTimeRow extends StatelessWidget {
 
     if (isOverImage) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, AppSpacing.sm, AppSpacing.chipGap),
+        padding: const EdgeInsets.fromLTRB(
+          0,
+          0,
+          AppSpacing.sm,
+          AppSpacing.chipGap,
+        ),
         child: Container(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.chipGap,
@@ -266,7 +312,12 @@ class _BubbleTimeRow extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.xxs, AppSpacing.sm2, AppSpacing.chipGap),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm2,
+        AppSpacing.xxs,
+        AppSpacing.sm2,
+        AppSpacing.chipGap,
+      ),
       child: content,
     );
   }
@@ -352,7 +403,9 @@ class _ImagePlaceholder extends StatelessWidget {
       height: size,
       color: AppColors.grey200,
       child: const Center(
-        child: CircularProgressIndicator(strokeWidth: AppSizing.spinnerStrokeSmall),
+        child: CircularProgressIndicator(
+          strokeWidth: AppSizing.spinnerStrokeSmall,
+        ),
       ),
     );
   }
@@ -661,7 +714,10 @@ class _DocumentContentState extends State<_DocumentContent> {
         return;
       }
 
-      final url = MessageUrlHelper.buildFileUrl(widget.message, widget.idNumero);
+      final url = MessageUrlHelper.buildFileUrl(
+        widget.message,
+        widget.idNumero,
+      );
 
       await Dio().download(
         url,
@@ -686,9 +742,9 @@ class _DocumentContentState extends State<_DocumentContent> {
     final colorScheme = Theme.of(context).colorScheme;
     final iconColor =
         (widget.message.direccionMensaje == 'ASE' ||
-                widget.message.direccionMensaje == 'AIA')
-            ? colorScheme.onPrimary
-            : colorScheme.primary;
+            widget.message.direccionMensaje == 'AIA')
+        ? colorScheme.onPrimary
+        : colorScheme.primary;
 
     return GestureDetector(
       onTap: _downloadAndOpen,
@@ -786,7 +842,9 @@ class _TemplateContent extends StatelessWidget {
         // Texto del template
         if (message.contenido.isNotEmpty)
           RichText(
-            text: TextSpan(children: parseMensaje(message.contenido, textColor)),
+            text: TextSpan(
+              children: parseMensaje(message.contenido, textColor),
+            ),
           ),
 
         // Imagen del template

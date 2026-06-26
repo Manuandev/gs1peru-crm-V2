@@ -9,40 +9,40 @@ import 'package:app_crm/index_dependencies.dart';
 
 class Lead extends Equatable {
   // ── Identificadores ───────────────────────────────────────────
-  final int    idLead;
-  final int    idContacto;
+  final int idLead;
+  final int idContacto;
 
   // ── Contacto ──────────────────────────────────────────────────
-  final String  nombre;
-  final String  apellidoPaterno;
-  final String  apellidoMaterno;
-  final String  nombreEmpresa;
-  final String  asesor;
-  final String  fechaHora;
+  final String nombre;
+  final String apellidoPaterno;
+  final String apellidoMaterno;
+  final String nombreEmpresa;
+  final String asesor;
+  final String fechaHora;
 
   // ── Número de contacto ────────────────────────────────────────
-  final int    idNumero;
+  final int idNumero;
   final String prefijo;
   final String numero;
-  final bool   isFavorito;
+  final bool isFavorito;
 
   // ── Correo ────────────────────────────────────────────────────
   final String correo;
 
   // ── Estado ────────────────────────────────────────────────────
-  final String  idEstado;
-  final String  estado;
+  final String idEstado;
+  final String estado;
 
   // ── Campaña / Oportunidad ─────────────────────────────────────
-  final int    idCampania;
+  final int idCampania;
   final String campania;
-  final int    idEvento;
+  final int idEvento;
   final String evento;
 
   // ── Canal / Interés ───────────────────────────────────────────
-  final int    idCanal;
+  final int idCanal;
   final String canal;
-  final int    idInteres;
+  final int idInteres;
   final String interes;
 
   // ── Conversación WhatsApp ─────────────────────────────────────
@@ -109,115 +109,120 @@ class Lead extends Equatable {
 
   @override
   List<Object?> get props => [
-        idLead,
-        idContacto,
-        nombre,
-        apellidoPaterno,
-        apellidoMaterno,
-        nombreEmpresa,
-        asesor,
-        fechaHora,
-        idNumero,
-        prefijo,
-        numero,
-        isFavorito,
-        correo,
-        idEstado,
-        estado,
-        idCampania,
-        campania,
-        idEvento,
-        evento,
-        idCanal,
-        canal,
-        idInteres,
-        interes,
-        tieneConversacionAbierta,
-        nombreContacto,
-        modalidad,
-        idEstadoPadre,
-        descripcionEstadoPadre,
-        idSubEstado,
-        subEstado,
-        precioBase,
-        precio,
-        cantidad,
-        descuento,
-      ];
+    idLead,
+    idContacto,
+    nombre,
+    apellidoPaterno,
+    apellidoMaterno,
+    nombreEmpresa,
+    asesor,
+    fechaHora,
+    idNumero,
+    prefijo,
+    numero,
+    isFavorito,
+    correo,
+    idEstado,
+    estado,
+    idCampania,
+    campania,
+    idEvento,
+    evento,
+    idCanal,
+    canal,
+    idInteres,
+    interes,
+    tieneConversacionAbierta,
+    nombreContacto,
+    modalidad,
+    idEstadoPadre,
+    descripcionEstadoPadre,
+    idSubEstado,
+    subEstado,
+    precioBase,
+    precio,
+    cantidad,
+    descuento,
+  ];
 
   Lead copyWith({
-    int?     idLead,
-    int?     idContacto,
-    String?  nombre,
-    String?  apellidoPaterno,
-    String?  apellidoMaterno,
-    String?  nombreEmpresa,
-    String?  asesor,
-    String?  fechaHora,
-    int?     idNumero,
-    String?  prefijo,
-    String?  numero,
-    bool?    isFavorito,
-    String?  correo,
-    String?  idEstado,
-    String?  estado,
-    int?     idCampania,
-    String?  campania,
-    int?     idEvento,
-    String?  evento,
-    bool     clearEvento = false,
-    int?     idCanal,
-    String?  canal,
-    int?     idInteres,
-    String?  interes,
-    bool?    tieneConversacionAbierta,
-    String?  nombreContacto,
-    String?  modalidad,
-    String?  idEstadoPadre,
-    bool     clearEstadoPadre = false,
-    String?  descripcionEstadoPadre,
-    String?  idSubEstado,
-    String?  subEstado,
-    double?  precioBase,
-    double?  precio,
-    double?  cantidad,
-    double?  descuento,
+    int? idLead,
+    int? idContacto,
+    String? nombre,
+    String? apellidoPaterno,
+    String? apellidoMaterno,
+    String? nombreEmpresa,
+    String? asesor,
+    String? fechaHora,
+    int? idNumero,
+    String? prefijo,
+    String? numero,
+    bool? isFavorito,
+    String? correo,
+    String? idEstado,
+    String? estado,
+    int? idCampania,
+    String? campania,
+    int? idEvento,
+    String? evento,
+    bool clearEvento = false,
+    int? idCanal,
+    String? canal,
+    int? idInteres,
+    String? interes,
+    bool? tieneConversacionAbierta,
+    String? nombreContacto,
+    String? modalidad,
+    String? idEstadoPadre,
+    bool clearEstadoPadre = false,
+    String? descripcionEstadoPadre,
+    String? idSubEstado,
+    String? subEstado,
+    double? precioBase,
+    double? precio,
+    double? cantidad,
+    double? descuento,
   }) {
     return Lead(
-      idLead:                   idLead          ?? this.idLead,
-      idContacto:               idContacto      ?? this.idContacto,
-      nombre:                   nombre          ?? this.nombre,
-      apellidoPaterno:          apellidoPaterno ?? this.apellidoPaterno,
-      apellidoMaterno:          apellidoMaterno ?? this.apellidoMaterno,
-      nombreEmpresa:            nombreEmpresa   ?? this.nombreEmpresa,
-      asesor:                   asesor          ?? this.asesor,
-      fechaHora:                fechaHora       ?? this.fechaHora,
-      idNumero:                 idNumero        ?? this.idNumero,
-      prefijo:                  prefijo         ?? this.prefijo,
-      numero:                   numero          ?? this.numero,
-      isFavorito:               isFavorito      ?? this.isFavorito,
-      correo:                   correo          ?? this.correo,
-      idEstado:                 idEstado        ?? this.idEstado,
-      estado:                   estado          ?? this.estado,
-      idCampania:               idCampania      ?? this.idCampania,
-      campania:                 campania        ?? this.campania,
-      idEvento:                 clearEvento ? 0 : (idEvento ?? this.idEvento),
-      evento:                   clearEvento ? '' : (evento ?? this.evento),
-      idCanal:                  idCanal         ?? this.idCanal,
-      canal:                    canal           ?? this.canal,
-      idInteres:                idInteres       ?? this.idInteres,
-      interes:                  interes         ?? this.interes,
-      tieneConversacionAbierta: tieneConversacionAbierta ?? this.tieneConversacionAbierta,
-      nombreContacto:           nombreContacto  ?? this.nombreContacto,
-      modalidad:                modalidad       ?? this.modalidad,
-      idEstadoPadre:            clearEstadoPadre ? null : (idEstadoPadre ?? this.idEstadoPadre),
-      descripcionEstadoPadre:   clearEstadoPadre ? null : (descripcionEstadoPadre ?? this.descripcionEstadoPadre),
-      idSubEstado:              idSubEstado     ?? this.idSubEstado,
-      subEstado:                subEstado       ?? this.subEstado,
-      precioBase:               precioBase      ?? this.precioBase,
-      precio:                   precio          ?? this.precio,
-      cantidad:                 cantidad        ?? this.cantidad,
-      descuento:                descuento       ?? this.descuento,
+      idLead: idLead ?? this.idLead,
+      idContacto: idContacto ?? this.idContacto,
+      nombre: nombre ?? this.nombre,
+      apellidoPaterno: apellidoPaterno ?? this.apellidoPaterno,
+      apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
+      nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
+      asesor: asesor ?? this.asesor,
+      fechaHora: fechaHora ?? this.fechaHora,
+      idNumero: idNumero ?? this.idNumero,
+      prefijo: prefijo ?? this.prefijo,
+      numero: numero ?? this.numero,
+      isFavorito: isFavorito ?? this.isFavorito,
+      correo: correo ?? this.correo,
+      idEstado: idEstado ?? this.idEstado,
+      estado: estado ?? this.estado,
+      idCampania: idCampania ?? this.idCampania,
+      campania: campania ?? this.campania,
+      idEvento: clearEvento ? 0 : (idEvento ?? this.idEvento),
+      evento: clearEvento ? '' : (evento ?? this.evento),
+      idCanal: idCanal ?? this.idCanal,
+      canal: canal ?? this.canal,
+      idInteres: idInteres ?? this.idInteres,
+      interes: interes ?? this.interes,
+      tieneConversacionAbierta:
+          tieneConversacionAbierta ?? this.tieneConversacionAbierta,
+      nombreContacto: nombreContacto ?? this.nombreContacto,
+      modalidad: modalidad ?? this.modalidad,
+      idEstadoPadre: clearEstadoPadre
+          ? null
+          : (idEstadoPadre ?? this.idEstadoPadre),
+      descripcionEstadoPadre: clearEstadoPadre
+          ? null
+          : (descripcionEstadoPadre ?? this.descripcionEstadoPadre),
+      idSubEstado: idSubEstado ?? this.idSubEstado,
+      subEstado: subEstado ?? this.subEstado,
+      precioBase: precioBase ?? this.precioBase,
+      precio: precio ?? this.precio,
+      cantidad: cantidad ?? this.cantidad,
+      descuento: descuento ?? this.descuento,
     );
   }
 }

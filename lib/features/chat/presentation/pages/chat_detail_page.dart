@@ -11,7 +11,12 @@ class ChatDetailPage extends StatelessWidget {
   final int? idLead;
   final Chat? conversacion;
 
-  const ChatDetailPage({super.key, required this.idNumero, this.idLead, this.conversacion});
+  const ChatDetailPage({
+    super.key,
+    required this.idNumero,
+    this.idLead,
+    this.conversacion,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,11 @@ class ChatDetailPage extends StatelessWidget {
           ),
         ),
       ],
-      child: ChatDetailView(idNumero: idNumero, idLead: idLead, conversacion: conversacion),
+      child: ChatDetailView(
+        idNumero: idNumero,
+        idLead: idLead,
+        conversacion: conversacion,
+      ),
     );
   }
 }

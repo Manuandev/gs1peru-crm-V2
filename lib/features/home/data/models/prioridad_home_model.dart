@@ -14,6 +14,7 @@ class PrioridadHomeModel extends PrioridadHome {
     required super.idCanal,
     required super.canal,
     required super.fechaHora,
+    required super.prefijoTelefono,
   });
 
   factory PrioridadHomeModel.fromRawString(String raw) {
@@ -29,6 +30,7 @@ class PrioridadHomeModel extends PrioridadHome {
       idCanal: ParseUtils.toInt(fields, 6),
       canal: ParseUtils.str(fields, 7),
       fechaHora: ParseUtils.str(fields, 8),
+      prefijoTelefono: ParseUtils.str(fields, 9),
     );
   }
 

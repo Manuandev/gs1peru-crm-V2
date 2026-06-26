@@ -183,11 +183,17 @@ class AppIconsSocial {
   );
 
   /// Chip de estado listo para usar en cualquier widget
-  static Widget chipEstado(String id, {TextStyle? textStyle, String? label}) {
+  static Widget chipEstado(
+    String id, {
+    TextStyle? textStyle,
+    String? label,
+    double? fontSize,
+    EdgeInsetsGeometry? padding,
+  }) {
     final color = colorEstado(id);
     final bg = bgEstado(id);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
@@ -199,7 +205,7 @@ class AppIconsSocial {
             label ?? '',
             style: (textStyle ?? const TextStyle()).copyWith(
               color: color,
-              fontSize: 10,
+              fontSize: fontSize ?? 10,
               fontWeight: FontWeight.w600,
             ),
           ),

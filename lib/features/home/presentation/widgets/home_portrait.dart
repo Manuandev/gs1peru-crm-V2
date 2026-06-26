@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
@@ -43,7 +44,10 @@ class HomePortrait extends StatelessWidget {
                         fontWeight: AppTextStyles.weightBold,
                       ),
                     ),
-                    CustomTextButton(text: 'Ver todas', onPressed: () {}),
+                    CustomTextButton(
+                      text: 'Ver todas',
+                      onPressed: () => context.goToChats(),
+                    ),
                   ],
                 ),
                 Text(

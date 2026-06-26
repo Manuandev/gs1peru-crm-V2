@@ -44,23 +44,20 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
   @override
   Widget build(BuildContext context) {
     final prioridad = widget.prioridad;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ─── Avatar ──────────────────────────────────────────────
+          // ─── Avatar con ícono de persona ─────────────────────────
           CircleAvatar(
-            radius: AppSizing.avatarRadiusSm,
+            radius: AppSizing.avatarRadiusXs,
             backgroundColor: prioridad.nombre.avatarColor,
-            child: Text(
-              prioridad.nombre.initials,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textOnDark,
-                fontWeight: AppTextStyles.weightBold,
-              ),
+            child: Icon(
+              AppIcons.userFilled,
+              color: AppColors.textOnDark,
+              size: AppSizing.avatarXs,
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
@@ -73,38 +70,31 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               children: [
                 Text(
                   _abreviarNombre(prioridad.nombre),
-                  style: AppTextStyles.labelMedium.copyWith(
+                  style: AppTextStyles.labelSmall.copyWith(
                     fontWeight: AppTextStyles.weightBold,
+                    fontSize: AppTextStyles.sizeSm,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: AppSpacing.xxs),
+                const SizedBox(height: 1),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (prioridad.idCanal > 0) ...[
                       AppIconsSocial.widgetCanal(prioridad.idCanal, size: 10),
                       const SizedBox(width: AppSpacing.xxs),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 32),
-                        child: Text(
-                          _canalCorto(prioridad.idCanal, prioridad.canal),
-                          style: AppTextStyles.labelSmall.copyWith(
-                            fontSize: AppTextStyles.sizeSub,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
                     ],
                     if (prioridad.idEstado.isNotEmpty)
                       Flexible(
                         child: AppIconsSocial.chipEstado(
                           prioridad.idEstado,
                           label: prioridad.estado,
+                          fontSize: AppTextStyles.sizeSub,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: 1,
+                          ),
                         ),
                       ),
                   ],
@@ -112,7 +102,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xxs),
 
           // ─── Tiempo sin respuesta ─────────────────────────────────
           Column(
@@ -122,13 +112,13 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               Text(
                 ElapsedTimeUtils.formatHyM(_elapsed),
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.error,
+                  color: AppColors.urgente,
                   fontWeight: AppTextStyles.weightExtraBold,
-                  fontSize: AppTextStyles.sizeSmPlus,
+                  fontSize: AppTextStyles.sizeSm,
                 ),
               ),
               Text(
-                'sin resp.',
+                'sin respuesta',
                 style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.textSecondary,
                   fontSize: AppTextStyles.sizeSub,
@@ -136,15 +126,16 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               ),
             ],
           ),
-          const SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.sm),
 
-          // ─── Botón WhatsApp ───────────────────────────────────────
+          // ─── Botones de acción ────────────────────────────────────
           _MiniActionButton(
             iconWidget: FaIcon(
               AppIconsSocial.whatsapp,
               color: AppColors.textOnDark,
-              size: AppSizing.iconActionSm,
+              size: AppSizing.iconXxs,
             ),
+            size: AppSizing.miniActionButtonSm,
             color: AppIconsSocial.colorCanal(1),
             onTap: () => context.goToDetalleChatDesdeHome(
               idNumero: prioridad.idNumero,
@@ -154,29 +145,27 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
           ),
           const SizedBox(width: AppSpacing.xxs),
 
-          // ─── Botón Llamar ─────────────────────────────────────────
           _MiniActionButton(
             iconWidget: Icon(
               AppIcons.phone,
               color: AppColors.textOnDark,
-              size: AppSizing.iconActionSm,
+              size: AppSizing.iconXxs,
             ),
+            size: AppSizing.miniActionButtonSm,
             color: AppColors.info,
             onTap: () async {
               await LauncherUtils.abrirTelefono(prioridad.telefono);
             },
             tooltip: 'Llamar',
           ),
-          const SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xxs),
 
           // ─── Botón Gestionar ─────────────────────────────────────
-          // Navega al chat del lead para gestionarlo directamente
           _GestionarButton(
             onTap: () => context.goToDetalleChatDesdeHome(
               idNumero: prioridad.idNumero,
               idLead: prioridad.idLead,
             ),
-            colorScheme: colorScheme,
           ),
         ],
       ),
@@ -192,30 +181,14 @@ String _abreviarNombre(String nombre) {
   final partes = nombre.trim().split(RegExp(r'\s+'));
   if (partes.length <= 2) return nombre;
   if (partes.length == 3) {
-    final inicial = partes[2].isNotEmpty ? '${partes[2][0].toUpperCase()}.' : '';
+    final inicial = partes[2].isNotEmpty
+        ? '${partes[2][0].toUpperCase()}.'
+        : '';
     return '${partes[0]} ${partes[1]} $inicial'.trim();
   }
   // 4+ palabras: nombre1 nombre2 apellido1 apellido2
   final inicial = partes[3].isNotEmpty ? '${partes[3][0].toUpperCase()}.' : '';
   return '${partes[0]} ${partes[2]} $inicial'.trim();
-}
-
-// ── Nombre corto del canal para el tile compacto ────────────────────────────
-String _canalCorto(int idCanal, String canal) {
-  const abreviaturas = <int, String>{
-    1: 'WA',
-    3: 'TikTok',
-    4: 'IG',
-    5: 'FB',
-    6: 'LI',
-    7: 'Web',
-    8: 'IP',
-    9: 'B.B.',
-    10: 'Migr.',
-    11: 'Ref.',
-    12: 'Manual',
-  };
-  return abreviaturas[idCanal] ?? canal;
 }
 
 // ─── Botón de acción compacto (WA / Llamar) ─────────────────────────────────
@@ -224,12 +197,14 @@ class _MiniActionButton extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
   final String tooltip;
+  final double size;
 
   const _MiniActionButton({
     required this.iconWidget,
     required this.color,
     required this.onTap,
     required this.tooltip,
+    this.size = AppSizing.miniActionButton,
   });
 
   @override
@@ -240,8 +215,8 @@ class _MiniActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizing.radiusSm),
         onTap: onTap,
         child: Container(
-          width: AppSizing.miniActionButton,
-          height: AppSizing.miniActionButton,
+          width: size,
+          height: size,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -253,20 +228,19 @@ class _MiniActionButton extends StatelessWidget {
   }
 }
 
-// ─── Botón "Gestionar" outlined ──────────────────────────────────────────────
+// ─── Botón "Gestionar" filled verde compacto ────────────────────────────────
 class _GestionarButton extends StatelessWidget {
   final VoidCallback onTap;
-  final ColorScheme colorScheme;
 
-  const _GestionarButton({required this.onTap, required this.colorScheme});
+  const _GestionarButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: AppSizing.miniActionButton,
-      child: OutlinedButton.icon(
+      height: AppSizing.miniActionButtonSm,
+      child: ElevatedButton.icon(
         onPressed: onTap,
-        icon: Icon(AppIcons.checkSingle, size: AppSizing.iconSm),
+        icon: Icon(AppIcons.checkSingle, size: AppSizing.iconXxs),
         label: Text(
           'Gestionar',
           style: AppTextStyles.labelSmall.copyWith(
@@ -274,15 +248,16 @@ class _GestionarButton extends StatelessWidget {
             fontWeight: AppTextStyles.weightSemiBold,
           ),
         ),
-        style: OutlinedButton.styleFrom(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.success,
+          foregroundColor: AppColors.textOnDark,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.xs,
-            vertical: AppSpacing.xxs,
+            vertical: 0,
           ),
-          minimumSize: Size.zero,
+          minimumSize: const Size(0, AppSizing.miniActionButtonSm),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          side: BorderSide(color: colorScheme.primary),
-          foregroundColor: colorScheme.primary,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           ),

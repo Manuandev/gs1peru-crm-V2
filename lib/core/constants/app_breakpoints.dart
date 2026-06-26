@@ -144,7 +144,6 @@ class AppSizing {
   /// Ligeramente más pequeño que iconMd para equilibrio visual en listas.
   static const double iconNav = 22.0;
 
-  
   static const double iconNav2 = 26.0;
 
   /// Ícono grande: 32px — iconos en headers y estados vacíos
@@ -236,12 +235,17 @@ class AppSizing {
   static const double spinnerStrokeLarge = 4.0;
 
   // Avatares
+  /// Avatar extra pequeño: 20px — tiles compactos como PrioridadTileHome
+  static const double avatarXss = 20;
+  static const double avatarXs = 28;
   static const double avatarSm = 42;
   static const double avatarMd = 48;
   static const double avatarLg = 56;
   static const double avatarXl = 72;
 
   // Radio (para CircleAvatar que usa radius, no size)
+  static const double avatarRadiusXss = avatarXss / 2; // 16
+  static const double avatarRadiusXs = avatarXs / 2;
   static const double avatarRadiusSm = avatarSm / 2; // 21
   static const double avatarRadiusMd = avatarMd / 2; // 24
   static const double avatarRadiusLg = avatarLg / 2; // 28
@@ -253,6 +257,9 @@ class AppSizing {
   /// Botón de acción compacto en tiles: 32px (chat, llamar en PrioridadTile)
   static const double miniActionButton = 32.0;
 
+  /// Botón de acción extra compacto: 26px — WA/teléfono en PrioridadTileHome versión densa
+  static const double miniActionButtonSm = 26.0;
+
   /// Diámetro del badge de notificaciones en AppBar — 18px
   /// Más pequeño que mensajesBadgeSize (22px): el AppBar tiene menos espacio visual
   static const double notifBadgeSize = 18.0;
@@ -260,12 +267,16 @@ class AppSizing {
   // Badge de canal sobre el avatar del lead (LeadCard)
   /// Diámetro del badge circular que muestra el ícono del canal sobre el avatar — 18px
   static const double avatarCanalBadge = 18.0;
+
   /// Grosor del borde blanco del badge de canal — 1.5px
   static const double canalBadgeBorder = 1.5;
+
   /// Ícono dentro del badge de canal (encima del avatar) — 10px
   static const double iconCanalBadge = 10.0;
+
   /// Ícono del canal en la línea de nombre del lead — 12px
   static const double iconCanalInfo = 12.0;
+
   /// Diámetro del badge de mensajes no leídos (LeadCard, borde derecho) — 22px
   static const double mensajesBadgeSize = 22.0;
 

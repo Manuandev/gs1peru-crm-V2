@@ -436,6 +436,9 @@ class AppColors {
   /// Doble-check de mensaje leído: lightBlue 300
   static const Color msgStatusRead = Color(0xFF4FC3F7);
 
+  /// Rojo vivo para tiempo sin respuesta en PrioridadTileHome (red 600 Material)
+  static const Color urgente = Color(0xFFE53935);
+
   /// Rojo suave para íconos de fallo/error en chat (red 400)
   static const Color errorLight = Color(0xFFEF5350);
 

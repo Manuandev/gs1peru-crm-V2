@@ -383,53 +383,37 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Banner IA: ClipPath recorta el contenedor azul con ola convexa en la base.
-// El scaffold blanco queda expuesto debajo — transición limpia azul → blanco.
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _OndaBanner extends StatelessWidget {
   const _OndaBanner();
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Stack(
-      children: [
-        // Fondo azul recortado con ola — detrás de la cartilla
-        Positioned.fill(
-          child: ClipPath(
-            clipper: _OndaClipper(),
-            child: ColoredBox(color: colorScheme.primary),
-          ),
-        ),
-        // Cartilla encima, sin recortar
-        const Padding(
-          padding: EdgeInsets.only(bottom: AppSpacing.sm2),
-          child: ChatIaBanner(),
-        ),
-      ],
+    return CustomPaint(
+      painter: _OndaPainter(colorScheme.primary),
+      child: const ChatIaBanner(),
     );
   }
 }
 
-// Recorta el rectángulo dejando el borde inferior como ola convexa hacia abajo.
-class _OndaClipper extends CustomClipper<Path> {
+// Pinta azul de arriba hasta la mitad del card, con ola convexa hacia abajo.
+// El card (child) queda encima tapando el centro; la ola asoma en los márgenes laterales.
+class _OndaPainter extends CustomPainter {
+  final Color color;
+  const _OndaPainter(this.color);
+
   @override
-  Path getClip(Size size) {
-    const ola = 28.0;
-    return Path()
-      ..lineTo(0, size.height - ola)
-      ..quadraticBezierTo(
-        size.width / 2,
-        size.height,
-        size.width,
-        size.height - ola,
-      )
+  void paint(Canvas canvas, Size size) {
+    const ola = AppSpacing.xxxl;
+    final mitad = size.height / 2;
+    final path = Path()
+      ..lineTo(0, mitad)
+      ..quadraticBezierTo(size.width / 2, mitad + ola, size.width, mitad)
       ..lineTo(size.width, 0)
       ..close();
+    canvas.drawPath(path, Paint()..color = color);
   }
 
   @override
-  bool shouldReclip(_OndaClipper old) => false;
+  bool shouldRepaint(_OndaPainter old) => old.color != color;
 }

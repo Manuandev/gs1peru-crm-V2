@@ -1,4 +1,4 @@
-// lib/core/presentation/widgets/buttons/custom_outlined_button.dart
+﻿// lib/core/presentation/widgets/buttons/custom_outlined_button.dart
 
 import 'package:flutter/material.dart';
 
@@ -10,7 +10,7 @@ class CustomOutlinedButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool isEnabled;
-  final IconData? icon;
+  final Object? icon;
   final double? width;
   final double? height;
   final Color? borderColor;

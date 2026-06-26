@@ -10,7 +10,6 @@ export 'constants/app_breakpoints.dart';
 export 'constants/app_images.dart';
 export 'constants/app_menu_items.dart';
 export 'constants/app_spacing.dart';
-export 'constants/app_icons_social.dart';
 export 'constants/app_currencies.dart';
 // #endregion constants
 
@@ -161,5 +160,6 @@ export 'utils/ui/avatar_utils.dart';
 export 'utils/ui/avatar_extensions.dart';
 export 'utils/ui/file_type_utils.dart';
 export 'utils/ui/color_utils.dart';
+export 'utils/ui/social_utils.dart';
 
 // #endregion utils

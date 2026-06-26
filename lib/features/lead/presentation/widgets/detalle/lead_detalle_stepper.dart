@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/detalle/lead_detalle_stepper.dart
+﻿// lib/features/lead/presentation/widgets/detalle/lead_detalle_stepper.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -9,18 +9,18 @@ class LeadDetalleStepper extends StatelessWidget {
   const LeadDetalleStepper({super.key, required this.idEstadoActual});
 
   static const _pasos = [
-    _DatoPaso(id: '00', label: 'Nuevo', icon: AppIconsSocial.etapaNuevo),
+    _DatoPaso(id: '00', label: 'Nuevo', icon: AppIcons.etapaNuevo),
     _DatoPaso(
       id: '01',
       label: 'En desarrollo',
-      icon: AppIconsSocial.etapaEnDesarrollo,
+      icon: AppIcons.etapaEnDesarrollo,
     ),
     _DatoPaso(
       id: '02',
       label: 'Propuesta',
-      icon: AppIconsSocial.etapaPropuesta,
+      icon: AppIcons.etapaPropuesta,
     ),
-    _DatoPaso(id: '05', label: 'Cobranza', icon: AppIconsSocial.etapaGanado),
+    _DatoPaso(id: '05', label: 'Cobranza', icon: AppIcons.etapaGanado),
   ];
 
   int get _indiceActual {
@@ -31,7 +31,7 @@ class LeadDetalleStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actual = _indiceActual;
-    final colorActual = AppIconsSocial.colorEstado(idEstadoActual);
+    final colorActual = AppSocialUtils.colorEstado(idEstadoActual);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -124,7 +124,7 @@ class _PasoEtapa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = AppIconsSocial.colorEstado(paso.id);
+    final colorEstado = AppSocialUtils.colorEstado(paso.id);
     final Color bgCircle;
     final Color iconColor;
     final Color borderColor;
@@ -134,7 +134,7 @@ class _PasoEtapa extends StatelessWidget {
       iconColor = AppColors.textOnDark;
       borderColor = colorEstado;
     } else if (isCompletado) {
-      bgCircle = AppIconsSocial.bgEstado(paso.id);
+      bgCircle = AppSocialUtils.bgEstado(paso.id);
       iconColor = colorEstado;
       borderColor = colorEstado;
     } else {

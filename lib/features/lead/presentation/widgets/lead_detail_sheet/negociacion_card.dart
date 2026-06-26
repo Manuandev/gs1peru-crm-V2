@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/lead_detail_sheet/negociacion_card.dart
+﻿// lib/features/lead/presentation/widgets/lead_detail_sheet/negociacion_card.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -53,7 +53,7 @@ class NegociacionCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: AppSpacing.xxs),
-                          AppIconsSocial.chipEstado(
+                          AppSocialUtils.chipEstado(
                             negociacion.idEstado,
                             label: negociacion.descripcionEstado,
                           ),
@@ -71,13 +71,13 @@ class NegociacionCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _FilaDato(
-                      icono: AppIconsSocial.widgetCanal(
+                      icono: AppSocialUtils.widgetCanal(
                         negociacion.idCanal,
                         size: AppSizing.iconSm,
                       ),
                       etiqueta: 'Canal',
                       valor: negociacion.descripcionCanal,
-                      colorValor: AppIconsSocial.colorCanal(
+                      colorValor: AppSocialUtils.colorCanal(
                         negociacion.idCanal,
                       ),
                     ),
@@ -157,7 +157,7 @@ class _AvatarCanal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorCanal = AppIconsSocial.colorCanal(idCanal);
+    final colorCanal = AppSocialUtils.colorCanal(idCanal);
     return Container(
       width: AppSizing.avatarSm,
       height: AppSizing.avatarSm,
@@ -166,7 +166,7 @@ class _AvatarCanal extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Center(
-        child: AppIconsSocial.widgetCanal(
+        child: AppSocialUtils.widgetCanal(
           idCanal,
           size: AppSizing.iconActionSm,
         ),

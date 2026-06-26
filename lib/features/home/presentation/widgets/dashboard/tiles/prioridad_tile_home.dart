@@ -1,4 +1,4 @@
-// lib/features/home/presentation/widgets/dashboard/tiles/prioridad_tile_home.dart
+﻿// lib/features/home/presentation/widgets/dashboard/tiles/prioridad_tile_home.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -82,12 +82,12 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (prioridad.idCanal > 0) ...[
-                      AppIconsSocial.widgetCanal(prioridad.idCanal, size: 10),
+                      AppSocialUtils.widgetCanal(prioridad.idCanal, size: 10),
                       const SizedBox(width: AppSpacing.xxs),
                     ],
                     if (prioridad.idEstado.isNotEmpty)
                       Flexible(
-                        child: AppIconsSocial.chipEstado(
+                        child: AppSocialUtils.chipEstado(
                           prioridad.idEstado,
                           label: prioridad.estado,
                           fontSize: AppTextStyles.sizeSub,
@@ -131,12 +131,12 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
           // ─── Botones de acción ────────────────────────────────────
           _MiniActionButton(
             iconWidget: FaIcon(
-              AppIconsSocial.whatsapp,
+              AppIcons.whatsapp,
               color: AppColors.textOnDark,
               size: AppSizing.iconXxs,
             ),
             size: AppSizing.miniActionButtonSm,
-            color: AppIconsSocial.colorCanal(1),
+            color: AppSocialUtils.colorCanal(1),
             onTap: () => context.goToDetalleChatDesdeHome(
               idNumero: prioridad.idNumero,
               idLead: prioridad.idLead,

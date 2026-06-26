@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/edit_lead/edit_lead_portrait.dart
+﻿// lib/features/lead/presentation/widgets/edit_lead/edit_lead_portrait.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -425,7 +425,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   }
 
   Widget _buildComboEstado(CatalogsLoaded state, bool hayEstados, ColorScheme colorScheme) {
-    final colorEstado = AppIconsSocial.colorEstado(
+    final colorEstado = AppSocialUtils.colorEstado(
       _estado?.id ?? widget.lead.idEstado,
     );
 
@@ -434,7 +434,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         label:      'Estado',
         controller: TextEditingController(text: widget.lead.estado),
         enabled:    false,
-        prefixIcon: AppIconsSocial.widgetEstado(widget.lead.idEstado),
+        prefixIcon: AppSocialUtils.widgetEstado(widget.lead.idEstado),
         dense:      true,
       );
     }

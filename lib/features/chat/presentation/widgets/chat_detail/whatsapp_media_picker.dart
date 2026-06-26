@@ -1,4 +1,4 @@
-// lib/features/chat/presentation/widgets/chat_detail/whatsapp_media_picker.dart
+﻿// lib/features/chat/presentation/widgets/chat_detail/whatsapp_media_picker.dart
 // whatsapp_media_picker.dart
 
 import 'package:flutter/foundation.dart';
@@ -186,7 +186,7 @@ class _PickerHeader extends StatelessWidget {
               ? FilledButton.icon(
                   onPressed: onConfirm,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppIconsSocial.colorCanal(1),
+                    backgroundColor: AppSocialUtils.colorCanal(1),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.mdPlus,
                       vertical: AppSpacing.sm,
@@ -221,7 +221,7 @@ class _PickerHeader extends StatelessWidget {
           trailing: current?.id == albums[i].id
               ? Icon(
                   AppIcons.checkRounded,
-                  color: AppIconsSocial.colorCanal(1),
+                  color: AppSocialUtils.colorCanal(1),
                 )
               : null,
           onTap: () {
@@ -321,11 +321,11 @@ class _MediaTile extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected
-                    ? AppIconsSocial.colorCanal(1)
+                    ? AppSocialUtils.colorCanal(1)
                     : AppColors.transparent,
                 border: Border.all(
                   color: isSelected
-                      ? AppIconsSocial.colorCanal(1)
+                      ? AppSocialUtils.colorCanal(1)
                       : AppColors.textOnDark,
                   width: AppSizing.canalBadgeBorder,
                 ),
@@ -444,7 +444,7 @@ class _PreviewThumb extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             border: Border.all(
-              color: AppIconsSocial.colorCanal(1),
+              color: AppSocialUtils.colorCanal(1),
               width: AppSizing.borderFocusWidth,
             ),
           ),

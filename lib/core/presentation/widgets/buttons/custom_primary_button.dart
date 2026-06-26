@@ -1,4 +1,4 @@
-// lib/core/presentation/widgets/buttons/custom_primary_button.dart
+﻿// lib/core/presentation/widgets/buttons/custom_primary_button.dart
 
 import 'package:flutter/material.dart';
 
@@ -10,7 +10,7 @@ class CustomPrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool isEnabled;
-  final IconData? icon;
+  final Object? icon;
   final double? width;
   final double? height;
   final EdgeInsetsGeometry? padding;

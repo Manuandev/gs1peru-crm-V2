@@ -1,4 +1,4 @@
-// lib/features/chat/presentation/widgets/chat_list/chat_tile.dart
+﻿// lib/features/chat/presentation/widgets/chat_list/chat_tile.dart
 
 import 'package:flutter/material.dart';
 
@@ -59,7 +59,7 @@ class ChatTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    AppIconsSocial.chipEstado(
+                    AppSocialUtils.chipEstado(
                       chat.idEstadoEfectivo,
                       label: chat.descEstadoEfectiva,
                     ),
@@ -198,7 +198,7 @@ class _InfoChat extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
-            AppIconsSocial.widgetCanal(idCanal, size: AppSizing.iconSm),
+            AppSocialUtils.widgetCanal(idCanal, size: AppSizing.iconSm),
           ],
         ),
 

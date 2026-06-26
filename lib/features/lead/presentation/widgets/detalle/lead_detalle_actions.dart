@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/detalle/lead_detalle_actions.dart
+﻿// lib/features/lead/presentation/widgets/detalle/lead_detalle_actions.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -33,8 +33,8 @@ class LeadDetalleActions extends StatelessWidget {
             children: [
               _BotonAccion(
                 icono: FaIcon(
-                  AppIconsSocial.whatsapp,
-                  color: AppIconsSocial.colorCanal(1),
+                  AppIcons.whatsapp,
+                  color: AppSocialUtils.colorCanal(1),
                   size: AppSizing.iconMd,
                 ),
                 label: 'WhatsApp',

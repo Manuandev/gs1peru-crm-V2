@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/widgets/detalle/cobranza_detalle_acciones.dart
+﻿// lib/features/cobranza/presentation/widgets/detalle/cobranza_detalle_acciones.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -39,9 +39,9 @@ class CobranzaDetalleAcciones extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _AccionBtn(
-                icono: AppIconsSocial.whatsapp,
+                icono: AppIcons.whatsapp,
                 esFontAwesome: true,
-                color: AppIconsSocial.colorCanal(1),
+                color: AppSocialUtils.colorCanal(1),
                 label: 'WhatsApp',
                 onTap: () {},
               ),

@@ -1,4 +1,4 @@
-# Lead Feature
+﻿# Lead Feature
 
 ## Propósito
 Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propuestas (`PA`).
@@ -60,8 +60,8 @@ enum LeadListFiltro { todos, misCasos, nuevos, enDesarrollo }
 ### Campos principales de Lead
 ```dart
 lead.idLead         // int — identificador único
-lead.idEstado       // String — '00'–'15' (ver AppIconsSocial etapas)
-lead.idCanal        // int — canal de origen (ver AppIconsSocial canales)
+lead.idEstado       // String — '00'–'15' (ver AppIcons etapas)
+lead.idCanal        // int — canal de origen (ver AppIcons canales)
 lead.asesor         // String — codUser del agente asignado (filtro misCasos)
 lead.nombreCompleto // String — getter: nombre + apellido
 lead.fechaHora      // String — usar .formatSinHoy() para mostrar

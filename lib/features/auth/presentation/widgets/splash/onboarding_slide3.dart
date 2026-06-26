@@ -1,4 +1,4 @@
-// lib/features/auth/presentation/widgets/splash/onboarding_slide3.dart
+﻿// lib/features/auth/presentation/widgets/splash/onboarding_slide3.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -255,7 +255,7 @@ class _ItemConversacion extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    AppIconsSocial.widgetCanal(canalId, size: 10),
+                    AppSocialUtils.widgetCanal(canalId, size: 10),
                     const SizedBox(width: 3),
                     Expanded(
                       child: Text(

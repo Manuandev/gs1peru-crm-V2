@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/list/lead_card.dart
+﻿// lib/features/lead/presentation/widgets/list/lead_card.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -61,7 +61,7 @@ class _LeadCardState extends State<LeadCard> {
   // ── Contenedor base compartido ──────────────────────────────────────────────
 
   Widget _buildBase({required Widget content}) {
-    final colorBorde = AppIconsSocial.colorEstado(widget.lead.idEstado);
+    final colorBorde = AppSocialUtils.colorEstado(widget.lead.idEstado);
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
@@ -172,7 +172,7 @@ class _LeadCardState extends State<LeadCard> {
 
   Widget _buildCompacta() {
     final colorElapsed = ElapsedTimeUtils.colorFromElapsed(_elapsed);
-    final colorEstado = AppIconsSocial.colorEstado(widget.lead.idEstado);
+    final colorEstado = AppSocialUtils.colorEstado(widget.lead.idEstado);
     return _buildBase(
       content: Padding(
         padding: const EdgeInsets.symmetric(
@@ -321,7 +321,7 @@ class _LeadAvatar extends StatelessWidget {
                 ),
               ),
               child: Center(
-                child: AppIconsSocial.widgetCanal(
+                child: AppSocialUtils.widgetCanal(
                   lead.idCanal,
                   size: AppSizing.iconCanalBadge,
                 ),
@@ -341,7 +341,7 @@ class _LeadEstadoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = AppIconsSocial.colorEstado(lead.idEstado);
+    final colorEstado = AppSocialUtils.colorEstado(lead.idEstado);
     return Row(
       children: [
         Icon(
@@ -356,7 +356,7 @@ class _LeadEstadoRow extends StatelessWidget {
         ),
         if (lead.idCanal > 0) ...[
           const SizedBox(width: AppSpacing.sm),
-          AppIconsSocial.widgetCanal(
+          AppSocialUtils.widgetCanal(
             lead.idCanal,
             size: AppSizing.iconCanalInfo,
           ),

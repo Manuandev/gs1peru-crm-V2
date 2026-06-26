@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/edit_lead/lead_edit_header_card.dart
+﻿// lib/features/lead/presentation/widgets/edit_lead/lead_edit_header_card.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -56,7 +56,7 @@ class LeadEditHeaderCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Row(
                   children: [
-                    AppIconsSocial.widgetCanal(lead.idCanal, size: AppSizing.iconSm),
+                    AppSocialUtils.widgetCanal(lead.idCanal, size: AppSizing.iconSm),
                     const SizedBox(width: AppSpacing.xs),
                     Flexible(
                       child: Text(
@@ -69,7 +69,7 @@ class LeadEditHeaderCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    AppIconsSocial.chipEstado(
+                    AppSocialUtils.chipEstado(
                       lead.idEstadoPadre?.isNotEmpty == true
                           ? lead.idEstadoPadre!
                           : lead.idEstado,

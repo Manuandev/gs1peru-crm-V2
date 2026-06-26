@@ -1,4 +1,4 @@
-// lib/features/cobranza/presentation/widgets/lista/cobranza_card.dart
+﻿// lib/features/cobranza/presentation/widgets/lista/cobranza_card.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -194,13 +194,13 @@ class _BotonWhatsApp extends StatelessWidget {
         height: AppSizing.buttonHeightSmall,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppIconsSocial.colorCanal(1).withValues(alpha: 0.1),
+          color: AppSocialUtils.colorCanal(1).withValues(alpha: 0.1),
         ),
         alignment: Alignment.center,
         child: FaIcon(
-          AppIconsSocial.whatsapp,
+          AppIcons.whatsapp,
           size: AppSizing.iconSm,
-          color: AppIconsSocial.colorCanal(1),
+          color: AppSocialUtils.colorCanal(1),
         ),
       ),
     );

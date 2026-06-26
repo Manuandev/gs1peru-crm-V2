@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart
+﻿// lib/features/lead/presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -15,7 +15,7 @@ class DatosTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final colorEstado = AppIconsSocial.colorEstado(lead.idEstado);
+    final colorEstado = AppSocialUtils.colorEstado(lead.idEstado);
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -96,7 +96,7 @@ class DatosTab extends StatelessWidget {
                   valor: lead.campania.isEmpty ? '—' : lead.campania,
                 ),
                 derecha: _CampoDato(
-                  icono: AppIconsSocial.widgetCanal(
+                  icono: AppSocialUtils.widgetCanal(
                     lead.idCanal,
                     size: AppSizing.iconActionSm,
                   ),

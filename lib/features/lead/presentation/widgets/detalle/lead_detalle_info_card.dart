@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/detalle/lead_detalle_info_card.dart
+﻿// lib/features/lead/presentation/widgets/detalle/lead_detalle_info_card.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -109,7 +109,7 @@ class LeadContextoCard extends StatelessWidget {
       titulo: 'INFORMACIÓN',
       filas: [
         _InfoFila(
-          icono: AppIconsSocial.widgetCanal(
+          icono: AppSocialUtils.widgetCanal(
             lead.idCanal,
             size: AppSizing.iconSm,
           ),

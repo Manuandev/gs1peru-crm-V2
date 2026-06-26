@@ -1,6 +1,7 @@
 // lib/core/constants/app_icons.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 /// Catálogo de Íconos del Sistema de Diseño
 ///
@@ -524,4 +525,39 @@ class AppIcons {
 
   /// Historial de actividades — tab Historial en LeadDetailSheet y popup del chat
   static const IconData historial = Icons.history_outlined;
+
+  // ============================================================
+  // CANALES — FontAwesome (logos de redes sociales/origen)
+  // FaIconData: usar con FaIcon() o resolveIcon().
+  // ============================================================
+  static const FaIconData whatsapp = FontAwesomeIcons.whatsapp;
+  static const FaIconData tiktok = FontAwesomeIcons.tiktok;
+  static const FaIconData instagram = FontAwesomeIcons.instagram;
+  static const FaIconData facebook = FontAwesomeIcons.facebook;
+  static const FaIconData linkedin = FontAwesomeIcons.linkedin;
+  static const FaIconData web = FontAwesomeIcons.globe;
+  static const FaIconData instapage = FontAwesomeIcons.instagram;
+  static const FaIconData bocaBoca = FontAwesomeIcons.microphone;
+  static const FaIconData migracion = FontAwesomeIcons.arrowRightArrowLeft;
+  static const FaIconData referido = FontAwesomeIcons.userGroup;
+  static const FaIconData manual = FontAwesomeIcons.penToSquare;
+
+  // ============================================================
+  // ETAPAS — FontAwesome (estados del pipeline CRM)
+  // ============================================================
+  static const FaIconData etapaNuevo = FontAwesomeIcons.bell;
+  static const FaIconData etapaEnDesarrollo = FontAwesomeIcons.chartLine;
+  static const FaIconData etapaPropuesta = FontAwesomeIcons.chartBar;
+  static const FaIconData etapaFicha = FontAwesomeIcons.idCard;
+  static const FaIconData etapaCerrado = FontAwesomeIcons.eye;
+  static const FaIconData etapaEvaluando = FontAwesomeIcons.magnifyingGlass;
+  static const FaIconData etapaPrueba = FontAwesomeIcons.flask;
+  static const FaIconData etapaPendiente = FontAwesomeIcons.hourglassHalf;
+  static const FaIconData etapaSinRespuesta = FontAwesomeIcons.commentSlash;
+  static const FaIconData etapaDesiste = FontAwesomeIcons.circleXmark;
+  static const FaIconData etapaGanado = FontAwesomeIcons.trophy;
+  static const FaIconData etapaPerdido = FontAwesomeIcons.faceSadTear;
+  static const FaIconData etapaProximoPeriodo = FontAwesomeIcons.calendarDays;
+  static const FaIconData etapaSinWhatsapp = FontAwesomeIcons.phoneSlash;
+  static const FaIconData etapaFichaInscripcion = FontAwesomeIcons.clipboardList;
 }

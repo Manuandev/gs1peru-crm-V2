@@ -1,4 +1,4 @@
-// lib/features/home/presentation/widgets/dashboard/card_totales_home.dart
+﻿// lib/features/home/presentation/widgets/dashboard/card_totales_home.dart
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +73,7 @@ class CardTotalesHome extends StatelessWidget {
                 children: [
                   _CardTotalItem(
                     icon: AppIcons.leadNuevo,
-                    iconColor: AppIconsSocial.colorEstado('00'),
+                    iconColor: AppSocialUtils.colorEstado('00'),
                     cantidad: state.totLeadsNuevos,
                     titulo: 'Nuevos',
                     onTap: () => context.goToSeguimiento(),
@@ -81,7 +81,7 @@ class CardTotalesHome extends StatelessWidget {
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
                     icon: AppIcons.accessTime,
-                    iconColor: AppIconsSocial.colorEstado('01'),
+                    iconColor: AppSocialUtils.colorEstado('01'),
                     cantidad: state.totLeadsDesarrollo,
                     titulo: 'En gestión',
                     onTap: () => context.goToSeguimiento(),
@@ -89,7 +89,7 @@ class CardTotalesHome extends StatelessWidget {
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
                     icon: AppIcons.datosLead,
-                    iconColor: AppIconsSocial.colorEstado('02'),
+                    iconColor: AppSocialUtils.colorEstado('02'),
                     cantidad: state.totPropuestas,
                     titulo: 'Propuestas',
                     onTap: () => context.goToSeguimiento(),
@@ -97,7 +97,7 @@ class CardTotalesHome extends StatelessWidget {
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
                     icon: AppIcons.moneda,
-                    iconColor: AppIconsSocial.colorEstado('04'),
+                    iconColor: AppSocialUtils.colorEstado('04'),
                     cantidad: state.totCobranza,
                     titulo: 'Cobranza',
                     onTap: () => context.goToCobranza(),

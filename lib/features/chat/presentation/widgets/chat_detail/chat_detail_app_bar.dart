@@ -1,4 +1,4 @@
-// lib/features/chat/presentation/widgets/chat_detail/chat_detail_app_bar.dart
+﻿// lib/features/chat/presentation/widgets/chat_detail/chat_detail_app_bar.dart
 
 import 'package:flutter/material.dart';
 
@@ -63,7 +63,7 @@ class ChatDetailAppBar extends StatelessWidget {
                     ),
                   ),
                   child: Center(
-                    child: AppIconsSocial.widgetCanal(
+                    child: AppSocialUtils.widgetCanal(
                       idCanal,
                       size: AppSizing.iconCanalBadge,
                     ),

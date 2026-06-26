@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/contacto_detalle/contacto_negociacion_card.dart
+﻿// lib/features/lead/presentation/widgets/contacto_detalle/contacto_negociacion_card.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -11,7 +11,7 @@ class ContactoNegociacionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = AppIconsSocial.colorEstado(negociacion.idEstado);
+    final colorEstado = AppSocialUtils.colorEstado(negociacion.idEstado);
 
     return Container(
       decoration: BoxDecoration(
@@ -49,7 +49,7 @@ class ContactoNegociacionCard extends StatelessWidget {
                       // Fila: canal + nombre evento + fecha
                       Row(
                         children: [
-                          AppIconsSocial.widgetCanal(
+                          AppSocialUtils.widgetCanal(
                             negociacion.idCanal,
                             size: AppSizing.iconXs,
                           ),
@@ -77,7 +77,7 @@ class ContactoNegociacionCard extends StatelessWidget {
                       const SizedBox(height: AppSpacing.xs),
                       Row(
                         children: [
-                          AppIconsSocial.chipEstado(
+                          AppSocialUtils.chipEstado(
                             negociacion.idEstado,
                             label: negociacion.descripcionEstado,
                           ),

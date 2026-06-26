@@ -1,4 +1,4 @@
-# Design System — lib/core
+﻿# Design System — lib/core
 
 Todo el sistema de diseño vive aquí. Nunca usar literales en widgets.
 Si un token no existe → crearlo en el archivo correspondiente con comentario → luego usarlo.
@@ -13,8 +13,8 @@ Si un token no existe → crearlo en el archivo correspondiente con comentario �
 | `constants/app_spacing.dart` | Espaciado (xxs → xxxl) |
 | `constants/app_sizing.dart` | Radios, elevaciones, iconos, botones, avatares |
 | `constants/app_text_styles.dart` | Tipografía y escala de texto |
-| `constants/app_icons.dart` | Íconos Material centralizados |
-| `constants/app_icons_social.dart` | Íconos FontAwesome (canales + etapas CRM) |
+| `constants/app_icons.dart` | Todos los íconos: Material (`IconData`) + FontAwesome (`FaIconData`) |
+| `utils/ui/social_utils.dart` | `AppSocialUtils` — colores, mapas y widgets de canal/estado CRM |
 | `constants/app_images.dart` | Paths de assets SVG/PNG |
 | `constants/app_constants.dart` | Constantes globales (versión, separadores) |
 | `constants/app_breakpoints.dart` | Breakpoints responsive |
@@ -274,59 +274,49 @@ AppIcons.lightning // rayo — logo splash
 
 ---
 
-## AppIconsSocial — `constants/app_icons_social.dart`
+## AppIcons — íconos FA (canales + etapas)
 
-Para canales de origen y etapas de lead. Siempre `FaIcon(AppIconsSocial.xxx)`.
+Los íconos FontAwesome también viven en `AppIcons`. Usar con `FaIcon()` o `resolveIcon()`.
 
 ```dart
-// Helpers listos — usar siempre estos en lugar de construir manualmente
-AppIconsSocial.widgetCanal(id, size: 14)    // FaIcon con color correcto del canal
-AppIconsSocial.widgetEstado(id, size: 14)   // FaIcon con color de etapa
-AppIconsSocial.chipEstado(id, label: '...')  // Chip con bg + color de etapa
-AppIconsSocial.colorCanal(id)               // Color del canal
-AppIconsSocial.colorEstado(id)              // Color del estado
-AppIconsSocial.bgEstado(id)                 // Color de fondo del estado
+// Canales
+AppIcons.whatsapp / tiktok / instagram / facebook / linkedin
+AppIcons.web / instapage / bocaBoca / migracion / referido / manual
+
+// Etapas
+AppIcons.etapaNuevo / etapaEnDesarrollo / etapaPropuesta / etapaFicha
+AppIcons.etapaCerrado / etapaEvaluando / etapaPrueba / etapaPendiente
+AppIcons.etapaSinRespuesta / etapaDesiste / etapaGanado / etapaPerdido
+AppIcons.etapaProximoPeriodo / etapaSinWhatsapp / etapaFichaInscripcion
 ```
 
-**Canales (id int):**
+## AppSocialUtils — `utils/ui/social_utils.dart`
 
-| ID | Canal | Color |
-|---|---|---|
-| 1 | WhatsApp | #25D366 |
-| 3 | TikTok | #010101 |
-| 4 | Instagram | Gradiente |
-| 5 | Facebook | #1877F2 |
-| 6 | LinkedIn | #0A66C2 |
-| 7 | Web GS1 | #607D8B |
-| 8 | Instapage | Gradiente |
-| 9 | Boca a Boca | #9C27B0 |
-| 10 | Migración | #455A64 |
-| 11 | Referido | #00897B |
-| 12 | Manual | #6D4C41 |
+Colores y widgets listos para canales y etapas CRM.
 
-**Etapas (id string):**
+```dart
+AppSocialUtils.widgetCanal(id, size: 14)    // FaIcon con color de marca
+AppSocialUtils.widgetEstado(id, size: 14)   // FaIcon con color de etapa
+AppSocialUtils.chipEstado(id, label: '...')  // Chip bg + color de etapa
+AppSocialUtils.colorCanal(id)               // Color del canal
+AppSocialUtils.colorEstado(id)              // Color del estado
+AppSocialUtils.bgEstado(id)                 // Color de fondo del estado
+```
 
-| ID | Etapa | ID | Etapa |
-|---|---|---|---|
-| "00" | Nuevo | "08" | Pendiente |
-| "01" | En Desarrollo | "09" | Sin Respuesta |
-| "02" | Propuesta | "10" | Desiste |
-| "03" | Ficha | "11" | Ganado |
-| "04" | Cerrado | "12" | Perdido |
-| "05" | Evaluando | "13" | Próximo Periodo |
-| "07" | Prueba | "14" | Sin WhatsApp |
-| | | "15" | Ficha Inscripción |
+**Canales (id int):** 1=WhatsApp 3=TikTok 4=Instagram 5=Facebook 6=LinkedIn 7=Web 8=Instapage 9=BocaBoca 10=Migración 11=Referido 12=Manual
+
+**Etapas (id string):** "00"=Nuevo "01"=EnDesarrollo "02"=Propuesta "03"=Ficha "04"=Cerrado "05"=Evaluando "07"=Prueba "08"=Pendiente "09"=SinRespuesta "10"=Desiste "11"=Ganado "12"=Perdido "13"=ProximoPeriodo "14"=SinWhatsApp "15"=FichaInscripcion
 
 **Agregar canal nuevo:**
-1. Constante de ícono en la clase
-2. Color en `_coloresCanal`
-3. Ícono en `_iconosCanal`
+1. Ícono `FaIconData` en `AppIcons`
+2. Color en `AppSocialUtils._coloresCanal`
+3. Ícono en `AppSocialUtils._iconosCanal`
 
 **Agregar etapa nueva:**
-1. Constante de ícono en la clase
-2. Color en `_coloresEstado`
-3. Fondo en `_bgEstado`
-4. Ícono en `_iconosEstado`
+1. Ícono `FaIconData` en `AppIcons`
+2. Color en `AppSocialUtils._coloresEstado`
+3. Fondo en `AppSocialUtils._bgEstado`
+4. Ícono en `AppSocialUtils._iconosEstado`
 
 ---
 

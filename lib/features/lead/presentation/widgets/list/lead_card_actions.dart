@@ -1,4 +1,4 @@
-// lib/features/lead/presentation/widgets/list/lead_card_actions.dart
+﻿// lib/features/lead/presentation/widgets/list/lead_card_actions.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -27,8 +27,8 @@ class LeadCardActions extends StatelessWidget {
     return Row(
       children: [
         // _LeadActionButton(
-        //   icon: AppIconsSocial.whatsapp,
-        //   color: AppIconsSocial.colorCanal(1),
+        //   icon: AppIcons.whatsapp,
+        //   color: AppSocialUtils.colorCanal(1),
         //   onTap: onWhatsAppTap,
         // ),
         // const SizedBox(width: AppSpacing.md),

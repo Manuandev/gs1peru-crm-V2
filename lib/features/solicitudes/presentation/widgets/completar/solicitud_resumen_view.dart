@@ -33,28 +33,7 @@ class SolicitudResumenView extends StatelessWidget {
           ),
         ),
       ],
-      appBarTrailingButtons: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.md),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.white(0.15),
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            child: Text(
-              'Paso 4 de 4',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textOnDark,
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-          ),
-        ),
-      ],
+      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 4)],
       body: Column(
         children: [
           const SolicitudPasosIndicador(pasoActual: 4),
@@ -155,27 +134,10 @@ class SolicitudResumenView extends StatelessWidget {
                 // Cancelar
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton.icon(
+                  child: SolicitudBotonAtras(
+                    label: 'Cancelar',
+                    icono: AppIcons.cancel,
                     onPressed: () => context.goBack(),
-                    icon: const Icon(AppIcons.cancel, size: 16),
-                    label: const Text('Cancelar'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.brandRaspberryAccessible,
-                      side: const BorderSide(
-                        color: AppColors.brandRaspberryAccessible,
-                        width: 1.5,
-                      ),
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
-                      ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.bodySmall.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
                   ),
                 ),
               ],

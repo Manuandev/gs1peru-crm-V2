@@ -70,28 +70,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
           ),
         ),
       ],
-      appBarTrailingButtons: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.md),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.white(0.15),
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            child: Text(
-              'Paso 3 de 4',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textOnDark,
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-          ),
-        ),
-      ],
+      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 3)],
       body: Column(
         children: [
           const SolicitudPasosIndicador(pasoActual: 3),
@@ -135,7 +114,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      _ToggleTipoPersona(
+                      SolicitudToggleTipoPersona(
                         valor: _tipoPersona,
                         habilitado: widget.modoEdicion,
                         onChanged: (v) => setState(() => _tipoPersona = v),
@@ -223,78 +202,22 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
+                      child: SolicitudBotonAtras(
+                        icono: AppIcons.back,
                         onPressed: () => context.goBack(),
-                        icon: const Icon(AppIcons.back, size: 15),
-                        label: const Text('Atrás'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.brandRaspberryAccessible,
-                          side: const BorderSide(
-                            color: AppColors.brandRaspberryAccessible,
-                          ),
-                          minimumSize: const Size.fromHeight(
-                            AppSizing.buttonHeightSmall,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppSizing.radiusMd,
-                            ),
-                          ),
-                          textStyle: AppTextStyles.labelSmall.copyWith(
-                            fontWeight: AppTextStyles.weightSemiBold,
-                          ),
-                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(AppIcons.save, size: 15),
-                        label: const Text('Guardar borrador'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.secondary,
-                          side: const BorderSide(color: AppColors.secondary),
-                          minimumSize: const Size.fromHeight(
-                            AppSizing.buttonHeightSmall,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppSizing.radiusMd,
-                            ),
-                          ),
-                          textStyle: AppTextStyles.labelSmall.copyWith(
-                            fontWeight: AppTextStyles.weightSemiBold,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs,
-                          ),
-                        ),
-                      ),
+                      child: SolicitudBotonBorrador(onPressed: () {}),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
-                      child: ElevatedButton(
+                      child: SolicitudBotonContinuar(
                         onPressed: () => context.goToFichaResumenSolicitud(
                           solicitud: widget.solicitud,
                           modoEdicion: widget.modoEdicion,
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.textOnDark,
-                          minimumSize: const Size.fromHeight(
-                            AppSizing.buttonHeightSmall,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppSizing.radiusMd,
-                            ),
-                          ),
-                          textStyle: AppTextStyles.labelSmall.copyWith(
-                            fontWeight: AppTextStyles.weightSemiBold,
-                          ),
-                        ),
-                        child: const Text('Continuar →'),
                       ),
                     ),
                   ],
@@ -563,7 +486,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _CampoCelular(
+              child: SolicitudCampoCelular(
                 controller: ctrlCelular,
                 habilitado: habilitado,
               ),
@@ -676,175 +599,3 @@ class _SeccionInfoComplementaria extends StatelessWidget {
   }
 }
 
-// ── Campo celular con selector de prefijo ─────────────────────────────────────
-
-class _CampoCelular extends StatelessWidget {
-  final TextEditingController controller;
-  final bool habilitado;
-
-  const _CampoCelular({required this.controller, required this.habilitado});
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          GestureDetector(
-            onTap: habilitado ? () {} : null,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: habilitado
-                    ? AppColors.inputBackground
-                    : AppColors.surfaceLightVariant,
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '🇵🇪',
-                    style: TextStyle(fontSize: AppTextStyles.sizeSm),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '+51',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: AppTextStyles.weightMedium,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xxs),
-                  const Icon(
-                    Icons.expand_more_rounded,
-                    size: AppSizing.iconSm,
-                    color: AppColors.textSecondary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: SolicitudTextField(
-              label: 'Celular *',
-              controller: controller,
-              keyboardType: TextInputType.phone,
-              enabled: habilitado,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Toggle Jurídica / Natural ─────────────────────────────────────────────────
-
-class _ToggleTipoPersona extends StatelessWidget {
-  final String valor;
-  final bool habilitado;
-  final ValueChanged<String> onChanged;
-
-  const _ToggleTipoPersona({
-    required this.valor,
-    required this.habilitado,
-    required this.onChanged,
-  });
-
-  static const _duracion = Duration(milliseconds: 250);
-  static const _curva = Curves.easeInOut;
-  static const double _anchoPorOpcion = 82.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final esJuridica = valor == 'juridica';
-
-    return SizedBox(
-      height: AppSizing.buttonHeightSmall,
-      width: _anchoPorOpcion * 2 + 6,
-      child: Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLightVariant,
-          borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-        ),
-        child: Stack(
-          children: [
-            AnimatedPositioned(
-              duration: _duracion,
-              curve: _curva,
-              left: esJuridica ? 0 : _anchoPorOpcion,
-              top: 0,
-              bottom: 0,
-              width: _anchoPorOpcion,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black(0.14),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                SizedBox(
-                  width: _anchoPorOpcion,
-                  child: GestureDetector(
-                    onTap: habilitado ? () => onChanged('juridica') : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: Center(
-                      child: AnimatedDefaultTextStyle(
-                        duration: _duracion,
-                        curve: _curva,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: esJuridica
-                              ? AppColors.textOnDark
-                              : AppColors.textSecondary,
-                          fontWeight: esJuridica
-                              ? AppTextStyles.weightSemiBold
-                              : AppTextStyles.weightRegular,
-                        ),
-                        child: const Text('Jurídica'),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: _anchoPorOpcion,
-                  child: GestureDetector(
-                    onTap: habilitado ? () => onChanged('natural') : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: Center(
-                      child: AnimatedDefaultTextStyle(
-                        duration: _duracion,
-                        curve: _curva,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: !esJuridica
-                              ? AppColors.textOnDark
-                              : AppColors.textSecondary,
-                          fontWeight: !esJuridica
-                              ? AppTextStyles.weightSemiBold
-                              : AppTextStyles.weightRegular,
-                        ),
-                        child: const Text('Natural'),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -99,28 +99,7 @@ class _SolicitudParticipantesViewState
           ),
         ),
       ],
-      appBarTrailingButtons: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.md),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.white(0.15),
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            child: Text(
-              'Paso 2 de 4',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textOnDark,
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-          ),
-        ),
-      ],
+      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 2)],
       body: Column(
         children: [
           const SolicitudPasosIndicador(pasoActual: 2),
@@ -243,71 +222,22 @@ class _SolicitudParticipantesViewState
             child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(AppIcons.save, size: 15),
-                    label: const Text('Guardar borrador'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.secondary,
-                      side: const BorderSide(color: AppColors.secondary),
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.labelSmall.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xs,
-                      ),
-                    ),
-                  ),
+                  child: SolicitudBotonBorrador(onPressed: () {}),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: OutlinedButton(
+                  child: SolicitudBotonAtras(
+                    label: 'Cancelar',
                     onPressed: () => context.goBack(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.brandRaspberryAccessible,
-                      side: const BorderSide(
-                        color: AppColors.brandRaspberryAccessible,
-                      ),
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.labelSmall.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
-                    child: const Text('Cancelar'),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: ElevatedButton(
+                  child: SolicitudBotonContinuar(
                     onPressed: () => context.goToFichaFacturacionSolicitud(
                       solicitud: widget.solicitud,
                       modoEdicion: widget.modoEdicion,
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textOnDark,
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.labelSmall.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
-                    child: const Text('Continuar →'),
                   ),
                 ),
               ],

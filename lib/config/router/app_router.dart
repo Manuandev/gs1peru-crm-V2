@@ -10,6 +10,7 @@ import 'package:app_crm/features/home/index_home.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/settings/index_settings.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 // ── Tipos de transición ────────────────────────────────────────
 
@@ -102,8 +103,56 @@ class AppRouter {
       builder: (_) => const UnderConstructionPage(routeName: 'Contactos'),
     ),
     AppRoutes.solicitudes: RouteDefinition(
+      builder: (_) => const SolicitudListPage(),
+    ),
+    AppRoutes.detalleSolicitud: RouteDefinition(
       transition: TransitionType.slideRight,
-      builder: (_) => const UnderConstructionPage(routeName: 'Solicitudes'),
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudDetallePage(
+          solicitud: args['solicitud'] as Solicitud,
+        );
+      },
+    ),
+    AppRoutes.fichaCompletarSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudCompletarPage(
+          solicitud: args['solicitud'] as Solicitud,
+          modoEdicion: args['modoEdicion'] as bool,
+        );
+      },
+    ),
+    AppRoutes.fichaParticipantesSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudParticipantesPage(
+          solicitud: args['solicitud'] as Solicitud,
+          modoEdicion: args['modoEdicion'] as bool,
+        );
+      },
+    ),
+    AppRoutes.fichaFacturacionSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudFacturacionPage(
+          solicitud: args['solicitud'] as Solicitud,
+          modoEdicion: args['modoEdicion'] as bool,
+        );
+      },
+    ),
+    AppRoutes.fichaResumenSolicitud: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudResumenPage(
+          solicitud: args['solicitud'] as Solicitud,
+          modoEdicion: args['modoEdicion'] as bool,
+        );
+      },
     ),
     AppRoutes.misCasos: RouteDefinition(
       transition: TransitionType.slideRight,

@@ -255,6 +255,7 @@ class _DrawerItem extends StatelessWidget {
   final bool isActive;
 
   const _DrawerItem({required this.item, required this.isActive});
+  const _DrawerItem({required this.item, required this.isActive});
 
   @override
   Widget build(BuildContext context) {
@@ -264,6 +265,7 @@ class _DrawerItem extends StatelessWidget {
         ? colorScheme.primary
         : colorScheme.onSurfaceVariant;
 
+    final textColor = isActive ? colorScheme.primary : colorScheme.onSurface;
     final textColor = isActive ? colorScheme.primary : colorScheme.onSurface;
 
     final bgColor = isActive

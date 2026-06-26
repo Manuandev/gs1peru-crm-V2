@@ -1,4 +1,4 @@
-﻿// lib/core/constants/app_icons.dart
+// lib/core/constants/app_icons.dart
 
 import 'package:flutter/material.dart';
 
@@ -99,6 +99,9 @@ class AppIcons {
 
   /// Persona rellena — ícono de usuario activo / avatar fallback
   static const IconData userFilled = Icons.person;
+
+  /// Agente / Asesor / Ejecutivo
+  static const IconData agent = Icons.support_agent;
 
   /// Grupo de personas — listado de usuarios / equipo
   static const IconData users = Icons.people_outline;

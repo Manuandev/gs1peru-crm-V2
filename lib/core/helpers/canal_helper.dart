@@ -8,11 +8,13 @@ class CanalInfo {
   final String nombre;
   final IconData icon;
   final Color color;
+  final String? assetPath;
 
   const CanalInfo({
     required this.nombre,
     required this.icon,
     required this.color,
+    this.assetPath,
   });
 }
 
@@ -21,9 +23,10 @@ class CanalHelper {
 
   static const Map<int, CanalInfo> _data = {
     1: CanalInfo(
-      nombre: 'WhatsApp',
-      icon: Icons.message, // ✅ igual que web
+      nombre: 'Chat',
+      icon: Icons.wechat, // ✅ igual que web
       color: Color(0xFF25D366),
+      assetPath: 'assets/icons/whatsapp_icon.png',
     ),
     3: CanalInfo(
       nombre: 'TikTok',
@@ -71,9 +74,10 @@ class CanalHelper {
       color: Color(0xFF00897B),
     ),
     12: CanalInfo(
-      nombre: 'Manual',
+      nombre: 'Seguimiento',
       icon: Icons.edit_outlined, // ✅ similar (lápiz/cuaderno)
       color: Color(0xFF6D4C41),
+      assetPath: 'assets/icons/whatsapp_icon.png',
     ),
   };
 
@@ -87,6 +91,9 @@ class CanalHelper {
 
   static Widget icon(int id, {double size = AppSizing.iconNav}) {
     final info = get(id);
+    if (info.assetPath != null) {
+      return Image.asset(info.assetPath!, width: size, height: size);
+    }
     return Icon(info.icon, color: info.color, size: size);
   }
 }

@@ -32,6 +32,7 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/home/index_home.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class AppWidget extends StatelessWidget {
   final ThemeCubit themeCubit; // ✅ nuevo
@@ -75,6 +76,11 @@ class AppWidget extends StatelessWidget {
         // ── COBRANZA REPOSITORY ───────────────────────────────
         RepositoryProvider<CobranzaRepository>(
           create: (_) => CobranzaRepositoryImpl(CobranzaRemoteDatasource()),
+        ),
+
+        // ── SOLICITUDES REPOSITORY ────────────────────────────
+        RepositoryProvider<SolicitudRepository>(
+          create: (_) => SolicitudRepositoryImpl(SolicitudRemoteDatasource()),
         ),
 
         // ── CONFIGURACION REPOSITORY ──────────────────────────

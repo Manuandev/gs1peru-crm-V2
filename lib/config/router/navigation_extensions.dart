@@ -6,6 +6,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 extension NavigationExtensions on BuildContext {
@@ -55,6 +56,41 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToEquipo() => clearAndPush(AppRoutes.equipo);
   Future<void> goToChats() => clearAndPush(AppRoutes.chats);
   Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
+  Future<void> goToDetalleSolicitud({required Solicitud solicitud}) =>
+      _push(AppRoutes.detalleSolicitud, arguments: {'solicitud': solicitud});
+
+  Future<void> goToFichaCompletarSolicitud({
+    required Solicitud solicitud,
+    required bool modoEdicion,
+  }) => _push(
+        AppRoutes.fichaCompletarSolicitud,
+        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+      );
+
+  Future<void> goToFichaParticipantesSolicitud({
+    required Solicitud solicitud,
+    required bool modoEdicion,
+  }) => _push(
+        AppRoutes.fichaParticipantesSolicitud,
+        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+      );
+
+  Future<void> goToFichaFacturacionSolicitud({
+    required Solicitud solicitud,
+    required bool modoEdicion,
+  }) => _push(
+        AppRoutes.fichaFacturacionSolicitud,
+        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+      );
+
+  Future<void> goToFichaResumenSolicitud({
+    required Solicitud solicitud,
+    required bool modoEdicion,
+  }) => _push(
+        AppRoutes.fichaResumenSolicitud,
+        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+      );
+
   Future<void> goToDetalleCobranza({required String numSol}) =>
       _push(AppRoutes.detalleCobranza, arguments: {'numSol': numSol});
 

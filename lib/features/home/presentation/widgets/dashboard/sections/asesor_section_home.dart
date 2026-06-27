@@ -48,8 +48,7 @@ class AsesorSectionHome extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.zero,
               itemCount: asesores.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(width: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
               itemBuilder: (context, i) => _AsesorCard(asesor: asesores[i]),
             ),
           ),
@@ -63,17 +62,17 @@ class AsesorSectionHome extends StatelessWidget {
 class _AsesorCard extends StatelessWidget {
   final AsesorHome asesor;
 
-  static const double alturaFija = 150.0;
-  static const double anchoFijo = 130.0;
+  static const double alturaFija = 120.0;
+  static const double anchoFijo = 120.0;
 
   const _AsesorCard({required this.asesor});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final colorEstado =
-        asesor.enLinea ? AppColors.success : AppColors.textSecondary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final colorEstado = asesor.enLinea
+        ? AppColors.success
+        : AppColors.textSecondary;
     final labelEstado = asesor.enLinea ? 'En línea' : 'Ausente';
     final nombreCorto = asesor.nombre.split(' ').take(2).join(' ');
 
@@ -89,25 +88,26 @@ class _AsesorCard extends StatelessWidget {
           ),
         ),
       ),
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // ── Avatar + estado ─────────────────────────────────
+          // ── Avatar + nombre + estado ────────────────────────
           Column(
             children: [
               CircleAvatar(
-                radius: AppSizing.avatarRadiusSm,
+                radius: AppSizing.avatarRadiusXs,
                 backgroundColor: asesor.nombre.avatarColor,
-                child: Text(
-                  asesor.nombre.initials,
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textOnDark,
-                    fontWeight: AppTextStyles.weightBold,
-                  ),
+                child: Icon(
+                  AppIcons.userFilled,
+                  color: AppColors.textOnDark,
+                  size: AppSizing.avatarXs,
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xxs),
               Text(
                 nombreCorto,
                 style: AppTextStyles.labelSmall.copyWith(
@@ -145,8 +145,16 @@ class _AsesorCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _Metrica(label: 'Activas', valor: asesor.activas),
-              _Metrica(label: 'Nuevos', valor: asesor.nuevos),
+              _Metrica(
+                label: 'Activas',
+                valor: asesor.activas,
+                color: AppColors.info,
+              ),
+              _Metrica(
+                label: 'Nuevos',
+                valor: asesor.nuevos,
+                color: AppColors.success,
+              ),
             ],
           ),
         ],
@@ -158,8 +166,13 @@ class _AsesorCard extends StatelessWidget {
 class _Metrica extends StatelessWidget {
   final String label;
   final int valor;
+  final Color color;
 
-  const _Metrica({required this.label, required this.valor});
+  const _Metrica({
+    required this.label,
+    required this.valor,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +183,7 @@ class _Metrica extends StatelessWidget {
           '$valor',
           style: AppTextStyles.titleSmall.copyWith(
             fontWeight: AppTextStyles.weightBold,
+            color: color,
           ),
         ),
         Text(

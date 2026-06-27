@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/constants/app_icons.dart';
+import 'package:app_crm/core/models/catalog_item.dart';
 
 class AppSocialUtils {
   AppSocialUtils._();
@@ -135,6 +136,17 @@ class AppSocialUtils {
 
   static Widget widgetCanalById(int id, {double size = 14}) =>
       widgetCanal(iconoAppById(id), size: size);
+
+  /// Resuelve el ícono usando la lista real de canales del catálogo (CatalogsBloc).
+  /// Usa el campo iconoApp que viene de la BD — evita depender del mapa hardcodeado.
+  static Widget widgetCanalFromList(
+    List<CanalItem> canales,
+    int id, {
+    double size = 14,
+  }) {
+    final iconoApp = canales.where((c) => c.id == id).firstOrNull?.iconoApp;
+    return widgetCanal(iconoApp, size: size);
+  }
 
   static Color colorEstado(String id) =>
       _coloresEstado[id] ?? const Color(0xFF9E9E9E);

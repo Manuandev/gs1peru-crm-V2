@@ -343,8 +343,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             initialValue: _canal?.id.toString(),
             onChanged: (item) => setState(() => _canal = item),
             dense: true,
-            prefixIcon: CanalHelper.icon(
-              _canal?.id ?? widget.lead.idCanal,
+            prefixIcon: AppSocialUtils.widgetCanal(
+              _canal?.iconoApp,
               size: AppSizing.iconActionSm,
             ),
           ),

@@ -44,6 +44,8 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
   @override
   Widget build(BuildContext context) {
     final prioridad = widget.prioridad;
+    final catState = context.read<CatalogsBloc>().state;
+    final canales = catState is CatalogsLoaded ? catState.canales : const <CanalItem>[];
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
@@ -82,7 +84,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (prioridad.idCanal > 0) ...[
-                      AppSocialUtils.widgetCanalById(prioridad.idCanal, size: 10),
+                      AppSocialUtils.widgetCanalFromList(canales, prioridad.idCanal, size: 10),
                       const SizedBox(width: AppSpacing.xxs),
                     ],
                     if (prioridad.idEstado.isNotEmpty)
@@ -228,7 +230,7 @@ class _MiniActionButton extends StatelessWidget {
   }
 }
 
-// ─── Botón "Gestionar" filled verde compacto ────────────────────────────────
+// ─── Botón "Gestionar" outlined azul compacto ───────────────────────────────
 class _GestionarButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -238,7 +240,7 @@ class _GestionarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: AppSizing.miniActionButtonSm,
-      child: ElevatedButton.icon(
+      child: OutlinedButton.icon(
         onPressed: onTap,
         icon: Icon(AppIcons.checkSingle, size: AppSizing.iconXxs),
         label: Text(
@@ -248,9 +250,10 @@ class _GestionarButton extends StatelessWidget {
             fontWeight: AppTextStyles.weightSemiBold,
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.success,
-          foregroundColor: AppColors.textOnDark,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: AppColors.surface,
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.xs,
             vertical: 0,

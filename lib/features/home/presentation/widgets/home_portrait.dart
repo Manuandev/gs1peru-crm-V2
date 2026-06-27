@@ -37,24 +37,43 @@ class HomePortrait extends StatelessWidget {
                 // ── Prioridad ahora ──────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Prioridad ahora',
-                      style: AppTextStyles.titleMedium.copyWith(
-                        fontWeight: AppTextStyles.weightBold,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Prioridad ahora',
+                          style: AppTextStyles.titleMedium.copyWith(
+                            fontWeight: AppTextStyles.weightBold,
+                          ),
+                        ),
+                        Text(
+                          'Casos sin respuesta o con seguimiento vencido',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () => context.goToChats(),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: AppColors.primary,
+                      ),
+                      child: Text(
+                        'Ver todas',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: AppTextStyles.weightSemiBold,
+                        ),
                       ),
                     ),
-                    CustomTextButton(
-                      text: 'Ver todas',
-                      onPressed: () => context.goToChats(),
-                    ),
                   ],
-                ),
-                Text(
-                  'Casos sin respuesta o con seguimiento vencido',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 PrioridadSectionHome(prioridades: state.prioridades),

@@ -131,6 +131,11 @@ class AppSizing {
   // TAMAÑOS DE ICONOS
   // ============================================================
 
+  // FontAwesome renderiza visualmente más grande que Material al mismo tamaño en px.
+  // faSize() compensa restando este offset para que ambos se vean iguales en pantalla.
+  static const double _faOffset = 2.0;
+  static double faSize(double size) => size - _faOffset;
+
   /// Ícono pequeño: 16px — iconos dentro de labels o chips
   static const double iconSm = 16.0;
 

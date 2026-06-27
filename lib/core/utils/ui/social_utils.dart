@@ -3,6 +3,7 @@
 // Utilidades de colores y widgets para canales de origen y etapas CRM.
 // Los íconos viven en AppIcons — aquí solo colores, mapas y helpers visuales.
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/constants/app_icons.dart';
@@ -159,12 +160,14 @@ class AppSocialUtils {
   // ============================================================
 
   /// FaIcon del canal con color de marca. Instagram lleva gradiente.
+  /// El tamaño se ajusta con [AppSizing.faSize] para que FA quede
+  /// visualmente igual a un Material Icon del mismo valor de [size].
   static Widget widgetCanal(String? iconoApp, {double size = 14}) {
     final esInstagram = iconoApp == 'instagram';
     final icono = FaIcon(
       _iconosCanal[iconoApp ?? ''] ?? FontAwesomeIcons.question,
       color: esInstagram ? Colors.white : colorCanal(iconoApp),
-      size: size,
+      size: AppSizing.faSize(size),
     );
 
     if (esInstagram) {
@@ -192,7 +195,7 @@ class AppSocialUtils {
   static Widget widgetEstado(String id, {double size = 14}) => FaIcon(
         _iconosEstado[id] ?? FontAwesomeIcons.question,
         color: colorEstado(id),
-        size: size,
+        size: AppSizing.faSize(size),
       );
 
   /// Chip compacto con etiqueta y color de etapa.

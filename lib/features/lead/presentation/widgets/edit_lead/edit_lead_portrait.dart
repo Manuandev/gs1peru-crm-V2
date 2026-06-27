@@ -268,7 +268,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              _buildSeccionProspecto(catalogState),
+              _buildSeccionContacto(),
+              const SizedBox(height: AppSpacing.lg),
+              _buildSeccionNegociacion(catalogState),
               const SizedBox(height: AppSpacing.lg),
               // ListenableBuilder para la sección financiera — solo ella se reconstruye al tipear
               ListenableBuilder(
@@ -288,81 +290,14 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     );
   }
 
-  // ── Sección Información del prospecto ─────────────────────────────────────
+  // ── Sección Información del contacto ─────────────────────────────────────
 
-  Widget _buildSeccionProspecto(CatalogsLoaded state) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final hayEstados = state.estados.isNotEmpty;
-
+  Widget _buildSeccionContacto() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const FormSectionTitle('Información del prospecto'),
+        const FormSectionTitle('Información del contacto'),
         const SizedBox(height: AppSpacing.md),
-
-        // Estado | Subestado
-        FormFieldRow(
-          izquierdo: _buildComboEstado(state, hayEstados, colorScheme),
-          derecho: _buildComboSubEstado(state, hayEstados, colorScheme),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-
-        // Campaña (read-only) | Evento (read-only)
-        FormFieldRow(
-          izquierdo: CustomTextField(
-            label: 'Campaña',
-            controller: _campaniaCtrl,
-            enabled: false,
-            dense: true,
-            prefixIcon: Icon(
-              AppIcons.campaign,
-              color: colorScheme.primary,
-              size: AppSizing.iconActionSm,
-            ),
-          ),
-          derecho: CustomTextField(
-            label: 'Evento',
-            controller: _eventoCtrl,
-            enabled: false,
-            dense: true,
-            prefixIcon: Icon(
-              AppIcons.calendar,
-              color: colorScheme.secondary,
-              size: AppSizing.iconActionSm,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-
-        // Canal | Interés
-        FormFieldRow(
-          izquierdo: CustomComboField<CanalItem>(
-            enabled: !_isLoading,
-            data: state.canales,
-            label: 'Canal',
-            initialValue: _canal?.id.toString(),
-            onChanged: (item) => setState(() => _canal = item),
-            dense: true,
-            prefixIcon: AppSocialUtils.widgetCanal(
-              _canal?.iconoApp,
-              size: AppSizing.iconActionSm,
-            ),
-          ),
-          derecho: CustomComboField<InteresItem>(
-            enabled: !_isLoading,
-            data: state.intereses,
-            label: 'Interés',
-            initialValue: _interes?.id.toString(),
-            onChanged: (item) => setState(() => _interes = item),
-            dense: true,
-            prefixIcon: Icon(
-              AppIcons.interes,
-              color: colorScheme.primary,
-              size: AppSizing.iconActionSm,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
 
         // Nombres
         CustomTextField(
@@ -442,6 +377,84 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           enabled: false,
           prefixIcon: const Icon(AppIcons.email),
           dense: true,
+        ),
+      ],
+    );
+  }
+
+  // ── Sección Información de la negociación ────────────────────────────────
+
+  Widget _buildSeccionNegociacion(CatalogsLoaded state) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final hayEstados = state.estados.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const FormSectionTitle('Información de la negociación'),
+        const SizedBox(height: AppSpacing.md),
+
+        // Estado | Subestado
+        FormFieldRow(
+          izquierdo: _buildComboEstado(state, hayEstados, colorScheme),
+          derecho: _buildComboSubEstado(state, hayEstados, colorScheme),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        // Campaña (read-only) | Evento (read-only)
+        FormFieldRow(
+          izquierdo: CustomTextField(
+            label: 'Campaña',
+            controller: _campaniaCtrl,
+            enabled: false,
+            dense: true,
+            prefixIcon: Icon(
+              AppIcons.campaign,
+              color: colorScheme.primary,
+              size: AppSizing.iconActionSm,
+            ),
+          ),
+          derecho: CustomTextField(
+            label: 'Evento',
+            controller: _eventoCtrl,
+            enabled: false,
+            dense: true,
+            prefixIcon: Icon(
+              AppIcons.calendar,
+              color: colorScheme.secondary,
+              size: AppSizing.iconActionSm,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        // Canal | Interés
+        FormFieldRow(
+          izquierdo: CustomComboField<CanalItem>(
+            enabled: !_isLoading,
+            data: state.canales,
+            label: 'Canal',
+            initialValue: _canal?.id.toString(),
+            onChanged: (item) => setState(() => _canal = item),
+            dense: true,
+            prefixIcon: AppSocialUtils.widgetCanalById(
+              _canal?.id ?? widget.lead.idCanal,
+              size: AppSizing.iconActionSm,
+            ),
+          ),
+          derecho: CustomComboField<InteresItem>(
+            enabled: !_isLoading,
+            data: state.intereses,
+            label: 'Interés',
+            initialValue: _interes?.id.toString(),
+            onChanged: (item) => setState(() => _interes = item),
+            dense: true,
+            prefixIcon: Icon(
+              AppIcons.interes,
+              color: colorScheme.primary,
+              size: AppSizing.iconActionSm,
+            ),
+          ),
         ),
       ],
     );

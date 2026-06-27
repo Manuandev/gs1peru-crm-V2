@@ -119,6 +119,9 @@ class _CustomComboFieldState<T extends Comboable>
           fontWeight: FontWeight.w600,
         ),
         prefixIcon: widget.prefixIcon,
+        prefixIconConstraints: widget.prefixIcon != null
+            ? const BoxConstraints(minWidth: 36, minHeight: 36)
+            : null,
         filled: true,
         fillColor: widget.enabled
             ? colorScheme.surface
@@ -153,30 +156,14 @@ class _CustomComboFieldState<T extends Comboable>
           borderSide: BorderSide(color: disabledColor),
         ),
       ),
-      items: widget.data.asMap().entries.map((entry) {
-        final index = entry.key;
-        final item = entry.value;
+      items: widget.data.map((item) {
         return DropdownMenuItem<T>(
           value: item,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (index > 0)
-                const Divider(height: 1, thickness: 0.5, color: AppColors.border),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.xs,
-                  horizontal: AppSpacing.xxs,
-                ),
-                child: Text(
-                  _getLabel(item),
-                  style: AppTextStyles.inputTextCompact,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-            ],
+          child: Text(
+            _getLabel(item),
+            style: AppTextStyles.inputTextCompact,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         );
       }).toList(),

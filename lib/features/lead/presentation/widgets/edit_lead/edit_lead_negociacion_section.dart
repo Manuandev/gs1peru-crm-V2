@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
 
 class EditLeadNegociacionSection extends StatelessWidget {
   final CatalogsLoaded catalogState;

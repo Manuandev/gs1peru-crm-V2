@@ -44,8 +44,6 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
   @override
   Widget build(BuildContext context) {
     final prioridad = widget.prioridad;
-    final catState = context.read<CatalogsBloc>().state;
-    final canales = catState is CatalogsLoaded ? catState.canales : const <CanalItem>[];
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
@@ -84,7 +82,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (prioridad.idCanal > 0) ...[
-                      AppSocialUtils.widgetCanalFromList(canales, prioridad.idCanal, size: 10),
+                      AppSocialUtils.widgetCanalById(prioridad.idCanal, size: 12),
                       const SizedBox(width: AppSpacing.xxs),
                     ],
                     if (prioridad.idEstado.isNotEmpty)

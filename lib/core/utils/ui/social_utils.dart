@@ -163,15 +163,18 @@ class AppSocialUtils {
   /// El tamaño se ajusta con [AppSizing.faSize] para que FA quede
   /// visualmente igual a un Material Icon del mismo valor de [size].
   static Widget widgetCanal(String? iconoApp, {double size = 14}) {
+    final faSize = AppSizing.faSize(size);
     final esInstagram = iconoApp == 'instagram';
+
     final icono = FaIcon(
       _iconosCanal[iconoApp ?? ''] ?? FontAwesomeIcons.question,
       color: esInstagram ? Colors.white : colorCanal(iconoApp),
-      size: AppSizing.faSize(size),
+      size: faSize,
     );
 
+    Widget resultado = icono;
     if (esInstagram) {
-      return ShaderMask(
+      resultado = ShaderMask(
         blendMode: BlendMode.srcIn,
         shaderCallback: (Rect bounds) => const LinearGradient(
           colors: [
@@ -188,15 +191,30 @@ class AppSocialUtils {
       );
     }
 
-    return icono;
+    // SizedBox + Center replica el comportamiento de Icon nativo:
+    // define tamaño explícito y centra el ícono dentro del slot prefixIcon.
+    return SizedBox(
+      width: faSize,
+      height: faSize,
+      child: Center(child: resultado),
+    );
   }
 
   /// FaIcon del estado con color de etapa.
-  static Widget widgetEstado(String id, {double size = 14}) => FaIcon(
-        _iconosEstado[id] ?? FontAwesomeIcons.question,
-        color: colorEstado(id),
-        size: AppSizing.faSize(size),
-      );
+  static Widget widgetEstado(String id, {double size = 14}) {
+    final faSize = AppSizing.faSize(size);
+    return SizedBox(
+      width: faSize,
+      height: faSize,
+      child: Center(
+        child: FaIcon(
+          _iconosEstado[id] ?? FontAwesomeIcons.question,
+          color: colorEstado(id),
+          size: faSize,
+        ),
+      ),
+    );
+  }
 
   /// Chip compacto con etiqueta y color de etapa.
   static Widget chipEstado(

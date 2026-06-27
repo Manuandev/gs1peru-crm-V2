@@ -49,7 +49,7 @@ class ContactoNegociacionCard extends StatelessWidget {
                       // Fila: canal + nombre evento + fecha
                       Row(
                         children: [
-                          AppSocialUtils.widgetCanal(
+                          AppSocialUtils.widgetCanalById(
                             negociacion.idCanal,
                             size: AppSizing.iconXs,
                           ),
@@ -106,3 +106,4 @@ class ContactoNegociacionCard extends StatelessWidget {
   String _formatMonto(double monto) =>
       'S/ ${monto.toStringAsFixed(2).replaceAll(RegExp(r'\.00$'), '')}';
 }
+

@@ -198,7 +198,7 @@ class _InfoChat extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
-            AppSocialUtils.widgetCanal(idCanal, size: AppSizing.iconSm),
+            AppSocialUtils.widgetCanalById(idCanal, size: AppSizing.iconSm),
           ],
         ),
 
@@ -353,3 +353,4 @@ class _ChipInfo extends StatelessWidget {
     );
   }
 }
+

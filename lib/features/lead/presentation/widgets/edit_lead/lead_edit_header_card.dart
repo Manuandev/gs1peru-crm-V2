@@ -56,7 +56,7 @@ class LeadEditHeaderCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Row(
                   children: [
-                    AppSocialUtils.widgetCanal(lead.idCanal, size: AppSizing.iconSm),
+                    AppSocialUtils.widgetCanalById(lead.idCanal, size: AppSizing.iconSm),
                     const SizedBox(width: AppSpacing.xs),
                     Flexible(
                       child: Text(
@@ -98,3 +98,4 @@ class LeadEditHeaderCard extends StatelessWidget {
     );
   }
 }
+

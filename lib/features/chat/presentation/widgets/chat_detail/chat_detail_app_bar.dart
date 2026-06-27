@@ -63,7 +63,7 @@ class ChatDetailAppBar extends StatelessWidget {
                     ),
                   ),
                   child: Center(
-                    child: AppSocialUtils.widgetCanal(
+                    child: AppSocialUtils.widgetCanalById(
                       idCanal,
                       size: AppSizing.iconCanalBadge,
                     ),
@@ -153,3 +153,4 @@ class ChatDetailAppBar extends StatelessWidget {
     );
   }
 }
+

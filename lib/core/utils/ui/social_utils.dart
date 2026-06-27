@@ -11,20 +11,43 @@ class AppSocialUtils {
   AppSocialUtils._();
 
   // ============================================================
-  // COLORES — canales
+  // MAPA DE PUENTE — id numérico → iconoApp
+  // Refleja los IDs reales de CRM.T_CANAL.
+  // Solo actualizar aquí si se agregan canales nuevos en BD.
   // ============================================================
-  static const Map<int, Color> _coloresCanal = {
-    1: Color(0xFF25D366), // WhatsApp
-    3: Color(0xFF010101), // TikTok
-    4: Color(0xFFE1306C), // Instagram
-    5: Color(0xFF1877F2), // Facebook
-    6: Color(0xFF0A66C2), // LinkedIn
-    7: Color(0xFF607D8B), // Web GS1
-    8: Color(0xFFFF6B35), // Instapage
-    9: Color(0xFF9C27B0), // Boca a boca
-    10: Color(0xFF455A64), // Migración
-    11: Color(0xFF00897B), // Referido
-    12: Color(0xFF6D4C41), // Manual
+  static const Map<int, String> _idAIconoApp = {
+    1:  'facebook',
+    2:  'instagram',
+    3:  'tiktok',
+    4:  'web',
+    5:  'whatsapp',
+    6:  'mailing',
+    7:  'sms',
+    8:  'recomendacion',
+    9:  'llamada',
+    10: 'visita',
+    11: 'telegram',
+    12: 'manual',
+  };
+
+  static String? iconoAppById(int id) => _idAIconoApp[id];
+
+  // ============================================================
+  // COLORES — canales (keyed por ICONO_APP de la BD)
+  // ============================================================
+  static const Map<String, Color> _coloresCanal = {
+    'facebook':      Color(0xFF1877F2),
+    'instagram':     Color(0xFFE1306C),
+    'tiktok':        Color(0xFF010101),
+    'web':           Color(0xFF607D8B),
+    'whatsapp':      Color(0xFF25D366),
+    'mailing':       Color(0xFF0A66C2),
+    'sms':           Color(0xFF455A64),
+    'recomendacion': Color(0xFF9C27B0),
+    'llamada':       Color(0xFF00897B),
+    'visita':        Color(0xFF6D4C41),
+    'telegram':      Color(0xFF2CA5E0),
+    'manual':        Color(0xFF6D4C41),
   };
 
   // ============================================================
@@ -69,18 +92,19 @@ class AppSocialUtils {
   // ============================================================
   // MAPAS — ícono por canal/estado
   // ============================================================
-  static const Map<int, FaIconData> _iconosCanal = {
-    1: AppIcons.whatsapp,
-    3: AppIcons.tiktok,
-    4: AppIcons.instagram,
-    5: AppIcons.facebook,
-    6: AppIcons.linkedin,
-    7: AppIcons.web,
-    8: AppIcons.instapage,
-    9: AppIcons.bocaBoca,
-    10: AppIcons.migracion,
-    11: AppIcons.referido,
-    12: AppIcons.manual,
+  static const Map<String, FaIconData> _iconosCanal = {
+    'facebook':      AppIcons.facebook,
+    'instagram':     AppIcons.instagram,
+    'tiktok':        AppIcons.tiktok,
+    'web':           AppIcons.web,
+    'whatsapp':      AppIcons.whatsapp,
+    'mailing':       AppIcons.linkedin,   // TODO: agregar AppIcons.mailing
+    'sms':           AppIcons.manual,     // TODO: agregar AppIcons.sms
+    'recomendacion': AppIcons.bocaBoca,
+    'llamada':       AppIcons.manual,     // TODO: agregar AppIcons.llamada
+    'visita':        AppIcons.migracion,  // TODO: agregar AppIcons.visita
+    'telegram':      AppIcons.referido,   // TODO: agregar AppIcons.telegram
+    'manual':        AppIcons.manual,
   };
 
   static const Map<String, FaIconData> _iconosEstado = {
@@ -104,8 +128,13 @@ class AppSocialUtils {
   // ============================================================
   // ACCESORES DE COLOR
   // ============================================================
-  static Color colorCanal(int id) =>
-      _coloresCanal[id] ?? const Color(0xFF9E9E9E);
+  static Color colorCanal(String? iconoApp) =>
+      _coloresCanal[iconoApp ?? ''] ?? const Color(0xFF9E9E9E);
+
+  static Color colorCanalById(int id) => colorCanal(iconoAppById(id));
+
+  static Widget widgetCanalById(int id, {double size = 14}) =>
+      widgetCanal(iconoAppById(id), size: size);
 
   static Color colorEstado(String id) =>
       _coloresEstado[id] ?? const Color(0xFF9E9E9E);
@@ -117,15 +146,16 @@ class AppSocialUtils {
   // WIDGETS LISTOS
   // ============================================================
 
-  /// FaIcon del canal con color de marca. Instagram/Instapage llevan gradiente.
-  static Widget widgetCanal(int id, {double size = 14}) {
+  /// FaIcon del canal con color de marca. Instagram lleva gradiente.
+  static Widget widgetCanal(String? iconoApp, {double size = 14}) {
+    final esInstagram = iconoApp == 'instagram';
     final icono = FaIcon(
-      _iconosCanal[id] ?? FontAwesomeIcons.question,
-      color: id == 4 || id == 8 ? Colors.white : colorCanal(id),
+      _iconosCanal[iconoApp ?? ''] ?? FontAwesomeIcons.question,
+      color: esInstagram ? Colors.white : colorCanal(iconoApp),
       size: size,
     );
 
-    if (id == 4 || id == 8) {
+    if (esInstagram) {
       return ShaderMask(
         blendMode: BlendMode.srcIn,
         shaderCallback: (Rect bounds) => const LinearGradient(

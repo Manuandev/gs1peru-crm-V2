@@ -109,7 +109,7 @@ class LeadContextoCard extends StatelessWidget {
       titulo: 'INFORMACIÓN',
       filas: [
         _InfoFila(
-          icono: AppSocialUtils.widgetCanal(
+          icono: AppSocialUtils.widgetCanalById(
             lead.idCanal,
             size: AppSizing.iconSm,
           ),
@@ -215,3 +215,4 @@ class _InfoFila extends StatelessWidget {
     return fila;
   }
 }
+

@@ -321,7 +321,7 @@ class _LeadAvatar extends StatelessWidget {
                 ),
               ),
               child: Center(
-                child: AppSocialUtils.widgetCanal(
+                child: AppSocialUtils.widgetCanalById(
                   lead.idCanal,
                   size: AppSizing.iconCanalBadge,
                 ),
@@ -356,7 +356,7 @@ class _LeadEstadoRow extends StatelessWidget {
         ),
         if (lead.idCanal > 0) ...[
           const SizedBox(width: AppSpacing.sm),
-          AppSocialUtils.widgetCanal(
+          AppSocialUtils.widgetCanalById(
             lead.idCanal,
             size: AppSizing.iconCanalInfo,
           ),
@@ -425,3 +425,4 @@ class _IconoCompacto extends StatelessWidget {
     );
   }
 }
+

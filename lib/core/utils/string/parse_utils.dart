@@ -8,6 +8,12 @@ class ParseUtils {
   static String str(List<String> campos, int i) =>
       i < campos.length ? campos[i].trim() : '';
 
+  static String? strNullable(List<String> campos, int i) {
+    if (i >= campos.length) return null;
+    final v = campos[i].trim();
+    return v.isEmpty ? null : v;
+  }
+
   static int toInt(List<String> campos, int i) =>
       int.tryParse(str(campos, i)) ?? 0;
 

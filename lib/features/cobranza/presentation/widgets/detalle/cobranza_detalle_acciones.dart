@@ -41,7 +41,7 @@ class CobranzaDetalleAcciones extends StatelessWidget {
               _AccionBtn(
                 icono: AppIcons.whatsapp,
                 esFontAwesome: true,
-                color: AppSocialUtils.colorCanal(1),
+                color: AppSocialUtils.colorCanalById(5),
                 label: 'WhatsApp',
                 onTap: () {},
               ),
@@ -129,3 +129,4 @@ class _AccionBtn extends StatelessWidget {
     );
   }
 }
+

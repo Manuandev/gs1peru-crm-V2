@@ -255,7 +255,7 @@ class _ItemConversacion extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    AppSocialUtils.widgetCanal(canalId, size: 10),
+                    AppSocialUtils.widgetCanalById(canalId, size: 10),
                     const SizedBox(width: 3),
                     Expanded(
                       child: Text(
@@ -409,3 +409,4 @@ class _CirculoFlotante extends StatelessWidget {
     );
   }
 }
+

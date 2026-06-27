@@ -71,13 +71,13 @@ class NegociacionCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _FilaDato(
-                      icono: AppSocialUtils.widgetCanal(
+                      icono: AppSocialUtils.widgetCanalById(
                         negociacion.idCanal,
                         size: AppSizing.iconSm,
                       ),
                       etiqueta: 'Canal',
                       valor: negociacion.descripcionCanal,
-                      colorValor: AppSocialUtils.colorCanal(
+                      colorValor: AppSocialUtils.colorCanalById(
                         negociacion.idCanal,
                       ),
                     ),
@@ -157,7 +157,7 @@ class _AvatarCanal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorCanal = AppSocialUtils.colorCanal(idCanal);
+    final colorCanal = AppSocialUtils.colorCanalById(idCanal);
     return Container(
       width: AppSizing.avatarSm,
       height: AppSizing.avatarSm,
@@ -166,7 +166,7 @@ class _AvatarCanal extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Center(
-        child: AppSocialUtils.widgetCanal(
+        child: AppSocialUtils.widgetCanalById(
           idCanal,
           size: AppSizing.iconActionSm,
         ),
@@ -225,3 +225,4 @@ class _FilaDato extends StatelessWidget {
     );
   }
 }
+

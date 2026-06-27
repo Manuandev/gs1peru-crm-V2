@@ -194,13 +194,13 @@ class _BotonWhatsApp extends StatelessWidget {
         height: AppSizing.buttonHeightSmall,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppSocialUtils.colorCanal(1).withValues(alpha: 0.1),
+          color: AppSocialUtils.colorCanalById(5).withValues(alpha: 0.1),
         ),
         alignment: Alignment.center,
         child: FaIcon(
           AppIcons.whatsapp,
           size: AppSizing.iconSm,
-          color: AppSocialUtils.colorCanal(1),
+          color: AppSocialUtils.colorCanalById(5),
         ),
       ),
     );
@@ -366,3 +366,4 @@ class _BotonVer extends StatelessWidget {
     );
   }
 }
+

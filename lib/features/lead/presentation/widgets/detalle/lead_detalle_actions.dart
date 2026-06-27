@@ -34,7 +34,7 @@ class LeadDetalleActions extends StatelessWidget {
               _BotonAccion(
                 icono: FaIcon(
                   AppIcons.whatsapp,
-                  color: AppSocialUtils.colorCanal(1),
+                  color: AppSocialUtils.colorCanalById(5),
                   size: AppSizing.iconMd,
                 ),
                 label: 'WhatsApp',
@@ -101,3 +101,4 @@ class _BotonAccion extends StatelessWidget {
     );
   }
 }
+

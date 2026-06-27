@@ -135,18 +135,23 @@ class OportunidadItemModel extends OportunidadItem {
 class CanalItem with Comboable {
   final int id;
   final String nombre;
-  const CanalItem({required this.id, required this.nombre});
+  final String? iconoApp;
+  const CanalItem({required this.id, required this.nombre, this.iconoApp});
 
   @override
   List<dynamic> get fields => [id, nombre];
 }
 
 class CanalItemModel extends CanalItem {
-  const CanalItemModel({required super.id, required super.nombre});
+  const CanalItemModel({required super.id, required super.nombre, super.iconoApp});
 
   factory CanalItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
-    return CanalItemModel(id: ParseUtils.toInt(c, 0), nombre: ParseUtils.str(c, 1));
+    return CanalItemModel(
+      id:       ParseUtils.toInt(c, 0),
+      nombre:   ParseUtils.str(c, 1),
+      iconoApp: ParseUtils.strNullable(c, 2),
+    );
   }
 
   static List<CanalItemModel> parseList(String rawResponse) {

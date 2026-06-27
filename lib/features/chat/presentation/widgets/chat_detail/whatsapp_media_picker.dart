@@ -186,7 +186,7 @@ class _PickerHeader extends StatelessWidget {
               ? FilledButton.icon(
                   onPressed: onConfirm,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppSocialUtils.colorCanal(1),
+                    backgroundColor: AppSocialUtils.colorCanalById(5),
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.mdPlus,
                       vertical: AppSpacing.sm,
@@ -221,7 +221,7 @@ class _PickerHeader extends StatelessWidget {
           trailing: current?.id == albums[i].id
               ? Icon(
                   AppIcons.checkRounded,
-                  color: AppSocialUtils.colorCanal(1),
+                  color: AppSocialUtils.colorCanalById(5),
                 )
               : null,
           onTap: () {
@@ -321,11 +321,11 @@ class _MediaTile extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected
-                    ? AppSocialUtils.colorCanal(1)
+                    ? AppSocialUtils.colorCanalById(5)
                     : AppColors.transparent,
                 border: Border.all(
                   color: isSelected
-                      ? AppSocialUtils.colorCanal(1)
+                      ? AppSocialUtils.colorCanalById(5)
                       : AppColors.textOnDark,
                   width: AppSizing.canalBadgeBorder,
                 ),
@@ -444,7 +444,7 @@ class _PreviewThumb extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             border: Border.all(
-              color: AppSocialUtils.colorCanal(1),
+              color: AppSocialUtils.colorCanalById(5),
               width: AppSizing.borderFocusWidth,
             ),
           ),
@@ -453,3 +453,4 @@ class _PreviewThumb extends StatelessWidget {
     );
   }
 }
+

@@ -82,7 +82,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (prioridad.idCanal > 0) ...[
-                      AppSocialUtils.widgetCanal(prioridad.idCanal, size: 10),
+                      AppSocialUtils.widgetCanalById(prioridad.idCanal, size: 10),
                       const SizedBox(width: AppSpacing.xxs),
                     ],
                     if (prioridad.idEstado.isNotEmpty)
@@ -136,7 +136,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               size: AppSizing.iconXxs,
             ),
             size: AppSizing.miniActionButtonSm,
-            color: AppSocialUtils.colorCanal(1),
+            color: AppSocialUtils.colorCanalById(5),
             onTap: () => context.goToDetalleChatDesdeHome(
               idNumero: prioridad.idNumero,
               idLead: prioridad.idLead,
@@ -266,3 +266,4 @@ class _GestionarButton extends StatelessWidget {
     );
   }
 }
+

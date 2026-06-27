@@ -96,7 +96,7 @@ class DatosTab extends StatelessWidget {
                   valor: lead.campania.isEmpty ? '—' : lead.campania,
                 ),
                 derecha: _CampoDato(
-                  icono: AppSocialUtils.widgetCanal(
+                  icono: AppSocialUtils.widgetCanalById(
                     lead.idCanal,
                     size: AppSizing.iconActionSm,
                   ),
@@ -307,3 +307,4 @@ class _CampoDato extends StatelessWidget {
     );
   }
 }
+

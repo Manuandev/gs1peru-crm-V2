@@ -29,6 +29,8 @@ class NegociacionLead extends Equatable {
 
   final int idInteres;
   final String descripcionInteres;
+  
+  final bool activo;
 
   const NegociacionLead({
     required this.idLead,
@@ -50,6 +52,7 @@ class NegociacionLead extends Equatable {
     required this.descripcionCanal,
     required this.idInteres,
     required this.descripcionInteres,
+    required this.activo,
   });
 
   @override
@@ -73,6 +76,7 @@ class NegociacionLead extends Equatable {
     descripcionCanal,
     idInteres,
     descripcionInteres,
+    activo,
   ];
 
   NegociacionLead copyWith({
@@ -95,6 +99,7 @@ class NegociacionLead extends Equatable {
     String? descripcionCanal,
     int? idInteres,
     String? descripcionInteres,
+    bool? activo,
   }) {
     return NegociacionLead(
       idLead: idLead ?? this.idLead,
@@ -117,6 +122,7 @@ class NegociacionLead extends Equatable {
       descripcionCanal: descripcionCanal ?? this.descripcionCanal,
       idInteres: idInteres ?? this.idInteres,
       descripcionInteres: descripcionInteres ?? this.descripcionInteres,
+      activo: activo ?? this.activo,
     );
   }
 }

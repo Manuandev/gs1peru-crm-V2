@@ -515,6 +515,15 @@ class AppIcons {
   /// Lista alternativa — ícono del campo Subestado en datos del lead
   static const IconData listAlt = Icons.list_alt_rounded;
 
+  /// Cargo / Puesto — campo de cargo del contacto en datos del lead
+  static const IconData cargo = Icons.work_outline;
+
+  /// Curso / Evento — campo de oportunidad educativa del lead
+  static const IconData cursoEvento = Icons.school_outlined;
+
+  /// Origen — fuente de adquisición del lead
+  static const IconData origen = Icons.adjust;
+
   // ── LeadDetailSheet — tabs y popup del chat ──────────────────────────────
 
   /// Datos del lead — tab Datos en LeadDetailSheet y popup del chat

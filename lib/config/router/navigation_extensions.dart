@@ -163,8 +163,8 @@ extension NavigationExtensions on BuildContext {
   );
 
   /// Retorna el [Template] seleccionado, o null si el usuario canceló.
-  Future<Template?> goToTemplates({required Lead lead}) =>
-      _push<Template>(AppRoutes.templates, arguments: {'lead': lead});
+  Future<Plantilla?> goToTemplates({required Lead lead}) =>
+      _push<Plantilla>(AppRoutes.templates, arguments: {'lead': lead});
 
   /// Navega a un chat desde home: limpia el stack, pone ChatList como base
   /// y apila ChatDetail encima para que el back funcione correctamente.

@@ -11,11 +11,8 @@ class ChatIaBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.iaBannerBg,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),

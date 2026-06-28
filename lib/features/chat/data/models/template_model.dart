@@ -3,8 +3,8 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
-class TemplateModel extends Template {
-  const TemplateModel({
+class PlantillaModel extends Plantilla {
+  const PlantillaModel({
     required super.idPlantilla,
     required super.nombre,
     required super.idCampania,
@@ -16,9 +16,9 @@ class TemplateModel extends Template {
     required super.isBoton,
   });
 
-  factory TemplateModel.fromRawString(String raw) {
+  factory PlantillaModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
-    return TemplateModel(
+    return PlantillaModel(
       idPlantilla:      ParseUtils.toInt(c, 0),
       nombre:           ParseUtils.str(c, 1),
       idCampania:       ParseUtils.toInt(c, 2),
@@ -31,11 +31,11 @@ class TemplateModel extends Template {
     );
   }
 
-  static List<TemplateModel> parseList(String rawResponse) {
+  static List<PlantillaModel> parseList(String rawResponse) {
     return rawResponse
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
-        .map((r) => TemplateModel.fromRawString(r))
+        .map((r) => PlantillaModel.fromRawString(r))
         .toList();
   }
 }

@@ -8,7 +8,7 @@ class SendTemplateMessageUseCase {
   const SendTemplateMessageUseCase(this._repository);
 
   bool call({
-    required Template template,
+    required Plantilla plantilla,
     required String mensajeFormateado,
     required String idNumero,
     required String numero,
@@ -19,7 +19,7 @@ class SendTemplateMessageUseCase {
     required bool isCerrado,
   }) {
     return _repository.sendWhatsAppTemplateMessage(
-      template: template,
+      plantilla: plantilla,
       mensajeFormateado: mensajeFormateado,
       idNumero: idNumero,
       numero: numero,

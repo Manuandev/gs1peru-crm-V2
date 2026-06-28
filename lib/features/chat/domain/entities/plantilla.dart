@@ -1,8 +1,8 @@
-// lib/features/chat/domain/entities/template.dart
+// lib/features/chat/domain/entities/plantilla.dart
 
 import 'package:app_crm/index_dependencies.dart';
 
-class Template extends Equatable {
+class Plantilla extends Equatable {
   final int idPlantilla;
   final String nombre;
   final int idCampania;
@@ -13,7 +13,7 @@ class Template extends Equatable {
   final String extensionArchivo;
   final bool isBoton;
 
-  const Template({
+  const Plantilla({
     required this.idPlantilla,
     required this.nombre,
     required this.idCampania,

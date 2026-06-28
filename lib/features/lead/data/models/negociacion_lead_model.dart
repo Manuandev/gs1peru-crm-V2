@@ -24,6 +24,7 @@ class NegociacionLeadModel extends NegociacionLead {
     required super.descripcionCanal,
     required super.idInteres,
     required super.descripcionInteres,
+    required super.activo,
   });
 
   factory NegociacionLeadModel.fromRawString(String raw) {
@@ -49,6 +50,7 @@ class NegociacionLeadModel extends NegociacionLead {
       descripcionCanal: ParseUtils.str(fields, 16),
       idInteres: ParseUtils.toInt(fields, 17),
       descripcionInteres: ParseUtils.str(fields, 18),
+      activo: ParseUtils.toBool(fields, 19),
     );
   }
 

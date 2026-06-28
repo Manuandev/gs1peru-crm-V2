@@ -24,7 +24,8 @@ class ChatDetailView extends StatefulWidget {
   State<ChatDetailView> createState() => _ChatDetailViewState();
 }
 
-class _ChatDetailViewState extends State<ChatDetailView> {
+class _ChatDetailViewState extends State<ChatDetailView>
+    with SingleTickerProviderStateMixin {
   final _scroll = ChatScrollController();
   final AudioController _audioController = AudioController();
   final List<StreamSubscription<String>> _subs = [];
@@ -32,6 +33,8 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   bool _isLoadingMore = false;
   bool _isInitialLoad = true;
   bool _showScrollDown = false;
+  bool _showLeadPanel = false;
+  late final TabController _panelTabController;
 
   DateTime? _lastLoadMoreTime;
 
@@ -40,6 +43,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   @override
   void initState() {
     super.initState();
+    _panelTabController = TabController(length: 3, vsync: this);
     _scroll.controller.addListener(_onScroll);
     AppRouteObserver.instance.setActiveLead(widget.idNumero);
     final cubit = context.read<InfoLeadCubit>();
@@ -61,6 +65,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   @override
   void dispose() {
     AppRouteObserver.instance.setActiveLead(null);
+    _panelTabController.dispose();
     _scroll.dispose();
     _audioController.dispose();
     for (final s in _subs) {
@@ -184,25 +189,16 @@ class _ChatDetailViewState extends State<ChatDetailView> {
         ),
       ],
       onPopupSelected: (value) {
-        final s = context.read<InfoLeadCubit>().state;
-        if (s is! InfoLeadSuccess) return;
-        final lead = s.lead;
-
-        final tab = switch (value) {
-          'datos' => LeadDetailTab.datos,
-          'negociaciones' => LeadDetailTab.negociaciones,
-          'historial' => LeadDetailTab.historial,
-          _ => LeadDetailTab.datos,
+        if (context.read<InfoLeadCubit>().state is! InfoLeadSuccess) return;
+        final tabIndex = switch (value) {
+          'negociaciones' => 1,
+          'historial' => 2,
+          _ => 0,
         };
-
-        LeadDetailSheet.show(
-          context,
-          initialTab: tab,
-          lead: lead,
-          leadId: lead.idLead,
-          idNumero: widget.idNumero,
-          cubit: context.read<InfoLeadCubit>(),
-        );
+        setState(() {
+          _showLeadPanel = true;
+          _panelTabController.animateTo(tabIndex);
+        });
       },
       body: Column(
         children: [
@@ -211,7 +207,7 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             color: AppColors.surface,
             child: Column(
               children: [
-                const _OndaBanner(),
+                const ChatOndaBanner(),
                 BlocBuilder<InfoLeadCubit, InfoLeadState>(
                   buildWhen: (prev, curr) {
                     if (curr is! InfoLeadSuccess) return false;
@@ -362,6 +358,21 @@ class _ChatDetailViewState extends State<ChatDetailView> {
             ),
           ),
 
+          if (_showLeadPanel)
+            BlocBuilder<InfoLeadCubit, InfoLeadState>(
+              buildWhen: (prev, curr) => curr is InfoLeadSuccess,
+              builder: (context, state) {
+                if (state is! InfoLeadSuccess) return const SizedBox.shrink();
+                return ChatLeadPanel(
+                  lead: state.lead,
+                  idNumero: widget.idNumero,
+                  tabController: _panelTabController,
+                  cubit: context.read<InfoLeadCubit>(),
+                  onClose: () => setState(() => _showLeadPanel = false),
+                );
+              },
+            ),
+
           BlocBuilder<ChatDetailBloc, ChatDetailState>(
             buildWhen: (prev, curr) {
               final prevActivo =
@@ -383,37 +394,3 @@ class _ChatDetailViewState extends State<ChatDetailView> {
   }
 }
 
-class _OndaBanner extends StatelessWidget {
-  const _OndaBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return CustomPaint(
-      painter: _OndaPainter(colorScheme.primary),
-      child: const ChatIaBanner(),
-    );
-  }
-}
-
-// Pinta azul de arriba hasta la mitad del card, con ola convexa hacia abajo.
-// El card (child) queda encima tapando el centro; la ola asoma en los márgenes laterales.
-class _OndaPainter extends CustomPainter {
-  final Color color;
-  const _OndaPainter(this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const ola = AppSpacing.xxxl;
-    final mitad = size.height / 2;
-    final path = Path()
-      ..lineTo(0, mitad)
-      ..quadraticBezierTo(size.width / 2, mitad + ola, size.width, mitad)
-      ..lineTo(size.width, 0)
-      ..close();
-    canvas.drawPath(path, Paint()..color = color);
-  }
-
-  @override
-  bool shouldRepaint(_OndaPainter old) => old.color != color;
-}

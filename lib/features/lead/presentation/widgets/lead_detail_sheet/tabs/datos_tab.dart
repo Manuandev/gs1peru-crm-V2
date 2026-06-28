@@ -9,8 +9,9 @@ class DatosTab extends StatelessWidget {
   final Lead lead;
   final int idNumero;
   final InfoLeadCubit? cubit;
+  final VoidCallback? onCerrar;
 
-  const DatosTab({super.key, required this.lead, required this.idNumero, this.cubit});
+  const DatosTab({super.key, required this.lead, required this.idNumero, this.cubit, this.onCerrar});
 
   @override
   Widget build(BuildContext context) {
@@ -57,12 +58,12 @@ class DatosTab extends StatelessWidget {
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
-                    AppIcons.documento,
+                    AppIcons.cargo,
                     size: AppSizing.iconActionSm,
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Cargo',
-                  valor: 'Gerente de Operaciones',
+                  valor: '—',
                 ),
               ),
               _ParFila(
@@ -73,7 +74,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Correo',
-                  valor: 'juan.perez@gs1mx.org',
+                  valor: lead.correo.isEmpty ? '—' : lead.correo,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -107,7 +108,7 @@ class DatosTab extends StatelessWidget {
               _ParFila(
                 izquierda: _CampoDato(
                   icono: Icon(
-                    AppIcons.interes,
+                    AppIcons.cursoEvento,
                     size: AppSizing.iconActionSm,
                     color: colorScheme.primary,
                   ),
@@ -148,12 +149,12 @@ class DatosTab extends StatelessWidget {
               _ParFila(
                 izquierda: _CampoDato(
                   icono: Icon(
-                    AppIcons.reasignar,
+                    AppIcons.origen,
                     size: AppSizing.iconActionSm,
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Origen',
-                  valor: 'Click-to-WhatsApp Ads',
+                  valor: lead.canal.isEmpty ? '—' : lead.canal,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -162,7 +163,9 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Fecha de creación',
-                  valor: '19/05/2026 · 10:12',
+                  valor: lead.fechaHora.isEmpty
+                      ? '—'
+                      : '${lead.fechaHora.formatDate(AppDateFormat.shortDate)} · ${lead.fechaHora.formatDate(AppDateFormat.hourMinute)}',
                 ),
               ),
             ],
@@ -172,7 +175,11 @@ class DatosTab extends StatelessWidget {
             text: 'Editar lead',
             icon: AppIcons.edit,
             onPressed: () {
-              NavigationService.goBack();
+              if (onCerrar != null) {
+                onCerrar!();
+              } else {
+                NavigationService.goBack();
+              }
               NavigationService.navigateTo(
                 AppRoutes.detalleEditarLead,
                 arguments: {'idLead': lead.idLead, 'cubit': cubit},

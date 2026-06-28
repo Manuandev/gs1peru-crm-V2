@@ -16,7 +16,7 @@ class SelectTemplatePortrait extends StatefulWidget {
 }
 
 class _SelectTemplatePortraitState extends State<SelectTemplatePortrait> {
-  Template? _selected;
+  Plantilla? _selected;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +70,7 @@ class _SelectTemplatePortraitState extends State<SelectTemplatePortrait> {
                 child: FilledButton.icon(
                   onPressed: _selected == null
                       ? null
-                      : () => context.goBack<Template>(_selected),
+                      : () => context.goBack<Plantilla>(_selected),
                   icon: const Icon(AppIcons.send),
                   label: const Text('Enviar plantilla'),
                   style: FilledButton.styleFrom(
@@ -95,7 +95,7 @@ class _SelectTemplatePortraitState extends State<SelectTemplatePortrait> {
 // ── Card individual ───────────────────────────────────────────────────────────
 
 class _TemplateCard extends StatelessWidget {
-  final Template template;
+  final Plantilla template;
   final bool isSelected;
   final VoidCallback onTap;
 

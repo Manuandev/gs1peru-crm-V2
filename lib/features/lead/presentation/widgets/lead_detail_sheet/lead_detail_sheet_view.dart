@@ -139,10 +139,9 @@ class _LeadDetailSheetState extends State<LeadDetailSheet>
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if (widget.lead.nombreEmpresa.isNotEmpty)
                           Text(
-                            widget.lead.nombreEmpresa.isEmpty
-                                ? 'Sin empresa'
-                                : widget.lead.nombreEmpresa,
+                            widget.lead.nombreEmpresa,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -159,9 +158,9 @@ class _LeadDetailSheetState extends State<LeadDetailSheet>
               TabBar(
                 controller: _tabController,
                 tabs: const [
-                  Tab(text: 'Datos'),
-                  Tab(text: 'Negociaciones'),
-                  Tab(text: 'Historial'),
+                  Tab(icon: Icon(AppIcons.datosLead), text: 'Datos'),
+                  Tab(icon: Icon(AppIcons.negociacion), text: 'Negociaciones'),
+                  Tab(icon: Icon(AppIcons.historial), text: 'Historial'),
                 ],
               ),
 

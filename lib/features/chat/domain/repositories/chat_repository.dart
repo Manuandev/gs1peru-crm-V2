@@ -31,10 +31,10 @@ abstract class ChatRepository {
 
   Future<CrudResult> updateEstado(int idNumero, String idEstado);
 
-  Future<List<Template>> getTemplates();
+  Future<List<Plantilla>> getPlantillas();
 
   bool sendWhatsAppTemplateMessage({
-    required Template template,
+    required Plantilla plantilla,
     required String mensajeFormateado,
     required String idNumero,
     required String numero,

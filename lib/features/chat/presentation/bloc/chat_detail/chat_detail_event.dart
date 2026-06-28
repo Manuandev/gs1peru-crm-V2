@@ -63,7 +63,7 @@ class ChatDetailTextMessageSent extends ChatDetailEvent {
 }
 
 class ChatDetailTemplateMessageSent extends ChatDetailEvent {
-  final Template template;
+  final Plantilla template;
   final String numero;
   final String chatCab;
   final String nombreCliente;

@@ -37,6 +37,13 @@ class ChatDetailPage extends StatelessWidget {
             UpdateLeadInfoUseCase(context.read<LeadRepository>()),
           ),
         ),
+        BlocProvider(
+          create: (_) => NegociacionesCubit(
+            obtenerNegociacionesUseCase:
+                GetNegociacionesLead(LeadRepositoryImpl(LeadRemoteDatasource())),
+          ),
+        ),
+        BlocProvider(create: (_) => HistorialLeadCubit()),
       ],
       child: ChatDetailView(
         idNumero: idNumero,

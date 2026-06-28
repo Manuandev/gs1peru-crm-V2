@@ -83,7 +83,7 @@ class ChatRemoteDatasource {
   }
 
   bool sendWhatsAppTemplateMessage({
-    required Template template,
+    required Plantilla plantilla,
     required String mensajeFormateado,
     required String idNumero,
     required String numero,
@@ -98,7 +98,7 @@ class ChatRemoteDatasource {
 
     final vars = [
       idNumero, // VAR01
-      template.nombre, // VAR02
+      plantilla.nombre, // VAR02
       user.codUser, // VAR03
       mensajeFormateado, // VAR04
       'template', // VAR05
@@ -110,9 +110,9 @@ class ChatRemoteDatasource {
       nombreCliente, // VAR11
       apellidoCliente, // VAR12
       _session.userApe, // VAR13
-      template.detalle, // VAR14
-      '${template.rutaArchivo}${template.nombreArchivo}${template.extensionArchivo}', // VAR15
-      template.isBoton ? '1' : '0', // VAR16
+      plantilla.detalle, // VAR14
+      '${plantilla.rutaArchivo}${plantilla.nombreArchivo}${plantilla.extensionArchivo}', // VAR15
+      plantilla.isBoton ? '1' : '0', // VAR16
     ].join(camp);
 
     final String body = '${user.token}$sep$vars${sep}CA';
@@ -233,13 +233,13 @@ class ChatRemoteDatasource {
     };
   }
 
-  Future<List<TemplateModel>> getTemplates() async {
+  Future<List<PlantillaModel>> getTemplates() async {
     final String body = '${sep}LP';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
     return switch (result) {
-      ApiSuccess(:final data) => TemplateModel.parseList(data),
+      ApiSuccess(:final data) => PlantillaModel.parseList(data),
       ApiEmpty() => [],
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),

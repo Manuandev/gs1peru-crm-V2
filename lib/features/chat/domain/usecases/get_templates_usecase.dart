@@ -6,5 +6,5 @@ class GetTemplatesUseCase {
   final ChatRepository repository;
   const GetTemplatesUseCase(this.repository);
 
-  Future<List<Template>> call() => repository.getTemplates();
+  Future<List<Plantilla>> call() => repository.getPlantillas();
 }

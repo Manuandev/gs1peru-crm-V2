@@ -10,7 +10,7 @@ export 'data/repositories/chat_repository_impl.dart';
 
 export 'domain/entities/conversation.dart';
 export 'domain/entities/message.dart';
-export 'domain/entities/template.dart';
+export 'domain/entities/plantilla.dart';
 
 export 'domain/enums/media_type.dart';
 export 'domain/enums/input_mode.dart';
@@ -66,6 +66,8 @@ export 'presentation/widgets/chat_list/contadores_chat_row.dart';
 export 'presentation/widgets/chat_list/filtro_chat_drawer.dart';
 
 export 'presentation/widgets/chat_detail/chat_detail_view.dart';
+export 'presentation/widgets/chat_detail/chat_lead_panel.dart';
+export 'presentation/widgets/chat_detail/chat_onda_banner.dart';
 
 export 'presentation/widgets/chat_detail/attachment_picker_widget.dart';
 export 'presentation/widgets/chat_detail/staged_file.dart';

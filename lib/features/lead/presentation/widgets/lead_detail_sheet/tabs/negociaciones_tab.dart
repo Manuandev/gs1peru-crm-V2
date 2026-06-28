@@ -3,17 +3,18 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class NegociacionesTab extends StatefulWidget {
   final int leadId;
   final int idNumero;
+  final VoidCallback? onCerrar;
 
   const NegociacionesTab({
     super.key,
     required this.leadId,
     required this.idNumero,
+    this.onCerrar,
   });
 
   @override
@@ -47,7 +48,9 @@ class _NegociacionesTabState extends State<NegociacionesTab>
           ),
           NegociacionesSuccess(:final negociaciones) => _ListaNegociaciones(
             negociaciones: negociaciones,
+            leadId: widget.leadId,
             idNumero: widget.idNumero,
+            onCerrar: widget.onCerrar,
           ),
         };
       },
@@ -63,11 +66,15 @@ enum _FiltroNeg { todas, activa, ganadas }
 
 class _ListaNegociaciones extends StatefulWidget {
   final List<NegociacionLead> negociaciones;
+  final int leadId;
   final int idNumero;
+  final VoidCallback? onCerrar;
 
   const _ListaNegociaciones({
     required this.negociaciones,
+    required this.leadId,
     required this.idNumero,
+    this.onCerrar,
   });
 
   @override
@@ -76,15 +83,6 @@ class _ListaNegociaciones extends StatefulWidget {
 
 class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   _FiltroNeg _filtro = _FiltroNeg.todas;
-
-  void _editarLead(int idLead) {
-    if (idLead == 0) return;
-    NavigationService.goBack();
-    NavigationService.navigateTo(
-      AppRoutes.detalleEditarLead,
-      arguments: {'idLead': idLead},
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,8 +131,11 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
         ...visibles.map(
           (negociacion) => NegociacionCard(
             negociacion: negociacion,
+            leadId: widget.leadId,
             onGenerarSolicitud: () {},
-            onEditarLead: () => _editarLead(negociacion.idLead),
+            onEdited: () => context
+                .read<NegociacionesCubit>()
+                .cargarNegociaciones(widget.leadId),
           ),
         ),
 

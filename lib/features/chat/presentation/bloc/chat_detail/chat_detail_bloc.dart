@@ -225,7 +225,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     if (_currentIdNumero != null) {
       _sendTemplateMessage(
-        template: event.template,
+        plantilla: event.template,
         mensajeFormateado: mensajeFormateado,
         idNumero: _currentIdNumero.toString(),
         numero: event.numero,

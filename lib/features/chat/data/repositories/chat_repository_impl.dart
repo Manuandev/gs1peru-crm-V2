@@ -53,11 +53,11 @@ class ChatRepositoryImpl implements ChatRepository {
       _datasource.updateEstado(idNumero, idEstado);
 
   @override
-  Future<List<Template>> getTemplates() => _datasource.getTemplates();
+  Future<List<Plantilla>> getPlantillas() => _datasource.getTemplates();
 
   @override
   bool sendWhatsAppTemplateMessage({
-    required Template template,
+    required Plantilla plantilla,
     required String mensajeFormateado,
     required String idNumero,
     required String numero,
@@ -67,7 +67,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required bool isExpirado,
     required bool isCerrado,
   }) => _datasource.sendWhatsAppTemplateMessage(
-    template: template,
+    plantilla: plantilla,
     mensajeFormateado: mensajeFormateado,
     idNumero: idNumero,
     numero: numero,

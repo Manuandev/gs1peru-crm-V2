@@ -274,7 +274,7 @@ class AppRouter {
         return infoLeadProvider(EditLeadPage(idLead: idLead));
       },
     ),
-    AppRoutes.templates: RouteDefinition<Template>(
+    AppRoutes.templates: RouteDefinition<Plantilla>(
       // T = Template: Navigator.pop<Template>(context, template) funciona
       transition: TransitionType.slideRight,
       builder: (context) {

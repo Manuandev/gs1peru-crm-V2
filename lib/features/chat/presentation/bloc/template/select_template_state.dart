@@ -20,7 +20,7 @@ class SelectTemplateLoading extends SelectTemplateState {
 }
 
 class SelectTemplateLoaded extends SelectTemplateState {
-  final List<Template> templates;
+  final List<Plantilla> templates;
 
   const SelectTemplateLoaded({required this.templates});
 

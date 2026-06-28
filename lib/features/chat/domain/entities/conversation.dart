@@ -71,6 +71,9 @@ class Chat extends Equatable {
   final String archivoNombreCliente;
   final String archivoTipoCliente;
 
+  // Cantidad de mensajes de la ia
+  final int cantidadMensajesIA;
+
   /// Retorna el id del estado a mostrar en UI: padre si existe, directo si no.
   String get idEstadoEfectivo =>
       idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
@@ -149,6 +152,9 @@ class Chat extends Equatable {
     // Documento del último mensaje del CLIENTE
     required this.archivoNombreCliente,
     required this.archivoTipoCliente,
+
+    // Cantidad de mensajes de la ia
+    required this.cantidadMensajesIA,
   });
 
   @override
@@ -204,6 +210,9 @@ class Chat extends Equatable {
     // Documento si tiene
     archivoNombre,
     archivoTipo,
+  
+    // Cantidad de mensajes de la ia
+    cantidadMensajesIA,
   ];
 
   Chat copyWith({
@@ -271,6 +280,9 @@ class Chat extends Equatable {
     // Documento del último mensaje del CLIENTE
     String? archivoNombreCliente,
     String? archivoTipoCliente,
+
+    // Cantidad de mensajes de la ia
+    int? cantidadMensajesIA,
   }) {
     return Chat(
       // Contacto
@@ -340,6 +352,9 @@ class Chat extends Equatable {
       // Documento del último mensaje del CLIENTE
       archivoNombreCliente: archivoNombreCliente ?? this.archivoNombreCliente,
       archivoTipoCliente: archivoTipoCliente ?? this.archivoTipoCliente,
+
+      // Cantidad de mensajes de la ia
+      cantidadMensajesIA: cantidadMensajesIA ?? this.cantidadMensajesIA,
     );
   }
 }

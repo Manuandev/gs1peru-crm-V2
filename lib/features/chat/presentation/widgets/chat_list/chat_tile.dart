@@ -84,24 +84,28 @@ class ChatTile extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _ChipInfo(
-                      icon: AppIcons.lightning,
-                      label: 'Derivado por IA',
-                      bgColor: AppColors.datoSubestadobg,
-                      fgColor: AppColors.datoSubestadoFg,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    _ChipInfo(
-                      icon: AppIcons.ia,
-                      label: 'Bot atendió 6 mensajes',
-                      bgColor: AppColors.datoEstadoBg,
-                      fgColor: AppColors.datoEstadoFg,
-                    ),
-                  ],
-                ),
+                if (chat.isDerivadoIA)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      _ChipInfo(
+                        icon: AppIcons.lightning,
+                        label: 'Derivado por IA',
+                        bgColor: AppColors.datoSubestadobg,
+                        fgColor: AppColors.datoSubestadoFg,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      _ChipInfo(
+                        icon: AppIcons.ia,
+                        label:
+                            'Bot atendió ${chat.cantidadMensajesIA} mensajes',
+                        bgColor: AppColors.datoEstadoBg,
+                        fgColor: AppColors.datoEstadoFg,
+                      ),
+                    ],
+                  )
+                else
+                  const SizedBox.shrink(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -167,7 +171,7 @@ class _InfoChat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final preview = buildMessagePreview(chat);
+    final preview = buildClientMessagePreview(chat);
     final idCanal = chat.idCanal > 0 ? chat.idCanal : 1;
     final nombre = chat.nombreCompleto.length > AppConstants.maxCharsNombreChat
         ? '${chat.nombreCompleto.substring(0, AppConstants.maxCharsNombreChat)}...'
@@ -270,38 +274,53 @@ class _InfoDerecha extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ahora = DateTime.now();
-    final fechaUltimoMensaje = DateTime.tryParse(chat.fechaHora) ?? ahora;
-    final elapsed = ahora.difference(fechaUltimoMensaje);
-    final colorTiempo = ElapsedTimeUtils.colorFromElapsed(elapsed);
+
+    // Tiempo desde el primer mensaje del cliente
+    final fechaPrimerMensaje = DateFormatter.parseDate(
+      chat.fcPrimerMensajeCliente,
+    );
+    final elapsedPrimero = fechaPrimerMensaje != null
+        ? ahora.difference(fechaPrimerMensaje)
+        : null;
+
+    // "Sin respuesta" — solo visible si el cliente mandó el último mensaje
+    final clienteEsUltimo = chat.direccionMensaje == 'CLI';
+    final fechaUltimoMensaje = DateFormatter.parseDate(chat.fechaHora);
+    final elapsedSinRespuesta = fechaUltimoMensaje != null
+        ? ahora.difference(fechaUltimoMensaje)
+        : null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          ElapsedTimeUtils.formatHyM(elapsed),
-          style: AppTextStyles.labelMedium.copyWith(
-            color: colorTiempo,
-            fontWeight: AppTextStyles.weightBold,
+        if (elapsedPrimero != null)
+          Text(
+            ElapsedTimeUtils.formatHyM(elapsedPrimero),
+            style: AppTextStyles.labelMedium.copyWith(
+              color: ElapsedTimeUtils.colorFromElapsed(elapsedPrimero),
+              fontWeight: AppTextStyles.weightBold,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          'sin respuesta',
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+        if (clienteEsUltimo && elapsedSinRespuesta != null) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            'sin respuesta',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.start,
           ),
-          textAlign: TextAlign.start,
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          ElapsedTimeUtils.formatHyM(elapsed),
-          style: AppTextStyles.labelMedium.copyWith(
-            color: colorTiempo,
-            fontWeight: AppTextStyles.weightBold,
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            ElapsedTimeUtils.formatHyM(elapsedSinRespuesta),
+            style: AppTextStyles.labelMedium.copyWith(
+              color: ElapsedTimeUtils.colorFromElapsed(elapsedSinRespuesta),
+              fontWeight: AppTextStyles.weightBold,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
+        ],
       ],
     );
   }
@@ -353,4 +372,3 @@ class _ChipInfo extends StatelessWidget {
     );
   }
 }
-

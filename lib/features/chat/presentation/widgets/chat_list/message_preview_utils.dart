@@ -45,6 +45,39 @@ MessagePreview buildMessagePreview(Chat chat) {
   }
 }
 
+/// Preview del último mensaje del CLIENTE (usa los campos *Cliente de Chat).
+MessagePreview buildClientMessagePreview(Chat chat) {
+  switch (chat.tipoCliente.toLowerCase()) {
+    case 'audio':
+      return MessagePreview(
+        AppIcons.mic,
+        'Audio',
+        color: AppColors.msgPreviewAudio,
+      );
+    case 'image':
+      return MessagePreview(
+        AppIcons.photo,
+        'Foto',
+        color: AppColors.success,
+      );
+    case 'video':
+      return MessagePreview(
+        AppIcons.videocam,
+        'Video',
+        color: AppColors.msgPreviewVideo,
+      );
+    case 'document':
+      return MessagePreview(
+        fileIcon(chat.archivoNombreCliente),
+        fileLabel(chat.archivoNombreCliente),
+        color: fileColor(chat.archivoNombreCliente),
+      );
+    case 'text':
+    default:
+      return MessagePreview(null, _cleanText(chat.contenidoCliente));
+  }
+}
+
 class MessageStatusIcon extends StatelessWidget {
   final String estado;
   final Color color;

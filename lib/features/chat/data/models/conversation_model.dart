@@ -71,6 +71,9 @@ class ChatModel extends Chat {
     // Documento del último mensaje del CLIENTE
     required super.archivoNombreCliente,
     required super.archivoTipoCliente,
+
+    // Cantidad de mensajes de la ia
+    required super.cantidadMensajesIA,
   });
 
   // Índices del SP CSV_WHATSAPP_LST_APP (task LS):
@@ -168,6 +171,9 @@ class ChatModel extends Chat {
       // Documento del último mensaje del CLIENTE
       archivoNombreCliente: ParseUtils.str(fields, 51),
       archivoTipoCliente: ParseUtils.str(fields, 52),
+
+      // Cantidad de mensajes de la ia
+      cantidadMensajesIA: ParseUtils.toInt(fields, 53),
     );
   }
 

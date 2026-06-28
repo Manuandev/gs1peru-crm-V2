@@ -31,9 +31,9 @@ class ChatModel extends Chat {
     required super.modalidad,
     // Info estado
     required super.idEstado,
-    required super.idEstadoDescripcion,
+    required super.descEstado,
     required super.idEstadoPadre,
-    super.descEstadoPadre = '',
+    required super.descEstadoPadre,
     // Info campaña
     required super.idCampania,
     required super.nombreCampania,
@@ -56,6 +56,21 @@ class ChatModel extends Chat {
     // Documento si tiene
     required super.archivoNombre,
     required super.archivoTipo,
+
+    // IBS
+    required super.isDerivadoIA,
+    // Fecha del primer mensaje del cliente
+    required super.fcPrimerMensajeCliente,
+    // Último mensaje del CLIENTE
+    required super.idTokenMetaCliente,
+    required super.tipoCliente,
+    required super.direccionCliente,
+    required super.contenidoCliente,
+    required super.estadoEntregaCliente,
+    required super.fcUsuarioCCliente,
+    // Documento del último mensaje del CLIENTE
+    required super.archivoNombreCliente,
+    required super.archivoTipoCliente,
   });
 
   // Índices del SP CSV_WHATSAPP_LST_APP (task LS):
@@ -113,7 +128,7 @@ class ChatModel extends Chat {
       // 19-22: precio_base, precio, cantidad, descuento — no aplican en ChatModel
       // Info estado
       idEstado: ParseUtils.str(fields, 23),
-      idEstadoDescripcion: ParseUtils.str(fields, 24),
+      descEstado: ParseUtils.str(fields, 24),
       idEstadoPadre: ParseUtils.str(fields, 25),
       descEstadoPadre: ParseUtils.str(fields, 26),
       // Info campaña
@@ -138,6 +153,21 @@ class ChatModel extends Chat {
       // Documento si tiene
       archivoNombre: ParseUtils.str(fields, 41),
       archivoTipo: ParseUtils.str(fields, 42),
+
+      // IBS
+      isDerivadoIA: ParseUtils.toBool(fields, 43),
+      // Fecha del primer mensaje del cliente
+      fcPrimerMensajeCliente: ParseUtils.str(fields, 44),
+      // Último mensaje del CLIENTE
+      idTokenMetaCliente: ParseUtils.str(fields, 45),
+      tipoCliente: ParseUtils.str(fields, 46),
+      direccionCliente: ParseUtils.str(fields, 47),
+      contenidoCliente: ParseUtils.str(fields, 48),
+      estadoEntregaCliente: ParseUtils.str(fields, 49),
+      fcUsuarioCCliente: ParseUtils.str(fields, 50),
+      // Documento del último mensaje del CLIENTE
+      archivoNombreCliente: ParseUtils.str(fields, 51),
+      archivoTipoCliente: ParseUtils.str(fields, 52),
     );
   }
 

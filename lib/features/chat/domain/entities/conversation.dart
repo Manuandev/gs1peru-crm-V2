@@ -29,8 +29,9 @@ class Chat extends Equatable {
   final String modalidad;
   // Info estado
   final String idEstado;
+  final String descEstado;
   final String idEstadoPadre;
-  final String idEstadoDescripcion;
+  final String descEstadoPadre;
   // Info campaña
   final int idCampania;
   final String nombreCampania;
@@ -43,19 +44,32 @@ class Chat extends Equatable {
   // Info interes
   final int idInteres;
   final String nombreInteres;
-  // Último mensaje
+  // Último mensaje en General
   final String idTokenMeta;
   final String tipo;
-  final String direccionMensaje; // AIA - ASISTENTE IA  / ASE - ASESOR / CLI - CLIENTE
+  final String
+  direccionMensaje; // AIA - ASISTENTE IA  / ASE - ASESOR / CLI - CLIENTE
   final String contenido;
   final String estadoEntrega;
   final String fechaHora;
-  // Documento si tiene
+  // Documento si tiene en General
   final String archivoNombre;
   final String archivoTipo;
 
-  // EP.DESCRIPCION — índice 22 — descripción del estado padre (vacía si no tiene padre)
-  final String descEstadoPadre;
+  // IBS
+  final bool isDerivadoIA;
+  // Fecha del primer mensaje del cliente
+  final String fcPrimerMensajeCliente;
+  // Último mensaje del CLIENTE
+  final String idTokenMetaCliente;
+  final String tipoCliente;
+  final String direccionCliente;
+  final String contenidoCliente;
+  final String estadoEntregaCliente;
+  final String fcUsuarioCCliente;
+  // Documento del último mensaje del CLIENTE
+  final String archivoNombreCliente;
+  final String archivoTipoCliente;
 
   /// Retorna el id del estado a mostrar en UI: padre si existe, directo si no.
   String get idEstadoEfectivo =>
@@ -63,7 +77,7 @@ class Chat extends Equatable {
 
   /// Retorna la descripción del estado efectivo.
   String get descEstadoEfectiva =>
-      idEstadoPadre.isNotEmpty ? descEstadoPadre : idEstadoDescripcion;
+      idEstadoPadre.isNotEmpty ? descEstadoPadre : descEstado;
 
   String get nombreCompleto =>
       '$nombres $apellidoPaterno $apellidoMaterno'.trim();
@@ -95,8 +109,9 @@ class Chat extends Equatable {
     required this.modalidad,
     // Info estado
     required this.idEstado,
+    required this.descEstado,
     required this.idEstadoPadre,
-    required this.idEstadoDescripcion,
+    required this.descEstadoPadre,
     // Info campaña
     required this.idCampania,
     required this.nombreCampania,
@@ -119,8 +134,21 @@ class Chat extends Equatable {
     // Documento si tiene
     required this.archivoNombre,
     required this.archivoTipo,
-    // EP.DESCRIPCION — índice 22
-    this.descEstadoPadre = '',
+
+    // IBS
+    required this.isDerivadoIA,
+    // Fecha del primer mensaje del cliente
+    required this.fcPrimerMensajeCliente,
+    // Último mensaje del CLIENTE
+    required this.idTokenMetaCliente,
+    required this.tipoCliente,
+    required this.direccionCliente,
+    required this.contenidoCliente,
+    required this.estadoEntregaCliente,
+    required this.fcUsuarioCCliente,
+    // Documento del último mensaje del CLIENTE
+    required this.archivoNombreCliente,
+    required this.archivoTipoCliente,
   });
 
   @override
@@ -151,8 +179,9 @@ class Chat extends Equatable {
     modalidad,
     // Info estado
     idEstado,
+    descEstado,
     idEstadoPadre,
-    idEstadoDescripcion,
+    descEstadoPadre,
     // Info campaña
     idCampania,
     nombreCampania,
@@ -175,7 +204,6 @@ class Chat extends Equatable {
     // Documento si tiene
     archivoNombre,
     archivoTipo,
-    descEstadoPadre,
   ];
 
   Chat copyWith({
@@ -194,30 +222,55 @@ class Chat extends Equatable {
     bool? isPrincipal,
     bool? isFavorito,
     bool? isBloqueado,
+    // Conversación más reciente de ese número
     bool? isExpirado,
     bool? isCerrado,
+    // Lead más reciente de ese número
     int? idLead,
     String? modalidad,
+    // Info estado
     String? idEstado,
+    String? descEstado,
     String? idEstadoPadre,
-    String? idEstadoDescripcion,
+    String? descEstadoPadre,
+    // Info campaña
     int? idCampania,
     String? nombreCampania,
+    // Info oportunidad
     int? idOportunidad,
     String? nombreOportunidad,
+    // Info canal
     int? idCanal,
     String? nombreCanal,
+    // Info interes
     int? idInteres,
     String? nombreInteres,
+
+    // Último mensaje
     String? idTokenMeta,
     String? tipo,
     String? direccionMensaje,
     String? contenido,
     String? estadoEntrega,
     String? fechaHora,
+    // Documento si tiene
     String? archivoNombre,
     String? archivoTipo,
-    String? descEstadoPadre,
+
+    // IBS
+    bool? isDerivadoIA,
+    // Fecha del primer mensaje del cliente
+    String? fcPrimerMensajeCliente,
+    // Último mensaje del CLIENTE
+    String? idTokenMetaCliente,
+    String? tipoCliente,
+    String? direccionCliente,
+    String? contenidoCliente,
+    String? estadoEntregaCliente,
+    String? fcUsuarioCCliente,
+    // Documento del último mensaje del CLIENTE
+    String? archivoNombreCliente,
+    String? archivoTipoCliente,
   }) {
     return Chat(
       // Contacto
@@ -246,8 +299,9 @@ class Chat extends Equatable {
       modalidad: modalidad ?? this.modalidad,
       //Info Estado
       idEstado: idEstado ?? this.idEstado,
+      descEstado: descEstado ?? this.descEstado,
       idEstadoPadre: idEstadoPadre ?? this.idEstadoPadre,
-      idEstadoDescripcion: idEstadoDescripcion ?? this.idEstadoDescripcion,
+      descEstadoPadre: descEstadoPadre ?? this.descEstadoPadre,
       // Info Campaña
       idCampania: idCampania ?? this.idCampania,
       nombreCampania: nombreCampania ?? this.nombreCampania,
@@ -270,7 +324,22 @@ class Chat extends Equatable {
       // Documento si tiene
       archivoNombre: archivoNombre ?? this.archivoNombre,
       archivoTipo: archivoTipo ?? this.archivoTipo,
-      descEstadoPadre: descEstadoPadre ?? this.descEstadoPadre,
+
+      // IBS
+      isDerivadoIA: isDerivadoIA ?? this.isDerivadoIA,
+      // Fecha del primer mensaje del cliente
+      fcPrimerMensajeCliente:
+          fcPrimerMensajeCliente ?? this.fcPrimerMensajeCliente,
+      // Último mensaje del CLIENTE
+      idTokenMetaCliente: idTokenMetaCliente ?? this.idTokenMetaCliente,
+      tipoCliente: tipoCliente ?? this.tipoCliente,
+      direccionCliente: direccionCliente ?? this.direccionCliente,
+      contenidoCliente: contenidoCliente ?? this.contenidoCliente,
+      estadoEntregaCliente: estadoEntregaCliente ?? this.estadoEntregaCliente,
+      fcUsuarioCCliente: fcUsuarioCCliente ?? this.fcUsuarioCCliente,
+      // Documento del último mensaje del CLIENTE
+      archivoNombreCliente: archivoNombreCliente ?? this.archivoNombreCliente,
+      archivoTipoCliente: archivoTipoCliente ?? this.archivoTipoCliente,
     );
   }
 }

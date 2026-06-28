@@ -24,7 +24,10 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   int? _idLead;
   StreamSubscription<LeadUpdate>? _updateSub;
 
-  InfoLeadCubit(this._getInfo, this._updateEstado, this._updateInfo, [
+  InfoLeadCubit(
+    this._getInfo,
+    this._updateEstado,
+    this._updateInfo, [
     this._getLeadDetalle,
   ]) : super(const InfoLeadInitial()) {
     _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
@@ -48,12 +51,14 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   // Inicializa desde la entidad Chat ya cargada en lista — sin llamada a API.
   void seed(Chat chat) {
     if (isClosed) return;
-    emit(InfoLeadSuccess(
-      _leadDesdeChat(chat),
-      isBloqueado: chat.isBloqueado,
-      isExpirado: chat.isExpirado,
-      isCerrado: chat.isCerrado,
-    ));
+    emit(
+      InfoLeadSuccess(
+        _leadDesdeChat(chat),
+        isBloqueado: chat.isBloqueado,
+        isExpirado: chat.isExpirado,
+        isCerrado: chat.isCerrado,
+      ),
+    );
   }
 
   // Inicializa directamente desde un Lead ya cargado (ej. desde EditLeadPage sin cubit compartido).
@@ -64,32 +69,32 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
 
   Lead _leadDesdeChat(Chat chat) {
     return Lead(
-      idLead:          chat.idLead,
-      idContacto:      chat.idContacto,
-      nombre:          chat.nombres,
+      idLead: chat.idLead,
+      idContacto: chat.idContacto,
+      nombre: chat.nombres,
       apellidoPaterno: chat.apellidoPaterno ?? '',
       apellidoMaterno: chat.apellidoMaterno ?? '',
-      nombreEmpresa:   chat.nombreEmpresa,
-      asesor:          chat.asesor ?? '',
-      fechaHora:       chat.fechaHora,
-      idNumero:        chat.idNumero,
-      prefijo:         chat.prefijoPais,
-      numero:          chat.numero,
-      isFavorito:      chat.isFavorito,
-      correo:          '',
-      idEstado:        chat.idEstado,
-      estado:          chat.idEstadoDescripcion,
-      idCampania:      chat.idCampania,
-      campania:        chat.nombreCampania,
-      idEvento:        chat.idOportunidad,
-      evento:          chat.nombreOportunidad,
-      idCanal:         chat.idCanal,
-      canal:           chat.nombreCanal,
-      idInteres:       chat.idInteres,
-      interes:         chat.nombreInteres,
-      modalidad:       chat.modalidad,
-      idEstadoPadre:           chat.idEstadoPadre,
-      descripcionEstadoPadre:  chat.descEstadoPadre,
+      nombreEmpresa: chat.nombreEmpresa,
+      asesor: chat.asesor ?? '',
+      fechaHora: chat.fechaHora,
+      idNumero: chat.idNumero,
+      prefijo: chat.prefijoPais,
+      numero: chat.numero,
+      isFavorito: chat.isFavorito,
+      correo: '',
+      idEstado: chat.idEstado,
+      estado: chat.descEstado,
+      idCampania: chat.idCampania,
+      campania: chat.nombreCampania,
+      idEvento: chat.idOportunidad,
+      evento: chat.nombreOportunidad,
+      idCanal: chat.idCanal,
+      canal: chat.nombreCanal,
+      idInteres: chat.idInteres,
+      interes: chat.nombreInteres,
+      modalidad: chat.modalidad,
+      idEstadoPadre: chat.idEstadoPadre,
+      descripcionEstadoPadre: chat.descEstadoPadre,
     );
   }
 
@@ -120,19 +125,21 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     // Preservar flags de conversación antes de entrar en loading
     final prev = state;
     final prevBloqueado = prev is InfoLeadSuccess ? prev.isBloqueado : false;
-    final prevExpirado  = prev is InfoLeadSuccess ? prev.isExpirado  : false;
-    final prevCerrado   = prev is InfoLeadSuccess ? prev.isCerrado   : false;
+    final prevExpirado = prev is InfoLeadSuccess ? prev.isExpirado : false;
+    final prevCerrado = prev is InfoLeadSuccess ? prev.isCerrado : false;
 
     emit(const InfoLeadLoading());
     try {
       final lead = await _getInfo(idLead);
       if (isClosed) return;
-      emit(InfoLeadSuccess(
-        lead,
-        isBloqueado: prevBloqueado,
-        isExpirado:  prevExpirado,
-        isCerrado:   prevCerrado,
-      ));
+      emit(
+        InfoLeadSuccess(
+          lead,
+          isBloqueado: prevBloqueado,
+          isExpirado: prevExpirado,
+          isCerrado: prevCerrado,
+        ),
+      );
     } on AppException catch (e) {
       emit(InfoLeadFailure(e.message));
     } catch (e, stackTrace) {
@@ -144,12 +151,14 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   void updateFavorito(bool value) {
     if (state is! InfoLeadSuccess) return;
     final s = state as InfoLeadSuccess;
-    emit(InfoLeadSuccess(
-      s.lead.copyWith(isFavorito: value),
-      isBloqueado: s.isBloqueado,
-      isExpirado:  s.isExpirado,
-      isCerrado:   s.isCerrado,
-    ));
+    emit(
+      InfoLeadSuccess(
+        s.lead.copyWith(isFavorito: value),
+        isBloqueado: s.isBloqueado,
+        isExpirado: s.isExpirado,
+        isCerrado: s.isCerrado,
+      ),
+    );
   }
 
   Future<void> updateEstado({
@@ -162,12 +171,14 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     final s = state as InfoLeadSuccess;
     final snapshot = s.lead;
 
-    emit(InfoLeadSuccess(
-      snapshot.copyWith(idEstado: idEstado, estado: estado),
-      isBloqueado: s.isBloqueado,
-      isExpirado:  s.isExpirado,
-      isCerrado:   s.isCerrado,
-    ));
+    emit(
+      InfoLeadSuccess(
+        snapshot.copyWith(idEstado: idEstado, estado: estado),
+        isBloqueado: s.isBloqueado,
+        isExpirado: s.isExpirado,
+        isCerrado: s.isCerrado,
+      ),
+    );
 
     try {
       final result = await _updateEstado(idNumero, idEstado);
@@ -181,19 +192,47 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
         case CrudAlert(:final message):
           _errorController.add(message);
         case CrudError(:final message):
-          emit(InfoLeadSuccess(snapshot, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+          emit(
+            InfoLeadSuccess(
+              snapshot,
+              isBloqueado: s.isBloqueado,
+              isExpirado: s.isExpirado,
+              isCerrado: s.isCerrado,
+            ),
+          );
           _errorController.add(message);
         case CrudNoInternet():
-          emit(InfoLeadSuccess(snapshot, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+          emit(
+            InfoLeadSuccess(
+              snapshot,
+              isBloqueado: s.isBloqueado,
+              isExpirado: s.isExpirado,
+              isCerrado: s.isCerrado,
+            ),
+          );
           _errorController.add('Sin conexión. Intenta de nuevo.');
         case CrudEmpty():
-          emit(InfoLeadSuccess(snapshot, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+          emit(
+            InfoLeadSuccess(
+              snapshot,
+              isBloqueado: s.isBloqueado,
+              isExpirado: s.isExpirado,
+              isCerrado: s.isCerrado,
+            ),
+          );
           _errorController.add('Respuesta inesperada del servidor.');
       }
     } catch (e) {
       if (isClosed) return;
       final current = state is InfoLeadSuccess ? (state as InfoLeadSuccess) : s;
-      emit(InfoLeadSuccess(snapshot, isBloqueado: current.isBloqueado, isExpirado: current.isExpirado, isCerrado: current.isCerrado));
+      emit(
+        InfoLeadSuccess(
+          snapshot,
+          isBloqueado: current.isBloqueado,
+          isExpirado: current.isExpirado,
+          isCerrado: current.isCerrado,
+        ),
+      );
       _errorController.add('No se pudo cambiar el estado. Intenta de nuevo.');
     }
   }
@@ -203,17 +242,17 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     String? estado,
     String? idEstadoPadre,
     String? descripcionEstadoPadre,
-    bool    clearEstadoPadre = false,
+    bool clearEstadoPadre = false,
     String? idSubEstado,
     String? subEstado,
-    int?    idCampania,
+    int? idCampania,
     String? campania,
-    int?    idEvento,
+    int? idEvento,
     String? evento,
-    bool    clearEvento = false,
-    int?    idCanal,
+    bool clearEvento = false,
+    int? idCanal,
     String? canal,
-    int?    idInteres,
+    int? idInteres,
     String? interes,
     String? nombre,
     String? apellidoPaterno,
@@ -229,33 +268,40 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     final current = s.lead;
 
     final updated = current.copyWith(
-      idEstado:               idEstado,
-      estado:                 estado,
-      idEstadoPadre:          idEstadoPadre,
+      idEstado: idEstado,
+      estado: estado,
+      idEstadoPadre: idEstadoPadre,
       descripcionEstadoPadre: descripcionEstadoPadre,
-      clearEstadoPadre:       clearEstadoPadre,
-      idSubEstado:            idSubEstado,
-      subEstado:              subEstado,
-      idCampania:             idCampania,
-      campania:               campania,
-      idEvento:               idEvento,
-      evento:                 evento,
-      clearEvento:            clearEvento,
-      idCanal:                idCanal,
-      canal:                  canal,
-      idInteres:              idInteres,
-      interes:                interes,
-      nombre:                 nombre,
-      apellidoPaterno:        apellidoPaterno,
-      apellidoMaterno:        apellidoMaterno,
-      correo:                 correo,
-      cantidad:               cantidad,
-      precioBase:             precioBase,
-      descuento:              descuento,
-      precio:                 precio,
+      clearEstadoPadre: clearEstadoPadre,
+      idSubEstado: idSubEstado,
+      subEstado: subEstado,
+      idCampania: idCampania,
+      campania: campania,
+      idEvento: idEvento,
+      evento: evento,
+      clearEvento: clearEvento,
+      idCanal: idCanal,
+      canal: canal,
+      idInteres: idInteres,
+      interes: interes,
+      nombre: nombre,
+      apellidoPaterno: apellidoPaterno,
+      apellidoMaterno: apellidoMaterno,
+      correo: correo,
+      cantidad: cantidad,
+      precioBase: precioBase,
+      descuento: descuento,
+      precio: precio,
     );
 
-    emit(InfoLeadSuccess(updated, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+    emit(
+      InfoLeadSuccess(
+        updated,
+        isBloqueado: s.isBloqueado,
+        isExpirado: s.isExpirado,
+        isCerrado: s.isCerrado,
+      ),
+    );
 
     try {
       final result = await _updateInfo(updated);
@@ -269,18 +315,46 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
         case CrudAlert(:final message):
           _errorController.add(message);
         case CrudError(:final message):
-          emit(InfoLeadSuccess(current, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+          emit(
+            InfoLeadSuccess(
+              current,
+              isBloqueado: s.isBloqueado,
+              isExpirado: s.isExpirado,
+              isCerrado: s.isCerrado,
+            ),
+          );
           _errorController.add(message);
         case CrudNoInternet():
-          emit(InfoLeadSuccess(current, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+          emit(
+            InfoLeadSuccess(
+              current,
+              isBloqueado: s.isBloqueado,
+              isExpirado: s.isExpirado,
+              isCerrado: s.isCerrado,
+            ),
+          );
           _errorController.add('Sin conexión. Intenta de nuevo.');
         case CrudEmpty():
-          emit(InfoLeadSuccess(current, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+          emit(
+            InfoLeadSuccess(
+              current,
+              isBloqueado: s.isBloqueado,
+              isExpirado: s.isExpirado,
+              isCerrado: s.isCerrado,
+            ),
+          );
           _errorController.add('Respuesta inesperada del servidor.');
       }
     } catch (e) {
       if (isClosed) return;
-      emit(InfoLeadSuccess(current, isBloqueado: s.isBloqueado, isExpirado: s.isExpirado, isCerrado: s.isCerrado));
+      emit(
+        InfoLeadSuccess(
+          current,
+          isBloqueado: s.isBloqueado,
+          isExpirado: s.isExpirado,
+          isCerrado: s.isCerrado,
+        ),
+      );
       _errorController.add('No se pudo cambiar el estado. Intenta de nuevo.');
     }
   }

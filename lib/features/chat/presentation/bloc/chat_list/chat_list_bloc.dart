@@ -36,7 +36,9 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       if (!isClosed) add(ChatListIncomingMessageReceived(message));
     });
 
-    _leadUpdateSubscription = LeadUpdateNotifier.instance.stream.listen((update) {
+    _leadUpdateSubscription = LeadUpdateNotifier.instance.stream.listen((
+      update,
+    ) {
       final lead = update.updatedLead as Lead?;
       if (!isClosed && lead != null) add(ChatListLeadUpdated(lead));
     });
@@ -115,26 +117,23 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
   // ── Parche en memoria tras edición de lead ───────────────────────────────
 
-  void _onLeadUpdated(
-    ChatListLeadUpdated event,
-    Emitter<ChatListState> emit,
-  ) {
+  void _onLeadUpdated(ChatListLeadUpdated event, Emitter<ChatListState> emit) {
     final lead = event.lead;
     _allChats = _allChats.map((c) {
       if (c.idLead != lead.idLead) return c;
       return c.copyWith(
-        idEstado:            lead.idEstado,
-        idEstadoDescripcion: lead.estado,
-        idEstadoPadre:       lead.idEstadoPadre ?? '',
-        descEstadoPadre:     lead.descripcionEstadoPadre ?? '',
-        idCampania:          lead.idCampania,
-        nombreCampania:      lead.campania,
-        idOportunidad:       lead.idEvento,
-        nombreOportunidad:   lead.evento,
-        idCanal:             lead.idCanal,
-        nombreCanal:         lead.canal,
-        idInteres:           lead.idInteres,
-        nombreInteres:       lead.interes,
+        idEstado: lead.idEstado,
+        descEstado: lead.estado,
+        idEstadoPadre: lead.idEstadoPadre ?? '',
+        descEstadoPadre: lead.descripcionEstadoPadre ?? '',
+        idCampania: lead.idCampania,
+        nombreCampania: lead.campania,
+        idOportunidad: lead.idEvento,
+        nombreOportunidad: lead.evento,
+        idCanal: lead.idCanal,
+        nombreCanal: lead.canal,
+        idInteres: lead.idInteres,
+        nombreInteres: lead.interes,
       );
     }).toList();
     _emitFiltered(emit);

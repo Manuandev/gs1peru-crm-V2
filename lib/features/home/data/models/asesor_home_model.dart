@@ -21,7 +21,7 @@ class AsesorHomeModel extends AsesorHome {
       activas: ParseUtils.toInt(fields, 1),
       nuevos: ParseUtils.toInt(fields, 2),
       enDesarrollo: ParseUtils.toInt(fields, 3),
-      enLinea: ParseUtils.str(fields, 4) == '1',
+      enLinea: ParseUtils.toBool(fields, 4),
     );
   }
 

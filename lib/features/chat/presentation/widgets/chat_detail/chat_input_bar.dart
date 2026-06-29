@@ -107,10 +107,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
     if (plantilla == null || !mounted) return;
 
     final infoState = context.read<InfoLeadCubit>().state;
-    final nombreCliente =
-        infoState is InfoLeadSuccess ? infoState.lead.nombre : '';
-    final apellidoCliente =
-        infoState is InfoLeadSuccess ? infoState.lead.apellido : '';
+    final nombreCliente = infoState is InfoLeadSuccess
+        ? infoState.lead.nombre
+        : '';
+    final apellidoCliente = infoState is InfoLeadSuccess
+        ? infoState.lead.apellido
+        : '';
     final nombreAsesor = SessionService().userApe;
 
     final texto = plantilla.contenido
@@ -126,18 +128,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final themeText = theme.textTheme;
-
-    final bodyStyle = themeText.bodyMedium?.copyWith(
-      color: themeText.bodyMedium!.color,
-    );
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // ── Attachment picker (mostrar/ocultar) ───────────────
+        // ── Attachment picker ─────────────────────────────────
         if (_mode == InputMode.attachment)
           AttachmentPickerWidget(
             onFilesBatchPicked: _onFilesBatchPicked,
@@ -170,44 +166,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   ? state.isExpirado
                   : false;
 
-              if (expirado) {
-                return Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    border: Border(
-                      top: BorderSide(
-                        color: colorScheme.outlineVariant,
-                        width: AppSizing.borderWidthSubtle,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Botón plantilla
-                      IconButton(
-                        icon: Icon(
-                          AppIcons.plantillas,
-                          color: colorScheme.primary,
-                        ),
-                        onPressed: _onTemplateSelected,
-                      ),
-                      Expanded(
-                        child: Text(
-                          'Sesión cerrada, debes usar una plantilla debido a que el cliente no ha escrito en las últimas 24 horas.',
-                          style: bodyStyle,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
               return Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                ),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
                   border: Border(
@@ -217,94 +182,238 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     ),
                   ),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // Adjuntar
-                    IconButton(
-                      icon: Icon(
-                        _mode == InputMode.attachment
-                            ? AppIcons.close
-                            : AppIcons.attach,
-                        color: colorScheme.onSurfaceVariant,
+                child: expirado
+                    ? _ExpiradoBar(onPlantilla: _onTemplateSelected)
+                    : _NormalBar(
+                        textController: _textController,
+                        hasText: _hasText,
+                        isAttachOpen: _mode == InputMode.attachment,
+                        onAttach: _toggleAttachment,
+                        onPlantilla: _onTemplateSelected,
+                        onSend: _sendText,
+                        onMic: () {
+                          widget.audioController.stop();
+                          setState(() => _mode = InputMode.audio);
+                        },
                       ),
-                      onPressed: _toggleAttachment,
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        AppIcons.plantillas,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: _onTemplateSelected,
-                    ),
-
-                    // Campo de texto
-                    Expanded(
-                      child: Container(
-                        constraints: const BoxConstraints(
-                          maxHeight: AppSizing.inputMaxHeight,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(AppSizing.radiusXl),
-                        ),
-                        child: TextField(
-                          controller: _textController,
-                          maxLines: null,
-                          textCapitalization: TextCapitalization.sentences,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: colorScheme.onSurface,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Escribe un mensaje...',
-                            hintStyle: AppTextStyles.bodyMedium.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.smPlus,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                          onSubmitted: (_) => _sendText(),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: AppSpacing.xs),
-
-                    // Enviar texto o activar audio
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (child, animation) =>
-                          ScaleTransition(scale: animation, child: child),
-                      child: _hasText
-                          ? IconButton(
-                              key: const ValueKey('send'),
-                              icon: Icon(
-                                AppIcons.send,
-                                color: colorScheme.primary,
-                              ),
-                              onPressed: _sendText,
-                            )
-                          : IconButton(
-                              key: const ValueKey('mic'),
-                              icon: Icon(
-                                AppIcons.mic,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                              onPressed: () {
-                                widget.audioController.stop();
-                                setState(() => _mode = InputMode.audio);
-                              },
-                            ),
-                    ),
-                  ],
-                ),
               );
             },
           ),
       ],
+    );
+  }
+}
+
+// ── Barra normal ───────────────────────────────────────────────────────────────
+
+class _NormalBar extends StatelessWidget {
+  final TextEditingController textController;
+  final bool hasText;
+  final bool isAttachOpen;
+  final VoidCallback onAttach;
+  final VoidCallback onPlantilla;
+  final VoidCallback onSend;
+  final VoidCallback onMic;
+
+  const _NormalBar({
+    required this.textController,
+    required this.hasText,
+    required this.isAttachOpen,
+    required this.onAttach,
+    required this.onPlantilla,
+    required this.onSend,
+    required this.onMic,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // ── Botón adjuntar (cuadrado redondeado) ──────────────
+        GestureDetector(
+          onTap: onAttach,
+          child: Container(
+            width: AppSizing.buttonHeight,
+            height: AppSizing.buttonHeight,
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              border: Border.all(
+                color: colorScheme.outlineVariant,
+                width: AppSizing.hairline,
+              ),
+            ),
+            child: Icon(
+              isAttachOpen ? AppIcons.close : AppIcons.attach,
+              color: colorScheme.onSurfaceVariant,
+              size: AppSizing.iconMd,
+            ),
+          ),
+        ),
+
+        const SizedBox(width: AppSpacing.sm),
+
+        // ── Botón Plantillas (independiente) ──────────────────
+        GestureDetector(
+          onTap: onPlantilla,
+          child: Container(
+            height: AppSizing.buttonHeight,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm2),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              border: Border.all(
+                color: colorScheme.outlineVariant,
+                width: AppSizing.hairline,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  AppIcons.plantillas,
+                  color: colorScheme.primary,
+                  size: AppSizing.iconActionSm,
+                ),
+                const SizedBox(width: AppSpacing.xxs),
+                Text(
+                  'Plantillas',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: AppTextStyles.weightSemiBold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(width: AppSpacing.sm),
+
+        // ── Campo de texto + enviar ───────────────────────────
+        Expanded(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxHeight: AppSizing.inputMaxHeight,
+            ),
+            child: CustomTextField(
+              controller: textController,
+              hint: 'Escribe un mensaje...',
+              maxLines: 3,
+              minLines: 1,
+              textCapitalization: TextCapitalization.sentences,
+              suffixIcon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (child, anim) =>
+                    ScaleTransition(scale: anim, child: child),
+                child: hasText
+                    ? _GreenCircleBtn(
+                        key: const ValueKey('send'),
+                        icon: AppIcons.send,
+                        onTap: onSend,
+                      )
+                    : _GreenCircleBtn(
+                        key: const ValueKey('mic'),
+                        icon: AppIcons.mic,
+                        onTap: onMic,
+                      ),
+              ),
+              onSubmitted: (_) => onSend(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Barra expirada ─────────────────────────────────────────────────────────────
+
+class _ExpiradoBar extends StatelessWidget {
+  final VoidCallback onPlantilla;
+  const _ExpiradoBar({required this.onPlantilla});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        GestureDetector(
+          onTap: onPlantilla,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm2,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  AppIcons.plantillas,
+                  color: colorScheme.primary,
+                  size: AppSizing.iconActionSm,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Plantillas',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: AppTextStyles.weightSemiBold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            'Sesión cerrada — usa una plantilla para reabrir la conversación.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Botón circular verde ───────────────────────────────────────────────────────
+
+class _GreenCircleBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _GreenCircleBtn({super.key, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: AppSizing.buttonHeightSmall,
+        height: AppSizing.buttonHeightSmall,
+        decoration: BoxDecoration(
+          color: AppColors.success,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: AppColors.textOnDark,
+          size: AppSizing.iconActionSm,
+        ),
+      ),
     );
   }
 }

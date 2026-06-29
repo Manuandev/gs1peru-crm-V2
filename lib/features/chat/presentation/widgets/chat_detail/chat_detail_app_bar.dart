@@ -20,7 +20,8 @@ class ChatDetailAppBar extends StatelessWidget {
   });
 
   Duration? _elapsedTime() {
-    if (fechaUltimaRespuesta == null || fechaUltimaRespuesta!.isEmpty) return null;
+    if (fechaUltimaRespuesta == null || fechaUltimaRespuesta!.isEmpty)
+      return null;
     final fecha = DateTime.tryParse(fechaUltimaRespuesta!.trim());
     if (fecha == null) return null;
     final elapsed = DateTime.now().difference(fecha);
@@ -153,4 +154,3 @@ class ChatDetailAppBar extends StatelessWidget {
     );
   }
 }
-

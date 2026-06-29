@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:flutter/material.dart';
@@ -219,14 +220,16 @@ class SignalRService implements ISignalRService {
       _onUnexpectedDisconnect();
       return false;
     }
+    _dispatchMessage(message);
+    return true;
+  }
 
+  Future<void> _dispatchMessage(String message) async {
     try {
-      debugPrint('MENSAJE ENVIADO: $message');
-      _hubConnection!.invoke('OnMessage', args: <Object>[message]);
-      return true;
+      if (kDebugMode) debugPrint('[WS] → ENVIADO: $message');
+      await _hubConnection!.invoke('OnMessage', args: <Object>[message]);
     } catch (_) {
       _onUnexpectedDisconnect();
-      return false;
     }
   }
 
@@ -275,8 +278,7 @@ class SignalRService implements ISignalRService {
   // ─── Manejo de mensajes ───────────────────────────────────────────────────
 
   void _handleIncomingMessage(dynamic rawMessage) {
-    debugPrint('MENSAJE RECIBIDO: $rawMessage');
-
+    if (kDebugMode) debugPrint('[WS] ← RECIBIDO: $rawMessage');
     // Si llegó un mensaje, la conexión está viva
     if (!isConnected && _isHubConnected()) {
       _emitState(WebSocketConnectionState.connected);
@@ -471,11 +473,8 @@ class SignalRService implements ISignalRService {
     try {
       final token = await FirebaseNotificationService.instance.obtenerToken();
       if (token == null || token.isEmpty) return;
-      _hubConnection?.invoke('RegistrarTokenFCM', args: <Object>[token]);
-      // debugPrint('[FCM] Token registrado en hub');
-    } catch (e) {
-      // debugPrint('[FCM] Error registrando token en hub: $e');
-    }
+      await _hubConnection?.invoke('RegistrarTokenFCM', args: <Object>[token]);
+    } catch (_) {}
   }
 
   @override

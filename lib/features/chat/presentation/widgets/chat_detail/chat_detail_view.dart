@@ -144,10 +144,13 @@ class _ChatDetailViewState extends State<ChatDetailView>
               lead: infoState.lead,
               idCanal: infoState.lead.idCanal,
               fechaUltimaRespuesta: fechaUltimaRespuesta,
-              onTap: () => context.goToEditarLead(
-                idLead: infoState.lead.idLead,
-                cubit: context.read<InfoLeadCubit>(),
-              ),
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                context.goToEditarLead(
+                  idLead: infoState.lead.idLead,
+                  cubit: context.read<InfoLeadCubit>(),
+                );
+              },
             ),
           );
         },
@@ -202,6 +205,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
       ],
       onPopupSelected: (value) {
         if (context.read<InfoLeadCubit>().state is! InfoLeadSuccess) return;
+        FocusScope.of(context).unfocus();
         final tabIndex = switch (value) {
           'negociaciones' => 1,
           'historial' => 2,

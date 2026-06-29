@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 
@@ -16,6 +17,7 @@ class MessageDispatcher {
   Stream<WebSocketMessage> get stream => _streamController.stream;
 
   void dispatch(WebSocketMessage message) {
+    debugPrint('[WS] ← ${message.process} | ${message.records.firstOrNull?.join("¦") ?? ""}');
     final String? route = AppRouteObserver.instance.currentRoute;
 
     switch (message.process) {

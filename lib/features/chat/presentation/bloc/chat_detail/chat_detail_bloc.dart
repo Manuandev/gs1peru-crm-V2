@@ -1,6 +1,7 @@
 // lib/features/chat/presentation/bloc/chat_detail/chat_detail_bloc.dart
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -237,10 +238,13 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     ChatDetailAudioMessageSent event,
     Emitter<ChatDetailState> emit,
   ) async {
+    debugPrint('[BLOC] Audio evento recibido | state=${state.runtimeType} | idNumero=$_currentIdNumero');
     if (state is! ChatDetailSuccess) return;
 
     final tempId = const Uuid().v4();
-    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final nameWithoutExt = 'audio_${DateTime.now().millisecondsSinceEpoch}';
+    const audioExt = '.m4a';
+    final fileName = '$nameWithoutExt$audioExt';
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
@@ -253,8 +257,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       tipo: 'audio',
       estadoEntrega: 'wait',
       rutaArchivo: '',
-      tipoArchivo: 'audio',
-      nombreArchivo: fileName,
+      tipoArchivo: audioExt,
+      nombreArchivo: nameWithoutExt,
     );
 
     emit(
@@ -302,8 +306,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       tipo: event.tipo,
       estadoEntrega: 'wait',
       rutaArchivo: '',
-      tipoArchivo: event.tipo,
-      nombreArchivo: '$uniqueName${event.fileExt}',
+      tipoArchivo: event.fileExt,
+      nombreArchivo: uniqueName,
     );
 
     emit(
@@ -335,6 +339,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     ChatDetailBatchFileMessageSent event,
     Emitter<ChatDetailState> emit,
   ) async {
+    debugPrint('[BLOC] Batch archivos evento recibido | ${event.files.length} archivos | state=${state.runtimeType} | idNumero=$_currentIdNumero');
     if (state is! ChatDetailSuccess) return;
 
     // 1. Crear mensajes optimistas
@@ -363,8 +368,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           tipo: file.tipo,
           estadoEntrega: 'wait',
           rutaArchivo: '',
-          tipoArchivo: file.tipo,
-          nombreArchivo: '$uniqueName${file.ext}',
+          tipoArchivo: file.ext,
+          nombreArchivo: uniqueName,
         ),
       );
     }

@@ -1,5 +1,6 @@
 // lib/features/chat/presentation/widgets/chat_detail/chat_input_bar.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -72,11 +73,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   void _onAudioReady(String path) {
     widget.audioController.stop();
+    final numero = _getNumero();
+    final chatCab = _getChatCab();
+    debugPrint('[INPUT] Audio listo: path=$path | num=$numero | cab=$chatCab');
     context.read<ChatDetailBloc>().add(
       ChatDetailAudioMessageSent(
         path,
-        numero: _getNumero(),
-        chatCab: _getChatCab(),
+        numero: numero,
+        chatCab: chatCab,
       ),
     );
     setState(() => _mode = InputMode.text);
@@ -85,11 +89,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
   void _onFilesBatchPicked(List<StagedFile> files) {
     if (files.isEmpty) return;
     widget.audioController.stop();
+    final numero = _getNumero();
+    final chatCab = _getChatCab();
+    debugPrint('[INPUT] Archivos: ${files.length} | num=$numero | cab=$chatCab');
     context.read<ChatDetailBloc>().add(
       ChatDetailBatchFileMessageSent(
         files: files,
-        numero: _getNumero(),
-        chatCab: _getChatCab(),
+        numero: numero,
+        chatCab: chatCab,
       ),
     );
     setState(() => _mode = InputMode.text);

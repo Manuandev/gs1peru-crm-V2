@@ -2,6 +2,7 @@
 //lib\features\chat\data\datasources\remote\chat_remote_datasource.dart
 
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -129,12 +130,20 @@ class ChatRemoteDatasource {
     required String chatCab,
   }) async {
     final user = _session.user;
-    if (user == null) return false;
+    if (user == null) {
+      debugPrint('[UPLOAD] ❌ Sin sesión de usuario');
+      return false;
+    }
 
     try {
       final file = File(filePath);
       final fileBytes = await file.readAsBytes();
-      if (fileBytes.isEmpty) return false;
+      if (fileBytes.isEmpty) {
+        debugPrint('[UPLOAD] ❌ Archivo vacío: $filePath');
+        return false;
+      }
+
+      debugPrint('[UPLOAD] ▶ $tipo | $fileName | ${fileBytes.length} bytes | num=$numero | cab=$chatCab');
 
       final dotIndex = fileName.lastIndexOf('.');
       final fileExt = dotIndex != -1 ? fileName.substring(dotIndex) : '';
@@ -158,6 +167,8 @@ class ChatRemoteDatasource {
       const int chunkSize = 2 * 1024 * 1024;
       final int totalSize = fileBytes.length;
       final int totalChunks = (totalSize / chunkSize).ceil();
+
+      debugPrint('[UPLOAD] Chunks: $totalChunks (${totalSize}B) → $urlUpload');
 
       for (int i = 0; i < totalChunks; i++) {
         final start = i * chunkSize;
@@ -184,10 +195,18 @@ class ChatRemoteDatasource {
           headers: {'Token': user.token},
         );
 
-        if (result.isEmpty) return false;
+        debugPrint('[UPLOAD] Chunk $i resultado: "$result"');
+
+        if (result.isEmpty) {
+          debugPrint('[UPLOAD] ❌ Chunk $i: respuesta vacía');
+          return false;
+        }
 
         final datos = result.split(camp);
-        if (datos[0] != 'OK') return false;
+        if (datos[0] != 'OK') {
+          debugPrint('[UPLOAD] ❌ Chunk $i: servidor respondió "${datos[0]}"');
+          return false;
+        }
       }
 
       final mergeData = [
@@ -208,13 +227,53 @@ class ChatRemoteDatasource {
         headers: {'Token': user.token},
       );
 
-      if (mergeResult.isEmpty) return false;
+      debugPrint('[UPLOAD] Merge resultado: "$mergeResult"');
+
+      if (mergeResult.isEmpty) {
+        debugPrint('[UPLOAD] ❌ Merge: respuesta vacía');
+        return false;
+      }
 
       final mergeDatos = mergeResult.split(camp);
-      return mergeDatos[0] == 'OK';
-    } catch (e) {
+      final ok = mergeDatos[0] == 'OK';
+      debugPrint('[UPLOAD] ${ok ? "✅ Éxito" : "❌ Merge falló: ${mergeDatos[0]}"}');
+
+      if (ok) {
+        final sent = _sendWhatsAppFile(
+          fileName: fileName,
+          fileExt: fileExt,
+          tipo: tipo,
+          idNumero: idNumero,
+          numero: numero,
+          chatCab: chatCab,
+        );
+        debugPrint('[UPLOAD] SignalR enviado: $sent');
+      }
+
+      return ok;
+    } catch (e, st) {
+      debugPrint('[UPLOAD] ❌ Excepción: $e\n$st');
       return false;
     }
+  }
+
+  bool _sendWhatsAppFile({
+    required String fileName,
+    required String fileExt,
+    required String tipo,
+    required String idNumero,
+    required String numero,
+    required String chatCab,
+  }) {
+    final user = _session.user;
+    if (user == null) return false;
+
+    final String body =
+        '${user.token}$sep'
+        '${[idNumero, '', user.codUser, '', tipo, numero, 0, '', chatCab, fileName, fileExt, '', user.codUser, ''].join(camp)}'
+        '${sep}CA';
+
+    return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");
   }
 
   Future<CrudResult> updateEstado(int idNumero, String idEstado) async {

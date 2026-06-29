@@ -60,10 +60,16 @@ class ApiClient {
       );
     }
 
+    // No sobreescribir contentType — Dio lo construye automáticamente con el
+    // boundary correcto cuando el body es FormData.
     final response = await _dio.post(
       url,
       data: formData,
-      options: Options(headers: headers, contentType: 'multipart/form-data'),
+      options: Options(
+        headers: headers,
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 60),
+      ),
     );
 
     return response.data?.toString() ?? '';

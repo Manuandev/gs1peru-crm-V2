@@ -174,7 +174,7 @@ class _InfoChat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final preview = buildClientMessagePreview(chat);
-    final idCanal = chat.idCanal > 0 ? chat.idCanal : 1;
+    final tieneCanal = chat.idCanal > 0;
     final nombre = chat.nombreCompleto.length > AppConstants.maxCharsNombreChat
         ? '${chat.nombreCompleto.substring(0, AppConstants.maxCharsNombreChat)}...'
         : chat.nombreCompleto;
@@ -203,8 +203,10 @@ class _InfoChat extends StatelessWidget {
                 maxLines: 1,
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            AppSocialUtils.widgetCanalById(idCanal, size: AppSizing.iconSm),
+            if (tieneCanal) ...[
+              const SizedBox(width: AppSpacing.xs),
+              AppSocialUtils.widgetCanalById(chat.idCanal, size: AppSizing.iconSm),
+            ],
           ],
         ),
 

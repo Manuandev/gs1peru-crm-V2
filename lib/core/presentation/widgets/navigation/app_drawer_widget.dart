@@ -175,7 +175,7 @@ class _DrawerContent extends StatelessWidget {
                 //     },
                 //   ),
                 // ],
-
+                Divider(color: AppColors.border),
                 // ── Cerrar sesión — siempre al fondo ──────────────
                 _DrawerItem(
                   item: DrawerItemModel(

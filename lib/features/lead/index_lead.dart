@@ -86,6 +86,8 @@ export 'presentation/widgets/edit_lead/edit_lead_financiera_section.dart';
 export 'presentation/widgets/edit_lead/lead_edit_header_card.dart';
 export 'presentation/widgets/edit_lead/negociacion_resumen_card.dart';
 export 'presentation/widgets/edit_lead/agregar_numero_panel.dart';
+export 'presentation/widgets/edit_lead/agregar_correo_panel.dart';
+export 'presentation/widgets/edit_lead/agregar_empresa_panel.dart';
 
 
 // Cubits de LeadDetailSheet

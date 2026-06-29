@@ -21,8 +21,24 @@ class LeadRepositoryImpl implements LeadRepository {
       _remote.marcarFavorito(idLead, isFavorito);
 
   @override
-  Future<CrudResult> updateLeadCompleto(Lead lead) =>
-      _remote.updateLeadCompleto(lead);
+  Future<CrudResult> updateLeadCompleto(
+    Lead lead, {
+    String empresaEditar = '',
+    String correoEditar = '',
+    String nuevasEmpresas = '',
+    String nuevosCorreos = '',
+    String nuevosPrefijos = '',
+    String nuevosNumeros = '',
+  }) =>
+      _remote.updateLeadCompleto(
+        lead,
+        empresaEditar: empresaEditar,
+        correoEditar: correoEditar,
+        nuevasEmpresas: nuevasEmpresas,
+        nuevosCorreos: nuevosCorreos,
+        nuevosPrefijos: nuevosPrefijos,
+        nuevosNumeros: nuevosNumeros,
+      );
 
   @override
   Future<ContactoDetalleModel> obtenerDetalleContacto(int idContacto) =>

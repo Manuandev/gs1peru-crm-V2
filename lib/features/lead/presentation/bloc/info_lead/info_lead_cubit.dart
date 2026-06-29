@@ -262,6 +262,12 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     double? precioBase,
     double? descuento,
     double? precio,
+    String empresaEditar = '',
+    String correoEditar = '',
+    String nuevasEmpresas = '',
+    String nuevosCorreos = '',
+    String nuevosPrefijos = '',
+    String nuevosNumeros = '',
   }) async {
     if (state is! InfoLeadSuccess) return;
     final s = state as InfoLeadSuccess;
@@ -304,7 +310,15 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     );
 
     try {
-      final result = await _updateInfo(updated);
+      final result = await _updateInfo(
+        updated,
+        empresaEditar: empresaEditar,
+        correoEditar: correoEditar,
+        nuevasEmpresas: nuevasEmpresas,
+        nuevosCorreos: nuevosCorreos,
+        nuevosPrefijos: nuevosPrefijos,
+        nuevosNumeros: nuevosNumeros,
+      );
 
       if (isClosed) return;
 

@@ -33,7 +33,15 @@ class LeadRemoteDatasource {
     await Future.delayed(const Duration(milliseconds: 300));
   }
 
-  Future<CrudResult> updateLeadCompleto(Lead lead) async {
+  Future<CrudResult> updateLeadCompleto(
+    Lead lead, {
+    String empresaEditar = '',
+    String correoEditar = '',
+    String nuevasEmpresas = '',
+    String nuevosCorreos = '',
+    String nuevosPrefijos = '',
+    String nuevosNumeros = '',
+  }) async {
     if (lead.idLead == 0) {
       return const CrudError('ID de lead inválido. No se puede actualizar.');
     }
@@ -52,9 +60,13 @@ class LeadRemoteDatasource {
       lead.nombre,                       // field8  NOMBRES
       lead.apellidoPaterno,              // field9  APELLIDO_P
       lead.apellidoMaterno,              // field10 APELLIDO_M
-      lead.correo,                       // field11 CORREO
-      lead.prefijo,                      // field12 PREFIJO_NM
-      lead.numero,                       // field13 NUMERO
+      nuevosCorreos,                     // field11 nuevos correos ± separados
+      nuevosPrefijos,                    // field12 nuevos prefijos ± separados
+      nuevosNumeros,                     // field13 nuevos números ± separados (mismo índice que field12)
+      // TODO(mejora): unificar field12+field13 en un solo string +51¶999000001±+1¶987654321
+      // usando AppConstants.sepComodin3 (¶) entre prefijo/número y sepComodin2 (±) entre entradas.
+      // Actualizar getter nuevosTelefonosStr en EditLeadContactoSection y SP para usar
+      // fnSplitStringTable05(@TELEFONOS_STR, @sepComodin2, @sepComodin3).
       _orEmpty(lead.precioBase),         // field14 PRECIO_BASE
       _orEmpty(lead.precio),             // field15 PRECIO (costoFinal calculado)
       _orEmpty(lead.cantidad),           // field16 CANTIDAD
@@ -62,6 +74,10 @@ class LeadRemoteDatasource {
       _session.codUser,                  // field18 ID_USUARIO
       ip,                                // field19 IP_USUARIO
       coords,                            // field20 LL_USUARIO
+      nuevasEmpresas,                    // field21 nuevas empresas ± separadas
+      '',                                // field22 CARGO placeholder
+      empresaEditar,                     // field23 editar empresa actual ('' si no cambió)
+      correoEditar,                      // field24 editar correo actual ('' si no cambió)
     ].join(camp);
 
     final result = await _api.postSafe(ApiConstants.urlLeadsCud, '$body${sep}U');

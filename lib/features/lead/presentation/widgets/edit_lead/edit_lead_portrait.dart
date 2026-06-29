@@ -16,6 +16,12 @@ class EditLeadPortrait extends StatefulWidget {
 }
 
 class _EditLeadPortraitState extends State<EditLeadPortrait> {
+  // ── Key para acceder a valores de la sección ──────────────────────────────
+  final _contactoKey = GlobalKey<EditLeadContactoSectionState>();
+
+  // ── Notificador para el botón guardar cuando la sección cambia ────────────
+  final _seccionCambio = ValueNotifier<int>(0);
+
   // ── Combos de catálogo ────────────────────────────────────────────────────
   EstadoItem? _estado;
   EstadoItem? _subEstado;
@@ -28,17 +34,16 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _apellidoPCtrl;
   late final TextEditingController _apellidoMCtrl;
+  late final TextEditingController _empresaCtrl;
+  late final TextEditingController _correoCtrl;
   late final TextEditingController _cantidadCtrl;
   late final TextEditingController _precioBaseCtrl;
   late final TextEditingController _descuentoCtrl;
 
-  // ── Campos solo-lectura ───────────────────────────────────────────────────
+  // ── Solo lectura ──────────────────────────────────────────────────────────
   late final TextEditingController _campaniaCtrl;
   late final TextEditingController _eventoCtrl;
-  late final TextEditingController _empresaCtrl;
-  late final TextEditingController _correoCtrl;
 
-  bool _mostrarAgregarNumero = false;
   bool _isLoading = false;
   bool _combosInicializados = false;
 
@@ -48,22 +53,16 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void initState() {
     super.initState();
     final l = widget.lead;
-    _nombreCtrl = TextEditingController(text: l.nombre);
-    _apellidoPCtrl = TextEditingController(text: l.apellidoPaterno);
-    _apellidoMCtrl = TextEditingController(text: l.apellidoMaterno);
-    _cantidadCtrl = TextEditingController(
-      text: EditLeadHelpers.fmtDouble(l.cantidad),
-    );
-    _precioBaseCtrl = TextEditingController(
-      text: EditLeadHelpers.fmtDouble(l.precioBase),
-    );
-    _descuentoCtrl = TextEditingController(
-      text: EditLeadHelpers.fmtDouble(l.descuento),
-    );
-    _campaniaCtrl = TextEditingController(text: l.campania);
-    _eventoCtrl = TextEditingController(text: l.evento);
-    _empresaCtrl = TextEditingController(text: l.nombreEmpresa);
-    _correoCtrl = TextEditingController(text: l.correo);
+    _nombreCtrl     = TextEditingController(text: l.nombre);
+    _apellidoPCtrl  = TextEditingController(text: l.apellidoPaterno);
+    _apellidoMCtrl  = TextEditingController(text: l.apellidoMaterno);
+    _empresaCtrl    = TextEditingController(text: l.nombreEmpresa);
+    _correoCtrl     = TextEditingController(text: l.correo);
+    _cantidadCtrl   = TextEditingController(text: EditLeadHelpers.fmtDouble(l.cantidad));
+    _precioBaseCtrl = TextEditingController(text: EditLeadHelpers.fmtDouble(l.precioBase));
+    _descuentoCtrl  = TextEditingController(text: EditLeadHelpers.fmtDouble(l.descuento));
+    _campaniaCtrl   = TextEditingController(text: l.campania);
+    _eventoCtrl     = TextEditingController(text: l.evento);
   }
 
   @override
@@ -94,50 +93,40 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _nombreCtrl.dispose();
     _apellidoPCtrl.dispose();
     _apellidoMCtrl.dispose();
+    _empresaCtrl.dispose();
+    _correoCtrl.dispose();
     _cantidadCtrl.dispose();
     _precioBaseCtrl.dispose();
     _descuentoCtrl.dispose();
     _campaniaCtrl.dispose();
     _eventoCtrl.dispose();
-    _empresaCtrl.dispose();
-    _correoCtrl.dispose();
+    _seccionCambio.dispose();
     super.dispose();
   }
 
   // ── Inicialización de combos ──────────────────────────────────────────────
 
   void _inicializarCombos(CatalogsLoaded state) {
-    _canal = state.canales
-        .where((e) => e.id == widget.lead.idCanal)
-        .firstOrNull;
-    _interes = state.intereses
-        .where((e) => e.id == widget.lead.idInteres)
-        .firstOrNull;
+    _canal   = state.canales.where((e) => e.id == widget.lead.idCanal).firstOrNull;
+    _interes = state.intereses.where((e) => e.id == widget.lead.idInteres).firstOrNull;
 
     if (state.estados.isNotEmpty) {
       final tienePadre = widget.lead.idEstadoPadre?.isNotEmpty ?? false;
       if (tienePadre) {
-        // El lead ya tiene padre explícito (ej: vino desde el chat).
         _estado = state.estados
             .where((e) => e.id == widget.lead.idEstadoPadre && e.esPadre)
             .firstOrNull;
         if (_estado != null) {
-          _subEstadosFiltrados = state.estados
-              .where((e) => e.idPadre == _estado!.id)
-              .toList();
+          _subEstadosFiltrados = state.estados.where((e) => e.idPadre == _estado!.id).toList();
           _subEstado = _subEstadosFiltrados
               .where((e) => e.id == widget.lead.idEstado)
               .firstOrNull;
         }
       } else {
-        // Intenta primero como estado padre directo.
         _estado = state.estados
             .where((e) => e.id == widget.lead.idEstado && e.esPadre)
             .firstOrNull;
 
-        // Si no es padre, puede ser un subestado sin idEstadoPadre seteado
-        // (ej: vino de CSV_LEADS_LST que no devuelve el padre). Busca el padre
-        // a través del catálogo.
         if (_estado == null) {
           final hijo = state.estados
               .where((e) => e.id == widget.lead.idEstado && !e.esPadre)
@@ -147,9 +136,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 .where((e) => e.id == hijo.idPadre && e.esPadre)
                 .firstOrNull;
             if (_estado != null) {
-              _subEstadosFiltrados = state.estados
-                  .where((e) => e.idPadre == _estado!.id)
-                  .toList();
+              _subEstadosFiltrados = state.estados.where((e) => e.idPadre == _estado!.id).toList();
               _subEstado = _subEstadosFiltrados
                   .where((e) => e.id == widget.lead.idEstado)
                   .firstOrNull;
@@ -162,10 +149,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   // ── Getters financieros ───────────────────────────────────────────────────
 
-  double get _cantidad => EditLeadHelpers.parseTexto(_cantidadCtrl.text);
+  double get _cantidad   => EditLeadHelpers.parseTexto(_cantidadCtrl.text);
   double get _precioBase => EditLeadHelpers.parseTexto(_precioBaseCtrl.text);
-  double get _descuento => EditLeadHelpers.parseTexto(_descuentoCtrl.text);
-  double get _subtotal => _precioBase * _cantidad;
+  double get _descuento  => EditLeadHelpers.parseTexto(_descuentoCtrl.text);
+  double get _subtotal   => _precioBase * _cantidad;
   double get _costoFinal => EditLeadHelpers.calcCostoFinal(
     precioBase: _precioBase,
     cantidad: _cantidad,
@@ -175,17 +162,22 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── Detección de cambios ──────────────────────────────────────────────────
 
   bool get _hayCambios {
-    final l = widget.lead;
+    final l   = widget.lead;
+    final sec = _contactoKey.currentState;
     return _canal?.id != l.idCanal ||
         _interes?.id != l.idInteres ||
         (_estado != null && _subEstado?.id != l.idEstado) ||
         (_estado != null && _estado?.id != l.idEstado && _subEstado == null) ||
-        _nombreCtrl.text.trim() != l.nombre ||
+        _nombreCtrl.text.trim()    != l.nombre ||
         _apellidoPCtrl.text.trim() != l.apellidoPaterno ||
         _apellidoMCtrl.text.trim() != l.apellidoMaterno ||
-        _cantidadCtrl.text != EditLeadHelpers.fmtDouble(l.cantidad) ||
+        // TODO: descomentar cuando empresa/correo/teléfono sean editables
+        // _empresaCtrl.text.trim()   != l.nombreEmpresa ||
+        // _correoCtrl.text.trim()    != l.correo ||
+        // (sec?.tieneNuevos ?? false) ||
+        _cantidadCtrl.text   != EditLeadHelpers.fmtDouble(l.cantidad) ||
         _precioBaseCtrl.text != EditLeadHelpers.fmtDouble(l.precioBase) ||
-        _descuentoCtrl.text != EditLeadHelpers.fmtDouble(l.descuento);
+        _descuentoCtrl.text  != EditLeadHelpers.fmtDouble(l.descuento);
   }
 
   // ── Callbacks de combos ───────────────────────────────────────────────────
@@ -216,8 +208,15 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     setState(() => _isLoading = true);
 
     final idEstadoEfectivo = _subEstado?.id ?? _estado?.id;
-    final estadoEfectivo = _subEstado?.nombre ?? _estado?.nombre;
-    final tieneSubEstado = _subEstado != null;
+    final estadoEfectivo   = _subEstado?.nombre ?? _estado?.nombre;
+    final tieneSubEstado   = _subEstado != null;
+
+    // TODO: descomentar cuando empresa/correo/teléfono sean editables en el SP
+    // final sec = _contactoKey.currentState!;
+    // final empresaEditar = _empresaCtrl.text.trim() != widget.lead.nombreEmpresa
+    //     ? _empresaCtrl.text.trim() : '';
+    // final correoEditar = _correoCtrl.text.trim() != widget.lead.correo
+    //     ? _correoCtrl.text.trim() : '';
 
     if (context.mounted) {
       // ignore: use_build_context_synchronously
@@ -238,6 +237,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         precioBase: double.tryParse(_precioBaseCtrl.text),
         descuento: double.tryParse(_descuentoCtrl.text),
         precio: _costoFinal > 0 ? _costoFinal : null,
+        // TODO: descomentar cuando el SP esté listo
+        // empresaEditar: empresaEditar,
+        // correoEditar: correoEditar,
+        // nuevasEmpresas: sec.nuevasEmpresasStr,
+        // nuevosCorreos: sec.nuevosCorreosStr,
+        // nuevosPrefijos: sec.nuevosPrefijosStr,
+        // nuevosNumeros: sec.nuevosNumerosStr,
       );
     }
 
@@ -256,6 +262,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         _nombreCtrl,
         _apellidoPCtrl,
         _apellidoMCtrl,
+        // TODO: descomentar cuando empresa/correo/teléfono sean editables
+        // _empresaCtrl,
+        // _correoCtrl,
+        // _seccionCambio,
         _cantidadCtrl,
         _precioBaseCtrl,
         _descuentoCtrl,
@@ -278,6 +288,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             children: [
               // 1. Contacto
               EditLeadContactoSection(
+                key: _contactoKey,
                 nombreCtrl: _nombreCtrl,
                 apellidoPCtrl: _apellidoPCtrl,
                 apellidoMCtrl: _apellidoMCtrl,
@@ -286,12 +297,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 telefonoPrefijo: widget.lead.prefijo,
                 telefonoNumero: widget.lead.numero,
                 isLoading: _isLoading,
-                mostrarAgregarNumero: _mostrarAgregarNumero,
-                onToggleTelefono: () => setState(
-                  () => _mostrarAgregarNumero = !_mostrarAgregarNumero,
-                ),
-                onAgregarNumero: (_, __) =>
-                    setState(() => _mostrarAgregarNumero = false),
+                onChanged: () => _seccionCambio.value++,
               ),
               const SizedBox(height: AppSpacing.lg),
 
@@ -307,8 +313,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 subEstadosFiltrados: _subEstadosFiltrados,
                 idEstadoFallback: widget.lead.idEstado,
                 estadoFallback: widget.lead.estado,
-                descripcionEstadoPadreFallback:
-                    widget.lead.descripcionEstadoPadre,
+                descripcionEstadoPadreFallback: widget.lead.descripcionEstadoPadre,
                 idCanalFallback: widget.lead.idCanal,
                 isLoading: _isLoading,
                 onCanalChanged: (item) => setState(() => _canal = item),
@@ -318,7 +323,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // 3. Financiera — ListenableBuilder para que solo ella se reconstruya al tipear
+              // 3. Financiera
               ListenableBuilder(
                 listenable: Listenable.merge([
                   _cantidadCtrl,

@@ -7,7 +7,15 @@ abstract class LeadRepository {
   Future<List<Lead>> getLeads();
   Future<LeadDetalle> getLeadDetalle(int idLead);
   Future<void> toggleFavorito(int idLead, bool isFavorito);
-  Future<CrudResult> updateLeadCompleto(Lead lead);
+  Future<CrudResult> updateLeadCompleto(
+    Lead lead, {
+    String empresaEditar,
+    String correoEditar,
+    String nuevasEmpresas,
+    String nuevosCorreos,
+    String nuevosPrefijos,
+    String nuevosNumeros,
+  });
   // TODO: conectar a SP real cuando se defina — '[CRM].[SP_ContactoDetalleLst]'
   Future<ContactoDetalle> obtenerDetalleContacto(int idContacto);
   // TODO: conectar a SP real cuando se defina — '[CRM].[SP_NegociacionesPorContacto]'

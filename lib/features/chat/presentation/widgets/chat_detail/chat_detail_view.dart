@@ -393,4 +393,3 @@ class _ChatDetailViewState extends State<ChatDetailView>
     );
   }
 }
-

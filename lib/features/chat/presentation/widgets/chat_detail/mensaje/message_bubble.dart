@@ -44,14 +44,98 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isEnviado =
-        message.direccionMensaje == 'ASE' || message.direccionMensaje == 'AIA';
+    final isAIA = message.direccionMensaje == 'AIA';
+    final isEnviado = message.direccionMensaje == 'ASE' || isAIA;
 
     final bubbleColor = isEnviado
         ? colorScheme.primary
         : colorScheme.surfaceContainerHighest;
-
     final textColor = isEnviado ? colorScheme.onPrimary : colorScheme.onSurface;
+
+    final burbuja = Container(
+      margin: EdgeInsets.only(
+        top: AppSpacing.xxs,
+        bottom: AppSpacing.xxs,
+        // Para AIA el avatar ocupa el espacio izquierdo; para ASE usamos xxl
+        left: isAIA ? 0 : (isEnviado ? AppSpacing.xxl : 0),
+        right: isEnviado ? 0 : AppSpacing.xxl,
+      ),
+      decoration: BoxDecoration(
+        color: bubbleColor,
+        borderRadius: _bubbleRadius(isEnviado),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black(0.06),
+            blurRadius: AppSizing.shadowBlurXs,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: _isMediaMsg
+            ? const EdgeInsets.all(AppSpacing.xxs)
+            : EdgeInsets.zero,
+        child: ClipRRect(
+          borderRadius: _isMediaMsg
+              ? _innerBubbleRadius(isEnviado)
+              : _bubbleRadius(isEnviado),
+          child: _isMediaMsg
+              ? Stack(
+                  children: [
+                    _buildContent(context, textColor),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: _BubbleTimeRow(
+                        fecha: message.fechaHora,
+                        estado: message.estadoEntrega,
+                        isEnviado: isEnviado,
+                        isOverImage: true,
+                        textColor: textColor,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildContent(context, textColor),
+                    _BubbleTimeRow(
+                      fecha: message.fechaHora,
+                      estado: message.estadoEntrega,
+                      isEnviado: isEnviado,
+                      isOverImage: false,
+                      textColor: textColor,
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+
+    // Mensajes del bot (AIA): burbuja a la derecha con avatar de robot a su derecha
+    if (isAIA) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.72,
+                ),
+                child: burbuja,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          const _BotAvatar(),
+        ],
+      );
+    }
 
     return Align(
       alignment: isEnviado ? Alignment.centerRight : Alignment.centerLeft,
@@ -59,67 +143,7 @@ class MessageBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        child: Container(
-          margin: EdgeInsets.only(
-            top: AppSpacing.xxs,
-            bottom: AppSpacing.xxs,
-            left: isEnviado ? AppSpacing.xxl : 0,
-            right: isEnviado ? 0 : AppSpacing.xxl,
-          ),
-          decoration: BoxDecoration(
-            color: bubbleColor,
-            borderRadius: _bubbleRadius(isEnviado),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.black(0.06),
-                blurRadius: AppSizing.shadowBlurXs,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Padding(
-            // Estilo WhatsApp: un ligero padding (2px) para fotos/videos, o 0 para texto.
-            padding: _isMediaMsg
-                ? const EdgeInsets.all(AppSpacing.xxs)
-                : EdgeInsets.zero,
-            child: ClipRRect(
-              borderRadius: _isMediaMsg
-                  ? _innerBubbleRadius(isEnviado)
-                  : _bubbleRadius(isEnviado),
-              child: _isMediaMsg
-                  ? Stack(
-                      children: [
-                        _buildContent(context, textColor),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: _BubbleTimeRow(
-                            fecha: message.fechaHora,
-                            estado: message.estadoEntrega,
-                            isEnviado: isEnviado,
-                            isOverImage: true,
-                            textColor: textColor,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildContent(context, textColor),
-                        _BubbleTimeRow(
-                          fecha: message.fechaHora,
-                          estado: message.estadoEntrega,
-                          isEnviado: isEnviado,
-                          isOverImage: false,
-                          textColor: textColor,
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-        ),
+        child: burbuja,
       ),
     );
   }
@@ -806,6 +830,31 @@ class _DocumentContentState extends State<_DocumentContent> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _BotAvatar — ícono circular del asistente IA, aparece junto a mensajes AIA
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BotAvatar extends StatelessWidget {
+  const _BotAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: AppSizing.iconMd,
+      height: AppSizing.iconMd,
+      decoration: const BoxDecoration(
+        color: AppColors.brandLavenderAccessible,
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(
+        AppIcons.ia,
+        size: AppSizing.iconSm,
+        color: AppColors.textOnDark,
       ),
     );
   }

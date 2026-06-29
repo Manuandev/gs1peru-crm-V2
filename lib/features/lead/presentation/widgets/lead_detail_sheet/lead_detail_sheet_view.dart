@@ -117,6 +117,32 @@ class _LeadDetailSheetState extends State<LeadDetailSheet>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Tab compacto — ícono pequeño + etiqueta sin margen excesivo
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CompactTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _CompactTab({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tab(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: AppSizing.iconSm),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(label),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Contenido visual del sheet — separado para poder reconstruirlo con BlocBuilder
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -208,10 +234,14 @@ class _SheetContent extends StatelessWidget {
           // ── Tabs ──
           TabBar(
             controller: tabController,
+            labelStyle: AppTextStyles.labelSmall.copyWith(
+              fontWeight: AppTextStyles.weightMedium,
+            ),
+            unselectedLabelStyle: AppTextStyles.labelSmall,
             tabs: const [
-              Tab(icon: Icon(AppIcons.datosLead), text: 'Datos'),
-              Tab(icon: Icon(AppIcons.negociacion), text: 'Negociaciones'),
-              Tab(icon: Icon(AppIcons.historial), text: 'Historial'),
+              _CompactTab(icon: AppIcons.datosLead, label: 'Datos'),
+              _CompactTab(icon: AppIcons.negociacion, label: 'Negociaciones'),
+              _CompactTab(icon: AppIcons.historial, label: 'Historial'),
             ],
           ),
 

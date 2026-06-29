@@ -20,10 +20,26 @@ class _HistorialTabState extends State<HistorialTab>
   @override
   bool get wantKeepAlive => true;
 
+  // null = Todos
+  TipoActor? _filtro;
+
   @override
   void initState() {
     super.initState();
     context.read<HistorialLeadCubit>().cargarHistorial(widget.leadId);
+  }
+
+  List<HistorialItemFake> _aplicarFiltro(List<HistorialItemFake> eventos) {
+    if (_filtro == null) return eventos;
+    // El filtro "Asesor" engloba tanto asesor como cliente (acción del contacto)
+    if (_filtro == TipoActor.asesor) {
+      return eventos
+          .where((e) =>
+              e.tipoActor == TipoActor.asesor ||
+              e.tipoActor == TipoActor.cliente)
+          .toList();
+    }
+    return eventos.where((e) => e.tipoActor == _filtro).toList();
   }
 
   @override
@@ -40,12 +56,118 @@ class _HistorialTabState extends State<HistorialTab>
                 .read<HistorialLeadCubit>()
                 .cargarHistorial(widget.leadId),
           ),
-          HistorialLeadSuccess(:final eventos) =>
-            eventos.isEmpty
-                ? const _EstadoVacio()
-                : _ListaHistorial(eventos: eventos),
+          HistorialLeadSuccess(:final eventos) => eventos.isEmpty
+              ? const _EstadoVacio()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ChipsFilter(
+                      filtroSeleccionado: _filtro,
+                      onFiltroChanged: (f) => setState(() => _filtro = f),
+                    ),
+                    Expanded(
+                      child: _ListaHistorial(eventos: _aplicarFiltro(eventos)),
+                    ),
+                  ],
+                ),
         };
       },
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chips de filtro
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChipsFilter extends StatelessWidget {
+  final TipoActor? filtroSeleccionado;
+  final ValueChanged<TipoActor?> onFiltroChanged;
+
+  const _ChipsFilter({
+    required this.filtroSeleccionado,
+    required this.onFiltroChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        spacing: AppSpacing.xs,
+        children: [
+          _Chip(
+            label: 'Todos',
+            color: AppColors.primary,
+            seleccionado: filtroSeleccionado == null,
+            onTap: () => onFiltroChanged(null),
+          ),
+          _Chip(
+            label: 'Bot IA',
+            color: AppColors.success,
+            seleccionado: filtroSeleccionado == TipoActor.botIA,
+            onTap: () => onFiltroChanged(TipoActor.botIA),
+          ),
+          _Chip(
+            label: 'Asesor',
+            color: AppColors.info,
+            seleccionado: filtroSeleccionado == TipoActor.asesor,
+            onTap: () => onFiltroChanged(TipoActor.asesor),
+          ),
+          _Chip(
+            label: 'Sistema',
+            color: AppColors.textSecondary,
+            seleccionado: filtroSeleccionado == TipoActor.sistema,
+            onTap: () => onFiltroChanged(TipoActor.sistema),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool seleccionado;
+  final VoidCallback onTap;
+
+  const _Chip({
+    required this.label,
+    required this.color,
+    required this.seleccionado,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: seleccionado ? color : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+          border: Border.all(
+            color: color.withValues(alpha: seleccionado ? 0 : 0.4),
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: seleccionado ? AppColors.textOnDark : color,
+            fontWeight: AppTextStyles.weightMedium,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -61,6 +183,19 @@ class _ListaHistorial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (eventos.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Text(
+            'Sin resultados para este filtro',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
     return ListView.separated(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -93,7 +228,7 @@ class _HistorialItem extends StatelessWidget {
     TipoActor.sistema => AppColors.textSecondary,
     TipoActor.botIA => AppColors.success,
     TipoActor.cliente => AppColors.info,
-    TipoActor.asesor => AppColors.warning,
+    TipoActor.asesor => AppColors.info,
   };
 
   @override

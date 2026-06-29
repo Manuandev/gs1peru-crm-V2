@@ -117,6 +117,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     if (state.estados.isNotEmpty) {
       final tienePadre = widget.lead.idEstadoPadre?.isNotEmpty ?? false;
       if (tienePadre) {
+        // El lead ya tiene padre explícito (ej: vino desde el chat).
         _estado = state.estados
             .where((e) => e.id == widget.lead.idEstadoPadre && e.esPadre)
             .firstOrNull;
@@ -129,9 +130,32 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
               .firstOrNull;
         }
       } else {
+        // Intenta primero como estado padre directo.
         _estado = state.estados
             .where((e) => e.id == widget.lead.idEstado && e.esPadre)
             .firstOrNull;
+
+        // Si no es padre, puede ser un subestado sin idEstadoPadre seteado
+        // (ej: vino de CSV_LEADS_LST que no devuelve el padre). Busca el padre
+        // a través del catálogo.
+        if (_estado == null) {
+          final hijo = state.estados
+              .where((e) => e.id == widget.lead.idEstado && !e.esPadre)
+              .firstOrNull;
+          if (hijo != null) {
+            _estado = state.estados
+                .where((e) => e.id == hijo.idPadre && e.esPadre)
+                .firstOrNull;
+            if (_estado != null) {
+              _subEstadosFiltrados = state.estados
+                  .where((e) => e.idPadre == _estado!.id)
+                  .toList();
+              _subEstado = _subEstadosFiltrados
+                  .where((e) => e.id == widget.lead.idEstado)
+                  .firstOrNull;
+            }
+          }
+        }
       }
     }
   }

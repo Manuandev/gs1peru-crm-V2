@@ -58,6 +58,7 @@ class AppTextStyles {
   static const double sizeXl = 18.0;
   static const double size2xl = 22.0;
   static const double size3xl = 28.0; // Títulos de pantalla
+  static const double size4xls = 34.0;
   static const double size4xl = 36.0;
   static const double size5xl = 40.0; // Splash display
   static const double size6xl = 48.0; // Error 404
@@ -96,6 +97,11 @@ class AppTextStyles {
   // --- Headline (títulos de pantalla) ---
   static const TextStyle headlineLarge = TextStyle(
     fontSize: size4xl,
+    fontWeight: weightBold,
+  );
+
+  static const TextStyle headlineLarge2 = TextStyle(
+    fontSize: size4xls,
     fontWeight: weightBold,
   );
 

@@ -79,7 +79,7 @@ class _LoginViewState extends State<LoginView> {
             (prev is LoginLoading) != (curr is LoginLoading),
         listener: (context, state) {
           if (state is LoginSuccess) {
-            AppSnackBar.success(context, '¡Bienvenido ${state.username}!');
+            // AppSnackBar.success(context, '¡Bienvenido ${state.username}!');
             context.read<AuthBloc>().add(
               AuthLoginSuccess(userId: state.userId, username: state.username),
             );
@@ -215,7 +215,7 @@ class _ZonaAzul extends StatelessWidget {
                       const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Bienvenido',
-                        style: AppTextStyles.headlineLarge.copyWith(
+                        style: AppTextStyles.headlineLarge2.copyWith(
                           color: AppColors.textOnDark,
                           fontWeight: AppTextStyles.weightBold,
                         ),

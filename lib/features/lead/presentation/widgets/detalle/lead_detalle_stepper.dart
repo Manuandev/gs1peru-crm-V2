@@ -1,37 +1,53 @@
-﻿// lib/features/lead/presentation/widgets/detalle/lead_detalle_stepper.dart
+// lib/features/lead/presentation/widgets/detalle/lead_detalle_stepper.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class LeadDetalleStepper extends StatelessWidget {
-  final String idEstadoActual;
-  const LeadDetalleStepper({super.key, required this.idEstadoActual});
+  /// Estado efectivo actual (puede ser subestado, ej: '06').
+  final String idEstado;
+
+  /// Estado padre si existe (ej: '01' para En desarrollo).
+  /// El paso activo se determina por este campo cuando está seteado.
+  final String idEstadoPadre;
+
+  const LeadDetalleStepper({
+    super.key,
+    required this.idEstado,
+    this.idEstadoPadre = '',
+  });
 
   static const _pasos = [
     _DatoPaso(id: '00', label: 'Nuevo', icon: AppIcons.etapaNuevo),
-    _DatoPaso(
-      id: '01',
-      label: 'En desarrollo',
-      icon: AppIcons.etapaEnDesarrollo,
-    ),
-    _DatoPaso(
-      id: '02',
-      label: 'Propuesta',
-      icon: AppIcons.etapaPropuesta,
-    ),
-    _DatoPaso(id: '05', label: 'Cobranza', icon: AppIcons.etapaGanado),
+    _DatoPaso(id: '01', label: 'En desarrollo', icon: AppIcons.etapaEnDesarrollo),
+    _DatoPaso(id: '02', label: 'Propuesta', icon: AppIcons.etapaPropuesta),
+    _DatoPaso(id: '04', label: 'Cobranza', icon: AppIcons.etapaGanado),
   ];
 
+  // Si hay padre, el paso se determina por él; si no, por el estado directo.
+  String get _idParaPaso => idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
+
   int get _indiceActual {
-    final idx = _pasos.indexWhere((p) => p.id == idEstadoActual);
+    final idx = _pasos.indexWhere((p) => p.id == _idParaPaso);
     return idx == -1 ? 0 : idx;
+  }
+
+  // Paso 4 (Cerrado/Cobranza): verde si subestado='05', rojo en cualquier otro caso.
+  Color get _colorPaso4 {
+    if (idEstado == '05') return AppColors.success;
+    return AppColors.error;
+  }
+
+  Color get _colorActual {
+    final actual = _indiceActual;
+    if (actual == _pasos.length - 1) return _colorPaso4;
+    return AppSocialUtils.colorEstado(_pasos[actual].id);
   }
 
   @override
   Widget build(BuildContext context) {
     final actual = _indiceActual;
-    final colorActual = AppSocialUtils.colorEstado(idEstadoActual);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -53,7 +69,7 @@ class LeadDetalleStepper extends StatelessWidget {
               Text(
                 '${actual + 1} de ${_pasos.length} · ${_pasos[actual].label}',
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: colorActual,
+                  color: _colorActual,
                   fontWeight: AppTextStyles.weightSemiBold,
                 ),
               ),
@@ -69,6 +85,9 @@ class LeadDetalleStepper extends StatelessWidget {
                     paso: _pasos[i],
                     isActivo: i == actual,
                     isCompletado: i < actual,
+                    colorOverride: i == _pasos.length - 1 && i == actual
+                        ? _colorPaso4
+                        : null,
                   ),
                 ),
                 if (i < _pasos.length - 1) _Conector(completado: i < actual),
@@ -115,16 +134,19 @@ class _PasoEtapa extends StatelessWidget {
   final _DatoPaso paso;
   final bool isActivo;
   final bool isCompletado;
+  /// Color explícito para el paso activo (usado en paso 4 con lógica cobranza/cerrado).
+  final Color? colorOverride;
 
   const _PasoEtapa({
     required this.paso,
     required this.isActivo,
     required this.isCompletado,
+    this.colorOverride,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = AppSocialUtils.colorEstado(paso.id);
+    final colorEstado = colorOverride ?? AppSocialUtils.colorEstado(paso.id);
     final Color bgCircle;
     final Color iconColor;
     final Color borderColor;
@@ -135,8 +157,8 @@ class _PasoEtapa extends StatelessWidget {
       borderColor = colorEstado;
     } else if (isCompletado) {
       bgCircle = AppSocialUtils.bgEstado(paso.id);
-      iconColor = colorEstado;
-      borderColor = colorEstado;
+      iconColor = AppSocialUtils.colorEstado(paso.id);
+      borderColor = AppSocialUtils.colorEstado(paso.id);
     } else {
       bgCircle = AppColors.surface;
       iconColor = AppColors.textDisabled;

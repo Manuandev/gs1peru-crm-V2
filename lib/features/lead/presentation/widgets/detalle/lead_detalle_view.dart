@@ -93,7 +93,10 @@ class _DetalleScaffold extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            LeadDetalleStepper(idEstadoActual: lead.idEstado),
+            LeadDetalleStepper(
+              idEstado: lead.idEstado,
+              idEstadoPadre: lead.idEstadoPadre ?? '',
+            ),
             _UltimaInteraccion(fechaHora: lead.fechaHora),
             LeadContactoCard(lead: lead),
             const SizedBox(height: AppSpacing.sm),

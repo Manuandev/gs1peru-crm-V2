@@ -15,7 +15,7 @@ export 'domain/entities/lead.dart';
 export 'domain/entities/lead_detalle.dart';
 export 'domain/entities/comentario_lead.dart';
 export 'domain/entities/contacto_detalle.dart';
-export 'domain/entities/negociacion_lead.dart';
+export 'domain/entities/negociacion.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';

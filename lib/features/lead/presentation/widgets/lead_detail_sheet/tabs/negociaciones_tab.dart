@@ -65,7 +65,7 @@ class _NegociacionesTabState extends State<NegociacionesTab>
 enum _FiltroNeg { todas, activa, ganadas }
 
 class _ListaNegociaciones extends StatefulWidget {
-  final List<NegociacionLead> negociaciones;
+  final List<Negociacion> negociaciones;
   final int leadId;
   final int idNumero;
   final VoidCallback? onCerrar;

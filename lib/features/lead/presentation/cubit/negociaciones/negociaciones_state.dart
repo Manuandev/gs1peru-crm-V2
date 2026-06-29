@@ -19,7 +19,7 @@ class NegociacionesLoading extends NegociacionesState {
 }
 
 class NegociacionesSuccess extends NegociacionesState {
-  final List<NegociacionLead> negociaciones;
+  final List<Negociacion> negociaciones;
 
   const NegociacionesSuccess({required this.negociaciones});
 

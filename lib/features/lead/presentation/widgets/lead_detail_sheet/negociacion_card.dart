@@ -6,7 +6,7 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class NegociacionCard extends StatelessWidget {
-  final NegociacionLead negociacion;
+  final Negociacion negociacion;
   final int leadId;
   final VoidCallback onGenerarSolicitud;
   // Se llama cuando el usuario vuelve de editar — recarga la lista

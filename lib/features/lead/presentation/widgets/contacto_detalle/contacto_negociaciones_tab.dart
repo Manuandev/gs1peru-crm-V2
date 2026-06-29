@@ -5,7 +5,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoNegociacionesTab extends StatelessWidget {
-  final List<NegociacionLead> negociaciones;
+  final List<Negociacion> negociaciones;
 
   const ContactoNegociacionesTab({super.key, required this.negociaciones});
 
@@ -23,7 +23,7 @@ class ContactoNegociacionesTab extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ListaNegociaciones extends StatelessWidget {
-  final List<NegociacionLead> negociaciones;
+  final List<Negociacion> negociaciones;
 
   const _ListaNegociaciones({required this.negociaciones});
 
@@ -61,8 +61,8 @@ class _ListaNegociaciones extends StatelessWidget {
     );
   }
 
-  List<_GrupoMes> _agruparPorMes(List<NegociacionLead> negociaciones) {
-    final mapa = <String, List<NegociacionLead>>{};
+  List<_GrupoMes> _agruparPorMes(List<Negociacion> negociaciones) {
+    final mapa = <String, List<Negociacion>>{};
     for (final negociacion in negociaciones) {
       final mes = negociacion.fechaHora.formatDate(AppDateFormat.monthYear);
       mapa.putIfAbsent(mes, () => []).add(negociacion);
@@ -75,7 +75,7 @@ class _ListaNegociaciones extends StatelessWidget {
 
 class _GrupoMes {
   final String mes;
-  final List<NegociacionLead> negociaciones;
+  final List<Negociacion> negociaciones;
   const _GrupoMes({required this.mes, required this.negociaciones});
 }
 

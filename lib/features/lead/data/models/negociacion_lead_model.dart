@@ -3,8 +3,8 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
-class NegociacionLeadModel extends NegociacionLead {
-  const NegociacionLeadModel({
+class NegociacionModel extends Negociacion {
+  const NegociacionModel({
     required super.idLead,
     required super.cantidad,
     required super.descuento,
@@ -27,10 +27,10 @@ class NegociacionLeadModel extends NegociacionLead {
     required super.activo,
   });
 
-  factory NegociacionLeadModel.fromRawString(String raw) {
+  factory NegociacionModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
-    return NegociacionLeadModel(
+    return NegociacionModel(
       idLead: ParseUtils.toInt(fields, 0),
       cantidad: ParseUtils.toInt(fields, 1),
       descuento: ParseUtils.toDouble(fields, 2),
@@ -54,16 +54,16 @@ class NegociacionLeadModel extends NegociacionLead {
     );
   }
 
-  static List<NegociacionLeadModel> parseList(String rawResponse) {
+  static List<NegociacionModel> parseList(String rawResponse) {
     return rawResponse
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
-        .map((r) => NegociacionLeadModel.fromRawString(r))
+        .map((r) => NegociacionModel.fromRawString(r))
         .toList();
   }
 
-  static NegociacionLeadModel? parse(String rawResponse) {
+  static NegociacionModel? parse(String rawResponse) {
     if (rawResponse.trim().isEmpty) return null;
-    return NegociacionLeadModel.fromRawString(rawResponse);
+    return NegociacionModel.fromRawString(rawResponse);
   }
 }

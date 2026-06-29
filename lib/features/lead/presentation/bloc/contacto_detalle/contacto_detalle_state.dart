@@ -20,7 +20,7 @@ final class ContactoDetalleCargando extends ContactoDetalleState {
 
 final class ContactoDetalleCargado extends ContactoDetalleState {
   final ContactoDetalle contacto;
-  final List<NegociacionLead> negociaciones;
+  final List<Negociacion> negociaciones;
 
   const ContactoDetalleCargado({
     required this.contacto,

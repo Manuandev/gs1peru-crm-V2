@@ -5,7 +5,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoNegociacionCard extends StatelessWidget {
-  final NegociacionLead negociacion;
+  final Negociacion negociacion;
 
   const ContactoNegociacionCard({super.key, required this.negociacion});
 

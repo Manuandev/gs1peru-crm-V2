@@ -7,6 +7,6 @@ class GetNegociacionesLead {
 
   GetNegociacionesLead(this._repository);
 
-  Future<List<NegociacionLead>> call(int idLead) =>
+  Future<List<Negociacion>> call(int idLead) =>
       _repository.obtenerNegociaciones(idLead);
 }

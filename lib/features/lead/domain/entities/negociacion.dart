@@ -2,7 +2,7 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
-class NegociacionLead extends Equatable {
+class Negociacion extends Equatable {
   final int idLead;
   final int cantidad;
   final double descuento;
@@ -32,7 +32,7 @@ class NegociacionLead extends Equatable {
   
   final bool activo;
 
-  const NegociacionLead({
+  const Negociacion({
     required this.idLead,
     required this.cantidad,
     required this.descuento,
@@ -79,7 +79,7 @@ class NegociacionLead extends Equatable {
     activo,
   ];
 
-  NegociacionLead copyWith({
+  Negociacion copyWith({
     int? idLead,
     int? cantidad,
     double? descuento,
@@ -101,7 +101,7 @@ class NegociacionLead extends Equatable {
     String? descripcionInteres,
     bool? activo,
   }) {
-    return NegociacionLead(
+    return Negociacion(
       idLead: idLead ?? this.idLead,
       cantidad: cantidad ?? this.cantidad,
       descuento: descuento ?? this.descuento,

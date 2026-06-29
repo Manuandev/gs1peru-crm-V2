@@ -533,7 +533,7 @@ class AppIcons {
   static const IconData negociacion = Icons.handshake_outlined;
 
   /// Historial de actividades — tab Historial en LeadDetailSheet y popup del chat
-  static const IconData historial = Icons.history_outlined;
+  static const IconData historial = Icons.history_rounded;
 
   // ============================================================
   // CANALES — FontAwesome (logos de redes sociales/origen)

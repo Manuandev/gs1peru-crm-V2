@@ -583,6 +583,10 @@ class AppSizing {
   /// Coincide con kMinInteractiveDimension — usado en skeletons de pantallas con tabs
   static const double tabBarHeight = 48.0;
 
+  /// Altura de tab compacto (ícono + texto en fila horizontal): 36dp
+  /// Usado en LeadDetailSheet para dejar más espacio al contenido del tab
+  static const double tabCompactHeight = 36.0;
+
   // ============================================================
   // BOTTOM SHEET HANDLE
   // ============================================================

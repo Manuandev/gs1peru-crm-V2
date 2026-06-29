@@ -129,12 +129,12 @@ class _CompactTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tab(
-      child: Column(
+      height: AppSizing.tabCompactHeight,
+      child: Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: AppSizing.iconSm),
-          const SizedBox(height: AppSpacing.xxs),
+          Icon(icon, size: AppSizing.iconXs),
+          const SizedBox(width: AppSpacing.xxs),
           Text(label),
         ],
       ),
@@ -238,6 +238,9 @@ class _SheetContent extends StatelessWidget {
               fontWeight: AppTextStyles.weightMedium,
             ),
             unselectedLabelStyle: AppTextStyles.labelSmall,
+            labelPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+            ),
             tabs: const [
               _CompactTab(icon: AppIcons.datosLead, label: 'Datos'),
               _CompactTab(icon: AppIcons.negociacion, label: 'Negociaciones'),

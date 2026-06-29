@@ -504,6 +504,12 @@ class AppColors {
   /// Fondo del campo Subestado (purple 50)
   static const Color datoSubestadobg = Color(0xFFF3E5F5);
 
+  /// Chip "Transferido hace X" — ícono de transferencia (orange 800)
+  static const Color datoTransferidoFg = Color(0xFFE65100);
+
+  /// Chip "Transferido hace X" — fondo (orange 50)
+  static const Color datoTransferidoBg = Color(0xFFFFF3E0);
+
   /// Ícono del campo Campaña (teal 700)
   static const Color datoCampaniaFg = Color(0xFF00796B);
 

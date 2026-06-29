@@ -85,24 +85,26 @@ class ChatTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (chat.isDerivadoIA)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _ChipInfo(
-                        icon: AppIcons.lightning,
-                        label: 'Derivado por IA',
-                        bgColor: AppColors.datoSubestadobg,
-                        fgColor: AppColors.datoSubestadoFg,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      _ChipInfo(
-                        icon: AppIcons.ia,
-                        label:
-                            'Bot atendió ${chat.cantidadMensajesIA} mensajes',
-                        bgColor: AppColors.datoEstadoBg,
-                        fgColor: AppColors.datoEstadoFg,
-                      ),
-                    ],
+                  Expanded(
+                    child: Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xxs,
+                      children: [
+                        _ChipInfo(
+                          icon: AppIcons.lightning,
+                          label: 'Derivado por IA',
+                          bgColor: AppColors.datoSubestadobg,
+                          fgColor: AppColors.datoSubestadoFg,
+                        ),
+                        _ChipInfo(
+                          icon: AppIcons.ia,
+                          label:
+                              'Bot atendió ${chat.cantidadMensajesIA} mensajes',
+                          bgColor: AppColors.datoEstadoBg,
+                          fgColor: AppColors.datoEstadoFg,
+                        ),
+                      ],
+                    ),
                   )
                 else
                   const SizedBox.shrink(),

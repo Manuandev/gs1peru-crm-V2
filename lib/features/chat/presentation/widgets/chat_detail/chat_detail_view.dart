@@ -39,10 +39,12 @@ class _ChatDetailViewState extends State<ChatDetailView>
   DateTime? _lastLoadMoreTime;
 
   int _previousMessageCount = 0;
+  ChatListBloc? _chatListBloc;
 
   @override
   void initState() {
     super.initState();
+    _chatListBloc = context.read<ChatListBloc>();
     _panelTabController = TabController(length: 3, vsync: this);
     _scroll.controller.addListener(_onScroll);
     AppRouteObserver.instance.setActiveLead(widget.idNumero);
@@ -64,6 +66,9 @@ class _ChatDetailViewState extends State<ChatDetailView>
 
   @override
   void dispose() {
+    if (!(_chatListBloc?.isClosed ?? true)) {
+      _chatListBloc!.add(const ChatListSilentRefreshed());
+    }
     AppRouteObserver.instance.setActiveLead(null);
     _panelTabController.dispose();
     _scroll.dispose();

@@ -52,7 +52,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
   String _getNumero() {
     final infoState = context.read<InfoLeadCubit>().state;
     if (infoState is InfoLeadSuccess) {
-      return infoState.lead.numero.replaceAll(RegExp(r'[^0-9]'), '');
+      final prefijo = infoState.lead.prefijo.replaceAll(RegExp(r'[^0-9]'), '');
+      final numero = infoState.lead.numero.replaceAll(RegExp(r'[^0-9]'), '');
+      return '$prefijo$numero';
     }
     return '';
   }

@@ -21,6 +21,12 @@ class ChatListRefreshed extends ChatListEvent {
   const ChatListRefreshed();
 }
 
+/// Recarga la lista desde la API sin emitir estado de carga (sin flash).
+/// Usar al regresar del detalle de chat.
+class ChatListSilentRefreshed extends ChatListEvent {
+  const ChatListSilentRefreshed();
+}
+
 class ChatListSearched extends ChatListEvent {
   final String query;
   const ChatListSearched(this.query);

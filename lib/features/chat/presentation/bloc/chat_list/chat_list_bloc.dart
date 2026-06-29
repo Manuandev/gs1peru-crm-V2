@@ -25,6 +25,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   ChatListBloc(this._getChats) : super(const ChatListInitial()) {
     on<ChatListStarted>(_onStarted);
     on<ChatListRefreshed>(_onRefreshed);
+    on<ChatListSilentRefreshed>(_onSilentRefreshed);
     on<ChatListSearched>(_onSearched);
     on<ChatListFiltered>(_onFiltered);
     on<ChatListFiltroAvanzadoAplicado>(_onFiltroAvanzadoAplicado);
@@ -67,6 +68,18 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   ) async {
     emit(const ChatListLoading());
     await _loadData(emit);
+  }
+
+  Future<void> _onSilentRefreshed(
+    ChatListSilentRefreshed event,
+    Emitter<ChatListState> emit,
+  ) async {
+    try {
+      _allChats = await _getChats();
+      _emitFiltered(emit);
+    } catch (_) {
+      // Falla silenciosa — mantiene el estado actual sin mostrar error
+    }
   }
 
   Future<void> _loadData(Emitter<ChatListState> emit) async {

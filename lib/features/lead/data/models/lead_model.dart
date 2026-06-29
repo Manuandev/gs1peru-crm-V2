@@ -1,8 +1,8 @@
 // lib/features/lead/data/models/lead_model.dart
 //
-// Parsea la respuesta del SP CSV_LEADS_LST_APP (tasks LS y DT sección 1).
-// APELLIDO_P en índice 3 y APELLIDO_M en índice 4 (campos separados).
-// Todos los índices desde 5 en adelante se desplazaron +1 respecto a la versión anterior.
+// Parsea la respuesta del SP CSV_LEADS_LST_APP (tasks LS y DT).
+// El SP retorna EP.ID_ESTADO y EP.DESCRIPCION (estado padre) en [15] y [16],
+// desplazando campaña, oportunidad, canal e interés a [17..24].
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -87,32 +87,36 @@ class LeadModel extends Lead {
       idEstado:      ParseUtils.str(fields, 13),
       // 14 → descripcionEstado
       estado:        ParseUtils.str(fields, 14),
-      // 15 → idCampania
-      idCampania:    ParseUtils.toInt(fields, 15),
-      // 16 → nombreCampania
-      campania:      ParseUtils.str(fields, 16),
-      // 17 → idOportunidad
-      idEvento:      ParseUtils.toInt(fields, 17),
-      // 18 → nombreOportunidad
-      evento:        ParseUtils.str(fields, 18),
-      // 19 → idCanal
-      idCanal:       ParseUtils.toInt(fields, 19),
-      // 20 → descripcionCanal
-      canal:         ParseUtils.str(fields, 20),
-      // 21 → idInteres
-      idInteres:     ParseUtils.toInt(fields, 21),
-      // 22 → descripcionInteres
-      interes:       ParseUtils.str(fields, 22),
-      // 23 → tieneConversacionAbierta
-      tieneConversacionAbierta: ParseUtils.toBool(fields, 23),
-      // 24 → precioBase
-      precioBase:    ParseUtils.toDouble(fields, 24),
-      // 25 → precio (costoFinal)
-      precio:        ParseUtils.toDouble(fields, 25),
-      // 26 → cantidad
-      cantidad:      ParseUtils.toDouble(fields, 26),
-      // 27 → descuento
-      descuento:     ParseUtils.toDouble(fields, 27),
+      // 15 → EP.ID_ESTADO (estado padre)
+      idEstadoPadre: ParseUtils.strNullable(fields, 15),
+      // 16 → EP.DESCRIPCION (descripcion estado padre)
+      descripcionEstadoPadre: ParseUtils.strNullable(fields, 16),
+      // 17 → idCampania
+      idCampania:    ParseUtils.toInt(fields, 17),
+      // 18 → nombreCampania
+      campania:      ParseUtils.str(fields, 18),
+      // 19 → idOportunidad
+      idEvento:      ParseUtils.toInt(fields, 19),
+      // 20 → nombreOportunidad
+      evento:        ParseUtils.str(fields, 20),
+      // 21 → idCanal
+      idCanal:       ParseUtils.toInt(fields, 21),
+      // 22 → descripcionCanal
+      canal:         ParseUtils.str(fields, 22),
+      // 23 → idInteres
+      idInteres:     ParseUtils.toInt(fields, 23),
+      // 24 → descripcionInteres
+      interes:       ParseUtils.str(fields, 24),
+      // 25 → tieneConversacionAbierta
+      tieneConversacionAbierta: ParseUtils.toBool(fields, 25),
+      // 26 → precioBase
+      precioBase:    ParseUtils.toDouble(fields, 26),
+      // 27 → precio (costoFinal)
+      precio:        ParseUtils.toDouble(fields, 27),
+      // 28 → cantidad
+      cantidad:      ParseUtils.toDouble(fields, 28),
+      // 29 → descuento
+      descuento:     ParseUtils.toDouble(fields, 29),
     );
   }
 

@@ -137,7 +137,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
             },
             builder: (context, fechaUltimaRespuesta) => ChatDetailAppBar(
               lead: infoState.lead,
-              idCanal: widget.conversacion?.idCanal ?? 1,
+              idCanal: infoState.lead.idCanal,
               fechaUltimaRespuesta: fechaUltimaRespuesta,
               onTap: () => context.goToEditarLead(
                 idLead: infoState.lead.idLead,
@@ -157,13 +157,20 @@ class _ChatDetailViewState extends State<ChatDetailView>
       ],
 
       appBarTrailingButtons: [
-        IconButton(
-          icon: const Icon(AppIcons.phone, color: AppColors.background),
-          onPressed: widget.conversacion == null
-              ? null
-              : () => LauncherUtils.abrirTelefono(
-                  '${widget.conversacion!.prefijoPais} ${widget.conversacion!.numero}',
-                ),
+        BlocBuilder<InfoLeadCubit, InfoLeadState>(
+          buildWhen: (prev, curr) => curr is InfoLeadSuccess,
+          builder: (context, state) {
+            final lead = state is InfoLeadSuccess ? state.lead : null;
+            final telefono = lead != null && lead.numero.isNotEmpty
+                ? '${lead.prefijo} ${lead.numero}'.trim()
+                : null;
+            return IconButton(
+              icon: const Icon(AppIcons.phone, color: AppColors.background),
+              onPressed: telefono == null
+                  ? null
+                  : () => LauncherUtils.abrirTelefono(telefono),
+            );
+          },
         ),
       ],
 

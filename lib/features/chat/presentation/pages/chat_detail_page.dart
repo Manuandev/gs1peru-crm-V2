@@ -10,7 +10,6 @@ class ChatDetailPage extends StatelessWidget {
   final int idNumero;
   final int? idLead;
   final Chat? conversacion;
-
   const ChatDetailPage({
     super.key,
     required this.idNumero,

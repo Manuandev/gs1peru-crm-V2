@@ -2,8 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
@@ -105,25 +103,24 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   Future<void> _onTemplateSelected() async {
+    final plantilla = await SelectTemplateModal.show(context);
+    if (plantilla == null || !mounted) return;
+
     final infoState = context.read<InfoLeadCubit>().state;
-    if (infoState is! InfoLeadSuccess) return;
+    final nombreCliente =
+        infoState is InfoLeadSuccess ? infoState.lead.nombre : '';
+    final apellidoCliente =
+        infoState is InfoLeadSuccess ? infoState.lead.apellido : '';
+    final nombreAsesor = SessionService().userApe;
 
-    final template = await context.goToTemplates(lead: infoState.lead);
-    if (template == null || !context.mounted) return;
+    final texto = plantilla.contenido
+        .replaceAll('{{nombre_cliente}}', nombreCliente)
+        .replaceAll('{{apellido_cliente}}', apellidoCliente)
+        .replaceAll('{{nombre_asesor}}', nombreAsesor);
 
-    final lead = infoState.lead;
-
-    // ignore: use_build_context_synchronously
-    context.read<ChatDetailBloc>().add(
-      ChatDetailTemplateMessageSent(
-        template: template,
-        numero: lead.numero.replaceAll(RegExp(r'[^0-9]'), ''),
-        chatCab: _getChatCab(),
-        nombreCliente: lead.nombre,
-        apellidoCliente: lead.apellido,
-        isExpirado: infoState.isExpirado,
-        isCerrado: infoState.isCerrado,
-      ),
+    _textController.text = texto;
+    _textController.selection = TextSelection.fromPosition(
+      TextPosition(offset: texto.length),
     );
   }
 

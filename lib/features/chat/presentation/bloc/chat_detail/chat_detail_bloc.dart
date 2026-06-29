@@ -190,7 +190,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   ) {
     if (state is! ChatDetailSuccess) return;
 
-    final mensajeFormateado = event.template.detalle
+    final mensajeFormateado = event.template.contenido
         .replaceAll('{{nombre_cliente}}', event.nombreCliente)
         .replaceAll('{{apellido_cliente}}', event.apellidoCliente)
         .replaceAll('{{nombre_asesor}}', _session.userApe);
@@ -198,23 +198,18 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final tempId = const Uuid().v4();
     final currentMessages = (state as ChatDetailSuccess).messages;
 
-    final tieneArchivo = event.template.rutaArchivo.isNotEmpty;
-    final tipo = tieneArchivo
-        ? _tipoDeExtension(event.template.extensionArchivo)
-        : 'text';
-
     final newMessage = ChatMessage(
       idConversacionCab: int.tryParse(event.chatCab) ?? 0,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
       direccionMensaje: 'ASE',
-      contenido: tieneArchivo ? event.template.rutaArchivo : mensajeFormateado,
-      tipo: tipo,
+      contenido: mensajeFormateado,
+      tipo: 'text',
       estadoEntrega: 'wait',
       rutaArchivo: '',
-      tipoArchivo: tipo,
-      nombreArchivo: event.template.nombreArchivo,
+      tipoArchivo: 'text',
+      nombreArchivo: '',
     );
 
     emit(
@@ -236,15 +231,6 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         isCerrado: event.isCerrado,
       );
     }
-  }
-
-  /// Infiere el tipo de mensaje según la extensión del archivo de la plantilla
-  static String _tipoDeExtension(String ext) {
-    final e = ext.toLowerCase().replaceAll('.', '');
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(e)) return 'image';
-    if (['mp4', 'mov', 'avi'].contains(e)) return 'video';
-    if (['mp3', 'm4a', 'ogg', 'wav'].contains(e)) return 'audio';
-    return 'document';
   }
 
   Future<void> _onAudioMessageSent(
@@ -610,7 +596,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     return messages.lastIndexWhere((m) {
       // Solo mensajes optimistas pendientes enviados por el asesor o IA
       if (m.estadoEntrega != 'wait') return false;
-      if (m.direccionMensaje != 'ASE' && m.direccionMensaje != 'AIA') return false;
+      if (m.direccionMensaje != 'ASE' && m.direccionMensaje != 'AIA')
+        return false;
       // Solo los que aún tienen tempId (UUID) — no los ya confirmados
       if (!uuidRegex.hasMatch(m.idTokenMeta)) return false;
       // Mismo tipo — las plantillas se guardan localmente como 'text' o tipo de

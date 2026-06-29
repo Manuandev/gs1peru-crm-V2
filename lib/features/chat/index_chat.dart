@@ -95,3 +95,4 @@ export '../lead/presentation/widgets/edit_lead/edit_lead_portrait.dart';
 
 export 'presentation/widgets/chat_detail/template/select_template_view.dart';
 export 'presentation/widgets/chat_detail/template/select_template_portrait.dart';
+export 'presentation/widgets/chat_detail/template/select_template_modal.dart';

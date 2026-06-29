@@ -7,27 +7,25 @@ class PlantillaModel extends Plantilla {
   const PlantillaModel({
     required super.idPlantilla,
     required super.nombre,
-    required super.idCampania,
-    required super.idEvento,
-    required super.detalle,
-    required super.rutaArchivo,
-    required super.nombreArchivo,
-    required super.extensionArchivo,
-    required super.isBoton,
+    required super.contenido,
+    required super.nombreCampania,
+    required super.nombreOportunidad,
+    required super.ibActivo,
+    required super.idMeta,
+    required super.estadoMeta,
   });
 
   factory PlantillaModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return PlantillaModel(
-      idPlantilla:      ParseUtils.toInt(c, 0),
-      nombre:           ParseUtils.str(c, 1),
-      idCampania:       ParseUtils.toInt(c, 2),
-      idEvento:         ParseUtils.toInt(c, 3),
-      detalle:          ParseUtils.str(c, 4),
-      rutaArchivo:      ParseUtils.str(c, 5),
-      nombreArchivo:    ParseUtils.str(c, 6),
-      extensionArchivo: ParseUtils.str(c, 7),
-      isBoton:          ParseUtils.toBool(c, 8),
+      idPlantilla:       ParseUtils.toInt(c, 0),
+      nombre:            ParseUtils.str(c, 1),
+      contenido:         ParseUtils.str(c, 2),
+      nombreCampania:    ParseUtils.str(c, 3),
+      nombreOportunidad: ParseUtils.str(c, 4),
+      ibActivo:          ParseUtils.toBool(c, 5),
+      idMeta:            ParseUtils.str(c, 6),
+      estadoMeta:        ParseUtils.str(c, 7),
     );
   }
 

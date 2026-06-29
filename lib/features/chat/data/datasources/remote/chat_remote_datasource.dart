@@ -110,9 +110,9 @@ class ChatRemoteDatasource {
       nombreCliente, // VAR11
       apellidoCliente, // VAR12
       _session.userApe, // VAR13
-      plantilla.detalle, // VAR14
-      '${plantilla.rutaArchivo}${plantilla.nombreArchivo}${plantilla.extensionArchivo}', // VAR15
-      plantilla.isBoton ? '1' : '0', // VAR16
+      plantilla.contenido, // VAR14
+      '', // VAR15 — archivo (no aplica en SP actual)
+      '0', // VAR16 — isBoton (no aplica en SP actual)
     ].join(camp);
 
     final String body = '${user.token}$sep$vars${sep}CA';

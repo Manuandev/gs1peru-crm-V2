@@ -109,8 +109,6 @@ class _TemplateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final tieneArchivo = template.rutaArchivo.isNotEmpty;
-
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -146,9 +144,7 @@ class _TemplateCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
               ),
               child: Icon(
-                tieneArchivo
-                    ? _iconForExt(template.extensionArchivo)
-                    : AppIcons.chat,
+                AppIcons.chat,
                 color: isSelected
                     ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,
@@ -158,7 +154,7 @@ class _TemplateCard extends StatelessWidget {
 
             const SizedBox(width: AppSpacing.sm2),
 
-            // ── Nombre + preview ────────────────────────────
+            // ── Nombre + contenido ──────────────────────────
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,35 +168,15 @@ class _TemplateCard extends StatelessWidget {
                           : colorScheme.onSurface,
                     ),
                   ),
-                  if (template.detalle.isNotEmpty) ...[
+                  if (template.contenido.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      template.detalle,
+                      template.contenido,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  if (tieneArchivo) ...[
-                    const SizedBox(height: AppSpacing.chipGap),
-                    Row(
-                      children: [
-                        Icon(
-                          AppIcons.attach,
-                          size: AppSizing.iconInline,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: AppSpacing.xxs),
-                        Text(
-                          template.nombreArchivo,
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
                     ),
                   ],
                 ],
@@ -221,17 +197,6 @@ class _TemplateCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  IconData _iconForExt(String ext) {
-    final e = ext.toLowerCase().replaceAll('.', '');
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(e)) {
-      return AppIcons.image;
-    }
-    if (['mp4', 'mov', 'avi'].contains(e)) return AppIcons.videocam;
-    if (['mp3', 'm4a', 'ogg', 'wav'].contains(e)) return AppIcons.mic;
-    if (['pdf'].contains(e)) return AppIcons.pdf;
-    return AppIcons.fileOutlined;
   }
 }
 

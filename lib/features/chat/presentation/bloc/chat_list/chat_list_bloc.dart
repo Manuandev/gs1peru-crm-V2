@@ -168,10 +168,9 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   }
 
   ContadoresChat _calcularContadores(List<Chat> chats) {
-    // TODO: confirmar códigos '02' y '04' con BD (provisional)
     return ContadoresChat(
       sinResponder: chats.where((c) => c.direccionMensaje == 'CLI').length,
-      derivadasPorIA: chats.where((c) => c.direccionMensaje == 'AIA').length,
+      derivadasPorIA: chats.where((c) => c.isDerivadoIA).length,
       conPropuesta: chats.where((c) => c.idEstadoEfectivo == '02').length,
       enCobranza: chats.where((c) => c.idEstado == '05').length,
     );

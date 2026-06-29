@@ -21,11 +21,10 @@ class ChatListLoading extends ChatListState {
 /// Contadores globales calculados siempre sobre la lista completa (_allChats),
 /// independientemente del chip o filtro avanzado activo.
 class ContadoresChat extends Equatable {
-  // TODO: confirmar códigos exactos con BD — '02'=Propuesta, '04'=Cobranza (provisional)
   final int sinResponder;   // direccionMensaje == 'CLI'
-  final int derivadasPorIA; // direccionMensaje == 'AIA'
+  final int derivadasPorIA; // isDerivadoIA == true
   final int conPropuesta;   // idEstadoEfectivo == '02'
-  final int enCobranza;     // idEstadoEfectivo == '04'
+  final int enCobranza;     // idEstado == '05'
 
   const ContadoresChat({
     this.sinResponder = 0,

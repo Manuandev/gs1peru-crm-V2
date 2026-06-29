@@ -77,7 +77,7 @@ class ChatRemoteDatasource {
 
     final String body =
         '${user.token}$sep'
-        '${[idNumero, '', user.codUser, mensaje, 'text', numero, 0, '', chatCab, '', '', '', user.codUser, ''].join(camp)}'
+        '${[chatCab, '', user.codUser, mensaje, 'text', numero, 0, '', chatCab, '', '', '', user.codUser, ''].join(camp)}'
         '${sep}CA';
 
     return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");
@@ -98,7 +98,7 @@ class ChatRemoteDatasource {
     if (user == null) return false;
 
     final vars = [
-      idNumero, // VAR01
+      chatCab, // VAR01
       plantilla.nombre, // VAR02
       user.codUser, // VAR03
       mensajeFormateado, // VAR04
@@ -270,7 +270,7 @@ class ChatRemoteDatasource {
 
     final String body =
         '${user.token}$sep'
-        '${[idNumero, '', user.codUser, '', tipo, numero, 0, '', chatCab, fileName, fileExt, '', user.codUser, ''].join(camp)}'
+        '${[chatCab, '', user.codUser, '', tipo, numero, 0, '', chatCab, fileName, fileExt, '', user.codUser, ''].join(camp)}'
         '${sep}CA';
 
     return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");

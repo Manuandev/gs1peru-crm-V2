@@ -149,7 +149,8 @@ class ChatRemoteDatasource {
       final fileExt = dotIndex != -1 ? fileName.substring(dotIndex) : '';
 
       final cabecera = [
-        idNumero,
+        //idNumero,
+        chatCab,
         '',
         user.codUser,
         '',

@@ -4,7 +4,7 @@ enum Environment { dev, qa, prod }
 
 class EnvConfig {
   // Entorno actual (cámbialo según necesites)
-  static const Environment current = Environment.dev;
+  static const Environment current = Environment.qa;
 
   // Configuración según entorno
   static String get baseUrl {

@@ -2,11 +2,20 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 /// Banner informativo que aparece cuando un lead fue atendido inicialmente por el bot.
-/// Los datos son estáticos por ahora; la lógica se conecta en una iteración posterior.
+/// Solo se muestra cuando chat.isDerivadoIA == true.
 class ChatIaBanner extends StatelessWidget {
-  const ChatIaBanner({super.key});
+  final Chat chat;
+  const ChatIaBanner({super.key, required this.chat});
+
+  String _badgeTexto() {
+    final fecha = DateFormatter.parseDate(chat.fcUltimoMensajeIA);
+    if (fecha == null) return 'Transferido a ti';
+    final elapsed = DateTime.now().difference(fecha);
+    return 'Transferido a ti\nhace ${ElapsedTimeUtils.formatHyM(elapsed)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +58,9 @@ class ChatIaBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  'El bot respondió las primeras preguntas y transfirió esta conversación '
-                  'a ti porque el cliente solicitó información de precios y una consulta específica.',
+                  'El bot atendió ${chat.cantidadMensajesIA} '
+                  '${chat.cantidadMensajesIA == 1 ? 'mensaje' : 'mensajes'} '
+                  'y transfirió esta conversación a ti para que puedas dar seguimiento personalizado.',
                   style: AppTextStyles.labelVerySmall9.copyWith(
                     color: AppColors.textSecondary,
                     height: 1.4,
@@ -71,7 +81,7 @@ class ChatIaBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             ),
             child: Text(
-              'Transferido a ti\nhace 12 min',
+              _badgeTexto(),
               style: AppTextStyles.labelVerySmall9.copyWith(
                 color: AppColors.textOnDark,
                 fontWeight: AppTextStyles.weightBold,

@@ -4,17 +4,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/chat/presentation/widgets/chat_detail/info_lead/chat_ia_banner.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatOndaBanner extends StatelessWidget {
-  const ChatOndaBanner({super.key});
+  final Chat? chat;
+  const ChatOndaBanner({super.key, this.chat});
 
   @override
   Widget build(BuildContext context) {
+    if (chat == null || !chat!.isDerivadoIA) return const SizedBox.shrink();
     final colorScheme = Theme.of(context).colorScheme;
     return CustomPaint(
       painter: _OndaPainter(colorScheme.primary),
-      child: const ChatIaBanner(),
+      child: ChatIaBanner(chat: chat!),
     );
   }
 }

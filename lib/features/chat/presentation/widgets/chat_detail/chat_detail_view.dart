@@ -214,7 +214,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
             color: AppColors.surface,
             child: Column(
               children: [
-                const ChatOndaBanner(),
+                ChatOndaBanner(chat: widget.conversacion),
                 BlocBuilder<InfoLeadCubit, InfoLeadState>(
                   buildWhen: (prev, curr) {
                     if (curr is! InfoLeadSuccess) return false;

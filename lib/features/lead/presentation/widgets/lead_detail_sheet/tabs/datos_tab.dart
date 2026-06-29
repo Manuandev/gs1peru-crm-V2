@@ -16,7 +16,20 @@ class DatosTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final colorEstado = AppSocialUtils.colorEstado(lead.idEstado);
+    // Cuando hay padre, el color de estado corresponde al padre (ej: '04' Cerrado),
+    // no al subestado crudo ('05' Cobranza).
+    final idEfectivo = (lead.idEstadoPadre?.isNotEmpty ?? false)
+        ? lead.idEstadoPadre!
+        : lead.idEstado;
+    final colorEstado = AppSocialUtils.colorEstado(idEfectivo);
+    // Separar las descripciones de estado y subestado para mostrarlas por separado.
+    final hayPadre = lead.idEstadoPadre?.isNotEmpty ?? false;
+    final labelEstado = hayPadre
+        ? (lead.descripcionEstadoPadre?.isNotEmpty ?? false
+            ? lead.descripcionEstadoPadre!
+            : lead.estado)
+        : lead.estado;
+    final labelSubEstado = hayPadre ? lead.estado : (lead.subEstado ?? '');
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -133,7 +146,7 @@ class DatosTab extends StatelessWidget {
                     color: colorEstado,
                   ),
                   etiqueta: 'Estado',
-                  valor: lead.estado.isEmpty ? '—' : lead.estado,
+                  valor: labelEstado.isEmpty ? '—' : labelEstado,
                   valorColor: colorEstado,
                 ),
                 derecha: _CampoDato(
@@ -143,7 +156,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Subestado',
-                  valor: (lead.subEstado ?? '').isEmpty ? '—' : lead.subEstado!,
+                  valor: labelSubEstado.isEmpty ? '—' : labelSubEstado,
                 ),
               ),
               _ParFila(

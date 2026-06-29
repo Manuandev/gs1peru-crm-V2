@@ -7,14 +7,34 @@ import 'package:app_crm/features/chat/index_chat.dart';
 class ChatDetailFases extends StatelessWidget {
   final String idEstadoActual;
 
-  const ChatDetailFases({super.key, required this.idEstadoActual});
+  /// ID del estado padre cuando hay subestado (ej: '04' Cerrado cuando
+  /// idEstadoActual es '05' Cerrado Ganado). Vacío si no hay padre.
+  final String idEstadoPadre;
+
+  const ChatDetailFases({
+    super.key,
+    required this.idEstadoActual,
+    this.idEstadoPadre = '',
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final estados = LeadEstado.values;
-    final indexActivo = estados.indexWhere((e) => e.id == idEstadoActual);
+
+    // Usar el padre para determinar el paso activo; si no hay padre, usar el estado crudo.
+    final idEfectivo = idEstadoPadre.isNotEmpty
+        ? idEstadoPadre
+        : idEstadoActual;
+    final indexActivo = estados.indexWhere((e) => e.id == idEfectivo);
     final activoEfectivo = indexActivo < 0 ? 0 : indexActivo;
+
+    // Cuando el último paso está activo (Cerrado/Cobranza = '04'):
+    //   '05' Cerrado Ganado → verde; cualquier otro subestado → rojo.
+    final bool ultimoPasoActivo = activoEfectivo == estados.length - 1;
+    final Color? colorUltimoPaso = ultimoPasoActivo
+        ? (idEstadoActual == '05' ? AppColors.success : AppColors.error)
+        : null;
 
     return Container(
       color: colorScheme.surface,
@@ -40,6 +60,9 @@ class ChatDetailFases extends StatelessWidget {
           final estado = estados[index];
           final isActivo = index == activoEfectivo;
           final isPasado = index < activoEfectivo;
+          final colorOverride = isActivo && index == estados.length - 1
+              ? colorUltimoPaso
+              : null;
 
           return _PasoStepper(
             numero: index + 1,
@@ -47,6 +70,7 @@ class ChatDetailFases extends StatelessWidget {
             isActivo: isActivo,
             isPasado: isPasado,
             colorActivo: colorScheme.primary,
+            colorOverride: colorOverride,
           );
         }),
       ),
@@ -61,20 +85,29 @@ class _PasoStepper extends StatelessWidget {
   final bool isPasado;
   final Color colorActivo;
 
+  /// Cuando se provee, reemplaza colorActivo solo para este paso (solo cuando isActivo).
+  final Color? colorOverride;
+
   const _PasoStepper({
     required this.numero,
     required this.label,
     required this.isActivo,
     required this.isPasado,
     required this.colorActivo,
+    this.colorOverride,
   });
 
   @override
   Widget build(BuildContext context) {
-    final circleFill = isActivo ? colorActivo : AppColors.surface;
-    final circleBorder = isActivo || isPasado ? colorActivo : AppColors.grey400;
-    final numberColor = isActivo ? AppColors.textOnDark : (isPasado ? colorActivo : AppColors.grey400);
-    final labelColor = isActivo ? colorActivo : AppColors.grey500;
+    final color = (isActivo && colorOverride != null)
+        ? colorOverride!
+        : colorActivo;
+    final circleFill = isActivo ? color : AppColors.surface;
+    final circleBorder = isActivo || isPasado ? color : AppColors.grey400;
+    final numberColor = isActivo
+        ? AppColors.textOnDark
+        : (isPasado ? colorActivo : AppColors.grey400);
+    final labelColor = isActivo ? color : AppColors.grey500;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -84,7 +117,9 @@ class _PasoStepper extends StatelessWidget {
           label,
           style: AppTextStyles.labelSmall.copyWith(
             color: labelColor,
-            fontWeight: isActivo ? AppTextStyles.weightBold : AppTextStyles.weightRegular,
+            fontWeight: isActivo
+                ? AppTextStyles.weightBold
+                : AppTextStyles.weightRegular,
           ),
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
@@ -99,7 +134,10 @@ class _PasoStepper extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: circleFill,
-            border: Border.all(color: circleBorder, width: AppSizing.borderFocusWidth),
+            border: Border.all(
+              color: circleBorder,
+              width: AppSizing.borderFocusWidth,
+            ),
           ),
           child: Center(
             child: Text(

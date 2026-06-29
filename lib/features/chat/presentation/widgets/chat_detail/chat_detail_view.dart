@@ -212,10 +212,14 @@ class _ChatDetailViewState extends State<ChatDetailView>
                   buildWhen: (prev, curr) {
                     if (curr is! InfoLeadSuccess) return false;
                     if (prev is! InfoLeadSuccess) return true;
-                    return (prev).lead.idEstado != (curr).lead.idEstado;
+                    return (prev).lead.idEstado != (curr).lead.idEstado ||
+                        (prev).lead.idEstadoPadre != (curr).lead.idEstadoPadre;
                   },
                   builder: (context, state) => state is InfoLeadSuccess
-                      ? ChatDetailFases(idEstadoActual: state.lead.idEstado)
+                      ? ChatDetailFases(
+                          idEstadoActual: state.lead.idEstado,
+                          idEstadoPadre: state.lead.idEstadoPadre ?? '',
+                        )
                       : const SizedBox.shrink(),
                 ),
               ],

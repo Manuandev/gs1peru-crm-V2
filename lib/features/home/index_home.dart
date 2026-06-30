@@ -7,9 +7,7 @@ export 'data/models/prioridad_home_model.dart';
 export 'data/models/prospecto_home_model.dart';
 export 'data/models/asesor_home_model.dart';
 
-export 'data/models/notifications/notification_model.dart';
-export 'data/models/notifications/leads_model.dart';
-export 'data/models/notifications/recordatorio_model.dart';
+export 'data/models/notifications/notificacion_model.dart';
 
 export 'data/repositories/home_repository_impl.dart';
 
@@ -18,8 +16,7 @@ export 'domain/entities/prioridad_home.dart';
 export 'domain/entities/prospecto_home.dart';
 export 'domain/entities/asesor_home.dart';
 
-export 'domain/entities/notifications/leads_notificaciones.dart';
-export 'domain/entities/notifications/recordatorio.dart';
+export 'domain/entities/notifications/notificacion.dart';
 export 'domain/entities/notifications/notification.dart';
 
 export 'domain/repositories/home_repository.dart';
@@ -46,9 +43,7 @@ export 'presentation/widgets/notifications/notifications_view.dart';
 export 'presentation/widgets/notifications/notifications_portrait.dart';
 export 'presentation/widgets/notifications/notification_filter_bar.dart';
 
-export 'presentation/widgets/notifications/tiles/lead_nuevo_tile.dart';
-export 'presentation/widgets/notifications/tiles/lead_reasignado_tile.dart';
-export 'presentation/widgets/notifications/tiles/recordatorio_tile.dart';
+export 'presentation/widgets/notifications/tiles/notificacion_tile.dart';
 
 export 'presentation/widgets/dashboard/dashboard_home.dart';
 export 'presentation/widgets/dashboard/home_menu_cards.dart';

@@ -11,7 +11,8 @@ class HomeRemoteDatasource {
   final camp = AppConstants.sepCampos;
 
   Future<HomeModel> getData() async {
-    final esEquipo = _session.isModerador &&
+    final esEquipo =
+        _session.isModerador &&
         FiltroCubit.instance.state.vista == FiltroVista.miEquipo;
     final String body =
         '${[_session.codUser, esEquipo ? 1 : 0].join(camp)}${sep}L';
@@ -37,23 +38,15 @@ class HomeRemoteDatasource {
     };
   }
 
-  Future<NotificationModel> getNotifications() async {
+  Future<List<NotificacionModel>> getNotifications() async {
     final String body =
         '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LN';
 
     final result = await _api.postSafe(ApiConstants.urlHomeLst, body);
 
     return switch (result) {
-      ApiSuccess(:final data) => NotificationModel.parse(data),
-      ApiEmpty() => const NotificationModel(
-        totNotificaciones: 0,
-        totLeadsReasignados: 0,
-        totLeadsNuevos: 0,
-        totRecordatorios: 0,
-        leadsReasignados: [],
-        leadsNuevos: [],
-        recordatorios: [],
-      ),
+      ApiSuccess(:final data) => NotificacionModel.parseList(data),
+      ApiEmpty() => const <NotificacionModel>[],
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };

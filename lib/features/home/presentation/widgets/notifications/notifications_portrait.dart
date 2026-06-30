@@ -18,25 +18,59 @@ class NotificationsPortrait extends StatefulWidget {
 class _NotificationsPortraitState extends State<NotificationsPortrait> {
   _Filtro _filtro = _Filtro.todas;
 
+  List<Notificacion> get _notificacionesFiltradas => switch (_filtro) {
+    _Filtro.todas => widget.state.notificaciones,
+    _Filtro.actividades => widget.state.actividades,
+    _Filtro.derivaciones => widget.state.derivaciones,
+    _Filtro.mensajes => widget.state.mensajes,
+  };
+
+  // Agrupa la lista por etiqueta de fecha ("Hoy", "Ayer", fecha corta)
+  // Preserva el orden de inserción (LinkedHashMap implícito en Dart).
+  Map<String, List<Notificacion>> _agruparPorFecha(List<Notificacion> lista) {
+    final grupos = <String, List<Notificacion>>{};
+    for (final n in lista) {
+      final clave = _etiquetaFecha(n.fechaHora);
+      grupos.putIfAbsent(clave, () => []).add(n);
+    }
+    return grupos;
+  }
+
+  String _etiquetaFecha(String fechaHora) {
+    try {
+      final dt = DateTime.parse(fechaHora);
+      final hoy = DateTime.now();
+      if (dt.year == hoy.year && dt.month == hoy.month && dt.day == hoy.day) {
+        return 'Hoy';
+      }
+      final ayer = hoy.subtract(const Duration(days: 1));
+      if (dt.year == ayer.year &&
+          dt.month == ayer.month &&
+          dt.day == ayer.day) {
+        return 'Ayer';
+      }
+      return fechaHora.formatDate(AppDateFormat.shortDate);
+    } catch (_) {
+      return 'Hoy';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
-    final empty =
-        state.leadsReasignados.isEmpty &&
-        state.leadsNuevos.isEmpty &&
-        state.recordatorios.isEmpty;
 
     return Column(
       children: [
         // ── Filtros — fijos, no scrollean ─────────────────────────────────
         _BarraFiltros(
           filtro: _filtro,
-          totTodas: state.totNotificaciones,
-          totActividades: state.totLeadsNuevos,
-          totDerivaciones: state.totLeadsReasignados,
-          totMensajes: state.totRecordatorios,
+          totTodas: state.notificaciones.length,
+          totActividades: state.actividades.length,
+          totDerivaciones: state.derivaciones.length,
+          totMensajes: state.mensajes.length,
           onCambio: (f) => setState(() => _filtro = f),
         ),
+
         // ── Contenido scrolleable ──────────────────────────────────────────
         Expanded(
           child: SingleChildScrollView(
@@ -47,44 +81,44 @@ class _NotificationsPortraitState extends State<NotificationsPortrait> {
                 const SizedBox(height: AppSpacing.xs),
                 _TarjetaContadores(state: state),
                 const SizedBox(height: AppSpacing.sm),
-                if (empty)
-                  const _EmptyNotifications()
-                else ...[
-                  if (_filtro == _Filtro.todas ||
-                      _filtro == _Filtro.actividades)
-                    CollapsibleSection(
-                      icon: AppIcons.leadNuevo,
-                      label: 'Leads Nuevos',
-                      count: state.totLeadsNuevos,
-                      children: state.leadsNuevos
-                          .map((e) => LeadNuevoTile(lead: e))
-                          .toList(),
-                    ),
-                  if (_filtro == _Filtro.todas ||
-                      _filtro == _Filtro.derivaciones)
-                    CollapsibleSection(
-                      icon: AppIcons.reasignar,
-                      label: 'Leads Reasignados',
-                      count: state.totLeadsReasignados,
-                      children: state.leadsReasignados
-                          .map((e) => LeadReasignadoTile(lead: e))
-                          .toList(),
-                    ),
-                  if (_filtro == _Filtro.todas || _filtro == _Filtro.mensajes)
-                    CollapsibleSection(
-                      icon: AppIcons.notificationActive,
-                      label: 'Recordatorios',
-                      count: state.totRecordatorios,
-                      children: state.recordatorios
-                          .map((e) => RecordatorioTile(recordatorio: e))
-                          .toList(),
-                    ),
-                ],
+                _buildLista(),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLista() {
+    final lista = _notificacionesFiltradas;
+
+    if (lista.isEmpty) return const _EmptyNotifications();
+
+    final grupos = _agruparPorFecha(lista);
+    final widgets = <Widget>[];
+
+    for (final entry in grupos.entries) {
+      widgets.add(
+        _EncabezadoFecha(fecha: entry.key, count: entry.value.length),
+      );
+      for (int i = 0; i < entry.value.length; i++) {
+        widgets.add(NotificacionTile(notificacion: entry.value[i]));
+        if (i < entry.value.length - 1) {
+          widgets.add(
+            const Divider(
+              height: 1,
+              indent: AppSpacing.md,
+              endIndent: AppSpacing.md,
+            ),
+          );
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
     );
   }
 }
@@ -146,7 +180,7 @@ class _BarraFiltros extends StatelessWidget {
             label: 'Mensajes',
             count: totMensajes,
             seleccionado: filtro == _Filtro.mensajes,
-            colorBadge: AppColors.info,
+            colorBadge: AppColors.brandSlateAccessible,
             onTap: () => onCambio(_Filtro.mensajes),
           ),
         ],
@@ -179,12 +213,8 @@ class _FiltroChip extends StatelessWidget {
     final textColor = seleccionado
         ? AppColors.textOnDark
         : colorScheme.onSurface;
-    // No seleccionado: círculo sólido con texto blanco
-    // Seleccionado: círculo blanco con texto del color del chip
     final badgeBg = seleccionado ? AppColors.textOnDark : colorBadge;
-    final badgeTextColor = seleccionado
-        ? colorSeleccionado
-        : AppColors.textOnDark;
+    final badgeText = seleccionado ? colorSeleccionado : AppColors.textOnDark;
 
     return GestureDetector(
       onTap: onTap,
@@ -222,7 +252,7 @@ class _FiltroChip extends StatelessWidget {
               child: Text(
                 '$count',
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: badgeTextColor,
+                  color: badgeText,
                   fontWeight: AppTextStyles.weightBold,
                 ),
               ),
@@ -260,7 +290,7 @@ class _TarjetaContadores extends StatelessWidget {
                 icono: AppIcons.calendar,
                 colorIcono: AppColors.warning,
                 titulo: 'Pendientes hoy',
-                valor: state.totLeadsNuevos,
+                valor: state.actividades.length,
               ),
             ),
             Container(width: 1, height: 48, color: AppColors.border),
@@ -269,7 +299,7 @@ class _TarjetaContadores extends StatelessWidget {
                 icono: AppIcons.ia,
                 colorIcono: AppColors.brandLavenderAccessible,
                 titulo: 'Derivaciones',
-                valor: state.totLeadsReasignados,
+                valor: state.derivaciones.length,
               ),
             ),
             Container(width: 1, height: 48, color: AppColors.border),
@@ -278,7 +308,7 @@ class _TarjetaContadores extends StatelessWidget {
                 icono: AppIcons.chatDots,
                 colorIcono: AppColors.brandSlateAccessible,
                 titulo: 'Mensajes sin leer',
-                valor: state.totRecordatorios,
+                valor: state.mensajes.length,
               ),
             ),
           ],
@@ -325,7 +355,7 @@ class _ContadorItem extends StatelessWidget {
               children: [
                 Text(
                   titulo,
-                  style: AppTextStyles.labelExtraSmall.copyWith(
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: colorScheme.onSurface.withValues(
                       alpha: AppColors.opacityEmptyText,
                     ),
@@ -341,6 +371,48 @@ class _ContadorItem extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Encabezado de grupo por fecha ─────────────────────────────────────────────
+
+class _EncabezadoFecha extends StatelessWidget {
+  final String fecha;
+  final int count;
+
+  const _EncabezadoFecha({required this.fecha, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.xs,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            fecha,
+            style: AppTextStyles.titleLarge.copyWith(
+              fontWeight: AppTextStyles.weightBold,
+            ),
+          ),
+          Text(
+            '$count ${count == 1 ? 'notificación' : 'notificaciones'}',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: colorScheme.onSurface.withValues(
+                alpha: AppColors.opacityEmptyText,
+              ),
             ),
           ),
         ],

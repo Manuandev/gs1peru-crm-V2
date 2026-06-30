@@ -136,6 +136,9 @@ class AppSizing {
   static const double _faOffset = 2.0;
   static double faSize(double size) => size - _faOffset;
 
+  /// Punto indicador de no leído en tiles de notificación: 8px
+  static const double dotIndicatorSize = 8.0;
+
   /// Ícono pequeño: 16px — iconos dentro de labels o chips
   static const double iconSm = 16.0;
 

@@ -20,20 +20,25 @@ class NotificationsLoading extends NotificationsState {
 }
 
 class NotificationsLoaded extends NotificationsState {
-  final Notification notification;
+  final List<Notificacion> notificationes;
 
-  const NotificationsLoaded({required this.notification});
-  
-  int get totNotificaciones => notification.totNotificaciones;
-  int get totLeadsReasignados => notification.totLeadsReasignados;
-  int get totLeadsNuevos => notification.totLeadsNuevos;
-  int get totRecordatorios => notification.totRecordatorios;
-  List<LeadReasignado> get leadsReasignados => notification.leadsReasignados;
-  List<LeadNuevo> get leadsNuevos => notification.leadsNuevos;
-  List<Recordatorio> get recordatorios => notification.recordatorios;
-  
+  const NotificationsLoaded({required this.notificationes});
+
+  List<Notificacion> get notificaciones => notificationes;
+
+  List<Notificacion> get actividades => notificaciones
+      .where((n) => n.tipo == TipoNotificacion.actividad)
+      .toList();
+
+  List<Notificacion> get derivaciones => notificaciones
+      .where((n) => n.tipo == TipoNotificacion.derivacion)
+      .toList();
+
+  List<Notificacion> get mensajes =>
+      notificaciones.where((n) => n.tipo == TipoNotificacion.mensaje).toList();
+
   @override
-  List<Object?> get props => [notification];
+  List<Object?> get props => [notificationes];
 }
 
 class NotificationsError extends NotificationsState {

@@ -6,13 +6,24 @@ import 'package:app_crm/features/chat/index_chat.dart';
 class MessageUrlHelper {
   MessageUrlHelper._();
 
-  /// URL base del archivo:
-  /// https://host/archivos_wsp_gs1/{idLead}/{idConversacionCab}/archivos_adjuntos/{nombreArchivo}{tipoArchivo}
+  /// Detecta si el archivo pertenece a la carpeta de plantillas del servidor.
+  /// La ruta del servidor termina en \PLANTILLAS (ej: ...ARCHIVOS_WSP\PLANTILLAS)
+  static bool isPlantillaFile(ChatMessage message) =>
+      message.rutaArchivo.contains(r'\PLANTILLAS');
+
+  /// Construye la URL del archivo.
+  /// - Si es un archivo de plantilla → {urlBase}PLANTILLAS/{nombre}{ext}
+  /// - Resto                        → {urlBase}{idNumero}/{cab}/archivos_adjuntos/{nombre}{ext}
   static String buildFileUrl(ChatMessage message, int idNumero) {
     final base = EnvConfig.urlArchivos;
-    final cab = message.idConversacionCab;
     final nombre = Uri.encodeComponent(message.nombreArchivo);
     final ext = Uri.encodeComponent(message.tipoArchivo);
+
+    if (isPlantillaFile(message)) {
+      return '${base}PLANTILLAS/$nombre$ext';
+    }
+
+    final cab = message.idConversacionCab;
     return '$base$idNumero/$cab/archivos_adjuntos/$nombre$ext';
   }
 

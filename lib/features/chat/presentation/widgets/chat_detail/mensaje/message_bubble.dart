@@ -36,8 +36,10 @@ class MessageBubble extends StatelessWidget {
     required this.nombre,
   });
 
-  bool get _isImageMsg => MessageUrlHelper.isImage(message);
-  bool get _isVideoMsg => MessageUrlHelper.isVideo(message);
+  bool get _isImageMsg =>
+      !MessageUrlHelper.isPlantillaFile(message) && MessageUrlHelper.isImage(message);
+  bool get _isVideoMsg =>
+      !MessageUrlHelper.isPlantillaFile(message) && MessageUrlHelper.isVideo(message);
   bool get _isMediaMsg => _isImageMsg || _isVideoMsg;
   bool get _isLocalFile => _isLocalFileHelper(message);
 
@@ -180,6 +182,18 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, Color textColor) {
+    // Archivo de plantilla (\PLANTILLAS\) → vista unificada sin importar el tipo del mensaje
+    if (MessageUrlHelper.isPlantillaFile(message) &&
+        message.nombreArchivo.isNotEmpty) {
+      return _PlantillaArchivoContent(
+        message: message,
+        idNumero: idNumero,
+        textColor: textColor,
+        audioController: audioController,
+        nombre: nombre,
+      );
+    }
+
     switch (message.tipo) {
       case 'image':
         return _ImageContent(
@@ -230,22 +244,12 @@ class MessageBubble extends StatelessWidget {
           ),
         );
 
-      case 'template':
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.sm2,
-            AppSpacing.sm,
-            AppSpacing.sm2,
-            AppSpacing.xs,
-          ),
-          child: _TemplateContent(
-            message: message,
-            idNumero: idNumero,
-            textColor: textColor,
-            audioController: audioController,
-            nombre: nombre,
-          ),
-        );
+      // case 'template':
+      //   return Padding(
+      //     padding: const EdgeInsets.fromLTRB(AppSpacing.sm2, AppSpacing.sm, AppSpacing.sm2, AppSpacing.xs),
+      //     child: _TemplateContent(message: message, idNumero: idNumero, textColor: textColor,
+      //       audioController: audioController, nombre: nombre),
+      //   );
 
       // text, button y cualquier otro tipo → texto plano
       case 'text':
@@ -861,17 +865,18 @@ class _BotAvatar extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _TemplateContent — mensaje de plantilla: texto + imagen opcional
+// _PlantillaArchivoContent — archivo de plantilla (\PLANTILLAS\):
+// imagen / video / audio / documento arriba + texto abajo
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _TemplateContent extends StatelessWidget {
+class _PlantillaArchivoContent extends StatelessWidget {
   final ChatMessage message;
   final int idNumero;
   final Color textColor;
   final AudioController audioController;
   final String nombre;
 
-  const _TemplateContent({
+  const _PlantillaArchivoContent({
     required this.message,
     required this.idNumero,
     required this.textColor,
@@ -879,36 +884,87 @@ class _TemplateContent extends StatelessWidget {
     required this.nombre,
   });
 
+  Widget _buildArchivo(BuildContext context) {
+    if (MessageUrlHelper.isImage(message)) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        child: _ImageContent(
+          message: message,
+          idNumero: idNumero,
+          nombre: nombre,
+        ),
+      );
+    }
+
+    if (MessageUrlHelper.isVideo(message)) {
+      return _VideoContent(
+        message: message,
+        idNumero: idNumero,
+        nombre: nombre,
+      );
+    }
+
+    if (MessageUrlHelper.isAudio(message)) {
+      final url = MessageUrlHelper.buildFileUrl(message, idNumero);
+      return AudioPlayerWidget(
+        audioPath: url,
+        isEnviado:
+            message.direccionMensaje == 'ASE' ||
+            message.direccionMensaje == 'AIA',
+        audioController: audioController,
+      );
+    }
+
+    return _DocumentContent(
+      message: message,
+      idNumero: idNumero,
+      textColor: textColor,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hasImage =
-        message.nombreArchivo.isNotEmpty && MessageUrlHelper.isImage(message);
+    final tieneTexto = message.contenido.isNotEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Texto del template
-        if (message.contenido.isNotEmpty)
-          RichText(
-            text: TextSpan(
-              children: parseMensaje(message.contenido, textColor),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm2,
+        AppSpacing.sm,
+        AppSpacing.sm2,
+        AppSpacing.xs,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildArchivo(context),
+          if (tieneTexto) ...[
+            const SizedBox(height: AppSpacing.sm),
+            RichText(
+              text: TextSpan(
+                children: parseMensaje(message.contenido, textColor),
+              ),
             ),
-          ),
-
-        // Imagen del template
-        if (hasImage) ...[
-          const SizedBox(height: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            child: _ImageContent(
-              message: message,
-              idNumero: idNumero,
-              nombre: nombre,
-            ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _TemplateContent — COMENTADO: detección migrada a _PlantillaArchivoContent
+// ─────────────────────────────────────────────────────────────────────────────
+
+// class _TemplateContent extends StatelessWidget {
+//   final ChatMessage message;
+//   final int idNumero;
+//   final Color textColor;
+//   final AudioController audioController;
+//   final String nombre;
+//
+//   const _TemplateContent({...});
+//
+//   @override
+//   Widget build(BuildContext context) { ... }
+// }

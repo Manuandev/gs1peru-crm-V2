@@ -36,9 +36,9 @@ class EditLeadContactoSection extends StatefulWidget {
 class EditLeadContactoSectionState extends State<EditLeadContactoSection> {
   // ── Límites configurables ─────────────────────────────────────────────────
   // Cambiar estos valores para permitir más entradas simultáneas
-  static const int _maxNuevasEmpresas = 1; // ← aumentar para más empresas
-  static const int _maxNuevosCorreos  = 1; // ← aumentar para más correos
-  static const int _maxNuevosTels     = 1; // ← aumentar para más teléfonos
+  // static const int _maxNuevasEmpresas = 1; // ← aumentar para más empresas
+  // static const int _maxNuevosCorreos  = 1; // ← aumentar para más correos
+  // static const int _maxNuevosTels     = 1; // ← aumentar para más teléfonos
 
   // ── Listas de nuevos items ────────────────────────────────────────────────
   final List<TextEditingController> _nuevasEmpresasCtrl = [];
@@ -113,72 +113,72 @@ class EditLeadContactoSectionState extends State<EditLeadContactoSection> {
 
   // ── Lógica del botón "+" ──────────────────────────────────────────────────
 
-  bool get _puedeAgregarEmpresa =>
-      _nuevasEmpresasCtrl.length < _maxNuevasEmpresas &&
-      (_nuevasEmpresasCtrl.isEmpty || _nuevasEmpresasCtrl.last.text.trim().isNotEmpty);
+  // bool get _puedeAgregarEmpresa =>
+  //     _nuevasEmpresasCtrl.length < _maxNuevasEmpresas &&
+  //     (_nuevasEmpresasCtrl.isEmpty || _nuevasEmpresasCtrl.last.text.trim().isNotEmpty);
 
-  bool get _puedeAgregarCorreo =>
-      _nuevosCorreosCtrl.length < _maxNuevosCorreos &&
-      (_nuevosCorreosCtrl.isEmpty || _nuevosCorreosCtrl.last.text.trim().isNotEmpty);
+  // bool get _puedeAgregarCorreo =>
+  //     _nuevosCorreosCtrl.length < _maxNuevosCorreos &&
+  //     (_nuevosCorreosCtrl.isEmpty || _nuevosCorreosCtrl.last.text.trim().isNotEmpty);
 
-  bool get _puedeAgregarTel =>
-      _nuevosTelNumCtrl.length < _maxNuevosTels &&
-      (_nuevosTelNumCtrl.isEmpty || _nuevosTelNumCtrl.last.text.trim().isNotEmpty);
+  // bool get _puedeAgregarTel =>
+  //     _nuevosTelNumCtrl.length < _maxNuevosTels &&
+  //     (_nuevosTelNumCtrl.isEmpty || _nuevosTelNumCtrl.last.text.trim().isNotEmpty);
 
-  // ── Acciones ──────────────────────────────────────────────────────────────
+  // // ── Acciones ──────────────────────────────────────────────────────────────
 
-  void _addEmpresa() {
-    final ctrl = TextEditingController();
-    ctrl.addListener(() { setState(() {}); widget.onChanged?.call(); });
-    setState(() => _nuevasEmpresasCtrl.add(ctrl));
-    widget.onChanged?.call();
-  }
+  // void _addEmpresa() {
+  //   final ctrl = TextEditingController();
+  //   ctrl.addListener(() { setState(() {}); widget.onChanged?.call(); });
+  //   setState(() => _nuevasEmpresasCtrl.add(ctrl));
+  //   widget.onChanged?.call();
+  // }
 
-  void _removeEmpresa(int i) {
-    _nuevasEmpresasCtrl[i].dispose();
-    setState(() => _nuevasEmpresasCtrl.removeAt(i));
-    widget.onChanged?.call();
-  }
+  // void _removeEmpresa(int i) {
+  //   _nuevasEmpresasCtrl[i].dispose();
+  //   setState(() => _nuevasEmpresasCtrl.removeAt(i));
+  //   widget.onChanged?.call();
+  // }
 
-  void _addCorreo() {
-    final ctrl = TextEditingController();
-    ctrl.addListener(() { setState(() {}); widget.onChanged?.call(); });
-    setState(() => _nuevosCorreosCtrl.add(ctrl));
-    widget.onChanged?.call();
-  }
+  // void _addCorreo() {
+  //   final ctrl = TextEditingController();
+  //   ctrl.addListener(() { setState(() {}); widget.onChanged?.call(); });
+  //   setState(() => _nuevosCorreosCtrl.add(ctrl));
+  //   widget.onChanged?.call();
+  // }
 
-  void _removeCorreo(int i) {
-    _nuevosCorreosCtrl[i].dispose();
-    setState(() => _nuevosCorreosCtrl.removeAt(i));
-    widget.onChanged?.call();
-  }
+  // void _removeCorreo(int i) {
+  //   _nuevosCorreosCtrl[i].dispose();
+  //   setState(() => _nuevosCorreosCtrl.removeAt(i));
+  //   widget.onChanged?.call();
+  // }
 
-  void _addTelefono() {
-    final ctrl = TextEditingController();
-    ctrl.addListener(() { setState(() {}); widget.onChanged?.call(); });
-    setState(() {
-      _nuevosTelPaises.add(CountryParser.parseCountryCode('PE'));
-      _nuevosTelNumCtrl.add(ctrl);
-    });
-    widget.onChanged?.call();
-  }
+  // void _addTelefono() {
+  //   final ctrl = TextEditingController();
+  //   ctrl.addListener(() { setState(() {}); widget.onChanged?.call(); });
+  //   setState(() {
+  //     _nuevosTelPaises.add(CountryParser.parseCountryCode('PE'));
+  //     _nuevosTelNumCtrl.add(ctrl);
+  //   });
+  //   widget.onChanged?.call();
+  // }
 
-  void _removeTelefono(int i) {
-    _nuevosTelNumCtrl[i].dispose();
-    setState(() {
-      _nuevosTelPaises.removeAt(i);
-      _nuevosTelNumCtrl.removeAt(i);
-    });
-    widget.onChanged?.call();
-  }
+  // void _removeTelefono(int i) {
+  //   _nuevosTelNumCtrl[i].dispose();
+  //   setState(() {
+  //     _nuevosTelPaises.removeAt(i);
+  //     _nuevosTelNumCtrl.removeAt(i);
+  //   });
+  //   widget.onChanged?.call();
+  // }
 
-  void _selectPais(int i) {
-    showCountryPicker(
-      context: context,
-      showPhoneCode: true,
-      onSelect: (c) => setState(() => _nuevosTelPaises[i] = c),
-    );
-  }
+  // void _selectPais(int i) {
+  //   showCountryPicker(
+  //     context: context,
+  //     showPhoneCode: true,
+  //     onSelect: (c) => setState(() => _nuevosTelPaises[i] = c),
+  //   );
+  // }
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
@@ -349,163 +349,163 @@ class EditLeadContactoSectionState extends State<EditLeadContactoSection> {
 // ── Widgets auxiliares ────────────────────────────────────────────────────────
 
 /// Campo existente + botón "+"
-class _CampoConAgregar extends StatelessWidget {
-  final Widget child;
-  final bool puedeAgregar;
-  final VoidCallback onAgregar;
+// class _CampoConAgregar extends StatelessWidget {
+//   final Widget child;
+//   final bool puedeAgregar;
+//   final VoidCallback onAgregar;
 
-  const _CampoConAgregar({
-    required this.child,
-    required this.puedeAgregar,
-    required this.onAgregar,
-  });
+//   const _CampoConAgregar({
+//     required this.child,
+//     required this.puedeAgregar,
+//     required this.onAgregar,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(child: child),
-        const SizedBox(width: AppSpacing.xs),
-        _BtnAgregar(enabled: puedeAgregar, onTap: onAgregar),
-      ],
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.center,
+//       children: [
+//         Expanded(child: child),
+//         const SizedBox(width: AppSpacing.xs),
+//         _BtnAgregar(enabled: puedeAgregar, onTap: onAgregar),
+//       ],
+//     );
+//   }
+// }
 
-/// Fila de nuevo item con "x" para eliminar
-class _FilaNueva extends StatelessWidget {
-  final Widget child;
-  final VoidCallback onRemove;
+// /// Fila de nuevo item con "x" para eliminar
+// class _FilaNueva extends StatelessWidget {
+//   final Widget child;
+//   final VoidCallback onRemove;
 
-  const _FilaNueva({required this.child, required this.onRemove});
+//   const _FilaNueva({required this.child, required this.onRemove});
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: child),
-        const SizedBox(width: AppSpacing.xs),
-        _BtnEliminar(onTap: onRemove),
-      ],
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Expanded(child: child),
+//         const SizedBox(width: AppSpacing.xs),
+//         _BtnEliminar(onTap: onRemove),
+//       ],
+//     );
+//   }
+// }
 
-/// Fila de nuevo teléfono: [selector país] [número] [x]
-class _FilaNuevaTelefono extends StatelessWidget {
-  final Country? pais;
-  final TextEditingController numCtrl;
-  final bool isLoading;
-  final VoidCallback onSelectPais;
-  final VoidCallback onRemove;
+// /// Fila de nuevo teléfono: [selector país] [número] [x]
+// class _FilaNuevaTelefono extends StatelessWidget {
+//   final Country? pais;
+//   final TextEditingController numCtrl;
+//   final bool isLoading;
+//   final VoidCallback onSelectPais;
+//   final VoidCallback onRemove;
 
-  const _FilaNuevaTelefono({
-    required this.pais,
-    required this.numCtrl,
-    required this.isLoading,
-    required this.onSelectPais,
-    required this.onRemove,
-  });
+//   const _FilaNuevaTelefono({
+//     required this.pais,
+//     required this.numCtrl,
+//     required this.isLoading,
+//     required this.onSelectPais,
+//     required this.onRemove,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: isLoading ? null : onSelectPais,
-          child: Container(
-            height: 42,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-              border: Border.all(color: cs.outline),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (pais != null) ...[
-                  Text(pais!.flagEmoji, style: const TextStyle(fontSize: 18)),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '+${pais!.phoneCode}',
-                    style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
-                  ),
-                ] else
-                  Text('País', style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
-                const SizedBox(width: AppSpacing.xxs),
-                Icon(AppIcons.forward, size: AppSizing.iconSm, color: cs.onSurfaceVariant),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: CustomTextField(
-            label: 'Número',
-            controller: numCtrl,
-            enabled: !isLoading,
-            keyboardType: TextInputType.phone,
-            dense: true,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        _BtnEliminar(onTap: onRemove),
-      ],
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     final cs = Theme.of(context).colorScheme;
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         GestureDetector(
+//           onTap: isLoading ? null : onSelectPais,
+//           child: Container(
+//             height: 42,
+//             padding: const EdgeInsets.symmetric(
+//               horizontal: AppSpacing.sm,
+//               vertical: AppSpacing.xs,
+//             ),
+//             decoration: BoxDecoration(
+//               color: cs.surface,
+//               borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+//               border: Border.all(color: cs.outline),
+//             ),
+//             child: Row(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 if (pais != null) ...[
+//                   Text(pais!.flagEmoji, style: const TextStyle(fontSize: 18)),
+//                   const SizedBox(width: AppSpacing.xs),
+//                   Text(
+//                     '+${pais!.phoneCode}',
+//                     style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+//                   ),
+//                 ] else
+//                   Text('País', style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurfaceVariant)),
+//                 const SizedBox(width: AppSpacing.xxs),
+//                 Icon(AppIcons.forward, size: AppSizing.iconSm, color: cs.onSurfaceVariant),
+//               ],
+//             ),
+//           ),
+//         ),
+//         const SizedBox(width: AppSpacing.xs),
+//         Expanded(
+//           child: CustomTextField(
+//             label: 'Número',
+//             controller: numCtrl,
+//             enabled: !isLoading,
+//             keyboardType: TextInputType.phone,
+//             dense: true,
+//             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+//           ),
+//         ),
+//         const SizedBox(width: AppSpacing.xs),
+//         _BtnEliminar(onTap: onRemove),
+//       ],
+//     );
+//   }
+// }
 
-class _BtnAgregar extends StatelessWidget {
-  final bool enabled;
-  final VoidCallback onTap;
-  const _BtnAgregar({required this.enabled, required this.onTap});
+// class _BtnAgregar extends StatelessWidget {
+//   final bool enabled;
+//   final VoidCallback onTap;
+//   const _BtnAgregar({required this.enabled, required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final color = enabled ? cs.primary : cs.outline;
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xs),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: AppSizing.hairline),
-        ),
-        child: Icon(AppIcons.add, size: AppSizing.iconActionSm, color: color),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     final cs = Theme.of(context).colorScheme;
+//     final color = enabled ? cs.primary : cs.outline;
+//     return InkWell(
+//       onTap: enabled ? onTap : null,
+//       borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+//       child: Container(
+//         padding: const EdgeInsets.all(AppSpacing.xs),
+//         decoration: BoxDecoration(
+//           shape: BoxShape.circle,
+//           border: Border.all(color: color, width: AppSizing.hairline),
+//         ),
+//         child: Icon(AppIcons.add, size: AppSizing.iconActionSm, color: color),
+//       ),
+//     );
+//   }
+// }
 
-class _BtnEliminar extends StatelessWidget {
-  final VoidCallback onTap;
-  const _BtnEliminar({required this.onTap});
+// class _BtnEliminar extends StatelessWidget {
+//   final VoidCallback onTap;
+//   const _BtnEliminar({required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xs),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: cs.error, width: AppSizing.hairline),
-        ),
-        child: Icon(AppIcons.close, size: AppSizing.iconActionSm, color: cs.error),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     final cs = Theme.of(context).colorScheme;
+//     return InkWell(
+//       onTap: onTap,
+//       borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+//       child: Container(
+//         padding: const EdgeInsets.all(AppSpacing.xs),
+//         decoration: BoxDecoration(
+//           shape: BoxShape.circle,
+//           border: Border.all(color: cs.error, width: AppSizing.hairline),
+//         ),
+//         child: Icon(AppIcons.close, size: AppSizing.iconActionSm, color: cs.error),
+//       ),
+//     );
+//   }
+// }

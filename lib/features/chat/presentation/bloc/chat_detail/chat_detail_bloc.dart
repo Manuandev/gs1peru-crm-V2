@@ -17,6 +17,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   final _session = SessionService();
 
   int? _currentIdNumero;
+  int? _currentChatCab;
 
   ChatDetailBloc(
     this._getChatMessages,
@@ -81,6 +82,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           return (a.idConversacionDet).compareTo(b.idConversacionDet);
         });
 
+      if (sorted.isNotEmpty) {
+        _currentChatCab = sorted.last.idConversacionCab;
+      }
       emit(ChatDetailSuccess(messages: sorted, hasMore: messages.isNotEmpty));
     } on AppException catch (e) {
       // ✅ FIX: error real → estado de error, no éxito vacío
@@ -436,7 +440,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (payload == null) return;
 
     // Solo procesamos si pertenece a este lead
-    if (payload.idNumero != _currentIdNumero) return;
+    if (payload.idNumero != _currentChatCab) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
@@ -485,7 +489,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final currentState = state as ChatDetailSuccess;
     final payload = UpdatePantallaWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
-    if (payload.idNumero != _currentIdNumero) return;
+    if (payload.idNumero != _currentChatCab) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
@@ -550,7 +554,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (payload == null) return;
 
     // Solo procesamos si pertenece a este lead
-    if (payload.idNumero != _currentIdNumero) return;
+    if (payload.idNumero != _currentChatCab) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 

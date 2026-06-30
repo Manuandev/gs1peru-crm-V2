@@ -163,7 +163,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   bool get _hayCambios {
     final l   = widget.lead;
-    final sec = _contactoKey.currentState;
+    // final sec = _contactoKey.currentState;
     return _canal?.id != l.idCanal ||
         _interes?.id != l.idInteres ||
         (_estado != null && _subEstado?.id != l.idEstado) ||

@@ -91,6 +91,20 @@ IconData _iconParaExt(String ext) {
   return AppIcons.fileOutlined;
 }
 
+// ── Sustitución de variables de plantilla ─────────────────────────────────────
+
+String _formatear(
+  String contenido,
+  String nombreCliente,
+  String apellidoCliente,
+  String nombreAsesor,
+) {
+  return contenido
+      .replaceAll('{{nombre_cliente}}', nombreCliente)
+      .replaceAll('{{apellido_cliente}}', apellidoCliente)
+      .replaceAll('{{nombre_asesor}}', nombreAsesor);
+}
+
 // ── Filtrado ──────────────────────────────────────────────────────────────────
 
 List<Plantilla> _filtrar(List<Plantilla> todas, int tab) {
@@ -110,9 +124,23 @@ List<Plantilla> _filtrar(List<Plantilla> todas, int tab) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SelectTemplateModal extends StatefulWidget {
-  const SelectTemplateModal({super.key});
+  final String nombreCliente;
+  final String apellidoCliente;
+  final String nombreAsesor;
 
-  static Future<Plantilla?> show(BuildContext context) {
+  const SelectTemplateModal({
+    super.key,
+    required this.nombreCliente,
+    required this.apellidoCliente,
+    required this.nombreAsesor,
+  });
+
+  static Future<Plantilla?> show(
+    BuildContext context, {
+    required String nombreCliente,
+    required String apellidoCliente,
+    required String nombreAsesor,
+  }) {
     return showModalBottomSheet<Plantilla?>(
       context: context,
       isScrollControlled: true,
@@ -126,7 +154,11 @@ class SelectTemplateModal extends StatefulWidget {
         create: (_) => SelectTemplateBloc(
           getData: GetTemplatesUseCase(ctx.read<ChatRepository>()),
         )..add(const SelectTemplateStarted()),
-        child: const SelectTemplateModal(),
+        child: SelectTemplateModal(
+          nombreCliente: nombreCliente,
+          apellidoCliente: apellidoCliente,
+          nombreAsesor: nombreAsesor,
+        ),
       ),
     );
   }
@@ -190,6 +222,9 @@ class _SelectTemplateModalState extends State<SelectTemplateModal> {
                   plantillas: filtradas,
                   seleccionada: _seleccionada,
                   onSeleccionar: (p) => setState(() => _seleccionada = p),
+                  nombreCliente: widget.nombreCliente,
+                  apellidoCliente: widget.apellidoCliente,
+                  nombreAsesor: widget.nombreAsesor,
                 );
               },
             ),
@@ -349,11 +384,17 @@ class _PlantillasTab extends StatelessWidget {
   final List<Plantilla> plantillas;
   final Plantilla? seleccionada;
   final ValueChanged<Plantilla> onSeleccionar;
+  final String nombreCliente;
+  final String apellidoCliente;
+  final String nombreAsesor;
 
   const _PlantillasTab({
     required this.plantillas,
     required this.seleccionada,
     required this.onSeleccionar,
+    required this.nombreCliente,
+    required this.apellidoCliente,
+    required this.nombreAsesor,
   });
 
   @override
@@ -424,6 +465,9 @@ class _PlantillasTab extends StatelessWidget {
                       plantilla: p,
                       isSelected: sel,
                       onTap: () => onSeleccionar(p),
+                      nombreCliente: nombreCliente,
+                      apellidoCliente: apellidoCliente,
+                      nombreAsesor: nombreAsesor,
                     );
                   },
                 ),
@@ -440,7 +484,14 @@ class _PlantillasTab extends StatelessWidget {
         ),
 
         // ── Vista previa ──────────────────────────────────────
-        Expanded(child: _TemplatePreview(plantilla: seleccionada)),
+        Expanded(
+          child: _TemplatePreview(
+            plantilla: seleccionada,
+            nombreCliente: nombreCliente,
+            apellidoCliente: apellidoCliente,
+            nombreAsesor: nombreAsesor,
+          ),
+        ),
       ],
     );
   }
@@ -452,11 +503,17 @@ class _TemplateItem extends StatelessWidget {
   final Plantilla plantilla;
   final bool isSelected;
   final VoidCallback onTap;
+  final String nombreCliente;
+  final String apellidoCliente;
+  final String nombreAsesor;
 
   const _TemplateItem({
     required this.plantilla,
     required this.isSelected,
-    required this.onTap,  
+    required this.onTap,
+    required this.nombreCliente,
+    required this.apellidoCliente,
+    required this.nombreAsesor,
   });
 
   @override
@@ -529,7 +586,7 @@ class _TemplateItem extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.xxs),
                       Text(
-                        plantilla.contenido,
+                        _formatear(plantilla.contenido, nombreCliente, apellidoCliente, nombreAsesor),
                         style: AppTextStyles.labelSmall.copyWith(
                           color: colorScheme.onSurfaceVariant,
                           fontWeight: AppTextStyles.weightRegular,
@@ -567,7 +624,16 @@ class _TemplateItem extends StatelessWidget {
 
 class _TemplatePreview extends StatelessWidget {
   final Plantilla? plantilla;
-  const _TemplatePreview({required this.plantilla});
+  final String nombreCliente;
+  final String apellidoCliente;
+  final String nombreAsesor;
+
+  const _TemplatePreview({
+    required this.plantilla,
+    required this.nombreCliente,
+    required this.apellidoCliente,
+    required this.nombreAsesor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -635,7 +701,7 @@ class _TemplatePreview extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      plantilla!.contenido,
+                      _formatear(plantilla!.contenido, nombreCliente, apellidoCliente, nombreAsesor),
                       style: AppTextStyles.bodySmall.copyWith(
                         color: colorScheme.onPrimaryContainer,
                       ),

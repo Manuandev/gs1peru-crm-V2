@@ -109,16 +109,20 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   Future<void> _onTemplateSelected() async {
-    final plantilla = await SelectTemplateModal.show(context);
-    if (plantilla == null || !mounted) return;
-
     final infoState = context.read<InfoLeadCubit>().state;
     final nombreCliente = infoState is InfoLeadSuccess ? infoState.lead.nombre : '';
     final apellidoCliente = infoState is InfoLeadSuccess ? infoState.lead.apellido : '';
     final isExpirado = infoState is InfoLeadSuccess ? infoState.isExpirado : false;
     final isCerrado = infoState is InfoLeadSuccess ? infoState.isCerrado : false;
+    final nombreAsesor = SessionService().userApe;
 
-    if (!mounted) return;
+    final plantilla = await SelectTemplateModal.show(
+      context,
+      nombreCliente: nombreCliente,
+      apellidoCliente: apellidoCliente,
+      nombreAsesor: nombreAsesor,
+    );
+    if (plantilla == null || !mounted) return;
 
     context.read<ChatDetailBloc>().add(
       ChatDetailTemplateMessageSent(

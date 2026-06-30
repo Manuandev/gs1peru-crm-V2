@@ -14,7 +14,26 @@ class NotificationsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       bodyPadding: EdgeInsets.zero,
-      title: 'Notificaciones',
+      titleWidget: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Notificaciones',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+          Text(
+            'Actividades, derivaciones del bot y nuevos mensajes',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: Theme.of(
+                context,
+              ).colorScheme.onPrimary.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
+      ),
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [
         IconButton(
@@ -34,15 +53,17 @@ class NotificationsView extends StatelessWidget {
         },
         child: BlocBuilder<NotificationsBloc, NotificationsState>(
           builder: (context, state) {
-            if (state is NotificationsInitial || state is NotificationsLoading) {
+            if (state is NotificationsInitial ||
+                state is NotificationsLoading) {
               return const AppLoadingView();
             }
 
             if (state is NotificationsError) {
               return AppErrorView(
                 message: state.message,
-                onRetry: () =>
-                    context.read<NotificationsBloc>().add(NotificationsRefresh()),
+                onRetry: () => context.read<NotificationsBloc>().add(
+                  NotificationsRefresh(),
+                ),
               );
             }
 

@@ -305,9 +305,9 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       mensaje: payload.mensaje,
       tipoMensaje: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
       estado: '',
-      fechaHora: payload.fecha.isNotEmpty
-          ? payload.fecha
-          : DateTime.now().toIso8601String(),
+      // Hora de recepción local — no la del payload, que llega desfasada
+      // del momento real en que el mensaje fue procesado por el servidor.
+      fechaHora: DateTime.now().toIso8601String(),
       direccionMensaje: 'CLI',
       idMensaje: payload.idTokenMeta,
       emit: emit,

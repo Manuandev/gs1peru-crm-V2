@@ -1,5 +1,7 @@
 ﻿// lib/features/chat/presentation/widgets/chat_list/chat_tile.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -205,7 +207,10 @@ class _InfoChat extends StatelessWidget {
             ),
             if (tieneCanal) ...[
               const SizedBox(width: AppSpacing.xs),
-              AppSocialUtils.widgetCanalById(chat.idCanal, size: AppSizing.iconSm),
+              AppSocialUtils.widgetCanalById(
+                chat.idCanal,
+                size: AppSizing.iconSm,
+              ),
             ],
           ],
         ),
@@ -271,9 +276,32 @@ class _InfoChat extends StatelessWidget {
 // Info derecha: tiempo sin respuesta + badge estado + hora del último mensaje
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _InfoDerecha extends StatelessWidget {
+class _InfoDerecha extends StatefulWidget {
   final Chat chat;
   const _InfoDerecha({required this.chat});
+
+  @override
+  State<_InfoDerecha> createState() => _InfoDerechaState();
+}
+
+class _InfoDerechaState extends State<_InfoDerecha> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  Chat get chat => widget.chat;
 
   @override
   Widget build(BuildContext context) {
@@ -317,7 +345,7 @@ class _InfoDerecha extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            ElapsedTimeUtils.formatHyM(elapsedSinRespuesta),
+            ElapsedTimeUtils.formatHoMoS(elapsedSinRespuesta),
             style: AppTextStyles.labelMedium.copyWith(
               color: ElapsedTimeUtils.colorFromElapsed(elapsedSinRespuesta),
               fontWeight: AppTextStyles.weightBold,

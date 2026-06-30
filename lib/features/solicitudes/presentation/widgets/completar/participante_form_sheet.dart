@@ -120,7 +120,9 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
+    return SafeArea(
+      top: false,
+      child: Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(
@@ -202,11 +204,16 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                       children: [
                         SizedBox(
                           width: 110,
-                          child: _DropdownField(
+                          child: SolicitudComboField(
                             label: 'Tipo doc.',
-                            valor: _tipoDoc,
-                            opciones: _tiposDoc,
-                            onChanged: (v) => setState(() => _tipoDoc = v!),
+                            data: _tiposDoc,
+                            displayIndex: 0,
+                            initialValue: _tipoDoc,
+                            onChanged: (item) {
+                              if (item != null) {
+                                setState(() => _tipoDoc = item.id);
+                              }
+                            },
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -294,17 +301,20 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                       children: [
                         SizedBox(
                           width: 120,
-                          child: _DropdownField(
+                          child: SolicitudComboField(
                             label: 'Tipo pago',
-                            valor: _tipoPago,
-                            opciones: _tiposPago,
-                            onChanged: (v) {
-                              setState(() {
-                                _tipoPago = v!;
-                                if (_tipoPago == 'Cortesía') {
-                                  _precioCtrl.clear();
-                                }
-                              });
+                            data: _tiposPago,
+                            displayIndex: 0,
+                            initialValue: _tipoPago,
+                            onChanged: (item) {
+                              if (item != null) {
+                                setState(() {
+                                  _tipoPago = item.id;
+                                  if (_tipoPago == 'Cortesía') {
+                                    _precioCtrl.clear();
+                                  }
+                                });
+                              }
                             },
                           ),
                         ),
@@ -382,73 +392,8 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
-// ── Dropdown simple para el formulario ────────────────────────────────────────
-
-class _DropdownField extends StatelessWidget {
-  final String label;
-  final String valor;
-  final List<String> opciones;
-  final ValueChanged<String?> onChanged;
-
-  const _DropdownField({
-    required this.label,
-    required this.valor,
-    required this.opciones,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return DropdownButtonFormField<String>(
-      value: valor,
-      onChanged: onChanged,
-      isExpanded: true,
-      style: const TextStyle(fontSize: 11, color: AppColors.textPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(
-          fontSize: 11,
-          color: AppColors.textSecondary,
-        ),
-        floatingLabelStyle: const TextStyle(
-          fontSize: 11,
-          color: AppColors.primary,
-          fontWeight: FontWeight.w600,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 10,
-        ),
-        isDense: true,
-        filled: true,
-        fillColor: colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          borderSide: BorderSide(color: colorScheme.outline),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          borderSide: BorderSide(color: colorScheme.outline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          borderSide: BorderSide(color: colorScheme.primary, width: 2),
-        ),
-      ),
-      items: opciones
-          .map(
-            (o) => DropdownMenuItem(
-              value: o,
-              child: Text(o, overflow: TextOverflow.ellipsis),
-            ),
-          )
-          .toList(),
-    );
-  }
-}

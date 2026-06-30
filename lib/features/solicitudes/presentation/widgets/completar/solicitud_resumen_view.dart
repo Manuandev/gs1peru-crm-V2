@@ -46,11 +46,19 @@ class SolicitudResumenView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _SeccionSolicitante(),
+                  _SeccionSolicitante(
+                    onEditar: () => Navigator.of(context).popUntil(
+                      ModalRoute.withName(AppRoutes.fichaCompletarSolicitud),
+                    ),
+                  ),
                   const _Separador(),
                   const _SeccionParticipantes(),
                   const _Separador(),
-                  const _SeccionFacturacion(),
+                  _SeccionFacturacion(
+                    onEditar: () => Navigator.of(context).popUntil(
+                      ModalRoute.withName(AppRoutes.fichaFacturacionSolicitud),
+                    ),
+                  ),
                   const _Separador(),
                   const _SeccionResumenComercial(),
                   const _Separador(),
@@ -305,7 +313,9 @@ class _FilaCampos extends StatelessWidget {
 // ── Seccion 1 — Solicitante ───────────────────────────────────────────────────
 
 class _SeccionSolicitante extends StatelessWidget {
-  const _SeccionSolicitante();
+  final VoidCallback onEditar;
+
+  const _SeccionSolicitante({required this.onEditar});
 
   @override
   Widget build(BuildContext context) {
@@ -315,7 +325,7 @@ class _SeccionSolicitante extends StatelessWidget {
         _CabeceraSeccion(
           icono: AppIcons.user,
           titulo: '1. Solicitante',
-          accion: _BotonEditar(onTap: () {}),
+          accion: _BotonEditar(onTap: onEditar),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
@@ -532,7 +542,9 @@ class _FilaTabla extends StatelessWidget {
 // ── Seccion 3 — Facturacion ───────────────────────────────────────────────────
 
 class _SeccionFacturacion extends StatelessWidget {
-  const _SeccionFacturacion();
+  final VoidCallback onEditar;
+
+  const _SeccionFacturacion({required this.onEditar});
 
   @override
   Widget build(BuildContext context) {
@@ -542,7 +554,7 @@ class _SeccionFacturacion extends StatelessWidget {
         _CabeceraSeccion(
           icono: AppIcons.receipt,
           titulo: '3. Facturacion',
-          accion: _BotonEditar(onTap: () {}),
+          accion: _BotonEditar(onTap: onEditar),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(

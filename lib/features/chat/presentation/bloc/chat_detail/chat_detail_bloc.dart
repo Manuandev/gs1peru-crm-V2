@@ -207,11 +207,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       fechaHora: DateTime.now().toIso8601String(),
       direccionMensaje: 'ASE',
       contenido: mensajeFormateado,
-      tipo: 'text',
+      tipo: 'template',
       estadoEntrega: 'wait',
       rutaArchivo: '',
-      tipoArchivo: 'text',
-      nombreArchivo: '',
+      tipoArchivo: event.template.archivoExt,
+      nombreArchivo: event.template.archivoNombre,
     );
 
     emit(
@@ -617,11 +617,11 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           return m.contenido == payload.mensaje;
 
         case 'template':
-          if (payload.nomArchivo.isEmpty) {
-            return m.contenido == payload.mensaje;
+          if (m.contenido != payload.mensaje) return false;
+          if (payload.nomArchivo.isNotEmpty && m.tipoArchivo.isNotEmpty) {
+            return m.tipoArchivo == _extractExt(payload.nomArchivo);
           }
-          return m.nombreArchivo == _removeExt(payload.nomArchivo) &&
-              m.tipoArchivo == _extractExt(payload.nomArchivo);
+          return true;
 
         case 'image':
         case 'video':

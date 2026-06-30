@@ -113,22 +113,23 @@ class _ChatInputBarState extends State<ChatInputBar> {
     if (plantilla == null || !mounted) return;
 
     final infoState = context.read<InfoLeadCubit>().state;
-    final nombreCliente = infoState is InfoLeadSuccess
-        ? infoState.lead.nombre
-        : '';
-    final apellidoCliente = infoState is InfoLeadSuccess
-        ? infoState.lead.apellido
-        : '';
-    final nombreAsesor = SessionService().userApe;
+    final nombreCliente = infoState is InfoLeadSuccess ? infoState.lead.nombre : '';
+    final apellidoCliente = infoState is InfoLeadSuccess ? infoState.lead.apellido : '';
+    final isExpirado = infoState is InfoLeadSuccess ? infoState.isExpirado : false;
+    final isCerrado = infoState is InfoLeadSuccess ? infoState.isCerrado : false;
 
-    final texto = plantilla.contenido
-        .replaceAll('{{nombre_cliente}}', nombreCliente)
-        .replaceAll('{{apellido_cliente}}', apellidoCliente)
-        .replaceAll('{{nombre_asesor}}', nombreAsesor);
+    if (!mounted) return;
 
-    _textController.text = texto;
-    _textController.selection = TextSelection.fromPosition(
-      TextPosition(offset: texto.length),
+    context.read<ChatDetailBloc>().add(
+      ChatDetailTemplateMessageSent(
+        template: plantilla,
+        numero: _getNumero(),
+        idChatCab: _getChatCab(),
+        nombreCliente: nombreCliente,
+        apellidoCliente: apellidoCliente,
+        isExpirado: isExpirado,
+        isCerrado: isCerrado,
+      ),
     );
   }
 

@@ -13,7 +13,7 @@ class SendFileMessageUseCase {
     required String tipo,
     required String idNumero,
     required String numero,
-    required String chatCab,
+    required int chatCab,
   }) {
     return _repository.uploadAndSendFileMessage(
       filePath: filePath,
@@ -21,7 +21,7 @@ class SendFileMessageUseCase {
       tipo: tipo,
       idNumero: idNumero,
       numero: numero,
-      chatCab: chatCab,
+      idChatCab: chatCab,
     );
   }
 }

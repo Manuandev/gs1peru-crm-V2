@@ -26,8 +26,8 @@ class ChatRepositoryImpl implements ChatRepository {
     String mensaje,
     String idNumero,
     String numero,
-    String chatCab,
-  ) => _datasource.sendWhatsAppMessage(mensaje, idNumero, numero, chatCab);
+    int idChatCab,
+  ) => _datasource.sendWhatsAppMessage(mensaje, idNumero, numero, idChatCab);
 
   @override
   Future<bool> uploadAndSendFileMessage({
@@ -36,7 +36,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String tipo,
     required String idNumero,
     required String numero,
-    required String chatCab,
+    required int idChatCab,
   }) async {
     return _datasource.uploadAndSendFileMessage(
       filePath: filePath,
@@ -44,7 +44,7 @@ class ChatRepositoryImpl implements ChatRepository {
       tipo: tipo,
       idNumero: idNumero,
       numero: numero,
-      chatCab: chatCab,
+      idChatCab: idChatCab,
     );
   }
 
@@ -61,7 +61,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String mensajeFormateado,
     required String idNumero,
     required String numero,
-    required String chatCab,
+    required int idChatCab,
     required String nombreCliente,
     required String apellidoCliente,
     required bool isExpirado,
@@ -71,7 +71,7 @@ class ChatRepositoryImpl implements ChatRepository {
     mensajeFormateado: mensajeFormateado,
     idNumero: idNumero,
     numero: numero,
-    chatCab: chatCab,
+    idChatCab: idChatCab,
     nombreCliente: nombreCliente,
     apellidoCliente: apellidoCliente,
     isExpirado: isExpirado,

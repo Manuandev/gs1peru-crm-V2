@@ -51,21 +51,21 @@ class ChatDetailMoreMessagesLoaded extends ChatDetailEvent {
 class ChatDetailTextMessageSent extends ChatDetailEvent {
   final String mensaje;
   final String numero;
-  final String chatCab;
+  final int idChatCab;
   const ChatDetailTextMessageSent(
     this.mensaje, {
     this.numero = '',
-    this.chatCab = '',
+    required this.idChatCab,
   });
 
   @override
-  List<Object?> get props => [mensaje, numero, chatCab];
+  List<Object?> get props => [mensaje, numero, idChatCab];
 }
 
 class ChatDetailTemplateMessageSent extends ChatDetailEvent {
   final Plantilla template;
   final String numero;
-  final String chatCab;
+  final int idChatCab;
   final String nombreCliente;
   final String apellidoCliente;
   final bool isExpirado;
@@ -74,7 +74,7 @@ class ChatDetailTemplateMessageSent extends ChatDetailEvent {
   const ChatDetailTemplateMessageSent({
     required this.template,
     required this.numero,
-    required this.chatCab,
+    required this.idChatCab,
     required this.nombreCliente,
     required this.apellidoCliente,
     required this.isExpirado,
@@ -83,28 +83,28 @@ class ChatDetailTemplateMessageSent extends ChatDetailEvent {
 
   @override
   List<Object?> get props => [
-        template,
-        numero,
-        chatCab,
-        nombreCliente,
-        apellidoCliente,
-        isExpirado,
-        isCerrado,
-      ];
+    template,
+    numero,
+    idChatCab,
+    nombreCliente,
+    apellidoCliente,
+    isExpirado,
+    isCerrado,
+  ];
 }
 
 class ChatDetailAudioMessageSent extends ChatDetailEvent {
   final String audioPath;
   final String numero;
-  final String chatCab;
+  final int idChatCab;
   const ChatDetailAudioMessageSent(
     this.audioPath, {
     this.numero = '',
-    this.chatCab = '',
+    required this.idChatCab,
   });
 
   @override
-  List<Object?> get props => [audioPath, numero, chatCab];
+  List<Object?> get props => [audioPath, numero, idChatCab];
 }
 
 class ChatDetailFileMessageSent extends ChatDetailEvent {
@@ -113,7 +113,7 @@ class ChatDetailFileMessageSent extends ChatDetailEvent {
   final String fileExt;
   final String tipo; // ← agregar ('image' | 'document')
   final String numero;
-  final String chatCab;
+  final int idChatCab;
 
   const ChatDetailFileMessageSent({
     required this.filePath,
@@ -121,7 +121,7 @@ class ChatDetailFileMessageSent extends ChatDetailEvent {
     required this.fileExt,
     required this.tipo, // ← agregar
     this.numero = '',
-    this.chatCab = '',
+    required this.idChatCab,
   });
 
   @override
@@ -131,21 +131,21 @@ class ChatDetailFileMessageSent extends ChatDetailEvent {
     fileExt,
     tipo,
     numero,
-    chatCab,
+    idChatCab,
   ];
 }
 
 class ChatDetailBatchFileMessageSent extends ChatDetailEvent {
   final List<StagedFile> files;
   final String numero;
-  final String chatCab;
+  final int idChatCab;
 
   const ChatDetailBatchFileMessageSent({
     required this.files,
     this.numero = '',
-    this.chatCab = '',
+    required this.idChatCab,
   });
 
   @override
-  List<Object?> get props => [files, numero, chatCab];
+  List<Object?> get props => [files, numero, idChatCab];
 }

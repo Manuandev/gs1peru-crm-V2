@@ -77,6 +77,8 @@ class Chat extends Equatable {
   // Fecha del último mensaje enviado por la IA (para calcular "Transferido hace X")
   final String fcUltimoMensajeIA;
 
+  final int idChatCab;
+
   /// Retorna el id del estado a mostrar en UI: padre si existe, directo si no.
   String get idEstadoEfectivo =>
       idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
@@ -160,6 +162,8 @@ class Chat extends Equatable {
     required this.cantidadMensajesIA,
     // Fecha del último mensaje de la IA
     this.fcUltimoMensajeIA = '',
+
+    required this.idChatCab,
   });
 
   @override
@@ -215,10 +219,12 @@ class Chat extends Equatable {
     // Documento si tiene
     archivoNombre,
     archivoTipo,
-  
+
     // Cantidad de mensajes de la ia
     cantidadMensajesIA,
     fcUltimoMensajeIA,
+
+    idChatCab,
   ];
 
   Chat copyWith({
@@ -290,6 +296,8 @@ class Chat extends Equatable {
     // Cantidad de mensajes de la ia
     int? cantidadMensajesIA,
     String? fcUltimoMensajeIA,
+
+    int? idChatCab,
   }) {
     return Chat(
       // Contacto
@@ -363,6 +371,9 @@ class Chat extends Equatable {
       // Cantidad de mensajes de la ia
       cantidadMensajesIA: cantidadMensajesIA ?? this.cantidadMensajesIA,
       fcUltimoMensajeIA: fcUltimoMensajeIA ?? this.fcUltimoMensajeIA,
+
+      // ID Chat Cab
+      idChatCab: idChatCab ?? this.idChatCab,
     );
   }
 }

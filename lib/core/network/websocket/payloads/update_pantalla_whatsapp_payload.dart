@@ -14,7 +14,7 @@ class UpdatePantallaWhatsAppPayload {
   final String codAsesor;       // [1] Código del asesor que envió
   final int idNumero;           // [2] ID del número del contacto
   final String tipoMensaje;     // [3] text, image, video, audio, document
-  final String idChatCab;       // [4] ID cabecera del chat
+  final int idChatCab;       // [4] ID cabecera del chat
   final String idTokenMeta;       // [5] ID único del mensaje (WhatsApp msg ID)
   final String hora;            // [6] Hora del envío
   final String nomArchivo;      // [7] Nombre del archivo adjunto
@@ -45,7 +45,7 @@ class UpdatePantallaWhatsAppPayload {
       codAsesor: f.length > 1 ? f[1].trim() : '',
       idNumero: f.length > 2 ? (int.tryParse(f[2].trim()) ?? 0) : 0,
       tipoMensaje: f.length > 3 ? f[3].trim() : '',
-      idChatCab: f.length > 4 ? f[4].trim() : '',
+      idChatCab: f.length > 4 ? int.parse(f[4].trim()) : 0,
       idTokenMeta: f.length > 5 ? f[5].trim() : '',
       hora: f.length > 6 ? f[6].trim() : '',
       nomArchivo: f.length > 7 ? f[7].trim() : '',

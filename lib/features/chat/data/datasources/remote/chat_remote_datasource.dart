@@ -16,7 +16,9 @@ class ChatRemoteDatasource {
 
   Lead _parsePrimerLead(String seccion) {
     final leads = LeadModel.parseList(seccion);
-    if (leads.isEmpty) throw const AppException('No se encontró información del lead.');
+    if (leads.isEmpty) {
+      throw const AppException('No se encontró información del lead.');
+    }
     return leads.first;
   }
 
@@ -53,7 +55,8 @@ class ChatRemoteDatasource {
     int idNumero, {
     String? idUltimoMensaje, // null = primera carga
   }) async {
-    final String body = '${[idNumero, idUltimoMensaje ?? ''].join(camp)}${sep}DT';
+    final String body =
+        '${[idNumero, idUltimoMensaje ?? ''].join(camp)}${sep}DT';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -69,14 +72,14 @@ class ChatRemoteDatasource {
     String mensaje,
     String idNumero,
     String numero,
-    String chatCab,
+    int idChatCab,
   ) {
     final user = _session.user;
     if (user == null) return false;
 
     final String body =
         '${user.token}$sep'
-        '${[chatCab, '', user.codUser, mensaje, 'text', numero, 0, '', chatCab, '', '', '', user.codUser, ''].join(camp)}'
+        '${[idChatCab, '', user.codUser, mensaje, 'text', numero, 0, '', idChatCab, '', '', '', user.codUser, ''].join(camp)}'
         '${sep}CA';
 
     return SignalRService.instance.sendMessage("ENVIAR_WHATSAPP$sep$body");
@@ -87,7 +90,7 @@ class ChatRemoteDatasource {
     required String mensajeFormateado,
     required String idNumero,
     required String numero,
-    required String chatCab,
+    required int idChatCab,
     required String nombreCliente,
     required String apellidoCliente,
     required bool isExpirado,
@@ -97,7 +100,7 @@ class ChatRemoteDatasource {
     if (user == null) return false;
 
     final vars = [
-      chatCab, // VAR01
+      idChatCab, // VAR01
       plantilla.nombre, // VAR02
       user.codUser, // VAR03
       mensajeFormateado, // VAR04
@@ -105,7 +108,7 @@ class ChatRemoteDatasource {
       numero, // VAR06
       isExpirado || isCerrado ? '1' : '0', // VAR07
       '', // VAR08
-      chatCab, // VAR09
+      idChatCab, // VAR09
       '', // VAR10
       nombreCliente, // VAR11
       apellidoCliente, // VAR12
@@ -126,7 +129,7 @@ class ChatRemoteDatasource {
     required String tipo,
     required String idNumero,
     required String numero,
-    required String chatCab,
+    required int idChatCab,
   }) async {
     final user = _session.user;
     if (user == null) return false;
@@ -140,7 +143,7 @@ class ChatRemoteDatasource {
       final fileExt = dotIndex != -1 ? fileName.substring(dotIndex) : '';
 
       final cabecera = [
-        chatCab,
+        idChatCab,
         '',
         user.codUser,
         '',
@@ -148,7 +151,7 @@ class ChatRemoteDatasource {
         numero,
         0,
         '',
-        chatCab,
+        idChatCab,
         fileName,
         fileExt,
       ].join(camp);

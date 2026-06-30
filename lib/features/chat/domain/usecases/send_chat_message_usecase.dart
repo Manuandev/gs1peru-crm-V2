@@ -7,7 +7,7 @@ class SendChatMessageUseCase {
 
   const SendChatMessageUseCase(this._repository);
 
-  bool call(String mensaje, String idNumero, String numero, String chatCab) {
-    return _repository.sendWhatsAppMessage(mensaje, idNumero, numero, chatCab);
+  bool call(String mensaje, String idNumero, String numero, int idChatCab) {
+    return _repository.sendWhatsAppMessage(mensaje, idNumero, numero, idChatCab);
   }
 }

@@ -301,7 +301,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     _updateChatInList(
-      idNumero: payload.idNumero,
+      idNumero: payload.idChatCab,
       mensaje: payload.mensaje,
       tipoMensaje: payload.tipoMensaje.isNotEmpty
           ? payload.tipoMensaje
@@ -322,7 +322,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     _updateChatInList(
-      idNumero: payload.idNumero,
+      idNumero: payload.idChatCab,
       mensaje: payload.mensaje,
       tipoMensaje: payload.tipoMensaje.isNotEmpty
           ? payload.tipoMensaje
@@ -345,7 +345,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     final chats = List<Chat>.from(_allChats);
-    final idx = chats.indexWhere((c) => c.idNumero == payload.idNumero);
+    final idx = chats.indexWhere((c) => c.idChatCab == payload.idChatCab);
     if (idx == -1) return;
 
     if (chats[idx].idTokenMeta == payload.idMensaje) {

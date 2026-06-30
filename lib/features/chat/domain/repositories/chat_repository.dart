@@ -17,7 +17,7 @@ abstract class ChatRepository {
     String mensaje,
     String idNumero,
     String numero,
-    String chatCab,
+    int idChatCab,
   );
 
   Future<bool> uploadAndSendFileMessage({
@@ -26,7 +26,7 @@ abstract class ChatRepository {
     required String tipo,
     required String idNumero,
     required String numero,
-    required String chatCab,
+    required int idChatCab,
   });
 
   Future<CrudResult> updateEstado(int idNumero, String idEstado);
@@ -38,7 +38,7 @@ abstract class ChatRepository {
     required String mensajeFormateado,
     required String idNumero,
     required String numero,
-    required String chatCab,
+    required int idChatCab,
     required String nombreCliente,
     required String apellidoCliente,
     required bool isExpirado,

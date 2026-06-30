@@ -43,7 +43,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       ChatDetailTextMessageSent(
         text,
         numero: _getNumero(),
-        chatCab: _getChatCab(),
+        idChatCab: _getChatCab(),
       ),
     );
     _textController.clear();
@@ -59,15 +59,15 @@ class _ChatInputBarState extends State<ChatInputBar> {
     return '';
   }
 
-  String _getChatCab() {
+  int _getChatCab() {
     final chatState = context.read<ChatDetailBloc>().state;
     final messages = switch (chatState) {
       ChatDetailSuccess s => s.messages,
       ChatDetailLoadingMore s => s.messages,
       _ => <ChatMessage>[],
     };
-    if (messages.isEmpty) return '';
-    return messages.first.idConversacionCab.toString();
+    if (messages.isEmpty) return 0;
+    return messages.first.idConversacionCab;
   }
 
   void _onAudioReady(String path) {
@@ -78,7 +78,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       ChatDetailAudioMessageSent(
         path,
         numero: numero,
-        chatCab: chatCab,
+        idChatCab: chatCab,
       ),
     );
     setState(() => _mode = InputMode.text);
@@ -93,7 +93,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       ChatDetailBatchFileMessageSent(
         files: files,
         numero: numero,
-        chatCab: chatCab,
+        idChatCab: chatCab,
       ),
     );
     setState(() => _mode = InputMode.text);

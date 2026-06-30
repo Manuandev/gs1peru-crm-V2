@@ -16,7 +16,6 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
   final _session = SessionService();
 
-  int? _currentIdNumero;
   int? _currentChatCab;
 
   ChatDetailBloc(
@@ -54,7 +53,6 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     ChatDetailStarted event,
     Emitter<ChatDetailState> emit,
   ) async {
-    _currentIdNumero = event.idNumero;
     LocalNotificationService.instance.clearLead(event.idNumero);
     emit(const ChatDetailLoading());
     await _loadMessages(event.idNumero, emit);
@@ -159,7 +157,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
+      idConversacionCab: event.idChatCab,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -178,12 +176,12 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentIdNumero != null) {
+    if (_currentChatCab != null) {
       _sendChatMessage(
         event.mensaje.trim(),
-        _currentIdNumero.toString(),
+        _currentChatCab.toString(),
         event.numero,
-        event.chatCab,
+        event.idChatCab,
       );
     }
   }
@@ -203,7 +201,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final currentMessages = (state as ChatDetailSuccess).messages;
 
     final newMessage = ChatMessage(
-      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
+      idConversacionCab: event.idChatCab,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -222,13 +220,13 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentIdNumero != null) {
+    if (_currentChatCab != null) {
       _sendTemplateMessage(
         plantilla: event.template,
         mensajeFormateado: mensajeFormateado,
-        idNumero: _currentIdNumero.toString(),
+        idNumero: _currentChatCab.toString(),
         numero: event.numero,
-        chatCab: event.chatCab,
+        chatCab: event.idChatCab,
         nombreCliente: event.nombreCliente,
         apellidoCliente: event.apellidoCliente,
         isExpirado: event.isExpirado,
@@ -250,7 +248,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
+      idConversacionCab: event.idChatCab,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -269,14 +267,14 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentIdNumero != null) {
+    if (_currentChatCab != null) {
       final success = await _sendFileMessage(
         filePath: event.audioPath,
         fileName: fileName,
         tipo: 'audio',
-        idNumero: _currentIdNumero.toString(),
+        idNumero: _currentChatCab.toString(),
         numero: event.numero,
-        chatCab: event.chatCab,
+        chatCab: event.idChatCab,
       );
 
       if (!success && !isClosed) {
@@ -299,7 +297,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
-      idConversacionCab: int.tryParse(event.chatCab) ?? 0,
+      idConversacionCab: event.idChatCab,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
@@ -318,14 +316,14 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       ),
     );
 
-    if (_currentIdNumero != null) {
+    if (_currentChatCab != null) {
       final success = await _sendFileMessage(
         filePath: event.filePath,
         fileName: '$uniqueName${event.fileExt}',
         tipo: event.tipo,
-        idNumero: _currentIdNumero.toString(),
+        idNumero: _currentChatCab.toString(),
         numero: event.numero,
-        chatCab: event.chatCab,
+        chatCab: event.idChatCab,
       );
 
       if (!success && !isClosed) {
@@ -360,7 +358,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
       currentMessages.add(
         ChatMessage(
-          idConversacionCab: int.tryParse(event.chatCab) ?? 0,
+          idConversacionCab: event.idChatCab,
           idConversacionDet: 0,
           idTokenMeta: tempId,
           fechaHora: DateTime.now().toIso8601String(),
@@ -378,7 +376,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     emit((state as ChatDetailSuccess).copyWith(messages: currentMessages));
 
     // 2. Enviar todos en paralelo
-    if (_currentIdNumero == null) return;
+    if (_currentChatCab == null) return;
 
     final futures = List.generate(event.files.length, (i) async {
       final file = event.files[i];
@@ -386,9 +384,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         filePath: file.path,
         fileName: '${uniqueNames[i]}${file.ext}',
         tipo: file.tipo,
-        idNumero: _currentIdNumero.toString(),
+        idNumero: _currentChatCab.toString(),
         numero: event.numero,
-        chatCab: event.chatCab,
+        chatCab: event.idChatCab,
       );
       if (!success && !isClosed) {
         _markMessageAsFailed(tempIds[i], emit);
@@ -439,8 +437,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final payload = WhatsAppMessagePayload.fromMessage(message);
     if (payload == null) return;
 
-    // Solo procesamos si pertenece a este lead
-    if (payload.idNumero != _currentChatCab) return;
+    // Solo procesamos si pertenece a esta conversación
+    if (payload.idChatCab != _currentChatCab) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
@@ -460,7 +458,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     // MENSAJE_WHATSAPP siempre es un mensaje del cliente → isEnviado = false
     final incomingMessage = ChatMessage(
-      idConversacionCab: int.tryParse(payload.idChatCab) ?? 0,
+      idConversacionCab: payload.idChatCab,
       idConversacionDet: 0,
       idTokenMeta: payload.idTokenMeta,
       fechaHora: payload.fecha.isNotEmpty
@@ -489,7 +487,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final currentState = state as ChatDetailSuccess;
     final payload = UpdatePantallaWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
-    if (payload.idNumero != _currentChatCab) return;
+    if (payload.idChatCab != _currentChatCab) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 
@@ -508,7 +506,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
         idTokenMeta: payload.idTokenMeta,
         estadoEntrega: 'sent',
-        idConversacionCab: int.tryParse(payload.idChatCab) ?? 0,
+        idConversacionCab: payload.idChatCab,
         nombreArchivo: pName.isNotEmpty
             ? pName
             : currentMessages[pendingIndex].nombreArchivo,
@@ -534,7 +532,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           rutaArchivo: '',
           nombreArchivo: pName,
           tipoArchivo: pExt,
-          idConversacionCab: int.tryParse(payload.idChatCab) ?? 0,
+          idConversacionCab: payload.idChatCab,
           idConversacionDet: 0,
         ),
       );
@@ -553,8 +551,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     final payload = UpdateMensajeWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
 
-    // Solo procesamos si pertenece a este lead
-    if (payload.idNumero != _currentChatCab) return;
+    // Solo procesamos si pertenece a esta conversación (campo idNumero contiene idChatCab)
+    if (payload.idChatCab != _currentChatCab) return;
 
     final currentMessages = List<ChatMessage>.from(currentState.messages);
 

@@ -75,6 +75,9 @@ class ChatModel extends Chat {
     // Cantidad de mensajes de la ia
     required super.cantidadMensajesIA,
     super.fcUltimoMensajeIA,
+
+    // ID Chat Cab
+    required super.idChatCab,
   });
 
   // Índices del SP CSV_WHATSAPP_LST_APP (task LS):
@@ -177,6 +180,9 @@ class ChatModel extends Chat {
       cantidadMensajesIA: ParseUtils.toInt(fields, 53),
       // Fecha del último mensaje de la IA — índice 54 (requiere SP actualizado)
       fcUltimoMensajeIA: ParseUtils.str(fields, 54),
+
+      // ID Chat Cab
+      idChatCab: ParseUtils.toInt(fields, 55),
     );
   }
 

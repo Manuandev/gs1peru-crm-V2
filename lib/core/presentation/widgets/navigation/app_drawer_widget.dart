@@ -222,29 +222,90 @@ class _DrawerHeader extends StatelessWidget {
             height: AppSizing.avatarSm,
           ),
           const SizedBox(width: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'CRM Perú',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.textOnDark,
-                  fontWeight: AppTextStyles.weightBold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      'CRM Perú',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.textOnDark,
+                        fontWeight: AppTextStyles.weightBold,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    StreamBuilder<WebSocketConnectionState>(
+                      stream: SignalRService.instance.connectionStateStream,
+                      initialData: SignalRService.instance.currentState,
+                      builder: (context, snapshot) {
+                        final state = snapshot.data!;
+                        return _SocketChip(state: state);
+                      },
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                rol,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textOnDark.withValues(
-                    alpha: AppColors.opacityOnPrimarySubtle,
+                Text(
+                  rol,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textOnDark.withValues(
+                      alpha: AppColors.opacityOnPrimarySubtle,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  'v${AppConstants.version}',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textOnDark.withValues(
+                      alpha: AppColors.opacityOnPrimarySubtle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+}
+
+// ── Chip de estado de conexión SignalR ────────────────────────────────────────
+
+class _SocketChip extends StatelessWidget {
+  final WebSocketConnectionState state;
+  const _SocketChip({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (state) {
+      WebSocketConnectionState.connected => ('● En línea', AppColors.success),
+      WebSocketConnectionState.connecting => (
+        '● Conectando',
+        AppColors.warning,
+      ),
+      WebSocketConnectionState.reconnecting => (
+        '● Reconectando',
+        AppColors.warning,
+      ),
+      WebSocketConnectionState.disconnected => (
+        '● Sin conexión',
+        AppColors.error,
+      ),
+      WebSocketConnectionState.noInternet => (
+        '● Sin internet',
+        AppColors.error,
+      ),
+      WebSocketConnectionState.manuallyClosed => ('', AppColors.transparent),
+    };
+
+    if (label.isEmpty) return const SizedBox.shrink();
+
+    return Text(label, style: AppTextStyles.labelSmall.copyWith(color: color));
   }
 }
 

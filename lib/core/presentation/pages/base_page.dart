@@ -228,14 +228,17 @@ class BasePage extends StatelessWidget {
                     ),
                   ),
 
-                  // Footer: explícito > showBottomNav > estándar
+                  // Footer: explícito > showBottomNav > vacío (sin footer por defecto)
                   if (!isLandscape)
                     footer ??
                         (showBottomNav
                             ? const AppBottomNavWidget()
-                            : const _FooterPages())
+                            : const SizedBox.shrink())
                   else
-                    _FooterCompact(),
+                    footer ??
+                        (showBottomNav
+                            ? const AppBottomNavWidget()
+                            : const SizedBox.shrink()),
                 ],
               );
             },
@@ -264,113 +267,3 @@ class BasePage extends StatelessWidget {
 ///   avatarUrl: 'https://...',   // o null para ícono por defecto
 /// )
 
-class _FooterPages extends StatelessWidget {
-  const _FooterPages();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        border: Border(
-          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '${AppConstants.nombreApp} - v${AppConstants.version}',
-            style: AppTextStyles.labelSmall,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          StreamBuilder<WebSocketConnectionState>(
-            stream: SignalRService.instance.connectionStateStream,
-            initialData: SignalRService.instance.currentState,
-            builder: (context, snapshot) {
-              final state = snapshot.data!;
-              return _SocketChip(state: state);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FooterCompact extends StatelessWidget {
-  const _FooterCompact();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        border: Border(
-          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '${AppConstants.nombreApp} - v${AppConstants.version}',
-            style: AppTextStyles.labelSmall,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          StreamBuilder<WebSocketConnectionState>(
-            stream: SignalRService.instance.connectionStateStream,
-            initialData: SignalRService.instance.currentState,
-            builder: (context, snapshot) {
-              final state = snapshot.data!;
-              return _SocketChip(state: state);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SocketChip extends StatelessWidget {
-  final WebSocketConnectionState state;
-  const _SocketChip({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (state) {
-      WebSocketConnectionState.connected => ('● En línea', AppColors.success),
-      WebSocketConnectionState.connecting => (
-        '● Conectando',
-        AppColors.warning,
-      ),
-      WebSocketConnectionState.reconnecting => (
-        '● Reconectando',
-        AppColors.warning,
-      ),
-      WebSocketConnectionState.disconnected => (
-        '● Sin conexión',
-        AppColors.error,
-      ),
-      WebSocketConnectionState.noInternet => (
-        '● Sin internet',
-        AppColors.error,
-      ),
-      WebSocketConnectionState.manuallyClosed => ('', AppColors.transparent),
-    };
-
-    if (label.isEmpty) return const SizedBox.shrink();
-
-    return Text(label, style: AppTextStyles.labelSmall.copyWith(color: color));
-  }
-}

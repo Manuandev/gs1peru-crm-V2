@@ -37,9 +37,11 @@ class MessageBubble extends StatelessWidget {
   });
 
   bool get _isImageMsg =>
-      !MessageUrlHelper.isPlantillaFile(message) && MessageUrlHelper.isImage(message);
+      !MessageUrlHelper.isPlantillaFile(message) &&
+      MessageUrlHelper.isImage(message);
   bool get _isVideoMsg =>
-      !MessageUrlHelper.isPlantillaFile(message) && MessageUrlHelper.isVideo(message);
+      !MessageUrlHelper.isPlantillaFile(message) &&
+      MessageUrlHelper.isVideo(message);
   bool get _isMediaMsg => _isImageMsg || _isVideoMsg;
   bool get _isLocalFile => _isLocalFileHelper(message);
 
@@ -706,6 +708,15 @@ class _DocumentContentState extends State<_DocumentContent> {
   bool _isDownloading = false;
   double _progress = 0;
 
+  // TODO: thumbnail PDF — descomentar cuando el jefe apruebe
+  // Uint8List? _pdfThumb;
+  // bool _loadingThumb = false;
+  // bool get _isPdf =>
+  //     widget.message.tipoArchivo.toLowerCase().replaceAll('.', '') == 'pdf';
+  // @override
+  // void initState() { super.initState(); if (_isPdf && !_isLocalFileHelper(widget.message)) _loadPdfThumb(); }
+  // Future<void> _loadPdfThumb() async { ... }
+
   IconData _iconForExt(String ext) {
     final e = ext.toLowerCase().replaceAll('.', '');
     if (e == 'pdf') return AppIcons.pdf;
@@ -715,6 +726,19 @@ class _DocumentContentState extends State<_DocumentContent> {
     if (['zip', 'rar'].contains(e)) return AppIcons.fileZip;
     return AppIcons.fileGeneric;
   }
+
+  Color _colorForExt(String ext) {
+    final e = ext.toLowerCase().replaceAll('.', '');
+    if (e == 'pdf') return AppColors.error;
+    if (['xls', 'xlsx'].contains(e)) return AppColors.success;
+    if (['doc', 'docx'].contains(e)) return AppColors.info;
+    if (['ppt', 'pptx'].contains(e)) return AppColors.secondary;
+    if (['zip', 'rar'].contains(e)) return AppColors.warning;
+    return AppColors.grey500;
+  }
+
+  String _labelForExt(String ext) =>
+      ext.toLowerCase().replaceAll('.', '').toUpperCase();
 
   Future<void> _downloadAndOpen() async {
     if (_isDownloading) return;
@@ -767,77 +791,79 @@ class _DocumentContentState extends State<_DocumentContent> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final iconColor =
-        (widget.message.direccionMensaje == 'ASE' ||
-            widget.message.direccionMensaje == 'AIA')
-        ? colorScheme.onPrimary
-        : colorScheme.primary;
+    final tipoColor = _colorForExt(widget.message.tipoArchivo);
+    final label = _labelForExt(widget.message.tipoArchivo);
 
     return GestureDetector(
       onTap: _downloadAndOpen,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.smPlus),
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: AppColors.opacityIconTint),
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
+      child: _buildIconLayout(label, tipoColor),
+    );
+  }
+
+  // Layout documento: cuadrado de color + nombre (PDF incluido por ahora)
+  Widget _buildIconLayout(String label, Color tipoColor) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: AppSizing.iconFileContainer,
+          height: AppSizing.iconFileContainer,
+          decoration: BoxDecoration(
+            color: tipoColor,
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
+          ),
+          child: _isDownloading
+              ? Padding(
+                  padding: const EdgeInsets.all(AppSpacing.smPlus),
+                  child: CircularProgressIndicator(
+                    value: _progress > 0 ? _progress : null,
+                    strokeWidth: AppSizing.spinnerStrokeLight,
+                    color: AppColors.textOnDark,
+                  ),
+                )
+              : Icon(
+                  _iconForExt(widget.message.tipoArchivo),
+                  size: AppSizing.iconMd,
+                  color: AppColors.textOnDark,
+                ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icono o loader de progreso
-            SizedBox(
-              width: AppSizing.iconFaLg,
-              height: AppSizing.iconFaLg,
-              child: _isDownloading
-                  ? CircularProgressIndicator(
-                      value: _progress > 0 ? _progress : null,
-                      strokeWidth: AppSizing.spinnerStrokeLight,
-                      color: iconColor,
-                    )
-                  : Icon(
-                      _iconForExt(widget.message.tipoArchivo),
-                      size: AppSizing.iconFaLg,
-                      color: iconColor,
-                    ),
-            ),
-
-            const SizedBox(width: AppSpacing.smPlus),
-
-            // Nombre y estado
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${widget.message.nombreArchivo}${widget.message.tipoArchivo}',
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                    style: TextStyle(
-                      fontSize: AppTextStyles.sizeSmPlus,
-                      color: widget.textColor,
-                      fontWeight: AppTextStyles.weightMedium,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    _isDownloading ? 'Descargando...' : 'Toca para abrir',
-                    style: TextStyle(
-                      fontSize: AppTextStyles.sizeXs,
-                      color: widget.textColor.withValues(
-                        alpha: AppColors.opacityTextMuted,
-                      ),
-                    ),
-                  ),
-                ],
+        const SizedBox(width: AppSpacing.smPlus),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${widget.message.nombreArchivo}${widget.message.tipoArchivo}',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                style: TextStyle(
+                  fontSize: AppTextStyles.sizeSmPlus,
+                  color: widget.textColor,
+                  fontWeight: AppTextStyles.weightMedium,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                _isDownloading ? 'Descargando...' : label,
+                style: TextStyle(
+                  fontSize: AppTextStyles.sizeXs,
+                  color: widget.textColor.withValues(
+                    alpha: AppColors.opacityTextMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
+
+// TODO: thumbnail PDF — descomentar cuando el jefe apruebe
+// class _PdfThumbLoading extends StatelessWidget { ... }
+// class _PdfThumbProgress extends StatelessWidget { ... }
+// class _PdfThumbFallback extends StatelessWidget { ... }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // _BotAvatar — ícono circular del asistente IA, aparece junto a mensajes AIA

@@ -163,6 +163,12 @@ class AppSizing {
   /// Ícono extra grande: 48px — ilustraciones de error/éxito en pantalla
   static const double iconXl = 48.0;
 
+  /// Contenedor de ícono de archivo adjunto: 40px — cuadrado de color tipo WhatsApp en _DocumentContent
+  static const double iconFileContainer = 40.0;
+
+  /// Altura del thumbnail de primera página PDF en _DocumentContent
+  static const double pdfThumbHeight = 180.0;
+
   /// Ícono muy grande: 80px — logo/lock en formularios de login
   static const double iconXxl = 80.0;
 

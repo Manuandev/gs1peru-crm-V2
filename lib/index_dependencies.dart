@@ -22,9 +22,10 @@ export 'package:equatable/equatable.dart';
 export 'package:sqflite/sqflite.dart';
 export 'package:path_provider/path_provider.dart';
 
-// ─── Media (Audio / Video / Image) ───────────────────────────────
+// ─── Media (Audio / Video / Image / PDF) ─────────────────────────
 export 'package:image_picker/image_picker.dart';
 export 'package:record/record.dart';
+export 'package:pdfx/pdfx.dart';
 export 'package:just_audio/just_audio.dart';
 export 'package:video_player/video_player.dart';
 export 'package:chewie/chewie.dart';

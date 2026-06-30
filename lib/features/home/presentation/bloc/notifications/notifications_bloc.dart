@@ -34,12 +34,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   Future<void> _loadData(Emitter<NotificationsState> emit) async {
     try {
       final notificationes = await _getData.call();
-
-      emit(
-        NotificationsLoaded(
-          notificationes: notificationes,
-        ),
-      );
+      emit(NotificationsLoaded(notificationes: notificationes));
     } on AppException catch (e) {
       emit(NotificationsError(e.message));
     } catch (e, stackTrace) {

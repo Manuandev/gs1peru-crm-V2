@@ -301,16 +301,23 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     _updateChatInList(
-      idNumero: payload.idChatCab,
+      idChatCab: payload.idChatCab,
       mensaje: payload.mensaje,
-      tipoMensaje: payload.tipoMensaje.isNotEmpty
-          ? payload.tipoMensaje
-          : 'text',
+      tipoMensaje: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
       estado: '',
-      fechaHora: DateTime.now().toIso8601String(),
+      fechaHora: payload.fecha.isNotEmpty
+          ? payload.fecha
+          : DateTime.now().toIso8601String(),
       direccionMensaje: 'CLI',
       idMensaje: payload.idTokenMeta,
       emit: emit,
+      idTokenMetaCliente: payload.idTokenMeta,
+      tipoCliente: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
+      contenidoCliente: payload.mensaje,
+      estadoEntregaCliente: '',
+      fcUsuarioCCliente: payload.fecha,
+      archivoNombreCliente: _removeExt(payload.nomArchivo),
+      archivoTipoCliente: _extractExt(payload.nomArchivo),
     );
   }
 
@@ -322,11 +329,9 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (payload == null) return;
 
     _updateChatInList(
-      idNumero: payload.idChatCab,
+      idChatCab: payload.idChatCab,
       mensaje: payload.mensaje,
-      tipoMensaje: payload.tipoMensaje.isNotEmpty
-          ? payload.tipoMensaje
-          : 'text',
+      tipoMensaje: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
       estado: 'sent',
       fechaHora: payload.hora.isNotEmpty
           ? payload.hora
@@ -356,7 +361,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   }
 
   void _updateChatInList({
-    required int idNumero,
+    required int idChatCab,
     required String mensaje,
     required String tipoMensaje,
     required String estado,
@@ -364,9 +369,16 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     required String direccionMensaje,
     required String idMensaje,
     required Emitter<ChatListState> emit,
+    String? idTokenMetaCliente,
+    String? tipoCliente,
+    String? contenidoCliente,
+    String? estadoEntregaCliente,
+    String? fcUsuarioCCliente,
+    String? archivoNombreCliente,
+    String? archivoTipoCliente,
   }) {
     final chats = List<Chat>.from(_allChats);
-    final idx = chats.indexWhere((c) => c.idNumero == idNumero);
+    final idx = chats.indexWhere((c) => c.idChatCab == idChatCab);
     if (idx == -1) return;
 
     final updatedChat = chats[idx].copyWith(
@@ -376,11 +388,30 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       fechaHora: fechaHora,
       direccionMensaje: direccionMensaje,
       idTokenMeta: idMensaje,
+      idTokenMetaCliente: idTokenMetaCliente,
+      tipoCliente: tipoCliente,
+      contenidoCliente: contenidoCliente,
+      estadoEntregaCliente: estadoEntregaCliente,
+      fcUsuarioCCliente: fcUsuarioCCliente,
+      archivoNombreCliente: archivoNombreCliente,
+      archivoTipoCliente: archivoTipoCliente,
     );
 
     chats.removeAt(idx);
     chats.insert(0, updatedChat);
     _allChats = chats;
     _emitFiltered(emit);
+  }
+
+  static String _extractExt(String fileName) {
+    if (fileName.isEmpty) return '';
+    final dotIndex = fileName.lastIndexOf('.');
+    return dotIndex != -1 ? fileName.substring(dotIndex) : '';
+  }
+
+  static String _removeExt(String fileName) {
+    if (fileName.isEmpty) return '';
+    final dotIndex = fileName.lastIndexOf('.');
+    return dotIndex != -1 ? fileName.substring(0, dotIndex) : fileName;
   }
 }

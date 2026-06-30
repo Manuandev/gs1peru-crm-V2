@@ -9,34 +9,6 @@ import 'package:app_crm/features/chat/index_chat.dart';
 // ── Demo (se usa cuando el SP aún no devuelve datos) ──────────────────────────
 
 const _demoTemplates = [
-  Plantilla(
-    idPlantilla: 1,
-    nombre: 'Bienvenida',
-    contenido:
-        '¡Hola {{nombre_cliente}}! 👋\n\n'
-        'Gracias por escribirnos.\n'
-        'En GS1 Perú te ayudamos a desarrollar habilidades prácticas '
-        'con nuestros cursos especializados en Excel, Power BI y más.\n\n'
-        'Cuéntanos, ¿en qué curso estás interesado para enviarte más información?',
-    nombreCampania: '',
-    nombreOportunidad: '',
-    ibActivo: true,
-    idMeta: '',
-    estadoMeta: 'APPROVED',
-  ),
-  Plantilla(
-    idPlantilla: 2,
-    nombre: 'Seguimiento',
-    contenido:
-        'Hola {{nombre_cliente}}, espero que estés bien. 😊\n\n'
-        'Te escribo para dar seguimiento a tu interés en nuestros cursos. '
-        '¿Tienes alguna duda que pueda resolver?',
-    nombreCampania: '',
-    nombreOportunidad: '',
-    ibActivo: true,
-    idMeta: '',
-    estadoMeta: 'APPROVED',
-  ),
 ];
 
 // ── Tabs (icon + color propio) ────────────────────────────────────────────────

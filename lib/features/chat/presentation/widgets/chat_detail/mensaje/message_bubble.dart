@@ -129,7 +129,7 @@ class MessageBubble extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.72,
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.72,
                 ),
                 child: burbuja,
               ),
@@ -145,7 +145,7 @@ class MessageBubble extends StatelessWidget {
       alignment: isEnviado ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.75,
         ),
         child: burbuja,
       ),

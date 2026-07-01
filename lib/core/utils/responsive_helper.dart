@@ -23,13 +23,15 @@ class ResponsiveHelper {
   // ============================================================
 
   /// Obtener ancho de pantalla
+  /// Usa sizeOf (no of().size) para no reconstruir con cada cambio de
+  /// viewInsets — por ejemplo, cuando se abre/cierra el teclado.
   static double getWidth(BuildContext context) {
-    return MediaQuery.of(context).size.width;
+    return MediaQuery.sizeOf(context).width;
   }
 
   /// Obtener alto de pantalla
   static double getHeight(BuildContext context) {
-    return MediaQuery.of(context).size.height;
+    return MediaQuery.sizeOf(context).height;
   }
 
   // ============================================================

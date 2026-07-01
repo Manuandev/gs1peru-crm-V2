@@ -58,9 +58,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _apellidoMCtrl  = TextEditingController(text: l.apellidoMaterno);
     _empresaCtrl    = TextEditingController(text: l.nombreEmpresa);
     _correoCtrl     = TextEditingController(text: l.correo);
-    _cantidadCtrl   = TextEditingController(text: EditLeadHelpers.fmtDouble(l.cantidad));
-    _precioBaseCtrl = TextEditingController(text: EditLeadHelpers.fmtDouble(l.precioBase));
-    _descuentoCtrl  = TextEditingController(text: EditLeadHelpers.fmtDouble(l.descuento));
+    _cantidadCtrl   = TextEditingController(text: NumberFormatUtils.fmtInt(l.cantidad));
+    _precioBaseCtrl = TextEditingController(text: NumberFormatUtils.fmtDecimal(l.precioBase));
+    _descuentoCtrl  = TextEditingController(text: NumberFormatUtils.fmtDecimal(l.descuento));
     _campaniaCtrl   = TextEditingController(text: l.campania);
     _eventoCtrl     = TextEditingController(text: l.evento);
   }
@@ -149,15 +149,11 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   // ── Getters financieros ───────────────────────────────────────────────────
 
-  double get _cantidad   => EditLeadHelpers.parseTexto(_cantidadCtrl.text);
-  double get _precioBase => EditLeadHelpers.parseTexto(_precioBaseCtrl.text);
-  double get _descuento  => EditLeadHelpers.parseTexto(_descuentoCtrl.text);
+  int get _cantidad       => NumberFormatUtils.parseInt(_cantidadCtrl.text);
+  double get _precioBase => NumberFormatUtils.parseDecimal(_precioBaseCtrl.text);
+  double get _descuento  => NumberFormatUtils.parseDecimal(_descuentoCtrl.text);
   double get _subtotal   => _precioBase * _cantidad;
-  double get _costoFinal => EditLeadHelpers.calcCostoFinal(
-    precioBase: _precioBase,
-    cantidad: _cantidad,
-    descuento: _descuento,
-  );
+  double get _costoFinal => _subtotal - _descuento;
 
   // ── Detección de cambios ──────────────────────────────────────────────────
 
@@ -175,9 +171,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         // _empresaCtrl.text.trim()   != l.nombreEmpresa ||
         // _correoCtrl.text.trim()    != l.correo ||
         // (sec?.tieneNuevos ?? false) ||
-        _cantidadCtrl.text   != EditLeadHelpers.fmtDouble(l.cantidad) ||
-        _precioBaseCtrl.text != EditLeadHelpers.fmtDouble(l.precioBase) ||
-        _descuentoCtrl.text  != EditLeadHelpers.fmtDouble(l.descuento);
+        _cantidadCtrl.text   != NumberFormatUtils.fmtInt(l.cantidad) ||
+        _precioBaseCtrl.text != NumberFormatUtils.fmtDecimal(l.precioBase) ||
+        _descuentoCtrl.text  != NumberFormatUtils.fmtDecimal(l.descuento);
   }
 
   // ── Callbacks de combos ───────────────────────────────────────────────────
@@ -233,7 +229,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         nombre: _nombreCtrl.text.trim(),
         apellidoPaterno: _apellidoPCtrl.text.trim(),
         apellidoMaterno: _apellidoMCtrl.text.trim(),
-        cantidad: double.tryParse(_cantidadCtrl.text),
+        cantidad: int.tryParse(_cantidadCtrl.text),
         precioBase: double.tryParse(_precioBaseCtrl.text),
         descuento: double.tryParse(_descuentoCtrl.text),
         precio: _costoFinal > 0 ? _costoFinal : null,

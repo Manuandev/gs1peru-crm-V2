@@ -114,7 +114,7 @@ class LeadModel extends Lead {
       // 27 → precio (costoFinal)
       precio:        ParseUtils.toDouble(fields, 27),
       // 28 → cantidad
-      cantidad:      ParseUtils.toDouble(fields, 28),
+      cantidad:      ParseUtils.toInt(fields, 28),
       // 29 → descuento
       descuento:     ParseUtils.toDouble(fields, 29),
     );

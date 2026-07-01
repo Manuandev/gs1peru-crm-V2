@@ -65,10 +65,8 @@ class EditLeadFinancieraSection extends StatelessWidget {
               color: colorScheme.primary,
               size: AppSizing.iconActionSm,
             ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-            ],
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -102,7 +100,7 @@ class EditLeadFinancieraSection extends StatelessWidget {
         CustomTextField(
           label: 'Costo final',
           controller: TextEditingController(
-            text: EditLeadHelpers.formatMoneda(_simbolo, costoFinal),
+            text: NumberFormatUtils.formatMoneda(_simbolo, costoFinal),
           ),
           enabled: false,
           dense: true,

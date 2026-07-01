@@ -1,7 +1,6 @@
 // lib/features/lead/presentation/widgets/edit_lead/negociacion_resumen_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 
 /// Resumen financiero de la negociación: subtotal, descuento y total.
@@ -25,7 +24,6 @@ class NegociacionResumenCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final fmt         = NumberFormat('#,##0.00', 'es_PE');
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -65,7 +63,7 @@ class NegociacionResumenCard extends StatelessWidget {
                   children: [
                     Text('Subtotal', style: AppTextStyles.bodySmall),
                     Text(
-                      '$simbolo ${fmt.format(subtotal)}',
+                      NumberFormatUtils.formatMoneda(simbolo, subtotal),
                       style: AppTextStyles.bodySmall,
                     ),
                   ],
@@ -80,7 +78,7 @@ class NegociacionResumenCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '- $simbolo ${fmt.format(montoDescuento)}',
+                      '- ${NumberFormatUtils.formatMoneda(simbolo, montoDescuento)}',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: montoDescuento > 0 ? AppColors.error : AppColors.textSecondary,
                       ),
@@ -101,7 +99,7 @@ class NegociacionResumenCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '$simbolo ${fmt.format(costoFinal)}',
+                NumberFormatUtils.formatMoneda(simbolo, costoFinal),
                 style: AppTextStyles.titleMedium.copyWith(
                   color:      colorScheme.primary,
                   fontWeight: AppTextStyles.weightBold,

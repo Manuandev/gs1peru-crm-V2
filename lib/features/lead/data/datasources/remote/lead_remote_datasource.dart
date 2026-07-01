@@ -69,15 +69,21 @@ class LeadRemoteDatasource {
       // fnSplitStringTable05(@TELEFONOS_STR, @sepComodin2, @sepComodin3).
       _orEmpty(lead.precioBase),         // field14 PRECIO_BASE
       _orEmpty(lead.precio),             // field15 PRECIO (costoFinal calculado)
+      // lead.cantidad es int: el SP castea field16 con TRY_CAST(... AS INT) —
+      // un string con decimales como "5.0" hace que TRY_CAST devuelva NULL y
+      // nunca se guarda IN_PARTICIPANTES.
       _orEmpty(lead.cantidad),           // field16 CANTIDAD
       _orEmpty(lead.descuento),          // field17 DESCUENTO
       _session.codUser,                  // field18 ID_USUARIO
       ip,                                // field19 IP_USUARIO
       coords,                            // field20 LL_USUARIO
-      nuevasEmpresas,                    // field21 nuevas empresas ± separadas
-      '',                                // field22 CARGO placeholder
-      empresaEditar,                     // field23 editar empresa actual ('' si no cambió)
-      correoEditar,                      // field24 editar correo actual ('' si no cambió)
+      // TODO: descomentar cuando [CRM].[CSV_LEADS_CUD_APP] task 'U' lea más de
+      // 20 fields — hoy Fnsplitstringtable25 solo extrae field1..field20, así
+      // que estos 4 se mandaban al pedo (el SP los ignora por completo).
+      // nuevasEmpresas,                 // field21 nuevas empresas ± separadas
+      // '',                             // field22 CARGO placeholder
+      // empresaEditar,                  // field23 editar empresa actual ('' si no cambió)
+      // correoEditar,                   // field24 editar correo actual ('' si no cambió)
     ].join(camp);
 
     final result = await _api.postSafe(ApiConstants.urlLeadsCud, '$body${sep}U');

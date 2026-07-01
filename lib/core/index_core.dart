@@ -154,7 +154,9 @@ export 'utils/date/date_formatter.dart';
 export 'utils/launcher/launcher_utils.dart';
 
 export 'utils/string/string_utils.dart';
-export 'utils/string/parse_utils.dart';  
+export 'utils/string/parse_utils.dart';
+
+export 'utils/number/number_format_utils.dart';
 
 // ui
 export 'utils/ui/avatar_utils.dart';

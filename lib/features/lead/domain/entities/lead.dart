@@ -59,7 +59,7 @@ class Lead extends Equatable {
   // ── Campos económicos ─────────────────────────────────────────
   final double? precioBase;
   final double? precio;
-  final double? cantidad;
+  final int? cantidad;
   final double? descuento;
 
   // ── Getters de conveniencia ───────────────────────────────────
@@ -180,7 +180,7 @@ class Lead extends Equatable {
     String? subEstado,
     double? precioBase,
     double? precio,
-    double? cantidad,
+    int? cantidad,
     double? descuento,
   }) {
     return Lead(

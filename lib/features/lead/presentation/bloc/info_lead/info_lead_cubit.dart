@@ -258,7 +258,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     String? apellidoPaterno,
     String? apellidoMaterno,
     String? correo,
-    double? cantidad,
+    int? cantidad,
     double? precioBase,
     double? descuento,
     double? precio,

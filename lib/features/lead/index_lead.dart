@@ -82,7 +82,6 @@ export 'presentation/bloc/info_lead/info_lead_state.dart';
 export 'presentation/pages/edit_lead_page.dart';
 export 'presentation/widgets/edit_lead/edit_lead_view.dart';
 export 'presentation/widgets/edit_lead/edit_lead_portrait.dart';
-export 'presentation/widgets/edit_lead/edit_lead_helpers.dart';
 export 'presentation/widgets/edit_lead/edit_lead_contacto_section.dart';
 export 'presentation/widgets/edit_lead/edit_lead_negociacion_section.dart';
 export 'presentation/widgets/edit_lead/edit_lead_financiera_section.dart';

@@ -167,7 +167,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         _nombreCtrl.text.trim()    != l.nombre ||
         _apellidoPCtrl.text.trim() != l.apellidoPaterno ||
         _apellidoMCtrl.text.trim() != l.apellidoMaterno ||
-        // TODO: descomentar cuando empresa/correo/teléfono sean editables
+        // Todo: descomentar cuando empresa/correo/teléfono sean editables
         // _empresaCtrl.text.trim()   != l.nombreEmpresa ||
         // _correoCtrl.text.trim()    != l.correo ||
         // (sec?.tieneNuevos ?? false) ||
@@ -207,7 +207,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     final estadoEfectivo   = _subEstado?.nombre ?? _estado?.nombre;
     final tieneSubEstado   = _subEstado != null;
 
-    // TODO: descomentar cuando empresa/correo/teléfono sean editables en el SP
+    // Todo: descomentar cuando empresa/correo/teléfono sean editables en el SP
     // final sec = _contactoKey.currentState!;
     // final empresaEditar = _empresaCtrl.text.trim() != widget.lead.nombreEmpresa
     //     ? _empresaCtrl.text.trim() : '';
@@ -233,7 +233,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         precioBase: double.tryParse(_precioBaseCtrl.text),
         descuento: double.tryParse(_descuentoCtrl.text),
         precio: _costoFinal > 0 ? _costoFinal : null,
-        // TODO: descomentar cuando el SP esté listo
+        // Todo: descomentar cuando el SP esté listo
         // empresaEditar: empresaEditar,
         // correoEditar: correoEditar,
         // nuevasEmpresas: sec.nuevasEmpresasStr,
@@ -258,7 +258,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         _nombreCtrl,
         _apellidoPCtrl,
         _apellidoMCtrl,
-        // TODO: descomentar cuando empresa/correo/teléfono sean editables
+        // Todo: descomentar cuando empresa/correo/teléfono sean editables
         // _empresaCtrl,
         // _correoCtrl,
         // _seccionCambio,

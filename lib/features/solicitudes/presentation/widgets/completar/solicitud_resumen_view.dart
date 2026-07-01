@@ -99,13 +99,14 @@ class SolicitudResumenView extends StatelessWidget {
                     icon: const Icon(AppIcons.save, size: 16),
                     label: const Text('Guardar'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textOnDark,
+                      backgroundColor: AppColors.primary,
                       side: const BorderSide(
                         color: AppColors.primary,
                         width: 1.5,
                       ),
                       minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
+                        AppSizing.buttonHeight,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
@@ -131,7 +132,7 @@ class SolicitudResumenView extends StatelessWidget {
                       backgroundColor: AppColors.secondary,
                       foregroundColor: AppColors.textOnDark,
                       minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
+                        AppSizing.buttonHeight,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
@@ -143,6 +144,7 @@ class SolicitudResumenView extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 5),
                 // Cancelar
                 SizedBox(
                   width: double.infinity,

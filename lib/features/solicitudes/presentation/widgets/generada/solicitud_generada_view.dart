@@ -34,7 +34,7 @@ class SolicitudGeneradaView extends StatelessWidget {
 
           // ── Indicador de pasos fijo bajo el header ────────────
           Transform.translate(
-            offset: const Offset(0, -AppSpacing.lg),
+            offset: const Offset(0, -AppSpacing.md),
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: _PasosGeneradaIndicador(pasoActual: 4),
@@ -44,7 +44,7 @@ class SolicitudGeneradaView extends StatelessWidget {
           // ── Contenido scrollable desplazado sobre el header ───
           Expanded(
             child: Transform.translate(
-              offset: const Offset(0, -AppSpacing.lg),
+              offset: const Offset(0, -AppSpacing.md),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Column(
@@ -92,7 +92,7 @@ class _HeaderGenerada extends StatelessWidget {
         AppSpacing.md,
         AppSpacing.xxs,
         AppSpacing.md,
-        AppSpacing.xl,
+        AppSpacing.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -847,11 +847,9 @@ class _BotonesFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.md,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -868,7 +866,7 @@ class _BotonesFooter extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
                 side: const BorderSide(color: AppColors.border, width: 1.5),
-                minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+                minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizing.radiusMd),

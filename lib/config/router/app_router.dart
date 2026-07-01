@@ -163,6 +163,15 @@ class AppRouter {
         );
       },
     ),
+    AppRoutes.cargaMasivaParticipantes: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudCargaMasivaPage(
+          cubit: args['cubit'] as ParticipantesCubit,
+        );
+      },
+    ),
     AppRoutes.misCasos: RouteDefinition(
       transition: TransitionType.slideRight,
       builder: (_) => const UnderConstructionPage(routeName: 'Mis casos'),

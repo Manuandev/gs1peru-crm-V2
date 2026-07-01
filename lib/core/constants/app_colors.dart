@@ -197,6 +197,9 @@ class AppColors {
   /// Color para advertencias
   static const Color warning = Color(0xFFFF9800); // Naranja
 
+  /// Fondo amarillo para columnas obligatorias en tablas de importación masiva
+  static const Color importacionObligatoria = Color(0xFFFFF3CD);
+
   /// Color para información
   static const Color info = Color(0xFF2196F3); // Azul
 

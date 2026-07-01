@@ -601,9 +601,10 @@ class SolicitudBotonBorrador extends StatelessWidget {
       icon: const Icon(AppIcons.save, size: AppSizing.iconActionSm),
       label: const Text('Guardar'),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.secondary,
+        foregroundColor: AppColors.textOnDark,
+        backgroundColor: AppColors.secondary,
         side: const BorderSide(color: AppColors.secondary),
-        minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+        minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -635,7 +636,7 @@ class SolicitudBotonContinuar extends StatelessWidget {
     final style = ElevatedButton.styleFrom(
       backgroundColor: color ?? AppColors.primary,
       foregroundColor: AppColors.textOnDark,
-      minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+      minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
       ),
@@ -676,9 +677,10 @@ class SolicitudBotonAtras extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = OutlinedButton.styleFrom(
-      foregroundColor: AppColors.brandRaspberryAccessible,
+      foregroundColor: AppColors.textOnDark,
+      backgroundColor: AppColors.brandRaspberryAccessible,
       side: const BorderSide(color: AppColors.brandRaspberryAccessible),
-      minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+      minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
       ),

@@ -7,6 +7,7 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
+import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 extension NavigationExtensions on BuildContext {
@@ -95,6 +96,13 @@ extension NavigationExtensions on BuildContext {
       _push(
         AppRoutes.solicitudGenerada,
         arguments: {'solicitud': solicitud},
+      );
+
+  Future<void> goToCargaMasivaParticipantes({
+    required ParticipantesCubit cubit,
+  }) => _push(
+        AppRoutes.cargaMasivaParticipantes,
+        arguments: {'cubit': cubit},
       );
 
   Future<void> goToDetalleCobranza({required String numSol}) =>

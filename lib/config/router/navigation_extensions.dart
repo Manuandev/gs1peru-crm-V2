@@ -8,6 +8,7 @@ import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
+import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 extension NavigationExtensions on BuildContext {
@@ -71,25 +72,40 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToFichaParticipantesSolicitud({
     required Solicitud solicitud,
     required bool modoEdicion,
+    required SolicitudFormCubit formCubit,
   }) => _push(
         AppRoutes.fichaParticipantesSolicitud,
-        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+        arguments: {
+          'solicitud': solicitud,
+          'modoEdicion': modoEdicion,
+          'formCubit': formCubit,
+        },
       );
 
   Future<void> goToFichaFacturacionSolicitud({
     required Solicitud solicitud,
     required bool modoEdicion,
+    required SolicitudFormCubit formCubit,
   }) => _push(
         AppRoutes.fichaFacturacionSolicitud,
-        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+        arguments: {
+          'solicitud': solicitud,
+          'modoEdicion': modoEdicion,
+          'formCubit': formCubit,
+        },
       );
 
   Future<void> goToFichaResumenSolicitud({
     required Solicitud solicitud,
     required bool modoEdicion,
+    required SolicitudFormCubit formCubit,
   }) => _push(
         AppRoutes.fichaResumenSolicitud,
-        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+        arguments: {
+          'solicitud': solicitud,
+          'modoEdicion': modoEdicion,
+          'formCubit': formCubit,
+        },
       );
 
   Future<void> goToSolicitudGenerada({required Solicitud solicitud}) =>

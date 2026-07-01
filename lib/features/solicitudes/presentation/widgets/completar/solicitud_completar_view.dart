@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_completar_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
@@ -32,6 +33,11 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // Switches — opciones del solicitante
   bool _solicitanteParticipante = false;
   bool _facturarAlSolicitante = false;
+
+  // Labels de combos capturados desde _SeccionDatosSolicitante
+  String _tipoDocLabel = '';
+  String _campanaLabel = '';
+  String _eventoLabel = '';
 
   // Controladores — Datos del solicitante
   final _ctrlNumDoc = TextEditingController();
@@ -205,6 +211,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     ctrlCargo: _ctrlCargo,
                     ctrlCelular: _ctrlCelular,
                     ctrlCorreo: _ctrlCorreo,
+                    onTipoDocLabelChanged: (v) =>
+                        setState(() => _tipoDocLabel = v),
+                    onCampanaChanged: (v) => setState(() => _campanaLabel = v),
+                    onEventoChanged: (v) => setState(() => _eventoLabel = v),
                   ),
                   if (_tipoPersona == 'juridica') ...[
                     const SizedBox(height: AppSpacing.sm),
@@ -245,10 +255,33 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: SolicitudBotonContinuar(
-                    onPressed: () => context.goToFichaParticipantesSolicitud(
-                      solicitud: widget.solicitud,
-                      modoEdicion: widget.modoEdicion,
-                    ),
+                    onPressed: () {
+                      context.read<SolicitudFormCubit>().guardarSolicitante(
+                        DatosSolicitante(
+                          tipoPersona: _tipoPersona,
+                          tipoDocLabel: _tipoDocLabel,
+                          numDoc: _ctrlNumDoc.text,
+                          nombres: _ctrlNombres.text,
+                          apellidoPaterno: _ctrlApellidoPaterno.text,
+                          apellidoMaterno: _ctrlApellidoMaterno.text,
+                          cargo: _ctrlCargo.text,
+                          celular: _ctrlCelular.text,
+                          correo: _ctrlCorreo.text,
+                          campana: _campanaLabel,
+                          evento: _eventoLabel,
+                          canales: _canalesSeleccionados.toList(),
+                          ruc: _ctrlRuc.text,
+                          razonSocial: _ctrlRazonSocial.text,
+                          solicitanteEsParticipante: _solicitanteParticipante,
+                          facturarAlSolicitante: _facturarAlSolicitante,
+                        ),
+                      );
+                      context.goToFichaParticipantesSolicitud(
+                        solicitud: widget.solicitud,
+                        modoEdicion: widget.modoEdicion,
+                        formCubit: context.read<SolicitudFormCubit>(),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -525,6 +558,9 @@ class _SeccionDatosSolicitante extends StatefulWidget {
   final TextEditingController ctrlCargo;
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
+  final ValueChanged<String>? onTipoDocLabelChanged;
+  final ValueChanged<String>? onCampanaChanged;
+  final ValueChanged<String>? onEventoChanged;
 
   const _SeccionDatosSolicitante({
     required this.habilitado,
@@ -535,6 +571,9 @@ class _SeccionDatosSolicitante extends StatefulWidget {
     required this.ctrlCargo,
     required this.ctrlCelular,
     required this.ctrlCorreo,
+    this.onTipoDocLabelChanged,
+    this.onCampanaChanged,
+    this.onEventoChanged,
   });
 
   @override
@@ -612,6 +651,8 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                     _tipoDocId = item?.id;
                     widget.ctrlNumDoc.clear();
                   });
+                  widget.onTipoDocLabelChanged
+                      ?.call(item?.descripcion ?? '');
                 },
               ),
             ),
@@ -730,6 +771,8 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                 label: 'Campaña *',
                 data: _campanas,
                 enabled: widget.habilitado,
+                onChanged: (item) =>
+                    widget.onCampanaChanged?.call(item?.descripcion ?? ''),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -738,6 +781,8 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                 label: 'Evento *',
                 data: _eventos,
                 enabled: widget.habilitado,
+                onChanged: (item) =>
+                    widget.onEventoChanged?.call(item?.descripcion ?? ''),
               ),
             ),
           ],

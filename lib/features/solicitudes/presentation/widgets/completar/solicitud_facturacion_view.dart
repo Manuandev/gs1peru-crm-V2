@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_facturacion_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
@@ -27,6 +28,17 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // 'juridica' | 'natural'
   String _tipoPersona = 'juridica';
 
+  // IDs y labels de combos (id para pre-selección, label para guardar en cubit)
+  String _comprobanteId = '';
+  String _comprobanteLabel = '';
+  String _paisId = '';
+  String _paisLabel = '';
+  String _monedaId = '';
+  String _monedaLabel = '';
+
+  // Evita pre-rellenar más de una vez
+  bool _prefillDone = false;
+
   // Controladores — Datos de facturación
   final _ctrlNumDoc = TextEditingController();
   final _ctrlNombresRazon = TextEditingController();
@@ -39,6 +51,32 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // Controladores — Información complementaria
   final _ctrlNit = TextEditingController();
   final _ctrlObservaciones = TextEditingController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_prefillDone) return;
+    _prefillDone = true;
+    final datos =
+        context.read<SolicitudFormCubit>().state.facturacion;
+    if (datos == null) return;
+    _tipoPersona = datos.tipoPersona;
+    _comprobanteId = datos.comprobanteId;
+    _comprobanteLabel = datos.comprobante;
+    _paisId = datos.paisId;
+    _paisLabel = datos.pais;
+    _monedaId = datos.monedaId;
+    _monedaLabel = datos.moneda;
+    _ctrlNumDoc.text = datos.numDoc;
+    _ctrlNombresRazon.text = datos.nombresRazon;
+    _ctrlApellidoPaterno.text = datos.apellidoPaterno;
+    _ctrlApellidoMaterno.text = datos.apellidoMaterno;
+    _ctrlCelular.text = datos.celular;
+    _ctrlCorreo.text = datos.correo;
+    _ctrlDireccion.text = datos.direccion;
+    _ctrlNit.text = datos.nit;
+    _ctrlObservaciones.text = datos.observaciones;
+  }
 
   @override
   void dispose() {
@@ -137,6 +175,23 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     ctrlCelular: _ctrlCelular,
                     ctrlCorreo: _ctrlCorreo,
                     ctrlDireccion: _ctrlDireccion,
+                    comprobanteInicialId:
+                        _comprobanteId.isNotEmpty ? _comprobanteId : null,
+                    paisInicialId: _paisId.isNotEmpty ? _paisId : null,
+                    monedaInicialId:
+                        _monedaId.isNotEmpty ? _monedaId : null,
+                    onComprobanteChanged: (item) => setState(() {
+                      _comprobanteId = item?.id ?? '';
+                      _comprobanteLabel = item?.descripcion ?? '';
+                    }),
+                    onPaisChanged: (item) => setState(() {
+                      _paisId = item?.id ?? '';
+                      _paisLabel = item?.descripcion ?? '';
+                    }),
+                    onMonedaChanged: (item) => setState(() {
+                      _monedaId = item?.id ?? '';
+                      _monedaLabel = item?.descripcion ?? '';
+                    }),
                   ),
                   const SizedBox(height: AppSpacing.sm),
 
@@ -212,10 +267,37 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: SolicitudBotonContinuar(
-                        onPressed: () => context.goToFichaResumenSolicitud(
-                          solicitud: widget.solicitud,
-                          modoEdicion: widget.modoEdicion,
-                        ),
+                        onPressed: () {
+                          context
+                              .read<SolicitudFormCubit>()
+                              .guardarFacturacion(
+                            DatosFacturacion(
+                              tipoPersona: _tipoPersona,
+                              comprobanteId: _comprobanteId,
+                              comprobante: _comprobanteLabel,
+                              paisId: _paisId,
+                              pais: _paisLabel,
+                              monedaId: _monedaId,
+                              moneda: _monedaLabel,
+                              tipoDocLabel: '',
+                              numDoc: _ctrlNumDoc.text,
+                              nombresRazon: _ctrlNombresRazon.text,
+                              apellidoPaterno: _ctrlApellidoPaterno.text,
+                              apellidoMaterno: _ctrlApellidoMaterno.text,
+                              celular: _ctrlCelular.text,
+                              correo: _ctrlCorreo.text,
+                              direccion: _ctrlDireccion.text,
+                              actividadEconomica: '',
+                              nit: _ctrlNit.text,
+                              observaciones: _ctrlObservaciones.text,
+                            ),
+                          );
+                          context.goToFichaResumenSolicitud(
+                            solicitud: widget.solicitud,
+                            modoEdicion: widget.modoEdicion,
+                            formCubit: context.read<SolicitudFormCubit>(),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -332,6 +414,12 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
   final TextEditingController ctrlDireccion;
+  final String? comprobanteInicialId;
+  final String? paisInicialId;
+  final String? monedaInicialId;
+  final ValueChanged<ComboItem?>? onComprobanteChanged;
+  final ValueChanged<ComboItem?>? onPaisChanged;
+  final ValueChanged<ComboItem?>? onMonedaChanged;
 
   const _SeccionDatosFacturacion({
     required this.habilitado,
@@ -342,6 +430,12 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     required this.ctrlCelular,
     required this.ctrlCorreo,
     required this.ctrlDireccion,
+    this.comprobanteInicialId,
+    this.paisInicialId,
+    this.monedaInicialId,
+    this.onComprobanteChanged,
+    this.onPaisChanged,
+    this.onMonedaChanged,
   });
 
   static const _comprobantes = ['01¦Boleta', '02¦Factura'];
@@ -380,6 +474,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
                 label: 'Comprobante *',
                 data: _comprobantes,
                 enabled: habilitado,
+                initialValue: comprobanteInicialId,
+                onChanged: onComprobanteChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -388,6 +484,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
                 label: 'País *',
                 data: _paises,
                 enabled: habilitado,
+                initialValue: paisInicialId,
+                onChanged: onPaisChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -396,6 +494,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
                 label: 'Moneda *',
                 data: _monedas,
                 enabled: habilitado,
+                initialValue: monedaInicialId,
+                onChanged: onMonedaChanged,
               ),
             ),
           ],

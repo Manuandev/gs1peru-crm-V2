@@ -200,6 +200,7 @@ class SolicitudParticipantesView extends StatelessWidget {
                         onPressed: () => context.goToFichaFacturacionSolicitud(
                           solicitud: solicitud,
                           modoEdicion: modoEdicion,
+                          formCubit: context.read<SolicitudFormCubit>(),
                         ),
                       ),
                     ),

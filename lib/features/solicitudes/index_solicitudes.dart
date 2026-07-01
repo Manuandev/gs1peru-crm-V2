@@ -20,6 +20,7 @@ export 'presentation/bloc/list/solicitud_list_event.dart';
 export 'presentation/bloc/list/solicitud_list_state.dart';
 
 export 'presentation/bloc/participantes/participantes_cubit.dart';
+export 'presentation/bloc/form/solicitud_form_cubit.dart';
 
 export 'presentation/pages/solicitud_list_page.dart';
 export 'presentation/pages/solicitud_detalle_page.dart';

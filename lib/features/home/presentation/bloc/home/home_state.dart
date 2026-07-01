@@ -36,7 +36,7 @@ class HomeLoaded extends HomeState {
 
   // Atajos para acceso rápido
   int get totConversaciones => home.totConversaciones;
-  int get totProspectos => home.totProspectos;
+  int get totSeguimientos => home.totSeguimientos;
   int get totPropuestas => home.totPropuestas;
   int get totCobranza => home.totCobranza;
   int get totLeadsNuevos => home.totLeadsNuevos;

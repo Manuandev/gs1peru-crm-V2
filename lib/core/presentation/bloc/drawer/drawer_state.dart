@@ -16,7 +16,7 @@ class DrawerLoaded extends DrawerState {
   final String? userSubtitle;
   final bool isModerador;
   final int conversaciones;
-  final int prospectos;
+  final int seguimientos;
   final int cobranzas;
 
   const DrawerLoaded({
@@ -25,15 +25,15 @@ class DrawerLoaded extends DrawerState {
     required this.isModerador,
     this.userSubtitle,
     this.conversaciones = 0,
-    this.prospectos = 0,
+    this.seguimientos = 0,
     this.cobranzas = 0,
   });
 
-  bool get hasBadges => conversaciones > 0 || prospectos > 0 || cobranzas > 0;
+  bool get hasBadges => conversaciones > 0 || seguimientos > 0 || cobranzas > 0;
 
   DrawerLoaded copyWithBadges({
     int? conversaciones,
-    int? prospectos,
+    int? seguimientos,
     int? cobranzas,
   }) {
     return DrawerLoaded(
@@ -42,7 +42,7 @@ class DrawerLoaded extends DrawerState {
       userSubtitle: userSubtitle,
       isModerador: isModerador,
       conversaciones: conversaciones ?? this.conversaciones,
-      prospectos: prospectos ?? this.prospectos,
+      seguimientos: seguimientos ?? this.seguimientos,
       cobranzas: cobranzas ?? this.cobranzas,
     );
   }

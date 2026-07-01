@@ -7,8 +7,8 @@ class HomeModel extends Home {
   const HomeModel({
     required super.totLeadsNuevos,
     required super.totLeadsDesarrollo,
-    required super.totProspectos,
     required super.totPropuestas,
+    required super.totSeguimientos,
     required super.totCobranza,
     required super.totConversaciones,
     required super.totNotificaciones,
@@ -53,8 +53,8 @@ class HomeModel extends Home {
     return HomeModel(
       totLeadsNuevos: ParseUtils.toInt(c, 0),
       totLeadsDesarrollo: ParseUtils.toInt(c, 1),
-      totProspectos: ParseUtils.toInt(c, 2),
-      totPropuestas: ParseUtils.toInt(c, 3),
+      totPropuestas: ParseUtils.toInt(c, 2),
+      totSeguimientos: ParseUtils.toInt(c, 3),
       totCobranza: ParseUtils.toInt(c, 4),
       totConversaciones: ParseUtils.toInt(c, 5),
       totNotificaciones: ParseUtils.toInt(c, 6),

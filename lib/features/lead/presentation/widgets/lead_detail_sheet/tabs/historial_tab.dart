@@ -3,13 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/lead/presentation/cubit/historial/historial_lead_cubit.dart';
 import 'package:app_crm/features/lead/presentation/cubit/historial/historial_lead_state.dart';
 
 class HistorialTab extends StatefulWidget {
-  final int leadId;
+  final int idNumero;
 
-  const HistorialTab({super.key, required this.leadId});
+  const HistorialTab({super.key, required this.idNumero});
 
   @override
   State<HistorialTab> createState() => _HistorialTabState();
@@ -26,10 +27,10 @@ class _HistorialTabState extends State<HistorialTab>
   @override
   void initState() {
     super.initState();
-    context.read<HistorialLeadCubit>().cargarHistorial(widget.leadId);
+    context.read<HistorialLeadCubit>().cargarHistorial(widget.idNumero);
   }
 
-  List<HistorialItemFake> _aplicarFiltro(List<HistorialItemFake> eventos) {
+  List<HistorialComentario> _aplicarFiltro(List<HistorialComentario> eventos) {
     if (_filtro == null) return eventos;
     // El filtro "Asesor" engloba tanto asesor como cliente (acción del contacto)
     if (_filtro == TipoActor.asesor) {
@@ -54,7 +55,7 @@ class _HistorialTabState extends State<HistorialTab>
             message: mensaje,
             onRetry: () => context
                 .read<HistorialLeadCubit>()
-                .cargarHistorial(widget.leadId),
+                .cargarHistorial(widget.idNumero),
           ),
           HistorialLeadSuccess(:final eventos) => eventos.isEmpty
               ? const _EstadoVacio()
@@ -177,7 +178,7 @@ class _Chip extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ListaHistorial extends StatelessWidget {
-  final List<HistorialItemFake> eventos;
+  final List<HistorialComentario> eventos;
 
   const _ListaHistorial({required this.eventos});
 
@@ -213,7 +214,7 @@ class _ListaHistorial extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _HistorialItem extends StatelessWidget {
-  final HistorialItemFake item;
+  final HistorialComentario item;
 
   const _HistorialItem({required this.item});
 
@@ -263,7 +264,7 @@ class _HistorialItem extends StatelessWidget {
           // ── Descripción ─────────────────────────────────────────────────
           Expanded(
             child: Text(
-              item.descripcion,
+              item.notas,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textPrimary,
               ),
@@ -277,14 +278,14 @@ class _HistorialItem extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                item.fechaHora,
+                item.fechaHora.formatConDia(),
                 style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxs),
               Text(
-                item.actor,
+                item.actorLabel,
                 style: AppTextStyles.labelSmall.copyWith(
                   color: colorActor,
                   fontWeight: AppTextStyles.weightMedium,

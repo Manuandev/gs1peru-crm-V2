@@ -72,7 +72,7 @@ class AppMenuItems {
 
   static List<DrawerItemModel> withBadges({
     int? conversacionesBadge,
-    int? prospectosBadge,
+    int? seguimientosBadge,
     int? cobranzaBadge,
   }) {
     return [
@@ -90,7 +90,7 @@ class AppMenuItems {
         icon: AppIcons.users,
         label: 'Seguimiento',
         route: AppRoutes.seguimiento,
-        badge: prospectosBadge,
+        badge: seguimientosBadge,
         descripcion: 'Gestiona y da seguimiento a tus leads',
       ),
       // DrawerItemModel(

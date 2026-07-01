@@ -43,7 +43,7 @@ class HomePage extends StatelessWidget {
             } else if (state is HomeLoaded) {
               context.updateBadge(
                 conversaciones: state.totConversaciones,
-                prospectos: state.totProspectos,
+                seguimientos: state.totSeguimientos,
                 cobranza: state.totCobranza,
               );
             }

@@ -23,7 +23,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
         userSubtitle: user.correoUser,
         isModerador: user.isModerador,
         conversaciones: previous?.conversaciones ?? 0,
-        prospectos: previous?.prospectos ?? 0,
+        seguimientos: previous?.seguimientos ?? 0,
         cobranzas: previous?.cobranzas ?? 0,
       ),
     );
@@ -39,7 +39,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
     emit(
       current.copyWithBadges(
         conversaciones: event.conversaciones,
-        prospectos: event.prospectos,
+        seguimientos: event.seguimientos,
         cobranzas: event.cobranza,
       ),
     );

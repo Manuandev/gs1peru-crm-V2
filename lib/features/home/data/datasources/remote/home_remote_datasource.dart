@@ -22,12 +22,12 @@ class HomeRemoteDatasource {
     return switch (result) {
       ApiSuccess(:final data) => HomeModel.parse(data),
       ApiEmpty() => const HomeModel(
-        totConversaciones: 0,
-        totProspectos: 0,
-        totPropuestas: 0,
-        totCobranza: 0,
         totLeadsNuevos: 0,
         totLeadsDesarrollo: 0,
+        totPropuestas: 0,
+        totSeguimientos: 0,
+        totCobranza: 0,
+        totConversaciones: 0,
         totNotificaciones: 0,
         prioridades: [],
         prospectos: [],

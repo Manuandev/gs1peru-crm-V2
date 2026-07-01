@@ -1,22 +1,7 @@
 // lib/features/lead/presentation/cubit/historial/historial_lead_state.dart
 
 import 'package:app_crm/index_dependencies.dart';
-
-enum TipoActor { sistema, botIA, cliente, asesor }
-
-class HistorialItemFake {
-  final String descripcion;
-  final String fechaHora;
-  final TipoActor tipoActor;
-  final String actor;
-
-  const HistorialItemFake({
-    required this.descripcion,
-    required this.fechaHora,
-    required this.tipoActor,
-    required this.actor,
-  });
-}
+import 'package:app_crm/features/lead/index_lead.dart';
 
 sealed class HistorialLeadState extends Equatable {
   const HistorialLeadState();
@@ -34,7 +19,7 @@ class HistorialLeadLoading extends HistorialLeadState {
 }
 
 class HistorialLeadSuccess extends HistorialLeadState {
-  final List<HistorialItemFake> eventos;
+  final List<HistorialComentario> eventos;
 
   const HistorialLeadSuccess({required this.eventos});
 

@@ -116,4 +116,19 @@ class LeadRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  Future<List<HistorialComentarioModel>> getHistorialComentarios(
+    int idNumero,
+  ) async {
+    final String body = '$idNumero${sep}LCG';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => HistorialComentarioModel.parseList(data),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
 }

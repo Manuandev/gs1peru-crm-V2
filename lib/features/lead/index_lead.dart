@@ -8,6 +8,7 @@ export 'data/models/lead_detalle_model.dart';
 export 'data/models/comentario_lead_model.dart';
 export 'data/models/contacto_detalle_model.dart';
 export 'data/models/negociacion_lead_model.dart';
+export 'data/models/historial_comentario_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
 
@@ -16,6 +17,7 @@ export 'domain/entities/lead_detalle.dart';
 export 'domain/entities/comentario_lead.dart';
 export 'domain/entities/contacto_detalle.dart';
 export 'domain/entities/negociacion.dart';
+export 'domain/entities/historial_comentario.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
@@ -27,6 +29,7 @@ export 'domain/usecases/get_lead_detalle_usecase.dart';
 export 'domain/usecases/toggle_favorito_lead_usecase.dart';
 export 'domain/usecases/obtener_detalle_contacto_usecase.dart';
 export 'domain/usecases/get_negociaciones_lead.dart';
+export 'domain/usecases/get_historial_comentarios.dart';
 
 export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';

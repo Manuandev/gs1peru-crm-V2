@@ -146,7 +146,7 @@ class _ChatLeadPanelState extends State<ChatLeadPanel> {
                   idNumero: widget.idNumero,
                   onCerrar: _cerrar,
                 ),
-                HistorialTab(leadId: widget.lead.idLead),
+                HistorialTab(idNumero: widget.idNumero),
               ],
             ),
           ),

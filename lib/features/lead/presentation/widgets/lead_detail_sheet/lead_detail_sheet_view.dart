@@ -42,7 +42,13 @@ class LeadDetailSheet extends StatefulWidget {
                   GetNegociacionesLead(LeadRepositoryImpl(LeadRemoteDatasource())),
             ),
           ),
-          BlocProvider(create: (_) => HistorialLeadCubit()),
+          BlocProvider(
+            create: (_) => HistorialLeadCubit(
+              obtenerHistorialUseCase: GetHistorialComentarios(
+                LeadRepositoryImpl(LeadRemoteDatasource()),
+              ),
+            ),
+          ),
         ],
         child: LeadDetailSheet(
           initialTab: initialTab,
@@ -255,7 +261,7 @@ class _SheetContent extends StatelessWidget {
               children: [
                 DatosTab(lead: lead, idNumero: idNumero, cubit: cubit),
                 NegociacionesTab(leadId: leadId, idNumero: idNumero),
-                HistorialTab(leadId: leadId),
+                HistorialTab(idNumero: idNumero),
               ],
             ),
           ),

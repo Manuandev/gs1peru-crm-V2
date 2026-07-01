@@ -8,13 +8,13 @@ import 'package:app_crm/core/index_core.dart';
 extension BadgeExtension on BuildContext {
   void updateBadge({
     int? conversaciones,
-    int? prospectos,
+    int? seguimientos,
     int? cobranza,
   }) {
     read<DrawerBloc>().add(
       DrawerBadgesUpdated(
         conversaciones: conversaciones,
-        prospectos: prospectos,
+        seguimientos: seguimientos,
         cobranza: cobranza,
       ),
     );

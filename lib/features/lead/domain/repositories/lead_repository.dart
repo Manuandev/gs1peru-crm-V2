@@ -20,4 +20,6 @@ abstract class LeadRepository {
   Future<ContactoDetalle> obtenerDetalleContacto(int idContacto);
   // TODO: conectar a SP real cuando se defina — '[CRM].[SP_NegociacionesPorContacto]'
   Future<List<Negociacion>> obtenerNegociaciones(int idLead);
+  // SP 'LCG' — historial de comentarios de todos los leads del mismo número
+  Future<List<HistorialComentario>> obtenerHistorialComentarios(int idNumero);
 }

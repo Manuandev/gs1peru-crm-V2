@@ -492,6 +492,8 @@ class _SeccionInfoComercial extends StatelessWidget {
                 controller: ctrlRuc,
                 keyboardType: TextInputType.number,
                 enabled: habilitado,
+                maxLength: 11,
+                digitsOnly: true,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -514,7 +516,7 @@ class _SeccionInfoComercial extends StatelessWidget {
 
 // ── Sección Datos del solicitante ────────────────────────────────────────────
 
-class _SeccionDatosSolicitante extends StatelessWidget {
+class _SeccionDatosSolicitante extends StatefulWidget {
   final bool habilitado;
   final TextEditingController ctrlNumDoc;
   final TextEditingController ctrlNombres;
@@ -535,6 +537,28 @@ class _SeccionDatosSolicitante extends StatelessWidget {
     required this.ctrlCorreo,
   });
 
+  @override
+  State<_SeccionDatosSolicitante> createState() =>
+      _SeccionDatosSolicitanteState();
+}
+
+class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
+  String? _tipoDocId;
+
+  // Límite de caracteres y tipo de teclado según tipo de documento
+  static const _maxLengthPorTipo = {
+    '01': 8, // DNI
+    '02': 12, // Pasaporte
+    '03': 12, // Carnet de extranjería
+    '04': 11, // RUC como doc de persona
+  };
+  static const _soloDigitosPorTipo = {
+    '01': true,
+    '02': false,
+    '03': false,
+    '04': true,
+  };
+
   static const _tiposDoc = [
     '01¦DNI',
     '02¦Pasaporte',
@@ -548,6 +572,10 @@ class _SeccionDatosSolicitante extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxLenDoc = _tipoDocId != null ? _maxLengthPorTipo[_tipoDocId] : null;
+    final soloDigitos = _soloDigitosPorTipo[_tipoDocId] ?? false;
+    final teclado = soloDigitos ? TextInputType.number : TextInputType.text;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -578,16 +606,24 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Tipo documento *',
                 data: _tiposDoc,
-                enabled: habilitado,
+                enabled: widget.habilitado,
+                onChanged: (item) {
+                  setState(() {
+                    _tipoDocId = item?.id;
+                    widget.ctrlNumDoc.clear();
+                  });
+                },
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: SolicitudTextField(
                 label: 'Número documento *',
-                controller: ctrlNumDoc,
-                keyboardType: TextInputType.number,
-                enabled: habilitado,
+                controller: widget.ctrlNumDoc,
+                keyboardType: teclado,
+                enabled: widget.habilitado,
+                maxLength: maxLenDoc,
+                digitsOnly: soloDigitos,
               ),
             ),
           ],
@@ -601,7 +637,7 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Nacionalidad *',
                 data: _nacionalidades,
-                enabled: habilitado,
+                enabled: widget.habilitado,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -609,7 +645,7 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Sexo *',
                 data: _sexos,
-                enabled: habilitado,
+                enabled: widget.habilitado,
               ),
             ),
           ],
@@ -619,8 +655,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
         // Nombres
         SolicitudTextField(
           label: 'Nombres *',
-          controller: ctrlNombres,
-          enabled: habilitado,
+          controller: widget.ctrlNombres,
+          enabled: widget.habilitado,
           isUpperCase: true,
           textCapitalization: TextCapitalization.words,
         ),
@@ -632,8 +668,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
             Expanded(
               child: SolicitudTextField(
                 label: 'Apellido paterno *',
-                controller: ctrlApellidoPaterno,
-                enabled: habilitado,
+                controller: widget.ctrlApellidoPaterno,
+                enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
               ),
@@ -642,8 +678,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
             Expanded(
               child: SolicitudTextField(
                 label: 'Apellido materno',
-                controller: ctrlApellidoMaterno,
-                enabled: habilitado,
+                controller: widget.ctrlApellidoMaterno,
+                enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
               ),
@@ -655,8 +691,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
         // Cargo
         SolicitudTextField(
           label: 'Cargo *',
-          controller: ctrlCargo,
-          enabled: habilitado,
+          controller: widget.ctrlCargo,
+          enabled: widget.habilitado,
           isUpperCase: true,
           textCapitalization: TextCapitalization.sentences,
         ),
@@ -668,17 +704,17 @@ class _SeccionDatosSolicitante extends StatelessWidget {
           children: [
             Expanded(
               child: SolicitudCampoCelular(
-                controller: ctrlCelular,
-                habilitado: habilitado,
+                controller: widget.ctrlCelular,
+                habilitado: widget.habilitado,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: SolicitudTextField(
                 label: 'Correo *',
-                controller: ctrlCorreo,
+                controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
-                enabled: habilitado,
+                enabled: widget.habilitado,
                 isUpperCase: true,
               ),
             ),
@@ -693,7 +729,7 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Campaña *',
                 data: _campanas,
-                enabled: habilitado,
+                enabled: widget.habilitado,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -701,7 +737,7 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Evento *',
                 data: _eventos,
-                enabled: habilitado,
+                enabled: widget.habilitado,
               ),
             ),
           ],

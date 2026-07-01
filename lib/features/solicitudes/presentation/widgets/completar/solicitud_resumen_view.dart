@@ -52,7 +52,12 @@ class SolicitudResumenView extends StatelessWidget {
                     ),
                   ),
                   const _Separador(),
-                  const _SeccionParticipantes(),
+                  _SeccionParticipantes(
+                    onVerTodos: () => context.goToFichaParticipantesSolicitud(
+                      solicitud: solicitud,
+                      modoEdicion: modoEdicion,
+                    ),
+                  ),
                   const _Separador(),
                   _SeccionFacturacion(
                     onEditar: () => Navigator.of(context).popUntil(
@@ -75,7 +80,7 @@ class SolicitudResumenView extends StatelessWidget {
               AppSpacing.md,
               AppSpacing.sm,
               AppSpacing.md,
-              AppSpacing.md,
+              AppSpacing.sm,
             ),
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -92,7 +97,7 @@ class SolicitudResumenView extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {},
                     icon: const Icon(AppIcons.save, size: 16),
-                    label: const Text('Guardar borrador'),
+                    label: const Text('Guardar'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: const BorderSide(
@@ -112,13 +117,14 @@ class SolicitudResumenView extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm2),
+                const SizedBox(height: 5),
 
                 // Generar solicitud
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () =>
+                        context.goToSolicitudGenerada(solicitud: solicitud),
                     icon: const Icon(AppIcons.fileFactura, size: 16),
                     label: const Text('Generar solicitud'),
                     style: ElevatedButton.styleFrom(
@@ -137,8 +143,6 @@ class SolicitudResumenView extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm2),
-
                 // Cancelar
                 SizedBox(
                   width: double.infinity,
@@ -387,7 +391,9 @@ class _SeccionSolicitante extends StatelessWidget {
 // ── Seccion 2 — Participantes ─────────────────────────────────────────────────
 
 class _SeccionParticipantes extends StatelessWidget {
-  const _SeccionParticipantes();
+  final VoidCallback onVerTodos;
+
+  const _SeccionParticipantes({required this.onVerTodos});
 
   static const _participantes = [
     ['José Eduardo Posada Peña', '057588685', 'ADC JR.', '503-76713284'],
@@ -456,7 +462,7 @@ class _SeccionParticipantes extends StatelessWidget {
 
         const SizedBox(height: AppSpacing.sm),
         GestureDetector(
-          onTap: () {},
+          onTap: onVerTodos,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

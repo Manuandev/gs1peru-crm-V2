@@ -154,6 +154,15 @@ class AppRouter {
         );
       },
     ),
+    AppRoutes.solicitudGenerada: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudGeneradaPage(
+          solicitud: args['solicitud'] as Solicitud,
+        );
+      },
+    ),
     AppRoutes.misCasos: RouteDefinition(
       transition: TransitionType.slideRight,
       builder: (_) => const UnderConstructionPage(routeName: 'Mis casos'),

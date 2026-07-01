@@ -1,4 +1,4 @@
-﻿// lib/features/lead/presentation/widgets/list/lead_card_actions.dart
+// lib/features/lead/presentation/widgets/list/lead_card_actions.dart
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -11,6 +11,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class LeadCardActions extends StatelessWidget {
   final Lead lead;
   final VoidCallback? onWhatsAppTap;
+  final VoidCallback? onVerDetalleTap;
   final VoidCallback? onChatTap;
   final VoidCallback? onStarTap;
 
@@ -18,70 +19,124 @@ class LeadCardActions extends StatelessWidget {
     super.key,
     required this.lead,
     this.onWhatsAppTap,
+    this.onVerDetalleTap,
     this.onChatTap,
     this.onStarTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorWhatsApp = AppSocialUtils.colorCanalById(1);
+
     return Row(
       children: [
-        // _LeadActionButton(
-        //   icon: AppIcons.whatsapp,
-        //   color: AppSocialUtils.colorCanal(1),
-        //   onTap: onWhatsAppTap,
-        // ),
-        // const SizedBox(width: AppSpacing.md),
-        if (lead.tieneConversacionAbierta == true) ...[
-          _LeadActionButton(
-            icon: AppIcons.chat,
-            color: AppColors.primary,
-            onTap: onChatTap,
+        Expanded(
+          child: GestureDetector(
+            onTap: onWhatsAppTap,
+            child: Container(
+              height: AppSizing.buttonHeightSmall,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colorWhatsApp,
+                borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              ),
+              child: FaIcon(
+                AppIcons.whatsapp,
+                size: AppSizing.iconActionSm,
+                color: AppColors.textOnDark,
+              ),
+            ),
           ),
-        ],
-        const SizedBox(width: AppSpacing.md),
-        _LeadActionButton(
-          icon: lead.isFavorito ? AppIcons.starFilled : AppIcons.star,
-          color: lead.isFavorito ? AppColors.favorito : AppColors.textDisabled,
-          onTap: onStarTap,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          flex: 2,
+          child: GestureDetector(
+            onTap: onVerDetalleTap,
+            child: Container(
+              height: AppSizing.buttonHeightSmall,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                'Ver detalle',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: AppTextStyles.weightMedium,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        PopupMenuButton<String>(
+          tooltip: 'Más opciones',
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizing.radiusLg),
+          ),
+          onSelected: (value) {
+            switch (value) {
+              case 'favorito':
+                onStarTap?.call();
+              case 'chat':
+                onChatTap?.call();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'favorito',
+              child: Row(
+                children: [
+                  Icon(
+                    lead.isFavorito ? AppIcons.starFilled : AppIcons.star,
+                    size: AppSizing.iconNav,
+                    color: lead.isFavorito
+                        ? AppColors.favorito
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    lead.isFavorito ? 'Quitar de favoritos' : 'Marcar favorito',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            if (lead.tieneConversacionAbierta == true)
+              PopupMenuItem(
+                value: 'chat',
+                child: Row(
+                  children: [
+                    const Icon(
+                      AppIcons.chat,
+                      size: AppSizing.iconNav,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    const Text('Abrir chat', style: AppTextStyles.bodyMedium),
+                  ],
+                ),
+              ),
+          ],
+          child: Container(
+            width: AppSizing.buttonHeightSmall,
+            height: AppSizing.buttonHeightSmall,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(
+              AppIcons.more,
+              size: AppSizing.iconActionSm,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ),
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Botón individual circular con fondo suave
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _LeadActionButton extends StatelessWidget {
-  final dynamic icon; // IconData (Material) o IconDataBrands (FontAwesome)
-  final Color color;
-  final VoidCallback? onTap;
-
-  const _LeadActionButton({
-    required this.icon,
-    required this.color,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: AppSizing.buttonHeightSmall,
-        height: AppSizing.buttonHeightSmall,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color.withValues(alpha: 0.1),
-        ),
-        alignment: Alignment.center,
-        child: icon is IconData
-            ? Icon(icon as IconData, size: AppSizing.iconSearch, color: color)
-            : FaIcon(icon, size: AppSizing.iconSm, color: color),
-      ),
     );
   }
 }

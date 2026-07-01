@@ -23,44 +23,43 @@ class LeadListFilterChips extends StatelessWidget {
     final isModerador = SessionService().isModerador;
 
     final todosChips = [
-      (filtro: LeadListFiltro.todos, label: 'Todas'),
+      (filtro: LeadListFiltro.todos, label: 'Todos'),
       (filtro: LeadListFiltro.misCasos, label: 'Mis casos'),
       (filtro: LeadListFiltro.nuevos, label: 'Nuevos'),
       (filtro: LeadListFiltro.enDesarrollo, label: 'En desarrollo'),
+      (filtro: LeadListFiltro.propuesta, label: 'Propuesta'),
     ];
 
-    // El chip "Todas" solo lo ve el moderador
+    // El chip "Todos" solo lo ve el moderador
     final chips = todosChips
         .where((c) => !(c.filtro == LeadListFiltro.todos && !isModerador))
         .toList();
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        child: Row(
-          children: chips.map((chip) {
-            final isSelected = filtroActual == chip.filtro;
-            final count = conteos[chip.filtro] ?? 0;
-            final labelColor = isSelected
-                ? colorScheme.onPrimary
-                : colorScheme.onSurface;
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        children: chips.map((chip) {
+          final isSelected = filtroActual == chip.filtro;
+          final count = conteos[chip.filtro] ?? 0;
+          final labelColor =
+              isSelected ? colorScheme.onPrimary : colorScheme.onSurface;
 
-            return Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.sm),
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
               child: GestureDetector(
                 onTap: () => onFiltroTap(chip.filtro),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.chipPaddingH,
-                    vertical: AppSpacing.chipPaddingV,
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? colorScheme.primary
-                        : colorScheme.surface,
+                    color: isSelected ? colorScheme.primary : colorScheme.surface,
                     borderRadius: BorderRadius.circular(AppSizing.radiusXl),
                     boxShadow: isSelected
                         ? []
@@ -80,32 +79,21 @@ class LeadListFilterChips extends StatelessWidget {
                             width: AppSizing.borderWidthThin,
                           ),
                   ),
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: chip.label,
-                          style: AppTextStyles.labelMedium.copyWith(
-                            fontWeight: AppTextStyles.weightSemiBold,
-                            color: labelColor,
-                          ),
-                        ),
-                        if (count > 0)
-                          TextSpan(
-                            text: '  $count',
-                            style: AppTextStyles.labelMedium.copyWith(
-                              fontWeight: AppTextStyles.weightMedium,
-                              color: labelColor,
-                            ),
-                          ),
-                      ],
+                  child: Text(
+                    count > 0 ? '${chip.label} $count' : chip.label,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      fontWeight: AppTextStyles.weightSemiBold,
+                      color: labelColor,
                     ),
                   ),
                 ),
               ),
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

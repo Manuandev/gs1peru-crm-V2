@@ -106,16 +106,24 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     _emitFiltered(emit);
   }
 
+  // Un lead pertenece a [idEstado] si coincide directo o si su idEstadoPadre
+  // apunta a él — así un sub-estado (ej. "07 Solicita ficha", padre "01") se
+  // cuenta dentro del padre "En desarrollo".
+  bool _perteneceEstado(Lead lead, String idEstado) =>
+      lead.idEstado == idEstado || lead.idEstadoPadre == idEstado;
+
   void _emitFiltered(Emitter<LeadListState> emit) {
     final conteos = {
       LeadListFiltro.todos: _allLeads.length,
       LeadListFiltro.misCasos: _allLeads
           .where((c) => c.asesor == _session.codUser)
           .length,
-      LeadListFiltro.nuevos: _allLeads.where((c) => c.idEstado == '00').length,
-      LeadListFiltro.enDesarrollo: _allLeads
-          .where((c) => c.idEstado == '01')
-          .length,
+      LeadListFiltro.nuevos:
+          _allLeads.where((c) => _perteneceEstado(c, '00')).length,
+      LeadListFiltro.enDesarrollo:
+          _allLeads.where((c) => _perteneceEstado(c, '01')).length,
+      LeadListFiltro.propuesta:
+          _allLeads.where((c) => _perteneceEstado(c, '02')).length,
     };
 
     var resultado = List<Lead>.from(_allLeads);
@@ -124,9 +132,11 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
           .where((c) => c.asesor == _session.codUser)
           .toList();
     } else if (_filtroActivo == LeadListFiltro.nuevos) {
-      resultado = resultado.where((c) => c.idEstado == '00').toList();
+      resultado = resultado.where((c) => _perteneceEstado(c, '00')).toList();
     } else if (_filtroActivo == LeadListFiltro.enDesarrollo) {
-      resultado = resultado.where((c) => c.idEstado == '01').toList();
+      resultado = resultado.where((c) => _perteneceEstado(c, '01')).toList();
+    } else if (_filtroActivo == LeadListFiltro.propuesta) {
+      resultado = resultado.where((c) => _perteneceEstado(c, '02')).toList();
     }
 
     emit(

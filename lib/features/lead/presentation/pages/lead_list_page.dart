@@ -19,9 +19,6 @@ class LeadListPage extends StatelessWidget {
             ToggleFavoritoLeadUseCase(context.read<LeadRepository>()),
           )..add(const LeadListStarted()),
         ),
-        BlocProvider(
-          create: (_) => LeadListVistaCubit()..cargar(),
-        ),
       ],
       child: BlocListener<LeadListBloc, LeadListState>(
         listener: (context, state) {

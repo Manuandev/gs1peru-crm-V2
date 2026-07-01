@@ -12,60 +12,73 @@ class LeadListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LeadListVistaCubit, bool>(
-      builder: (context, modoCompacto) {
-        return BasePage(
-          onPop: () => context.goToHome(),
-          title: 'Seguimientos',
-          drawerSide: DrawerSide.left,
-          appBarTrailingButtons: [
-            IconButton(
-              icon: Icon(
-                modoCompacto ? AppIcons.vistaDetallada : AppIcons.vistaCompacta,
-                color: AppColors.textOnDark,
-              ),
-              tooltip: modoCompacto ? 'Vista detallada' : 'Vista compacta',
-              onPressed: () =>
-                  context.read<LeadListVistaCubit>().alternar(),
-            ),
-          ],
-          body: RefreshIndicator(
-            color: AppColors.primary,
-            backgroundColor: AppColors.surface,
-            onRefresh: () async {
-              final bloc = context.read<LeadListBloc>();
-              bloc.add(const LeadListRefresh());
-              await bloc.stream
-                  .firstWhere((s) => s is LeadListSuccess || s is LeadListError);
-            },
-            child: BlocBuilder<LeadListBloc, LeadListState>(
-              builder: (context, state) {
-                if (state is LeadListLoading || state is LeadListInitial) {
-                  return const LeadListSkeleton();
-                }
-
-                if (state is LeadListError) {
-                  return AppErrorView(
-                    message: state.message,
-                    onRetry: () =>
-                        context.read<LeadListBloc>().add(const LeadListRefresh()),
-                  );
-                }
-
-                if (state is LeadListSuccess) {
-                  return LeadListPortrait(
-                    leads: state.leads,
-                    filtro: state.filtro,
-                    modoCompacto: modoCompacto,
-                  );
-                }
-
-                return const SizedBox.shrink();
-              },
+    return BasePage(
+      onPop: () => context.goToHome(),
+      titleWidget: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Seguimiento',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.textOnDark,
+              fontWeight: AppTextStyles.weightSemiBold,
             ),
           ),
-        );
-      },
+          Text(
+            'Gestiona el avance de tus casos',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.white(0.75),
+            ),
+          ),
+        ],
+      ),
+      drawerSide: DrawerSide.left,
+      bodyPadding: EdgeInsets.zero,
+      body: Column(
+        children: [
+          const SizedBox(height: AppSpacing.sm),
+
+          Expanded(
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              onRefresh: () async {
+                final bloc = context.read<LeadListBloc>();
+                bloc.add(const LeadListRefresh());
+                await bloc.stream.firstWhere(
+                  (s) => s is LeadListSuccess || s is LeadListError,
+                );
+              },
+              child: BlocBuilder<LeadListBloc, LeadListState>(
+                builder: (context, state) {
+                  if (state is LeadListLoading || state is LeadListInitial) {
+                    return const LeadListSkeleton();
+                  }
+
+                  if (state is LeadListError) {
+                    return AppErrorView(
+                      message: state.message,
+                      onRetry: () => context.read<LeadListBloc>().add(
+                        const LeadListRefresh(),
+                      ),
+                    );
+                  }
+
+                  if (state is LeadListSuccess) {
+                    return LeadListPortrait(
+                      leads: state.leads,
+                      filtro: state.filtro,
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

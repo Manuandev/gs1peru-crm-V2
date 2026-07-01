@@ -70,6 +70,19 @@ class Lead extends Equatable {
   String get nombreCompleto =>
       '$nombre $apellidoPaterno $apellidoMaterno'.trim();
 
+  /// Id de estado a mostrar/agrupar: si el lead tiene un sub-estado
+  /// (idEstadoPadre presente), se usa el padre — ej. "Con ficha" agrupa
+  /// visualmente bajo "En desarrollo".
+  String get idEstadoEfectivo =>
+      (idEstadoPadre?.isNotEmpty ?? false) ? idEstadoPadre! : idEstado;
+
+  /// Descripción de estado a mostrar — misma regla que [idEstadoEfectivo].
+  String get estadoEfectivo => (idEstadoPadre?.isNotEmpty ?? false)
+      ? (descripcionEstadoPadre?.isNotEmpty ?? false)
+          ? descripcionEstadoPadre!
+          : estado
+      : estado;
+
   const Lead({
     required this.idLead,
     required this.idContacto,

@@ -1,4 +1,4 @@
-﻿// lib/features/lead/presentation/widgets/list/lead_card.dart
+// lib/features/lead/presentation/widgets/list/lead_card.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -8,7 +8,6 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadCard extends StatefulWidget {
   final Lead lead;
-  final bool modoCompacto;
   final VoidCallback? onTap;
   final VoidCallback? onWhatsAppTap;
   final VoidCallback? onChatTap;
@@ -17,7 +16,6 @@ class LeadCard extends StatefulWidget {
   const LeadCard({
     super.key,
     required this.lead,
-    this.modoCompacto = false,
     this.onTap,
     this.onWhatsAppTap,
     this.onChatTap,
@@ -53,15 +51,21 @@ class _LeadCardState extends State<LeadCard> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return widget.modoCompacto ? _buildCompacta() : _buildDetallada();
+  String get _subtitulo {
+    final l = widget.lead;
+    final partes = [
+      if (l.evento.isNotEmpty) l.evento,
+      if (l.interes.isNotEmpty) l.interes,
+      if (l.nombreEmpresa.isNotEmpty) l.nombreEmpresa,
+    ];
+    return partes.isEmpty ? '—' : partes.join(' · ');
   }
 
-  // ── Contenedor base compartido ──────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.lead;
+    final colorBorde = AppSocialUtils.colorEstado(l.idEstadoEfectivo);
 
-  Widget _buildBase({required Widget content}) {
-    final colorBorde = AppSocialUtils.colorEstado(widget.lead.idEstado);
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
@@ -83,201 +87,83 @@ class _LeadCardState extends State<LeadCard> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  width: AppSizing.cardBorderEstadoAncho,
-                  color: colorBorde,
+                Container(width: AppSizing.cardBorderEstadoAncho, color: colorBorde),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.sm,
+                      AppSpacing.sm,
+                      AppSpacing.md,
+                      AppSpacing.sm,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Fila principal: avatar + info + timestamp ─────
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _LeadAvatar(lead: l),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          l.nombreCompleto,
+                                          style: AppTextStyles.bodyMedium.copyWith(
+                                            fontWeight: AppTextStyles.weightSemiBold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (l.idCanal > 0) ...[
+                                        const SizedBox(width: AppSpacing.xs),
+                                        _CanalPill(lead: l),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.xxs),
+                                  Text(
+                                    _subtitulo,
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            _TimestampColumn(elapsed: _elapsed, lead: l),
+                          ],
+                        ),
+
+                        const SizedBox(height: AppSpacing.sm),
+
+                        // ── Acciones ───────────────────────────────────
+                        LeadCardActions(
+                          lead: l,
+                          onWhatsAppTap: widget.onWhatsAppTap,
+                          onVerDetalleTap: widget.onTap,
+                          onChatTap: widget.onChatTap,
+                          onStarTap: widget.onStarTap,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                Expanded(child: content),
               ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  // ── Vista detallada ─────────────────────────────────────────────────────────
-
-  Widget _buildDetallada() {
-    return _buildBase(
-      content: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.sm,
-          AppSpacing.sm,
-          AppSpacing.md,
-          AppSpacing.xs,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Fila principal: avatar + info + timestamp ─────────────
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _LeadAvatar(lead: widget.lead),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.lead.nombreCompleto,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: AppTextStyles.weightSemiBold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      _LeadEstadoRow(lead: widget.lead),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                _TimestampDetallada(elapsed: _elapsed, lead: widget.lead),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.xs),
-
-            // ── Subtítulo ─────────────────────────────────────────────
-            Text(
-              _subtitulo,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            const SizedBox(height: AppSpacing.xs),
-
-            // ── Acciones ──────────────────────────────────────────────
-            Align(
-              alignment: Alignment.centerRight,
-              child: LeadCardActions(
-                lead: widget.lead,
-                onWhatsAppTap: widget.onWhatsAppTap,
-                onChatTap: widget.onChatTap,
-                onStarTap: widget.onStarTap,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Vista compacta ──────────────────────────────────────────────────────────
-
-  Widget _buildCompacta() {
-    final colorElapsed = ElapsedTimeUtils.colorFromElapsed(_elapsed);
-    final colorEstado = AppSocialUtils.colorEstado(widget.lead.idEstado);
-    return _buildBase(
-      content: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Avatar ────────────────────────────────────────────────
-            _LeadAvatar(lead: widget.lead),
-            const SizedBox(width: AppSpacing.sm),
-
-            // ── Info central ──────────────────────────────────────────
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.lead.nombreCompleto,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: AppTextStyles.weightSemiBold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  // const SizedBox(height: AppSpacing.xxs),
-                  // _LeadEstadoRow(lead: widget.lead),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    _subtitulo,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-
-            // ── Columna derecha: tiempo + estado | iconos ─────────────
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      ElapsedTimeUtils.formatHyM(_elapsed),
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: colorElapsed,
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      widget.lead.estado,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: colorEstado,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Column(
-                  children: [
-                    if (widget.lead.tieneConversacionAbierta == true) ...[
-                      _IconoCompacto(
-                        icon: AppIcons.chat,
-                        color: AppColors.primary,
-                        onTap: widget.onChatTap,
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                    ],
-                    _IconoCompacto(
-                      icon: widget.lead.isFavorito
-                          ? AppIcons.starFilled
-                          : AppIcons.star,
-                      color: widget.lead.isFavorito
-                          ? AppColors.favorito
-                          : AppColors.textDisabled,
-                      onTap: widget.onStarTap,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  String get _subtitulo {
-    final partes = [
-      if (widget.lead.evento.isNotEmpty) widget.lead.evento,
-      if (widget.lead.interes.isNotEmpty) widget.lead.interes,
-      if (widget.lead.nombreEmpresa.isNotEmpty) widget.lead.nombreEmpresa,
-    ];
-    return partes.isEmpty ? '—' : partes.join(' · ');
   }
 }
 
@@ -333,56 +219,43 @@ class _LeadAvatar extends StatelessWidget {
   }
 }
 
-/// Fila: ● Estado  ·  [canal icon]  [canal name]
-class _LeadEstadoRow extends StatelessWidget {
+/// Pill pequeño con el nombre del canal, junto al nombre del lead.
+class _CanalPill extends StatelessWidget {
   final Lead lead;
 
-  const _LeadEstadoRow({required this.lead});
+  const _CanalPill({required this.lead});
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = AppSocialUtils.colorEstado(lead.idEstado);
-    return Row(
-      children: [
-        Icon(
-          AppIcons.circuloRelleno,
-          size: AppSizing.iconXxs,
-          color: colorEstado,
+    final color = AppSocialUtils.colorCanalById(lead.idCanal);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+      ),
+      child: Text(
+        lead.canal,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: color,
+          fontWeight: AppTextStyles.weightMedium,
         ),
-        const SizedBox(width: AppSpacing.xs),
-        Text(
-          lead.estado,
-          style: AppTextStyles.labelSmall.copyWith(color: colorEstado),
-        ),
-        if (lead.idCanal > 0) ...[
-          const SizedBox(width: AppSpacing.sm),
-          AppSocialUtils.widgetCanalById(
-            lead.idCanal,
-            size: AppSizing.iconCanalInfo,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              lead.canal,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ],
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }
 
-/// Columna derecha de la tarjeta detallada: tiempo en color + fecha en gris.
-class _TimestampDetallada extends StatelessWidget {
+/// Columna derecha: fecha absoluta + tiempo relativo, y pill de estado.
+class _TimestampColumn extends StatelessWidget {
   final Duration elapsed;
   final Lead lead;
 
-  const _TimestampDetallada({required this.elapsed, required this.lead});
+  const _TimestampColumn({required this.elapsed, required this.lead});
 
   @override
   Widget build(BuildContext context) {
@@ -390,39 +263,26 @@ class _TimestampDetallada extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          ElapsedTimeUtils.formatHyM(elapsed),
-          style: AppTextStyles.bodySmall.copyWith(
-            color: ElapsedTimeUtils.colorFromElapsed(elapsed),
-            fontWeight: AppTextStyles.weightSemiBold,
+          lead.fechaHora.formatConDia(),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: AppSpacing.xxs),
         Text(
-          lead.fechaHora.formatSinHoy(),
+          'Hace ${ElapsedTimeUtils.formatHoMoS(elapsed)}',
           style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
+            color: ElapsedTimeUtils.colorFromElapsed(elapsed),
+            fontWeight: AppTextStyles.weightMedium,
           ),
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        AppSocialUtils.chipEstado(
+          lead.idEstadoEfectivo,
+          label: lead.estadoEfectivo,
+          fontSize: AppTextStyles.sizeXs,
         ),
       ],
     );
   }
 }
-
-/// Ícono táctil sin fondo — para la columna derecha del modo compacto.
-class _IconoCompacto extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-
-  const _IconoCompacto({required this.icon, required this.color, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Icon(icon, size: AppSizing.iconSm, color: color),
-    );
-  }
-}
-

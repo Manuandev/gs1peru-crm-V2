@@ -422,6 +422,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
         _handleUpdatePantalla(event.message, emit);
       case 'UPDATE_MENSAJE_WHATSAPP':
         _handleUpdateMensaje(event.message, emit);
+      case 'ERROR_PANTALLA_WHATSAPP':
+        _handleErrorPantalla(event.message, emit);
       default:
         break;
     }
@@ -566,6 +568,35 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     // Actualizar solo el estado del mensaje
     currentMessages[msgIndex] = currentMessages[msgIndex].copyWith(
       estadoEntrega: payload.estado,
+    );
+
+    emit(currentState.copyWith(messages: currentMessages));
+  }
+
+  // ── ERROR_PANTALLA_WHATSAPP — el servidor falló al procesar el envío ───────
+
+  void _handleErrorPantalla(
+    WebSocketMessage message,
+    Emitter<ChatDetailState> emit,
+  ) {
+    if (state is! ChatDetailSuccess) return;
+    final currentState = state as ChatDetailSuccess;
+    final payload = ErrorPantallaWhatsAppPayload.fromMessage(message);
+    if (payload == null) return;
+    if (payload.idChatCab != _currentChatCab) return;
+
+    final currentMessages = List<ChatMessage>.from(currentState.messages);
+
+    // No trae idTokenMeta — se asume el más antiguo aún pendiente de ese chat
+    final pendingIndex = currentMessages.indexWhere(
+      (m) =>
+          m.estadoEntrega == 'wait' &&
+          (m.direccionMensaje == 'ASE' || m.direccionMensaje == 'AIA'),
+    );
+    if (pendingIndex == -1) return;
+
+    currentMessages[pendingIndex] = currentMessages[pendingIndex].copyWith(
+      estadoEntrega: 'failed',
     );
 
     emit(currentState.copyWith(messages: currentMessages));

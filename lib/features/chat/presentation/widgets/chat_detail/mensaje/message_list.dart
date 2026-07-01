@@ -69,6 +69,7 @@ class MessageList extends StatelessWidget {
             !_isSameDay(message.fechaHora, previousMessage.fechaHora);
 
         return Column(
+          key: ValueKey(message.idTokenMeta),
           children: [
             if (showDateSeparator) _DateSeparator(fecha: message.fechaHora),
             MessageBubble(

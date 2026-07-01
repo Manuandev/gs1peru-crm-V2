@@ -8,8 +8,12 @@ class MessageUrlHelper {
 
   /// Detecta si el archivo pertenece a la carpeta de plantillas del servidor.
   /// La ruta del servidor termina en \PLANTILLAS (ej: ...ARCHIVOS_WSP\PLANTILLAS)
+  /// También se considera plantilla si tipo == 'template': la confirmación en
+  /// vivo (UPDATE_PANTALLA_WHATSAPP) no trae rutaArchivo, solo se completa al
+  /// recargar desde BD.
   static bool isPlantillaFile(ChatMessage message) =>
-      message.rutaArchivo.contains(r'\PLANTILLAS');
+      message.rutaArchivo.contains(r'\PLANTILLAS') ||
+      message.tipo == 'template';
 
   /// Construye la URL del archivo.
   /// - Si es un archivo de plantilla → {urlBase}PLANTILLAS/{nombre}{ext}

@@ -89,7 +89,10 @@ class _LeadCardSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -105,25 +108,21 @@ class _LeadCardSkeleton extends StatelessWidget {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Fila superior: avatar + info + timestamp
+          // Avatar chico + info (nombre/fecha, oportunidad/hace-X/estado, empresa)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar circular
               SkeletonBox(
-                width: AppSizing.avatarMd,
-                height: AppSizing.avatarMd,
+                width: AppSizing.avatarSm,
+                height: AppSizing.avatarSm,
                 borderRadius: AppSizing.radiusCircular,
               ),
-              SizedBox(width: AppSpacing.md),
-              // Info central: nombre, canal·interés, empresa
+              SizedBox(width: AppSpacing.xs),
               Expanded(child: _InfoSkeleton()),
-              // Timestamp derecho: fecha, elapsed, badge de estado
-              _TimestampSkeleton(),
             ],
           ),
-          SizedBox(height: AppSpacing.sm),
-          // Botones de acción
+          SizedBox(height: AppSpacing.xs),
+          // Botones de acción, en fila
           _AccionesSkeleton(),
         ],
       ),
@@ -131,7 +130,7 @@ class _LeadCardSkeleton extends StatelessWidget {
   }
 }
 
-// Info central skeleton: espejo de _LeadInfo (nombre + canal·interés + empresa).
+// Info skeleton: espejo de _LeadInfo (nombre+fecha, oportunidad+hace-X+estado, empresa).
 class _InfoSkeleton extends StatelessWidget {
   const _InfoSkeleton();
 
@@ -142,7 +141,7 @@ class _InfoSkeleton extends StatelessWidget {
       children: [
         SkeletonBox(
           width: AppSizing.skeletonNameWidth,
-          height: AppSizing.skeletonTitleHeight,
+          height: AppSizing.skeletonLineHeight,
         ),
         SizedBox(height: AppSpacing.xxs),
         SkeletonBox(
@@ -159,37 +158,7 @@ class _InfoSkeleton extends StatelessWidget {
   }
 }
 
-// Timestamp derecho skeleton: espejo de _LeadTimestamp (fecha + elapsed + chipEstado).
-class _TimestampSkeleton extends StatelessWidget {
-  const _TimestampSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        SkeletonBox(
-          width: AppSizing.skeletonLabelWidth,
-          height: AppSizing.skeletonLineHeight,
-        ),
-        SizedBox(height: AppSpacing.xs),
-        SkeletonBox(
-          width: AppSizing.skeletonLabelWidth,
-          height: AppSizing.skeletonLineHeight,
-        ),
-        SizedBox(height: AppSpacing.xs),
-        // Chip de estado (pill)
-        SkeletonBox(
-          width: AppSizing.skeletonChipWidthSm,
-          height: AppSizing.skeletonChipHeight,
-          borderRadius: AppSizing.radiusCircular,
-        ),
-      ],
-    );
-  }
-}
-
-// Fila de botones de acción skeleton: espejo de LeadCardActions (chat + estrella).
+// Botones de acción skeleton: espejo de LeadCardActions (WhatsApp chico + Ver detalle chico, en fila).
 class _AccionesSkeleton extends StatelessWidget {
   const _AccionesSkeleton();
 
@@ -198,15 +167,15 @@ class _AccionesSkeleton extends StatelessWidget {
     return const Row(
       children: [
         SkeletonBox(
-          width: AppSizing.buttonHeightSmall,
-          height: AppSizing.buttonHeightSmall,
-          borderRadius: AppSizing.radiusCircular,
+          width: AppSizing.miniActionButton,
+          height: AppSizing.miniActionButton,
+          borderRadius: AppSizing.radiusMd,
         ),
-        SizedBox(width: AppSpacing.md),
+        SizedBox(width: AppSpacing.xs),
         SkeletonBox(
-          width: AppSizing.buttonHeightSmall,
-          height: AppSizing.buttonHeightSmall,
-          borderRadius: AppSizing.radiusCircular,
+          width: AppSizing.skeletonChipWidthSm,
+          height: AppSizing.miniActionButton,
+          borderRadius: AppSizing.radiusMd,
         ),
       ],
     );

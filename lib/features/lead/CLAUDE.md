@@ -16,8 +16,8 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 - `LeadListSkeleton` (list/) → skeleton de carga de la lista: chips placeholder + 7 cards placeholder
 - `LeadListPortrait` (list/) → StatelessWidget: chips + `LeadListStatsRow` + lista de `LeadCard`s en el orden que entrega el bloc (sin selector de orden — descartado por decisión de negocio)
 - `LeadListStatsRow` (list/) → 3 tarjetas resumen (Nuevos / En gestión / Listos para propuesta) con conteos de `LeadListBloc`; mismo tamaño en las 3 (`IntrinsicHeight` + `CrossAxisAlignment.stretch`), orden interno: ícono → etiqueta → número (coloreado azul/verde/morado) → palabra "casos" fija
-- `LeadCard` (list/) → único estilo (ya no hay modo compacto/detallado): borde izquierdo por estado efectivo, avatar+badge canal, pill de canal junto al nombre, timestamp + chip de estado, fila de acciones
-- `LeadCardActions` (list/) → botón WhatsApp, botón "Ver detalle" y menú "⋯" (favorito / abrir chat)
+- `LeadCard` (list/) → compacta, borde izquierdo por estado efectivo. Avatar chico (`avatarRadiusSm`, mismo estilo que `ChatTile` de Conversaciones — color por nombre + `AppIcons.user`, sin iniciales ni badge de canal) a la izquierda; a su derecha 3 líneas: (1) nombre + ícono de canal inline (sin texto/pill, `AppSocialUtils.widgetCanalById`) ... fecha alineada a la derecha; (2) oportunidad (`lead.evento`, negrita chica) ... "Hace X" + chip de estado (el chip siempre comparte esta fila con hace-X, nunca va solo en su propia línea); (3) empresa (`lead.nombreEmpresa`, sin negrita). Debajo, `LeadCardActions` en fila
+- `LeadCardActions` (list/) → 2 botones chicos en fila (`AppSizing.miniActionButton` = 32dp): WhatsApp cuadrado verde (`AppSocialUtils.colorCanalById(1)`, ícono only) + "Ver detalle" con borde y texto en `colorScheme.primary`. El menú "⋯" (favorito / abrir chat) se quitó — `ToggleFavoritoPressed` sigue viva en `LeadListBloc` pero sin trigger de UI en la lista por ahora
 - `LeadListFilterChips` (list/) → 5 chips (Todos/Asesores*/Nuevos/En gestión/Propuesta — la etiqueta "En gestión" mapea al filtro `enDesarrollo`) en fila con scroll horizontal (`SingleChildScrollView`). Todos/Asesores llevan ícono (`AppIcons.filter` / `AppIcons.userFilled`); Nuevos/En gestión/Propuesta llevan un punto de color (azul `AppColors.info` / verde `AppColors.success` / morado `AppColors.purple`). *Asesores solo lo ve el moderador. El chip "Asesores" nunca aplica el filtro directo — `LeadListPortrait` intercepta su tap y abre `LeadAsesorPickerModal`
 - `LeadAsesorPickerModal` (list/) → bottom sheet con buscador (nombre o `codUser`), reactivo a `CatalogsBloc` (`BlocBuilder<CatalogsBloc, CatalogsState>`, no recibe la lista como snapshot estático); cada fila muestra avatar (iniciales + color), nombre, código, punto verde si `disponible` y el conteo de leads (`conteosPorAsesor`, calculado en el bloc sobre `_allLeads`, no en el backend). Ícono de refrescar en el header dispara `CatalogsLoadRequested` (reusa el catálogo completo — sin endpoint dedicado, ver nota abajo). Retorna el `codUser` elegido o `null`. `LeadListPortrait` interpreta `null` (back, tap fuera, botón cerrar) como "volver a Todos" — nunca deja el filtro a medias
 - `LeadDetalleView` (detalle/) → layout principal del detalle con todas las secciones
@@ -75,7 +75,7 @@ enum LeadListFiltro { todos, asesores, nuevos, enDesarrollo, propuesta }
   preseleccionado. Usado por `CardTotalesHome` (dashboard de Home): Nuevos → `nuevos`,
   En gestión → `enDesarrollo`, Propuestas → `propuesta`. Sin `filtroInicial` (ej. desde el
   Drawer) el filtro por defecto es `todos`.
-- Detalle de chat desde lead → `context.goToDetalleChat(idLead: lead.idLead)` (apila)
+- Botón WhatsApp de `LeadCard` → `context.goToDetalleChat(idNumero: lead.idNumero, idLead: lead.idLead)` (apila)
 
 ### Campos principales de Lead
 ```dart

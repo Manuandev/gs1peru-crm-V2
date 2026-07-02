@@ -18,6 +18,7 @@ class PrioridadTileHome extends StatefulWidget {
 class _PrioridadTileHomeState extends State<PrioridadTileHome> {
   late Duration _elapsed;
   late Timer _timer;
+  bool _gestionando = false;
 
   @override
   void initState() {
@@ -42,13 +43,17 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
   }
 
   Future<void> _gestionar() async {
+    setState(() => _gestionando = true);
+    final idNumero = widget.prioridad.idNumero;
     final result = await context.read<HomeRepository>().gestionarPrioridad(
-      widget.prioridad.idNumero,
+      idNumero,
     );
     if (!mounted) return;
     switch (result) {
       case CrudOk(:final message):
         AppSnackBar.success(context, message);
+        context.read<HomeBloc>().add(HomePrioridadGestionada(idNumero));
+        return; // el tile desaparece de la lista — no hace falta setState
       case CrudAlert(:final message):
         AppSnackBar.warning(context, message);
       case CrudError(:final message):
@@ -58,6 +63,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
       case CrudEmpty():
         AppSnackBar.error(context, 'Respuesta inesperada del servidor.');
     }
+    setState(() => _gestionando = false);
   }
 
   @override
@@ -180,7 +186,10 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
           const SizedBox(width: AppSpacing.xxs),
 
           // ─── Botón Gestionar ─────────────────────────────────────
-          _GestionarButton(onTap: _gestionar),
+          _GestionarButton(
+            onTap: _gestionando ? null : _gestionar,
+            isLoading: _gestionando,
+          ),
         ],
       ),
     );
@@ -244,9 +253,10 @@ class _MiniActionButton extends StatelessWidget {
 
 // ─── Botón "Gestionar" outlined azul compacto ───────────────────────────────
 class _GestionarButton extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
-  const _GestionarButton({required this.onTap});
+  const _GestionarButton({required this.onTap, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -254,9 +264,20 @@ class _GestionarButton extends StatelessWidget {
       height: AppSizing.miniActionButtonSm,
       child: OutlinedButton.icon(
         onPressed: onTap,
-        icon: Icon(AppIcons.checkSingle, size: AppSizing.iconXxs),
+        icon: isLoading
+            ? SizedBox(
+                width: AppSizing.iconXxs,
+                height: AppSizing.iconXxs,
+                child: CircularProgressIndicator(
+                  strokeWidth: AppSizing.spinnerStrokeSmall,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.primary,
+                  ),
+                ),
+              )
+            : Icon(AppIcons.checkSingle, size: AppSizing.iconXxs),
         label: Text(
-          'Gestionar',
+          isLoading ? 'Gestionando…' : 'Gestionar',
           style: AppTextStyles.labelSmall.copyWith(
             fontSize: AppTextStyles.sizeSub,
             fontWeight: AppTextStyles.weightSemiBold,

@@ -30,26 +30,65 @@ class PrioridadSectionHome extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ...prioridades.take(_maxVisible).toList().asMap().entries.map((e) {
-              final isLast =
-                  e.key == (prioridades.length.clamp(0, _maxVisible) - 1);
-              return Column(
+        child: prioridades.isEmpty
+            ? const _EstadoVacioPrioridades()
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  PrioridadTileHome(prioridad: e.value),
-                  if (!isLast)
-                    Divider(
-                      color: colorScheme.outlineVariant.withValues(
-                        alpha: AppColors.opacityDivider,
-                      ),
-                    ),
+                  ...prioridades
+                      .take(_maxVisible)
+                      .toList()
+                      .asMap()
+                      .entries
+                      .map((e) {
+                        final isLast =
+                            e.key ==
+                            (prioridades.length.clamp(0, _maxVisible) - 1);
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PrioridadTileHome(prioridad: e.value),
+                            if (!isLast)
+                              Divider(
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: AppColors.opacityDivider,
+                                ),
+                              ),
+                          ],
+                        );
+                      }),
                 ],
-              );
-            }),
+              ),
+      ),
+    );
+  }
+}
+
+class _EstadoVacioPrioridades extends StatelessWidget {
+  const _EstadoVacioPrioridades();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              AppIcons.checkCircle,
+              size: AppSizing.iconLg,
+              color: AppColors.success,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'No hay prioridades por ahora',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: AppTextStyles.weightSemiBold,
+              ),
+            ),
           ],
         ),
       ),

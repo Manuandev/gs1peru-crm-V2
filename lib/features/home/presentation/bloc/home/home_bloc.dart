@@ -45,6 +45,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       super(const HomeInitial()) {
     on<HomeStarted>(_onStarted);
     on<HomeRefresh>(_onRefresh);
+    on<HomePrioridadGestionada>(_onPrioridadGestionada);
     // Recarga automática cuando el moderador cambia entre "Mis casos" / "Equipo"
     _filtroSub = FiltroCubit.instance.stream.listen((_) => add(HomeRefresh()));
   }
@@ -63,6 +64,23 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _onRefresh(HomeRefresh event, Emitter<HomeState> emit) async {
     emit(const HomeLoading());
     await _loadData(emit);
+  }
+
+  void _onPrioridadGestionada(
+    HomePrioridadGestionada event,
+    Emitter<HomeState> emit,
+  ) {
+    final current = state;
+    if (current is! HomeLoaded) return;
+    final prioridades = current.home.prioridades
+        .where((p) => p.idNumero != event.idNumero)
+        .toList();
+    emit(
+      HomeLoaded(
+        home: current.home.copyWith(prioridades: prioridades),
+        usuario: current.usuario,
+      ),
+    );
   }
 
   Future<void> _loadData(Emitter<HomeState> emit) async {

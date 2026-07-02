@@ -24,17 +24,11 @@ class AsesorSectionHome extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // ── Encabezado ───────────────────────────────────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Resumen por asesor',
-              style: AppTextStyles.titleMedium.copyWith(
-                fontWeight: AppTextStyles.weightBold,
-              ),
-            ),
-            CustomTextButton(text: 'Ver todos', onPressed: () {}),
-          ],
+        Text(
+          'Resumen por asesor',
+          style: AppTextStyles.titleMedium.copyWith(
+            fontWeight: AppTextStyles.weightBold,
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
 

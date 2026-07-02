@@ -26,6 +26,16 @@ class HomeRefresh extends HomeEvent {
   const HomeRefresh();
 }
 
+/// Una prioridad se gestionó correctamente (botón "Gestionar").
+/// Quita el registro de `state.prioridades` sin volver a pedir todo el Home.
+class HomePrioridadGestionada extends HomeEvent {
+  final int idNumero;
+  const HomePrioridadGestionada(this.idNumero);
+
+  @override
+  List<Object?> get props => [idNumero];
+}
+
 // ── NOTA SOBRE LOGOUT ───────────────────────────────────────
 // El logout NO se maneja aquí.
 // El Drawer dispara: context.read<AuthBloc>().add(AuthLogoutRequested())

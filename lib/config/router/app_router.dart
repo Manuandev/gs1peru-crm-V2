@@ -221,7 +221,10 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return ContactoDetallePage(idContacto: args['idContacto'] as int);
+        return ContactoDetallePage(
+          idContacto: args['idContacto'] as int,
+          idLead: args['idLead'] as int,
+        );
       },
     ),
 

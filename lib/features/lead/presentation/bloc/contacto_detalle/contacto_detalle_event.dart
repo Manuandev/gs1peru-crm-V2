@@ -8,8 +8,9 @@ sealed class ContactoDetalleEvent extends Equatable {
 
 final class ContactoDetalleStarted extends ContactoDetalleEvent {
   final int idContacto;
-  const ContactoDetalleStarted(this.idContacto);
+  final int idLead;
+  const ContactoDetalleStarted(this.idContacto, this.idLead);
 
   @override
-  List<Object?> get props => [idContacto];
+  List<Object?> get props => [idContacto, idLead];
 }

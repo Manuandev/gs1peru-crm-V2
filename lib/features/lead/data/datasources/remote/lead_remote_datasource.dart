@@ -46,37 +46,37 @@ class LeadRemoteDatasource {
       return const CrudError('ID de lead inválido. No se puede actualizar.');
     }
 
-    final ip     = await _deviceInfo.getLocalIp();
+    final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
 
     final String body = [
-      lead.idContacto,                   // field1  ID_CONTACTO
-      lead.idLead,                       // field2  ID_LEAD
-      lead.idEstado,                     // field3  ID_ESTADO
-      _orEmpty(lead.idCampania),         // field4  ID_CAMPANIA
-      _orEmpty(lead.idEvento),           // field5  ID_OPORTUNIDAD
-      _orEmpty(lead.idCanal),            // field6  ID_CANAL
-      _orEmpty(lead.idInteres),          // field7  ID_INTERES
-      lead.nombre,                       // field8  NOMBRES
-      lead.apellidoPaterno,              // field9  APELLIDO_P
-      lead.apellidoMaterno,              // field10 APELLIDO_M
-      nuevosCorreos,                     // field11 nuevos correos ± separados
-      nuevosPrefijos,                    // field12 nuevos prefijos ± separados
-      nuevosNumeros,                     // field13 nuevos números ± separados (mismo índice que field12)
+      lead.idContacto, // field1  ID_CONTACTO
+      lead.idLead, // field2  ID_LEAD
+      lead.idEstado, // field3  ID_ESTADO
+      _orEmpty(lead.idCampania), // field4  ID_CAMPANIA
+      _orEmpty(lead.idEvento), // field5  ID_OPORTUNIDAD
+      _orEmpty(lead.idCanal), // field6  ID_CANAL
+      _orEmpty(lead.idInteres), // field7  ID_INTERES
+      lead.nombre, // field8  NOMBRES
+      lead.apellidoPaterno, // field9  APELLIDO_P
+      lead.apellidoMaterno, // field10 APELLIDO_M
+      nuevosCorreos, // field11 nuevos correos ± separados
+      nuevosPrefijos, // field12 nuevos prefijos ± separados
+      nuevosNumeros, // field13 nuevos números ± separados (mismo índice que field12)
       // TODO(mejora): unificar field12+field13 en un solo string +51¶999000001±+1¶987654321
       // usando AppConstants.sepComodin3 (¶) entre prefijo/número y sepComodin2 (±) entre entradas.
       // Actualizar getter nuevosTelefonosStr en EditLeadContactoSection y SP para usar
       // fnSplitStringTable05(@TELEFONOS_STR, @sepComodin2, @sepComodin3).
-      _orEmpty(lead.precioBase),         // field14 PRECIO_BASE
-      _orEmpty(lead.precio),             // field15 PRECIO (costoFinal calculado)
+      _orEmpty(lead.precioBase), // field14 PRECIO_BASE
+      _orEmpty(lead.precio), // field15 PRECIO (costoFinal calculado)
       // lead.cantidad es int: el SP castea field16 con TRY_CAST(... AS INT) —
       // un string con decimales como "5.0" hace que TRY_CAST devuelva NULL y
       // nunca se guarda IN_PARTICIPANTES.
-      _orEmpty(lead.cantidad),           // field16 CANTIDAD
-      _orEmpty(lead.descuento),          // field17 DESCUENTO
-      _session.codUser,                  // field18 ID_USUARIO
-      ip,                                // field19 IP_USUARIO
-      coords,                            // field20 LL_USUARIO
+      _orEmpty(lead.cantidad), // field16 CANTIDAD
+      _orEmpty(lead.descuento), // field17 DESCUENTO
+      _session.codUser, // field18 ID_USUARIO
+      ip, // field19 IP_USUARIO
+      coords, // field20 LL_USUARIO
       // TODO: descomentar cuando [CRM].[CSV_LEADS_CUD_APP] task 'U' lea más de
       // 20 fields — hoy Fnsplitstringtable25 solo extrae field1..field20, así
       // que estos 4 se mandaban al pedo (el SP los ignora por completo).
@@ -86,7 +86,10 @@ class LeadRemoteDatasource {
       // correoEditar,                   // field24 editar correo actual ('' si no cambió)
     ].join(camp);
 
-    final result = await _api.postSafe(ApiConstants.urlLeadsCud, '$body${sep}U');
+    final result = await _api.postSafe(
+      ApiConstants.urlLeadsCud,
+      '$body${sep}U',
+    );
 
     return switch (result) {
       ApiSuccess(:final data) => parseCrudResponse(data),
@@ -109,11 +112,33 @@ class LeadRemoteDatasource {
     };
   }
 
+  // Mismo patrón que ChatRemoteDatasource.getInfoLead — task DT, un solo
+  // Lead (sin comentarios). Usado por ContactoDetalleBloc.
+  Future<Lead> getInfoLead(int idLead) async {
+    final String body = '$idLead${sep}DT';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => _parsePrimerLead(data),
+      ApiEmpty() => throw const AppException('No se encontró el lead.'),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  Lead _parsePrimerLead(String raw) {
+    final leads = LeadModel.parseList(raw);
+    if (leads.isEmpty) {
+      throw const AppException('No se encontró el lead.');
+    }
+    return leads.first;
+  }
+
   Future<List<NegociacionModel>> getLeadNegociaciones(int idLead) async {
     final String body = '$idLead${sep}LN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
-
 
     return switch (result) {
       ApiSuccess(:final data) => NegociacionModel.parseList(data),

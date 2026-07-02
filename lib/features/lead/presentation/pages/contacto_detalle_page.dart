@@ -6,8 +6,13 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoDetallePage extends StatelessWidget {
   final int idContacto;
+  final int idLead;
 
-  const ContactoDetallePage({super.key, required this.idContacto});
+  const ContactoDetallePage({
+    super.key,
+    required this.idContacto,
+    required this.idLead,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +24,8 @@ class ContactoDetallePage extends StatelessWidget {
         obtenerNegociaciones: GetNegociacionesLead(
           context.read<LeadRepository>(),
         ),
-      )..add(ContactoDetalleStarted(idContacto)),
-      child: ContactoDetalleView(idContacto: idContacto),
+      )..add(ContactoDetalleStarted(idContacto, idLead)),
+      child: ContactoDetalleView(idContacto: idContacto, idLead: idLead),
     );
   }
 }

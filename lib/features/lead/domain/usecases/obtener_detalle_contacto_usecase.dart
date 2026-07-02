@@ -7,6 +7,6 @@ class ObtenerDetalleContactoUseCase {
 
   ObtenerDetalleContactoUseCase(this._repository);
 
-  Future<ContactoDetalle> call(int idContacto) =>
-      _repository.obtenerDetalleContacto(idContacto);
+  Future<ContactoDetalle> call(int idLead) =>
+      _repository.obtenerDetalleContacto(idLead);
 }

@@ -8,6 +8,7 @@ class ContactoDetalle extends Equatable {
   final String apellido;
   final String cargo;
   final String empresa;
+  final String razonSocial;
   final String tipoDocumento;
   final String numDocumento;
   final String prefijo;
@@ -29,6 +30,7 @@ class ContactoDetalle extends Equatable {
     required this.apellido,
     required this.cargo,
     required this.empresa,
+    required this.razonSocial,
     required this.tipoDocumento,
     required this.numDocumento,
     required this.prefijo,
@@ -48,6 +50,7 @@ class ContactoDetalle extends Equatable {
     apellido,
     cargo,
     empresa,
+    razonSocial,
     tipoDocumento,
     numDocumento,
     prefijo,

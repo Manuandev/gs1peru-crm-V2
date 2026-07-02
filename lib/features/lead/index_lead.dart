@@ -1,12 +1,10 @@
 // lib/features/lead/index_lead.dart
 
 export 'data/datasources/remote/lead_remote_datasource.dart';
-export 'data/datasources/remote/contacto_detalle_remote_datasource.dart';
 
 export 'data/models/lead_model.dart';
 export 'data/models/lead_detalle_model.dart';
 export 'data/models/comentario_lead_model.dart';
-export 'data/models/contacto_detalle_model.dart';
 export 'data/models/negociacion_lead_model.dart';
 export 'data/models/historial_comentario_model.dart';
 

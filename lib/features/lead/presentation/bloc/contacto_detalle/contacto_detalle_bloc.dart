@@ -24,8 +24,8 @@ class ContactoDetalleBloc
   ) async {
     emit(const ContactoDetalleCargando());
     try {
-      final contacto = await _obtenerDetalle(event.idContacto);
-      final negociaciones = await _obtenerNegociaciones(event.idContacto);
+      final contacto = await _obtenerDetalle(event.idLead);
+      final negociaciones = await _obtenerNegociaciones(event.idLead);
       emit(ContactoDetalleCargado(
         contacto: contacto,
         negociaciones: negociaciones,

@@ -126,3 +126,25 @@ class Negociacion extends Equatable {
     );
   }
 }
+
+/// Helpers sobre una lista de negociaciones de un mismo contacto.
+extension NegociacionesX on List<Negociacion> {
+  /// La negociación más antigua (por fecha de creación) — el "primer lead"
+  /// del contacto. Sus campos (estado, canal, campaña, oportunidad) son los
+  /// que se muestran en el stepper y en la pestaña de Información.
+  Negociacion? get primerLead {
+    if (isEmpty) return null;
+    final ordenadas = [...this]
+      ..sort((a, b) => a.fechaHoraCreacion.compareTo(b.fechaHoraCreacion));
+    return ordenadas.first;
+  }
+
+  /// La negociación con la actividad más reciente (por fecha de última
+  /// interacción) — alimenta el campo "Última interacción".
+  Negociacion? get ultimaInteraccion {
+    if (isEmpty) return null;
+    final ordenadas = [...this]
+      ..sort((a, b) => b.fechaHora.compareTo(a.fechaHora));
+    return ordenadas.first;
+  }
+}

@@ -4,12 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoDetalleView extends StatelessWidget {
   final int idContacto;
+  final int idLead;
 
-  const ContactoDetalleView({super.key, required this.idContacto});
+  const ContactoDetalleView({
+    super.key,
+    required this.idContacto,
+    required this.idLead,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +29,7 @@ class ContactoDetalleView extends StatelessWidget {
           return AppErrorView(
             message: state.mensaje,
             onRetry: () => context.read<ContactoDetalleBloc>().add(
-              ContactoDetalleStarted(idContacto),
+              ContactoDetalleStarted(idContacto, idLead),
             ),
           );
         }
@@ -32,6 +38,7 @@ class ContactoDetalleView extends StatelessWidget {
             contacto: state.contacto,
             negociaciones: state.negociaciones,
             idContacto: idContacto,
+            idLead: idLead,
           );
         }
         return const SizedBox.shrink();
@@ -48,15 +55,19 @@ class _ContactoScaffold extends StatelessWidget {
   final ContactoDetalle contacto;
   final List<Negociacion> negociaciones;
   final int idContacto;
+  final int idLead;
 
   const _ContactoScaffold({
     required this.contacto,
     required this.negociaciones,
     required this.idContacto,
+    required this.idLead,
   });
 
   @override
   Widget build(BuildContext context) {
+    final primerLead = negociaciones.primerLead;
+
     return DefaultTabController(
       length: 2,
       child: BasePage(
@@ -75,7 +86,7 @@ class _ContactoScaffold extends StatelessWidget {
           backgroundColor: AppColors.surface,
           onRefresh: () async {
             final bloc = context.read<ContactoDetalleBloc>();
-            bloc.add(ContactoDetalleStarted(idContacto));
+            bloc.add(ContactoDetalleStarted(idContacto, idLead));
             await bloc.stream.firstWhere(
               (s) => s is ContactoDetalleCargado || s is ContactoDetalleError,
             );
@@ -84,6 +95,11 @@ class _ContactoScaffold extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ContactoDetalleHeader(contacto: contacto),
+              if (primerLead != null)
+                ChatDetailFases(
+                  idEstadoActual: primerLead.idEstado,
+                  idEstadoPadre: primerLead.idEstadoPadre,
+                ),
               TabBar(
                 indicator: const UnderlineTabIndicator(
                   borderSide: BorderSide(
@@ -100,7 +116,7 @@ class _ContactoScaffold extends StatelessWidget {
                 ),
                 unselectedLabelStyle: AppTextStyles.labelLarge,
                 tabs: [
-                  const Tab(text: 'Info'),
+                  const Tab(text: 'Información'),
                   Tab(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -118,7 +134,11 @@ class _ContactoScaffold extends StatelessWidget {
               Expanded(
                 child: TabBarView(
                   children: [
-                    ContactoInfoTab(contacto: contacto),
+                    ContactoInfoTab(
+                      contacto: contacto,
+                      primerLead: primerLead,
+                      ultimaInteraccion: negociaciones.ultimaInteraccion,
+                    ),
                     ContactoNegociacionesTab(negociaciones: negociaciones),
                   ],
                 ),

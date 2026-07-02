@@ -26,6 +26,7 @@ class ContactoDetalleSkeleton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _HeaderSkeleton(),
+            _StepperSkeleton(),
             _TabBarSkeleton(),
             _InfoTabSkeleton(),
           ],
@@ -78,6 +79,56 @@ class _HeaderSkeleton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stepper de 4 fases
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StepperSkeleton extends StatelessWidget {
+  const _StepperSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.surface,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: const Row(
+        children: [
+          Expanded(child: _PasoSkeleton()),
+          Expanded(child: _PasoSkeleton()),
+          Expanded(child: _PasoSkeleton()),
+          _PasoSkeleton(),
+        ],
+      ),
+    );
+  }
+}
+
+class _PasoSkeleton extends StatelessWidget {
+  const _PasoSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SkeletonBox(
+          width: AppSizing.skeletonChipWidthSm,
+          height: AppSizing.skeletonLineHeight,
+        ),
+        SizedBox(height: AppSpacing.xs),
+        SkeletonBox(
+          width: AppSizing.chatStepperCircleSize,
+          height: AppSizing.chatStepperCircleSize,
+          borderRadius: AppSizing.radiusCircular,
+        ),
+      ],
     );
   }
 }
@@ -136,11 +187,7 @@ class _InfoTabSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _CardSkeleton(filas: 2),
-          SizedBox(height: AppSpacing.sm),
-          _CardSkeleton(filas: 3),
-          SizedBox(height: AppSpacing.sm),
-          _CardSkeleton(filas: 3),
+          _CardSkeleton(filas: 7),
           SizedBox(height: AppSpacing.lg),
           SkeletonBox(height: AppSizing.buttonHeight),
         ],
@@ -157,6 +204,7 @@ class _CardSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -167,12 +215,7 @@ class _CardSkeleton extends StatelessWidget {
         children: [
           for (int i = 0; i < filas; i++) ...[
             const _FilaSkeleton(),
-            if (i < filas - 1)
-              const Divider(
-                height: AppSizing.hairline,
-                indent: AppSpacing.md,
-                endIndent: AppSpacing.md,
-              ),
+            if (i < filas - 1) const Divider(height: AppSizing.hairline),
           ],
         ],
       ),
@@ -186,37 +229,48 @@ class _FilaSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cuadrado gris del ícono
-          SkeletonBox(
-            width: AppSizing.iconContainerMd,
-            height: AppSizing.iconContainerMd,
-            borderRadius: AppSizing.radiusSm,
-          ),
+          Expanded(child: _CampoSkeleton()),
           SizedBox(width: AppSpacing.sm),
-          // Etiqueta arriba + valor abajo
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SkeletonBox(
-                  width: AppSizing.infoLabelWidth,
-                  height: AppSizing.skeletonLineHeight,
-                ),
-                SizedBox(height: AppSpacing.xxs),
-                SkeletonBox(height: AppSizing.skeletonTitleHeight),
-              ],
-            ),
-          ),
+          Expanded(child: _CampoSkeleton()),
         ],
       ),
+    );
+  }
+}
+
+class _CampoSkeleton extends StatelessWidget {
+  const _CampoSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SkeletonBox(
+          width: AppSizing.iconSm,
+          height: AppSizing.iconSm,
+          borderRadius: AppSizing.radiusXs,
+        ),
+        SizedBox(width: AppSpacing.xs),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SkeletonBox(
+                width: AppSizing.infoLabelWidth,
+                height: AppSizing.skeletonLineHeight,
+              ),
+              SizedBox(height: AppSpacing.xxs),
+              SkeletonBox(height: AppSizing.skeletonTitleHeight),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

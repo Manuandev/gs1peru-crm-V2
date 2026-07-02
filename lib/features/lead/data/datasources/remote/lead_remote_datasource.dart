@@ -112,29 +112,6 @@ class LeadRemoteDatasource {
     };
   }
 
-  // Mismo patrón que ChatRemoteDatasource.getInfoLead — task DT, un solo
-  // Lead (sin comentarios). Usado por ContactoDetalleBloc.
-  Future<Lead> getInfoLead(int idLead) async {
-    final String body = '$idLead${sep}DT';
-
-    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
-
-    return switch (result) {
-      ApiSuccess(:final data) => _parsePrimerLead(data),
-      ApiEmpty() => throw const AppException('No se encontró el lead.'),
-      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
-      ApiError(:final message) => throw AppException(message),
-    };
-  }
-
-  Lead _parsePrimerLead(String raw) {
-    final leads = LeadModel.parseList(raw);
-    if (leads.isEmpty) {
-      throw const AppException('No se encontró el lead.');
-    }
-    return leads.first;
-  }
-
   Future<List<NegociacionModel>> getLeadNegociaciones(int idLead) async {
     final String body = '$idLead${sep}LN';
 

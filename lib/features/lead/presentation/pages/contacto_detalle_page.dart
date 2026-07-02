@@ -2,30 +2,39 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoDetallePage extends StatelessWidget {
-  final int idContacto;
   final int idLead;
 
-  const ContactoDetallePage({
-    super.key,
-    required this.idContacto,
-    required this.idLead,
-  });
+  const ContactoDetallePage({super.key, required this.idLead});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ContactoDetalleBloc(
-        obtenerDetalle: ObtenerDetalleContactoUseCase(
-          context.read<LeadRepository>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => InfoLeadCubit(
+            GetInfoUseCase(context.read<ChatRepository>()),
+            UpdateLeadEstadoUseCase(context.read<ChatRepository>()),
+            UpdateLeadInfoUseCase(context.read<LeadRepository>()),
+          ),
         ),
-        obtenerNegociaciones: GetNegociacionesLead(
-          context.read<LeadRepository>(),
+        BlocProvider(
+          create: (_) => NegociacionesCubit(
+            obtenerNegociacionesUseCase:
+                GetNegociacionesLead(context.read<LeadRepository>()),
+          ),
         ),
-      )..add(ContactoDetalleStarted(idContacto, idLead)),
-      child: ContactoDetalleView(idContacto: idContacto, idLead: idLead),
+        BlocProvider(
+          create: (_) => HistorialLeadCubit(
+            obtenerHistorialUseCase:
+                GetHistorialComentarios(context.read<LeadRepository>()),
+          ),
+        ),
+      ],
+      child: ContactoDetalleView(idLead: idLead),
     );
   }
 }

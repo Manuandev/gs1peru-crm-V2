@@ -40,31 +40,6 @@ class LeadRepositoryImpl implements LeadRepository {
       );
 
   @override
-  Future<ContactoDetalle> obtenerDetalleContacto(int idLead) async {
-    final lead = await _remote.getInfoLead(idLead);
-    return ContactoDetalle(
-      idContacto: lead.idContacto,
-      nombre: lead.nombre,
-      apellido: lead.apellido,
-      cargo: '',
-      empresa: lead.nombreEmpresa,
-      // "Razón social" y "Empresa" son el mismo dato — no hay 2 campos
-      // distintos en el SP DT.
-      razonSocial: lead.nombreEmpresa,
-      tipoDocumento: '',
-      numDocumento: '',
-      prefijo: lead.prefijo,
-      numero: lead.numero,
-      correo: lead.correo,
-      fechaRegistro: '',
-      direccion: '',
-      departamento: '',
-      provincia: '',
-      distrito: '',
-    );
-  }
-
-  @override
   Future<List<NegociacionModel>> obtenerNegociaciones(int idLead) =>
       _remote.getLeadNegociaciones(idLead);
 

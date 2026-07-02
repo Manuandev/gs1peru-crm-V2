@@ -535,6 +535,48 @@ class AppColors {
   static const Color datoInteresBg = Color(0xFFE8F5E9);
 
   // ============================================================
+  // DATO ITEM — Colores de ícono por campo en ContactoInfoTab
+  // Campos de identidad del contacto que no tienen equivalente en
+  // ChatDetailDatosLead — mismo criterio fg/bg que la sección anterior.
+  // ============================================================
+
+  /// Ícono del campo Nombres y apellidos (indigo 700)
+  static const Color datoNombreFg = Color(0xFF3949AB);
+
+  /// Fondo del campo Nombres y apellidos (indigo 50)
+  static const Color datoNombreBg = Color(0xFFE8EAF6);
+
+  /// Ícono del campo Celular (cyan 700)
+  static const Color datoCelularFg = Color(0xFF0097A7);
+
+  /// Fondo del campo Celular (cyan 50)
+  static const Color datoCelularBg = Color(0xFFE0F7FA);
+
+  /// Ícono del campo Correo (deep orange 700)
+  static const Color datoCorreoFg = Color(0xFFE64A19);
+
+  /// Fondo del campo Correo (deep orange 50)
+  static const Color datoCorreoBg = Color(0xFFFBE9E7);
+
+  /// Ícono del campo Empresa (brown 700)
+  static const Color datoEmpresaFg = Color(0xFF5D4037);
+
+  /// Fondo del campo Empresa (brown 50)
+  static const Color datoEmpresaBg = Color(0xFFEFEBE9);
+
+  /// Ícono del campo Fecha de registro (amber 800)
+  static const Color datoFechaRegistroFg = Color(0xFFFF8F00);
+
+  /// Fondo del campo Fecha de registro (amber 50)
+  static const Color datoFechaRegistroBg = Color(0xFFFFF8E1);
+
+  /// Ícono del campo Última interacción (light green 800)
+  static const Color datoUltimaInteraccionFg = Color(0xFF558B2F);
+
+  /// Fondo del campo Última interacción (light green 50)
+  static const Color datoUltimaInteraccionBg = Color(0xFFF1F8E9);
+
+  // ============================================================
   // IA BANNER — ChatDetailPage, banner informativo de bot
   // ============================================================
 

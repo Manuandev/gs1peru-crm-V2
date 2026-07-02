@@ -86,10 +86,8 @@ class LeadListPortrait extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: LeadCard(
                         lead: lead,
-                        onTap: () => context.goToDetalleContacto(
-                          idContacto: lead.idContacto,
-                          idLead: lead.idLead,
-                        ),
+                        onTap: () =>
+                            context.goToDetalleContacto(idLead: lead.idLead),
                         onWhatsAppTap: () => context.goToDetalleChat(
                           idNumero: lead.idNumero,
                           idLead: lead.idLead,

@@ -5,12 +5,14 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoAccionesFooter extends StatelessWidget {
-  final ContactoDetalle contacto;
+  final Lead lead;
 
-  const ContactoAccionesFooter({super.key, required this.contacto});
+  const ContactoAccionesFooter({super.key, required this.lead});
 
   @override
   Widget build(BuildContext context) {
+    final telefono = '${lead.prefijo}${lead.numero}';
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -23,76 +25,42 @@ class ContactoAccionesFooter extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
+        horizontal: AppSpacing.md,
         vertical: AppSpacing.md,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _BotonCircular(
-            icono: AppIcons.phone,
-            colorIcono: AppColors.info,
-            colorFondo: AppColors.infoWithOpacity(0.15),
-            onTap: contacto.numero.isEmpty
-                ? null
-                : () => LauncherUtils.abrirTelefono(
-                      contacto.telefonoCompleto.limpiarTelefono,
-                    ),
+          Expanded(
+            child: CustomOutlinedButton(
+              text: 'WhatsApp',
+              icon: AppIcons.whatsapp,
+              borderColor: AppSocialUtils.colorCanalById(1),
+              foregroundColor: AppSocialUtils.colorCanalById(1),
+              onPressed: lead.numero.isEmpty
+                  ? null
+                  : () => LauncherUtils.abrirWhatsApp(telefono),
+            ),
           ),
-          _BotonCircular(
-            icono: AppIcons.chat,
-            colorIcono: AppColors.textOnDark,
-            colorFondo: AppColors.success,
-            // TODO: navegar a chat del contacto cuando esté definida la pantalla
-            onTap: () {},
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: CustomOutlinedButton(
+              text: 'Llamar',
+              icon: AppIcons.phone,
+              onPressed: lead.numero.isEmpty
+                  ? null
+                  : () => LauncherUtils.abrirTelefono(telefono),
+            ),
           ),
-          _BotonCircular(
-            icono: AppIcons.email,
-            colorIcono: AppColors.textOnDark,
-            colorFondo: AppColors.purple,
-            onTap: contacto.correo.isEmpty
-                ? null
-                : () => LauncherUtils.abrirCorreo(contacto.correo),
-          ),
+          // Editar contacto — pendiente hasta que exista la pantalla de edición.
+          // const SizedBox(width: AppSpacing.sm),
+          // Expanded(
+          //   child: CustomPrimaryButton(
+          //     text: 'Editar',
+          //     icon: AppIcons.edit,
+          //     onPressed: () {},
+          //   ),
+          // ),
         ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Botón circular de acción
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _BotonCircular extends StatelessWidget {
-  final IconData icono;
-  final Color colorIcono;
-  final Color colorFondo;
-  final VoidCallback? onTap;
-
-  const _BotonCircular({
-    required this.icono,
-    required this.colorIcono,
-    required this.colorFondo,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: AppSizing.buttonHeight,
-        height: AppSizing.buttonHeight,
-        decoration: BoxDecoration(
-          color: onTap != null ? colorFondo : AppColors.grey200,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icono,
-          size: AppSizing.iconMd,
-          color: onTap != null ? colorIcono : AppColors.textDisabled,
-        ),
       ),
     );
   }

@@ -16,9 +16,6 @@ abstract class LeadRepository {
     String nuevosPrefijos,
     String nuevosNumeros,
   });
-  // Usa el mismo task DT que getLeadDetalle — trae los datos del contacto
-  // a partir de su lead (nombre, correo, teléfono, empresa, estado, etc.)
-  Future<ContactoDetalle> obtenerDetalleContacto(int idLead);
   // TODO: conectar a SP real cuando se defina — '[CRM].[SP_NegociacionesPorContacto]'
   Future<List<Negociacion>> obtenerNegociaciones(int idLead);
   // SP 'LCG' — historial de comentarios de todos los leads del mismo número

@@ -13,7 +13,6 @@ export 'data/repositories/lead_repository_impl.dart';
 export 'domain/entities/lead.dart';
 export 'domain/entities/lead_detalle.dart';
 export 'domain/entities/comentario_lead.dart';
-export 'domain/entities/contacto_detalle.dart';
 export 'domain/entities/negociacion.dart';
 export 'domain/entities/historial_comentario.dart';
 
@@ -25,7 +24,6 @@ export 'domain/repositories/lead_repository.dart';
 export 'domain/usecases/get_leads_usecase.dart';
 export 'domain/usecases/get_lead_detalle_usecase.dart';
 export 'domain/usecases/toggle_favorito_lead_usecase.dart';
-export 'domain/usecases/obtener_detalle_contacto_usecase.dart';
 export 'domain/usecases/get_negociaciones_lead.dart';
 export 'domain/usecases/get_historial_comentarios.dart';
 
@@ -37,10 +35,6 @@ export 'presentation/bloc/detail/lead_detalle_bloc.dart';
 export 'presentation/bloc/detail/lead_detalle_event.dart';
 export 'presentation/bloc/detail/lead_detalle_state.dart';
 
-export 'presentation/bloc/contacto_detalle/contacto_detalle_event.dart';
-export 'presentation/bloc/contacto_detalle/contacto_detalle_state.dart';
-export 'presentation/bloc/contacto_detalle/contacto_detalle_bloc.dart';
-
 export 'presentation/pages/lead_list_page.dart';
 export 'presentation/pages/contacto_detalle_page.dart';
 
@@ -48,7 +42,6 @@ export 'presentation/widgets/contacto_detalle/contacto_negociaciones_tab.dart';
 export 'presentation/widgets/contacto_detalle/contacto_detalle_skeleton.dart';
 export 'presentation/widgets/contacto_detalle/contacto_negociacion_card.dart';
 export 'presentation/widgets/contacto_detalle/contacto_acciones_footer.dart';
-export 'presentation/widgets/contacto_detalle/contacto_detalle_header.dart';
 export 'presentation/widgets/contacto_detalle/contacto_detalle_view.dart';
 export 'presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart';
 export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';

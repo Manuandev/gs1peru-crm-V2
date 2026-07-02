@@ -11,7 +11,6 @@ class ContactoDetalleSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       bodyPadding: EdgeInsets.zero,
-      title: 'Detalle de contacto',
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [
         IconButton(
@@ -61,20 +60,9 @@ class _HeaderSkeleton extends StatelessWidget {
           ),
           SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SkeletonBox(
-                  width: AppSizing.skeletonNameWidth,
-                  height: AppSizing.skeletonTitleHeight,
-                ),
-                SizedBox(height: AppSpacing.xs),
-                SkeletonBox(
-                  width: AppSizing.skeletonTextWidth,
-                  height: AppSizing.skeletonLineHeight,
-                ),
-              ],
+            child: SkeletonBox(
+              width: AppSizing.skeletonNameWidth,
+              height: AppSizing.skeletonTitleHeight,
             ),
           ),
         ],
@@ -163,6 +151,14 @@ class _TabBarSkeleton extends StatelessWidget {
             child: Center(
               child: SkeletonBox(
                 width: AppSizing.skeletonChipWidthMd,
+                height: AppSizing.skeletonLineHeight,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: SkeletonBox(
+                width: AppSizing.skeletonChipWidthSm,
                 height: AppSizing.skeletonLineHeight,
               ),
             ),
@@ -287,26 +283,17 @@ class _FooterSkeleton extends StatelessWidget {
     return Container(
       color: AppColors.surface,
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
+        horizontal: AppSpacing.md,
         vertical: AppSpacing.md,
       ),
       child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          SkeletonBox(
-            width: AppSizing.buttonHeight,
-            height: AppSizing.buttonHeight,
-            borderRadius: AppSizing.radiusCircular,
+          Expanded(
+            child: SkeletonBox(height: AppSizing.buttonHeightSmall),
           ),
-          SkeletonBox(
-            width: AppSizing.buttonHeight,
-            height: AppSizing.buttonHeight,
-            borderRadius: AppSizing.radiusCircular,
-          ),
-          SkeletonBox(
-            width: AppSizing.buttonHeight,
-            height: AppSizing.buttonHeight,
-            borderRadius: AppSizing.radiusCircular,
+          SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: SkeletonBox(height: AppSizing.buttonHeightSmall),
           ),
         ],
       ),

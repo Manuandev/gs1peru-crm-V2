@@ -16,6 +16,16 @@ class LauncherUtils {
     }
   }
 
+  static Future<void> abrirWhatsApp(String telefono) async {
+    final numeroLimpio = telefono.limpiarTelefono.replaceAll('+', '');
+    final uri = Uri.https('wa.me', numeroLimpio);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw Exception('No se pudo abrir WhatsApp: $telefono');
+    }
+  }
+
   static Future<void> abrirCorreo(
     String correo, {
     String asunto = '',

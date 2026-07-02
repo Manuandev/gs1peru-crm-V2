@@ -216,15 +216,12 @@ class AppRouter {
       },
     ),
     // SEGUIMIENTO / PROPUESTAS — detalle de lead
-    // CONTACTO — detalle de contacto (tabs Info + Negociaciones)
+    // CONTACTO — detalle de contacto (tabs Info + Negociaciones + Historial)
     AppRoutes.detalleContacto: RouteDefinition(
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return ContactoDetallePage(
-          idContacto: args['idContacto'] as int,
-          idLead: args['idLead'] as int,
-        );
+        return ContactoDetallePage(idLead: args['idLead'] as int);
       },
     ),
 

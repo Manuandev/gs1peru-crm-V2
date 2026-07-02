@@ -61,10 +61,12 @@ class ChatTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    AppSocialUtils.chipEstado(
-                      chat.idEstadoEfectivo,
-                      label: chat.descEstadoEfectiva,
-                    ),
+                    chat.idEstado.isEmpty
+                        ? const _ChipSinEstado()
+                        : AppSocialUtils.chipEstado(
+                            chat.idEstadoEfectivo,
+                            label: chat.descEstadoEfectiva,
+                          ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       chat.fechaHora.formatDate(AppDateFormat.hourMinute),
@@ -400,6 +402,36 @@ class _ChipInfo extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chip "Sin estado" — reemplaza el chip de etapa cuando el número no tiene
+// lead asociado (chat.idEstado vacío), evitando el círculo vacío sin texto.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChipSinEstado extends StatelessWidget {
+  const _ChipSinEstado();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.sinEstadoBg,
+        borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+      ),
+      child: Text(
+        'Sin estado',
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.sinEstadoFg,
+          fontWeight: AppTextStyles.weightSemiBold,
+        ),
       ),
     );
   }

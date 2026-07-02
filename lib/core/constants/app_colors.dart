@@ -251,16 +251,16 @@ class AppColors {
   // ============================================================
 
   // ℹ️ Aún en uso en: skeleton_box.dart, whatsapp_media_picker.dart, message_bubble.dart, app_error_view.dart, contacto_acciones_footer.dart, chat_detail_fases.dart
-  static const Color grey50 = Color(0xFFE5F0FC);   // → ui2
-  static const Color grey100 = Color(0xFFE5F0FC);  // → ui2
-  static const Color grey200 = Color(0xFFC4D7ED);  // → ui3
-  static const Color grey300 = Color(0xFFE5E8EB);  // → ui4
-  static const Color grey400 = Color(0xFFA6B0BB);  // → ui5
+  static const Color grey50 = Color(0xFFE5F0FC); // → ui2
+  static const Color grey100 = Color(0xFFE5F0FC); // → ui2
+  static const Color grey200 = Color(0xFFC4D7ED); // → ui3
+  static const Color grey300 = Color(0xFFE5E8EB); // → ui4
+  static const Color grey400 = Color(0xFFA6B0BB); // → ui5
   static const Color grey500 = Color(0xFF9E9E9E);
-  static const Color grey600 = Color(0xFF696D73);  // → ui6
+  static const Color grey600 = Color(0xFF696D73); // → ui6
   static const Color grey700 = Color(0xFF616161);
-  static const Color grey800 = Color(0xFF414345);  // → ui7
-  static const Color grey900 = Color(0xFF262626);  // → ui8
+  static const Color grey800 = Color(0xFF414345); // → ui7
+  static const Color grey900 = Color(0xFF262626); // → ui8
 
   // ============================================================
   // COLORES CON OPACIDAD
@@ -512,6 +512,13 @@ class AppColors {
 
   /// Chip "Transferido hace X" — fondo (orange 50)
   static const Color datoTransferidoBg = Color(0xFFFFF3E0);
+
+  /// Chip "Sin estado" en ChatTile — se usa cuando el número no tiene lead
+  /// asociado (idEstado vacío) y por lo tanto no hay chip de etapa que mostrar.
+  static const Color sinEstadoFg = Color(0xFFC62828);
+
+  /// Chip "Sin estado" — fondo (red 50)
+  static const Color sinEstadoBg = Color(0xFFFFEBEE);
 
   /// Ícono del campo Campaña (teal 700)
   static const Color datoCampaniaFg = Color(0xFF00796B);

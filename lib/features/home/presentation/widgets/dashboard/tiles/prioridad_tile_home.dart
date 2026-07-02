@@ -41,6 +41,25 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
     super.dispose();
   }
 
+  Future<void> _gestionar() async {
+    final result = await context.read<HomeRepository>().gestionarPrioridad(
+      widget.prioridad.idNumero,
+    );
+    if (!mounted) return;
+    switch (result) {
+      case CrudOk(:final message):
+        AppSnackBar.success(context, message);
+      case CrudAlert(:final message):
+        AppSnackBar.warning(context, message);
+      case CrudError(:final message):
+        AppSnackBar.error(context, message);
+      case CrudNoInternet():
+        AppSnackBar.error(context, 'Sin conexión. Intenta de nuevo.');
+      case CrudEmpty():
+        AppSnackBar.error(context, 'Respuesta inesperada del servidor.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final prioridad = widget.prioridad;
@@ -161,12 +180,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
           const SizedBox(width: AppSpacing.xxs),
 
           // ─── Botón Gestionar ─────────────────────────────────────
-          _GestionarButton(
-            onTap: () => context.goToDetalleChatDesdeHome(
-              idNumero: prioridad.idNumero,
-              idLead: prioridad.idLead,
-            ),
-          ),
+          _GestionarButton(onTap: _gestionar),
         ],
       ),
     );

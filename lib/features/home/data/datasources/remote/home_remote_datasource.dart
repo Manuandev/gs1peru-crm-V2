@@ -6,6 +6,7 @@ import 'package:app_crm/features/home/index_home.dart';
 class HomeRemoteDatasource {
   final ApiClient _api = ApiClient();
   final _session = SessionService();
+  final _deviceInfo = DeviceInfoService();
 
   final sep = AppConstants.sepListas;
   final camp = AppConstants.sepCampos;
@@ -49,6 +50,22 @@ class HomeRemoteDatasource {
       ApiEmpty() => const <NotificacionModel>[],
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  Future<CrudResult> gestionarPrioridad(int idNumero) async {
+    final ip = await _deviceInfo.getLocalIp();
+    final coords = await _deviceInfo.getCoordenadasString();
+
+    final String body = [idNumero, _session.codUser, ip, coords].join(camp);
+
+    final result = await _api.postSafe(ApiConstants.urlHomeCud, '$body${sep}G');
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
     };
   }
 }

@@ -577,14 +577,6 @@ class AppSizing {
   static const double actorCircleBorder = 1.5;
 
   // ============================================================
-  // CONTACTO INFO TAB — Badge circular de ícono grande
-  // ============================================================
-
-  /// Diámetro del círculo de color que envuelve el ícono de cada campo en
-  /// ContactoInfoTab: 40dp — más grande que el badge cuadrado de ChatDetailDatosLead.
-  static const double infoBadgeSize = 40.0;
-
-  // ============================================================
   // EMPTY STATE — Contenedor de ícono
   // ============================================================
 

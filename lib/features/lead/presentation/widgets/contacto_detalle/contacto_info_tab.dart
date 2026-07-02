@@ -36,15 +36,12 @@ class ContactoInfoTab extends StatelessWidget {
                   icono: AppIcons.user,
                   etiqueta: 'Nombres y apellidos',
                   valor: lead.nombreCompleto,
-                  iconColor: AppColors.datoNombreFg,
-                  iconBackground: AppColors.datoNombreBg,
                 ),
                 derecha: _CampoInfo(
                   icono: AppIcons.phone,
                   etiqueta: 'Celular',
                   valor: '${lead.prefijo} ${lead.numero}'.trim(),
-                  iconColor: AppColors.datoCelularFg,
-                  iconBackground: AppColors.datoCelularBg,
+                  iconColor: AppColors.success,
                 ),
               ),
               _FilaCampos(
@@ -52,15 +49,11 @@ class ContactoInfoTab extends StatelessWidget {
                   icono: AppIcons.email,
                   etiqueta: 'Correo',
                   valor: lead.correo.isEmpty ? '—' : lead.correo,
-                  iconColor: AppColors.datoCorreoFg,
-                  iconBackground: AppColors.datoCorreoBg,
                 ),
                 derecha: _CampoInfo(
                   icono: AppIcons.business,
                   etiqueta: 'Empresa',
                   valor: lead.nombreEmpresa.isEmpty ? '—' : lead.nombreEmpresa,
-                  iconColor: AppColors.datoEmpresaFg,
-                  iconBackground: AppColors.datoEmpresaBg,
                 ),
               ),
               _FilaCampos(
@@ -68,82 +61,69 @@ class ContactoInfoTab extends StatelessWidget {
                   icono: AppIcons.campaign,
                   etiqueta: 'Campaña',
                   valor: lead.campania.isEmpty ? '—' : lead.campania,
-                  iconColor: AppColors.datoCampaniaFg,
-                  iconBackground: AppColors.datoCampaniaBg,
                 ),
                 derecha: _CampoInfo(
                   icono: AppIcons.cursoEvento,
                   etiqueta: 'Oportunidad',
                   valor: lead.evento.isEmpty ? '—' : lead.evento,
-                  iconColor: AppColors.datoEventoFg,
-                  iconBackground: AppColors.datoEventoBg,
                 ),
               ),
               _FilaCampos(
                 izquierda: _CampoInfo(
                   iconoWidget: AppSocialUtils.widgetCanalById(
                     lead.idCanal,
-                    size: AppSizing.iconMd,
+                    size: AppSizing.iconSm,
                   ),
                   etiqueta: 'Canal',
                   valor: lead.canal.isEmpty ? '—' : lead.canal,
-                  iconBackground: AppColors.datoCanalBg,
                 ),
                 derecha: _CampoInfo(
                   icono: AppIcons.interes,
                   etiqueta: 'Interés',
                   valor: lead.interes.isEmpty ? '—' : lead.interes,
-                  iconColor: AppColors.datoInteresFg,
-                  iconBackground: AppColors.datoInteresBg,
                 ),
               ),
               _FilaCampos(
                 izquierda: _CampoInfo(
                   iconoWidget: AppSocialUtils.widgetEstado(
                     lead.idEstadoEfectivo,
-                    size: AppSizing.iconMd,
+                    size: AppSizing.iconSm,
                   ),
                   etiqueta: 'Estado',
                   valor: lead.estadoEfectivo,
                   colorValor: AppSocialUtils.colorEstado(lead.idEstadoEfectivo),
-                  iconBackground: AppColors.datoEstadoBg,
                 ),
                 derecha: tieneSubestado
                     ? _CampoInfo(
                         iconoWidget: AppSocialUtils.widgetEstado(
                           lead.idEstado,
-                          size: AppSizing.iconMd,
+                          size: AppSizing.iconSm,
                         ),
                         etiqueta: 'Subestado',
                         valor: lead.estado,
                         colorValor: AppSocialUtils.colorEstado(lead.idEstado),
-                        iconBackground: AppColors.datoSubestadobg,
                       )
-                    : _CampoInfo(
+                    : const _CampoInfo(
                         icono: AppIcons.listAlt,
                         etiqueta: 'Subestado',
                         valor: '—',
-                        iconColor: AppColors.datoSubestadoFg,
-                        iconBackground: AppColors.datoSubestadobg,
                       ),
               ),
               _FilaCampos(
                 izquierda: _CampoInfo(
                   icono: AppIcons.calendar,
                   etiqueta: 'Fecha de registro',
-                  valor: lead.fechaHora.isEmpty
+                  valor: (lead.fechaCreacion ?? '').isEmpty
                       ? '—'
-                      : lead.fechaHora.formatDate(AppDateFormat.shortDate),
-                  iconColor: AppColors.datoFechaRegistroFg,
-                  iconBackground: AppColors.datoFechaRegistroBg,
+                      : lead.fechaCreacion!.formatDate(
+                          AppDateFormat.shortDate,
+                        ),
                 ),
                 derecha: _CampoInfo(
                   // Ícono fijo — la última interacción no depende del canal.
                   icono: AppIcons.time,
                   etiqueta: 'Última interacción',
                   valor: ultima == null ? '—' : ultima.fechaHora.formatConDia(),
-                  iconColor: AppColors.datoUltimaInteraccionFg,
-                  iconBackground: AppColors.datoUltimaInteraccionBg,
                 ),
               ),
             ],
@@ -214,7 +194,8 @@ class _FilaCampos extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Campo individual: ícono grande en círculo de color / label arriba / valor abajo
+// Campo individual: ícono chico + etiqueta arriba / valor abajo.
+// Sin color por defecto — solo Celular, Canal y Estado/Subestado llevan color.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CampoInfo extends StatelessWidget {
@@ -224,14 +205,12 @@ class _CampoInfo extends StatelessWidget {
   final String valor;
   final Color? iconColor;
   final Color? colorValor;
-  final Color iconBackground;
 
   const _CampoInfo({
     this.icono,
     this.iconoWidget,
     required this.etiqueta,
     required this.valor,
-    required this.iconBackground,
     this.iconColor,
     this.colorValor,
   }) : assert(icono != null || iconoWidget != null);
@@ -241,20 +220,14 @@ class _CampoInfo extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: AppSizing.infoBadgeSize,
-          height: AppSizing.infoBadgeSize,
-          decoration: BoxDecoration(
-            color: iconBackground,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child:
-                iconoWidget ??
-                Icon(icono, size: AppSizing.iconMd, color: iconColor),
-          ),
+        SizedBox(
+          width: AppSizing.iconSm,
+          height: AppSizing.iconSm,
+          child:
+              iconoWidget ??
+              Icon(icono, size: AppSizing.iconSm, color: iconColor ?? AppColors.grey500),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

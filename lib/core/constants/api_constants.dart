@@ -22,6 +22,7 @@ class ApiConstants {
 
   // ========== HOME ==========
   static const String lstHome = 'Home/SPHomeLSTApp';
+  static const String cudHome = 'Home/SPHomeCUDApp';
 
   // ========== LEADS ==========
   static const String lstleads = 'Lead/SPLeadLSTApp';
@@ -62,6 +63,7 @@ class ApiConstants {
 
   // ========== HOME ==========
   static String get urlHomeLst => '$baseUrl$lstHome';
+  static String get urlHomeCud => '$baseUrl$cudHome';
 
   // ========== LEADS ==========
   static String get urlLeadsLst => '$baseUrl$lstleads';

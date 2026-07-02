@@ -1,5 +1,6 @@
 // lib/features/home/data/repositories/home_repository_impl.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class HomeRepositoryImpl implements HomeRepository {
@@ -12,4 +13,8 @@ class HomeRepositoryImpl implements HomeRepository {
 
   @override
   Future<List<Notificacion>> getNotifications() => _remote.getNotifications();
+
+  @override
+  Future<CrudResult> gestionarPrioridad(int idNumero) =>
+      _remote.gestionarPrioridad(idNumero);
 }

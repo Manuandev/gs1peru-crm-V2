@@ -17,6 +17,7 @@ class LeadModel extends Lead {
     required super.nombreEmpresa,
     required super.asesor,
     required super.fechaHora,
+    super.fechaCreacion,
     required super.idNumero,
     required super.prefijo,
     required super.numero,
@@ -117,6 +118,8 @@ class LeadModel extends Lead {
       cantidad:      ParseUtils.toInt(fields, 28),
       // 29 → descuento
       descuento:     ParseUtils.toDouble(fields, 29),
+      // 30 → fecha de creación real (LD.FC_USUARIO_C) — solo presente en task 'DT'
+      fechaCreacion: ParseUtils.strNullable(fields, 30),
     );
   }
 

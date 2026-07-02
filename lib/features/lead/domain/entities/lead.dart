@@ -20,6 +20,11 @@ class Lead extends Equatable {
   final String asesor;
   final String fechaHora;
 
+  /// Fecha de creación real del lead (LD.FC_USUARIO_C) — solo viene en la
+  /// respuesta de la task 'DT' (detalle). Null en listas (task 'LS'), donde
+  /// solo se usa [fechaHora] (última modificación o creación).
+  final String? fechaCreacion;
+
   // ── Número de contacto ────────────────────────────────────────
   final int idNumero;
   final String prefijo;
@@ -92,6 +97,7 @@ class Lead extends Equatable {
     required this.nombreEmpresa,
     required this.asesor,
     required this.fechaHora,
+    this.fechaCreacion,
     required this.idNumero,
     required this.prefijo,
     required this.numero,
@@ -130,6 +136,7 @@ class Lead extends Equatable {
     nombreEmpresa,
     asesor,
     fechaHora,
+    fechaCreacion,
     idNumero,
     prefijo,
     numero,
@@ -167,6 +174,7 @@ class Lead extends Equatable {
     String? nombreEmpresa,
     String? asesor,
     String? fechaHora,
+    String? fechaCreacion,
     int? idNumero,
     String? prefijo,
     String? numero,
@@ -205,6 +213,7 @@ class Lead extends Equatable {
       nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
       asesor: asesor ?? this.asesor,
       fechaHora: fechaHora ?? this.fechaHora,
+      fechaCreacion: fechaCreacion ?? this.fechaCreacion,
       idNumero: idNumero ?? this.idNumero,
       prefijo: prefijo ?? this.prefijo,
       numero: numero ?? this.numero,

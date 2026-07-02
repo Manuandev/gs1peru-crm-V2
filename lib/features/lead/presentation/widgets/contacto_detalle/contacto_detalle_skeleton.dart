@@ -11,6 +11,7 @@ class ContactoDetalleSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BasePage(
       bodyPadding: EdgeInsets.zero,
+      titleWidget: const SizedBox.shrink(),
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [
         IconButton(

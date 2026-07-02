@@ -84,6 +84,7 @@ class _ContactoScaffold extends StatelessWidget {
           ),
         ],
         footer: ContactoAccionesFooter(lead: lead),
+        backgroundColor: AppColors.background,
         body: RefreshIndicator(
           color: AppColors.primary,
           backgroundColor: AppColors.surface,
@@ -91,84 +92,116 @@ class _ContactoScaffold extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ChatDetailFases(
-                idEstadoActual: lead.idEstado,
-                idEstadoPadre: lead.idEstadoPadre ?? '',
+              _CardSection(
+                margin: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                ),
+                child: ChatDetailFases(
+                  idEstadoActual: lead.idEstado,
+                  idEstadoPadre: lead.idEstadoPadre ?? '',
+                ),
               ),
-              BlocBuilder<NegociacionesCubit, NegociacionesState>(
-                builder: (context, negState) {
-                  final negociaciones = negState is NegociacionesSuccess
-                      ? negState.negociaciones
-                      : const <Negociacion>[];
-
-                  return Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TabBar(
-                          indicator: const UnderlineTabIndicator(
-                            borderSide: BorderSide(
-                              color: AppColors.primary,
-                              width: AppSizing.borderFocusWidth,
-                            ),
-                          ),
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          dividerColor: AppColors.transparent,
-                          labelColor: AppColors.primary,
-                          unselectedLabelColor: AppColors.textSecondary,
-                          labelStyle: AppTextStyles.labelLarge.copyWith(
-                            fontWeight: AppTextStyles.weightBold,
-                          ),
-                          unselectedLabelStyle: AppTextStyles.labelLarge,
-                          tabs: [
-                            const Tab(
-                              icon: Icon(AppIcons.datosLead, size: AppSizing.iconSm),
-                              text: 'Información',
-                            ),
-                            Tab(
-                              icon: const Icon(
-                                AppIcons.negociacion,
-                                size: AppSizing.iconSm,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('Negociaciones'),
-                                  if (negociaciones.isNotEmpty) ...[
-                                    const SizedBox(width: AppSpacing.xs),
-                                    _ContadorBadge(count: negociaciones.length),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            const Tab(
-                              icon: Icon(AppIcons.historial, size: AppSizing.iconSm),
-                              text: 'Historial',
-                            ),
-                          ],
-                        ),
-                        Expanded(
-                          child: TabBarView(
-                            children: [
-                              ContactoInfoTab(
-                                lead: lead,
-                                negociaciones: negociaciones,
-                              ),
-                              ContactoNegociacionesTab(
-                                negociaciones: negociaciones,
-                              ),
-                              HistorialTab(idNumero: lead.idNumero),
-                            ],
-                          ),
-                        ),
-                      ],
+              _CardSection(
+                margin: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: TabBar(
+                  indicator: const UnderlineTabIndicator(
+                    borderSide: BorderSide(
+                      color: AppColors.primary,
+                      width: AppSizing.borderFocusWidth,
                     ),
-                  );
-                },
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: AppColors.transparent,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  labelPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xxs,
+                  ),
+                  labelStyle: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: AppTextStyles.weightBold,
+                  ),
+                  unselectedLabelStyle: AppTextStyles.labelMedium,
+                  tabs: const [
+                    Tab(
+                      icon: Icon(AppIcons.datosLead, size: AppSizing.iconXs),
+                      text: 'Información',
+                    ),
+                    Tab(
+                      icon: Icon(AppIcons.negociacion, size: AppSizing.iconXs),
+                      text: 'Negociaciones',
+                    ),
+                    Tab(
+                      icon: Icon(AppIcons.historial, size: AppSizing.iconXs),
+                      text: 'Historial',
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: BlocBuilder<NegociacionesCubit, NegociacionesState>(
+                  builder: (context, negState) {
+                    final negociaciones = negState is NegociacionesSuccess
+                        ? negState.negociaciones
+                        : const <Negociacion>[];
+
+                    return TabBarView(
+                      children: [
+                        ContactoInfoTab(
+                          lead: lead,
+                          negociaciones: negociaciones,
+                        ),
+                        ContactoNegociacionesTab(
+                          negociaciones: negociaciones,
+                        ),
+                        HistorialTab(idNumero: lead.idNumero),
+                      ],
+                    );
+                  },
+                ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card flotante — envuelve stepper y tab bar sobre el fondo gris de la página
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CardSection extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry margin;
+
+  const _CardSection({required this.child, required this.margin});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: margin,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.cardShadow,
+            blurRadius: AppSizing.shadowBlurMd,
+            offset: const Offset(0, AppSizing.shadowOffsetCardY),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        child: ColoredBox(color: AppColors.surface, child: child),
       ),
     );
   }
@@ -240,34 +273,6 @@ class _ContactoHeaderTitle extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ContadorBadge extends StatelessWidget {
-  final int count;
-
-  const _ContadorBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: AppSpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.primary,
-        borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-      ),
-      child: Text(
-        '$count',
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textOnDark,
-          fontWeight: AppTextStyles.weightBold,
-        ),
-      ),
     );
   }
 }

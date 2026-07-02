@@ -33,6 +33,7 @@ class HomePortrait extends StatelessWidget {
 
                 // ── Grid de módulos ──────────────────────────────
                 HomeMenuCards(state: state),
+                const SizedBox(height: AppSpacing.xs),
 
                 // ── Prioridad ahora ──────────────────────────────
                 Row(

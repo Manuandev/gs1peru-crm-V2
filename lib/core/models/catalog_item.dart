@@ -9,6 +9,8 @@ class ListasGenericas {
   final List<InteresItem> intereses;
   // Parte [4] del SP lstListas. Vacío hasta que el SP devuelva la sección.
   final List<EstadoItem> estados;
+  // Parte [5] del SP lstListas. Vacío hasta que el SP devuelva la sección.
+  final List<AsesorItem> asesores;
 
   const ListasGenericas({
     required this.campanias,
@@ -16,6 +18,7 @@ class ListasGenericas {
     required this.canales,
     required this.intereses,
     this.estados = const [],
+    this.asesores = const [],
   });
 }
 
@@ -26,6 +29,7 @@ class ListasGenericasModel extends ListasGenericas {
     required super.canales,
     required super.intereses,
     super.estados,
+    super.asesores,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -35,6 +39,7 @@ class ListasGenericasModel extends ListasGenericas {
     final canalesRaw      = partes.length > 2    ? partes[2] : '';
     final interesesRaw    = partes.length > 3    ? partes[3] : '';
     final estadosRaw      = partes.length > 4    ? partes[4] : '';
+    final asesoresRaw     = partes.length > 5    ? partes[5] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -56,12 +61,17 @@ class ListasGenericasModel extends ListasGenericas {
         ? <EstadoItemModel>[]
         : EstadoItemModel.parseList(estadosRaw);
 
+    final asesores = asesoresRaw.trim().isEmpty
+        ? <AsesorItemModel>[]
+        : AsesorItemModel.parseList(asesoresRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
       canales: canales,
       intereses: intereses,
       estados: estados,
+      asesores: asesores,
     );
   }
 }
@@ -226,6 +236,47 @@ class EstadoItemModel extends EstadoItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => EstadoItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+// SP lstListas parte [5]: codUser ¦ nombre ¦ flgDisponible (0/1)
+class AsesorItem with Comboable {
+  final String codUser;
+  final String nombre;
+  final bool disponible;
+
+  const AsesorItem({
+    required this.codUser,
+    required this.nombre,
+    required this.disponible,
+  });
+
+  @override
+  List<dynamic> get fields => [codUser, nombre];
+}
+
+class AsesorItemModel extends AsesorItem {
+  const AsesorItemModel({
+    required super.codUser,
+    required super.nombre,
+    required super.disponible,
+  });
+
+  factory AsesorItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return AsesorItemModel(
+      codUser:    ParseUtils.str(c, 0),
+      nombre:     ParseUtils.str(c, 1),
+      disponible: ParseUtils.toBool(c, 2),
+    );
+  }
+
+  static List<AsesorItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => AsesorItemModel.fromRawString(r))
         .toList();
   }
 }

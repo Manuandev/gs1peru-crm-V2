@@ -31,8 +31,32 @@ class LeadListPortrait extends StatelessWidget {
                 LeadListFilterChips(
                   filtroActual: state.filtro,
                   conteos: state.conteos,
-                  onFiltroTap: (filtro) {
-                    context.read<LeadListBloc>().add(LeadListFiltered(filtro));
+                  onFiltroTap: (filtro) async {
+                    final bloc = context.read<LeadListBloc>();
+
+                    if (filtro != LeadListFiltro.asesores) {
+                      bloc.add(LeadListFiltered(filtro));
+                      return;
+                    }
+
+                    final catalogsState = context.read<CatalogsBloc>().state;
+                    final asesores = catalogsState is CatalogsLoaded
+                        ? catalogsState.asesores
+                        : const <AsesorItem>[];
+
+                    final seleccionado = await LeadAsesorPickerModal.show(
+                      context,
+                      asesores: asesores,
+                      conteosPorAsesor: state.conteosPorAsesor,
+                      seleccionadoActual: state.asesorSeleccionado,
+                    );
+
+                    if (!context.mounted) return;
+                    if (seleccionado != null) {
+                      bloc.add(LeadListAsesorSeleccionado(seleccionado));
+                    } else {
+                      bloc.add(const LeadListFiltered(LeadListFiltro.todos));
+                    }
                   },
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -50,7 +74,7 @@ class LeadListPortrait extends StatelessWidget {
                   message: switch (filtro) {
                     LeadListFiltro.todos => 'No hay seguimientos.',
                     LeadListFiltro.asesores =>
-                      'No tienes seguimientos asignados.',
+                      'Este asesor no tiene seguimientos asignados.',
                     LeadListFiltro.nuevos => 'No hay seguimientos nuevos.',
                     LeadListFiltro.enDesarrollo =>
                       'No hay seguimientos en gestión.',

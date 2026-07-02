@@ -9,10 +9,10 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   final GetLeadsUseCase _getLeadsUseCase;
   final ToggleFavoritoLeadUseCase _toggleFavoritoUseCase;
-  final _session = SessionService();
 
   List<Lead> _allLeads = [];
   late LeadListFiltro _filtroActivo;
+  String? _asesorSeleccionado;
   StreamSubscription<LeadUpdate>? _updateSub;
 
   LeadListBloc(
@@ -24,6 +24,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     on<LeadListStarted>(_onStarted);
     on<LeadListRefresh>(_onRefresh);
     on<LeadListFiltered>(_onFiltered);
+    on<LeadListAsesorSeleccionado>(_onAsesorSeleccionado);
     on<ToggleFavoritoPressed>(_onToggleFavorito);
     on<LeadListLeadUpdated>(_onLeadUpdated);
 
@@ -68,6 +69,16 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
   void _onFiltered(LeadListFiltered event, Emitter<LeadListState> emit) {
     _filtroActivo = event.filtro;
+    if (event.filtro != LeadListFiltro.asesores) _asesorSeleccionado = null;
+    _emitFiltered(emit);
+  }
+
+  void _onAsesorSeleccionado(
+    LeadListAsesorSeleccionado event,
+    Emitter<LeadListState> emit,
+  ) {
+    _filtroActivo = LeadListFiltro.asesores;
+    _asesorSeleccionado = event.codUser;
     _emitFiltered(emit);
   }
 
@@ -116,9 +127,6 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   void _emitFiltered(Emitter<LeadListState> emit) {
     final conteos = {
       LeadListFiltro.todos: _allLeads.length,
-      LeadListFiltro.asesores: _allLeads
-          .where((c) => c.asesor == _session.codUser)
-          .length,
       LeadListFiltro.nuevos:
           _allLeads.where((c) => _perteneceEstado(c, '00')).length,
       LeadListFiltro.enDesarrollo:
@@ -127,10 +135,19 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
           _allLeads.where((c) => _perteneceEstado(c, '02')).length,
     };
 
+    final conteosPorAsesor = <String, int>{};
+    for (final lead in _allLeads) {
+      conteosPorAsesor.update(
+        lead.asesor,
+        (v) => v + 1,
+        ifAbsent: () => 1,
+      );
+    }
+
     var resultado = List<Lead>.from(_allLeads);
     if (_filtroActivo == LeadListFiltro.asesores) {
       resultado = resultado
-          .where((c) => c.asesor == _session.codUser)
+          .where((c) => c.asesor == _asesorSeleccionado)
           .toList();
     } else if (_filtroActivo == LeadListFiltro.nuevos) {
       resultado = resultado.where((c) => _perteneceEstado(c, '00')).toList();
@@ -145,6 +162,8 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
         leads: resultado,
         filtro: _filtroActivo,
         conteos: conteos,
+        asesorSeleccionado: _asesorSeleccionado,
+        conteosPorAsesor: conteosPorAsesor,
       ),
     );
   }

@@ -72,6 +72,7 @@ export 'presentation/widgets/list/lead_card_actions.dart';
 export 'presentation/widgets/list/lead_card.dart';
 export 'presentation/widgets/list/lead_list_filter_chips.dart';
 export 'presentation/widgets/list/lead_list_stats_row.dart';
+export 'presentation/widgets/list/lead_asesor_picker_modal.dart';
 
 // Blocs + cubit movidos de chat → lead (ver CLAUDE.md del feature lead)
 export 'presentation/bloc/edit_lead/edit_lead_bloc.dart';

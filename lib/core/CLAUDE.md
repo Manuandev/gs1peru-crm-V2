@@ -847,13 +847,17 @@ item.fieldCount   // total de campos
 
 | Clase | Campos |
 |---|---|
-| `ListasGenericas` | campanias, oportunidades, canales, intereses |
+| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores |
 | `CampaniaItem` | id(int), nombre |
 | `OportunidadItem` | idEvento(int), idCampania(int), nombre |
 | `CanalItem` | id(int), nombre |
 | `InteresItem` | id(int), nombre |
+| `EstadoItem` | id(String), nombre, idPadre(String?) — parte [4] del SP |
+| `AsesorItem` | codUser(String), nombre(String), disponible(bool) — parte [5] del SP; universo = todo `CODUSER` que alguna vez fue `ASESOR_PRINCIPAL` en `T_CONTACTO` (no depende de tener leads activos hoy) |
 
 Todas implementan `Comboable`. Parsear con `ListasGenericasModel.parse(rawResponse)`.
+`AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) — el conteo de
+leads por asesor NO viene del backend, se calcula en el cliente sobre los leads ya cargados.
 
 ---
 

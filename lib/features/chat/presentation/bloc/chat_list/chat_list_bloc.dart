@@ -286,8 +286,6 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
         _handleMensajeWhatsApp(event.message, emit);
       case 'UPDATE_PANTALLA_WHATSAPP':
         _handleUpdatePantalla(event.message, emit);
-      case 'UPDATE_MENSAJE_WHATSAPP':
-        _handleUpdateMensaje(event.message, emit);
       default:
         break;
     }
@@ -302,20 +300,13 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
     _updateChatInList(
       idChatCab: payload.idChatCab,
-      mensaje: payload.mensaje,
-      tipoMensaje: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
-      estado: '',
       // Hora de recepción local — no la del payload, que llega desfasada
       // del momento real en que el mensaje fue procesado por el servidor.
       fechaHora: DateTime.now().toIso8601String(),
       direccionMensaje: 'CLI',
-      idMensaje: payload.idTokenMeta,
       emit: emit,
-      idTokenMetaCliente: payload.idTokenMeta,
       tipoCliente: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
       contenidoCliente: payload.mensaje,
-      estadoEntregaCliente: '',
-      fcUsuarioCCliente: payload.fecha,
       archivoNombreCliente: _removeExt(payload.nomArchivo),
       archivoTipoCliente: _extractExt(payload.nomArchivo),
     );
@@ -330,50 +321,21 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
     _updateChatInList(
       idChatCab: payload.idChatCab,
-      mensaje: payload.mensaje,
-      tipoMensaje: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
-      estado: 'sent',
       fechaHora: payload.hora.isNotEmpty
           ? payload.hora
           : DateTime.now().toIso8601String(),
       direccionMensaje: 'ASE',
-      idMensaje: payload.idTokenMeta,
       emit: emit,
     );
   }
 
-  void _handleUpdateMensaje(
-    WebSocketMessage message,
-    Emitter<ChatListState> emit,
-  ) {
-    final payload = UpdateMensajeWhatsAppPayload.fromMessage(message);
-    if (payload == null) return;
-
-    final chats = List<Chat>.from(_allChats);
-    final idx = chats.indexWhere((c) => c.idChatCab == payload.idChatCab);
-    if (idx == -1) return;
-
-    if (chats[idx].idTokenMeta == payload.idMensaje) {
-      chats[idx] = chats[idx].copyWith(estadoEntrega: payload.estado);
-      _allChats = chats;
-      _emitFiltered(emit);
-    }
-  }
-
   void _updateChatInList({
     required int idChatCab,
-    required String mensaje,
-    required String tipoMensaje,
-    required String estado,
     required String fechaHora,
     required String direccionMensaje,
-    required String idMensaje,
     required Emitter<ChatListState> emit,
-    String? idTokenMetaCliente,
     String? tipoCliente,
     String? contenidoCliente,
-    String? estadoEntregaCliente,
-    String? fcUsuarioCCliente,
     String? archivoNombreCliente,
     String? archivoTipoCliente,
   }) {
@@ -382,17 +344,10 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (idx == -1) return;
 
     final updatedChat = chats[idx].copyWith(
-      contenido: mensaje,
-      tipo: tipoMensaje,
-      estadoEntrega: estado,
       fechaHora: fechaHora,
       direccionMensaje: direccionMensaje,
-      idTokenMeta: idMensaje,
-      idTokenMetaCliente: idTokenMetaCliente,
       tipoCliente: tipoCliente,
       contenidoCliente: contenidoCliente,
-      estadoEntregaCliente: estadoEntregaCliente,
-      fcUsuarioCCliente: fcUsuarioCCliente,
       archivoNombreCliente: archivoNombreCliente,
       archivoTipoCliente: archivoTipoCliente,
     );

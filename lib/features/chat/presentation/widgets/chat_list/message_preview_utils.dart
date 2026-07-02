@@ -13,38 +13,6 @@ class MessagePreview {
   const MessagePreview(this.icon, this.label, {this.color});
 }
 
-MessagePreview buildMessagePreview(Chat chat) {
-  switch (chat.tipo.toLowerCase()) {
-    case 'audio':
-      return MessagePreview(
-        AppIcons.mic,
-        'Audio',
-        color: AppColors.msgPreviewAudio,
-      );
-    case 'image':
-      return MessagePreview(
-        AppIcons.photo,
-        'Foto',
-        color: AppColors.success,
-      );
-    case 'video':
-      return MessagePreview(
-        AppIcons.videocam,
-        'Video',
-        color: AppColors.msgPreviewVideo,
-      );
-    case 'document':
-      return MessagePreview(
-        fileIcon(chat.contenido),
-        fileLabel(chat.contenido),
-        color: fileColor(chat.contenido),
-      );
-    case 'text':
-    default:
-      return MessagePreview(null, _cleanText(chat.contenido));
-  }
-}
-
 /// Preview del último mensaje del CLIENTE (usa los campos *Cliente de Chat).
 MessagePreview buildClientMessagePreview(Chat chat) {
   switch (chat.tipoCliente.toLowerCase()) {
@@ -55,11 +23,7 @@ MessagePreview buildClientMessagePreview(Chat chat) {
         color: AppColors.msgPreviewAudio,
       );
     case 'image':
-      return MessagePreview(
-        AppIcons.photo,
-        'Foto',
-        color: AppColors.success,
-      );
+      return MessagePreview(AppIcons.photo, 'Foto', color: AppColors.success);
     case 'video':
       return MessagePreview(
         AppIcons.videocam,
@@ -94,11 +58,23 @@ class MessageStatusIcon extends StatelessWidget {
 
     switch (estado) {
       case 'wait':
-        return Icon(AppIcons.accessTime, size: AppSizing.iconStatusWait, color: dimColor);
+        return Icon(
+          AppIcons.accessTime,
+          size: AppSizing.iconStatusWait,
+          color: dimColor,
+        );
       case 'sent':
-        return Icon(AppIcons.checkSingle, size: AppSizing.iconStatus, color: dimColor);
+        return Icon(
+          AppIcons.checkSingle,
+          size: AppSizing.iconStatus,
+          color: dimColor,
+        );
       case 'delivered':
-        return Icon(AppIcons.checkDouble, size: AppSizing.iconStatus, color: dimColor);
+        return Icon(
+          AppIcons.checkDouble,
+          size: AppSizing.iconStatus,
+          color: dimColor,
+        );
       case 'read':
         return Icon(
           AppIcons.checkDouble,

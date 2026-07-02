@@ -12,8 +12,8 @@ class EnvConfig {
       case Environment.dev:
         return 'https://expediter-falsify-spinach.ngrok-free.dev/'; // URL DE DEV
       case Environment.qa:
-        // return 'https://natcodee.net:40805/gs1pe_interfaz/'; // URL DE QA
-        return 'https://expediter-falsify-spinach.ngrok-free.dev/'; // URL DE QA
+        return 'https://natcodee.net:40805/gs1pe_interfaz/'; // URL DE QA
+      // return 'https://expediter-falsify-spinach.ngrok-free.dev/'; // URL DE QA
       case Environment.prod:
         return 'https://apicommerce.gs1pe.org.pe/'; // URL DE PRODUCCION
     }

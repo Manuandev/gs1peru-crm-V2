@@ -44,6 +44,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   late final TextEditingController _campaniaCtrl;
   late final TextEditingController _eventoCtrl;
 
+  // ── Información adicional (pendiente de conectar al SP, ver _guardar) ─────
+  late final TextEditingController _nombreLeadCtrl;
+  late final TextEditingController _modalidadCtrl;
+
   bool _isLoading = false;
   bool _combosInicializados = false;
 
@@ -63,6 +67,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _descuentoCtrl  = TextEditingController(text: NumberFormatUtils.fmtDecimal(l.descuento));
     _campaniaCtrl   = TextEditingController(text: l.campania);
     _eventoCtrl     = TextEditingController(text: l.evento);
+    _nombreLeadCtrl = TextEditingController();
+    _modalidadCtrl  = TextEditingController(text: l.modalidad ?? '');
   }
 
   @override
@@ -100,6 +106,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _descuentoCtrl.dispose();
     _campaniaCtrl.dispose();
     _eventoCtrl.dispose();
+    _nombreLeadCtrl.dispose();
+    _modalidadCtrl.dispose();
     _seccionCambio.dispose();
     super.dispose();
   }
@@ -160,7 +168,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   bool get _hayCambios {
     final l   = widget.lead;
     // final sec = _contactoKey.currentState;
-    return _canal?.id != l.idCanal ||
+    // idLead 0 → el guardado crea el lead, no hay nada que "cambiar" primero.
+    return l.idLead == 0 ||
+        _canal?.id != l.idCanal ||
         _interes?.id != l.idInteres ||
         (_estado != null && _subEstado?.id != l.idEstado) ||
         (_estado != null && _estado?.id != l.idEstado && _subEstado == null) ||
@@ -171,6 +181,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         // _empresaCtrl.text.trim()   != l.nombreEmpresa ||
         // _correoCtrl.text.trim()    != l.correo ||
         // (sec?.tieneNuevos ?? false) ||
+        _nombreLeadCtrl.text.trim() != (l.nombreLead ?? '') ||
+        _modalidadCtrl.text.trim()  != (l.modalidad ?? '') ||
         _cantidadCtrl.text   != NumberFormatUtils.fmtInt(l.cantidad) ||
         _precioBaseCtrl.text != NumberFormatUtils.fmtDecimal(l.precioBase) ||
         _descuentoCtrl.text  != NumberFormatUtils.fmtDecimal(l.descuento);
@@ -229,6 +241,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         nombre: _nombreCtrl.text.trim(),
         apellidoPaterno: _apellidoPCtrl.text.trim(),
         apellidoMaterno: _apellidoMCtrl.text.trim(),
+        nombreLead: _nombreLeadCtrl.text.trim(),
+        modalidad: _modalidadCtrl.text.trim(),
         cantidad: int.tryParse(_cantidadCtrl.text),
         precioBase: double.tryParse(_precioBaseCtrl.text),
         descuento: double.tryParse(_descuentoCtrl.text),
@@ -262,6 +276,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         // _empresaCtrl,
         // _correoCtrl,
         // _seccionCambio,
+        _nombreLeadCtrl,
+        _modalidadCtrl,
         _cantidadCtrl,
         _precioBaseCtrl,
         _descuentoCtrl,
@@ -338,6 +354,14 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                   descuento: _descuento,
                   costoFinal: _costoFinal,
                 ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // 4. Información adicional
+              EditLeadAdicionalSection(
+                nombreLeadCtrl: _nombreLeadCtrl,
+                modalidadCtrl: _modalidadCtrl,
+                isLoading: _isLoading,
               ),
               const SizedBox(height: AppSpacing.xl),
             ],

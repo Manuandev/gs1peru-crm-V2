@@ -207,7 +207,7 @@ class MessageBubble extends StatelessWidget {
       case 'audio':
         final path = _isLocalFile
             ? message.contenido
-            : MessageUrlHelper.buildFileUrl(message, idNumero);
+            : MessageUrlHelper.buildFileUrl(message);
         return Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.sm2,
@@ -407,7 +407,7 @@ class _ImageContent extends StatelessWidget {
       );
     }
 
-    final url = MessageUrlHelper.buildFileUrl(message, idNumero);
+    final url = MessageUrlHelper.buildFileUrl(message);
     return GestureDetector(
       onTap: () => _openViewer(context, url),
       child: CachedNetworkImage(
@@ -498,7 +498,7 @@ class _VideoContent extends StatelessWidget {
 
     final url = _isLocal
         ? message.contenido
-        : MessageUrlHelper.buildFileUrl(message, idNumero);
+        : MessageUrlHelper.buildFileUrl(message);
 
     return GestureDetector(
       onTap: () {
@@ -708,7 +708,7 @@ class _DocumentContentState extends State<_DocumentContent> {
   bool _isDownloading = false;
   double _progress = 0;
 
-  // TODO: thumbnail PDF — descomentar cuando el jefe apruebe
+  // Todo: thumbnail PDF — descomentar cuando el jefe apruebe
   // Uint8List? _pdfThumb;
   // bool _loadingThumb = false;
   // bool get _isPdf =>
@@ -766,10 +766,7 @@ class _DocumentContentState extends State<_DocumentContent> {
         return;
       }
 
-      final url = MessageUrlHelper.buildFileUrl(
-        widget.message,
-        widget.idNumero,
-      );
+      final url = MessageUrlHelper.buildFileUrl(widget.message);
 
       await Dio().download(
         url,
@@ -860,7 +857,7 @@ class _DocumentContentState extends State<_DocumentContent> {
   }
 }
 
-// TODO: thumbnail PDF — descomentar cuando el jefe apruebe
+// Todo: thumbnail PDF — descomentar cuando el jefe apruebe
 // class _PdfThumbLoading extends StatelessWidget { ... }
 // class _PdfThumbProgress extends StatelessWidget { ... }
 // class _PdfThumbFallback extends StatelessWidget { ... }
@@ -931,7 +928,7 @@ class _PlantillaArchivoContent extends StatelessWidget {
     }
 
     if (MessageUrlHelper.isAudio(message)) {
-      final url = MessageUrlHelper.buildFileUrl(message, idNumero);
+      final url = MessageUrlHelper.buildFileUrl(message);
       return AudioPlayerWidget(
         audioPath: url,
         isEnviado:

@@ -42,15 +42,13 @@ class LeadRemoteDatasource {
     String nuevosPrefijos = '',
     String nuevosNumeros = '',
   }) async {
-    if (lead.idLead == 0) {
-      return const CrudError('ID de lead inválido. No se puede actualizar.');
-    }
-
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
 
     final String body = [
-      lead.idContacto, // field1  ID_CONTACTO
+      // field1 ID_NUMERO — el SP resuelve el contacto por CRM.T_CONTACTO_NUMERO.
+      // lead.idLead en 0 le indica al SP que debe crear el lead (no actualizarlo).
+      lead.idNumero, // field1  ID_NUMERO
       lead.idLead, // field2  ID_LEAD
       lead.idEstado, // field3  ID_ESTADO
       _orEmpty(lead.idCampania), // field4  ID_CAMPANIA
@@ -77,13 +75,15 @@ class LeadRemoteDatasource {
       _session.codUser, // field18 ID_USUARIO
       ip, // field19 IP_USUARIO
       coords, // field20 LL_USUARIO
-      // TODO: descomentar cuando [CRM].[CSV_LEADS_CUD_APP] task 'U' lea más de
-      // 20 fields — hoy Fnsplitstringtable25 solo extrae field1..field20, así
-      // que estos 4 se mandaban al pedo (el SP los ignora por completo).
-      // nuevasEmpresas,                 // field21 nuevas empresas ± separadas
-      // '',                             // field22 CARGO placeholder
-      // empresaEditar,                  // field23 editar empresa actual ('' si no cambió)
-      // correoEditar,                   // field24 editar correo actual ('' si no cambió)
+      lead.nombreLead ?? '', // field21 NOMBRE_LD
+      lead.modalidad ?? '', // field22 MODALIDAD
+      // TODO: [CRM].[CSV_LEADS_CUD_APP] task 'U' (Fnsplitstringtable25, tope 25
+      // fields) todavía no lee más allá de field22 — cuando empresa/correo/
+      // teléfono sean editables, hay que ampliar el split y sumar estos 4:
+      // nuevasEmpresas,                 // field23 nuevas empresas ± separadas
+      // '',                             // field24 CARGO placeholder
+      // empresaEditar,                  // field25 editar empresa actual ('' si no cambió)
+      // correoEditar,                   // field26 editar correo actual ('' si no cambió) — excede el tope de 25, requeriría otra función split
     ].join(camp);
 
     final result = await _api.postSafe(

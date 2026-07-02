@@ -18,7 +18,7 @@ class MessageUrlHelper {
   /// Construye la URL del archivo.
   /// - Si es un archivo de plantilla → {urlBase}PLANTILLAS/{nombre}{ext}
   /// - Resto                        → {urlBase}{idNumero}/{cab}/archivos_adjuntos/{nombre}{ext}
-  static String buildFileUrl(ChatMessage message, int idNumero) {
+  static String buildFileUrl(ChatMessage message) {
     final base = EnvConfig.urlArchivos;
     final nombre = Uri.encodeComponent(message.nombreArchivo);
     final ext = Uri.encodeComponent(message.tipoArchivo);
@@ -28,7 +28,7 @@ class MessageUrlHelper {
     }
 
     final cab = message.idConversacionCab;
-    return '$base$idNumero/$cab/archivos_adjuntos/$nombre$ext';
+    return '$base$cab/$cab/archivos_adjuntos/$nombre$ext';
   }
 
   /// Determina si el tipo de mensaje es una imagen

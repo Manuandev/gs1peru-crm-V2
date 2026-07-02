@@ -35,6 +35,7 @@ class LeadModel extends Lead {
     required super.interes,
     super.tieneConversacionAbierta,
     super.nombreContacto,
+    super.nombreLead,
     super.modalidad,
     super.idEstadoPadre,
     super.descripcionEstadoPadre,

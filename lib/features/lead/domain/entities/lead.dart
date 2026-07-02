@@ -55,6 +55,7 @@ class Lead extends Equatable {
 
   // ── Campos adicionales del SP de chats ────────────────────────
   final String? nombreContacto;
+  final String? nombreLead;
   final String? modalidad;
   final String? idEstadoPadre;
   final String? descripcionEstadoPadre;
@@ -115,6 +116,7 @@ class Lead extends Equatable {
     required this.interes,
     this.tieneConversacionAbierta,
     this.nombreContacto,
+    this.nombreLead,
     this.modalidad,
     this.idEstadoPadre,
     this.descripcionEstadoPadre,
@@ -154,6 +156,7 @@ class Lead extends Equatable {
     interes,
     tieneConversacionAbierta,
     nombreContacto,
+    nombreLead,
     modalidad,
     idEstadoPadre,
     descripcionEstadoPadre,
@@ -193,6 +196,7 @@ class Lead extends Equatable {
     String? interes,
     bool? tieneConversacionAbierta,
     String? nombreContacto,
+    String? nombreLead,
     String? modalidad,
     String? idEstadoPadre,
     bool clearEstadoPadre = false,
@@ -232,6 +236,7 @@ class Lead extends Equatable {
       tieneConversacionAbierta:
           tieneConversacionAbierta ?? this.tieneConversacionAbierta,
       nombreContacto: nombreContacto ?? this.nombreContacto,
+      nombreLead: nombreLead ?? this.nombreLead,
       modalidad: modalidad ?? this.modalidad,
       idEstadoPadre: clearEstadoPadre
           ? null

@@ -185,8 +185,8 @@ class DatosTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           CustomOutlinedButton(
-            text: 'Editar lead',
-            icon: AppIcons.edit,
+            text: lead.idLead == 0 ? 'Crear lead' : 'Editar lead',
+            icon: lead.idLead == 0 ? AppIcons.add : AppIcons.edit,
             onPressed: () {
               if (onCerrar != null) {
                 onCerrar!();

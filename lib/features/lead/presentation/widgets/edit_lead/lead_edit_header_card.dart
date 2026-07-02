@@ -53,32 +53,42 @@ class LeadEditHeaderCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    AppSocialUtils.widgetCanalById(lead.idCanal, size: AppSizing.iconSm),
-                    const SizedBox(width: AppSpacing.xs),
-                    Flexible(
-                      child: Text(
-                        lead.canal,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                // Canal y estado — ocultos si no hay lead asociado, para no
+                // mostrar datos falsos (ícono/chip vacíos).
+                if (lead.canal.isNotEmpty || lead.idEstado.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    children: [
+                      if (lead.canal.isNotEmpty) ...[
+                        AppSocialUtils.widgetCanalById(
+                          lead.idCanal,
+                          size: AppSizing.iconSm,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    AppSocialUtils.chipEstado(
-                      lead.idEstadoPadre?.isNotEmpty == true
-                          ? lead.idEstadoPadre!
-                          : lead.idEstado,
-                      label: lead.idEstadoPadre?.isNotEmpty == true
-                          ? lead.descripcionEstadoPadre ?? lead.estado
-                          : lead.estado,
-                    ),
-                  ],
-                ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            lead.canal,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                      ],
+                      if (lead.idEstado.isNotEmpty)
+                        AppSocialUtils.chipEstado(
+                          lead.idEstadoPadre?.isNotEmpty == true
+                              ? lead.idEstadoPadre!
+                              : lead.idEstado,
+                          label: lead.idEstadoPadre?.isNotEmpty == true
+                              ? lead.descripcionEstadoPadre ?? lead.estado
+                              : lead.estado,
+                        ),
+                    ],
+                  ),
+                ],
                 if (lead.nombreEmpresa.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(

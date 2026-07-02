@@ -95,30 +95,31 @@ class ChatDetailAppBar extends StatelessWidget {
                 ),
               ),
 
-              // Campaña / canal
-              Row(
-                children: [
-                  Icon(
-                    AppIcons.campaign,
-                    size: AppSizing.iconXxs,
-                    color: colorScheme.onPrimary.withValues(
-                      alpha: AppColors.opacityOnPrimarySubtle,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      lead.canal.isEmpty ? 'Sin canal' : lead.canal,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: colorScheme.onPrimary.withValues(
-                          alpha: AppColors.opacityOnPrimarySubtle,
-                        ),
+              // Campaña / canal — oculto si no hay lead asociado (sin canal)
+              if (lead.idLead > 0)
+                Row(
+                  children: [
+                    Icon(
+                      AppIcons.campaign,
+                      size: AppSizing.iconXxs,
+                      color: colorScheme.onPrimary.withValues(
+                        alpha: AppColors.opacityOnPrimarySubtle,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        lead.canal.isNotEmpty ? 'Sin canal' : lead.canal,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: colorScheme.onPrimary.withValues(
+                            alpha: AppColors.opacityOnPrimarySubtle,
+                          ),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
 
               // Punto verde + "Derivado por IA · Última respuesta hace X"
               const SizedBox(height: AppSpacing.xxs),

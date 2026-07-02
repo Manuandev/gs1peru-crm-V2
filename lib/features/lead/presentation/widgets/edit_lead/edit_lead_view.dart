@@ -43,7 +43,18 @@ class _EditLeadViewState extends State<EditLeadView> {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      title: 'Editar lead',
+      titleWidget: BlocBuilder<InfoLeadCubit, InfoLeadState>(
+        buildWhen: (prev, curr) => curr is InfoLeadSuccess,
+        builder: (context, state) {
+          final esNuevo = state is InfoLeadSuccess && state.lead.idLead == 0;
+          return Text(
+            esNuevo ? 'Crear lead' : 'Editar lead',
+            style: AppTextStyles.titleLarge.copyWith(
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          );
+        },
+      ),
       bodyPadding: EdgeInsets.zero,
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [

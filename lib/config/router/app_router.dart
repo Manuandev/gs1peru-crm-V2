@@ -115,9 +115,7 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return SolicitudDetallePage(
-          solicitud: args['solicitud'] as Solicitud,
-        );
+        return SolicitudDetallePage(solicitud: args['solicitud'] as Solicitud);
       },
     ),
     AppRoutes.fichaCompletarSolicitud: RouteDefinition(
@@ -224,15 +222,6 @@ class AppRouter {
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
         return ContactoDetallePage(idContacto: args['idContacto'] as int);
-      },
-    ),
-
-    // SEGUIMIENTO / PROPUESTAS — detalle de lead
-    AppRoutes.detalleSeguimiento: RouteDefinition(
-      transition: TransitionType.slideRight,
-      builder: (context) {
-        final args = _requireArgs<Map<String, dynamic>>(context);
-        return LeadDetallePage(idLead: args['idLead'] as int);
       },
     ),
 

@@ -44,7 +44,6 @@ export 'presentation/bloc/contacto_detalle/contacto_detalle_state.dart';
 export 'presentation/bloc/contacto_detalle/contacto_detalle_bloc.dart';
 
 export 'presentation/pages/lead_list_page.dart';
-export 'presentation/pages/lead_detalle_page.dart';
 export 'presentation/pages/contacto_detalle_page.dart';
 
 export 'presentation/widgets/contacto_detalle/contacto_negociaciones_tab.dart';
@@ -58,12 +57,6 @@ export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';
 export 'presentation/widgets/lead_detail_sheet/negociacion_card.dart';
 export 'presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart';
 
-export 'presentation/widgets/detalle/lead_detalle_view.dart';
-export 'presentation/widgets/detalle/lead_detalle_skeleton.dart';
-export 'presentation/widgets/detalle/lead_detalle_stepper.dart';
-export 'presentation/widgets/detalle/lead_detalle_info_card.dart';
-export 'presentation/widgets/detalle/lead_detalle_comentarios.dart';
-export 'presentation/widgets/detalle/lead_detalle_actions.dart';
 
 export 'presentation/widgets/list/lead_list_portrait.dart';
 export 'presentation/widgets/list/lead_list_view.dart';

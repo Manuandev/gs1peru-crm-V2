@@ -8,7 +8,10 @@ sealed class CrudResult {
 
 class CrudOk extends CrudResult {
   final String message;
-  const CrudOk(this.message);
+  /// Dato extra opcional que algunos SP devuelven tras el 'OK' — ej. el
+  /// ID_LEAD generado al crear un lead nuevo (ver [CSV_LEADS_CUD_APP] task 'U').
+  final String? data;
+  const CrudOk(this.message, {this.data});
 }
 
 class CrudAlert extends CrudResult {
@@ -34,7 +37,10 @@ CrudResult parseCrudResponse(String raw) {
 
   switch (parte[0].toUpperCase()) {
     case 'OK':
-      return CrudOk(parte.length > 1 ? parte[1] : '');
+      return CrudOk(
+        parte.length > 1 ? parte[1] : '',
+        data: parte.length > 2 ? parte[2] : null,
+      );
     case 'ALERTA':
       return CrudAlert(parte.length > 1 ? parte[1] : '');
     case 'ERROR':

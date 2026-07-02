@@ -200,10 +200,11 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
 
     final s = state as InfoLeadSuccess;
     final snapshot = s.lead;
+    final optimista = snapshot.copyWith(idEstado: idEstado, estado: estado);
 
     emit(
       InfoLeadSuccess(
-        snapshot.copyWith(idEstado: idEstado, estado: estado),
+        optimista,
         isBloqueado: s.isBloqueado,
         isExpirado: s.isExpirado,
         isCerrado: s.isCerrado,
@@ -218,6 +219,10 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       switch (result) {
         case CrudOk(:final message):
           _successController.add(message);
+          LeadUpdateNotifier.instance.notify(
+            optimista.idLead,
+            updatedLead: optimista,
+          );
           break;
         case CrudAlert(:final message):
           _errorController.add(message);
@@ -357,8 +362,29 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       if (isClosed) return;
 
       switch (result) {
-        case CrudOk(:final message):
+        case CrudOk(:final message, :final data):
+          // Si el lead se acaba de crear (idLead venía en 0), el SP devuelve
+          // el ID_LEAD real generado — sin esto el resto de la app (incluida
+          // la lista de chats) se queda con idLead 0 para siempre.
+          final idLeadNuevo = int.tryParse(data ?? '');
+          final leadFinal = (idLeadNuevo != null && idLeadNuevo > 0)
+              ? updated.copyWith(idLead: idLeadNuevo)
+              : updated;
+          if (leadFinal.idLead != updated.idLead) {
+            emit(
+              InfoLeadSuccess(
+                leadFinal,
+                isBloqueado: s.isBloqueado,
+                isExpirado: s.isExpirado,
+                isCerrado: s.isCerrado,
+              ),
+            );
+          }
           _successController.add(message);
+          LeadUpdateNotifier.instance.notify(
+            leadFinal.idLead,
+            updatedLead: leadFinal,
+          );
           break;
         case CrudAlert(:final message):
           _errorController.add(message);

@@ -221,10 +221,15 @@ class _ChatDetailViewState extends State<ChatDetailView>
                   buildWhen: (prev, curr) {
                     if (curr is! InfoLeadSuccess) return false;
                     if (prev is! InfoLeadSuccess) return true;
-                    return (prev).lead.idEstado != (curr).lead.idEstado ||
+                    return (prev).lead.idLead != (curr).lead.idLead ||
+                        (prev).lead.idEstado != (curr).lead.idEstado ||
                         (prev).lead.idEstadoPadre != (curr).lead.idEstadoPadre;
                   },
-                  builder: (context, state) => state is InfoLeadSuccess
+                  // Sin lead no hay etapa que mostrar — mostrar "paso 1" sería
+                  // data falsa (el fallback interno de ChatDetailFases activa
+                  // el primer paso cuando idEstado no matchea ningún estado).
+                  builder: (context, state) =>
+                      state is InfoLeadSuccess && state.lead.idLead > 0
                       ? ChatDetailFases(
                           idEstadoActual: state.lead.idEstado,
                           idEstadoPadre: state.lead.idEstadoPadre ?? '',

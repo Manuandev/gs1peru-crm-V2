@@ -97,10 +97,15 @@ class HomeView extends StatelessWidget {
         backgroundColor: AppColors.surface,
         onRefresh: () async {
           final bloc = context.read<HomeBloc>();
+          final catalogsBloc = context.read<CatalogsBloc>();
           bloc.add(HomeRefresh());
-          await bloc.stream.firstWhere(
-            (s) => s is HomeLoaded || s is HomeError,
-          );
+          catalogsBloc.add(const CatalogsLoadRequested());
+          await Future.wait([
+            bloc.stream.firstWhere((s) => s is HomeLoaded || s is HomeError),
+            catalogsBloc.stream.firstWhere(
+              (s) => s is CatalogsLoaded || s is CatalogsError,
+            ),
+          ]);
         },
         child: BlocBuilder<HomeBloc, HomeState>(
           builder: (context, state) {

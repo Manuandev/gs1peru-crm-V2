@@ -39,14 +39,8 @@ class LeadListPortrait extends StatelessWidget {
                       return;
                     }
 
-                    final catalogsState = context.read<CatalogsBloc>().state;
-                    final asesores = catalogsState is CatalogsLoaded
-                        ? catalogsState.asesores
-                        : const <AsesorItem>[];
-
                     final seleccionado = await LeadAsesorPickerModal.show(
                       context,
-                      asesores: asesores,
                       conteosPorAsesor: state.conteosPorAsesor,
                       seleccionadoActual: state.asesorSeleccionado,
                     );

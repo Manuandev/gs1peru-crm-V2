@@ -19,7 +19,7 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 - `LeadCard` (list/) → único estilo (ya no hay modo compacto/detallado): borde izquierdo por estado efectivo, avatar+badge canal, pill de canal junto al nombre, timestamp + chip de estado, fila de acciones
 - `LeadCardActions` (list/) → botón WhatsApp, botón "Ver detalle" y menú "⋯" (favorito / abrir chat)
 - `LeadListFilterChips` (list/) → 5 chips (Todos/Asesores*/Nuevos/En gestión/Propuesta — la etiqueta "En gestión" mapea al filtro `enDesarrollo`) en fila con scroll horizontal (`SingleChildScrollView`). Todos/Asesores llevan ícono (`AppIcons.filter` / `AppIcons.userFilled`); Nuevos/En gestión/Propuesta llevan un punto de color (azul `AppColors.info` / verde `AppColors.success` / morado `AppColors.purple`). *Asesores solo lo ve el moderador. El chip "Asesores" nunca aplica el filtro directo — `LeadListPortrait` intercepta su tap y abre `LeadAsesorPickerModal`
-- `LeadAsesorPickerModal` (list/) → bottom sheet con buscador (nombre o `codUser`) sobre el catálogo `CatalogsBloc.state.asesores`; cada fila muestra avatar (iniciales + color), nombre, código, punto verde si `disponible` y el conteo de leads (`conteosPorAsesor`, calculado en el bloc sobre `_allLeads`, no en el backend). Retorna el `codUser` elegido o `null`. `LeadListPortrait` interpreta `null` (back, tap fuera, botón cerrar) como "volver a Todos" — nunca deja el filtro a medias
+- `LeadAsesorPickerModal` (list/) → bottom sheet con buscador (nombre o `codUser`), reactivo a `CatalogsBloc` (`BlocBuilder<CatalogsBloc, CatalogsState>`, no recibe la lista como snapshot estático); cada fila muestra avatar (iniciales + color), nombre, código, punto verde si `disponible` y el conteo de leads (`conteosPorAsesor`, calculado en el bloc sobre `_allLeads`, no en el backend). Ícono de refrescar en el header dispara `CatalogsLoadRequested` (reusa el catálogo completo — sin endpoint dedicado, ver nota abajo). Retorna el `codUser` elegido o `null`. `LeadListPortrait` interpreta `null` (back, tap fuera, botón cerrar) como "volver a Todos" — nunca deja el filtro a medias
 - `LeadDetalleView` (detalle/) → layout principal del detalle con todas las secciones
 - `LeadDetalleSkeleton` (detalle/) → skeleton de carga del detalle: reemplaza el BasePage completo
 - `LeadDetalleStepper` (detalle/) → stepper visual de 4 etapas con header "ETAPA · X de 4 · Nombre"
@@ -59,6 +59,11 @@ enum LeadListFiltro { todos, asesores, nuevos, enDesarrollo, propuesta }
 - Conteos se calculan sobre `_allLeads` (lista completa), no sobre la lista filtrada.
   `state.conteosPorAsesor` (`Map<String,int>` por `codUser`) alimenta el picker; no hay una
   entrada de `asesores` en `conteos` — ese chip nunca muestra número, solo el label
+- `CatalogsBloc.asesores` se carga una sola vez al iniciar sesión — un asesor recién asignado
+  a un lead no aparece hasta refrescar. Dos puntos de refresco (ambos disparan el mismo
+  `CatalogsLoadRequested`, sin endpoint dedicado solo-asesores — el payload total de catálogos
+  es pequeño y no justifica separarlo): ícono en el header de `LeadAsesorPickerModal`, y el
+  pull-to-refresh de `HomeView` (que además de `HomeRefresh` ahora dispara `CatalogsLoadRequested`)
 - Un lead pertenece a un bucket (`nuevos`/`enDesarrollo`/`propuesta`) si su `idEstado` coincide
   directo **o** si su `idEstadoPadre` apunta a ese id — así un sub-estado (ej. "07 Solicita
   ficha", padre "01") cuenta dentro de "En gestión". Ver `LeadListBloc._perteneceEstado`.

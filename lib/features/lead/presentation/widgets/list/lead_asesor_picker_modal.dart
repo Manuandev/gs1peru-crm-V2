@@ -1,6 +1,7 @@
 // lib/features/lead/presentation/widgets/list/lead_asesor_picker_modal.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
@@ -8,21 +9,23 @@ import 'package:app_crm/core/index_core.dart';
 /// de Seguimiento. Retorna el `codUser` elegido, o `null` si se cierra sin
 /// seleccionar (back, tap fuera, o botón de cerrar) — el llamador debe
 /// interpretar `null` como "volver al filtro Todos".
+///
+/// La lista de asesores se lee en vivo de [CatalogsBloc] (catálogo global,
+/// cargado una sola vez al iniciar sesión) — el botón de refrescar del
+/// header dispara [CatalogsLoadRequested] para traer asesores recién
+/// asignados sin cerrar sesión.
 class LeadAsesorPickerModal extends StatefulWidget {
-  final List<AsesorItem> asesores;
   final Map<String, int> conteosPorAsesor;
   final String? seleccionadoActual;
 
   const LeadAsesorPickerModal({
     super.key,
-    required this.asesores,
     required this.conteosPorAsesor,
     this.seleccionadoActual,
   });
 
   static Future<String?> show(
     BuildContext context, {
-    required List<AsesorItem> asesores,
     required Map<String, int> conteosPorAsesor,
     String? seleccionadoActual,
   }) {
@@ -36,7 +39,6 @@ class LeadAsesorPickerModal extends StatefulWidget {
         ),
       ),
       builder: (_) => LeadAsesorPickerModal(
-        asesores: asesores,
         conteosPorAsesor: conteosPorAsesor,
         seleccionadoActual: seleccionadoActual,
       ),
@@ -57,10 +59,10 @@ class _LeadAsesorPickerModalState extends State<LeadAsesorPickerModal> {
     super.dispose();
   }
 
-  List<AsesorItem> get _filtrados {
+  List<AsesorItem> _filtrar(List<AsesorItem> asesores) {
     final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return widget.asesores;
-    return widget.asesores
+    if (q.isEmpty) return asesores;
+    return asesores
         .where(
           (a) =>
               a.nombre.toLowerCase().contains(q) ||
@@ -111,6 +113,33 @@ class _LeadAsesorPickerModalState extends State<LeadAsesorPickerModal> {
                     ),
                   ),
                 ),
+                BlocBuilder<CatalogsBloc, CatalogsState>(
+                  builder: (context, state) {
+                    final refrescando = state is CatalogsLoading;
+                    return IconButton(
+                      tooltip: 'Actualizar lista de asesores',
+                      onPressed: refrescando
+                          ? null
+                          : () => context.read<CatalogsBloc>().add(
+                              const CatalogsLoadRequested(),
+                            ),
+                      icon: refrescando
+                          ? SizedBox(
+                              width: AppSizing.iconSm,
+                              height: AppSizing.iconSm,
+                              child: CircularProgressIndicator(
+                                strokeWidth: AppSizing.spinnerStrokeSmall,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            )
+                          : Icon(
+                              AppIcons.refresh,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                      visualDensity: VisualDensity.compact,
+                    );
+                  },
+                ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: Icon(
@@ -133,28 +162,45 @@ class _LeadAsesorPickerModalState extends State<LeadAsesorPickerModal> {
           ),
           const SizedBox(height: AppSpacing.sm),
           Expanded(
-            child: _filtrados.isEmpty
-                ? const AppEmptyView(message: 'No se encontraron asesores.')
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.xxs,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                    ),
-                    itemCount: _filtrados.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.xs),
-                    itemBuilder: (context, i) {
-                      final asesor = _filtrados[i];
-                      return _AsesorTile(
-                        asesor: asesor,
-                        cantidad: widget.conteosPorAsesor[asesor.codUser] ?? 0,
-                        isSelected: asesor.codUser == widget.seleccionadoActual,
-                        onTap: () => Navigator.of(context).pop(asesor.codUser),
-                      );
-                    },
+            child: BlocBuilder<CatalogsBloc, CatalogsState>(
+              builder: (context, state) {
+                final asesores = state is CatalogsLoaded
+                    ? state.asesores
+                    : const <AsesorItem>[];
+                final filtrados = _filtrar(asesores);
+
+                if (state is CatalogsLoading && asesores.isEmpty) {
+                  return const AppLoadingView();
+                }
+
+                if (filtrados.isEmpty) {
+                  return const AppEmptyView(
+                    message: 'No se encontraron asesores.',
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.xxs,
+                    AppSpacing.md,
+                    AppSpacing.md,
                   ),
+                  itemCount: filtrados.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.xs),
+                  itemBuilder: (context, i) {
+                    final asesor = filtrados[i];
+                    return _AsesorTile(
+                      asesor: asesor,
+                      cantidad: widget.conteosPorAsesor[asesor.codUser] ?? 0,
+                      isSelected: asesor.codUser == widget.seleccionadoActual,
+                      onTap: () => Navigator.of(context).pop(asesor.codUser),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

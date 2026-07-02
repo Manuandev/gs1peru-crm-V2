@@ -22,4 +22,9 @@ class ParseUtils {
 
   static bool toBool(List<String> campos, int i) =>
       str(campos, i) == '1' || str(campos, i).toLowerCase() == 'true';
+
+  /// Serializa un valor de salida (int?/double?) para el body de un SP —
+  /// '' si es null o 0, para que el SP lo trate como NULL vía NULLIF/TRY_CAST.
+  static String orEmpty(dynamic val) =>
+      (val == null || val == 0) ? '' : val.toString();
 }

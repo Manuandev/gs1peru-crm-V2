@@ -11,9 +11,6 @@ class LeadRemoteDatasource {
   final sep = AppConstants.sepListas;
   final camp = AppConstants.sepCampos;
 
-  String _orEmpty(dynamic val) =>
-      (val == null || val == 0) ? '' : val.toString();
-
   Future<List<LeadModel>> getLeads() async {
     final String body =
         '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LS';
@@ -51,39 +48,31 @@ class LeadRemoteDatasource {
       lead.idNumero, // field1  ID_NUMERO
       lead.idLead, // field2  ID_LEAD
       lead.idEstado, // field3  ID_ESTADO
-      _orEmpty(lead.idCampania), // field4  ID_CAMPANIA
-      _orEmpty(lead.idEvento), // field5  ID_OPORTUNIDAD
-      _orEmpty(lead.idCanal), // field6  ID_CANAL
-      _orEmpty(lead.idInteres), // field7  ID_INTERES
+      ParseUtils.orEmpty(lead.idCampania), // field4  ID_CAMPANIA
+      ParseUtils.orEmpty(lead.idEvento), // field5  ID_OPORTUNIDAD
+      ParseUtils.orEmpty(lead.idCanal), // field6  ID_CANAL
+      ParseUtils.orEmpty(lead.idInteres), // field7  ID_INTERES
       lead.nombre, // field8  NOMBRES
       lead.apellidoPaterno, // field9  APELLIDO_P
       lead.apellidoMaterno, // field10 APELLIDO_M
-      nuevosCorreos, // field11 nuevos correos ± separados
-      nuevosPrefijos, // field12 nuevos prefijos ± separados
-      nuevosNumeros, // field13 nuevos números ± separados (mismo índice que field12)
-      // TODO(mejora): unificar field12+field13 en un solo string +51¶999000001±+1¶987654321
-      // usando AppConstants.sepComodin3 (¶) entre prefijo/número y sepComodin2 (±) entre entradas.
-      // Actualizar getter nuevosTelefonosStr en EditLeadContactoSection y SP para usar
-      // fnSplitStringTable05(@TELEFONOS_STR, @sepComodin2, @sepComodin3).
-      _orEmpty(lead.precioBase), // field14 PRECIO_BASE
-      _orEmpty(lead.precio), // field15 PRECIO (costoFinal calculado)
-      // lead.cantidad es int: el SP castea field16 con TRY_CAST(... AS INT) —
+      ParseUtils.orEmpty(lead.precioBase), // field11 PRECIO_BASE
+      ParseUtils.orEmpty(lead.precio), // field12 PRECIO (costoFinal calculado)
+      // lead.cantidad es int: el SP castea field13 con TRY_CAST(... AS INT) —
       // un string con decimales como "5.0" hace que TRY_CAST devuelva NULL y
       // nunca se guarda IN_PARTICIPANTES.
-      _orEmpty(lead.cantidad), // field16 CANTIDAD
-      _orEmpty(lead.descuento), // field17 DESCUENTO
-      _session.codUser, // field18 ID_USUARIO
-      ip, // field19 IP_USUARIO
-      coords, // field20 LL_USUARIO
-      lead.nombreLead ?? '', // field21 NOMBRE_LD
-      lead.modalidad ?? '', // field22 MODALIDAD
-      // TODO: [CRM].[CSV_LEADS_CUD_APP] task 'U' (Fnsplitstringtable25, tope 25
-      // fields) todavía no lee más allá de field22 — cuando empresa/correo/
-      // teléfono sean editables, hay que ampliar el split y sumar estos 4:
-      // nuevasEmpresas,                 // field23 nuevas empresas ± separadas
-      // '',                             // field24 CARGO placeholder
-      // empresaEditar,                  // field25 editar empresa actual ('' si no cambió)
-      // correoEditar,                   // field26 editar correo actual ('' si no cambió) — excede el tope de 25, requeriría otra función split
+      ParseUtils.orEmpty(lead.cantidad), // field13 CANTIDAD
+      ParseUtils.orEmpty(lead.descuento), // field14 DESCUENTO
+      lead.nombreLead ?? '', // field15 NOMBRE_LD
+      lead.modalidad ?? '', // field16 MODALIDAD
+      _session.codUser, // field17 ID_USUARIO
+      ip, // field18 IP_USUARIO
+      coords, // field19 LL_USUARIO
+      // TODO: [CRM].[CSV_LEADS_CUD_APP] task 'U' todavía no lee más allá de
+      // field19 — cuando empresa/correo/teléfono/nuevos ítems sean editables
+      // en el SP, hay que sumar aquí (en este orden, tras confirmar los
+      // índices con el SP actualizado):
+      // nuevasEmpresas, nuevosCorreos, nuevosPrefijos, nuevosNumeros,
+      // empresaEditar, correoEditar
     ].join(camp);
 
     final result = await _api.postSafe(

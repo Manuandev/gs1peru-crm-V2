@@ -29,12 +29,17 @@ class _NegociacionesTabState extends State<NegociacionesTab>
   @override
   void initState() {
     super.initState();
-    context.read<NegociacionesCubit>().cargarNegociaciones(widget.leadId);
+    // Sin lead no hay nada que buscar — el SP devolvería vacío igual.
+    if (widget.leadId > 0) {
+      context.read<NegociacionesCubit>().cargarNegociaciones(widget.leadId);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (widget.leadId == 0) return const _EstadoVacio();
+
     return BlocBuilder<NegociacionesCubit, NegociacionesState>(
       builder: (context, state) {
         return switch (state) {

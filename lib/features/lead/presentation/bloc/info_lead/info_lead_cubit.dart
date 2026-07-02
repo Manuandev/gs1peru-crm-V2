@@ -59,6 +59,35 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
         isCerrado: chat.isCerrado,
       ),
     );
+
+    // Si el chat tiene lead, se enriquece en segundo plano con el detalle
+    // real (task 'DT') — trae fechaCreacion y demás datos que el SP de
+    // chats no incluye. Si no tiene lead (idLead == 0), no se busca nada:
+    // se queda vacío.
+    if (chat.idLead > 0) {
+      _enriquecerConDetalle(chat.idLead);
+    }
+  }
+
+  // Trae el detalle completo del lead sin pasar por InfoLeadLoading — evita
+  // el parpadeo de spinner sobre datos que ya se mostraron desde el seed.
+  Future<void> _enriquecerConDetalle(int idLead) async {
+    try {
+      final detalle = await _getInfo(idLead);
+      if (isClosed) return;
+      final current = state;
+      if (current is! InfoLeadSuccess || current.lead.idLead != idLead) return;
+      emit(
+        InfoLeadSuccess(
+          detalle,
+          isBloqueado: current.isBloqueado,
+          isExpirado: current.isExpirado,
+          isCerrado: current.isCerrado,
+        ),
+      );
+    } catch (_) {
+      // Falla silenciosa — se queda con los datos ya seedeados desde el chat
+    }
   }
 
   // Inicializa directamente desde un Lead ya cargado (ej. desde EditLeadPage sin cubit compartido).

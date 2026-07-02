@@ -176,9 +176,9 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Fecha de creación',
-                  valor: lead.fechaHora.isEmpty
+                  valor: (lead.fechaCreacion ?? '').isEmpty
                       ? '—'
-                      : '${lead.fechaHora.formatDate(AppDateFormat.shortDate)} · ${lead.fechaHora.formatDate(AppDateFormat.hourMinute)}',
+                      : '${lead.fechaCreacion!.formatDate(AppDateFormat.shortDate)} · ${lead.fechaCreacion!.formatDate(AppDateFormat.hourMinute)}',
                 ),
               ),
             ],

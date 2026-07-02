@@ -65,10 +65,9 @@ final ip   = await _deviceInfo.getLocalIp();
 final body = '${[idLead, idEstado, _session.codUser, ip].join(camp)}${sep}UE';
 ```
 
-Helper para valores nulos o cero:
+Helper para valores nulos o cero — centralizado en core, no duplicar por feature:
 ```dart
-String _orEmpty(dynamic val) =>
-    (val == null || val == 0) ? '' : val.toString();
+ParseUtils.orEmpty(val) // '' si val es null o 0, si no val.toString()
 ```
 
 ---

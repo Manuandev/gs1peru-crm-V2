@@ -16,6 +16,10 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<List<Chat>> getChats() => _datasource.getChats();
 
   @override
+  Future<Chat?> getChatByIdChatCab(int idChatCab) =>
+      _datasource.getChatByIdChatCab(idChatCab);
+
+  @override
   Future<List<ChatMessage>> getChatMessages(
     int idNumero, {
     String? idUltimoMensaje,

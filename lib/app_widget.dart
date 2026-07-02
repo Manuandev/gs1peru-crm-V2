@@ -112,6 +112,7 @@ class AppWidget extends StatelessWidget {
           BlocProvider<ChatListBloc>(
             create: (context) => ChatListBloc(
               GetChatsUseCase(context.read<ChatRepository>()),
+              GetChatByIdChatCabUseCase(context.read<ChatRepository>()),
             )..add(const ChatListStarted()),
           ),
         ],

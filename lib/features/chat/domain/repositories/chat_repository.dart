@@ -7,6 +7,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 abstract class ChatRepository {
   Future<Lead> getInfoLead(int idLead);
   Future<List<Chat>> getChats();
+  Future<Chat?> getChatByIdChatCab(int idChatCab);
 
   Future<List<ChatMessage>> getChatMessages(
     int idNumero, {

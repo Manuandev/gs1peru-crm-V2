@@ -20,6 +20,7 @@ export 'domain/enums/chat_filtro.dart';
 export 'domain/repositories/chat_repository.dart';
 
 export 'domain/usecases/get_chats_usecase.dart';
+export 'domain/usecases/get_chat_by_id_chat_cab_usecase.dart';
 export 'domain/usecases/get_chat_messages_usecase.dart';
 export 'domain/usecases/get_info_lead_usecase.dart';
 export 'domain/usecases/send_chat_message_usecase.dart';

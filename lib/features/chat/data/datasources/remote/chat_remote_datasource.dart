@@ -51,6 +51,22 @@ class ChatRemoteDatasource {
     };
   }
 
+  /// Trae un único chat por su ID_CONVERSACION_CAB — usado cuando llega un
+  /// mensaje por WebSocket de una conversación que aún no está en memoria.
+  Future<Chat?> getChatByIdChatCab(int idChatCab) async {
+    final String body =
+        '${[_session.codUser, _session.isModerador ? 1 : 0, idChatCab].join(camp)}${sep}LU';
+
+    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => ChatModel.parseList(data).firstOrNull,
+      ApiEmpty() => null,
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   Future<List<ChatMessageModel>> getChatMessages(
     int idNumero, {
     String? idUltimoMensaje, // null = primera carga

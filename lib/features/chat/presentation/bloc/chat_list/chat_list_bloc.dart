@@ -9,6 +9,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   final GetChatsUseCase _getChats;
+  final GetChatByIdChatCabUseCase _getChatByIdChatCab;
   List<Chat> _allChats = [];
   StreamSubscription<WebSocketMessage>? _messageSubscription;
   StreamSubscription<LeadUpdate>? _leadUpdateSubscription;
@@ -22,7 +23,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   String _filtroNumero = '';
   String _filtroOportunidadId = '';
 
-  ChatListBloc(this._getChats) : super(const ChatListInitial()) {
+  ChatListBloc(this._getChats, this._getChatByIdChatCab)
+    : super(const ChatListInitial()) {
     on<ChatListStarted>(_onStarted);
     on<ChatListRefreshed>(_onRefreshed);
     on<ChatListSilentRefreshed>(_onSilentRefreshed);
@@ -275,30 +277,30 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
   // ── WebSocket ────────────────────────────────────────────────────────────
 
-  void _onIncomingMessageReceived(
+  Future<void> _onIncomingMessageReceived(
     ChatListIncomingMessageReceived event,
     Emitter<ChatListState> emit,
-  ) {
+  ) async {
     if (state is! ChatListSuccess) return;
 
     switch (event.message.process) {
       case 'MENSAJE_WHATSAPP':
-        _handleMensajeWhatsApp(event.message, emit);
+        await _handleMensajeWhatsApp(event.message, emit);
       case 'UPDATE_PANTALLA_WHATSAPP':
-        _handleUpdatePantalla(event.message, emit);
+        await _handleUpdatePantalla(event.message, emit);
       default:
         break;
     }
   }
 
-  void _handleMensajeWhatsApp(
+  Future<void> _handleMensajeWhatsApp(
     WebSocketMessage message,
     Emitter<ChatListState> emit,
-  ) {
+  ) async {
     final payload = WhatsAppMessagePayload.fromMessage(message);
     if (payload == null) return;
 
-    _updateChatInList(
+    await _updateChatInList(
       idChatCab: payload.idChatCab,
       // Hora de recepción local — no la del payload, que llega desfasada
       // del momento real en que el mensaje fue procesado por el servidor.
@@ -312,14 +314,14 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     );
   }
 
-  void _handleUpdatePantalla(
+  Future<void> _handleUpdatePantalla(
     WebSocketMessage message,
     Emitter<ChatListState> emit,
-  ) {
+  ) async {
     final payload = UpdatePantallaWhatsAppPayload.fromMessage(message);
     if (payload == null) return;
 
-    _updateChatInList(
+    await _updateChatInList(
       idChatCab: payload.idChatCab,
       fechaHora: payload.hora.isNotEmpty
           ? payload.hora
@@ -329,7 +331,11 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     );
   }
 
-  void _updateChatInList({
+  /// Actualiza el chat de [idChatCab] en memoria. Si no existe todavía
+  /// (conversación nueva que llegó por WebSocket antes de cualquier refresh),
+  /// trae solo ese registro con [_getChatByIdChatCab] (task 'LU') en vez de
+  /// refrescar la lista completa, y lo inserta al inicio.
+  Future<void> _updateChatInList({
     required int idChatCab,
     required String fechaHora,
     required String direccionMensaje,
@@ -338,10 +344,21 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     String? contenidoCliente,
     String? archivoNombreCliente,
     String? archivoTipoCliente,
-  }) {
+  }) async {
     final chats = List<Chat>.from(_allChats);
     final idx = chats.indexWhere((c) => c.idChatCab == idChatCab);
-    if (idx == -1) return;
+
+    if (idx == -1) {
+      try {
+        final nuevoChat = await _getChatByIdChatCab(idChatCab);
+        if (nuevoChat == null || isClosed) return;
+        _allChats = [nuevoChat, ..._allChats];
+        _emitFiltered(emit);
+      } catch (_) {
+        // Falla silenciosa — el chat seguirá faltando hasta el próximo refresh
+      }
+      return;
+    }
 
     final updatedChat = chats[idx].copyWith(
       fechaHora: fechaHora,

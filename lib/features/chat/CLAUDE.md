@@ -242,7 +242,7 @@ Ruta: `AppRoutes.mediaPicker` con `TransitionType.slideRight`.
 | Página | Ruta | Transición | Argumentos |
 |---|---|---|---|
 | `ChatListPage` | `AppRoutes.chats` | material | — |
-| `ChatDetailPage` | `AppRoutes.detalleChat` | slideRight | `{'idLead': int}` |
+| `ChatDetailPage` | `AppRoutes.detalleChat` | slideRight | `{'idChatCab': int}` — resuelve el `Chat` completo internamente vía task `LU`, sin importar el origen (lista de chats, lista de leads, home) |
 | `EditLeadPage` | `AppRoutes.detalleEditarLead` | slideRight | `{'lead': InfoLead, 'cubit': InfoLeadCubit}` |
 | `SelectTemplatePage` | `AppRoutes.templates` | slideRight | `{'lead': InfoLead}` |
 | `WhatsAppMediaPicker` | `AppRoutes.mediaPicker` | slideRight | — |

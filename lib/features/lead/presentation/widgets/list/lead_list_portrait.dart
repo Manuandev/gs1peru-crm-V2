@@ -89,8 +89,7 @@ class LeadListPortrait extends StatelessWidget {
                         onTap: () =>
                             context.goToDetalleContacto(idLead: lead.idLead),
                         onWhatsAppTap: () => context.goToDetalleChat(
-                          idNumero: lead.idNumero,
-                          idLead: lead.idLead,
+                          idChatCab: lead.idChatCab,
                         ),
                       ),
                     );

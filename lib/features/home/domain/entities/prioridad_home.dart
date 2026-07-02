@@ -10,6 +10,7 @@ class PrioridadHome {
   final String canal;
   final String fechaHora;
   final String prefijoTelefono;
+  final int idChatCab;
 
   const PrioridadHome({
     required this.idNumero,
@@ -22,6 +23,7 @@ class PrioridadHome {
     required this.canal,
     required this.fechaHora,
     required this.prefijoTelefono,
+    required this.idChatCab,
   });
 
   String get telefonoCompleto => "$prefijoTelefono $telefono";
@@ -37,6 +39,7 @@ class PrioridadHome {
     canal,
     fechaHora,
     prefijoTelefono,
+    idChatCab,
   ];
 
   PrioridadHome copyWith({
@@ -50,6 +53,7 @@ class PrioridadHome {
     String? canal,
     String? fechaHora,
     String? prefijoTelefono,
+    int? idChatCab,
   }) {
     return PrioridadHome(
       idNumero: idNumero ?? this.idNumero,
@@ -62,6 +66,7 @@ class PrioridadHome {
       canal: canal ?? this.canal,
       fechaHora: fechaHora ?? this.fechaHora,
       prefijoTelefono: prefijoTelefono ?? this.prefijoTelefono,
+      idChatCab: idChatCab ?? this.idChatCab,
     );
   }
 }

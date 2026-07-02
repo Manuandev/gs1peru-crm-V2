@@ -100,6 +100,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     return Lead(
       idLead: chat.idLead,
       idContacto: chat.idContacto,
+      idChatCab: chat.idChatCab,
       nombre: chat.nombres,
       apellidoPaterno: chat.apellidoPaterno ?? '',
       apellidoMaterno: chat.apellidoMaterno ?? '',

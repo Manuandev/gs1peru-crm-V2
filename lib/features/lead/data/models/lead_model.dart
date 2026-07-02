@@ -22,6 +22,7 @@ class LeadModel extends Lead {
     required super.prefijo,
     required super.numero,
     required super.isFavorito,
+    super.idChatCab,
     required super.correo,
     required super.idEstado,
     required super.estado,
@@ -119,8 +120,11 @@ class LeadModel extends Lead {
       cantidad:      ParseUtils.toInt(fields, 28),
       // 29 → descuento
       descuento:     ParseUtils.toDouble(fields, 29),
-      // 30 → fecha de creación real (LD.FC_USUARIO_C) — solo presente en task 'DT'
+      // 30 → fecha de creación real (LD.FC_USUARIO_C)
       fechaCreacion: ParseUtils.strNullable(fields, 30),
+      // 31 → idChatCab (CCU.ID_CONVERSACION_CAB) — conversación más reciente
+      // del número, independiente de si está abierta/cerrada/expirada.
+      idChatCab: ParseUtils.toInt(fields, 31),
     );
   }
 

@@ -75,7 +75,7 @@ enum LeadListFiltro { todos, asesores, nuevos, enDesarrollo, propuesta }
   preseleccionado. Usado por `CardTotalesHome` (dashboard de Home): Nuevos → `nuevos`,
   En gestión → `enDesarrollo`, Propuestas → `propuesta`. Sin `filtroInicial` (ej. desde el
   Drawer) el filtro por defecto es `todos`.
-- Botón WhatsApp de `LeadCard` → `context.goToDetalleChat(idNumero: lead.idNumero, idLead: lead.idLead)` (apila)
+- Botón WhatsApp de `LeadCard` → `context.goToDetalleChat(idChatCab: lead.idChatCab)` (apila)
 
 ### Campos principales de Lead
 ```dart

@@ -163,8 +163,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
             size: AppSizing.miniActionButtonSm,
             color: AppSocialUtils.colorCanalById(5),
             onTap: () => context.goToDetalleChatDesdeHome(
-              idNumero: prioridad.idNumero,
-              idLead: prioridad.idLead,
+              idChatCab: prioridad.idChatCab,
             ),
             tooltip: 'WhatsApp',
           ),

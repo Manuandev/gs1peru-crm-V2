@@ -127,7 +127,7 @@ context.goToChangePassword()
 
 ```dart
 context.goToNotifications()
-context.goToDetalleChat(idLead: 123)
+context.goToDetalleChat(idChatCab: 123)
 context.goToEditarLead(lead: lead, cubit: cubit)
 
 // Con valor de retorno
@@ -140,7 +140,7 @@ final assets   = await context.goToMediaPicker()           // List<AssetEntity>?
 Construye el stack correcto para que el botón Back vuelva a ChatList:
 
 ```dart
-context.goToDetalleChatDesdeHome(idLead: 123)
+context.goToDetalleChatDesdeHome(idChatCab: 123)
 // Resultado: Home se limpia → ChatList queda como base → ChatDetail encima
 ```
 

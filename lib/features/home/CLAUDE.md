@@ -78,15 +78,22 @@ static List<PrioridadHomeModel> parseList(String rawResponse) {
 
 factory PrioridadHomeModel.fromRawString(String raw) {
   final fields = raw.split(AppConstants.sepCampos); // ¦
-  String f(int i) => i < fields.length ? fields[i].trim() : '';
 
   return PrioridadHomeModel(
-    idLead:    int.parse(f(0)),
-    nombre:    f(1),
-    telefono:  f(2),
-    idEstado:  f(3),
-    estado:    f(4),
-    idCanal:   int.tryParse(f(5)) ?? 0,
+    idNumero:        ParseUtils.toInt(fields, 0),
+    idLead:          ParseUtils.toInt(fields, 1),
+    nombre:          ParseUtils.str(fields, 2),
+    telefono:        ParseUtils.str(fields, 3),
+    idEstado:        ParseUtils.str(fields, 4),
+    estado:          ParseUtils.str(fields, 5),
+    idCanal:         ParseUtils.toInt(fields, 6),
+    canal:           ParseUtils.str(fields, 7),
+    fechaHora:       ParseUtils.str(fields, 8),
+    prefijoTelefono: ParseUtils.str(fields, 9),
+    // idChatCab — conversación más reciente del número (T_CONVERSACION_CAB),
+    // se usa para navegar a ChatDetail con el mismo id que la lista de chats
+    // y la lista de leads (ver goToDetalleChat).
+    idChatCab:       ParseUtils.toInt(fields, 10),
     canal:     f(6),
     fechaHora: f(7),
   );
@@ -124,7 +131,7 @@ context.goToCobranza()
 context.goToNotifications()
 
 // A detalle de chat (construye stack correcto: Home limpio → ChatList → ChatDetail)
-context.goToDetalleChatDesdeHome(idLead: lead.idLead)
+context.goToDetalleChatDesdeHome(idChatCab: prioridad.idChatCab)
 ```
 
 ---

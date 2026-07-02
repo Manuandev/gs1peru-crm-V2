@@ -20,9 +20,8 @@ class Lead extends Equatable {
   final String asesor;
   final String fechaHora;
 
-  /// Fecha de creación real del lead (LD.FC_USUARIO_C) — solo viene en la
-  /// respuesta de la task 'DT' (detalle). Null en listas (task 'LS'), donde
-  /// solo se usa [fechaHora] (última modificación o creación).
+  /// Fecha de creación real del lead (LD.FC_USUARIO_C) — distinta de
+  /// [fechaHora], que es la fecha de última modificación o creación.
   final String? fechaCreacion;
 
   // ── Número de contacto ────────────────────────────────────────
@@ -30,6 +29,11 @@ class Lead extends Equatable {
   final String prefijo;
   final String numero;
   final bool isFavorito;
+
+  /// Id de la conversación (T_CONVERSACION_CAB) más reciente de este número —
+  /// clave única para abrir ChatDetail sin importar desde dónde se navegue
+  /// (lista de chats, lista de leads, home). 0 si el número nunca conversó.
+  final int idChatCab;
 
   // ── Correo ────────────────────────────────────────────────────
   final String correo;
@@ -103,6 +107,7 @@ class Lead extends Equatable {
     required this.prefijo,
     required this.numero,
     required this.isFavorito,
+    this.idChatCab = 0,
     required this.correo,
     required this.idEstado,
     required this.estado,
@@ -143,6 +148,7 @@ class Lead extends Equatable {
     prefijo,
     numero,
     isFavorito,
+    idChatCab,
     correo,
     idEstado,
     estado,
@@ -182,6 +188,7 @@ class Lead extends Equatable {
     String? prefijo,
     String? numero,
     bool? isFavorito,
+    int? idChatCab,
     String? correo,
     String? idEstado,
     String? estado,
@@ -222,6 +229,7 @@ class Lead extends Equatable {
       prefijo: prefijo ?? this.prefijo,
       numero: numero ?? this.numero,
       isFavorito: isFavorito ?? this.isFavorito,
+      idChatCab: idChatCab ?? this.idChatCab,
       correo: correo ?? this.correo,
       idEstado: idEstado ?? this.idEstado,
       estado: estado ?? this.estado,

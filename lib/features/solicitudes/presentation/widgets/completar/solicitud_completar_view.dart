@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_completar_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
@@ -32,6 +33,11 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // Switches — opciones del solicitante
   bool _solicitanteParticipante = false;
   bool _facturarAlSolicitante = false;
+
+  // Labels de combos capturados desde _SeccionDatosSolicitante
+  String _tipoDocLabel = '';
+  String _campanaLabel = '';
+  String _eventoLabel = '';
 
   // Controladores — Datos del solicitante
   final _ctrlNumDoc = TextEditingController();
@@ -76,28 +82,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
           ),
         ),
       ],
-      appBarTrailingButtons: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.md),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.white(0.15),
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            child: Text(
-              'Paso 1 de 4',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textOnDark,
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-          ),
-        ),
-      ],
+      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 1)],
       body: Column(
         children: [
           const SolicitudPasosIndicador(pasoActual: 1),
@@ -120,7 +105,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      _ToggleTipoPersona(
+                      SolicitudToggleTipoPersona(
                         valor: _tipoPersona,
                         habilitado: widget.modoEdicion,
                         onChanged: (v) => setState(() => _tipoPersona = v),
@@ -226,6 +211,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     ctrlCargo: _ctrlCargo,
                     ctrlCelular: _ctrlCelular,
                     ctrlCorreo: _ctrlCorreo,
+                    onTipoDocLabelChanged: (v) =>
+                        setState(() => _tipoDocLabel = v),
+                    onCampanaChanged: (v) => setState(() => _campanaLabel = v),
+                    onEventoChanged: (v) => setState(() => _eventoLabel = v),
                   ),
                   if (_tipoPersona == 'juridica') ...[
                     const SizedBox(height: AppSpacing.sm),
@@ -262,50 +251,37 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(
-                      AppIcons.save,
-                      size: AppSizing.iconActionSm,
-                    ),
-                    label: const Text('Guardar borrador'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.secondary,
-                      side: const BorderSide(color: AppColors.secondary),
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.labelMedium.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
-                  ),
-                ),
+                Expanded(child: SolicitudBotonBorrador(onPressed: () {})),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => context.goToFichaParticipantesSolicitud(
-                      solicitud: widget.solicitud,
-                      modoEdicion: widget.modoEdicion,
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textOnDark,
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.labelMedium.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
-                    child: const Text('Continuar →'),
+                  child: SolicitudBotonContinuar(
+                    onPressed: () {
+                      context.read<SolicitudFormCubit>().guardarSolicitante(
+                        DatosSolicitante(
+                          tipoPersona: _tipoPersona,
+                          tipoDocLabel: _tipoDocLabel,
+                          numDoc: _ctrlNumDoc.text,
+                          nombres: _ctrlNombres.text,
+                          apellidoPaterno: _ctrlApellidoPaterno.text,
+                          apellidoMaterno: _ctrlApellidoMaterno.text,
+                          cargo: _ctrlCargo.text,
+                          celular: _ctrlCelular.text,
+                          correo: _ctrlCorreo.text,
+                          campana: _campanaLabel,
+                          evento: _eventoLabel,
+                          canales: _canalesSeleccionados.toList(),
+                          ruc: _ctrlRuc.text,
+                          razonSocial: _ctrlRazonSocial.text,
+                          solicitanteEsParticipante: _solicitanteParticipante,
+                          facturarAlSolicitante: _facturarAlSolicitante,
+                        ),
+                      );
+                      context.goToFichaParticipantesSolicitud(
+                        solicitud: widget.solicitud,
+                        modoEdicion: widget.modoEdicion,
+                        formCubit: context.read<SolicitudFormCubit>(),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -549,6 +525,8 @@ class _SeccionInfoComercial extends StatelessWidget {
                 controller: ctrlRuc,
                 keyboardType: TextInputType.number,
                 enabled: habilitado,
+                maxLength: 11,
+                digitsOnly: true,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -571,7 +549,7 @@ class _SeccionInfoComercial extends StatelessWidget {
 
 // ── Sección Datos del solicitante ────────────────────────────────────────────
 
-class _SeccionDatosSolicitante extends StatelessWidget {
+class _SeccionDatosSolicitante extends StatefulWidget {
   final bool habilitado;
   final TextEditingController ctrlNumDoc;
   final TextEditingController ctrlNombres;
@@ -580,6 +558,9 @@ class _SeccionDatosSolicitante extends StatelessWidget {
   final TextEditingController ctrlCargo;
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
+  final ValueChanged<String>? onTipoDocLabelChanged;
+  final ValueChanged<String>? onCampanaChanged;
+  final ValueChanged<String>? onEventoChanged;
 
   const _SeccionDatosSolicitante({
     required this.habilitado,
@@ -590,7 +571,32 @@ class _SeccionDatosSolicitante extends StatelessWidget {
     required this.ctrlCargo,
     required this.ctrlCelular,
     required this.ctrlCorreo,
+    this.onTipoDocLabelChanged,
+    this.onCampanaChanged,
+    this.onEventoChanged,
   });
+
+  @override
+  State<_SeccionDatosSolicitante> createState() =>
+      _SeccionDatosSolicitanteState();
+}
+
+class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
+  String? _tipoDocId;
+
+  // Límite de caracteres y tipo de teclado según tipo de documento
+  static const _maxLengthPorTipo = {
+    '01': 8, // DNI
+    '02': 12, // Pasaporte
+    '03': 12, // Carnet de extranjería
+    '04': 11, // RUC como doc de persona
+  };
+  static const _soloDigitosPorTipo = {
+    '01': true,
+    '02': false,
+    '03': false,
+    '04': true,
+  };
 
   static const _tiposDoc = [
     '01¦DNI',
@@ -605,6 +611,10 @@ class _SeccionDatosSolicitante extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxLenDoc = _tipoDocId != null ? _maxLengthPorTipo[_tipoDocId] : null;
+    final soloDigitos = _soloDigitosPorTipo[_tipoDocId] ?? false;
+    final teclado = soloDigitos ? TextInputType.number : TextInputType.text;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -635,16 +645,26 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Tipo documento *',
                 data: _tiposDoc,
-                enabled: habilitado,
+                enabled: widget.habilitado,
+                onChanged: (item) {
+                  setState(() {
+                    _tipoDocId = item?.id;
+                    widget.ctrlNumDoc.clear();
+                  });
+                  widget.onTipoDocLabelChanged
+                      ?.call(item?.descripcion ?? '');
+                },
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: SolicitudTextField(
                 label: 'Número documento *',
-                controller: ctrlNumDoc,
-                keyboardType: TextInputType.number,
-                enabled: habilitado,
+                controller: widget.ctrlNumDoc,
+                keyboardType: teclado,
+                enabled: widget.habilitado,
+                maxLength: maxLenDoc,
+                digitsOnly: soloDigitos,
               ),
             ),
           ],
@@ -658,7 +678,7 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Nacionalidad *',
                 data: _nacionalidades,
-                enabled: habilitado,
+                enabled: widget.habilitado,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -666,7 +686,7 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Sexo *',
                 data: _sexos,
-                enabled: habilitado,
+                enabled: widget.habilitado,
               ),
             ),
           ],
@@ -676,8 +696,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
         // Nombres
         SolicitudTextField(
           label: 'Nombres *',
-          controller: ctrlNombres,
-          enabled: habilitado,
+          controller: widget.ctrlNombres,
+          enabled: widget.habilitado,
           isUpperCase: true,
           textCapitalization: TextCapitalization.words,
         ),
@@ -689,8 +709,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
             Expanded(
               child: SolicitudTextField(
                 label: 'Apellido paterno *',
-                controller: ctrlApellidoPaterno,
-                enabled: habilitado,
+                controller: widget.ctrlApellidoPaterno,
+                enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
               ),
@@ -699,8 +719,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
             Expanded(
               child: SolicitudTextField(
                 label: 'Apellido materno',
-                controller: ctrlApellidoMaterno,
-                enabled: habilitado,
+                controller: widget.ctrlApellidoMaterno,
+                enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
               ),
@@ -712,8 +732,8 @@ class _SeccionDatosSolicitante extends StatelessWidget {
         // Cargo
         SolicitudTextField(
           label: 'Cargo *',
-          controller: ctrlCargo,
-          enabled: habilitado,
+          controller: widget.ctrlCargo,
+          enabled: widget.habilitado,
           isUpperCase: true,
           textCapitalization: TextCapitalization.sentences,
         ),
@@ -724,18 +744,18 @@ class _SeccionDatosSolicitante extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _CampoCelular(
-                controller: ctrlCelular,
-                habilitado: habilitado,
+              child: SolicitudCampoCelular(
+                controller: widget.ctrlCelular,
+                habilitado: widget.habilitado,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: SolicitudTextField(
                 label: 'Correo *',
-                controller: ctrlCorreo,
+                controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
-                enabled: habilitado,
+                enabled: widget.habilitado,
                 isUpperCase: true,
               ),
             ),
@@ -750,7 +770,9 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Campaña *',
                 data: _campanas,
-                enabled: habilitado,
+                enabled: widget.habilitado,
+                onChanged: (item) =>
+                    widget.onCampanaChanged?.call(item?.descripcion ?? ''),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -758,78 +780,14 @@ class _SeccionDatosSolicitante extends StatelessWidget {
               child: SolicitudComboField(
                 label: 'Evento *',
                 data: _eventos,
-                enabled: habilitado,
+                enabled: widget.habilitado,
+                onChanged: (item) =>
+                    widget.onEventoChanged?.call(item?.descripcion ?? ''),
               ),
             ),
           ],
         ),
       ],
-    );
-  }
-}
-
-// ── Campo celular con selector de prefijo ─────────────────────────────────────
-
-class _CampoCelular extends StatelessWidget {
-  final TextEditingController controller;
-  final bool habilitado;
-
-  const _CampoCelular({required this.controller, required this.habilitado});
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Selector de prefijo telefónico
-          GestureDetector(
-            onTap: habilitado ? () {} : null,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: habilitado
-                    ? AppColors.inputBackground
-                    : AppColors.surfaceLightVariant,
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '🇵🇪',
-                    style: TextStyle(fontSize: AppTextStyles.sizeMd),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '+51',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: AppTextStyles.weightMedium,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xxs),
-                  const Icon(
-                    Icons.expand_more_rounded,
-                    size: AppSizing.iconSm,
-                    color: AppColors.textSecondary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: SolicitudTextField(
-              label: 'Celular *',
-              controller: controller,
-              keyboardType: TextInputType.phone,
-              enabled: habilitado,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -871,118 +829,6 @@ class _CampoNumeroSolicitud extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Toggle Jurídica / Natural (pill deslizante) ───────────────────────────────
-
-class _ToggleTipoPersona extends StatelessWidget {
-  final String valor;
-  final bool habilitado;
-  final ValueChanged<String> onChanged;
-
-  const _ToggleTipoPersona({
-    required this.valor,
-    required this.habilitado,
-    required this.onChanged,
-  });
-
-  static const _duracion = Duration(milliseconds: 250);
-  static const _curva = Curves.easeInOut;
-  // Ancho fijo por opción — evita ancho infinito en el Stack
-  static const double _anchoPorOpcion = 82.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final esJuridica = valor == 'juridica';
-
-    return SizedBox(
-      height: AppSizing.buttonHeightSmall,
-      width: _anchoPorOpcion * 2 + 6, // +6 = padding all(3) x2
-      child: Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLightVariant,
-          borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-        ),
-        child: Stack(
-          children: [
-            // ── Pill deslizante ───────────────────────────────
-            AnimatedPositioned(
-              duration: _duracion,
-              curve: _curva,
-              left: esJuridica ? 0 : _anchoPorOpcion,
-              top: 0,
-              bottom: 0,
-              width: _anchoPorOpcion,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black(0.14),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Etiquetas (encima del pill) ───────────────────
-            Row(
-              children: [
-                SizedBox(
-                  width: _anchoPorOpcion,
-                  child: GestureDetector(
-                    onTap: habilitado ? () => onChanged('juridica') : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: Center(
-                      child: AnimatedDefaultTextStyle(
-                        duration: _duracion,
-                        curve: _curva,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: esJuridica
-                              ? AppColors.textOnDark
-                              : AppColors.textSecondary,
-                          fontWeight: esJuridica
-                              ? AppTextStyles.weightSemiBold
-                              : AppTextStyles.weightRegular,
-                        ),
-                        child: const Text('Jurídica'),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: _anchoPorOpcion,
-                  child: GestureDetector(
-                    onTap: habilitado ? () => onChanged('natural') : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: Center(
-                      child: AnimatedDefaultTextStyle(
-                        duration: _duracion,
-                        curve: _curva,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: !esJuridica
-                              ? AppColors.textOnDark
-                              : AppColors.textSecondary,
-                          fontWeight: !esJuridica
-                              ? AppTextStyles.weightSemiBold
-                              : AppTextStyles.weightRegular,
-                        ),
-                        child: const Text('Natural'),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -1096,4 +942,3 @@ class _ChipsCanales extends StatelessWidget {
     );
   }
 }
-

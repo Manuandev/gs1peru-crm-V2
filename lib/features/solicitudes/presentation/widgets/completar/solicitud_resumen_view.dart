@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_resumen_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
@@ -19,6 +20,8 @@ class SolicitudResumenView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formState = context.watch<SolicitudFormCubit>().state;
+
     return BasePage(
       onPop: () => context.goBack(),
       drawerSide: DrawerSide.none,
@@ -33,28 +36,7 @@ class SolicitudResumenView extends StatelessWidget {
           ),
         ),
       ],
-      appBarTrailingButtons: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.md),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.white(0.15),
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            child: Text(
-              'Paso 4 de 4',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textOnDark,
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-          ),
-        ),
-      ],
+      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 4)],
       body: Column(
         children: [
           const SolicitudPasosIndicador(pasoActual: 4),
@@ -67,11 +49,27 @@ class SolicitudResumenView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _SeccionSolicitante(),
+                  _SeccionSolicitante(
+                    datos: formState.solicitante,
+                    onEditar: () => Navigator.of(context).popUntil(
+                      ModalRoute.withName(AppRoutes.fichaCompletarSolicitud),
+                    ),
+                  ),
                   const _Separador(),
-                  const _SeccionParticipantes(),
+                  _SeccionParticipantes(
+                    onVerTodos: () => context.goToFichaParticipantesSolicitud(
+                      solicitud: solicitud,
+                      modoEdicion: modoEdicion,
+                      formCubit: context.read<SolicitudFormCubit>(),
+                    ),
+                  ),
                   const _Separador(),
-                  const _SeccionFacturacion(),
+                  _SeccionFacturacion(
+                    datos: formState.facturacion,
+                    onEditar: () => Navigator.of(context).popUntil(
+                      ModalRoute.withName(AppRoutes.fichaFacturacionSolicitud),
+                    ),
+                  ),
                   const _Separador(),
                   const _SeccionResumenComercial(),
                   const _Separador(),
@@ -88,7 +86,7 @@ class SolicitudResumenView extends StatelessWidget {
               AppSpacing.md,
               AppSpacing.sm,
               AppSpacing.md,
-              AppSpacing.md,
+              AppSpacing.sm,
             ),
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -105,15 +103,16 @@ class SolicitudResumenView extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {},
                     icon: const Icon(AppIcons.save, size: 16),
-                    label: const Text('Guardar borrador'),
+                    label: const Text('Guardar'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textOnDark,
+                      backgroundColor: AppColors.primary,
                       side: const BorderSide(
                         color: AppColors.primary,
                         width: 1.5,
                       ),
                       minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
+                        AppSizing.buttonHeight,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
@@ -125,20 +124,21 @@ class SolicitudResumenView extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm2),
+                const SizedBox(height: 5),
 
                 // Generar solicitud
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () =>
+                        context.goToSolicitudGenerada(solicitud: solicitud),
                     icon: const Icon(AppIcons.fileFactura, size: 16),
                     label: const Text('Generar solicitud'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.secondary,
                       foregroundColor: AppColors.textOnDark,
                       minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
+                        AppSizing.buttonHeight,
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       shape: RoundedRectangleBorder(
@@ -150,32 +150,14 @@ class SolicitudResumenView extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm2),
-
+                const SizedBox(height: 5),
                 // Cancelar
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton.icon(
+                  child: SolicitudBotonAtras(
+                    label: 'Cancelar',
+                    icono: AppIcons.cancel,
                     onPressed: () => context.goBack(),
-                    icon: const Icon(AppIcons.cancel, size: 16),
-                    label: const Text('Cancelar'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.brandRaspberryAccessible,
-                      side: const BorderSide(
-                        color: AppColors.brandRaspberryAccessible,
-                        width: 1.5,
-                      ),
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeightSmall,
-                      ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.bodySmall.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -343,68 +325,72 @@ class _FilaCampos extends StatelessWidget {
 // ── Seccion 1 — Solicitante ───────────────────────────────────────────────────
 
 class _SeccionSolicitante extends StatelessWidget {
-  const _SeccionSolicitante();
+  final DatosSolicitante? datos;
+  final VoidCallback onEditar;
+
+  const _SeccionSolicitante({required this.onEditar, this.datos});
 
   @override
   Widget build(BuildContext context) {
+    final d = datos;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _CabeceraSeccion(
           icono: AppIcons.user,
           titulo: '1. Solicitante',
-          accion: _BotonEditar(onTap: () {}),
+          accion: _BotonEditar(onTap: onEditar),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.user,
             label: 'Nombre completo',
-            valor: 'José Eduardo Posada Peña',
+            valor: d?.nombreCompleto ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.email,
             label: 'Correo',
-            valor: 'eduardoposada20041998@gmail.com',
+            valor: d?.correo ?? '—',
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.documento,
             label: 'Documento',
-            valor: 'DNI 057588685',
+            valor: d?.documento ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.info,
             label: '¿Cómo se enteró del evento?',
-            valor: 'Logística',
+            valor: d?.canalesTexto ?? '—',
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.business,
             label: 'Cargo',
-            valor: 'ADC JR.',
+            valor: d?.cargo ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.calendar,
             label: 'Campaña',
-            valor: 'Septiembre 2026',
+            valor: d?.campana ?? '—',
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.phone,
             label: 'Celular',
-            valor: '+51  767 132 84',
+            valor: d?.celular ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.listAlt,
             label: 'Evento',
-            valor: 'Expogestión 2026',
+            valor: d?.evento ?? '—',
           ),
         ),
       ],
@@ -415,7 +401,9 @@ class _SeccionSolicitante extends StatelessWidget {
 // ── Seccion 2 — Participantes ─────────────────────────────────────────────────
 
 class _SeccionParticipantes extends StatelessWidget {
-  const _SeccionParticipantes();
+  final VoidCallback onVerTodos;
+
+  const _SeccionParticipantes({required this.onVerTodos});
 
   static const _participantes = [
     ['José Eduardo Posada Peña', '057588685', 'ADC JR.', '503-76713284'],
@@ -484,7 +472,7 @@ class _SeccionParticipantes extends StatelessWidget {
 
         const SizedBox(height: AppSpacing.sm),
         GestureDetector(
-          onTap: () {},
+          onTap: onVerTodos,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -570,69 +558,72 @@ class _FilaTabla extends StatelessWidget {
 // ── Seccion 3 — Facturacion ───────────────────────────────────────────────────
 
 class _SeccionFacturacion extends StatelessWidget {
-  const _SeccionFacturacion();
+  final DatosFacturacion? datos;
+  final VoidCallback onEditar;
+
+  const _SeccionFacturacion({required this.onEditar, this.datos});
 
   @override
   Widget build(BuildContext context) {
+    final d = datos;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _CabeceraSeccion(
           icono: AppIcons.receipt,
-          titulo: '3. Facturacion',
-          accion: _BotonEditar(onTap: () {}),
+          titulo: '3. Facturación',
+          accion: _BotonEditar(onTap: onEditar),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.documento,
             label: 'Tipo de solicitante',
-            valor: 'Juridica',
+            valor: d?.tipoPersonaLabel ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.business,
-            label: 'Razon social',
-            valor: 'IML Manufacturing',
+            label: 'Razón social / Nombres',
+            valor: d?.nombresRazon ?? '—',
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.fileFactura,
             label: 'Comprobante',
-            valor: 'Boleta',
+            valor: d?.comprobante ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.documento,
-            label: 'Numero de documento',
-            valor: '02101201231017',
+            label: 'Número de documento',
+            valor: d?.numDoc ?? '—',
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.language,
-            label: 'Pais',
-            valor: 'El Salvador',
+            label: 'País',
+            valor: d?.pais ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.email,
-            label: 'Correo de envio de boleta',
-            valor: 'karlaoliva@grupoiml.com',
+            label: 'Correo de envío de boleta',
+            valor: d?.correo ?? '—',
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
-          izquierdo: const _CampoDato(
+          izquierdo: _CampoDato(
             icono: AppIcons.moneda,
             label: 'Moneda',
-            valor: 'Dolares',
+            valor: d?.moneda ?? '—',
           ),
-          derecho: const _CampoDato(
+          derecho: _CampoDato(
             icono: AppIcons.location,
-            label: 'Direccion',
-            valor:
-                'Carr. A Metapan Km. 69.7, Lottif La Capellania, Plantel del Grupo IML, Santa Ana',
+            label: 'Dirección',
+            valor: d?.direccion ?? '—',
           ),
         ),
       ],

@@ -1,24 +1,33 @@
 // lib/features/solicitudes/presentation/pages/solicitud_participantes_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudParticipantesPage extends StatelessWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
+  final SolicitudFormCubit formCubit;
 
   const SolicitudParticipantesPage({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
+    required this.formCubit,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SolicitudParticipantesView(
-      solicitud: solicitud,
-      modoEdicion: modoEdicion,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => ParticipantesCubit()),
+        BlocProvider.value(value: formCubit),
+      ],
+      child: SolicitudParticipantesView(
+        solicitud: solicitud,
+        modoEdicion: modoEdicion,
+      ),
     );
   }
 }

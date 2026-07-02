@@ -96,7 +96,13 @@ class AppRouter {
     AppRoutes.settings: RouteDefinition(builder: (_) => const SettingsPage()),
 
     AppRoutes.seguimiento: RouteDefinition(
-      builder: (_) => const LeadListPage(),
+      builder: (context) {
+        final args =
+            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        return LeadListPage(
+          filtroInicial: args?['filtroInicial'] as LeadListFiltro?,
+        );
+      },
     ),
     AppRoutes.contactos: RouteDefinition(
       transition: TransitionType.slideRight,

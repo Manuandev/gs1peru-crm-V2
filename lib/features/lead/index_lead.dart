@@ -21,7 +21,6 @@ export 'domain/entities/historial_comentario.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
-export 'domain/enums/lead_list_orden.dart';
 
 export 'domain/repositories/lead_repository.dart';
 
@@ -73,7 +72,6 @@ export 'presentation/widgets/list/lead_card_actions.dart';
 export 'presentation/widgets/list/lead_card.dart';
 export 'presentation/widgets/list/lead_list_filter_chips.dart';
 export 'presentation/widgets/list/lead_list_stats_row.dart';
-export 'presentation/widgets/list/lead_list_orden_dropdown.dart';
 
 // Blocs + cubit movidos de chat → lead (ver CLAUDE.md del feature lead)
 export 'presentation/bloc/edit_lead/edit_lead_bloc.dart';

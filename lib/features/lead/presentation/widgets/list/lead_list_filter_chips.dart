@@ -23,19 +23,45 @@ class LeadListFilterChips extends StatelessWidget {
     final isModerador = SessionService().isModerador;
 
     final todosChips = [
-      (filtro: LeadListFiltro.todos, label: 'Todos'),
-      (filtro: LeadListFiltro.misCasos, label: 'Mis casos'),
-      (filtro: LeadListFiltro.nuevos, label: 'Nuevos'),
-      (filtro: LeadListFiltro.enDesarrollo, label: 'En desarrollo'),
-      (filtro: LeadListFiltro.propuesta, label: 'Propuesta'),
+      (
+        filtro: LeadListFiltro.todos,
+        label: 'Todos',
+        icon: AppIcons.filter,
+        dotColor: null,
+      ),
+      (
+        filtro: LeadListFiltro.asesores,
+        label: 'Asesores',
+        icon: AppIcons.userFilled,
+        dotColor: null,
+      ),
+      (
+        filtro: LeadListFiltro.nuevos,
+        label: 'Nuevos',
+        icon: null,
+        dotColor: AppColors.info,
+      ),
+      (
+        filtro: LeadListFiltro.enDesarrollo,
+        label: 'En gestión',
+        icon: null,
+        dotColor: AppColors.success,
+      ),
+      (
+        filtro: LeadListFiltro.propuesta,
+        label: 'Propuesta',
+        icon: null,
+        dotColor: AppColors.purple,
+      ),
     ];
 
-    // El chip "Todos" solo lo ve el moderador
+    // El chip "Asesores" solo lo ve el moderador
     final chips = todosChips
-        .where((c) => !(c.filtro == LeadListFiltro.todos && !isModerador))
+        .where((c) => !(c.filtro == LeadListFiltro.asesores && !isModerador))
         .toList();
 
-    return Container(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.sm,
@@ -47,48 +73,62 @@ class LeadListFilterChips extends StatelessWidget {
           final labelColor =
               isSelected ? colorScheme.onPrimary : colorScheme.onSurface;
 
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-              child: GestureDetector(
-                onTap: () => onFiltroTap(chip.filtro),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? colorScheme.primary : colorScheme.surface,
-                    borderRadius: BorderRadius.circular(AppSizing.radiusXl),
-                    boxShadow: isSelected
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: AppColors.black(0.08),
-                              blurRadius: AppSizing.shadowBlurSm,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                    border: isSelected
-                        ? null
-                        : Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.5,
-                            ),
-                            width: AppSizing.borderWidthThin,
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
+            child: GestureDetector(
+              onTap: () => onFiltroTap(chip.filtro),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.chipPaddingH,
+                  vertical: AppSpacing.chipPaddingV,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? colorScheme.primary : colorScheme.surface,
+                  borderRadius: BorderRadius.circular(AppSizing.radiusXl),
+                  boxShadow: isSelected
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.black(0.08),
+                            blurRadius: AppSizing.shadowBlurSm,
+                            offset: const Offset(0, 2),
                           ),
-                  ),
-                  child: Text(
-                    count > 0 ? '${chip.label} $count' : chip.label,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      fontWeight: AppTextStyles.weightSemiBold,
-                      color: labelColor,
+                        ],
+                  border: isSelected
+                      ? null
+                      : Border.all(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                          width: AppSizing.borderWidthThin,
+                        ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (chip.icon != null)
+                      Icon(chip.icon, size: AppSizing.iconSm, color: labelColor)
+                    else
+                      Container(
+                        width: AppSizing.dotIndicatorSize,
+                        height: AppSizing.dotIndicatorSize,
+                        decoration: BoxDecoration(
+                          color: chip.dotColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      count > 0 ? '${chip.label} $count' : chip.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        fontWeight: AppTextStyles.weightSemiBold,
+                        color: labelColor,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

@@ -4,7 +4,7 @@
 Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propuestas (`PA`).
 
 ## Pantallas
-- `LeadListPage` → lista de leads con chips de filtro; recibe `LeadType` como argumento
+- `LeadListPage` → lista de leads con chips de filtro; recibe `filtroInicial` opcional (`LeadListFiltro?`) para preseleccionar un chip al entrar (ej. desde `CardTotalesHome` en el dashboard)
 - `LeadDetallePage` → detalle completo del lead con comentarios y stepper de estado
 
 ## BLoCs / Cubits
@@ -14,12 +14,11 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 ## Widgets principales
 - `LeadListView` (list/) → vista principal: AppBar simple (solo drawer + título, sin buscar ni popup) + banner de subtítulo "Gestiona el avance de tus casos"; muestra `LeadListSkeleton` en loading
 - `LeadListSkeleton` (list/) → skeleton de carga de la lista: chips placeholder + 7 cards placeholder
-- `LeadListPortrait` (list/) → StatefulWidget: chips + `LeadListStatsRow` + `LeadListOrdenDropdown` + lista de `LeadCard`s; ordena localmente por `LeadListOrden`
-- `LeadListStatsRow` (list/) → 3 tarjetas resumen (Nuevos / En gestión / Listos para propuesta) con conteos de `LeadListBloc`
-- `LeadListOrdenDropdown` (list/) → pill "Ordenar por: X" con `PopupMenuButton<LeadListOrden>`
+- `LeadListPortrait` (list/) → StatelessWidget: chips + `LeadListStatsRow` + lista de `LeadCard`s en el orden que entrega el bloc (sin selector de orden — descartado por decisión de negocio)
+- `LeadListStatsRow` (list/) → 3 tarjetas resumen (Nuevos / En gestión / Listos para propuesta) con conteos de `LeadListBloc`; mismo tamaño en las 3 (`IntrinsicHeight` + `CrossAxisAlignment.stretch`), orden interno: ícono → etiqueta → número (coloreado azul/verde/morado) → palabra "casos" fija
 - `LeadCard` (list/) → único estilo (ya no hay modo compacto/detallado): borde izquierdo por estado efectivo, avatar+badge canal, pill de canal junto al nombre, timestamp + chip de estado, fila de acciones
 - `LeadCardActions` (list/) → botón WhatsApp, botón "Ver detalle" y menú "⋯" (favorito / abrir chat)
-- `LeadListFilterChips` (list/) → 5 chips (Todos*/Mis casos/Nuevos/En desarrollo/Propuesta) en una sola fila con `Expanded` — nunca hace scroll horizontal. *Todos solo lo ve el moderador
+- `LeadListFilterChips` (list/) → 5 chips (Todos/Asesores*/Nuevos/En gestión/Propuesta — la etiqueta "En gestión" mapea al filtro `enDesarrollo`) en fila con scroll horizontal (`SingleChildScrollView`). Todos/Asesores llevan ícono (`AppIcons.filter` / `AppIcons.userFilled`); Nuevos/En gestión/Propuesta llevan un punto de color (azul `AppColors.info` / verde `AppColors.success` / morado `AppColors.purple`). *Asesores solo lo ve el moderador
 - `LeadDetalleView` (detalle/) → layout principal del detalle con todas las secciones
 - `LeadDetalleSkeleton` (detalle/) → skeleton de carga del detalle: reemplaza el BasePage completo
 - `LeadDetalleStepper` (detalle/) → stepper visual de 4 etapas con header "ETAPA · X de 4 · Nombre"
@@ -34,7 +33,7 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 
 ## Dependencias externas
 - `LeadRepository` (RepositoryProvider global)
-- `SessionService` → para filtro `misCasos` y rol de moderador
+- `SessionService` → para filtro `asesores` y rol de moderador
 
 ## Notas importantes
 
@@ -48,24 +47,23 @@ enum LeadType {
 
 ### LeadListFiltro
 ```dart
-enum LeadListFiltro { todos, misCasos, nuevos, enDesarrollo, propuesta }
+enum LeadListFiltro { todos, asesores, nuevos, enDesarrollo, propuesta }
 ```
-- Moderador: filtro inicial `todos`; agente: `misCasos`
+- Filtro inicial siempre `todos` (moderador y agente) — el backend ya limita el dataset del
+  agente a sus propios leads, así que "Todos" ya representa "mis casos" para un no-moderador
+- Chip "Asesores" (antes "Mis casos") solo lo ve el moderador — filtra por `asesor == codUser`
 - Conteos se calculan sobre `_allLeads` (lista completa), no sobre la lista filtrada
 - Un lead pertenece a un bucket (`nuevos`/`enDesarrollo`/`propuesta`) si su `idEstado` coincide
   directo **o** si su `idEstadoPadre` apunta a ese id — así un sub-estado (ej. "07 Solicita
-  ficha", padre "01") cuenta dentro de "En desarrollo". Ver `LeadListBloc._perteneceEstado`.
+  ficha", padre "01") cuenta dentro de "En gestión". Ver `LeadListBloc._perteneceEstado`.
 - `propuesta` = idEstado `'02'` (Cotización) + sus hijos
-
-### LeadListOrden
-```dart
-enum LeadListOrden { ultimaInteraccion, nombreAZ }
-```
-Orden local (no pasa por el bloc) aplicado en `LeadListPortrait._leadsOrdenados`, seleccionado
-desde `LeadListOrdenDropdown`.
 
 ### Navegación
 - Seguimiento/Propuestas → `clearAndPush` (limpia stack; se abre desde Drawer)
+- `context.goToSeguimiento(filtroInicial: LeadListFiltro.nuevos)` → abre Seguimiento con un chip
+  preseleccionado. Usado por `CardTotalesHome` (dashboard de Home): Nuevos → `nuevos`,
+  En gestión → `enDesarrollo`, Propuestas → `propuesta`. Sin `filtroInicial` (ej. desde el
+  Drawer) el filtro por defecto es `todos`.
 - Detalle de chat desde lead → `context.goToDetalleChat(idLead: lead.idLead)` (apila)
 
 ### Campos principales de Lead
@@ -76,7 +74,7 @@ lead.idEstadoPadre  // String? — si existe, es un sub-estado del padre
 lead.idEstadoEfectivo // String — getter: idEstadoPadre si existe, si no idEstado
 lead.estadoEfectivo   // String — getter: descripcionEstadoPadre si existe, si no estado
 lead.idCanal        // int — canal de origen (ver AppIcons canales)
-lead.asesor         // String — codUser del agente asignado (filtro misCasos)
+lead.asesor         // String — codUser del agente asignado (filtro asesores)
 lead.nombreCompleto // String — getter: nombre + apellido
 lead.fechaHora      // String — usar .formatSinHoy() para mostrar
 lead.evento         // String — oportunidad/producto (subtítulo 1ª parte)

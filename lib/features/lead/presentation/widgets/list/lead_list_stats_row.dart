@@ -15,35 +15,38 @@ class LeadListStatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatCard(
-              icon: AppIcons.message,
-              color: AppColors.info,
-              cantidad: conteos[LeadListFiltro.nuevos] ?? 0,
-              label: 'Nuevos',
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: AppIcons.message,
+                color: AppColors.info,
+                cantidad: conteos[LeadListFiltro.nuevos] ?? 0,
+                label: 'Nuevos',
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _StatCard(
-              icon: AppIcons.checkCircle,
-              color: AppColors.success,
-              cantidad: conteos[LeadListFiltro.enDesarrollo] ?? 0,
-              label: 'En gestión',
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _StatCard(
+                icon: AppIcons.checkCircle,
+                color: AppColors.success,
+                cantidad: conteos[LeadListFiltro.enDesarrollo] ?? 0,
+                label: 'En gestión',
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _StatCard(
-              icon: AppIcons.flag,
-              color: AppColors.purple,
-              cantidad: conteos[LeadListFiltro.propuesta] ?? 0,
-              label: 'Listos para\npropuesta',
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _StatCard(
+                icon: AppIcons.flag,
+                color: AppColors.purple,
+                cantidad: conteos[LeadListFiltro.propuesta] ?? 0,
+                label: 'Listos para propuesta',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -71,34 +74,48 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: AppSizing.buttonHeightSmall,
-            height: AppSizing.buttonHeightSmall,
+            width: AppSizing.avatarXs,
+            height: AppSizing.avatarXs,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: AppSizing.iconActionSm, color: color),
+            child: Icon(icon, size: AppSizing.iconSm, color: color),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '$cantidad',
-            style: AppTextStyles.titleMedium.copyWith(
-              fontWeight: AppTextStyles.weightBold,
-              color: AppColors.textPrimary,
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    fontWeight: AppTextStyles.weightSemiBold,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 2,
+                ),
+                Text(
+                  '$cantidad',
+                  style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: AppTextStyles.weightBold,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  'casos',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            label,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            maxLines: 2,
           ),
         ],
       ),

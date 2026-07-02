@@ -15,11 +15,12 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   late LeadListFiltro _filtroActivo;
   StreamSubscription<LeadUpdate>? _updateSub;
 
-  LeadListBloc(this._getLeadsUseCase, this._toggleFavoritoUseCase)
-      : super(const LeadListInitial()) {
-    _filtroActivo = _session.isModerador
-        ? LeadListFiltro.todos
-        : LeadListFiltro.misCasos;
+  LeadListBloc(
+    this._getLeadsUseCase,
+    this._toggleFavoritoUseCase, {
+    LeadListFiltro? filtroInicial,
+  }) : super(const LeadListInitial()) {
+    _filtroActivo = filtroInicial ?? LeadListFiltro.todos;
     on<LeadListStarted>(_onStarted);
     on<LeadListRefresh>(_onRefresh);
     on<LeadListFiltered>(_onFiltered);
@@ -115,7 +116,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   void _emitFiltered(Emitter<LeadListState> emit) {
     final conteos = {
       LeadListFiltro.todos: _allLeads.length,
-      LeadListFiltro.misCasos: _allLeads
+      LeadListFiltro.asesores: _allLeads
           .where((c) => c.asesor == _session.codUser)
           .length,
       LeadListFiltro.nuevos:
@@ -127,7 +128,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     };
 
     var resultado = List<Lead>.from(_allLeads);
-    if (_filtroActivo == LeadListFiltro.misCasos) {
+    if (_filtroActivo == LeadListFiltro.asesores) {
       resultado = resultado
           .where((c) => c.asesor == _session.codUser)
           .toList();

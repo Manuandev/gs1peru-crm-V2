@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 
 class CardTotalesHome extends StatelessWidget {
   final HomeLoaded state;
@@ -76,7 +77,9 @@ class CardTotalesHome extends StatelessWidget {
                     iconColor: AppSocialUtils.colorEstado('00'),
                     cantidad: state.totLeadsNuevos,
                     titulo: 'Nuevos',
-                    onTap: () => context.goToSeguimiento(),
+                    onTap: () => context.goToSeguimiento(
+                      filtroInicial: LeadListFiltro.nuevos,
+                    ),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
@@ -84,7 +87,9 @@ class CardTotalesHome extends StatelessWidget {
                     iconColor: AppSocialUtils.colorEstado('01'),
                     cantidad: state.totLeadsDesarrollo,
                     titulo: 'En gestión',
-                    onTap: () => context.goToSeguimiento(),
+                    onTap: () => context.goToSeguimiento(
+                      filtroInicial: LeadListFiltro.enDesarrollo,
+                    ),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
@@ -92,7 +97,9 @@ class CardTotalesHome extends StatelessWidget {
                     iconColor: AppSocialUtils.colorEstado('02'),
                     cantidad: state.totPropuestas,
                     titulo: 'Propuestas',
-                    onTap: () => context.goToSeguimiento(),
+                    onTap: () => context.goToSeguimiento(
+                      filtroInicial: LeadListFiltro.propuesta,
+                    ),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(

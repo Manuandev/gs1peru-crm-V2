@@ -7,7 +7,7 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
-class LeadListPortrait extends StatefulWidget {
+class LeadListPortrait extends StatelessWidget {
   final List<Lead> leads;
   final LeadListFiltro filtro;
 
@@ -16,32 +16,6 @@ class LeadListPortrait extends StatefulWidget {
     required this.leads,
     required this.filtro,
   });
-
-  @override
-  State<LeadListPortrait> createState() => _LeadListPortraitState();
-}
-
-class _LeadListPortraitState extends State<LeadListPortrait> {
-  LeadListOrden _orden = LeadListOrden.ultimaInteraccion;
-
-  List<Lead> get _leadsOrdenados {
-    final leads = List<Lead>.from(widget.leads);
-    switch (_orden) {
-      case LeadListOrden.ultimaInteraccion:
-        leads.sort((a, b) {
-          final fa = DateFormatter.parseDate(a.fechaHora) ?? DateTime(0);
-          final fb = DateFormatter.parseDate(b.fechaHora) ?? DateTime(0);
-          return fb.compareTo(fa);
-        });
-      case LeadListOrden.nombreAZ:
-        leads.sort(
-          (a, b) => a.nombreCompleto.toLowerCase().compareTo(
-                b.nombreCompleto.toLowerCase(),
-              ),
-        );
-    }
-    return leads;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,23 +43,17 @@ class _LeadListPortraitState extends State<LeadListPortrait> {
           },
         ),
 
-        LeadListOrdenDropdown(
-          ordenActual: _orden,
-          onChanged: (o) => setState(() => _orden = o),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-
         // ── Lista ──────────────────────────────────────
         Expanded(
-          child: widget.leads.isEmpty
+          child: leads.isEmpty
               ? AppEmptyView(
-                  message: switch (widget.filtro) {
+                  message: switch (filtro) {
                     LeadListFiltro.todos => 'No hay seguimientos.',
-                    LeadListFiltro.misCasos =>
+                    LeadListFiltro.asesores =>
                       'No tienes seguimientos asignados.',
                     LeadListFiltro.nuevos => 'No hay seguimientos nuevos.',
                     LeadListFiltro.enDesarrollo =>
-                      'No hay seguimientos en desarrollo.',
+                      'No hay seguimientos en gestión.',
                     LeadListFiltro.propuesta =>
                       'No hay seguimientos listos para propuesta.',
                   },
@@ -93,9 +61,9 @@ class _LeadListPortraitState extends State<LeadListPortrait> {
               : ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  itemCount: _leadsOrdenados.length,
+                  itemCount: leads.length,
                   itemBuilder: (context, index) {
-                    final lead = _leadsOrdenados[index];
+                    final lead = leads[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: LeadCard(

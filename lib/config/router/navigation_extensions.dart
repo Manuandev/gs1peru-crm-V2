@@ -49,7 +49,13 @@ extension NavigationExtensions on BuildContext {
 
   // ── Módulos principales ────────────────────────────────────
 
-  Future<void> goToSeguimiento() => clearAndPush(AppRoutes.seguimiento);
+  Future<void> goToSeguimiento({LeadListFiltro? filtroInicial}) =>
+      clearAndPush(
+        AppRoutes.seguimiento,
+        arguments: filtroInicial != null
+            ? {'filtroInicial': filtroInicial}
+            : null,
+      );
   Future<void> goToContactos() => clearAndPush(AppRoutes.contactos);
   Future<void> goToSolicitudes() => clearAndPush(AppRoutes.solicitudes);
   Future<void> goToMisCasos() => clearAndPush(AppRoutes.misCasos);

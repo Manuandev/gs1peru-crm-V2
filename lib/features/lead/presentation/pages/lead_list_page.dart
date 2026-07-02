@@ -7,7 +7,9 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPage extends StatelessWidget {
-  const LeadListPage({super.key});
+  final LeadListFiltro? filtroInicial;
+
+  const LeadListPage({super.key, this.filtroInicial});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +19,7 @@ class LeadListPage extends StatelessWidget {
           create: (context) => LeadListBloc(
             GetLeadsUseCase(context.read<LeadRepository>()),
             ToggleFavoritoLeadUseCase(context.read<LeadRepository>()),
+            filtroInicial: filtroInicial,
           )..add(const LeadListStarted()),
         ),
       ],

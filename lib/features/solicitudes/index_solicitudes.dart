@@ -44,3 +44,4 @@ export 'presentation/widgets/list/solicitud_list_view.dart';
 export 'presentation/widgets/list/solicitud_list_portrait.dart';
 export 'presentation/widgets/list/solicitud_card.dart';
 export 'presentation/widgets/list/solicitud_list_skeleton.dart';
+export 'presentation/widgets/list/solicitud_asesor_picker_modal.dart';

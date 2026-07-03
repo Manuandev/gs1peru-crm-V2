@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
@@ -15,10 +16,40 @@ class SolicitudCargaMasivaView extends StatefulWidget {
 }
 
 class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
-  bool _archivoSeleccionado = false;
+  static const _extensionesPermitidas = ['xlsx', 'xls'];
 
-  void _seleccionarArchivo() {
-    setState(() => _archivoSeleccionado = true);
+  PlatformFile? _archivo;
+  bool get _archivoSeleccionado => _archivo != null;
+
+  Future<void> _seleccionarArchivo() async {
+    final resultado = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _extensionesPermitidas,
+    );
+    final archivo = resultado?.files.single;
+    if (archivo == null) return;
+
+    final extension = archivo.extension?.toLowerCase();
+    if (!_extensionesPermitidas.contains(extension)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Solo se permiten archivos Excel (.xlsx, .xls)',
+            ),
+            backgroundColor: AppColors.errorDark,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _archivo = archivo);
+  }
+
+  void _quitarArchivo() {
+    setState(() => _archivo = null);
   }
 
   @override
@@ -67,7 +98,9 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
                     descripcion:
                         'Adjunta el archivo Excel completado para importar los participantes.',
                     contenido: _ContenidoPaso3(
+                      archivo: _archivo,
                       onArchivoSeleccionado: _seleccionarArchivo,
+                      onArchivoQuitado: _quitarArchivo,
                     ),
                   ),
                   if (_archivoSeleccionado) ...[
@@ -332,15 +365,25 @@ class _ContenidoPaso2 extends StatelessWidget {
 // ── Paso 3: Área de carga ─────────────────────────────────────────────────────
 
 class _ContenidoPaso3 extends StatelessWidget {
+  final PlatformFile? archivo;
   final VoidCallback onArchivoSeleccionado;
+  final VoidCallback onArchivoQuitado;
 
-  const _ContenidoPaso3({required this.onArchivoSeleccionado});
+  const _ContenidoPaso3({
+    required this.archivo,
+    required this.onArchivoSeleccionado,
+    required this.onArchivoQuitado,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _AreaCarga(onSeleccionar: onArchivoSeleccionado),
+        _AreaCarga(
+          archivo: archivo,
+          onSeleccionar: onArchivoSeleccionado,
+          onQuitar: onArchivoQuitado,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Center(
           child: Text(
@@ -356,12 +399,20 @@ class _ContenidoPaso3 extends StatelessWidget {
 }
 
 class _AreaCarga extends StatelessWidget {
+  final PlatformFile? archivo;
   final VoidCallback onSeleccionar;
+  final VoidCallback onQuitar;
 
-  const _AreaCarga({required this.onSeleccionar});
+  const _AreaCarga({
+    required this.archivo,
+    required this.onSeleccionar,
+    required this.onQuitar,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final tieneArchivo = archivo != null;
+
     return CustomPaint(
       painter: _DashedBorderPainter(
         color: AppColors.primary,
@@ -380,34 +431,48 @@ class _AreaCarga extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              AppIcons.upload,
+            Icon(
+              tieneArchivo ? AppIcons.fileExcel : AppIcons.upload,
               size: AppSizing.iconXl,
-              color: AppColors.primary,
+              color: tieneArchivo ? AppColors.success : AppColors.primary,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Arrastra y suelta el archivo aquí',
+              tieneArchivo
+                  ? archivo!.name
+                  : 'Arrastra y suelta el archivo aquí',
+              textAlign: TextAlign.center,
               style: AppTextStyles.titleSmall.copyWith(
-                color: AppColors.primary,
+                color: tieneArchivo ? AppColors.success : AppColors.primary,
                 fontWeight: AppTextStyles.weightSemiBold,
               ),
             ),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              'o selecciona el archivo desde tu dispositivo',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+            if (!tieneArchivo) ...[
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                'o selecciona el archivo desde tu dispositivo',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: AppSpacing.md),
             OutlinedButton.icon(
-              onPressed: onSeleccionar,
-              icon: const Icon(AppIcons.attach, size: AppSizing.iconActionSm),
-              label: const Text('Adjuntar archivo Excel'),
+              onPressed: tieneArchivo ? onQuitar : onSeleccionar,
+              icon: Icon(
+                tieneArchivo ? AppIcons.close : AppIcons.attach,
+                size: AppSizing.iconActionSm,
+              ),
+              label: Text(
+                tieneArchivo ? 'Quitar archivo' : 'Adjuntar archivo Excel',
+              ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
+                foregroundColor: tieneArchivo
+                    ? AppColors.error
+                    : AppColors.primary,
+                side: BorderSide(
+                  color: tieneArchivo ? AppColors.error : AppColors.primary,
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,

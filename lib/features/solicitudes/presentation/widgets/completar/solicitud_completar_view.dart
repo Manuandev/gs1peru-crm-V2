@@ -1,13 +1,12 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_completar_view.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart';
 
 class SolicitudCompletarView extends StatefulWidget {
   final Solicitud solicitud;
@@ -51,6 +50,33 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // Controladores — Información comercial
   final _ctrlRuc = TextEditingController();
   final _ctrlRazonSocial = TextEditingController();
+
+  // Archivos adjuntos — voucher y orden de compra
+  PlatformFile? _archivoVoucher;
+  PlatformFile? _archivoOC;
+
+  Future<void> _adjuntarArchivo(bool esVoucher) async {
+    final resultado = await FilePicker.platform.pickFiles(type: FileType.any);
+    final archivo = resultado?.files.single;
+    if (archivo == null) return;
+    setState(() {
+      if (esVoucher) {
+        _archivoVoucher = archivo;
+      } else {
+        _archivoOC = archivo;
+      }
+    });
+  }
+
+  void _quitarArchivo(bool esVoucher) {
+    setState(() {
+      if (esVoucher) {
+        _archivoVoucher = null;
+      } else {
+        _archivoOC = null;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -141,56 +167,25 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
                   // ── Botones de adjuntos ────────────────────────────
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: widget.modoEdicion ? () {} : null,
-                          icon: const Icon(
-                            Icons.attach_file_rounded,
-                            size: AppSizing.iconActionSm,
-                          ),
-                          label: const Text('Adjuntar voucher'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primary,
-                            side: const BorderSide(color: AppColors.primary),
-                            minimumSize: const Size.fromHeight(
-                              AppSizing.buttonHeightSmall,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppSizing.radiusSm,
-                              ),
-                            ),
-                            textStyle: AppTextStyles.labelMedium.copyWith(
-                              fontWeight: AppTextStyles.weightMedium,
-                            ),
-                          ),
+                        child: _BotonAdjuntar(
+                          label: 'Adjuntar voucher',
+                          archivo: _archivoVoucher,
+                          habilitado: widget.modoEdicion,
+                          onAdjuntar: () => _adjuntarArchivo(true),
+                          onQuitar: () => _quitarArchivo(true),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: widget.modoEdicion ? () {} : null,
-                          icon: const Icon(
-                            Icons.attach_file_rounded,
-                            size: AppSizing.iconActionSm,
-                          ),
-                          label: const Text('Adjuntar O/C'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primary,
-                            side: const BorderSide(color: AppColors.primary),
-                            minimumSize: const Size.fromHeight(
-                              AppSizing.buttonHeightSmall,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppSizing.radiusSm,
-                              ),
-                            ),
-                            textStyle: AppTextStyles.labelMedium.copyWith(
-                              fontWeight: AppTextStyles.weightMedium,
-                            ),
-                          ),
+                        child: _BotonAdjuntar(
+                          label: 'Adjuntar O/C',
+                          archivo: _archivoOC,
+                          habilitado: widget.modoEdicion,
+                          onAdjuntar: () => _adjuntarArchivo(false),
+                          onQuitar: () => _quitarArchivo(false),
                         ),
                       ),
                     ],
@@ -293,6 +288,54 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   }
 }
 
+// ── Botón de adjuntar archivo (voucher / O-C) ─────────────────────────────────
+
+class _BotonAdjuntar extends StatelessWidget {
+  final String label;
+  final PlatformFile? archivo;
+  final bool habilitado;
+  final VoidCallback onAdjuntar;
+  final VoidCallback onQuitar;
+
+  const _BotonAdjuntar({
+    required this.label,
+    required this.archivo,
+    required this.habilitado,
+    required this.onAdjuntar,
+    required this.onQuitar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tieneArchivo = archivo != null;
+
+    return OutlinedButton.icon(
+      onPressed: habilitado ? (tieneArchivo ? onQuitar : onAdjuntar) : null,
+      icon: Icon(
+        tieneArchivo ? AppIcons.checkCircleFilled : Icons.attach_file_rounded,
+        size: AppSizing.iconActionSm,
+      ),
+      label: Text(
+        tieneArchivo ? archivo!.name : label,
+        overflow: TextOverflow.ellipsis,
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: tieneArchivo ? AppColors.success : AppColors.primary,
+        side: BorderSide(
+          color: tieneArchivo ? AppColors.success : AppColors.primary,
+        ),
+        minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        ),
+        textStyle: AppTextStyles.labelMedium.copyWith(
+          fontWeight: AppTextStyles.weightMedium,
+        ),
+      ),
+    );
+  }
+}
+
 // ── Tooltip — 3 partes de la solicitud ───────────────────────────────────────
 
 class _TooltipPartesSolicitud extends StatelessWidget {
@@ -386,7 +429,7 @@ class _SeccionSwitches extends StatelessWidget {
         _ItemSwitch(
           icono: AppIcons.user,
           colorIcono: AppColors.brandForest,
-          colorFondo: AppColors.brandForest.withOpacity(0.12),
+          colorFondo: AppColors.brandForest.withValues(alpha: 0.12),
           label: 'El solicitante será participante',
           valor: solicitanteParticipante,
           habilitado: habilitado,
@@ -651,8 +694,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                     _tipoDocId = item?.id;
                     widget.ctrlNumDoc.clear();
                   });
-                  widget.onTipoDocLabelChanged
-                      ?.call(item?.descripcion ?? '');
+                  widget.onTipoDocLabelChanged?.call(item?.descripcion ?? '');
                 },
               ),
             ),

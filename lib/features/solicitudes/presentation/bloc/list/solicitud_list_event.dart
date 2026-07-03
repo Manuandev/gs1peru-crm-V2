@@ -33,3 +33,11 @@ class SolicitudListSearched extends SolicitudListEvent {
   @override
   List<Object?> get props => [query];
 }
+
+class SolicitudListAsesorSeleccionado extends SolicitudListEvent {
+  final String? codAsesor;
+  const SolicitudListAsesorSeleccionado(this.codAsesor);
+
+  @override
+  List<Object?> get props => [codAsesor];
+}

@@ -28,9 +28,27 @@ class SolicitudListPortrait extends StatelessWidget {
             if (state is! SolicitudListSuccess) return const SizedBox.shrink();
             return _SolicitudFilterTabs(
               filtroActual: state.filtro,
-              onFiltroTap: (f) => context.read<SolicitudListBloc>().add(
-                SolicitudListFiltered(f),
-              ),
+              onFiltroTap: (f) async {
+                final bloc = context.read<SolicitudListBloc>();
+
+                if (f != SolicitudFiltro.asesores) {
+                  bloc.add(SolicitudListFiltered(f));
+                  return;
+                }
+
+                final seleccionado = await SolicitudAsesorPickerModal.show(
+                  context,
+                  asesores: state.asesoresDisponibles,
+                  seleccionadoActual: state.asesorSeleccionado,
+                );
+
+                if (!context.mounted) return;
+                if (seleccionado != null) {
+                  bloc.add(SolicitudListAsesorSeleccionado(seleccionado));
+                } else {
+                  bloc.add(const SolicitudListFiltered(SolicitudFiltro.todas));
+                }
+              },
             );
           },
         ),

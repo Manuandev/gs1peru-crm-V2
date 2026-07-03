@@ -20,11 +20,9 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   late final LoginFormController _formController;
 
-  // TODO(backend): este valor vendrá de los parámetros generales traídos en
-  // SplashBloc cuando se implemente la integración con el SP de configuración.
-  // Por ahora se hardcodea para desarrollo. Cambiar el valor aquí para probar
-  // los tres modos: ModoAutenticacion.soloGoogle | soloCredenciales | ambos
-  final ModoAutenticacion _modoAutenticacion = ModoAutenticacion.ambos;
+  // Viene de ConfiguracionService (grupo TLA), cargado en SplashBloc
+  // apenas arranca la app — ver ConfiguracionRemoteDatasource (task 'CA').
+  final TipoLoginApp _tipoLogin = ConfiguracionService().tipoLogin;
 
   @override
   void initState() {
@@ -94,7 +92,7 @@ class _LoginViewState extends State<LoginView> {
           return _CuerpoLogin(
             formController: _formController,
             esCargando: esCargando,
-            modoAutenticacion: _modoAutenticacion,
+            tipoLogin: _tipoLogin,
             onLogin: _handleLogin,
             onGoogleLogin: _handleGoogleLogin,
             onForgotPassword: _handleForgotPassword,
@@ -112,7 +110,7 @@ class _LoginViewState extends State<LoginView> {
 class _CuerpoLogin extends StatelessWidget {
   final LoginFormController formController;
   final bool esCargando;
-  final ModoAutenticacion modoAutenticacion;
+  final TipoLoginApp tipoLogin;
   final VoidCallback onLogin;
   final VoidCallback onGoogleLogin;
   final VoidCallback onForgotPassword;
@@ -120,7 +118,7 @@ class _CuerpoLogin extends StatelessWidget {
   const _CuerpoLogin({
     required this.formController,
     required this.esCargando,
-    required this.modoAutenticacion,
+    required this.tipoLogin,
     required this.onLogin,
     required this.onGoogleLogin,
     required this.onForgotPassword,
@@ -145,7 +143,7 @@ class _CuerpoLogin extends StatelessWidget {
                 child: _CartillaBlanca(
                   formController: formController,
                   esCargando: esCargando,
-                  modoAutenticacion: modoAutenticacion,
+                  tipoLogin: tipoLogin,
                   onLogin: onLogin,
                   onGoogleLogin: onGoogleLogin,
                   onForgotPassword: onForgotPassword,
@@ -248,7 +246,7 @@ class _ZonaAzul extends StatelessWidget {
 class _CartillaBlanca extends StatelessWidget {
   final LoginFormController formController;
   final bool esCargando;
-  final ModoAutenticacion modoAutenticacion;
+  final TipoLoginApp tipoLogin;
   final VoidCallback onLogin;
   final VoidCallback onGoogleLogin;
   final VoidCallback onForgotPassword;
@@ -256,7 +254,7 @@ class _CartillaBlanca extends StatelessWidget {
   const _CartillaBlanca({
     required this.formController,
     required this.esCargando,
-    required this.modoAutenticacion,
+    required this.tipoLogin,
     required this.onLogin,
     required this.onGoogleLogin,
     required this.onForgotPassword,
@@ -306,26 +304,22 @@ class _CartillaBlanca extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // ── Botón Google (solo en soloGoogle y ambos) ───────────
-          if (modoAutenticacion == ModoAutenticacion.soloGoogle ||
-              modoAutenticacion == ModoAutenticacion.ambos)
+          // ── Botón Google ─────────────────────────────────────────
+          if (tipoLogin.mostrarGoogle)
             CustomGoogleButton(
               onPressed: esCargando ? null : onGoogleLogin,
-              isLoading:
-                  esCargando &&
-                  modoAutenticacion == ModoAutenticacion.soloGoogle,
+              isLoading: esCargando && tipoLogin == TipoLoginApp.google,
             ),
 
-          // ── Divisor (solo en ambos) ─────────────────────────────
-          if (modoAutenticacion == ModoAutenticacion.ambos) ...[
+          // ── Divisor (solo cuando se muestran ambas opciones) ────
+          if (tipoLogin.mostrarGoogle && tipoLogin.mostrarCredenciales) ...[
             const SizedBox(height: AppSpacing.md),
             const LoginDivisorWidget(),
             const SizedBox(height: AppSpacing.md),
           ],
 
-          // ── Formulario de credenciales (soloCredenciales y ambos) ─
-          if (modoAutenticacion == ModoAutenticacion.soloCredenciales ||
-              modoAutenticacion == ModoAutenticacion.ambos)
+          // ── Formulario de credenciales ───────────────────────────
+          if (tipoLogin.mostrarCredenciales)
             _FormularioCredenciales(
               formController: formController,
               esCargando: esCargando,

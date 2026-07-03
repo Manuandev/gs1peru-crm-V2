@@ -7,7 +7,6 @@ export 'data/models/session_model.dart';
 
 export 'data/repositories/auth_repository_impl.dart';
 
-export 'domain/entities/modo_autenticacion.dart';
 export 'domain/entities/session_entity.dart';
 
 export 'domain/repositories/auth_repository.dart';

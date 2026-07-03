@@ -14,11 +14,8 @@ class ConfiguracionService {
 
   // ── GETTERS ─────────────────────────────────────────────
   AppConfiguracion? get config => _config;
-  bool get mantenimiento => _config?.mantenimiento ?? false;
-  String get versionMinima => _config?.versionMinima ?? '';
-  String get mensajeBienvenida => _config?.mensajeBienvenida ?? '';
-  bool get permitirRegistro => _config?.permitirRegistro ?? true;
-  String get urlSoporte => _config?.urlSoporte ?? '';
+  double get tiempoChatAbierto => _config?.tiempoChatAbierto ?? 15.0;
+  TipoLoginApp get tipoLogin => _config?.tipoLogin ?? TipoLoginApp.credenciales;
   bool get cargada => _config != null;
 
   // ── MÉTODOS ─────────────────────────────────────────────

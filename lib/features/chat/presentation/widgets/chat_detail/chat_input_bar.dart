@@ -1,14 +1,22 @@
 // lib/features/chat/presentation/widgets/chat_detail/chat_input_bar.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatInputBar extends StatefulWidget {
   final AudioController audioController;
+  // Mientras el panel de datos/negociaciones/historial está abierto, el
+  // input no debe poder tomar foco — evita que el teclado se abra encima.
+  final bool panelAbierto;
 
-  const ChatInputBar({super.key, required this.audioController});
+  const ChatInputBar({
+    super.key,
+    required this.audioController,
+    this.panelAbierto = false,
+  });
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
@@ -16,6 +24,7 @@ class ChatInputBar extends StatefulWidget {
 
 class _ChatInputBarState extends State<ChatInputBar> {
   final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   InputMode _mode = InputMode.text;
   bool _hasText = false;
@@ -23,6 +32,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   void initState() {
     super.initState();
+    _focusNode.canRequestFocus = !widget.panelAbierto;
     _textController.addListener(() {
       final hasText = _textController.text.trim().isNotEmpty;
       if (hasText != _hasText) setState(() => _hasText = hasText);
@@ -30,8 +40,33 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   @override
+  void didUpdateWidget(covariant ChatInputBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.panelAbierto != oldWidget.panelAbierto) {
+      _focusNode.canRequestFocus = !widget.panelAbierto;
+      if (widget.panelAbierto) _ocultarTecladoNativo();
+    }
+  }
+
+  // El unfocus() de Flutter no basta: al cerrarse el menú de los 3 puntos,
+  // la restauración de foco de la ruta modal gana la carrera por un frame y
+  // el teclado nativo alcanza a abrirse antes de que lo bloqueemos. Forzamos
+  // el ocultamiento directo del teclado (por debajo del sistema de foco) en
+  // este frame y en el siguiente, para cubrir ambos casos.
+  void _ocultarTecladoNativo() {
+    _focusNode.unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _focusNode.unfocus();
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    });
+  }
+
+  @override
   void dispose() {
     _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -75,11 +110,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final numero = _getNumero();
     final chatCab = _getChatCab();
     context.read<ChatDetailBloc>().add(
-      ChatDetailAudioMessageSent(
-        path,
-        numero: numero,
-        idChatCab: chatCab,
-      ),
+      ChatDetailAudioMessageSent(path, numero: numero, idChatCab: chatCab),
     );
     setState(() => _mode = InputMode.text);
   }
@@ -110,10 +141,18 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   Future<void> _onTemplateSelected() async {
     final infoState = context.read<InfoLeadCubit>().state;
-    final nombreCliente = infoState is InfoLeadSuccess ? infoState.lead.nombre : '';
-    final apellidoCliente = infoState is InfoLeadSuccess ? infoState.lead.apellido : '';
-    final isExpirado = infoState is InfoLeadSuccess ? infoState.isExpirado : false;
-    final isCerrado = infoState is InfoLeadSuccess ? infoState.isCerrado : false;
+    final nombreCliente = infoState is InfoLeadSuccess
+        ? infoState.lead.nombre
+        : '';
+    final apellidoCliente = infoState is InfoLeadSuccess
+        ? infoState.lead.apellido
+        : '';
+    final isExpirado = infoState is InfoLeadSuccess
+        ? infoState.isExpirado
+        : false;
+    final isCerrado = infoState is InfoLeadSuccess
+        ? infoState.isCerrado
+        : false;
     final nombreAsesor = SessionService().userApe;
 
     final plantilla = await SelectTemplateModal.show(
@@ -141,76 +180,82 @@ class _ChatInputBarState extends State<ChatInputBar> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // ── Attachment picker ─────────────────────────────────
-        if (_mode == InputMode.attachment)
-          AttachmentPickerWidget(
-            onFilesBatchPicked: _onFilesBatchPicked,
-            onClose: () => setState(() => _mode = InputMode.text),
-          ),
-
-        // ── Audio recorder ────────────────────────────────────
-        if (_mode == InputMode.audio)
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm2,
-              vertical: AppSpacing.sm,
+    // Con el panel de datos/negociaciones/historial abierto, toda la barra
+    // queda bloqueada al toque — no solo el foco del input.
+    return IgnorePointer(
+      ignoring: widget.panelAbierto,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Attachment picker ─────────────────────────────────
+          if (_mode == InputMode.attachment)
+            AttachmentPickerWidget(
+              onFilesBatchPicked: _onFilesBatchPicked,
+              onClose: () => setState(() => _mode = InputMode.text),
             ),
-            child: AudioRecorderWidget(
-              onAudioReady: _onAudioReady,
-              onCancel: () => setState(() => _mode = InputMode.text),
+
+          // ── Audio recorder ────────────────────────────────────
+          if (_mode == InputMode.audio)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm2,
+                vertical: AppSpacing.sm,
+              ),
+              child: AudioRecorderWidget(
+                onAudioReady: _onAudioReady,
+                onCancel: () => setState(() => _mode = InputMode.text),
+              ),
             ),
-          ),
 
-        // ── Input principal ───────────────────────────────────
-        if (_mode != InputMode.audio)
-          BlocBuilder<InfoLeadCubit, InfoLeadState>(
-            buildWhen: (prev, curr) {
-              if (curr is! InfoLeadSuccess) return false;
-              if (prev is! InfoLeadSuccess) return true;
-              return prev.isExpirado != curr.isExpirado;
-            },
-            builder: (context, state) {
-              final expirado = state is InfoLeadSuccess
-                  ? state.isExpirado
-                  : false;
+          // ── Input principal ───────────────────────────────────
+          if (_mode != InputMode.audio)
+            BlocBuilder<InfoLeadCubit, InfoLeadState>(
+              buildWhen: (prev, curr) {
+                if (curr is! InfoLeadSuccess) return false;
+                if (prev is! InfoLeadSuccess) return true;
+                return prev.isExpirado != curr.isExpirado;
+              },
+              builder: (context, state) {
+                final expirado = state is InfoLeadSuccess
+                    ? state.isExpirado
+                    : false;
 
-              return Container(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.sm,
-                  AppSpacing.sm,
-                  AppSpacing.sm,
-                  AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  border: Border(
-                    top: BorderSide(
-                      color: colorScheme.outlineVariant,
-                      width: AppSizing.borderWidthSubtle,
+                return Container(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.sm,
+                    AppSpacing.sm,
+                    AppSpacing.sm,
+                    AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    border: Border(
+                      top: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: AppSizing.borderWidthSubtle,
+                      ),
                     ),
                   ),
-                ),
-                child: expirado
-                    ? _ExpiradoBar(onPlantilla: _onTemplateSelected)
-                    : _NormalBar(
-                        textController: _textController,
-                        hasText: _hasText,
-                        isAttachOpen: _mode == InputMode.attachment,
-                        onAttach: _toggleAttachment,
-                        onPlantilla: _onTemplateSelected,
-                        onSend: _sendText,
-                        onMic: () {
-                          widget.audioController.stop();
-                          setState(() => _mode = InputMode.audio);
-                        },
-                      ),
-              );
-            },
-          ),
-      ],
+                  child: expirado
+                      ? _ExpiradoBar(onPlantilla: _onTemplateSelected)
+                      : _NormalBar(
+                          textController: _textController,
+                          focusNode: _focusNode,
+                          hasText: _hasText,
+                          isAttachOpen: _mode == InputMode.attachment,
+                          onAttach: _toggleAttachment,
+                          onPlantilla: _onTemplateSelected,
+                          onSend: _sendText,
+                          onMic: () {
+                            widget.audioController.stop();
+                            setState(() => _mode = InputMode.audio);
+                          },
+                        ),
+                );
+              },
+            ),
+        ],
+      ),
     );
   }
 }
@@ -219,6 +264,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
 class _NormalBar extends StatelessWidget {
   final TextEditingController textController;
+  final FocusNode focusNode;
   final bool hasText;
   final bool isAttachOpen;
   final VoidCallback onAttach;
@@ -228,6 +274,7 @@ class _NormalBar extends StatelessWidget {
 
   const _NormalBar({
     required this.textController,
+    required this.focusNode,
     required this.hasText,
     required this.isAttachOpen,
     required this.onAttach,
@@ -312,6 +359,7 @@ class _NormalBar extends StatelessWidget {
             ),
             child: CustomTextField(
               controller: textController,
+              focusNode: focusNode,
               hint: 'Escribe un mensaje...',
               maxLines: 3,
               minLines: 1,

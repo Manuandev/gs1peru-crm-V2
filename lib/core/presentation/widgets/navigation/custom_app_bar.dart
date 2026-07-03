@@ -1,6 +1,7 @@
 // lib/core/presentation/widgets/navigation/custom_app_bar.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
@@ -145,6 +146,21 @@ class _CustomAppBarState extends State<CustomAppBar>
     _menuCtrl.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  // Flutter restaura el foco del campo anterior al cerrar el PopupMenuButton
+  // (comportamiento propio de la ruta modal que abre showMenu), tanto al
+  // seleccionar una opción como al cancelar tocando afuera. El unfocus() solo
+  // a nivel de Flutter no basta — el teclado nativo puede alcanzar a re-abrirse
+  // un frame después. Forzamos también el ocultamiento nativo directo.
+  void _unfocusDespuesDelFrame() {
+    FocusScope.of(context).unfocus();
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      FocusScope.of(context).unfocus();
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    });
   }
 
   void _startSearch() => setState(() => _isSearching = true);
@@ -430,10 +446,14 @@ class _CustomAppBarState extends State<CustomAppBar>
         FocusScope.of(context).unfocus();
         _menuCtrl.forward();
       },
-      onCanceled: _menuCtrl.reverse,
+      onCanceled: () {
+        _menuCtrl.reverse();
+        _unfocusDespuesDelFrame();
+      },
       onSelected: (v) {
         _menuCtrl.reverse();
         widget.onPopupSelected?.call(v);
+        _unfocusDespuesDelFrame();
       },
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),

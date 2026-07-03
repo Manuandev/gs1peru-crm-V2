@@ -403,7 +403,10 @@ class _ChatDetailViewState extends State<ChatDetailView>
               final activo =
                   state is ChatDetailSuccess || state is ChatDetailLoadingMore;
               if (!activo) return const SizedBox.shrink();
-              return ChatInputBar(audioController: _audioController);
+              return ChatInputBar(
+                audioController: _audioController,
+                panelAbierto: _showLeadPanel,
+              );
             },
           ),
         ],

@@ -44,6 +44,7 @@ export 'models/combo_item.dart';
 export 'models/user_model.dart';
 export 'models/catalog_item.dart';
 export 'models/moneda_item.dart';
+export 'models/configuracion_item.dart';
 // #endregion models
 
 export 'navigation/app_route_observer.dart';

@@ -109,7 +109,7 @@ class ChatDetailAppBar extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
-                        lead.canal.isNotEmpty ? 'Sin canal' : lead.canal,
+                        lead.canal.isEmpty ? 'Sin canal' : lead.canal,
                         style: AppTextStyles.labelSmall.copyWith(
                           color: colorScheme.onPrimary.withValues(
                             alpha: AppColors.opacityOnPrimarySubtle,

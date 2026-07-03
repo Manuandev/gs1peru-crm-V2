@@ -11,6 +11,7 @@ class EditLeadContactoSection extends StatefulWidget {
   final TextEditingController apellidoMCtrl;
   final TextEditingController empresaCtrl; // editable — actualiza empresa existente
   final TextEditingController correoCtrl;  // editable — actualiza correo existente
+  final TextEditingController cargoCtrl;   // solo lectura — SP de guardado aún no lo soporta
   final String telefonoPrefijo;
   final String telefonoNumero;
   final bool isLoading;
@@ -23,6 +24,7 @@ class EditLeadContactoSection extends StatefulWidget {
     required this.apellidoMCtrl,
     required this.empresaCtrl,
     required this.correoCtrl,
+    required this.cargoCtrl,
     required this.telefonoPrefijo,
     required this.telefonoNumero,
     required this.isLoading,
@@ -257,13 +259,12 @@ class EditLeadContactoSectionState extends State<EditLeadContactoSection> {
 
         const SizedBox(height: AppSpacing.sm),
 
-        // ── Cargo — próximamente ──────────────────────────────────────────
+        // ── Cargo (solo lectura — el SP de guardado aún no lo soporta) ────
         CustomTextField(
           label: 'Cargo',
-          controller: TextEditingController(),
+          controller: widget.cargoCtrl,
           enabled: false,
           prefixIcon: const Icon(AppIcons.documento),
-          hint: 'Próximamente',
           dense: true,
         ),
         const SizedBox(height: AppSpacing.sm),

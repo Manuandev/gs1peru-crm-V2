@@ -36,6 +36,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   late final TextEditingController _apellidoMCtrl;
   late final TextEditingController _empresaCtrl;
   late final TextEditingController _correoCtrl;
+  late final TextEditingController _cargoCtrl;
   late final TextEditingController _cantidadCtrl;
   late final TextEditingController _precioBaseCtrl;
   late final TextEditingController _descuentoCtrl;
@@ -44,7 +45,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   late final TextEditingController _campaniaCtrl;
   late final TextEditingController _eventoCtrl;
 
-  // ── Información adicional (pendiente de conectar al SP, ver _guardar) ─────
+  // ── Información adicional ──────────────────────────────────────────────────
   late final TextEditingController _nombreLeadCtrl;
   late final TextEditingController _modalidadCtrl;
 
@@ -57,18 +58,25 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void initState() {
     super.initState();
     final l = widget.lead;
-    _nombreCtrl     = TextEditingController(text: l.nombre);
-    _apellidoPCtrl  = TextEditingController(text: l.apellidoPaterno);
-    _apellidoMCtrl  = TextEditingController(text: l.apellidoMaterno);
-    _empresaCtrl    = TextEditingController(text: l.nombreEmpresa);
-    _correoCtrl     = TextEditingController(text: l.correo);
-    _cantidadCtrl   = TextEditingController(text: NumberFormatUtils.fmtInt(l.cantidad));
-    _precioBaseCtrl = TextEditingController(text: NumberFormatUtils.fmtDecimal(l.precioBase));
-    _descuentoCtrl  = TextEditingController(text: NumberFormatUtils.fmtDecimal(l.descuento));
-    _campaniaCtrl   = TextEditingController(text: l.campania);
-    _eventoCtrl     = TextEditingController(text: l.evento);
-    _nombreLeadCtrl = TextEditingController();
-    _modalidadCtrl  = TextEditingController(text: l.modalidad ?? '');
+    _nombreCtrl = TextEditingController(text: l.nombre);
+    _apellidoPCtrl = TextEditingController(text: l.apellidoPaterno);
+    _apellidoMCtrl = TextEditingController(text: l.apellidoMaterno);
+    _empresaCtrl = TextEditingController(text: l.nombreEmpresa);
+    _correoCtrl = TextEditingController(text: l.correo);
+    _cargoCtrl = TextEditingController(text: l.cargo);
+    _cantidadCtrl = TextEditingController(
+      text: NumberFormatUtils.fmtInt(l.cantidad),
+    );
+    _precioBaseCtrl = TextEditingController(
+      text: NumberFormatUtils.fmtDecimal(l.precioBase),
+    );
+    _descuentoCtrl = TextEditingController(
+      text: NumberFormatUtils.fmtDecimal(l.descuento),
+    );
+    _campaniaCtrl = TextEditingController(text: l.campania);
+    _eventoCtrl = TextEditingController(text: l.evento);
+    _nombreLeadCtrl = TextEditingController(text: l.nombreLead ?? '');
+    _modalidadCtrl = TextEditingController(text: l.modalidad ?? '');
   }
 
   @override
@@ -101,6 +109,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _apellidoMCtrl.dispose();
     _empresaCtrl.dispose();
     _correoCtrl.dispose();
+    _cargoCtrl.dispose();
     _cantidadCtrl.dispose();
     _precioBaseCtrl.dispose();
     _descuentoCtrl.dispose();
@@ -115,8 +124,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── Inicialización de combos ──────────────────────────────────────────────
 
   void _inicializarCombos(CatalogsLoaded state) {
-    _canal   = state.canales.where((e) => e.id == widget.lead.idCanal).firstOrNull;
-    _interes = state.intereses.where((e) => e.id == widget.lead.idInteres).firstOrNull;
+    _canal = state.canales
+        .where((e) => e.id == widget.lead.idCanal)
+        .firstOrNull;
+    _interes = state.intereses
+        .where((e) => e.id == widget.lead.idInteres)
+        .firstOrNull;
 
     if (state.estados.isNotEmpty) {
       final tienePadre = widget.lead.idEstadoPadre?.isNotEmpty ?? false;
@@ -125,7 +138,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             .where((e) => e.id == widget.lead.idEstadoPadre && e.esPadre)
             .firstOrNull;
         if (_estado != null) {
-          _subEstadosFiltrados = state.estados.where((e) => e.idPadre == _estado!.id).toList();
+          _subEstadosFiltrados = state.estados
+              .where((e) => e.idPadre == _estado!.id)
+              .toList();
           _subEstado = _subEstadosFiltrados
               .where((e) => e.id == widget.lead.idEstado)
               .firstOrNull;
@@ -144,7 +159,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 .where((e) => e.id == hijo.idPadre && e.esPadre)
                 .firstOrNull;
             if (_estado != null) {
-              _subEstadosFiltrados = state.estados.where((e) => e.idPadre == _estado!.id).toList();
+              _subEstadosFiltrados = state.estados
+                  .where((e) => e.idPadre == _estado!.id)
+                  .toList();
               _subEstado = _subEstadosFiltrados
                   .where((e) => e.id == widget.lead.idEstado)
                   .firstOrNull;
@@ -157,16 +174,17 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   // ── Getters financieros ───────────────────────────────────────────────────
 
-  int get _cantidad       => NumberFormatUtils.parseInt(_cantidadCtrl.text);
-  double get _precioBase => NumberFormatUtils.parseDecimal(_precioBaseCtrl.text);
-  double get _descuento  => NumberFormatUtils.parseDecimal(_descuentoCtrl.text);
-  double get _subtotal   => _precioBase * _cantidad;
+  int get _cantidad => NumberFormatUtils.parseInt(_cantidadCtrl.text);
+  double get _precioBase =>
+      NumberFormatUtils.parseDecimal(_precioBaseCtrl.text);
+  double get _descuento => NumberFormatUtils.parseDecimal(_descuentoCtrl.text);
+  double get _subtotal => _precioBase * _cantidad;
   double get _costoFinal => _subtotal - _descuento;
 
   // ── Detección de cambios ──────────────────────────────────────────────────
 
   bool get _hayCambios {
-    final l   = widget.lead;
+    final l = widget.lead;
     // final sec = _contactoKey.currentState;
     // idLead 0 → el guardado crea el lead, no hay nada que "cambiar" primero.
     return l.idLead == 0 ||
@@ -174,7 +192,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         _interes?.id != l.idInteres ||
         (_estado != null && _subEstado?.id != l.idEstado) ||
         (_estado != null && _estado?.id != l.idEstado && _subEstado == null) ||
-        _nombreCtrl.text.trim()    != l.nombre ||
+        _nombreCtrl.text.trim() != l.nombre ||
         _apellidoPCtrl.text.trim() != l.apellidoPaterno ||
         _apellidoMCtrl.text.trim() != l.apellidoMaterno ||
         // Todo: descomentar cuando empresa/correo/teléfono sean editables
@@ -182,10 +200,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         // _correoCtrl.text.trim()    != l.correo ||
         // (sec?.tieneNuevos ?? false) ||
         _nombreLeadCtrl.text.trim() != (l.nombreLead ?? '') ||
-        _modalidadCtrl.text.trim()  != (l.modalidad ?? '') ||
-        _cantidadCtrl.text   != NumberFormatUtils.fmtInt(l.cantidad) ||
+        _modalidadCtrl.text.trim() != (l.modalidad ?? '') ||
+        _cantidadCtrl.text != NumberFormatUtils.fmtInt(l.cantidad) ||
         _precioBaseCtrl.text != NumberFormatUtils.fmtDecimal(l.precioBase) ||
-        _descuentoCtrl.text  != NumberFormatUtils.fmtDecimal(l.descuento);
+        _descuentoCtrl.text != NumberFormatUtils.fmtDecimal(l.descuento);
   }
 
   // ── Callbacks de combos ───────────────────────────────────────────────────
@@ -216,8 +234,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     setState(() => _isLoading = true);
 
     final idEstadoEfectivo = _subEstado?.id ?? _estado?.id;
-    final estadoEfectivo   = _subEstado?.nombre ?? _estado?.nombre;
-    final tieneSubEstado   = _subEstado != null;
+    final estadoEfectivo = _subEstado?.nombre ?? _estado?.nombre;
+    final tieneSubEstado = _subEstado != null;
 
     // Todo: descomentar cuando empresa/correo/teléfono sean editables en el SP
     // final sec = _contactoKey.currentState!;
@@ -306,6 +324,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 apellidoMCtrl: _apellidoMCtrl,
                 empresaCtrl: _empresaCtrl,
                 correoCtrl: _correoCtrl,
+                cargoCtrl: _cargoCtrl,
                 telefonoPrefijo: widget.lead.prefijo,
                 telefonoNumero: widget.lead.numero,
                 isLoading: _isLoading,
@@ -325,7 +344,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 subEstadosFiltrados: _subEstadosFiltrados,
                 idEstadoFallback: widget.lead.idEstado,
                 estadoFallback: widget.lead.estado,
-                descripcionEstadoPadreFallback: widget.lead.descripcionEstadoPadre,
+                descripcionEstadoPadreFallback:
+                    widget.lead.descripcionEstadoPadre,
                 idCanalFallback: widget.lead.idCanal,
                 isLoading: _isLoading,
                 onCanalChanged: (item) => setState(() => _canal = item),

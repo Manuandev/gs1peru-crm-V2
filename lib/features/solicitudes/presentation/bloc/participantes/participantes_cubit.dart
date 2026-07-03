@@ -96,4 +96,8 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       participantes: state.participantes.where((p) => p.id != id).toList(),
     ));
   }
+
+  void eliminarTodos() {
+    emit(state.copyWith(participantes: const []));
+  }
 }

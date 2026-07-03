@@ -36,6 +36,17 @@ class SolicitudParticipantesView extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmarEliminarTodos(BuildContext context) async {
+    final cubit = context.read<ParticipantesCubit>();
+    final confirmado = await context.showConfirmDialog(
+      title: 'Eliminar participantes',
+      message: '¿Deseas eliminar a todos los participantes?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+    );
+    if (confirmado) cubit.eliminarTodos();
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ParticipantesCubit, ParticipantesState>(
@@ -130,7 +141,9 @@ class SolicitudParticipantesView extends StatelessWidget {
                         _BotonIconoSmall(
                           icono: AppIcons.delete,
                           color: AppColors.error,
-                          onTap: () {},
+                          onTap: state.participantes.isEmpty
+                              ? () {}
+                              : () => _confirmarEliminarTodos(context),
                         ),
                       ],
                     ),

@@ -18,10 +18,9 @@ class AppConfiguracion extends Equatable {
   factory AppConfiguracion.parse(String rawResponse) =>
       AppConfiguracion(items: ConfiguracionItem.parseList(rawResponse));
 
-  /// Opciones (id > 0) de un grupo, ya filtradas por activas.
-  List<ConfiguracionItem> _opciones(String idConfig) => items
-      .where((c) => c.idConfig == idConfig && c.id > 0 && c.activo)
-      .toList();
+  /// Opciones (id > 0) de un grupo. El SP ya filtra IB_ACTIVO = 1.
+  List<ConfiguracionItem> _opciones(String idConfig) =>
+      items.where((c) => c.idConfig == idConfig && c.id > 0).toList();
 
   // ── TDE — Tiempo de espera / chat abierto (minutos) ────────
   double get tiempoChatAbierto {

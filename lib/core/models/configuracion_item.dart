@@ -31,7 +31,6 @@ class ConfiguracionItem {
   final String? valor3;
   final String? valor4;
   final String? valor5;
-  final bool activo;
 
   const ConfiguracionItem({
     required this.idConfig,
@@ -43,10 +42,11 @@ class ConfiguracionItem {
     this.valor3,
     this.valor4,
     this.valor5,
-    required this.activo,
   });
 
-  /// Formato: ID_CONFIG¦ID¦DES_CORTA¦DES_LARGA¦VALOR_1¦VALOR_2¦VALOR_3¦VALOR_4¦VALOR_5¦IB_ACTIVO
+  /// Formato (task 'CA' del SP de listas):
+  /// ID_CONFIG¦ID¦DES_CORTA¦DES_LARGA¦VALOR_1¦VALOR_2¦VALOR_3¦VALOR_4¦VALOR_5
+  /// El SP ya filtra IB_ACTIVO = 1 en el WHERE, por eso no viaja como campo.
   factory ConfiguracionItem.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return ConfiguracionItem(
@@ -59,7 +59,6 @@ class ConfiguracionItem {
       valor3: ParseUtils.strNullable(c, 6),
       valor4: ParseUtils.strNullable(c, 7),
       valor5: ParseUtils.strNullable(c, 8),
-      activo: ParseUtils.toBool(c, 9),
     );
   }
 

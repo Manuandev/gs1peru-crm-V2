@@ -65,6 +65,7 @@ class Lead extends Equatable {
   final String? descripcionEstadoPadre;
   final String? idSubEstado;
   final String? subEstado;
+  final String? cargo;
 
   // ── Campos económicos ─────────────────────────────────────────
   final double? precioBase;
@@ -77,8 +78,16 @@ class Lead extends Equatable {
   /// Apellidos combinados — compatible con código existente.
   String get apellido => '$apellidoPaterno $apellidoMaterno'.trim();
 
-  String get nombreCompleto =>
-      '$nombre $apellidoPaterno $apellidoMaterno'.trim();
+  /// Nombre completo del contacto. Si no tiene nombre/apellidos registrados,
+  /// muestra el número de teléfono como identificador.
+  String get nombreCompleto {
+    final partes = [
+      nombre,
+      apellidoPaterno,
+      apellidoMaterno,
+    ].where((parte) => parte.trim().isNotEmpty).join(' ');
+    return partes.isNotEmpty ? partes : '$prefijo $numero';
+  }
 
   /// Id de estado a mostrar/agrupar: si el lead tiene un sub-estado
   /// (idEstadoPadre presente), se usa el padre — ej. "Con ficha" agrupa
@@ -127,6 +136,7 @@ class Lead extends Equatable {
     this.descripcionEstadoPadre,
     this.idSubEstado,
     this.subEstado,
+    this.cargo,
     this.precioBase,
     this.precio,
     this.cantidad,
@@ -168,6 +178,7 @@ class Lead extends Equatable {
     descripcionEstadoPadre,
     idSubEstado,
     subEstado,
+    cargo,
     precioBase,
     precio,
     cantidad,
@@ -210,6 +221,7 @@ class Lead extends Equatable {
     String? descripcionEstadoPadre,
     String? idSubEstado,
     String? subEstado,
+    String? cargo,
     double? precioBase,
     double? precio,
     int? cantidad,
@@ -254,6 +266,7 @@ class Lead extends Equatable {
           : (descripcionEstadoPadre ?? this.descripcionEstadoPadre),
       idSubEstado: idSubEstado ?? this.idSubEstado,
       subEstado: subEstado ?? this.subEstado,
+      cargo: cargo ?? this.cargo,
       precioBase: precioBase ?? this.precioBase,
       precio: precio ?? this.precio,
       cantidad: cantidad ?? this.cantidad,

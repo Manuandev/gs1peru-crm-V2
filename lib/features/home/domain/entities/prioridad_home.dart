@@ -28,6 +28,11 @@ class PrioridadHome {
 
   String get telefonoCompleto => "$prefijoTelefono $telefono";
 
+  /// Nombre a mostrar en UI. Si el contacto no tiene nombre registrado,
+  /// muestra el número de teléfono como identificador.
+  String get nombreMostrar =>
+      nombre.trim().isNotEmpty ? nombre : telefonoCompleto;
+
   List<Object?> get props => [
     idNumero,
     idLead,

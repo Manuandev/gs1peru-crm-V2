@@ -76,7 +76,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Cargo',
-                  valor: '—',
+                  valor: (lead.cargo?.isEmpty ?? true) ? '—' : lead.cargo!,
                 ),
               ),
               _ParFila(

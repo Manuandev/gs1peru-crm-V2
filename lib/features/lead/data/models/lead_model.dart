@@ -3,6 +3,8 @@
 // Parsea la respuesta del SP CSV_LEADS_LST_APP (tasks LS y DT).
 // El SP retorna EP.ID_ESTADO y EP.DESCRIPCION (estado padre) en [15] y [16],
 // desplazando campaña, oportunidad, canal e interés a [17..24].
+// [32..34] (nombreLead, modalidad, cargo) son campos agregados al final del
+// CONCAT del SP para no correr los índices existentes.
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -42,6 +44,7 @@ class LeadModel extends Lead {
     super.descripcionEstadoPadre,
     super.idSubEstado,
     super.subEstado,
+    super.cargo,
     super.precioBase,
     super.precio,
     super.cantidad,
@@ -125,6 +128,13 @@ class LeadModel extends Lead {
       // 31 → idChatCab (CCU.ID_CONVERSACION_CAB) — conversación más reciente
       // del número, independiente de si está abierta/cerrada/expirada.
       idChatCab: ParseUtils.toInt(fields, 31),
+      // 32 → nombreLead (LD.NOMBRE) — nombre adicional del lead, distinto
+      // del nombre del contacto.
+      nombreLead: ParseUtils.strNullable(fields, 32),
+      // 33 → modalidad (LD.MODALIDAD)
+      modalidad: ParseUtils.strNullable(fields, 33),
+      // 34 → cargo (CT.ID_CARGO) — valor de texto directo, sin catálogo.
+      cargo: ParseUtils.strNullable(fields, 34),
     );
   }
 

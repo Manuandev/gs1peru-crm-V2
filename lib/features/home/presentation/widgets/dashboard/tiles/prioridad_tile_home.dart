@@ -78,7 +78,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
           // ─── Avatar con ícono de persona ─────────────────────────
           CircleAvatar(
             radius: AppSizing.avatarRadiusXs,
-            backgroundColor: prioridad.nombre.avatarColor,
+            backgroundColor: prioridad.nombreMostrar.avatarColor,
             child: Icon(
               AppIcons.userFilled,
               color: AppColors.textOnDark,
@@ -94,7 +94,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _abreviarNombre(prioridad.nombre),
+                  _abreviarNombre(prioridad.nombreMostrar),
                   style: AppTextStyles.labelSmall.copyWith(
                     fontWeight: AppTextStyles.weightBold,
                     fontSize: AppTextStyles.sizeSm,

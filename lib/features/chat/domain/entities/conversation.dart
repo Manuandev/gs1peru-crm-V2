@@ -73,8 +73,16 @@ class Chat extends Equatable {
   String get descEstadoEfectiva =>
       idEstadoPadre.isNotEmpty ? descEstadoPadre : descEstado;
 
-  String get nombreCompleto =>
-      '$nombres $apellidoPaterno $apellidoMaterno'.trim();
+  /// Nombre completo del contacto. Si no tiene nombre/apellidos registrados,
+  /// muestra el número de teléfono como identificador.
+  String get nombreCompleto {
+    final partes = [
+      nombres,
+      apellidoPaterno ?? '',
+      apellidoMaterno ?? '',
+    ].where((parte) => parte.trim().isNotEmpty).join(' ');
+    return partes.isNotEmpty ? partes : '$prefijoPais $numero';
+  }
 
   const Chat({
     // Contacto

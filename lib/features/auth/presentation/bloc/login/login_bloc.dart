@@ -3,6 +3,8 @@
 // LOGIN BLOC — CONEXIÓN REAL CON DIO
 // ============================================================
 
+import 'package:flutter/foundation.dart';
+
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -48,10 +50,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     LoginWithGoogleSubmitted event,
     Emitter<LoginState> emit,
   ) async {
+    if (kDebugMode) debugPrint('[GoogleSignIn] evento recibido, iniciando flujo');
     emit(const LoginLoading());
 
     try {
       if (!GoogleSignIn.instance.supportsAuthenticate()) {
+        if (kDebugMode) debugPrint('[GoogleSignIn] supportsAuthenticate() = false');
         emit(
           const LoginFailure(
             'Google Sign-In no está disponible en este dispositivo',
@@ -60,25 +64,35 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         return;
       }
 
+      if (kDebugMode) debugPrint('[GoogleSignIn] abriendo selector nativo...');
       // Abre el selector nativo de cuentas Google
       final cuenta = await GoogleSignIn.instance.authenticate();
+      if (kDebugMode) debugPrint('[GoogleSignIn] cuenta seleccionada: ${cuenta.email}');
 
       // idToken no requiere serverClientId — viene incluido en authenticate().
       // El backend valida con Google tokeninfo usando este token.
       final idToken = cuenta.authentication.idToken;
+      if (kDebugMode) {
+        debugPrint('[GoogleSignIn] idToken presente=${idToken != null && idToken.isNotEmpty}');
+      }
 
       if (idToken == null || idToken.isEmpty) {
         emit(const LoginFailure('No se pudo obtener el token de Google'));
         return;
       }
 
+      if (kDebugMode) debugPrint('[GoogleSignIn] llamando al backend...');
       final usuario = await _loginConGoogleUsecase(
         accessToken: idToken,
         correo: cuenta.email,
       );
+      if (kDebugMode) debugPrint('[GoogleSignIn] backend OK, userId=${usuario.userId}');
 
       emit(LoginSuccess(userId: usuario.userId, username: usuario.fullName));
     } on GoogleSignInException catch (e) {
+      if (kDebugMode) {
+        debugPrint('[GoogleSignIn] GoogleSignInException code=${e.code} description=${e.description}');
+      }
       // Usuario canceló el selector → no mostrar nada, volver al estado inicial
       if (e.code == GoogleSignInExceptionCode.canceled) {
         emit(const LoginInitial());
@@ -88,8 +102,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         LoginFailure('Error de Google: ${e.description ?? e.code.toString()}'),
       );
     } on AppException catch (e) {
+      if (kDebugMode) debugPrint('[GoogleSignIn] AppException: ${e.message}');
       emit(LoginFailure(e.message));
     } catch (e, stackTrace) {
+      if (kDebugMode) debugPrint('[GoogleSignIn] Error genérico: $e');
       addError(e, stackTrace);
       emit(const LoginFailure('Error inesperado al iniciar con Google'));
     }

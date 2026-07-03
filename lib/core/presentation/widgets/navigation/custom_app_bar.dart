@@ -426,7 +426,10 @@ class _CustomAppBarState extends State<CustomAppBar>
         borderRadius: BorderRadius.all(Radius.circular(AppSizing.radiusLg)),
       ),
       color: colorScheme.surface,
-      onOpened: _menuCtrl.forward,
+      onOpened: () {
+        FocusScope.of(context).unfocus();
+        _menuCtrl.forward();
+      },
       onCanceled: _menuCtrl.reverse,
       onSelected: (v) {
         _menuCtrl.reverse();

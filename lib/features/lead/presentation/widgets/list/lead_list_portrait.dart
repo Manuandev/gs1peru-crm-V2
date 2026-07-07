@@ -8,7 +8,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListPortrait extends StatelessWidget {
-  final List<Lead> leads;
+  final List<ContactoNegociacion> leads;
   final LeadListFiltro filtro;
 
   const LeadListPortrait({
@@ -31,27 +31,8 @@ class LeadListPortrait extends StatelessWidget {
                 LeadListFilterChips(
                   filtroActual: state.filtro,
                   conteos: state.conteos,
-                  onFiltroTap: (filtro) async {
-                    final bloc = context.read<LeadListBloc>();
-
-                    if (filtro != LeadListFiltro.asesores) {
-                      bloc.add(LeadListFiltered(filtro));
-                      return;
-                    }
-
-                    final seleccionado = await LeadAsesorPickerModal.show(
-                      context,
-                      conteosPorAsesor: state.conteosPorAsesor,
-                      seleccionadoActual: state.asesorSeleccionado,
-                    );
-
-                    if (!context.mounted) return;
-                    if (seleccionado != null) {
-                      bloc.add(LeadListAsesorSeleccionado(seleccionado));
-                    } else {
-                      bloc.add(const LeadListFiltered(LeadListFiltro.todos));
-                    }
-                  },
+                  onFiltroTap: (filtro) =>
+                      context.read<LeadListBloc>().add(LeadListFiltered(filtro)),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 LeadListStatsRow(conteos: state.conteos),
@@ -67,8 +48,6 @@ class LeadListPortrait extends StatelessWidget {
               ? AppEmptyView(
                   message: switch (filtro) {
                     LeadListFiltro.todos => 'No hay seguimientos.',
-                    LeadListFiltro.asesores =>
-                      'Este asesor no tiene seguimientos asignados.',
                     LeadListFiltro.nuevos => 'No hay seguimientos nuevos.',
                     LeadListFiltro.enDesarrollo =>
                       'No hay seguimientos en gestión.',
@@ -86,10 +65,11 @@ class LeadListPortrait extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: LeadCard(
                         lead: lead,
-                        onTap: () =>
-                            context.goToDetalleContacto(idLead: lead.idLead),
+                        onTap: () => context.goToDetalleContacto(
+                          idLead: lead.negociacion.idLead,
+                        ),
                         onWhatsAppTap: () => context.goToDetalleChat(
-                          idChatCab: lead.idChatCab,
+                          idChatCab: lead.numero.idChatCab,
                         ),
                       ),
                     );

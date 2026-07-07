@@ -5,8 +5,8 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailDatosLead extends StatefulWidget {
-  final Lead lead;
-  const ChatDetailDatosLead({super.key, required this.lead});
+  final Negociacion negociacion;
+  const ChatDetailDatosLead({super.key, required this.negociacion});
 
   @override
   State<ChatDetailDatosLead> createState() => _ChatDetailDatosLeadState();
@@ -43,8 +43,9 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
                         height: AppSizing.iconSm,
                         decoration: BoxDecoration(
                           color: colorScheme.primary,
-                          borderRadius:
-                              BorderRadius.circular(AppSizing.radiusXxs),
+                          borderRadius: BorderRadius.circular(
+                            AppSizing.radiusXxs,
+                          ),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -64,7 +65,7 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
           // ── Contenido expandible ──
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
-            secondChild: _DatosLeadContenido(lead: widget.lead),
+            secondChild: _DatosLeadContenido(lead: widget.negociacion),
             crossFadeState: _expandido
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
@@ -77,7 +78,7 @@ class _ChatDetailDatosLeadState extends State<ChatDetailDatosLead> {
 }
 
 class _DatosLeadContenido extends StatelessWidget {
-  final Lead lead;
+  final Negociacion lead;
   const _DatosLeadContenido({required this.lead});
 
   @override
@@ -96,14 +97,14 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: AppIcons.flag,
                 label: 'Estado',
-                valor: lead.estado,
+                valor: lead.descripcionEstado,
                 iconColor: AppColors.datoEstadoFg,
                 iconBackground: AppColors.datoEstadoBg,
               ),
               _DatoItem(
                 icon: AppIcons.listAlt,
                 label: 'Subestado',
-                valor: lead.subEstado ?? '',
+                valor: lead.descripcionEstadoPadre,
                 iconColor: AppColors.datoSubestadoFg,
                 iconBackground: AppColors.datoSubestadobg,
               ),
@@ -115,14 +116,14 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: AppIcons.campaign,
                 label: 'Campaña',
-                valor: lead.campania,
+                valor: lead.nombreCampania,
                 iconColor: AppColors.datoCampaniaFg,
                 iconBackground: AppColors.datoCampaniaBg,
               ),
               _DatoItem(
                 icon: AppIcons.calendar,
                 label: 'Evento',
-                valor: lead.evento,
+                valor: lead.nombreOportunidad,
                 iconColor: AppColors.datoEventoFg,
                 iconBackground: AppColors.datoEventoBg,
               ),
@@ -134,14 +135,14 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: AppIcons.share,
                 label: 'Canal',
-                valor: lead.canal,
+                valor: lead.descripcionCanal,
                 iconColor: AppColors.datoCanalFg,
                 iconBackground: AppColors.datoCanalBg,
               ),
               _DatoItem(
                 icon: AppIcons.users,
                 label: 'Interés',
-                valor: lead.interes,
+                valor: lead.descripcionInteres,
                 iconColor: AppColors.datoInteresFg,
                 iconBackground: AppColors.datoInteresBg,
               ),

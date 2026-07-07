@@ -11,10 +11,15 @@ class ChatInputBar extends StatefulWidget {
   // Mientras el panel de datos/negociaciones/historial está abierto, el
   // input no debe poder tomar foco — evita que el teclado se abra encima.
   final bool panelAbierto;
+  // Contacto/número/estado de conversación — vienen del Chat resuelto una
+  // sola vez en ChatDetailPage, no de InfoLeadCubit (que ahora es solo
+  // Negociacion, sin nada de contacto/número).
+  final Chat chat;
 
   const ChatInputBar({
     super.key,
     required this.audioController,
+    required this.chat,
     this.panelAbierto = false,
   });
 
@@ -85,13 +90,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   String _getNumero() {
-    final infoState = context.read<InfoLeadCubit>().state;
-    if (infoState is InfoLeadSuccess) {
-      final prefijo = infoState.lead.prefijo.replaceAll(RegExp(r'[^0-9]'), '');
-      final numero = infoState.lead.numero.replaceAll(RegExp(r'[^0-9]'), '');
-      return '$prefijo$numero';
-    }
-    return '';
+    final prefijo = widget.chat.prefijoPais.replaceAll(RegExp(r'[^0-9]'), '');
+    final numero = widget.chat.numero.replaceAll(RegExp(r'[^0-9]'), '');
+    return '$prefijo$numero';
   }
 
   int _getChatCab() {
@@ -140,19 +141,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   Future<void> _onTemplateSelected() async {
-    final infoState = context.read<InfoLeadCubit>().state;
-    final nombreCliente = infoState is InfoLeadSuccess
-        ? infoState.lead.nombre
-        : '';
-    final apellidoCliente = infoState is InfoLeadSuccess
-        ? infoState.lead.apellido
-        : '';
-    final isExpirado = infoState is InfoLeadSuccess
-        ? infoState.isExpirado
-        : false;
-    final isCerrado = infoState is InfoLeadSuccess
-        ? infoState.isCerrado
-        : false;
+    final nombreCliente = widget.chat.nombres;
+    final apellidoCliente = widget.chat.apellidoPaterno ?? '';
+    final isExpirado = widget.chat.isExpirado;
+    final isCerrado = widget.chat.isCerrado;
     final nombreAsesor = SessionService().userApe;
 
     final plantilla = await SelectTemplateModal.show(
@@ -209,50 +201,37 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
           // ── Input principal ───────────────────────────────────
           if (_mode != InputMode.audio)
-            BlocBuilder<InfoLeadCubit, InfoLeadState>(
-              buildWhen: (prev, curr) {
-                if (curr is! InfoLeadSuccess) return false;
-                if (prev is! InfoLeadSuccess) return true;
-                return prev.isExpirado != curr.isExpirado;
-              },
-              builder: (context, state) {
-                final expirado = state is InfoLeadSuccess
-                    ? state.isExpirado
-                    : false;
-
-                return Container(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.sm,
-                    AppSpacing.sm,
-                    AppSpacing.sm,
-                    AppSpacing.sm,
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.sm,
+                AppSpacing.sm,
+                AppSpacing.sm,
+                AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: colorScheme.outlineVariant,
+                    width: AppSizing.borderWidthSubtle,
                   ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    border: Border(
-                      top: BorderSide(
-                        color: colorScheme.outlineVariant,
-                        width: AppSizing.borderWidthSubtle,
-                      ),
+                ),
+              ),
+              child: widget.chat.isExpirado
+                  ? _ExpiradoBar(onPlantilla: _onTemplateSelected)
+                  : _NormalBar(
+                      textController: _textController,
+                      focusNode: _focusNode,
+                      hasText: _hasText,
+                      isAttachOpen: _mode == InputMode.attachment,
+                      onAttach: _toggleAttachment,
+                      onPlantilla: _onTemplateSelected,
+                      onSend: _sendText,
+                      onMic: () {
+                        widget.audioController.stop();
+                        setState(() => _mode = InputMode.audio);
+                      },
                     ),
-                  ),
-                  child: expirado
-                      ? _ExpiradoBar(onPlantilla: _onTemplateSelected)
-                      : _NormalBar(
-                          textController: _textController,
-                          focusNode: _focusNode,
-                          hasText: _hasText,
-                          isAttachOpen: _mode == InputMode.attachment,
-                          onAttach: _toggleAttachment,
-                          onPlantilla: _onTemplateSelected,
-                          onSend: _sendText,
-                          onMic: () {
-                            widget.audioController.stop();
-                            setState(() => _mode = InputMode.audio);
-                          },
-                        ),
-                );
-              },
             ),
         ],
       ),

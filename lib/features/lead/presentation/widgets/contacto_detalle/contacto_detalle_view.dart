@@ -52,7 +52,7 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
             ),
           );
         }
-        final lead = (state as InfoLeadSuccess).lead;
+        final lead = (state as InfoLeadSuccess).negociacion;
         return _ContactoScaffold(lead: lead, onRefresh: _refrescar);
       },
     );
@@ -64,7 +64,7 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ContactoScaffold extends StatelessWidget {
-  final Lead lead;
+  final Negociacion lead;
   final Future<void> Function() onRefresh;
 
   const _ContactoScaffold({required this.lead, required this.onRefresh});
@@ -101,7 +101,7 @@ class _ContactoScaffold extends StatelessWidget {
                 ),
                 child: ChatDetailFases(
                   idEstadoActual: lead.idEstado,
-                  idEstadoPadre: lead.idEstadoPadre ?? '',
+                  idEstadoPadre: lead.idEstadoPadre,
                 ),
               ),
               _CardSection(
@@ -161,7 +161,10 @@ class _ContactoScaffold extends StatelessWidget {
                         ContactoNegociacionesTab(
                           negociaciones: negociaciones,
                         ),
-                        HistorialTab(idNumero: lead.idNumero),
+                        // idNumero no disponible en Negociacion — pendiente
+                        // de conectar con la fuente de Numero de esta
+                        // pantalla.
+                        HistorialTab(idNumero: 0),
                       ],
                     );
                   },
@@ -212,13 +215,16 @@ class _CardSection extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ContactoHeaderTitle extends StatelessWidget {
-  final Lead lead;
+  final Negociacion lead;
 
   const _ContactoHeaderTitle({required this.lead});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    // Nombre de contacto — no disponible en Negociacion; pendiente de
+    // conectar con la fuente de Contacto de esta pantalla.
+    const nombreCompleto = '';
 
     return Row(
       children: [
@@ -227,9 +233,9 @@ class _ContactoHeaderTitle extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: AppSizing.avatarRadiusAppBar,
-              backgroundColor: AvatarUtils.color(lead.nombreCompleto),
+              backgroundColor: AvatarUtils.color(nombreCompleto),
               child: Text(
-                AvatarUtils.initials(lead.nombreCompleto),
+                AvatarUtils.initials(nombreCompleto),
                 style: AppTextStyles.titleSmall.copyWith(
                   color: AppColors.textOnDark,
                   fontWeight: AppTextStyles.weightBold,
@@ -263,7 +269,7 @@ class _ContactoHeaderTitle extends StatelessWidget {
         const SizedBox(width: AppSpacing.smPlus),
         Expanded(
           child: Text(
-            lead.nombreCompleto,
+            nombreCompleto,
             style: AppTextStyles.titleMedium.copyWith(
               color: colorScheme.onPrimary,
               fontWeight: AppTextStyles.weightBold,

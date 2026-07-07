@@ -7,14 +7,17 @@ import 'package:app_crm/features/lead/index_lead.dart';
 /// Card de encabezado del formulario de edición de lead.
 /// Muestra avatar con iniciales, nombre completo, canal, estado y empresa.
 class LeadEditHeaderCard extends StatelessWidget {
-  final Lead lead;
+  final Negociacion lead;
   const LeadEditHeaderCard({super.key, required this.lead});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final avatarColor = lead.nombreCompleto.avatarColor;
-    final iniciales   = lead.nombreCompleto.initials;
+    // Nombre de contacto — no disponible en Negociacion; pendiente de
+    // conectar con la fuente de Contacto de esta pantalla.
+    const nombreCompleto = '';
+    final avatarColor = nombreCompleto.avatarColor;
+    final iniciales   = nombreCompleto.initials;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -48,18 +51,19 @@ class LeadEditHeaderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  lead.nombreCompleto,
+                  nombreCompleto,
                   style: AppTextStyles.titleMedium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 // Canal y estado — ocultos si no hay lead asociado, para no
                 // mostrar datos falsos (ícono/chip vacíos).
-                if (lead.canal.isNotEmpty || lead.idEstado.isNotEmpty) ...[
+                if (lead.descripcionCanal.isNotEmpty ||
+                    lead.idEstado.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
-                      if (lead.canal.isNotEmpty) ...[
+                      if (lead.descripcionCanal.isNotEmpty) ...[
                         AppSocialUtils.widgetCanalById(
                           lead.idCanal,
                           size: AppSizing.iconSm,
@@ -67,7 +71,7 @@ class LeadEditHeaderCard extends StatelessWidget {
                         const SizedBox(width: AppSpacing.xs),
                         Flexible(
                           child: Text(
-                            lead.canal,
+                            lead.descripcionCanal,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -79,25 +83,10 @@ class LeadEditHeaderCard extends StatelessWidget {
                       ],
                       if (lead.idEstado.isNotEmpty)
                         AppSocialUtils.chipEstado(
-                          lead.idEstadoPadre?.isNotEmpty == true
-                              ? lead.idEstadoPadre!
-                              : lead.idEstado,
-                          label: lead.idEstadoPadre?.isNotEmpty == true
-                              ? lead.descripcionEstadoPadre ?? lead.estado
-                              : lead.estado,
+                          lead.idEstadoEfectivo,
+                          label: lead.estadoEfectivo,
                         ),
                     ],
-                  ),
-                ],
-                if (lead.nombreEmpresa.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    lead.nombreEmpresa,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ],

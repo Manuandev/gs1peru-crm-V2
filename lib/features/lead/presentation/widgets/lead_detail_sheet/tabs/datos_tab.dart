@@ -3,33 +3,41 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class DatosTab extends StatelessWidget {
-  final Lead lead;
+  final Chat chat;
+  final Negociacion negociacion;
   final int idNumero;
   final InfoLeadCubit? cubit;
   final VoidCallback? onCerrar;
 
-  const DatosTab({super.key, required this.lead, required this.idNumero, this.cubit, this.onCerrar});
+  const DatosTab({
+    super.key,
+    required this.chat,
+    required this.negociacion,
+    required this.idNumero,
+    this.cubit,
+    this.onCerrar,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     // Cuando hay padre, el color de estado corresponde al padre (ej: '04' Cerrado),
     // no al subestado crudo ('05' Cobranza).
-    final idEfectivo = (lead.idEstadoPadre?.isNotEmpty ?? false)
-        ? lead.idEstadoPadre!
-        : lead.idEstado;
-    final colorEstado = AppSocialUtils.colorEstado(idEfectivo);
+    final hayPadre = negociacion.idEstadoPadre.isNotEmpty;
+    final colorEstado = AppSocialUtils.colorEstado(
+      negociacion.idEstadoEfectivo,
+    );
     // Separar las descripciones de estado y subestado para mostrarlas por separado.
-    final hayPadre = lead.idEstadoPadre?.isNotEmpty ?? false;
-    final labelEstado = hayPadre
-        ? (lead.descripcionEstadoPadre?.isNotEmpty ?? false
-            ? lead.descripcionEstadoPadre!
-            : lead.estado)
-        : lead.estado;
-    final labelSubEstado = hayPadre ? lead.estado : (lead.subEstado ?? '');
+    final labelEstado = negociacion.estadoEfectivo;
+    final labelSubEstado = hayPadre ? negociacion.descripcionEstado : '';
+    final apellido = [
+      chat.apellidoPaterno ?? '',
+      chat.apellidoMaterno ?? '',
+    ].where((p) => p.isNotEmpty).join(' ');
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -47,7 +55,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Nombres',
-                  valor: lead.nombre.isEmpty ? '—' : lead.nombre,
+                  valor: chat.nombres.isEmpty ? '—' : chat.nombres,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -56,7 +64,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Apellidos',
-                  valor: lead.apellido.isEmpty ? '—' : lead.apellido,
+                  valor: apellido.isEmpty ? '—' : apellido,
                 ),
               ),
               _ParFila(
@@ -67,7 +75,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Empresa',
-                  valor: lead.nombreEmpresa.isEmpty ? '—' : lead.nombreEmpresa,
+                  valor: chat.nombreEmpresa.isEmpty ? '—' : chat.nombreEmpresa,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -76,7 +84,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Cargo',
-                  valor: (lead.cargo?.isEmpty ?? true) ? '—' : lead.cargo!,
+                  valor: (chat.cargo?.isEmpty ?? true) ? '—' : chat.cargo!,
                 ),
               ),
               _ParFila(
@@ -87,7 +95,7 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Correo',
-                  valor: lead.correo.isEmpty ? '—' : lead.correo,
+                  valor: (chat.correo?.isEmpty ?? true) ? '—' : chat.correo!,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -96,7 +104,7 @@ class DatosTab extends StatelessWidget {
                     color: AppColors.success,
                   ),
                   etiqueta: 'Celular',
-                  valor: lead.numero.isEmpty ? '—' : lead.numero,
+                  valor: chat.numero.isEmpty ? '—' : chat.numero,
                 ),
               ),
               _ParFila(
@@ -107,15 +115,19 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Campaña',
-                  valor: lead.campania.isEmpty ? '—' : lead.campania,
+                  valor: negociacion.nombreCampania.isEmpty
+                      ? '—'
+                      : negociacion.nombreCampania,
                 ),
                 derecha: _CampoDato(
                   icono: AppSocialUtils.widgetCanalById(
-                    lead.idCanal,
+                    negociacion.idCanal,
                     size: AppSizing.iconActionSm,
                   ),
                   etiqueta: 'Canal',
-                  valor: lead.canal.isEmpty ? '—' : lead.canal,
+                  valor: negociacion.descripcionCanal.isEmpty
+                      ? '—'
+                      : negociacion.descripcionCanal,
                 ),
               ),
               _ParFila(
@@ -126,7 +138,9 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Curso / Evento',
-                  valor: lead.evento.isEmpty ? '—' : lead.evento,
+                  valor: negociacion.nombreOportunidad.isEmpty
+                      ? '—'
+                      : negociacion.nombreOportunidad,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -135,7 +149,9 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Interés',
-                  valor: lead.interes.isEmpty ? '—' : lead.interes,
+                  valor: negociacion.descripcionInteres.isEmpty
+                      ? '—'
+                      : negociacion.descripcionInteres,
                 ),
               ),
               _ParFila(
@@ -167,7 +183,9 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Origen',
-                  valor: lead.canal.isEmpty ? '—' : lead.canal,
+                  valor: negociacion.descripcionCanal.isEmpty
+                      ? '—'
+                      : negociacion.descripcionCanal,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -176,17 +194,17 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Fecha de creación',
-                  valor: (lead.fechaCreacion ?? '').isEmpty
+                  valor: negociacion.fechaHoraCreacion.isEmpty
                       ? '—'
-                      : '${lead.fechaCreacion!.formatDate(AppDateFormat.shortDate)} · ${lead.fechaCreacion!.formatDate(AppDateFormat.hourMinute)}',
+                      : '${negociacion.fechaHoraCreacion.formatDate(AppDateFormat.shortDate)} · ${negociacion.fechaHoraCreacion.formatDate(AppDateFormat.hourMinute)}',
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
           CustomOutlinedButton(
-            text: lead.idLead == 0 ? 'Crear lead' : 'Editar lead',
-            icon: lead.idLead == 0 ? AppIcons.add : AppIcons.edit,
+            text: negociacion.idLead == 0 ? 'Crear lead' : 'Editar lead',
+            icon: negociacion.idLead == 0 ? AppIcons.add : AppIcons.edit,
             onPressed: () {
               if (onCerrar != null) {
                 onCerrar!();
@@ -195,7 +213,7 @@ class DatosTab extends StatelessWidget {
               }
               NavigationService.navigateTo(
                 AppRoutes.detalleEditarLead,
-                arguments: {'idLead': lead.idLead, 'cubit': cubit},
+                arguments: {'idLead': negociacion.idLead, 'cubit': cubit},
               );
             },
           ),

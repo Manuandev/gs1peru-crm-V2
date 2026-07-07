@@ -19,22 +19,12 @@ class InfoLeadLoading extends InfoLeadState {
 }
 
 class InfoLeadSuccess extends InfoLeadState {
-  final Lead lead;
-  // Flags de conversación WhatsApp — pertenecen al número, no al lead.
-  // Se almacenan aquí para que ChatInputBar pueda leerlos sin que Lead los cargue.
-  final bool isBloqueado;
-  final bool isExpirado;
-  final bool isCerrado;
+  final Negociacion negociacion;
 
-  const InfoLeadSuccess(
-    this.lead, {
-    this.isBloqueado = false,
-    this.isExpirado = false,
-    this.isCerrado = false,
-  });
+  const InfoLeadSuccess(this.negociacion);
 
   @override
-  List<Object?> get props => [lead, isBloqueado, isExpirado, isCerrado];
+  List<Object?> get props => [negociacion];
 }
 
 class InfoLeadFailure extends InfoLeadState {

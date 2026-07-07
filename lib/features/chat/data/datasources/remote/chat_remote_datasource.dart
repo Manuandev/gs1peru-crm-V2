@@ -14,15 +14,15 @@ class ChatRemoteDatasource {
   final sep = AppConstants.sepListas;
   final camp = AppConstants.sepCampos;
 
-  Lead _parsePrimerLead(String seccion) {
-    final leads = LeadModel.parseList(seccion);
-    if (leads.isEmpty) {
+  Negociacion _parsePrimerLead(String seccion) {
+    final negociaciones = NegociacionModel.parseDetalleList(seccion);
+    if (negociaciones.isEmpty) {
       throw const AppException('No se encontró información del lead.');
     }
-    return leads.first;
+    return negociaciones.first;
   }
 
-  Future<Lead> getInfoLead(int idLead) async {
+  Future<Negociacion> getInfoNegociacion(int idLead) async {
     final String body = '${[idLead].join(camp)}${sep}DT';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
@@ -54,8 +54,7 @@ class ChatRemoteDatasource {
   /// Trae un único chat por su ID_CONVERSACION_CAB — usado cuando llega un
   /// mensaje por WebSocket de una conversación que aún no está en memoria.
   Future<Chat?> getChatByIdChatCab(int idChatCab) async {
-    final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0, idChatCab].join(camp)}${sep}LU';
+    final String body = '$idChatCab${sep}LU';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 

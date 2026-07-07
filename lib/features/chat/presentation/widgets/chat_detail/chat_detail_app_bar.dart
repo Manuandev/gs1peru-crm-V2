@@ -6,14 +6,18 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailAppBar extends StatelessWidget {
-  final Lead lead;
+  final Negociacion negociacion;
+  // Nombre del contacto — viene del Chat resuelto en ChatDetailPage, no de
+  // Negociacion (que ya no carga nada de contacto).
+  final String nombreCompleto;
   final String? fechaUltimaRespuesta;
   final int idCanal;
   final VoidCallback? onTap;
 
   const ChatDetailAppBar({
     super.key,
-    required this.lead,
+    required this.negociacion,
+    required this.nombreCompleto,
     required this.idCanal,
     this.fechaUltimaRespuesta,
     this.onTap,
@@ -42,7 +46,7 @@ class ChatDetailAppBar extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: AppSizing.avatarRadiusAppBar,
-              backgroundColor: AvatarUtils.color(lead.nombreCompleto),
+              backgroundColor: AvatarUtils.color(nombreCompleto),
               child: Icon(
                 AppIcons.user,
                 size: AppSizing.iconMd,
@@ -86,7 +90,7 @@ class ChatDetailAppBar extends StatelessWidget {
               GestureDetector(
                 onTap: onTap,
                 child: Text(
-                  lead.nombreCompleto,
+                  nombreCompleto,
                   style: AppTextStyles.titleMedium.copyWith(
                     color: colorScheme.onPrimary,
                     fontWeight: AppTextStyles.weightBold,
@@ -96,7 +100,7 @@ class ChatDetailAppBar extends StatelessWidget {
               ),
 
               // Campaña / canal — oculto si no hay lead asociado (sin canal)
-              if (lead.idLead > 0)
+              if (negociacion.idLead > 0)
                 Row(
                   children: [
                     Icon(
@@ -109,7 +113,9 @@ class ChatDetailAppBar extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
-                        lead.canal.isEmpty ? 'Sin canal' : lead.canal,
+                        negociacion.descripcionCanal.isEmpty
+                            ? 'Sin canal'
+                            : negociacion.descripcionCanal,
                         style: AppTextStyles.labelSmall.copyWith(
                           color: colorScheme.onPrimary.withValues(
                             alpha: AppColors.opacityOnPrimarySubtle,

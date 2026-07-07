@@ -5,13 +5,15 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoAccionesFooter extends StatelessWidget {
-  final Lead lead;
+  final Negociacion lead;
 
   const ContactoAccionesFooter({super.key, required this.lead});
 
   @override
   Widget build(BuildContext context) {
-    final telefono = '${lead.prefijo}${lead.numero}';
+    // Teléfono del contacto — pendiente de conectar con la fuente de
+    // Contacto/Numero de esta pantalla (Negociacion no lo trae).
+    const telefono = '';
 
     return Container(
       decoration: BoxDecoration(
@@ -36,7 +38,7 @@ class ContactoAccionesFooter extends StatelessWidget {
               icon: AppIcons.whatsapp,
               borderColor: AppSocialUtils.colorCanalById(1),
               foregroundColor: AppSocialUtils.colorCanalById(1),
-              onPressed: lead.numero.isEmpty
+              onPressed: telefono.isEmpty
                   ? null
                   : () => LauncherUtils.abrirWhatsApp(telefono),
             ),
@@ -46,7 +48,7 @@ class ContactoAccionesFooter extends StatelessWidget {
             child: CustomOutlinedButton(
               text: 'Llamar',
               icon: AppIcons.phone,
-              onPressed: lead.numero.isEmpty
+              onPressed: telefono.isEmpty
                   ? null
                   : () => LauncherUtils.abrirTelefono(telefono),
             ),

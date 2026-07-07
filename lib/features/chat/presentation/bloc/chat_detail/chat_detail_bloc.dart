@@ -66,9 +66,9 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     await _loadMessages(event.idNumero, emit);
   }
 
-  Future<void> _loadMessages(int idLead, Emitter<ChatDetailState> emit) async {
+  Future<void> _loadMessages(int idNumero, Emitter<ChatDetailState> emit) async {
     try {
-      final messages = await _getChatMessages(idLead);
+      final messages = await _getChatMessages(idNumero);
 
       final sorted = [...messages]
         ..sort((a, b) {

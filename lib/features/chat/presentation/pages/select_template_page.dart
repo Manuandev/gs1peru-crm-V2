@@ -7,9 +7,9 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class SelectTemplatePage extends StatelessWidget {
-  final Lead lead;
+  final Negociacion negociacion;
 
-  const SelectTemplatePage({super.key, required this.lead});
+  const SelectTemplatePage({super.key, required this.negociacion});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class SelectTemplatePage extends StatelessWidget {
       )..add(const SelectTemplateStarted()),
       child: BlocListener<SelectTemplateBloc, SelectTemplateState>(
         listener: (context, state) {},
-        child: SelectTemplateView(lead: lead),
+        child: SelectTemplateView(negociacion: negociacion),
       ),
     );
   }

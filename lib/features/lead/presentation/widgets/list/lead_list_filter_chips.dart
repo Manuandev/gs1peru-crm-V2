@@ -20,19 +20,12 @@ class LeadListFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isModerador = SessionService().isModerador;
 
-    final todosChips = [
+    final chips = [
       (
         filtro: LeadListFiltro.todos,
         label: 'Todos',
         icon: AppIcons.filter,
-        dotColor: null,
-      ),
-      (
-        filtro: LeadListFiltro.asesores,
-        label: 'Asesores',
-        icon: AppIcons.userFilled,
         dotColor: null,
       ),
       (
@@ -54,11 +47,6 @@ class LeadListFilterChips extends StatelessWidget {
         dotColor: AppColors.purple,
       ),
     ];
-
-    // El chip "Asesores" solo lo ve el moderador
-    final chips = todosChips
-        .where((c) => !(c.filtro == LeadListFiltro.asesores && !isModerador))
-        .toList();
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

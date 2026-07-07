@@ -29,16 +29,16 @@ class _NegociacionesTabState extends State<NegociacionesTab>
   @override
   void initState() {
     super.initState();
-    // Sin lead no hay nada que buscar — el SP devolvería vacío igual.
-    if (widget.leadId > 0) {
-      context.read<NegociacionesCubit>().cargarNegociaciones(widget.leadId);
+    // Sin número no hay nada que buscar — el SP devolvería vacío igual.
+    if (widget.idNumero > 0) {
+      context.read<NegociacionesCubit>().cargarNegociaciones(widget.idNumero);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (widget.leadId == 0) return const _EstadoVacio();
+    if (widget.idNumero == 0) return const _EstadoVacio();
 
     return BlocBuilder<NegociacionesCubit, NegociacionesState>(
       builder: (context, state) {
@@ -49,7 +49,7 @@ class _NegociacionesTabState extends State<NegociacionesTab>
             message: mensaje,
             onRetry: () => context
                 .read<NegociacionesCubit>()
-                .cargarNegociaciones(widget.leadId),
+                .cargarNegociaciones(widget.idNumero),
           ),
           NegociacionesSuccess(:final negociaciones) => _ListaNegociaciones(
             negociaciones: negociaciones,
@@ -140,7 +140,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
             onGenerarSolicitud: () {},
             onEdited: () => context
                 .read<NegociacionesCubit>()
-                .cargarNegociaciones(widget.leadId),
+                .cargarNegociaciones(widget.idNumero),
           ),
         ),
 

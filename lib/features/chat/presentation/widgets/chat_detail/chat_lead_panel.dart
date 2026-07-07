@@ -5,10 +5,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatLeadPanel extends StatefulWidget {
-  final Lead lead;
+  final Chat chat;
+  final Negociacion negociacion;
   final int idNumero;
   final TabController tabController;
   final InfoLeadCubit cubit;
@@ -16,7 +18,8 @@ class ChatLeadPanel extends StatefulWidget {
 
   const ChatLeadPanel({
     super.key,
-    required this.lead,
+    required this.chat,
+    required this.negociacion,
     required this.idNumero,
     required this.tabController,
     required this.cubit,
@@ -136,13 +139,14 @@ class _ChatLeadPanelState extends State<ChatLeadPanel> {
               controller: widget.tabController,
               children: [
                 DatosTab(
-                  lead: widget.lead,
+                  chat: widget.chat,
+                  negociacion: widget.negociacion,
                   idNumero: widget.idNumero,
                   cubit: widget.cubit,
                   onCerrar: _cerrar,
                 ),
                 NegociacionesTab(
-                  leadId: widget.lead.idLead,
+                  leadId: widget.negociacion.idLead,
                   idNumero: widget.idNumero,
                   onCerrar: _cerrar,
                 ),

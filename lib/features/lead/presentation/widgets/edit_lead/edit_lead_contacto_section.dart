@@ -192,13 +192,12 @@ class EditLeadContactoSectionState extends State<EditLeadContactoSection> {
         const FormSectionTitle('Información del contacto'),
         const SizedBox(height: AppSpacing.md),
 
-        // ── Nombres ───────────────────────────────────────────────────────
+        // ── Nombres (solo lectura — ya no se editan desde acá) ────────────
         CustomTextField(
           label: 'Nombres',
           controller: widget.nombreCtrl,
-          enabled: !widget.isLoading,
+          enabled: false,
           prefixIcon: const Icon(AppIcons.user),
-          textCapitalization: TextCapitalization.words,
           dense: true,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -207,15 +206,13 @@ class EditLeadContactoSectionState extends State<EditLeadContactoSection> {
           izquierdo: CustomTextField(
             label: 'Apellido Paterno',
             controller: widget.apellidoPCtrl,
-            enabled: !widget.isLoading,
-            textCapitalization: TextCapitalization.words,
+            enabled: false,
             dense: true,
           ),
           derecho: CustomTextField(
             label: 'Apellido Materno',
             controller: widget.apellidoMCtrl,
-            enabled: !widget.isLoading,
-            textCapitalization: TextCapitalization.words,
+            enabled: false,
             dense: true,
           ),
         ),

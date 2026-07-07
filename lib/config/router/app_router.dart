@@ -293,7 +293,7 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return SelectTemplatePage(lead: args['lead'] as Lead);
+        return SelectTemplatePage(negociacion: args['lead'] as Negociacion);
       },
     ),
   };

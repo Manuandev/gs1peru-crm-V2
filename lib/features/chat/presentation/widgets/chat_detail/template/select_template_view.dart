@@ -9,9 +9,9 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class SelectTemplateView extends StatefulWidget {
-  final Lead lead;
+  final Negociacion negociacion;
 
-  const SelectTemplateView({super.key, required this.lead});
+  const SelectTemplateView({super.key, required this.negociacion});
 
   @override
   State<SelectTemplateView> createState() => _SelectTemplateViewState();

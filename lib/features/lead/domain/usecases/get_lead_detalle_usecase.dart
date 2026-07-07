@@ -6,5 +6,5 @@ class GetLeadDetalleUseCase {
   final LeadRepository _repository;
   const GetLeadDetalleUseCase(this._repository);
 
-  Future<LeadDetalle> call(int idLead) => _repository.getLeadDetalle(idLead);
+  Future<Negociacion> call(int idLead) => _repository.getLeadDetalle(idLead);
 }

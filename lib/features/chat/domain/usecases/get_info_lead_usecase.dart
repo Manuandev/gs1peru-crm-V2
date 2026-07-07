@@ -7,5 +7,5 @@ class GetInfoUseCase {
   final ChatRepository repository;
   const GetInfoUseCase(this.repository);
 
-  Future<Lead> call(int idLead) => repository.getInfoLead(idLead);
+  Future<Negociacion> call(int idLead) => repository.getInfoNegociacion(idLead);
 }

@@ -4,12 +4,15 @@ import 'package:app_crm/index_dependencies.dart';
 
 class Negociacion extends Equatable {
   final int idLead;
-  final int cantidad;
-  final double descuento;
 
+  final String nombre;
+  final String modalidad;
+
+  final int cantidad;
   final double precioBase;
+  final double descuento;
   final double precio;
-  final String fechaHora;
+  final String fechaHoraInteraccion;
   final String fechaHoraCreacion;
 
   final String idEstado;
@@ -29,16 +32,43 @@ class Negociacion extends Equatable {
 
   final int idInteres;
   final String descripcionInteres;
-  
+
   final bool activo;
+
+  // Contacto/número — de solo lectura en el form de edición. Con default
+  // porque no todos los SPs que alimentan Negociacion los traen (ej. 'LN' —
+  // historial de negociaciones). Se completan desde el SP de detalle ('DT')
+  // o desde el Chat ya cargado en lista.
+  final int idNumero;
+  final String prefijoPais;
+  final String numero;
+  final String nombres;
+  final String apellidoPaterno;
+  final String apellidoMaterno;
+  final String nombreEmpresa;
+  final String correo;
+
+  /// Id de estado a mostrar/agrupar: si hay un sub-estado (idEstadoPadre
+  /// presente), se usa el padre — ej. "Con ficha" agrupa bajo "En desarrollo".
+  String get idEstadoEfectivo =>
+      idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
+
+  /// Descripción de estado a mostrar — misma regla que [idEstadoEfectivo].
+  String get estadoEfectivo => idEstadoPadre.isNotEmpty
+      ? (descripcionEstadoPadre.isNotEmpty
+            ? descripcionEstadoPadre
+            : descripcionEstado)
+      : descripcionEstado;
 
   const Negociacion({
     required this.idLead,
+    required this.nombre,
+    required this.modalidad,
     required this.cantidad,
-    required this.descuento,
     required this.precioBase,
+    required this.descuento,
     required this.precio,
-    required this.fechaHora,
+    required this.fechaHoraInteraccion,
     required this.fechaHoraCreacion,
     required this.idEstado,
     required this.descripcionEstado,
@@ -53,16 +83,26 @@ class Negociacion extends Equatable {
     required this.idInteres,
     required this.descripcionInteres,
     required this.activo,
+    this.idNumero = 0,
+    this.prefijoPais = '',
+    this.numero = '',
+    this.nombres = '',
+    this.apellidoPaterno = '',
+    this.apellidoMaterno = '',
+    this.nombreEmpresa = '',
+    this.correo = '',
   });
 
   @override
   List<Object?> get props => [
     idLead,
+    nombre,
+    modalidad,
     cantidad,
-    descuento,
     precioBase,
+    descuento,
     precio,
-    fechaHora,
+    fechaHoraInteraccion,
     fechaHoraCreacion,
     idEstado,
     descripcionEstado,
@@ -77,15 +117,25 @@ class Negociacion extends Equatable {
     idInteres,
     descripcionInteres,
     activo,
+    idNumero,
+    prefijoPais,
+    numero,
+    nombres,
+    apellidoPaterno,
+    apellidoMaterno,
+    nombreEmpresa,
+    correo,
   ];
 
   Negociacion copyWith({
     int? idLead,
+    String? nombre,
+    String? modalidad,
     int? cantidad,
-    double? descuento,
     double? precioBase,
+    double? descuento,
     double? precio,
-    String? fechaHora,
+    String? fechaHoraInteraccion,
     String? fechaHoraCreacion,
     String? idEstado,
     String? descripcionEstado,
@@ -100,14 +150,24 @@ class Negociacion extends Equatable {
     int? idInteres,
     String? descripcionInteres,
     bool? activo,
+    int? idNumero,
+    String? prefijoPais,
+    String? numero,
+    String? nombres,
+    String? apellidoPaterno,
+    String? apellidoMaterno,
+    String? nombreEmpresa,
+    String? correo,
   }) {
     return Negociacion(
       idLead: idLead ?? this.idLead,
+      nombre: nombre ?? this.nombre,
+      modalidad: modalidad ?? this.modalidad,
       cantidad: cantidad ?? this.cantidad,
-      descuento: descuento ?? this.descuento,
       precioBase: precioBase ?? this.precioBase,
+      descuento: descuento ?? this.descuento,
       precio: precio ?? this.precio,
-      fechaHora: fechaHora ?? this.fechaHora,
+      fechaHoraInteraccion: fechaHoraInteraccion ?? this.fechaHoraInteraccion,
       fechaHoraCreacion: fechaHoraCreacion ?? this.fechaHoraCreacion,
       idEstado: idEstado ?? this.idEstado,
       descripcionEstado: descripcionEstado ?? this.descripcionEstado,
@@ -123,15 +183,19 @@ class Negociacion extends Equatable {
       idInteres: idInteres ?? this.idInteres,
       descripcionInteres: descripcionInteres ?? this.descripcionInteres,
       activo: activo ?? this.activo,
+      idNumero: idNumero ?? this.idNumero,
+      prefijoPais: prefijoPais ?? this.prefijoPais,
+      numero: numero ?? this.numero,
+      nombres: nombres ?? this.nombres,
+      apellidoPaterno: apellidoPaterno ?? this.apellidoPaterno,
+      apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
+      nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
+      correo: correo ?? this.correo,
     );
   }
 }
 
-/// Helpers sobre una lista de negociaciones de un mismo contacto.
 extension NegociacionesX on List<Negociacion> {
-  /// La negociación más antigua (por fecha de creación) — el "primer lead"
-  /// del contacto. Sus campos (estado, canal, campaña, oportunidad) son los
-  /// que se muestran en el stepper y en la pestaña de Información.
   Negociacion? get primerLead {
     if (isEmpty) return null;
     final ordenadas = [...this]
@@ -143,8 +207,9 @@ extension NegociacionesX on List<Negociacion> {
   /// interacción) — alimenta el campo "Última interacción".
   Negociacion? get ultimaInteraccion {
     if (isEmpty) return null;
-    final ordenadas = [...this]
-      ..sort((a, b) => b.fechaHora.compareTo(a.fechaHora));
+    final ordenadas = [
+      ...this,
+    ]..sort((a, b) => b.fechaHoraInteraccion.compareTo(a.fechaHoraInteraccion));
     return ordenadas.first;
   }
 }

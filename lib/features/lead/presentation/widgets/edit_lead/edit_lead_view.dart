@@ -46,7 +46,7 @@ class _EditLeadViewState extends State<EditLeadView> {
       titleWidget: BlocBuilder<InfoLeadCubit, InfoLeadState>(
         buildWhen: (prev, curr) => curr is InfoLeadSuccess,
         builder: (context, state) {
-          final esNuevo = state is InfoLeadSuccess && state.lead.idLead == 0;
+          final esNuevo = state is InfoLeadSuccess && state.negociacion.idLead == 0;
           return Text(
             esNuevo ? 'Crear lead' : 'Editar lead',
             style: AppTextStyles.titleLarge.copyWith(
@@ -89,7 +89,9 @@ class _EditLeadViewState extends State<EditLeadView> {
                 );
               }
               if (state is EditLeadLoaded) {
-                return EditLeadPortrait(lead: infoState.lead); // ← del cubit
+                return EditLeadPortrait(
+                  negociacion: infoState.negociacion, // ← del cubit
+                );
               }
               return const SizedBox.shrink();
             },

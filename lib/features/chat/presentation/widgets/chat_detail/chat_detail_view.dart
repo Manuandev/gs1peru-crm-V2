@@ -134,13 +134,14 @@ class _ChatDetailViewState extends State<ChatDetailView>
               return null;
             },
             builder: (context, fechaUltimaRespuesta) => ChatDetailAppBar(
-              lead: infoState.lead,
-              idCanal: infoState.lead.idCanal,
+              negociacion: infoState.negociacion,
+              nombreCompleto: widget.conversacion.nombreCompleto,
+              idCanal: infoState.negociacion.idCanal,
               fechaUltimaRespuesta: fechaUltimaRespuesta,
               onTap: () {
                 FocusScope.of(context).unfocus();
                 context.goToEditarLead(
-                  idLead: infoState.lead.idLead,
+                  idLead: infoState.negociacion.idLead,
                   cubit: context.read<InfoLeadCubit>(),
                 );
               },
@@ -158,12 +159,11 @@ class _ChatDetailViewState extends State<ChatDetailView>
       ],
 
       appBarTrailingButtons: [
-        BlocBuilder<InfoLeadCubit, InfoLeadState>(
-          buildWhen: (prev, curr) => curr is InfoLeadSuccess,
-          builder: (context, state) {
-            final lead = state is InfoLeadSuccess ? state.lead : null;
-            final telefono = lead != null && lead.numero.isNotEmpty
-                ? '${lead.prefijo} ${lead.numero}'.trim()
+        Builder(
+          builder: (context) {
+            final chat = widget.conversacion;
+            final telefono = chat.numero.isNotEmpty
+                ? '${chat.prefijoPais} ${chat.numero}'.trim()
                 : null;
             return IconButton(
               icon: const Icon(AppIcons.phone, color: AppColors.background),
@@ -221,18 +221,19 @@ class _ChatDetailViewState extends State<ChatDetailView>
                   buildWhen: (prev, curr) {
                     if (curr is! InfoLeadSuccess) return false;
                     if (prev is! InfoLeadSuccess) return true;
-                    return (prev).lead.idLead != (curr).lead.idLead ||
-                        (prev).lead.idEstado != (curr).lead.idEstado ||
-                        (prev).lead.idEstadoPadre != (curr).lead.idEstadoPadre;
+                    return prev.negociacion.idLead != curr.negociacion.idLead ||
+                        prev.negociacion.idEstado != curr.negociacion.idEstado ||
+                        prev.negociacion.idEstadoPadre !=
+                            curr.negociacion.idEstadoPadre;
                   },
                   // Sin lead no hay etapa que mostrar — mostrar "paso 1" sería
                   // data falsa (el fallback interno de ChatDetailFases activa
                   // el primer paso cuando idEstado no matchea ningún estado).
                   builder: (context, state) =>
-                      state is InfoLeadSuccess && state.lead.idLead > 0
+                      state is InfoLeadSuccess && state.negociacion.idLead > 0
                       ? ChatDetailFases(
-                          idEstadoActual: state.lead.idEstado,
-                          idEstadoPadre: state.lead.idEstadoPadre ?? '',
+                          idEstadoActual: state.negociacion.idEstado,
+                          idEstadoPadre: state.negociacion.idEstadoPadre,
                         )
                       : const SizedBox.shrink(),
                 ),
@@ -317,27 +318,13 @@ class _ChatDetailViewState extends State<ChatDetailView>
                       );
                     }
 
-                    return BlocBuilder<InfoLeadCubit, InfoLeadState>(
-                      buildWhen: (prev, curr) {
-                        if (curr is! InfoLeadSuccess) return false;
-                        if (prev is! InfoLeadSuccess) return true;
-                        return prev.lead.nombreCompleto !=
-                            curr.lead.nombreCompleto;
-                      },
-                      builder: (context, infoState) {
-                        final nombre = infoState is InfoLeadSuccess
-                            ? infoState.lead.nombreCompleto
-                            : '';
-
-                        return MessageList(
-                          messages: messages,
-                          scrollController: _scroll.controller,
-                          isLoadingMore: isLoadingMore,
-                          audioController: _audioController,
-                          idNumero: widget.idNumero,
-                          nombre: nombre,
-                        );
-                      },
+                    return MessageList(
+                      messages: messages,
+                      scrollController: _scroll.controller,
+                      isLoadingMore: isLoadingMore,
+                      audioController: _audioController,
+                      idNumero: widget.idNumero,
+                      nombre: widget.conversacion.nombreCompleto,
                     );
                   },
                 ),
@@ -382,7 +369,8 @@ class _ChatDetailViewState extends State<ChatDetailView>
               builder: (context, state) {
                 if (state is! InfoLeadSuccess) return const SizedBox.shrink();
                 return ChatLeadPanel(
-                  lead: state.lead,
+                  chat: widget.conversacion,
+                  negociacion: state.negociacion,
                   idNumero: widget.idNumero,
                   tabController: _panelTabController,
                   cubit: context.read<InfoLeadCubit>(),
@@ -405,6 +393,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
               if (!activo) return const SizedBox.shrink();
               return ChatInputBar(
                 audioController: _audioController,
+                chat: widget.conversacion,
                 panelAbierto: _showLeadPanel,
               );
             },

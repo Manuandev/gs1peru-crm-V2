@@ -67,7 +67,7 @@ class LeadListView extends StatelessWidget {
 
                   if (state is LeadListSuccess) {
                     return LeadListPortrait(
-                      leads: state.leads,
+                      leads: state.contactos,
                       filtro: state.filtro,
                     );
                   }

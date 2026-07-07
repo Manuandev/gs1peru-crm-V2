@@ -8,29 +8,26 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   final GetLeadsUseCase _getLeadsUseCase;
-  final ToggleFavoritoLeadUseCase _toggleFavoritoUseCase;
 
-  List<Lead> _allLeads = [];
+  List<ContactoNegociacion> _allLeads = [];
   late LeadListFiltro _filtroActivo;
-  String? _asesorSeleccionado;
   StreamSubscription<LeadUpdate>? _updateSub;
 
   LeadListBloc(
-    this._getLeadsUseCase,
-    this._toggleFavoritoUseCase, {
+    this._getLeadsUseCase, {
     LeadListFiltro? filtroInicial,
   }) : super(const LeadListInitial()) {
     _filtroActivo = filtroInicial ?? LeadListFiltro.todos;
     on<LeadListStarted>(_onStarted);
     on<LeadListRefresh>(_onRefresh);
     on<LeadListFiltered>(_onFiltered);
-    on<LeadListAsesorSeleccionado>(_onAsesorSeleccionado);
-    on<ToggleFavoritoPressed>(_onToggleFavorito);
     on<LeadListLeadUpdated>(_onLeadUpdated);
 
     _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
-      final lead = update.updatedLead as Lead?;
-      if (!isClosed && lead != null) add(LeadListLeadUpdated(lead));
+      final negociacion = update.updatedLead as Negociacion?;
+      if (!isClosed && negociacion != null) {
+        add(LeadListLeadUpdated(negociacion));
+      }
     });
   }
 
@@ -69,43 +66,7 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
   void _onFiltered(LeadListFiltered event, Emitter<LeadListState> emit) {
     _filtroActivo = event.filtro;
-    if (event.filtro != LeadListFiltro.asesores) _asesorSeleccionado = null;
     _emitFiltered(emit);
-  }
-
-  void _onAsesorSeleccionado(
-    LeadListAsesorSeleccionado event,
-    Emitter<LeadListState> emit,
-  ) {
-    _filtroActivo = LeadListFiltro.asesores;
-    _asesorSeleccionado = event.codUser;
-    _emitFiltered(emit);
-  }
-
-  Future<void> _onToggleFavorito(
-    ToggleFavoritoPressed event,
-    Emitter<LeadListState> emit,
-  ) async {
-    // Actualización optimista: cambia el ícono de inmediato
-    _allLeads = _allLeads
-        .map((l) => l.idLead == event.idLead
-            ? l.copyWith(isFavorito: event.nuevoValor)
-            : l)
-        .toList();
-    _emitFiltered(emit);
-
-    try {
-      await _toggleFavoritoUseCase(event.idLead, event.nuevoValor);
-    } catch (e, stackTrace) {
-      // Revertir si falla
-      _allLeads = _allLeads
-          .map((l) => l.idLead == event.idLead
-              ? l.copyWith(isFavorito: !event.nuevoValor)
-              : l)
-          .toList();
-      _emitFiltered(emit);
-      addError(e, stackTrace);
-    }
   }
 
   void _onLeadUpdated(
@@ -113,7 +74,11 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     Emitter<LeadListState> emit,
   ) {
     _allLeads = _allLeads
-        .map((l) => l.idLead == event.lead.idLead ? event.lead : l)
+        .map(
+          (c) => c.negociacion.idLead == event.negociacion.idLead
+              ? c.copyWith(negociacion: event.negociacion)
+              : c,
+        )
         .toList();
     _emitFiltered(emit);
   }
@@ -121,8 +86,9 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
   // Un lead pertenece a [idEstado] si coincide directo o si su idEstadoPadre
   // apunta a él — así un sub-estado (ej. "07 Solicita ficha", padre "01") se
   // cuenta dentro del padre "En desarrollo".
-  bool _perteneceEstado(Lead lead, String idEstado) =>
-      lead.idEstado == idEstado || lead.idEstadoPadre == idEstado;
+  bool _perteneceEstado(ContactoNegociacion item, String idEstado) =>
+      item.negociacion.idEstado == idEstado ||
+      item.negociacion.idEstadoPadre == idEstado;
 
   void _emitFiltered(Emitter<LeadListState> emit) {
     final conteos = {
@@ -135,21 +101,8 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
           _allLeads.where((c) => _perteneceEstado(c, '02')).length,
     };
 
-    final conteosPorAsesor = <String, int>{};
-    for (final lead in _allLeads) {
-      conteosPorAsesor.update(
-        lead.asesor,
-        (v) => v + 1,
-        ifAbsent: () => 1,
-      );
-    }
-
-    var resultado = List<Lead>.from(_allLeads);
-    if (_filtroActivo == LeadListFiltro.asesores) {
-      resultado = resultado
-          .where((c) => c.asesor == _asesorSeleccionado)
-          .toList();
-    } else if (_filtroActivo == LeadListFiltro.nuevos) {
+    var resultado = List<ContactoNegociacion>.from(_allLeads);
+    if (_filtroActivo == LeadListFiltro.nuevos) {
       resultado = resultado.where((c) => _perteneceEstado(c, '00')).toList();
     } else if (_filtroActivo == LeadListFiltro.enDesarrollo) {
       resultado = resultado.where((c) => _perteneceEstado(c, '01')).toList();
@@ -159,11 +112,9 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
 
     emit(
       LeadListSuccess(
-        leads: resultado,
+        contactos: resultado,
         filtro: _filtroActivo,
         conteos: conteos,
-        asesorSeleccionado: _asesorSeleccionado,
-        conteosPorAsesor: conteosPorAsesor,
       ),
     );
   }

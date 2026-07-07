@@ -9,42 +9,22 @@ class LeadRepositoryImpl implements LeadRepository {
   LeadRepositoryImpl(this._remote);
 
   @override
-  Future<List<LeadModel>> getLeads() => _remote.getLeads();
+  Future<List<ContactoNegociacionModel>> getLeads() => _remote.getLeads();
 
   @override
-  Future<LeadDetalleModel> getLeadDetalle(int idLead) =>
+  Future<NegociacionModel> getLeadDetalle(int idLead) =>
       _remote.getLeadDetalle(idLead);
 
   @override
-  Future<void> toggleFavorito(int idLead, bool isFavorito) =>
-      _remote.marcarFavorito(idLead, isFavorito);
+  Future<CrudResult> updateNegociacion(Negociacion negociacion, int idNumero) =>
+      _remote.updateNegociacion(negociacion, idNumero);
 
   @override
-  Future<CrudResult> updateLeadCompleto(
-    Lead lead, {
-    String empresaEditar = '',
-    String correoEditar = '',
-    String nuevasEmpresas = '',
-    String nuevosCorreos = '',
-    String nuevosPrefijos = '',
-    String nuevosNumeros = '',
-  }) =>
-      _remote.updateLeadCompleto(
-        lead,
-        empresaEditar: empresaEditar,
-        correoEditar: correoEditar,
-        nuevasEmpresas: nuevasEmpresas,
-        nuevosCorreos: nuevosCorreos,
-        nuevosPrefijos: nuevosPrefijos,
-        nuevosNumeros: nuevosNumeros,
-      );
-
-  @override
-  Future<List<NegociacionModel>> obtenerNegociaciones(int idLead) =>
-      _remote.getLeadNegociaciones(idLead);
+  Future<List<NegociacionModel>> obtenerNegociaciones(int idNumero) =>
+      _remote.obtenerNegociaciones(idNumero);
 
   @override
   Future<List<HistorialComentarioModel>> obtenerHistorialComentarios(
     int idNumero,
-  ) => _remote.getHistorialComentarios(idNumero);
+  ) => _remote.obtenerHistorialComentarios(idNumero);
 }

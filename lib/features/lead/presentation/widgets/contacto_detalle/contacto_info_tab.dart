@@ -7,7 +7,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 /// Pestaña "Información": grilla de 2 columnas con los datos del lead
 /// (contacto, estado, canal, campaña, oportunidad, interés).
 class ContactoInfoTab extends StatelessWidget {
-  final Lead lead;
+  final Negociacion lead;
 
   /// Negociaciones del lead — solo alimenta "Última interacción".
   final List<Negociacion> negociaciones;
@@ -20,7 +20,7 @@ class ContactoInfoTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tieneSubestado = lead.idEstadoPadre?.isNotEmpty ?? false;
+    final tieneSubestado = lead.idEstadoPadre.isNotEmpty;
     final ultima = negociaciones.ultimaInteraccion;
 
     return SingleChildScrollView(
@@ -32,40 +32,44 @@ class ContactoInfoTab extends StatelessWidget {
           _InfoCard(
             filas: [
               _FilaCampos(
-                izquierda: _CampoInfo(
+                // Nombre/teléfono de contacto — pendiente de conectar con
+                // la fuente de Contacto de esta pantalla.
+                izquierda: const _CampoInfo(
                   icono: AppIcons.user,
                   etiqueta: 'Nombres y apellidos',
-                  valor: lead.nombreCompleto,
+                  valor: '—',
                 ),
-                derecha: _CampoInfo(
+                derecha: const _CampoInfo(
                   icono: AppIcons.phone,
                   etiqueta: 'Celular',
-                  valor: '${lead.prefijo} ${lead.numero}'.trim(),
+                  valor: '—',
                   iconColor: AppColors.success,
                 ),
               ),
               _FilaCampos(
-                izquierda: _CampoInfo(
+                izquierda: const _CampoInfo(
                   icono: AppIcons.email,
                   etiqueta: 'Correo',
-                  valor: lead.correo.isEmpty ? '—' : lead.correo,
+                  valor: '—',
                 ),
-                derecha: _CampoInfo(
+                derecha: const _CampoInfo(
                   icono: AppIcons.business,
                   etiqueta: 'Empresa',
-                  valor: lead.nombreEmpresa.isEmpty ? '—' : lead.nombreEmpresa,
+                  valor: '—',
                 ),
               ),
               _FilaCampos(
                 izquierda: _CampoInfo(
                   icono: AppIcons.campaign,
                   etiqueta: 'Campaña',
-                  valor: lead.campania.isEmpty ? '—' : lead.campania,
+                  valor: lead.nombreCampania.isEmpty ? '—' : lead.nombreCampania,
                 ),
                 derecha: _CampoInfo(
                   icono: AppIcons.cursoEvento,
                   etiqueta: 'Oportunidad',
-                  valor: lead.evento.isEmpty ? '—' : lead.evento,
+                  valor: lead.nombreOportunidad.isEmpty
+                      ? '—'
+                      : lead.nombreOportunidad,
                 ),
               ),
               _FilaCampos(
@@ -75,12 +79,16 @@ class ContactoInfoTab extends StatelessWidget {
                     size: AppSizing.iconSm,
                   ),
                   etiqueta: 'Canal',
-                  valor: lead.canal.isEmpty ? '—' : lead.canal,
+                  valor: lead.descripcionCanal.isEmpty
+                      ? '—'
+                      : lead.descripcionCanal,
                 ),
                 derecha: _CampoInfo(
                   icono: AppIcons.interes,
                   etiqueta: 'Interés',
-                  valor: lead.interes.isEmpty ? '—' : lead.interes,
+                  valor: lead.descripcionInteres.isEmpty
+                      ? '—'
+                      : lead.descripcionInteres,
                 ),
               ),
               _FilaCampos(
@@ -100,7 +108,7 @@ class ContactoInfoTab extends StatelessWidget {
                           size: AppSizing.iconSm,
                         ),
                         etiqueta: 'Subestado',
-                        valor: lead.estado,
+                        valor: lead.descripcionEstado,
                         colorValor: AppSocialUtils.colorEstado(lead.idEstado),
                       )
                     : const _CampoInfo(
@@ -113,9 +121,9 @@ class ContactoInfoTab extends StatelessWidget {
                 izquierda: _CampoInfo(
                   icono: AppIcons.calendar,
                   etiqueta: 'Fecha de registro',
-                  valor: (lead.fechaCreacion ?? '').isEmpty
+                  valor: lead.fechaHoraCreacion.isEmpty
                       ? '—'
-                      : lead.fechaCreacion!.formatDate(
+                      : lead.fechaHoraCreacion.formatDate(
                           AppDateFormat.shortDate,
                         ),
                 ),
@@ -123,7 +131,9 @@ class ContactoInfoTab extends StatelessWidget {
                   // Ícono fijo — la última interacción no depende del canal.
                   icono: AppIcons.time,
                   etiqueta: 'Última interacción',
-                  valor: ultima == null ? '—' : ultima.fechaHora.formatConDia(),
+                  valor: ultima == null
+                      ? '—'
+                      : ultima.fechaHoraInteraccion.formatConDia(),
                 ),
               ),
             ],

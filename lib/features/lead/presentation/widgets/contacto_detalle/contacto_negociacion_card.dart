@@ -67,7 +67,7 @@ class ContactoNegociacionCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            negociacion.fechaHora.formatSinHoy(),
+                            negociacion.fechaHoraInteraccion.formatSinHoy(),
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textSecondary,
                             ),

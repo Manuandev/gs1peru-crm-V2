@@ -77,9 +77,9 @@ class ChatListIncomingMessageReceived extends ChatListEvent {
 
 /// Parcha el [Chat] que contiene ese lead en memoria tras edición exitosa.
 class ChatListLeadUpdated extends ChatListEvent {
-  final Lead lead;
-  const ChatListLeadUpdated(this.lead);
+  final Negociacion negociacion;
+  const ChatListLeadUpdated(this.negociacion);
 
   @override
-  List<Object?> get props => [lead];
+  List<Object?> get props => [negociacion];
 }

@@ -64,7 +64,7 @@ class _ListaNegociaciones extends StatelessWidget {
   List<_GrupoMes> _agruparPorMes(List<Negociacion> negociaciones) {
     final mapa = <String, List<Negociacion>>{};
     for (final negociacion in negociaciones) {
-      final mes = negociacion.fechaHora.formatDate(AppDateFormat.monthYear);
+      final mes = negociacion.fechaHoraInteraccion.formatDate(AppDateFormat.monthYear);
       mapa.putIfAbsent(mes, () => []).add(negociacion);
     }
     return mapa.entries

@@ -27,31 +27,11 @@ class LeadListFiltered extends LeadListEvent {
   List<Object?> get props => [filtro];
 }
 
-/// Se selecciona un asesor específico desde el modal de búsqueda —
-/// activa el filtro [LeadListFiltro.asesores] acotado a ese `codUser`.
-class LeadListAsesorSeleccionado extends LeadListEvent {
-  final String codUser;
-  const LeadListAsesorSeleccionado(this.codUser);
-
-  @override
-  List<Object?> get props => [codUser];
-}
-
-class ToggleFavoritoPressed extends LeadListEvent {
-  final int idLead;
-  final bool nuevoValor;
-
-  const ToggleFavoritoPressed({required this.idLead, required this.nuevoValor});
-
-  @override
-  List<Object?> get props => [idLead, nuevoValor];
-}
-
 /// Parcha un lead en memoria tras edición exitosa (vía [LeadUpdateNotifier]).
 class LeadListLeadUpdated extends LeadListEvent {
-  final Lead lead;
-  const LeadListLeadUpdated(this.lead);
+  final Negociacion negociacion;
+  const LeadListLeadUpdated(this.negociacion);
 
   @override
-  List<Object?> get props => [lead];
+  List<Object?> get props => [negociacion];
 }

@@ -42,7 +42,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     _leadUpdateSubscription = LeadUpdateNotifier.instance.stream.listen((
       update,
     ) {
-      final lead = update.updatedLead as Lead?;
+      final lead = update.updatedLead as Negociacion?;
       if (!isClosed && lead != null) add(ChatListLeadUpdated(lead));
     });
   }
@@ -133,27 +133,27 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   // ── Parche en memoria tras edición de lead ───────────────────────────────
 
   void _onLeadUpdated(ChatListLeadUpdated event, Emitter<ChatListState> emit) {
-    final lead = event.lead;
+    final lead = event.negociacion;
     // Matchea por idChatCab, no por idLead: cuando se crea un lead nuevo
     // desde el chat (idLead pasa de 0 al id real), es el único id que no
     // cambia entre el chat de la lista y el lead recién guardado.
     _allChats = _allChats.map((c) {
-      if (c.idChatCab != lead.idChatCab) return c;
+      if (c.idLead != lead.idLead) return c;
       return c.copyWith(
         idLead: lead.idLead,
         modalidad: lead.modalidad,
         idEstado: lead.idEstado,
-        descEstado: lead.estado,
-        idEstadoPadre: lead.idEstadoPadre ?? '',
-        descEstadoPadre: lead.descripcionEstadoPadre ?? '',
+        descEstado: lead.descripcionEstado,
+        idEstadoPadre: lead.idEstadoPadre,
+        descEstadoPadre: lead.descripcionEstadoPadre,
         idCampania: lead.idCampania,
-        nombreCampania: lead.campania,
-        idOportunidad: lead.idEvento,
-        nombreOportunidad: lead.evento,
+        nombreCampania: lead.nombreCampania,
+        idOportunidad: lead.idOportunidad,
+        nombreOportunidad: lead.nombreOportunidad,
         idCanal: lead.idCanal,
-        nombreCanal: lead.canal,
+        nombreCanal: lead.descripcionCanal,
         idInteres: lead.idInteres,
-        nombreInteres: lead.interes,
+        nombreInteres: lead.descripcionInteres,
       );
     }).toList();
     _emitFiltered(emit);
@@ -312,7 +312,9 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       fechaHora: DateTime.now().toIso8601String(),
       direccionMensaje: 'CLI',
       emit: emit,
-      tipoCliente: payload.tipoMensaje.isNotEmpty ? payload.tipoMensaje : 'text',
+      tipoCliente: payload.tipoMensaje.isNotEmpty
+          ? payload.tipoMensaje
+          : 'text',
       contenidoCliente: payload.mensaje,
       archivoNombreCliente: _removeExt(payload.nomArchivo),
       archivoTipoCliente: _extractExt(payload.nomArchivo),

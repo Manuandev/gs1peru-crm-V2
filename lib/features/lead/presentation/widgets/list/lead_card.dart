@@ -7,7 +7,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class LeadCard extends StatefulWidget {
-  final Lead lead;
+  final ContactoNegociacion lead;
   final VoidCallback? onTap;
   final VoidCallback? onWhatsAppTap;
 
@@ -36,7 +36,9 @@ class _LeadCardState extends State<LeadCard> {
   }
 
   void _actualizarElapsed() {
-    final fecha = DateFormatter.parseDate(widget.lead.fechaHora);
+    final fecha = DateFormatter.parseDate(
+      widget.lead.negociacion.fechaHoraInteraccion,
+    );
     if (fecha == null) return;
     _elapsed = DateTime.now().difference(fecha);
   }
@@ -50,7 +52,9 @@ class _LeadCardState extends State<LeadCard> {
   @override
   Widget build(BuildContext context) {
     final l = widget.lead;
-    final colorBorde = AppSocialUtils.colorEstado(l.idEstadoEfectivo);
+    final colorBorde = AppSocialUtils.colorEstado(
+      l.negociacion.idEstadoEfectivo,
+    );
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -126,7 +130,7 @@ class _LeadCardState extends State<LeadCard> {
 /// Avatar circular genérico y compacto — mismo estilo que en Conversaciones
 /// (`ChatTile`): color por nombre + ícono de persona, sin iniciales ni badge.
 class _LeadAvatar extends StatelessWidget {
-  final Lead lead;
+  final ContactoNegociacion lead;
 
   const _LeadAvatar({required this.lead});
 
@@ -147,7 +151,7 @@ class _LeadAvatar extends StatelessWidget {
 /// Nombre (negrita) + oportunidad (negrita, gris medio) + empresa (gris claro,
 /// sin negrita) — mitad izquierda de la card.
 class _LeadClientInfo extends StatelessWidget {
-  final Lead lead;
+  final ContactoNegociacion lead;
 
   const _LeadClientInfo({required this.lead});
 
@@ -165,10 +169,10 @@ class _LeadClientInfo extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        if (lead.evento.isNotEmpty) ...[
+        if (lead.negociacion.nombreOportunidad.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            lead.evento,
+            lead.negociacion.nombreOportunidad,
             style: AppTextStyles.labelSmall.copyWith(
               fontWeight: AppTextStyles.weightBold,
               color: AppColors.textSecondary,
@@ -177,10 +181,10 @@ class _LeadClientInfo extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
-        if (lead.nombreEmpresa.isNotEmpty) ...[
+        if (lead.contacto.nombreEmpresa.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            lead.nombreEmpresa,
+            lead.contacto.nombreEmpresa,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textDisabled,
             ),
@@ -196,7 +200,7 @@ class _LeadClientInfo extends StatelessWidget {
 /// Fecha/hora + tiempo transcurrido junto al chip de estado (arriba) y
 /// acciones WhatsApp/Ver detalle (abajo) — mitad derecha de la card.
 class _LeadDateAndActions extends StatelessWidget {
-  final Lead lead;
+  final ContactoNegociacion lead;
   final Duration elapsed;
   final VoidCallback? onWhatsAppTap;
   final VoidCallback? onVerDetalleTap;
@@ -223,7 +227,7 @@ class _LeadDateAndActions extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  lead.fechaHora.formatConDia(),
+                  lead.negociacion.fechaHoraInteraccion.formatConDia(),
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -243,8 +247,8 @@ class _LeadDateAndActions extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Flexible(
               child: AppSocialUtils.chipEstado(
-                lead.idEstadoEfectivo,
-                label: lead.estadoEfectivo,
+                lead.negociacion.idEstadoEfectivo,
+                label: lead.negociacion.estadoEfectivo,
                 fontSize: AppTextStyles.sizeXs,
               ),
             ),

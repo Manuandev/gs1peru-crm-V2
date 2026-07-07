@@ -15,14 +15,15 @@ class Chat extends Equatable {
   final int idNumero;
   final String prefijoPais;
   final String numero;
-  final bool isPrincipal;
   final bool isFavorito;
   final bool isBloqueado;
-  // Conversación más reciente de ese número
+  // Conversación más reciente de ese número — no vienen en el SP de lista;
+  // pendientes de conectar con el SP de detalle de chat.
   final bool isExpirado;
   final bool isCerrado;
   // Lead más reciente de ese número
   final int idLead;
+  // No viene en el SP de lista — pendiente del SP de detalle de chat.
   final String modalidad;
   // Info estado
   final String idEstado;
@@ -65,6 +66,9 @@ class Chat extends Equatable {
 
   final int idChatCab;
 
+  final String? cargo;
+  final String? correo;
+
   /// Retorna el id del estado a mostrar en UI: padre si existe, directo si no.
   String get idEstadoEfectivo =>
       idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
@@ -97,15 +101,14 @@ class Chat extends Equatable {
     required this.idNumero,
     required this.prefijoPais,
     required this.numero,
-    required this.isPrincipal,
     required this.isFavorito,
     required this.isBloqueado,
     // Conversación más reciente de ese número
-    required this.isExpirado,
-    required this.isCerrado,
+    this.isExpirado = false,
+    this.isCerrado = false,
     // Lead más reciente de ese número
     required this.idLead,
-    required this.modalidad,
+    this.modalidad = '',
     // Info estado
     required this.idEstado,
     required this.descEstado,
@@ -144,6 +147,9 @@ class Chat extends Equatable {
     this.fcUltimoMensajeIA = '',
 
     required this.idChatCab,
+
+    this.cargo,
+    this.correo,
   });
 
   @override
@@ -160,7 +166,6 @@ class Chat extends Equatable {
     idNumero,
     prefijoPais,
     numero,
-    isPrincipal,
     isFavorito,
     isBloqueado,
     // Conversación más reciente de ese número
@@ -195,6 +200,9 @@ class Chat extends Equatable {
     fcUltimoMensajeIA,
 
     idChatCab,
+
+    cargo,
+    correo,
   ];
 
   Chat copyWith({
@@ -207,7 +215,6 @@ class Chat extends Equatable {
     int? idNumero,
     String? prefijoPais,
     String? numero,
-    bool? isPrincipal,
     bool? isFavorito,
     bool? isBloqueado,
     // Conversación más reciente de ese número
@@ -254,6 +261,9 @@ class Chat extends Equatable {
     String? fcUltimoMensajeIA,
 
     int? idChatCab,
+
+    String? cargo,
+    String? correo,
   }) {
     return Chat(
       // Contacto
@@ -268,7 +278,6 @@ class Chat extends Equatable {
       idNumero: idNumero ?? this.idNumero,
       prefijoPais: prefijoPais ?? this.prefijoPais,
       numero: numero ?? this.numero,
-      isPrincipal: isPrincipal ?? this.isPrincipal,
       isFavorito: isFavorito ?? this.isFavorito,
       isBloqueado: isBloqueado ?? this.isBloqueado,
       //Conversación más reciente de ese número
@@ -316,6 +325,9 @@ class Chat extends Equatable {
 
       // ID Chat Cab
       idChatCab: idChatCab ?? this.idChatCab,
+
+      cargo: cargo ?? this.cargo,
+      correo: correo ?? this.correo,
     );
   }
 }

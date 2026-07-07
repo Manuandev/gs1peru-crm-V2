@@ -154,7 +154,7 @@ class NegociacionCard extends StatelessWidget {
                             const SizedBox(width: AppSpacing.xxs),
                             Expanded(
                               child: Text(
-                                negociacion.fechaHora.formatDate(
+                                negociacion.fechaHoraInteraccion.formatDate(
                                   AppDateFormat.shortDate,
                                 ),
                                 style: _estiloMicro,

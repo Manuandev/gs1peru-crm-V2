@@ -8,23 +8,7 @@ class UpdateLeadInfoUseCase {
 
   const UpdateLeadInfoUseCase(this.repository);
 
-  Future<CrudResult> call(
-    Lead leadModificado, {
-    String empresaEditar = '',
-    String correoEditar = '',
-    String nuevasEmpresas = '',
-    String nuevosCorreos = '',
-    String nuevosPrefijos = '',
-    String nuevosNumeros = '',
-  }) async {
-    return await repository.updateLeadCompleto(
-      leadModificado,
-      empresaEditar: empresaEditar,
-      correoEditar: correoEditar,
-      nuevasEmpresas: nuevasEmpresas,
-      nuevosCorreos: nuevosCorreos,
-      nuevosPrefijos: nuevosPrefijos,
-      nuevosNumeros: nuevosNumeros,
-    );
+  Future<CrudResult> call(Negociacion negociacion, int idNumero) async {
+    return await repository.updateNegociacion(negociacion, idNumero);
   }
 }

@@ -20,24 +20,18 @@ class LeadListLoading extends LeadListState {
 }
 
 class LeadListSuccess extends LeadListState {
-  final List<Lead> leads;
+  final List<ContactoNegociacion> contactos;
   final LeadListFiltro filtro;
   final Map<LeadListFiltro, int> conteos;
-  // codUser del asesor elegido en el modal cuando filtro == asesores
-  final String? asesorSeleccionado;
-  // conteo de leads por codUser de asesor, sobre el total cargado (no filtrado)
-  final Map<String, int> conteosPorAsesor;
 
   const LeadListSuccess({
-    required this.leads,
+    required this.contactos,
     this.filtro = LeadListFiltro.todos,
     this.conteos = const {},
-    this.asesorSeleccionado,
-    this.conteosPorAsesor = const {},
   });
 
   @override
-  List<Object?> get props => [leads, filtro, asesorSeleccionado];
+  List<Object?> get props => [contactos, filtro];
 }
 
 class LeadListError extends LeadListState {

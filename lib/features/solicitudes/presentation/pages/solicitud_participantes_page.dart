@@ -9,19 +9,21 @@ class SolicitudParticipantesPage extends StatelessWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
   final SolicitudFormCubit formCubit;
+  final ParticipantesCubit participantesCubit;
 
   const SolicitudParticipantesPage({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
     required this.formCubit,
+    required this.participantesCubit,
   });
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => ParticipantesCubit()),
+        BlocProvider.value(value: participantesCubit),
         BlocProvider.value(value: formCubit),
       ],
       child: SolicitudParticipantesView(

@@ -79,12 +79,14 @@ extension NavigationExtensions on BuildContext {
     required Solicitud solicitud,
     required bool modoEdicion,
     required SolicitudFormCubit formCubit,
+    required ParticipantesCubit participantesCubit,
   }) => _push(
         AppRoutes.fichaParticipantesSolicitud,
         arguments: {
           'solicitud': solicitud,
           'modoEdicion': modoEdicion,
           'formCubit': formCubit,
+          'participantesCubit': participantesCubit,
         },
       );
 
@@ -92,12 +94,14 @@ extension NavigationExtensions on BuildContext {
     required Solicitud solicitud,
     required bool modoEdicion,
     required SolicitudFormCubit formCubit,
+    required ParticipantesCubit participantesCubit,
   }) => _push(
         AppRoutes.fichaFacturacionSolicitud,
         arguments: {
           'solicitud': solicitud,
           'modoEdicion': modoEdicion,
           'formCubit': formCubit,
+          'participantesCubit': participantesCubit,
         },
       );
 
@@ -105,12 +109,14 @@ extension NavigationExtensions on BuildContext {
     required Solicitud solicitud,
     required bool modoEdicion,
     required SolicitudFormCubit formCubit,
+    required ParticipantesCubit participantesCubit,
   }) => _push(
         AppRoutes.fichaResumenSolicitud,
         arguments: {
           'solicitud': solicitud,
           'modoEdicion': modoEdicion,
           'formCubit': formCubit,
+          'participantesCubit': participantesCubit,
         },
       );
 

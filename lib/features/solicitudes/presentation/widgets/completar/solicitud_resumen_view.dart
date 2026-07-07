@@ -61,6 +61,7 @@ class SolicitudResumenView extends StatelessWidget {
                       solicitud: solicitud,
                       modoEdicion: modoEdicion,
                       formCubit: context.read<SolicitudFormCubit>(),
+                      participantesCubit: context.read<ParticipantesCubit>(),
                     ),
                   ),
                   const _Separador(),
@@ -405,21 +406,11 @@ class _SeccionParticipantes extends StatelessWidget {
 
   const _SeccionParticipantes({required this.onVerTodos});
 
-  static const _participantes = [
-    ['José Eduardo Posada Peña', '057588685', 'ADC JR.', '503-76713284'],
-    [
-      'Rodrigo Alejandro Magaña Blanco',
-      '054476059',
-      'Gerente Regional',
-      '503-79150391',
-    ],
-    ['Josue Eliseo Amaya Rivera', '053880352', 'ADC JR.', '503-71077672'],
-    ['Alejandra Sofia Duenas Trujillo', '044577544', 'ADC JR.', '20-75278536'],
-    ['Karla Maria Contreras de Castro', '033906536', 'ADC SR.', '503-77299772'],
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final participantes =
+        context.watch<ParticipantesCubit>().state.participantes;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -436,7 +427,7 @@ class _SeccionParticipantes extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
             ),
             child: Text(
-              '5 participantes',
+              '${participantes.length} participante/s',
               style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.primary,
                 fontWeight: AppTextStyles.weightSemiBold,
@@ -446,28 +437,37 @@ class _SeccionParticipantes extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // Cabecera tabla
-        _FilaTabla(
-          numero: 'N°',
-          nombre: 'Nombre completo',
-          documento: 'Documento',
-          cargo: 'Cargo',
-          celular: 'Celular',
-          esEncabezado: true,
-        ),
-        const Divider(height: AppSpacing.xs, thickness: 0.5),
-
-        for (int i = 0; i < _participantes.length; i++) ...[
+        if (participantes.isEmpty)
+          Text(
+            'Sin participantes registrados',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          )
+        else ...[
+          // Cabecera tabla
           _FilaTabla(
-            numero: '${i + 1}',
-            nombre: _participantes[i][0],
-            documento: _participantes[i][1],
-            cargo: _participantes[i][2],
-            celular: _participantes[i][3],
-            esEncabezado: false,
+            numero: 'N°',
+            nombre: 'Nombre completo',
+            documento: 'Documento',
+            cargo: 'Cargo',
+            celular: 'Celular',
+            esEncabezado: true,
           ),
-          if (i < _participantes.length - 1)
-            const Divider(height: AppSpacing.xs, thickness: 0.3),
+          const Divider(height: AppSpacing.xs, thickness: 0.5),
+
+          for (int i = 0; i < participantes.length; i++) ...[
+            _FilaTabla(
+              numero: '${i + 1}',
+              nombre: participantes[i].nombre,
+              documento: participantes[i].numDoc,
+              cargo: participantes[i].cargo,
+              celular: participantes[i].celular,
+              esEncabezado: false,
+            ),
+            if (i < participantes.length - 1)
+              const Divider(height: AppSpacing.xs, thickness: 0.3),
+          ],
         ],
 
         const SizedBox(height: AppSpacing.sm),
@@ -477,7 +477,7 @@ class _SeccionParticipantes extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Ver los 5 participantes',
+                'Ver los ${participantes.length} participantes',
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.primary,
                   fontWeight: AppTextStyles.weightSemiBold,

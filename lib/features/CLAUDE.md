@@ -53,3 +53,4 @@ El resto de Blocs se crean en su propia Page y mueren con ella.
 | `lead/` | Filtros, estados, tipos, LeadListBloc |
 | `home/` | Dashboard, parseo multi-sección, prioridades |
 | `settings/` | ThemeCubit, preferencias |
+| `solicitudes/` | Wizard de 4 pasos, FormCubit/ParticipantesCubit compartidos, estado del mock |

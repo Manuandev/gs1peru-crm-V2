@@ -17,8 +17,11 @@ class SolicitudCompletarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => SolicitudFormCubit(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => SolicitudFormCubit()),
+        BlocProvider(create: (_) => ParticipantesCubit()),
+      ],
       child: SolicitudCompletarView(
         solicitud: solicitud,
         modoEdicion: modoEdicion,

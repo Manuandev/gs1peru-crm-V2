@@ -210,11 +210,15 @@ class SolicitudParticipantesView extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: SolicitudBotonContinuar(
-                        onPressed: () => context.goToFichaFacturacionSolicitud(
-                          solicitud: solicitud,
-                          modoEdicion: modoEdicion,
-                          formCubit: context.read<SolicitudFormCubit>(),
-                        ),
+                        onPressed: state.participantes.isEmpty
+                            ? null
+                            : () => context.goToFichaFacturacionSolicitud(
+                                solicitud: solicitud,
+                                modoEdicion: modoEdicion,
+                                formCubit: context.read<SolicitudFormCubit>(),
+                                participantesCubit: context
+                                    .read<ParticipantesCubit>(),
+                              ),
                       ),
                     ),
                   ],

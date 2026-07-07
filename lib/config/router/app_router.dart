@@ -136,6 +136,7 @@ class AppRouter {
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
           formCubit: args['formCubit'] as SolicitudFormCubit,
+          participantesCubit: args['participantesCubit'] as ParticipantesCubit,
         );
       },
     ),
@@ -147,6 +148,7 @@ class AppRouter {
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
           formCubit: args['formCubit'] as SolicitudFormCubit,
+          participantesCubit: args['participantesCubit'] as ParticipantesCubit,
         );
       },
     ),
@@ -158,6 +160,7 @@ class AppRouter {
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
           formCubit: args['formCubit'] as SolicitudFormCubit,
+          participantesCubit: args['participantesCubit'] as ParticipantesCubit,
         );
       },
     ),

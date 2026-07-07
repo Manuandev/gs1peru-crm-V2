@@ -33,8 +33,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   bool _solicitanteParticipante = false;
   bool _facturarAlSolicitante = false;
 
-  // Labels de combos capturados desde _SeccionDatosSolicitante
+  // Labels/ids de combos capturados desde _SeccionDatosSolicitante
   String _tipoDocLabel = '';
+  String _nacionalidadId = '';
+  String _sexoId = '';
   String _campanaLabel = '';
   String _eventoLabel = '';
 
@@ -54,6 +56,38 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // Archivos adjuntos — voucher y orden de compra
   PlatformFile? _archivoVoucher;
   PlatformFile? _archivoOC;
+
+  /// Campos obligatorios (marcados con *) del paso 1. Los opcionales
+  /// (apellido materno, RUC/razón social, canales) no se exigen.
+  bool get _formCompleto =>
+      _tipoDocLabel.isNotEmpty &&
+      _ctrlNumDoc.text.trim().isNotEmpty &&
+      _nacionalidadId.isNotEmpty &&
+      _sexoId.isNotEmpty &&
+      _ctrlNombres.text.trim().isNotEmpty &&
+      _ctrlApellidoPaterno.text.trim().isNotEmpty &&
+      _ctrlCargo.text.trim().isNotEmpty &&
+      _ctrlCelular.text.trim().isNotEmpty &&
+      _ctrlCorreo.text.trim().isNotEmpty &&
+      _campanaLabel.isNotEmpty &&
+      _eventoLabel.isNotEmpty;
+
+  void _onCampoTexto() => setState(() {});
+
+  @override
+  void initState() {
+    super.initState();
+    for (final ctrl in [
+      _ctrlNumDoc,
+      _ctrlNombres,
+      _ctrlApellidoPaterno,
+      _ctrlCargo,
+      _ctrlCelular,
+      _ctrlCorreo,
+    ]) {
+      ctrl.addListener(_onCampoTexto);
+    }
+  }
 
   Future<void> _adjuntarArchivo(bool esVoucher) async {
     final resultado = await FilePicker.platform.pickFiles(type: FileType.any);
@@ -208,6 +242,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     ctrlCorreo: _ctrlCorreo,
                     onTipoDocLabelChanged: (v) =>
                         setState(() => _tipoDocLabel = v),
+                    onNacionalidadChanged: (v) =>
+                        setState(() => _nacionalidadId = v),
+                    onSexoChanged: (v) => setState(() => _sexoId = v),
                     onCampanaChanged: (v) => setState(() => _campanaLabel = v),
                     onEventoChanged: (v) => setState(() => _eventoLabel = v),
                   ),
@@ -250,33 +287,41 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: SolicitudBotonContinuar(
-                    onPressed: () {
-                      context.read<SolicitudFormCubit>().guardarSolicitante(
-                        DatosSolicitante(
-                          tipoPersona: _tipoPersona,
-                          tipoDocLabel: _tipoDocLabel,
-                          numDoc: _ctrlNumDoc.text,
-                          nombres: _ctrlNombres.text,
-                          apellidoPaterno: _ctrlApellidoPaterno.text,
-                          apellidoMaterno: _ctrlApellidoMaterno.text,
-                          cargo: _ctrlCargo.text,
-                          celular: _ctrlCelular.text,
-                          correo: _ctrlCorreo.text,
-                          campana: _campanaLabel,
-                          evento: _eventoLabel,
-                          canales: _canalesSeleccionados.toList(),
-                          ruc: _ctrlRuc.text,
-                          razonSocial: _ctrlRazonSocial.text,
-                          solicitanteEsParticipante: _solicitanteParticipante,
-                          facturarAlSolicitante: _facturarAlSolicitante,
-                        ),
-                      );
-                      context.goToFichaParticipantesSolicitud(
-                        solicitud: widget.solicitud,
-                        modoEdicion: widget.modoEdicion,
-                        formCubit: context.read<SolicitudFormCubit>(),
-                      );
-                    },
+                    onPressed: !_formCompleto
+                        ? null
+                        : () {
+                            context
+                                .read<SolicitudFormCubit>()
+                                .guardarSolicitante(
+                                  DatosSolicitante(
+                                    tipoPersona: _tipoPersona,
+                                    tipoDocLabel: _tipoDocLabel,
+                                    numDoc: _ctrlNumDoc.text,
+                                    nombres: _ctrlNombres.text,
+                                    apellidoPaterno: _ctrlApellidoPaterno.text,
+                                    apellidoMaterno: _ctrlApellidoMaterno.text,
+                                    cargo: _ctrlCargo.text,
+                                    celular: _ctrlCelular.text,
+                                    correo: _ctrlCorreo.text,
+                                    campana: _campanaLabel,
+                                    evento: _eventoLabel,
+                                    canales: _canalesSeleccionados.toList(),
+                                    ruc: _ctrlRuc.text,
+                                    razonSocial: _ctrlRazonSocial.text,
+                                    solicitanteEsParticipante:
+                                        _solicitanteParticipante,
+                                    facturarAlSolicitante:
+                                        _facturarAlSolicitante,
+                                  ),
+                                );
+                            context.goToFichaParticipantesSolicitud(
+                              solicitud: widget.solicitud,
+                              modoEdicion: widget.modoEdicion,
+                              formCubit: context.read<SolicitudFormCubit>(),
+                              participantesCubit: context
+                                  .read<ParticipantesCubit>(),
+                            );
+                          },
                   ),
                 ),
               ],
@@ -602,6 +647,8 @@ class _SeccionDatosSolicitante extends StatefulWidget {
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
   final ValueChanged<String>? onTipoDocLabelChanged;
+  final ValueChanged<String>? onNacionalidadChanged;
+  final ValueChanged<String>? onSexoChanged;
   final ValueChanged<String>? onCampanaChanged;
   final ValueChanged<String>? onEventoChanged;
 
@@ -615,6 +662,8 @@ class _SeccionDatosSolicitante extends StatefulWidget {
     required this.ctrlCelular,
     required this.ctrlCorreo,
     this.onTipoDocLabelChanged,
+    this.onNacionalidadChanged,
+    this.onSexoChanged,
     this.onCampanaChanged,
     this.onEventoChanged,
   });
@@ -721,6 +770,8 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                 label: 'Nacionalidad *',
                 data: _nacionalidades,
                 enabled: widget.habilitado,
+                onChanged: (item) =>
+                    widget.onNacionalidadChanged?.call(item?.id ?? ''),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -729,6 +780,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                 label: 'Sexo *',
                 data: _sexos,
                 enabled: widget.habilitado,
+                onChanged: (item) => widget.onSexoChanged?.call(item?.id ?? ''),
               ),
             ),
           ],

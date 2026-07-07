@@ -131,6 +131,7 @@ class AppRouter {
         return SolicitudParticipantesPage(
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
+          formCubit: args['formCubit'] as SolicitudFormCubit,
         );
       },
     ),
@@ -141,6 +142,7 @@ class AppRouter {
         return SolicitudFacturacionPage(
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
+          formCubit: args['formCubit'] as SolicitudFormCubit,
         );
       },
     ),
@@ -151,6 +153,25 @@ class AppRouter {
         return SolicitudResumenPage(
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
+          formCubit: args['formCubit'] as SolicitudFormCubit,
+        );
+      },
+    ),
+    AppRoutes.solicitudGenerada: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudGeneradaPage(
+          solicitud: args['solicitud'] as Solicitud,
+        );
+      },
+    ),
+    AppRoutes.cargaMasivaParticipantes: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return SolicitudCargaMasivaPage(
+          cubit: args['cubit'] as ParticipantesCubit,
         );
       },
     ),

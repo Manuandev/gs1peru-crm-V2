@@ -54,10 +54,7 @@ class SolicitudDetalleView extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    SolicitudCard(
-                      solicitud: solicitud,
-                      mostrarBotones: false,
-                    ),
+                    SolicitudCard(solicitud: solicitud, mostrarBotones: false),
                     const SizedBox(height: AppSpacing.sm),
                     _SeccionDatosParticipante(solicitud: solicitud),
                     const SizedBox(height: AppSpacing.sm),
@@ -104,7 +101,8 @@ class _DetalleHeader extends StatelessWidget {
       child: Text(
         'Revisa la información y continúa con el proceso',
         style: AppTextStyles.bodySmall.copyWith(
-          color: AppColors.textOnDark.withValues(alpha: 0.85),
+          color: AppColors.textOnDark,
+          fontSize: 14,
         ),
       ),
     );
@@ -118,12 +116,7 @@ class _PasosIndicador extends StatelessWidget {
 
   const _PasosIndicador({required this.pasoActual});
 
-  static const _etiquetas = [
-    'Completar',
-    'Validar',
-    'Adjuntar',
-    'Cobranza',
-  ];
+  static const _etiquetas = ['Completar', 'Validar', 'Adjuntar', 'Cobranza'];
 
   @override
   Widget build(BuildContext context) {
@@ -428,12 +421,27 @@ class _SeccionHistorial extends StatelessWidget {
     final fechaFormateada = fechaCreacion.formatDate(AppDateFormat.shortDate);
 
     final entradas = [
-      (fechaFormateada, '10:35', 'Solicitud creada',
-          'La solicitud fue registrada por el ejecutivo.', true),
-      (fechaFormateada, '10:40', 'Ficha iniciada',
-          'Se comenzó a completar la información del participante.', false),
-      (fechaFormateada, '11:05', 'Guardado parcial',
-          'La información fue guardada como borrador.', false),
+      (
+        fechaFormateada,
+        '10:35',
+        'Solicitud creada',
+        'La solicitud fue registrada por el ejecutivo.',
+        true,
+      ),
+      (
+        fechaFormateada,
+        '10:40',
+        'Ficha iniciada',
+        'Se comenzó a completar la información del participante.',
+        false,
+      ),
+      (
+        fechaFormateada,
+        '11:05',
+        'Guardado parcial',
+        'La información fue guardada como borrador.',
+        false,
+      ),
     ];
 
     return _SeccionCard(
@@ -567,7 +575,7 @@ class _BotonesDetalle extends StatelessWidget {
         AppSpacing.md,
         AppSpacing.sm,
         AppSpacing.md,
-        AppSpacing.md,
+        AppSpacing.sm,
       ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -600,10 +608,7 @@ class _BotonesDetalle extends StatelessWidget {
                 solicitud: solicitud,
                 modoEdicion: false,
               ),
-              icon: const Icon(
-                AppIcons.forward,
-                size: AppSizing.iconActionSm,
-              ),
+              icon: const Icon(AppIcons.forward, size: AppSizing.iconActionSm),
               label: const Text('Continuar'),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,

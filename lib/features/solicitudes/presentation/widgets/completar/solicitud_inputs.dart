@@ -59,6 +59,8 @@ class SolicitudTextField extends StatelessWidget {
   final void Function(String)? onChanged;
   final VoidCallback? onTap;
   final FocusNode? focusNode;
+  final int? maxLength;
+  final bool digitsOnly;
 
   const SolicitudTextField({
     super.key,
@@ -78,13 +80,17 @@ class SolicitudTextField extends StatelessWidget {
     this.onChanged,
     this.onTap,
     this.focusNode,
+    this.maxLength,
+    this.digitsOnly = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final List<TextInputFormatter> formatters = isUpperCase
-        ? [_UpperCaseFormatter()]
-        : [];
+    final List<TextInputFormatter> formatters = [
+      if (digitsOnly) FilteringTextInputFormatter.digitsOnly,
+      if (isUpperCase) _UpperCaseFormatter(),
+      if (maxLength != null) LengthLimitingTextInputFormatter(maxLength!),
+    ];
 
     return TextFormField(
       controller: controller,
@@ -538,6 +544,8 @@ class SolicitudCampoCelular extends StatelessWidget {
               controller: controller,
               keyboardType: TextInputType.phone,
               enabled: habilitado,
+              maxLength: 9,
+              digitsOnly: true,
             ),
           ),
         ],
@@ -568,7 +576,7 @@ class SolicitudBadgePaso extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppSizing.radiusSm),
         ),
         child: Text(
-          'Paso $paso de $total',
+          '$paso de $total',
           style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.textOnDark,
             fontWeight: AppTextStyles.weightSemiBold,
@@ -591,11 +599,12 @@ class SolicitudBotonBorrador extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: const Icon(AppIcons.save, size: AppSizing.iconActionSm),
-      label: const Text('Guardar borrador'),
+      label: const Text('Guardar'),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.secondary,
+        foregroundColor: AppColors.textOnDark,
+        backgroundColor: AppColors.secondary,
         side: const BorderSide(color: AppColors.secondary),
-        minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+        minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -611,28 +620,43 @@ class SolicitudBotonBorrador extends StatelessWidget {
 class SolicitudBotonContinuar extends StatelessWidget {
   final VoidCallback? onPressed;
   final String label;
+  final Color? color;
+  final IconData? icono;
 
   const SolicitudBotonContinuar({
     super.key,
     required this.onPressed,
     this.label = 'Continuar →',
+    this.color,
+    this.icono,
   });
 
   @override
   Widget build(BuildContext context) {
+    final style = ElevatedButton.styleFrom(
+      backgroundColor: color ?? AppColors.primary,
+      foregroundColor: AppColors.textOnDark,
+      minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+      ),
+      textStyle: AppTextStyles.labelSmall.copyWith(
+        fontWeight: AppTextStyles.weightSemiBold,
+      ),
+    );
+
+    if (icono != null) {
+      return ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icono, size: AppSizing.iconActionSm),
+        label: Text(label),
+        style: style,
+      );
+    }
+
     return ElevatedButton(
       onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textOnDark,
-        minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        ),
-        textStyle: AppTextStyles.labelSmall.copyWith(
-          fontWeight: AppTextStyles.weightSemiBold,
-        ),
-      ),
+      style: style,
       child: Text(label),
     );
   }
@@ -653,9 +677,10 @@ class SolicitudBotonAtras extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = OutlinedButton.styleFrom(
-      foregroundColor: AppColors.brandRaspberryAccessible,
+      foregroundColor: AppColors.textOnDark,
+      backgroundColor: AppColors.brandRaspberryAccessible,
       side: const BorderSide(color: AppColors.brandRaspberryAccessible),
-      minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+      minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
       ),

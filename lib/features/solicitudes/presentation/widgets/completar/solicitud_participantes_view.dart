@@ -136,7 +136,9 @@ class SolicitudParticipantesView extends StatelessWidget {
                         _BotonSeccionSmall(
                           icono: AppIcons.downloadFile,
                           label: 'Carga masiva',
-                          onTap: () {},
+                          onTap: () => context.goToCargaMasivaParticipantes(
+                            cubit: context.read<ParticipantesCubit>(),
+                          ),
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         _BotonIconoSmall(
@@ -210,6 +212,7 @@ class SolicitudParticipantesView extends StatelessWidget {
                         onPressed: () => context.goToFichaFacturacionSolicitud(
                           solicitud: solicitud,
                           modoEdicion: modoEdicion,
+                          formCubit: context.read<SolicitudFormCubit>(),
                         ),
                       ),
                     ),

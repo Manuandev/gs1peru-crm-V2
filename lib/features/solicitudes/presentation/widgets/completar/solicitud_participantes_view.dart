@@ -36,6 +36,20 @@ class SolicitudParticipantesView extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmarEliminar(
+    BuildContext context,
+    ParticipanteLocal participante,
+  ) async {
+    final cubit = context.read<ParticipantesCubit>();
+    final confirmado = await context.showConfirmDialog(
+      title: 'Eliminar participante',
+      message: '¿Deseas eliminar a ${participante.nombre}?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+    );
+    if (confirmado) cubit.eliminar(participante.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ParticipantesCubit, ParticipantesState>(
@@ -158,9 +172,7 @@ class SolicitudParticipantesView extends StatelessWidget {
                             participante: p,
                             habilitado: modoEdicion,
                             onEditar: () => _abrirFormularioEditar(context, p),
-                            onEliminar: () => context
-                                .read<ParticipantesCubit>()
-                                .eliminar(p.id),
+                            onEliminar: () => _confirmarEliminar(context, p),
                           );
                         },
                       ),

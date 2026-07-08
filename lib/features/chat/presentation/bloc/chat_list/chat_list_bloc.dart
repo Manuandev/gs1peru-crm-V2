@@ -134,11 +134,12 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
 
   void _onLeadUpdated(ChatListLeadUpdated event, Emitter<ChatListState> emit) {
     final lead = event.negociacion;
-    // Matchea por idChatCab, no por idLead: cuando se crea un lead nuevo
-    // desde el chat (idLead pasa de 0 al id real), es el único id que no
-    // cambia entre el chat de la lista y el lead recién guardado.
+    // Matchea por idNumero, no por idLead: al crear una negociación nueva
+    // (idLead pasa de 0 al id real, o cambia a otra negociación del mismo
+    // contacto), el número es lo único que no cambia entre el chat de la
+    // lista y el lead recién guardado.
     _allChats = _allChats.map((c) {
-      if (c.idLead != lead.idLead) return c;
+      if (c.idNumero != lead.idNumero) return c;
       return c.copyWith(
         idLead: lead.idLead,
         modalidad: lead.modalidad,

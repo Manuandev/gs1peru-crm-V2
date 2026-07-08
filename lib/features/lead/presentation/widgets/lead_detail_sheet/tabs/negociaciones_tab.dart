@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class NegociacionesTab extends StatefulWidget {
@@ -89,13 +90,55 @@ class _ListaNegociaciones extends StatefulWidget {
 class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   _FiltroNeg _filtro = _FiltroNeg.todas;
 
+  // "Ganada" = negociación cerrada (idEstadoPadre '04') en el sub-estado
+  // '05' — códigos de negocio, no confundir con el catálogo de etapas
+  // genérico de AppSocialUtils.
+  List<Negociacion> get _visibles => switch (_filtro) {
+    _FiltroNeg.todas => widget.negociaciones,
+    _FiltroNeg.activa =>
+      widget.negociaciones.where((n) => n.activo).toList(),
+    _FiltroNeg.ganadas => widget.negociaciones
+        .where((n) => n.idEstado == '05' && n.idEstadoPadre == '04')
+        .toList(),
+  };
+
+  String get _mensajeVacioFiltro => switch (_filtro) {
+    _FiltroNeg.activa => 'No hay negociaciones activas.',
+    _FiltroNeg.ganadas => 'No hay negociaciones ganadas.',
+    _FiltroNeg.todas => '',
+  };
+
+  // Deja el InfoLeadCubit compartido listo para crear una negociación nueva
+  // del mismo contacto/número, navega a Editar/Crear lead y, si el usuario
+  // cancela sin guardar, restaura la negociación que estaba activa antes.
+  Future<void> _crearNegociacion() async {
+    final cubit = context.read<InfoLeadCubit>();
+    final estadoPrevio = cubit.state;
+    final idLeadPrevio = estadoPrevio is InfoLeadSuccess
+        ? estadoPrevio.negociacion.idLead
+        : 0;
+
+    cubit.prepararNuevaNegociacion();
+    await context.goToEditarLead(idLead: 0, cubit: cubit);
+
+    final estadoActual = cubit.state;
+    final sigueEnBlanco =
+        estadoActual is InfoLeadSuccess && estadoActual.negociacion.idLead == 0;
+    if (sigueEnBlanco && idLeadPrevio != 0) {
+      cubit.load(idLeadPrevio);
+    }
+    if (mounted) {
+      context.read<NegociacionesCubit>().cargarNegociaciones(widget.idNumero);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.negociaciones.isEmpty) {
       return const _EstadoVacio();
     }
 
-    final visibles = widget.negociaciones;
+    final visibles = _visibles;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -132,17 +175,28 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
           ),
         ),
 
-        // ── Cards ─────────────────────────────────────────────────────────────
-        ...visibles.map(
-          (negociacion) => NegociacionCard(
-            negociacion: negociacion,
-            leadId: widget.leadId,
-            onGenerarSolicitud: () {},
-            onEdited: () => context
-                .read<NegociacionesCubit>()
-                .cargarNegociaciones(widget.idNumero),
+        // ── Cards (o vacío del filtro activo) ───────────────────────────────────
+        if (visibles.isEmpty)
+          _EstadoVacioFiltro(mensaje: _mensajeVacioFiltro)
+        else
+          ...visibles.map(
+            (negociacion) => NegociacionCard(
+              negociacion: negociacion,
+              leadId: widget.leadId,
+              onGenerarSolicitud: () {},
+              onEdited: () => context
+                  .read<NegociacionesCubit>()
+                  .cargarNegociaciones(widget.idNumero),
+            ),
           ),
+
+        const SizedBox(height: AppSpacing.sm),
+        CustomOutlinedButton(
+          text: '+ Crear negociación',
+          onPressed: _crearNegociacion,
         ),
+
+        const SizedBox(height: AppSpacing.sm),
 
         // ── Info banner ───────────────────────────────────────────────────────
         Container(
@@ -173,6 +227,31 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Estado vacío de un filtro (Activa/Ganadas) — hay negociaciones, pero
+// ninguna cae en el filtro seleccionado.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EstadoVacioFiltro extends StatelessWidget {
+  final String mensaje;
+  const _EstadoVacioFiltro({required this.mensaje});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      child: Center(
+        child: Text(
+          mensaje,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 }

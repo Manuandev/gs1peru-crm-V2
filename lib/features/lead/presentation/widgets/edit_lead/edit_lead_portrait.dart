@@ -291,21 +291,24 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              // 1. Contacto
-              EditLeadContactoSection(
-                key: _contactoKey,
-                nombreCtrl: _nombreCtrl,
-                apellidoPCtrl: _apellidoPCtrl,
-                apellidoMCtrl: _apellidoMCtrl,
-                empresaCtrl: _empresaCtrl,
-                correoCtrl: _correoCtrl,
-                cargoCtrl: _cargoCtrl,
-                telefonoPrefijo: widget.negociacion.prefijoPais,
-                telefonoNumero: widget.negociacion.numero,
-                isLoading: _isLoading,
-                onChanged: () => _seccionCambio.value++,
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              // 1. Contacto — solo al editar un lead existente. Al crear uno
+              // nuevo (idLead 0) no hay contacto que mostrar todavía.
+              if (widget.negociacion.idLead != 0) ...[
+                EditLeadContactoSection(
+                  key: _contactoKey,
+                  nombreCtrl: _nombreCtrl,
+                  apellidoPCtrl: _apellidoPCtrl,
+                  apellidoMCtrl: _apellidoMCtrl,
+                  empresaCtrl: _empresaCtrl,
+                  correoCtrl: _correoCtrl,
+                  cargoCtrl: _cargoCtrl,
+                  telefonoPrefijo: widget.negociacion.prefijoPais,
+                  telefonoNumero: widget.negociacion.numero,
+                  isLoading: _isLoading,
+                  onChanged: () => _seccionCambio.value++,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
 
               // 2. Negociación
               EditLeadNegociacionSection(

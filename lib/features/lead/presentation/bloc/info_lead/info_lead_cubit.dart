@@ -89,6 +89,56 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     emit(InfoLeadSuccess(negociacion));
   }
 
+  // Deja el cubit listo para crear una negociación NUEVA para el mismo
+  // contacto/número (botón "Crear negociación" en NegociacionesTab) — sin
+  // perder el contacto ya cargado. idLead en 0 hace que EditLeadPortrait
+  // arranque en blanco y el SP de guardado la cree en vez de actualizarla.
+  //
+  // Si el usuario cancela sin guardar, el llamador debe restaurar el estado
+  // anterior (ej. con `load(idLeadAnterior)`) — este método no lo hace solo,
+  // porque no sabe si el idLead:0 resultante es "cancelado" o "recién creado
+  // pero aún no confirmado por el switch de arriba".
+  void prepararNuevaNegociacion() {
+    if (isClosed || state is! InfoLeadSuccess) return;
+    final actual = (state as InfoLeadSuccess).negociacion;
+    emit(
+      InfoLeadSuccess(
+        Negociacion(
+          idLead: 0,
+          nombre: '',
+          modalidad: '',
+          cantidad: 0,
+          precioBase: 0,
+          descuento: 0,
+          precio: 0,
+          fechaHoraInteraccion: '',
+          fechaHoraCreacion: '',
+          idEstado: '',
+          descripcionEstado: '',
+          idEstadoPadre: '',
+          descripcionEstadoPadre: '',
+          idCampania: 0,
+          nombreCampania: '',
+          idOportunidad: 0,
+          nombreOportunidad: '',
+          idCanal: 0,
+          descripcionCanal: '',
+          idInteres: 0,
+          descripcionInteres: '',
+          activo: true,
+          idNumero: actual.idNumero,
+          prefijoPais: actual.prefijoPais,
+          numero: actual.numero,
+          nombres: actual.nombres,
+          apellidoPaterno: actual.apellidoPaterno,
+          apellidoMaterno: actual.apellidoMaterno,
+          nombreEmpresa: actual.nombreEmpresa,
+          correo: actual.correo,
+        ),
+      ),
+    );
+  }
+
   // Negociacion parcial armada desde el Chat ya cargado en lista — sin
   // cantidad/precioBase/descuento/precio/fechaHoraCreacion (Chat no los
   // trae); se completan al enriquecer con el detalle real (task 'DT').

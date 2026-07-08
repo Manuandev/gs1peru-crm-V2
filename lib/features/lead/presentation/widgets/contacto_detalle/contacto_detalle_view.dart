@@ -166,10 +166,7 @@ class _ContactoScaffold extends StatelessWidget {
                           lead: lead,
                           negociaciones: negociaciones,
                         ),
-                        NegociacionesTab(
-                          leadId: lead.idLead,
-                          idNumero: lead.idNumero,
-                        ),
+                        ContactoNegociacionesTab(negociaciones: negociaciones),
                         HistorialTab(idNumero: lead.idNumero),
                       ],
                     );

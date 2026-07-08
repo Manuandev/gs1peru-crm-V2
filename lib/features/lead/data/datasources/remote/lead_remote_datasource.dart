@@ -44,6 +44,7 @@ class LeadRemoteDatasource {
       ParseUtils.orEmpty(negociacion.precio),
       ParseUtils.orEmpty(negociacion.cantidad),
       ParseUtils.orEmpty(negociacion.descuento),
+      negociacion.idMoneda,
       negociacion.nombre,
       negociacion.modalidad,
       _session.codUser,

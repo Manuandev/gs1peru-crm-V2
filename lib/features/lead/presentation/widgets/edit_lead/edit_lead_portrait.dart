@@ -205,7 +205,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         _modalidadCtrl.text.trim() != n.modalidad ||
         _cantidadCtrl.text != NumberFormatUtils.fmtInt(n.cantidad) ||
         _precioBaseCtrl.text != NumberFormatUtils.fmtDecimal(n.precioBase) ||
-        _descuentoCtrl.text != NumberFormatUtils.fmtDecimal(n.descuento);
+        _descuentoCtrl.text != NumberFormatUtils.fmtDecimal(n.descuento) ||
+        (_monedaItem?.id ?? '') != n.idMoneda;
   }
 
   // ── Callbacks de combos ───────────────────────────────────────────────────
@@ -257,6 +258,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         precioBase: double.tryParse(_precioBaseCtrl.text),
         descuento: double.tryParse(_descuentoCtrl.text),
         precio: _costoFinal > 0 ? _costoFinal : null,
+        idMoneda: _monedaItem?.id,
       );
     }
 

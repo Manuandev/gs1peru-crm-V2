@@ -308,6 +308,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     double? precioBase,
     double? descuento,
     double? precio,
+    String? idMoneda,
   }) async {
     if (state is! InfoLeadSuccess) return;
     final s = state as InfoLeadSuccess;
@@ -326,6 +327,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       descripcionCanal: canal,
       idInteres: idInteres,
       descripcionInteres: interes,
+      idMoneda: idMoneda,
       nombre: nombreLead,
       modalidad: modalidad,
       cantidad: cantidad,

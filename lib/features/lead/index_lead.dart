@@ -39,6 +39,8 @@ export 'presentation/pages/contacto_detalle_page.dart';
 export 'presentation/widgets/contacto_detalle/contacto_detalle_skeleton.dart';
 export 'presentation/widgets/contacto_detalle/contacto_acciones_footer.dart';
 export 'presentation/widgets/contacto_detalle/contacto_detalle_view.dart';
+export 'presentation/widgets/contacto_detalle/contacto_negociaciones_tab.dart';
+export 'presentation/widgets/contacto_detalle/contacto_negociacion_card.dart';
 export 'presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart';
 export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';
 export 'presentation/widgets/lead_detail_sheet/negociacion_card.dart';

@@ -39,6 +39,10 @@ class Negociacion extends Equatable {
   // matchear directo contra MonedaItem.id en el combo de CatalogsBloc.
   final String idMoneda;
 
+  // CL.CT_LEADS — cantidad de leads activos del número de este contacto.
+  // Solo la traen 'LS' y 'DT' (no 'LN', que ya es el historial completo).
+  final int totalLeadsNumero;
+
   // Contacto/número — de solo lectura en el form de edición. Con default
   // porque no todos los SPs que alimentan Negociacion los traen (ej. 'LN' —
   // historial de negociaciones). Se completan desde el SP de detalle ('DT')
@@ -88,6 +92,7 @@ class Negociacion extends Equatable {
     required this.descripcionInteres,
     required this.activo,
     this.idMoneda = '',
+    this.totalLeadsNumero = 0,
     this.idNumero = 0,
     this.prefijoPais = '',
     this.numero = '',
@@ -123,6 +128,7 @@ class Negociacion extends Equatable {
     descripcionInteres,
     activo,
     idMoneda,
+    totalLeadsNumero,
     idNumero,
     prefijoPais,
     numero,
@@ -157,6 +163,7 @@ class Negociacion extends Equatable {
     String? descripcionInteres,
     bool? activo,
     String? idMoneda,
+    int? totalLeadsNumero,
     int? idNumero,
     String? prefijoPais,
     String? numero,
@@ -191,6 +198,7 @@ class Negociacion extends Equatable {
       descripcionInteres: descripcionInteres ?? this.descripcionInteres,
       activo: activo ?? this.activo,
       idMoneda: idMoneda ?? this.idMoneda,
+      totalLeadsNumero: totalLeadsNumero ?? this.totalLeadsNumero,
       idNumero: idNumero ?? this.idNumero,
       prefijoPais: prefijoPais ?? this.prefijoPais,
       numero: numero ?? this.numero,

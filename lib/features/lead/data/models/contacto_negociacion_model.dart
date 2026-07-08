@@ -3,8 +3,7 @@
 // Parsea la respuesta del SP de listado (lead_list_page.dart, task 'LS').
 // 'LS' comparte exactamente el mismo layout de columnas que 'DT' (mismo
 // SELECT de [CRM].[CSV_LEADS_LST_APP], solo cambia el WHERE) — cada fila es
-// 1 lead con su Contacto/Numero. Ya no trae un CL.CT_LEADS agregado por
-// número — totalLeads queda en 0 (no se muestra en ningún widget hoy).
+// 1 lead con su Contacto/Numero + CL.CT_LEADS (leads activos de ese número).
 // Ver comentario de índices en NegociacionModel.fromDetalleRawString.
 
 import 'package:app_crm/core/index_core.dart';
@@ -69,10 +68,13 @@ class ContactoNegociacionModel extends ContactoNegociacion {
         activo: true,
         // 33 → LD.ID_TIP_MONEDA
         idMoneda: ParseUtils.str(fields, 33),
+        // 34 → CL.CT_LEADS (leads activos del número)
+        totalLeadsNumero: ParseUtils.toInt(fields, 34),
       ),
-      // El SP ya no agrega CL.CT_LEADS — sin fuente hoy, y el campo no se
-      // consume en ningún widget todavía.
-      totalLeads: 0,
+      // 34 → CL.CT_LEADS — mismo valor que negociacion.totalLeadsNumero,
+      // expuesto también acá porque LeadCard/LeadListBloc leen ContactoNegociacion,
+      // no Negociacion directo.
+      totalLeads: ParseUtils.toInt(fields, 34),
     );
   }
 

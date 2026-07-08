@@ -9,7 +9,13 @@ import 'dart:async';
 class LeadUpdate {
   final int idLead;
   final Object? updatedLead;
-  const LeadUpdate(this.idLead, {this.updatedLead});
+  /// Quién disparó el guardado (normalmente el propio InfoLeadCubit que
+  /// llamó a updateLead/updateEstado). Permite que ESE cubit ignore su
+  /// propio aviso — ya tiene el estado fresco, no necesita recargarse a sí
+  /// mismo — mientras otros suscriptores (LeadListBloc, otro InfoLeadCubit
+  /// para el mismo lead en otra pantalla) sí reaccionan normalmente.
+  final Object? source;
+  const LeadUpdate(this.idLead, {this.updatedLead, this.source});
 }
 
 /// Bus de comunicación entre [EditLeadPortrait] y los BLoCs de lista.
@@ -24,9 +30,11 @@ class LeadUpdateNotifier {
   final _controller = StreamController<LeadUpdate>.broadcast();
   Stream<LeadUpdate> get stream => _controller.stream;
 
-  void notify(int idLead, {Object? updatedLead}) {
+  void notify(int idLead, {Object? updatedLead, Object? source}) {
     if (!_controller.isClosed) {
-      _controller.add(LeadUpdate(idLead, updatedLead: updatedLead));
+      _controller.add(
+        LeadUpdate(idLead, updatedLead: updatedLead, source: source),
+      );
     }
   }
 }

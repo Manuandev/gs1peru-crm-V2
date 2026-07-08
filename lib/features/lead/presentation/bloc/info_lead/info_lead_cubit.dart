@@ -39,6 +39,10 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     this._getLeadDetallePorNumero,
   ]) : super(const InfoLeadInitial()) {
     _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
+      // Yo mismo disparé este aviso al guardar — ya tengo el estado fresco
+      // (emitido directo en updateLead/updateEstado), recargarme de nuevo
+      // solo prende el loading y repite la llamada de red por nada.
+      if (identical(update.source, this)) return;
       final s = state;
       if (s is InfoLeadSuccess &&
           s.negociacion.idLead == update.idLead &&
@@ -270,6 +274,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
           LeadUpdateNotifier.instance.notify(
             optimista.idLead,
             updatedLead: optimista,
+            source: this,
           );
           break;
         case CrudAlert(:final message):
@@ -368,6 +373,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
           LeadUpdateNotifier.instance.notify(
             leadFinal.idLead,
             updatedLead: leadFinal,
+            source: this,
           );
           break;
         case CrudAlert(:final message):

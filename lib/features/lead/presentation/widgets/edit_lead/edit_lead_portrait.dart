@@ -20,11 +20,10 @@ class EditLeadPortrait extends StatefulWidget {
 }
 
 class _EditLeadPortraitState extends State<EditLeadPortrait> {
-  // ── Key para acceder a valores de la sección ──────────────────────────────
-  final _contactoKey = GlobalKey<EditLeadContactoSectionState>();
-
-  // ── Notificador para el botón guardar cuando la sección cambia ────────────
-  final _seccionCambio = ValueNotifier<int>(0);
+  // ── EditLeadContactoSection comentada — la página solo muestra lo que se
+  // puede guardar/actualizar, no info de contacto de solo lectura. ──────────
+  // final _contactoKey = GlobalKey<EditLeadContactoSectionState>();
+  // final _seccionCambio = ValueNotifier<int>(0);
 
   // ── Combos de catálogo ────────────────────────────────────────────────────
   EstadoItem? _estado;
@@ -125,7 +124,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _eventoCtrl.dispose();
     _nombreLeadCtrl.dispose();
     _modalidadCtrl.dispose();
-    _seccionCambio.dispose();
+    // _seccionCambio.dispose();
     super.dispose();
   }
 
@@ -296,24 +295,32 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              // 1. Contacto — solo al editar un lead existente. Al crear uno
-              // nuevo (idLead 0) no hay contacto que mostrar todavía.
-              if (widget.negociacion.idLead != 0) ...[
-                EditLeadContactoSection(
-                  key: _contactoKey,
-                  nombreCtrl: _nombreCtrl,
-                  apellidoPCtrl: _apellidoPCtrl,
-                  apellidoMCtrl: _apellidoMCtrl,
-                  empresaCtrl: _empresaCtrl,
-                  correoCtrl: _correoCtrl,
-                  cargoCtrl: _cargoCtrl,
-                  telefonoPrefijo: widget.negociacion.prefijoPais,
-                  telefonoNumero: widget.negociacion.numero,
-                  isLoading: _isLoading,
-                  onChanged: () => _seccionCambio.value++,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
+              // 1. Contacto — comentada: la página solo muestra lo que se
+              // puede guardar/actualizar, no info de contacto de solo lectura.
+              // if (widget.negociacion.idLead != 0) ...[
+              //   EditLeadContactoSection(
+              //     key: _contactoKey,
+              //     nombreCtrl: _nombreCtrl,
+              //     apellidoPCtrl: _apellidoPCtrl,
+              //     apellidoMCtrl: _apellidoMCtrl,
+              //     empresaCtrl: _empresaCtrl,
+              //     correoCtrl: _correoCtrl,
+              //     cargoCtrl: _cargoCtrl,
+              //     telefonoPrefijo: widget.negociacion.prefijoPais,
+              //     telefonoNumero: widget.negociacion.numero,
+              //     isLoading: _isLoading,
+              //     onChanged: () => _seccionCambio.value++,
+              //   ),
+              //   const SizedBox(height: AppSpacing.lg),
+              // ],
+
+              // 1. Información adicional — arriba, es lo primero que se ve
+              EditLeadAdicionalSection(
+                nombreLeadCtrl: _nombreLeadCtrl,
+                modalidadCtrl: _modalidadCtrl,
+                isLoading: _isLoading,
+              ),
+              const SizedBox(height: AppSpacing.lg),
 
               // 2. Negociación
               EditLeadNegociacionSection(
@@ -357,14 +364,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                   descuento: _descuento,
                   costoFinal: _costoFinal,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // 4. Información adicional
-              EditLeadAdicionalSection(
-                nombreLeadCtrl: _nombreLeadCtrl,
-                modalidadCtrl: _modalidadCtrl,
-                isLoading: _isLoading,
               ),
               const SizedBox(height: AppSpacing.xl),
             ],

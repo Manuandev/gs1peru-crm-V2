@@ -24,15 +24,46 @@ class LeadCard extends StatefulWidget {
 
 class _LeadCardState extends State<LeadCard> {
   Duration _elapsed = Duration.zero;
-  late Timer _timer;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _actualizarElapsed();
-    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) setState(_actualizarElapsed);
-    });
+    _reiniciarTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant LeadCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // LeadListBloc parchea `lead` en memoria cuando LeadUpdateNotifier avisa
+    // un cambio — sin esto, "Hace X" se quedaba con el valor viejo hasta el
+    // próximo tick del Timer (hasta 1 minuto de espera).
+    if (oldWidget.lead.negociacion.fechaHoraInteraccion !=
+        widget.lead.negociacion.fechaHoraInteraccion) {
+      _actualizarElapsed();
+      _reiniciarTimer();
+    }
+  }
+
+  // Tiquea cada segundo mientras el lead sea reciente (< 1 min) para que se
+  // vea "correr" en tiempo real justo después de editar; pasado el minuto,
+  // vuelve a cada minuto — no tiene sentido redibujar cada segundo una
+  // tarjeta de hace días.
+  void _reiniciarTimer() {
+    _timer?.cancel();
+    final eraReciente = _elapsed.inMinutes < 1;
+    _timer = Timer.periodic(
+      eraReciente ? const Duration(seconds: 1) : const Duration(minutes: 1),
+      (_) {
+        if (!mounted) return;
+        final seguiaReciente = _elapsed.inMinutes < 1;
+        setState(_actualizarElapsed);
+        if (seguiaReciente && _elapsed.inMinutes >= 1) {
+          _reiniciarTimer();
+        }
+      },
+    );
   }
 
   void _actualizarElapsed() {
@@ -45,7 +76,7 @@ class _LeadCardState extends State<LeadCard> {
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 

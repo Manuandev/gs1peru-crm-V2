@@ -3,8 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 
-// Todo: descomentar el envío al SP cuando [CRM].[CSV_LEADS_CUD_APP] acepte
-// NOMBRE_LD y MODALIDAD como fields nuevos (ver EditLeadPortrait._guardar).
 class EditLeadAdicionalSection extends StatelessWidget {
   final TextEditingController nombreLeadCtrl;
   final TextEditingController modalidadCtrl;

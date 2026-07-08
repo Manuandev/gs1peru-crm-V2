@@ -19,6 +19,10 @@ class ContactoDetallePage extends StatelessWidget {
             GetInfoUseCase(context.read<ChatRepository>()),
             UpdateLeadEstadoUseCase(context.read<ChatRepository>()),
             UpdateLeadInfoUseCase(context.read<LeadRepository>()),
+            // null: cargarPorIdLead no se usa acá — tocar una card de
+            // ContactoNegociacionesTab abre EditLeadPage con SU PROPIO
+            // InfoLeadCubit (sin pasar cubit), justamente para no disparar
+            // InfoLeadLoading sobre este cubit y tumbar toda esta pantalla.
             null,
             GetLeadDetallePorNumeroUseCase(context.read<LeadRepository>()),
           ),

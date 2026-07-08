@@ -1,5 +1,6 @@
 // lib/features/lead/presentation/widgets/contacto_detalle/contacto_detalle_view.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/config/index_config.dart';
@@ -17,14 +18,38 @@ class ContactoDetalleView extends StatefulWidget {
 }
 
 class _ContactoDetalleViewState extends State<ContactoDetalleView> {
+  StreamSubscription<LeadUpdate>? _updateSub;
+
   @override
   void initState() {
     super.initState();
     context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero);
+
+    // ContactoNegociacionesTab edita leads históricos con SU PROPIO
+    // InfoLeadCubit (ver contacto_negociacion_card.dart) — esta pantalla no
+    // se entera por ahí, así que escucha directo el mismo bus que usa
+    // LeadListBloc, filtrando por idNumero (no por idLead: cualquier lead
+    // de este número que cambie puede alterar cuál es "el más reciente" que
+    // muestra Información, o afectar el historial de Negociaciones).
+    _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
+      final negociacion = update.updatedLead;
+      if (negociacion is Negociacion &&
+          negociacion.idNumero == widget.idNumero) {
+        _refrescar();
+      }
+    });
   }
 
-  Future<void> _refrescar() =>
-      context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero);
+  @override
+  void dispose() {
+    _updateSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _refrescar() => Future.wait([
+    context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero),
+    context.read<NegociacionesCubit>().cargarNegociaciones(widget.idNumero),
+  ]);
 
   @override
   Widget build(BuildContext context) {

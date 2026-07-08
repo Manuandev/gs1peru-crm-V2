@@ -186,6 +186,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   /// Distinto de load(idNumero) que usa el SP de chats.
   Future<void> cargarPorIdLead(int idLead) async {
     if (isClosed) return;
+    _idLead = idLead;
     emit(const InfoLeadLoading());
     try {
       final detalle = await _getLeadDetalle!(idLead);
@@ -210,6 +211,9 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     try {
       final detalle = await _getLeadDetallePorNumero!(idNumero);
       if (isClosed) return;
+      // El SP resuelve el lead más reciente del número — se guarda recién acá
+      // porque hasta este punto no se sabía qué idLead venía.
+      _idLead = detalle.idLead;
       emit(InfoLeadSuccess(detalle));
     } on AppException catch (e) {
       if (isClosed) return;
@@ -250,6 +254,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     final optimista = snapshot.copyWith(
       idEstado: idEstado,
       descripcionEstado: estado,
+      fechaHoraInteraccion: DateTime.now().toString(),
     );
 
     emit(InfoLeadSuccess(optimista));
@@ -334,6 +339,10 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       precioBase: precioBase,
       descuento: descuento,
       precio: precio,
+      // El backend bumpea FC_USUARIO_M al guardar — sin esto, "Hace X" se
+      // queda contando desde la última interacción vieja en vez de mostrar
+      // que se acaba de tocar el lead ahora mismo.
+      fechaHoraInteraccion: DateTime.now().toString(),
     );
 
     emit(InfoLeadSuccess(updated));

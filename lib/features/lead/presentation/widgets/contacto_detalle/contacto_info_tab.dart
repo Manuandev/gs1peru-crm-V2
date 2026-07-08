@@ -62,6 +62,18 @@ class ContactoInfoTab extends StatelessWidget {
               ),
               _FilaCampos(
                 izquierda: _CampoInfo(
+                  icono: AppIcons.datosLead,
+                  etiqueta: 'Nombre del lead',
+                  valor: lead.nombre.isEmpty ? '—' : lead.nombre,
+                ),
+                derecha: _CampoInfo(
+                  icono: AppIcons.cursoEvento,
+                  etiqueta: 'Modalidad',
+                  valor: lead.modalidad.isEmpty ? '—' : lead.modalidad,
+                ),
+              ),
+              _FilaCampos(
+                izquierda: _CampoInfo(
                   icono: AppIcons.campaign,
                   etiqueta: 'Campaña',
                   valor: lead.nombreCampania.isEmpty ? '—' : lead.nombreCampania,

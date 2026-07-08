@@ -25,6 +25,18 @@ class ContactoNegociacionCard extends StatelessWidget {
         'S/';
   }
 
+  // OJO: no reusar el InfoLeadCubit de ContactoDetalleView acá. Llamar
+  // cargarPorIdLead en ese mismo cubit emite InfoLeadLoading — y como
+  // ContactoDetalleView escucha ese cubit, toda la pantalla (esta card
+  // incluida) se reemplaza por el skeleton de carga a mitad de camino,
+  // el BuildContext de la card se desmonta, y la navegación de abajo nunca
+  // llega a dispararse. A diferencia de Conversaciones (un solo lead activo
+  // por conversación), acá hay varios leads históricos — cada tap necesita
+  // su propio InfoLeadCubit aislado, como en el resto de la app.
+  void _irAEditar(BuildContext context) {
+    context.goToEditarLead(idLead: negociacion.idLead);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorEstado = AppSocialUtils.colorEstado(
@@ -33,12 +45,7 @@ class ContactoNegociacionCard extends StatelessWidget {
     final simbolo = _simbolo(context);
 
     return GestureDetector(
-      onTap: negociacion.idLead == 0
-          ? null
-          : () => NavigationService.navigateTo(
-              AppRoutes.detalleEditarLead,
-              arguments: {'idLead': negociacion.idLead},
-            ),
+      onTap: negociacion.idLead == 0 ? null : () => _irAEditar(context),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,

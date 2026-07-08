@@ -115,7 +115,7 @@ class NegociacionModel extends Negociacion {
   // 16  EP.DESCRIPCION (padre) 32 CT.ID_CARGO (id crudo, sin catálogo — no se
   //                               parsea acá todavía)
   //                            33 LD.ID_TIP_MONEDA
-  //                            34 CL.CT_LEADS (leads activos del número)
+  //                            34 CL.CT_LEADS (total de leads del número)
   factory NegociacionModel.fromDetalleRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 

@@ -1,10 +1,11 @@
 // lib/features/lead/data/models/contacto_negociacion_model.dart
 //
 // Parsea la respuesta del SP de listado (lead_list_page.dart, task 'LS').
-// 'LS' comparte exactamente el mismo layout de columnas que 'DT' (mismo
-// SELECT de [CRM].[CSV_LEADS_LST_APP], solo cambia el WHERE) — cada fila es
-// 1 lead con su Contacto/Numero + CL.CT_LEADS (leads activos de ese número).
-// Ver comentario de índices en NegociacionModel.fromDetalleRawString.
+// 'LS' tiene el mismo layout de columnas que 'DT' ([CRM].[CSV_LEADS_LST_APP]
+// — ver comentario de índices en NegociacionModel.fromDetalleRawString), pero
+// ancla en NÚMERO, no en lead: cada fila es 1 contacto/número con su lead MÁS
+// RECIENTE (subquery TOP 1 ORDER BY fecha DESC) + CL.CT_LEADS (cuántos leads
+// tiene ese número en total, sin filtrar por activo — badge "N casos" en LeadCard).
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -68,7 +69,7 @@ class ContactoNegociacionModel extends ContactoNegociacion {
         activo: true,
         // 33 → LD.ID_TIP_MONEDA
         idMoneda: ParseUtils.str(fields, 33),
-        // 34 → CL.CT_LEADS (leads activos del número)
+        // 34 → CL.CT_LEADS (total de leads del número)
         totalLeadsNumero: ParseUtils.toInt(fields, 34),
       ),
       // 34 → CL.CT_LEADS — mismo valor que negociacion.totalLeadsNumero,

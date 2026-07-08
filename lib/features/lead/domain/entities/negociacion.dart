@@ -39,8 +39,9 @@ class Negociacion extends Equatable {
   // matchear directo contra MonedaItem.id en el combo de CatalogsBloc.
   final String idMoneda;
 
-  // CL.CT_LEADS — cantidad de leads activos del número de este contacto.
-  // Solo la traen 'LS' y 'DT' (no 'LN', que ya es el historial completo).
+  // CL.CT_LEADS — cantidad total de leads del número de este contacto
+  // (sin filtrar por activo). Solo la traen 'LS' y 'DT' (no 'LN', que ya es
+  // el historial completo).
   final int totalLeadsNumero;
 
   // Contacto/número — de solo lectura en el form de edición. Con default

@@ -161,13 +161,26 @@ class _LeadClientInfo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Text(
-          lead.nombreCompleto,
-          style: AppTextStyles.bodySmall.copyWith(
-            fontWeight: AppTextStyles.weightSemiBold,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                lead.nombreCompleto,
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: AppTextStyles.weightSemiBold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // totalLeads en 0 → el backend todavía no manda CL.CT_LEADS
+            // (SP viejo desplegado); no mostramos el badge para no mentir.
+            if (lead.totalLeads > 0) ...[
+              const SizedBox(width: AppSpacing.xxs),
+              _CasosBadge(count: lead.totalLeads),
+            ],
+          ],
         ),
         if (lead.negociacion.nombreOportunidad.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
@@ -259,6 +272,35 @@ class _LeadDateAndActions extends StatelessWidget {
           onVerDetalleTap: onVerDetalleTap,
         ),
       ],
+    );
+  }
+}
+
+/// Badge "N casos" — cuántos leads activos tiene el número de este contacto
+/// (CL.CT_LEADS). Junto al nombre, en `_LeadClientInfo`.
+class _CasosBadge extends StatelessWidget {
+  final int count;
+
+  const _CasosBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLightVariant,
+        borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+      ),
+      child: Text(
+        count == 1 ? '1 caso' : '$count casos',
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.textSecondary,
+          fontWeight: AppTextStyles.weightSemiBold,
+        ),
+      ),
     );
   }
 }

@@ -3,8 +3,11 @@
 // Parsea la porción de Contacto (T_CONTACTO) de la fila del SP de listado
 // (lead_list_page.dart, task 'LS'). Se usa desde ContactoNegociacionModel,
 // que reparte los mismos campos entre Contacto/Numero/Negociacion.
-// correo/cargo no vienen en este SP — quedan null hasta que la pantalla de
-// detalle de contacto los traiga con su propio SP.
+// 'LS' comparte exactamente el mismo layout de columnas que 'DT' (mismo
+// SELECT, solo cambia el WHERE) — ver comentario de índices en
+// NegociacionModel.fromDetalleRawString. cargo (32, CT.ID_CARGO) llega como
+// id crudo sin catálogo — no se parsea todavía para no mostrar un número
+// donde se espera un puesto.
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -23,18 +26,20 @@ class ContactoModel extends Contacto {
 
   factory ContactoModel.fromFields(List<String> fields) {
     return ContactoModel(
-      // 00 → CT.ID_CONTACTO
-      idContacto: ParseUtils.toInt(fields, 0),
-      // 01 → CT.NOMBRES
-      nombre: ParseUtils.str(fields, 1),
-      // 02 → CT.APELLIDO_P
-      apellidoPaterno: ParseUtils.str(fields, 2),
-      // 03 → CT.APELLIDO_M
-      apellidoMaterno: ParseUtils.str(fields, 3),
-      // 04 → EM.NOMBRE (empresa)
-      nombreEmpresa: ParseUtils.str(fields, 4),
-      // 05 → CT.ASESOR_PRINCIPAL
-      asesor: ParseUtils.str(fields, 5),
+      // 01 → CT.ID_CONTACTO
+      idContacto: ParseUtils.toInt(fields, 1),
+      // 02 → CT.NOMBRES
+      nombre: ParseUtils.str(fields, 2),
+      // 03 → CT.APELLIDO_P
+      apellidoPaterno: ParseUtils.str(fields, 3),
+      // 04 → CT.APELLIDO_M
+      apellidoMaterno: ParseUtils.str(fields, 4),
+      // 05 → EM.NOMBRE (empresa)
+      nombreEmpresa: ParseUtils.str(fields, 5),
+      // 06 → CT.ASESOR_PRINCIPAL
+      asesor: ParseUtils.str(fields, 6),
+      // 12 → CO.CORREO
+      correo: ParseUtils.strNullable(fields, 12),
     );
   }
 }

@@ -36,6 +36,7 @@ class NegociacionModel extends Negociacion {
     required super.idInteres,
     required super.descripcionInteres,
     required super.activo,
+    super.idMoneda,
     super.idNumero,
     super.prefijoPais,
     super.numero,
@@ -72,6 +73,8 @@ class NegociacionModel extends Negociacion {
       idInteres: ParseUtils.toInt(fields, 19),
       descripcionInteres: ParseUtils.str(fields, 20),
       activo: ParseUtils.toBool(fields, 21),
+      // 22 → LD.ID_TIP_MONEDA, agregada al final sin correr los índices existentes.
+      idMoneda: ParseUtils.str(fields, 22),
     );
   }
 
@@ -108,7 +111,9 @@ class NegociacionModel extends Negociacion {
   // 13  LE.ID_ESTADO          29 LD.DC_DESCUENTO
   // 14  LE.DESCRIPCION        30 LD.FC_USUARIO_C (fecha creación)
   // 15  EP.ID_ESTADO (padre)  31 CCU.ID_CONVERSACION_CAB
-  // 16  EP.DESCRIPCION (padre)
+  // 16  EP.DESCRIPCION (padre) 32 CT.ID_CARGO (id crudo, sin catálogo — no se
+  //                               parsea acá todavía)
+  //                            33 LD.ID_TIP_MONEDA
   factory NegociacionModel.fromDetalleRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -143,6 +148,7 @@ class NegociacionModel extends Negociacion {
       apellidoMaterno: ParseUtils.str(fields, 4),
       nombreEmpresa: ParseUtils.str(fields, 5),
       correo: ParseUtils.str(fields, 12),
+      idMoneda: ParseUtils.str(fields, 33),
     );
   }
 

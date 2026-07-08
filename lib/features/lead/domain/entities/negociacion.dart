@@ -35,6 +35,10 @@ class Negociacion extends Equatable {
 
   final bool activo;
 
+  // codargu de SYSTABEXTER02 (CODTABLA='MON') — LD.ID_TIP_MONEDA. String para
+  // matchear directo contra MonedaItem.id en el combo de CatalogsBloc.
+  final String idMoneda;
+
   // Contacto/número — de solo lectura en el form de edición. Con default
   // porque no todos los SPs que alimentan Negociacion los traen (ej. 'LN' —
   // historial de negociaciones). Se completan desde el SP de detalle ('DT')
@@ -83,6 +87,7 @@ class Negociacion extends Equatable {
     required this.idInteres,
     required this.descripcionInteres,
     required this.activo,
+    this.idMoneda = '',
     this.idNumero = 0,
     this.prefijoPais = '',
     this.numero = '',
@@ -117,6 +122,7 @@ class Negociacion extends Equatable {
     idInteres,
     descripcionInteres,
     activo,
+    idMoneda,
     idNumero,
     prefijoPais,
     numero,
@@ -150,6 +156,7 @@ class Negociacion extends Equatable {
     int? idInteres,
     String? descripcionInteres,
     bool? activo,
+    String? idMoneda,
     int? idNumero,
     String? prefijoPais,
     String? numero,
@@ -183,6 +190,7 @@ class Negociacion extends Equatable {
       idInteres: idInteres ?? this.idInteres,
       descripcionInteres: descripcionInteres ?? this.descripcionInteres,
       activo: activo ?? this.activo,
+      idMoneda: idMoneda ?? this.idMoneda,
       idNumero: idNumero ?? this.idNumero,
       prefijoPais: prefijoPais ?? this.prefijoPais,
       numero: numero ?? this.numero,

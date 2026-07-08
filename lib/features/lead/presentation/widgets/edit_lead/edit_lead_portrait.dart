@@ -138,10 +138,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         .where((e) => e.id == n.idInteres)
         .firstOrNull;
 
-    // Todo: cuando Negociacion traiga idMoneda desde el SP de detalle, matchear
-    // por `m.id == n.idMoneda` acá (igual que _canal/_interes más arriba).
-    _monedaItem =
-        state.monedas.where((m) => m.id == _monedaItem?.id).firstOrNull ??
+    _monedaItem = state.monedas.where((m) => m.id == n.idMoneda).firstOrNull ??
         state.monedas.firstOrNull;
 
     if (state.estados.isNotEmpty) {

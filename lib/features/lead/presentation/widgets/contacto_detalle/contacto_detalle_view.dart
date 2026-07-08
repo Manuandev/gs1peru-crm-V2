@@ -8,9 +8,9 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoDetalleView extends StatefulWidget {
-  final int idLead;
+  final int idNumero;
 
-  const ContactoDetalleView({super.key, required this.idLead});
+  const ContactoDetalleView({super.key, required this.idNumero});
 
   @override
   State<ContactoDetalleView> createState() => _ContactoDetalleViewState();
@@ -20,18 +20,25 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   @override
   void initState() {
     super.initState();
-    context.read<InfoLeadCubit>().load(widget.idLead);
-    context.read<NegociacionesCubit>().cargarNegociaciones(widget.idLead);
+    context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero);
   }
 
-  Future<void> _refrescar() => Future.wait([
-    context.read<InfoLeadCubit>().load(widget.idLead),
-    context.read<NegociacionesCubit>().cargarNegociaciones(widget.idLead),
-  ]);
+  Future<void> _refrescar() =>
+      context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero);
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<InfoLeadCubit, InfoLeadState>(
+    return BlocConsumer<InfoLeadCubit, InfoLeadState>(
+      // NegociacionesCubit.cargarNegociaciones necesita idNumero, que solo se
+      // conoce una vez que InfoLeadCubit resuelve el lead — por eso se
+      // dispara acá y no en initState (ahí solo se tiene idLead).
+      listener: (context, state) {
+        if (state is InfoLeadSuccess) {
+          context
+              .read<NegociacionesCubit>()
+              .cargarNegociaciones(state.negociacion.idNumero);
+        }
+      },
       builder: (context, state) {
         if (state is InfoLeadInitial || state is InfoLeadLoading) {
           return const ContactoDetalleSkeleton();
@@ -48,7 +55,8 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
             ],
             body: AppErrorView(
               message: state.message,
-              onRetry: () => context.read<InfoLeadCubit>().load(widget.idLead),
+              onRetry: () =>
+                  context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero),
             ),
           );
         }
@@ -158,13 +166,11 @@ class _ContactoScaffold extends StatelessWidget {
                           lead: lead,
                           negociaciones: negociaciones,
                         ),
-                        ContactoNegociacionesTab(
-                          negociaciones: negociaciones,
+                        NegociacionesTab(
+                          leadId: lead.idLead,
+                          idNumero: lead.idNumero,
                         ),
-                        // idNumero no disponible en Negociacion — pendiente
-                        // de conectar con la fuente de Numero de esta
-                        // pantalla.
-                        HistorialTab(idNumero: 0),
+                        HistorialTab(idNumero: lead.idNumero),
                       ],
                     );
                   },
@@ -222,9 +228,7 @@ class _ContactoHeaderTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    // Nombre de contacto — no disponible en Negociacion; pendiente de
-    // conectar con la fuente de Contacto de esta pantalla.
-    const nombreCompleto = '';
+    final nombreCompleto = lead.nombreCompleto;
 
     return Row(
       children: [

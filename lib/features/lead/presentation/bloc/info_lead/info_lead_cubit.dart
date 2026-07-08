@@ -18,6 +18,9 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   // Opcional: solo se inyecta cuando se carga un lead por idLead (contexto de edición).
   // En el contexto de chat se deja null; load(idNumero) usa el SP de WhatsApp.
   final GetLeadDetalleUseCase? _getLeadDetalle;
+  // Opcional: solo se inyecta en Seguimiento ("Ver detalle" del contacto,
+  // ContactoDetallePage) — task 'DN', ancla en idNumero en vez de idLead.
+  final GetLeadDetallePorNumeroUseCase? _getLeadDetallePorNumero;
 
   final _successController = StreamController<String>.broadcast();
   Stream<String> get successes => _successController.stream;
@@ -33,6 +36,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     this._updateEstado,
     this._updateInfo, [
     this._getLeadDetalle,
+    this._getLeadDetallePorNumero,
   ]) : super(const InfoLeadInitial()) {
     _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
       final s = state;
@@ -185,6 +189,26 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     emit(const InfoLeadLoading());
     try {
       final detalle = await _getLeadDetalle!(idLead);
+      if (isClosed) return;
+      emit(InfoLeadSuccess(detalle));
+    } on AppException catch (e) {
+      if (isClosed) return;
+      emit(InfoLeadFailure(e.message));
+    } catch (e, stackTrace) {
+      addError(e, stackTrace);
+      if (isClosed) return;
+      emit(const InfoLeadFailure('Ocurrió un error inesperado.'));
+    }
+  }
+
+  /// Carga el lead más reciente de un número — task 'DN'.
+  /// Usa Seguimiento (ContactoDetallePage), que navega por idNumero en vez
+  /// de idLead. Distinto de cargarPorIdLead(idLead), que trae un lead puntual.
+  Future<void> cargarPorIdNumero(int idNumero) async {
+    if (isClosed) return;
+    emit(const InfoLeadLoading());
+    try {
+      final detalle = await _getLeadDetallePorNumero!(idNumero);
       if (isClosed) return;
       emit(InfoLeadSuccess(detalle));
     } on AppException catch (e) {

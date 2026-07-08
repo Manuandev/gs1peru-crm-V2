@@ -6,9 +6,9 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoDetallePage extends StatelessWidget {
-  final int idLead;
+  final int idNumero;
 
-  const ContactoDetallePage({super.key, required this.idLead});
+  const ContactoDetallePage({super.key, required this.idNumero});
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +19,8 @@ class ContactoDetallePage extends StatelessWidget {
             GetInfoUseCase(context.read<ChatRepository>()),
             UpdateLeadEstadoUseCase(context.read<ChatRepository>()),
             UpdateLeadInfoUseCase(context.read<LeadRepository>()),
+            null,
+            GetLeadDetallePorNumeroUseCase(context.read<LeadRepository>()),
           ),
         ),
         BlocProvider(
@@ -34,7 +36,7 @@ class ContactoDetallePage extends StatelessWidget {
           ),
         ),
       ],
-      child: ContactoDetalleView(idLead: idLead),
+      child: ContactoDetalleView(idNumero: idNumero),
     );
   }
 }

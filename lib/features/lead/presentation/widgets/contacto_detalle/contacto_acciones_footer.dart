@@ -11,9 +11,7 @@ class ContactoAccionesFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Teléfono del contacto — pendiente de conectar con la fuente de
-    // Contacto/Numero de esta pantalla (Negociacion no lo trae).
-    const telefono = '';
+    final telefono = lead.telefonoCompleto;
 
     return Container(
       decoration: BoxDecoration(

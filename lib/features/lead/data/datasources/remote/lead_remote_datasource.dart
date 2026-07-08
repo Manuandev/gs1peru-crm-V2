@@ -79,6 +79,25 @@ class LeadRemoteDatasource {
     };
   }
 
+  // Task 'DN' — mismo shape de columnas que 'DT', pero ancla en NÚMERO (el
+  // lead más reciente de ese número). Usada por Seguimiento ("Ver detalle"),
+  // que ahora navega por idNumero, no por idLead — 'DT' se queda reservado
+  // para Conversaciones y para ver un lead histórico puntual.
+  Future<NegociacionModel> getLeadDetallePorNumero(int idNumero) async {
+    final String body = '$idNumero${sep}DN';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) =>
+        NegociacionModel.parseDetalle(data) ??
+            (throw const AppException('No se encontró el lead.')),
+      ApiEmpty() => throw const AppException('No se encontró el lead.'),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   Future<List<NegociacionModel>> obtenerNegociaciones(int idNumero) async {
     final String body = '$idNumero${sep}LN';
 

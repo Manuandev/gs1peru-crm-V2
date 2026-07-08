@@ -69,6 +69,17 @@ class Negociacion extends Equatable {
             : descripcionEstado)
       : descripcionEstado;
 
+  /// Nombre completo del contacto — vacío si no hay nombres/apellidos
+  /// registrados (solo lo trae 'DT', no 'LN').
+  String get nombreCompleto => [
+    nombres,
+    apellidoPaterno,
+    apellidoMaterno,
+  ].where((p) => p.trim().isNotEmpty).join(' ');
+
+  /// Teléfono con prefijo — vacío si no hay número registrado.
+  String get telefonoCompleto => '$prefijoPais $numero'.trim();
+
   const Negociacion({
     required this.idLead,
     required this.nombre,

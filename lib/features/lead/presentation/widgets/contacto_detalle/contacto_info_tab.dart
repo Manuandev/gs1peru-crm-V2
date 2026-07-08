@@ -32,30 +32,32 @@ class ContactoInfoTab extends StatelessWidget {
           _InfoCard(
             filas: [
               _FilaCampos(
-                // Nombre/teléfono de contacto — pendiente de conectar con
-                // la fuente de Contacto de esta pantalla.
-                izquierda: const _CampoInfo(
+                izquierda: _CampoInfo(
                   icono: AppIcons.user,
                   etiqueta: 'Nombres y apellidos',
-                  valor: '—',
+                  valor: lead.nombreCompleto.isEmpty
+                      ? '—'
+                      : lead.nombreCompleto,
                 ),
-                derecha: const _CampoInfo(
+                derecha: _CampoInfo(
                   icono: AppIcons.phone,
                   etiqueta: 'Celular',
-                  valor: '—',
+                  valor: lead.telefonoCompleto.isEmpty
+                      ? '—'
+                      : lead.telefonoCompleto,
                   iconColor: AppColors.success,
                 ),
               ),
               _FilaCampos(
-                izquierda: const _CampoInfo(
+                izquierda: _CampoInfo(
                   icono: AppIcons.email,
                   etiqueta: 'Correo',
-                  valor: '—',
+                  valor: lead.correo.isEmpty ? '—' : lead.correo,
                 ),
-                derecha: const _CampoInfo(
+                derecha: _CampoInfo(
                   icono: AppIcons.business,
                   etiqueta: 'Empresa',
-                  valor: '—',
+                  valor: lead.nombreEmpresa.isEmpty ? '—' : lead.nombreEmpresa,
                 ),
               ),
               _FilaCampos(

@@ -32,7 +32,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   List<EstadoItem> _subEstadosFiltrados = [];
   CanalItem? _canal;
   InteresItem? _interes;
-  MonedaItem _monedaItem = AppCurrencies.pen;
+  MonedaItem? _monedaItem;
 
   // ── Campos editables ──────────────────────────────────────────────────────
   late final TextEditingController _cantidadCtrl;
@@ -137,6 +137,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _interes = state.intereses
         .where((e) => e.id == n.idInteres)
         .firstOrNull;
+
+    // Todo: cuando Negociacion traiga idMoneda desde el SP de detalle, matchear
+    // por `m.id == n.idMoneda` acá (igual que _canal/_interes más arriba).
+    _monedaItem =
+        state.monedas.where((m) => m.id == _monedaItem?.id).firstOrNull ??
+        state.monedas.firstOrNull;
 
     if (state.estados.isNotEmpty) {
       final tienePadre = n.idEstadoPadre.isNotEmpty;
@@ -344,10 +350,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                   cantidadCtrl: _cantidadCtrl,
                   precioBaseCtrl: _precioBaseCtrl,
                   descuentoCtrl: _descuentoCtrl,
+                  monedas: catalogState.monedas,
                   monedaItem: _monedaItem,
                   isLoading: _isLoading,
-                  onMonedaChanged: (item) =>
-                      setState(() => _monedaItem = item ?? AppCurrencies.pen),
+                  onMonedaChanged: (item) => setState(() => _monedaItem = item),
                   subtotal: _subtotal,
                   descuento: _descuento,
                   costoFinal: _costoFinal,

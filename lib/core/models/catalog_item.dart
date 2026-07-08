@@ -13,6 +13,8 @@ class ListasGenericas {
   final List<AsesorItem> asesores;
   // Parte [6] del SP lstListas — DBO.[edu.TIP_ESTADO_GES], estados de cobranza (planos, sin padre)
   final List<EstadoGestionItem> estadosGestion;
+  // Parte [7] del SP lstListas — SYSTABEXTER02 CODTABLA='MON', tipos de moneda
+  final List<MonedaItem> monedas;
 
   const ListasGenericas({
     required this.campanias,
@@ -22,6 +24,7 @@ class ListasGenericas {
     this.estados = const [],
     this.asesores = const [],
     this.estadosGestion = const [],
+    this.monedas = const [],
   });
 }
 
@@ -34,17 +37,19 @@ class ListasGenericasModel extends ListasGenericas {
     super.estados,
     super.asesores,
     super.estadosGestion,
+    super.monedas,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
     final partes = rawResponse.split(AppConstants.sepListas);
-    final campaniasRaw    = partes.isNotEmpty    ? partes[0] : '';
-    final oportunidadesRaw = partes.length > 1   ? partes[1] : '';
-    final canalesRaw      = partes.length > 2    ? partes[2] : '';
-    final interesesRaw    = partes.length > 3    ? partes[3] : '';
-    final estadosRaw      = partes.length > 4    ? partes[4] : '';
-    final asesoresRaw     = partes.length > 5    ? partes[5] : '';
-    final estadosGestionRaw = partes.length > 6  ? partes[6] : '';
+    final campaniasRaw = partes.isNotEmpty ? partes[0] : '';
+    final oportunidadesRaw = partes.length > 1 ? partes[1] : '';
+    final canalesRaw = partes.length > 2 ? partes[2] : '';
+    final interesesRaw = partes.length > 3 ? partes[3] : '';
+    final estadosRaw = partes.length > 4 ? partes[4] : '';
+    final asesoresRaw = partes.length > 5 ? partes[5] : '';
+    final estadosGestionRaw = partes.length > 6 ? partes[6] : '';
+    final monedasRaw = partes.length > 7 ? partes[7] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -74,6 +79,10 @@ class ListasGenericasModel extends ListasGenericas {
         ? <EstadoGestionItemModel>[]
         : EstadoGestionItemModel.parseList(estadosGestionRaw);
 
+    final monedas = monedasRaw.trim().isEmpty
+        ? <MonedaItemModel>[]
+        : MonedaItemModel.parseList(monedasRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -82,6 +91,7 @@ class ListasGenericasModel extends ListasGenericas {
       estados: estados,
       asesores: asesores,
       estadosGestion: estadosGestion,
+      monedas: monedas,
     );
   }
 }
@@ -100,7 +110,10 @@ class CampaniaItemModel extends CampaniaItem {
 
   factory CampaniaItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
-    return CampaniaItemModel(id: ParseUtils.toInt(c, 0), nombre: ParseUtils.str(c, 1));
+    return CampaniaItemModel(
+      id: ParseUtils.toInt(c, 0),
+      nombre: ParseUtils.str(c, 1),
+    );
   }
 
   static List<CampaniaItemModel> parseList(String rawResponse) {
@@ -137,9 +150,9 @@ class OportunidadItemModel extends OportunidadItem {
   factory OportunidadItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return OportunidadItemModel(
-      idEvento:   ParseUtils.toInt(c, 0),
+      idEvento: ParseUtils.toInt(c, 0),
       idCampania: ParseUtils.toInt(c, 1),
-      nombre:     ParseUtils.str(c, 2),
+      nombre: ParseUtils.str(c, 2),
     );
   }
 
@@ -163,13 +176,17 @@ class CanalItem with Comboable {
 }
 
 class CanalItemModel extends CanalItem {
-  const CanalItemModel({required super.id, required super.nombre, super.iconoApp});
+  const CanalItemModel({
+    required super.id,
+    required super.nombre,
+    super.iconoApp,
+  });
 
   factory CanalItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return CanalItemModel(
-      id:       ParseUtils.toInt(c, 0),
-      nombre:   ParseUtils.str(c, 1),
+      id: ParseUtils.toInt(c, 0),
+      nombre: ParseUtils.str(c, 1),
       iconoApp: ParseUtils.strNullable(c, 2),
     );
   }
@@ -197,7 +214,10 @@ class InteresItemModel extends InteresItem {
 
   factory InteresItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
-    return InteresItemModel(id: ParseUtils.toInt(c, 0), nombre: ParseUtils.str(c, 1));
+    return InteresItemModel(
+      id: ParseUtils.toInt(c, 0),
+      nombre: ParseUtils.str(c, 1),
+    );
   }
 
   static List<InteresItemModel> parseList(String rawResponse) {
@@ -211,8 +231,9 @@ class InteresItemModel extends InteresItem {
 
 // SP lstListas parte [4]: idEstado ¦ descripcion ¦ idEstadoPadre (vacío si es padre)
 class EstadoItem with Comboable {
-  final String  id;
-  final String  nombre;
+  final String id;
+  final String nombre;
+
   /// null → estado principal; non-null → es subestado de [idPadre].
   final String? idPadre;
 
@@ -235,8 +256,8 @@ class EstadoItemModel extends EstadoItem {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     final padre = ParseUtils.str(c, 1);
     return EstadoItemModel(
-      id:      ParseUtils.str(c, 0),
-      nombre:  ParseUtils.str(c, 2),
+      id: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 2),
       idPadre: padre.isEmpty ? null : padre,
     );
   }
@@ -276,8 +297,8 @@ class AsesorItemModel extends AsesorItem {
   factory AsesorItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return AsesorItemModel(
-      codUser:    ParseUtils.str(c, 0),
-      nombre:     ParseUtils.str(c, 1),
+      codUser: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
       disponible: ParseUtils.toBool(c, 2),
     );
   }
@@ -308,7 +329,7 @@ class EstadoGestionItemModel extends EstadoGestionItem {
   factory EstadoGestionItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return EstadoGestionItemModel(
-      id:     ParseUtils.str(c, 0),
+      id: ParseUtils.str(c, 0),
       nombre: ParseUtils.str(c, 1),
     );
   }
@@ -318,6 +339,57 @@ class EstadoGestionItemModel extends EstadoGestionItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => EstadoGestionItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class MonedaItem with Comboable {
+  // codargu del SP (SYSTABEXTER02) — id interno usado para autoseleccionar
+  // el combo cuando el SP de detalle de lead mande su propio idMoneda.
+  final String id;
+  // valor4 del SP — código ISO ('PEN'/'USD'), usado por NumberFormatUtils.
+  final String codigo;
+  final String nombre;
+  final String simbolo;
+
+  const MonedaItem({
+    required this.id,
+    required this.codigo,
+    required this.nombre,
+    required this.simbolo,
+  });
+
+  @override
+  List<dynamic> get fields => [id, '$codigo — $nombre'];
+}
+
+// SP lstListas parte [7]: codargu ¦ deslarga ¦ descorta ¦ valor4 — SYSTABEXTER02
+// CODTABLA='MON'. id usa codargu (string) — el SP de detalle de lead mandará
+// su propio idMoneda con este mismo valor para autoseleccionar el combo.
+// codigo usa valor4 (ISO, ej. 'PEN'/'USD') para NumberFormatUtils/AppCurrencies.
+class MonedaItemModel extends MonedaItem {
+  const MonedaItemModel({
+    required super.id,
+    required super.codigo,
+    required super.nombre,
+    required super.simbolo,
+  });
+
+  factory MonedaItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return MonedaItemModel(
+      id: ParseUtils.str(c, 0),
+      codigo: ParseUtils.str(c, 3),
+      nombre: ParseUtils.str(c, 1),
+      simbolo: ParseUtils.str(c, 2),
+    );
+  }
+
+  static List<MonedaItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => MonedaItemModel.fromRawString(r))
         .toList();
   }
 }

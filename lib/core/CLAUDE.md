@@ -847,7 +847,7 @@ item.fieldCount   // total de campos
 
 | Clase | Campos |
 |---|---|
-| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion |
+| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion, monedas |
 | `CampaniaItem` | id(int), nombre |
 | `OportunidadItem` | idEvento(int), idCampania(int), nombre |
 | `CanalItem` | id(int), nombre |
@@ -855,6 +855,7 @@ item.fieldCount   // total de campos
 | `EstadoItem` | id(String), nombre, idPadre(String?) — parte [4] del SP, estados de `lead/` (jerárquico) |
 | `AsesorItem` | codUser(String), nombre(String), disponible(bool) — parte [5] del SP; universo = todo `CODUSER` que alguna vez fue `ASESOR_PRINCIPAL` en `T_CONTACTO` (no depende de tener leads activos hoy) |
 | `EstadoGestionItem` | id(String), nombre — parte [6] del SP, `DBO.[edu.TIP_ESTADO_GES]`. Estados de `cobranza/` (plano, sin padre — no confundir con `EstadoItem` de leads) |
+| `MonedaItem` | id(String), codigo(String), nombre(String), simbolo(String) — parte [7] del SP, `SYSTABEXTER02 CODTABLA='MON'` (codargu ¦ deslarga ¦ descorta ¦ valor4). `id` = `codargu` (usado por `Comboable.fields[0]` y para autoseleccionar cuando el detalle de lead mande `idMoneda`); `codigo` = `valor4` (ISO: 'PEN'/'USD', para `NumberFormatUtils`) |
 
 Todas implementan `Comboable`. Parsear con `ListasGenericasModel.parse(rawResponse)`.
 `AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) y en `CobranzaAsesorPickerModal` —
@@ -862,6 +863,9 @@ el conteo por asesor NO viene del backend, se calcula en el cliente sobre los re
 `EstadoGestionItem` es solo de referencia/etiqueta — `cobranza/` traduce el `ID_ESTADO_GES` crudo a
 sus 4 códigos internos (`PD`/`F`/`PP`/`CA`) con una tabla fija en `CobranzaModel`, no consultando este
 catálogo en tiempo de ejecución (ver `cobranza/CLAUDE.md`).
+`MonedaItem` alimenta el combo "Moneda" de `EditLeadFinancieraSection` (`lead/`) vía `CatalogsBloc.monedas` —
+sin lista fija de respaldo; si el SP aún no devuelve la parte [7], el combo llega vacío y
+`_monedaItem` queda `null` (ver `edit_lead_portrait.dart._inicializarCombos`).
 
 ---
 

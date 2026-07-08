@@ -9,7 +9,8 @@ class EditLeadFinancieraSection extends StatelessWidget {
   final TextEditingController cantidadCtrl;
   final TextEditingController precioBaseCtrl;
   final TextEditingController descuentoCtrl;
-  final MonedaItem monedaItem;
+  final List<MonedaItem> monedas;
+  final MonedaItem? monedaItem;
   final bool isLoading;
   final ValueChanged<MonedaItem?> onMonedaChanged;
   final double subtotal;
@@ -21,6 +22,7 @@ class EditLeadFinancieraSection extends StatelessWidget {
     required this.cantidadCtrl,
     required this.precioBaseCtrl,
     required this.descuentoCtrl,
+    required this.monedas,
     required this.monedaItem,
     required this.isLoading,
     required this.onMonedaChanged,
@@ -29,7 +31,7 @@ class EditLeadFinancieraSection extends StatelessWidget {
     required this.costoFinal,
   });
 
-  String get _simbolo => monedaItem.simbolo;
+  String get _simbolo => monedaItem?.simbolo ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -43,9 +45,9 @@ class EditLeadFinancieraSection extends StatelessWidget {
 
         FormFieldRow(
           izquierdo: CustomComboField<MonedaItem>(
-            data: AppCurrencies.all,
+            data: monedas,
             label: 'Moneda',
-            initialValue: monedaItem.codigo,
+            initialValue: monedaItem?.id,
             onChanged: onMonedaChanged,
             enabled: !isLoading,
             dense: true,

@@ -11,6 +11,8 @@ class ListasGenericas {
   final List<EstadoItem> estados;
   // Parte [5] del SP lstListas. Vacío hasta que el SP devuelva la sección.
   final List<AsesorItem> asesores;
+  // Parte [6] del SP lstListas — DBO.[edu.TIP_ESTADO_GES], estados de cobranza (planos, sin padre)
+  final List<EstadoGestionItem> estadosGestion;
 
   const ListasGenericas({
     required this.campanias,
@@ -19,6 +21,7 @@ class ListasGenericas {
     required this.intereses,
     this.estados = const [],
     this.asesores = const [],
+    this.estadosGestion = const [],
   });
 }
 
@@ -30,6 +33,7 @@ class ListasGenericasModel extends ListasGenericas {
     required super.intereses,
     super.estados,
     super.asesores,
+    super.estadosGestion,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -40,6 +44,7 @@ class ListasGenericasModel extends ListasGenericas {
     final interesesRaw    = partes.length > 3    ? partes[3] : '';
     final estadosRaw      = partes.length > 4    ? partes[4] : '';
     final asesoresRaw     = partes.length > 5    ? partes[5] : '';
+    final estadosGestionRaw = partes.length > 6  ? partes[6] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -65,6 +70,10 @@ class ListasGenericasModel extends ListasGenericas {
         ? <AsesorItemModel>[]
         : AsesorItemModel.parseList(asesoresRaw);
 
+    final estadosGestion = estadosGestionRaw.trim().isEmpty
+        ? <EstadoGestionItemModel>[]
+        : EstadoGestionItemModel.parseList(estadosGestionRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -72,6 +81,7 @@ class ListasGenericasModel extends ListasGenericas {
       intereses: intereses,
       estados: estados,
       asesores: asesores,
+      estadosGestion: estadosGestion,
     );
   }
 }
@@ -277,6 +287,37 @@ class AsesorItemModel extends AsesorItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => AsesorItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+// SP lstListas parte [6]: idEstadoGes ¦ descripcion — estados de cobranza, sin padre
+class EstadoGestionItem with Comboable {
+  final String id;
+  final String nombre;
+
+  const EstadoGestionItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+class EstadoGestionItemModel extends EstadoGestionItem {
+  const EstadoGestionItemModel({required super.id, required super.nombre});
+
+  factory EstadoGestionItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return EstadoGestionItemModel(
+      id:     ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+    );
+  }
+
+  static List<EstadoGestionItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => EstadoGestionItemModel.fromRawString(r))
         .toList();
   }
 }

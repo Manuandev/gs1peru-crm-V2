@@ -49,24 +49,27 @@ class CobranzaSummaryCards extends StatelessWidget {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: Row(
-        children: _tarjetas.map((t) {
-          final isActiva = estadosSeleccionados.isEmpty ||
-              estadosSeleccionados.contains(t.idEstado);
-          final count = conteosPorEstado[t.idEstado] ?? 0;
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _tarjetas.map((t) {
+            final isActiva = estadosSeleccionados.isEmpty ||
+                estadosSeleccionados.contains(t.idEstado);
+            final count = conteosPorEstado[t.idEstado] ?? 0;
 
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.xs),
-              child: _SummaryCard(
-                def: t,
-                count: count,
-                isActiva: isActiva,
-                onTap: () => onEstadoTap(t.idEstado),
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.xs),
+                child: _SummaryCard(
+                  def: t,
+                  count: count,
+                  isActiva: isActiva,
+                  onTap: () => onEstadoTap(t.idEstado),
+                ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -115,7 +118,7 @@ class _SummaryCard extends StatelessWidget {
           ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               def.icon,

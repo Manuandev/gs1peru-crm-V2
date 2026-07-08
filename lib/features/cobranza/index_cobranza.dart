@@ -43,6 +43,7 @@ export 'presentation/pages/cobranza_detalle_page.dart';
 export 'presentation/pages/cobranza_factura_page.dart';
 export 'presentation/pages/cobranza_plan_page.dart';
 
+export 'presentation/widgets/lista/cobranza_asesor_picker_modal.dart';
 export 'presentation/widgets/lista/cobranza_card.dart';
 export 'presentation/widgets/lista/cobranza_filter_chips.dart';
 export 'presentation/widgets/lista/cobranza_list_portrait.dart';

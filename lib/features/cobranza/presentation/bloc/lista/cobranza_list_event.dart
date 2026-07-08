@@ -18,13 +18,22 @@ class CobranzaListRefresh extends CobranzaListEvent {
   const CobranzaListRefresh();
 }
 
-// Cambia el chip activo (Todos / Mis casos / Contado / Crédito)
+// Cambia el chip activo (Todos / Asesores / Contado / Crédito)
 class CobranzaChipChanged extends CobranzaListEvent {
   final CobranzaChipFiltro filtro;
   const CobranzaChipChanged(this.filtro);
 
   @override
   List<Object?> get props => [filtro];
+}
+
+// Asesor elegido en CobranzaAsesorPickerModal (chip "Asesores")
+class CobranzaAsesorSeleccionado extends CobranzaListEvent {
+  final String codAsesor;
+  const CobranzaAsesorSeleccionado(this.codAsesor);
+
+  @override
+  List<Object?> get props => [codAsesor];
 }
 
 // Activa o desactiva una tarjeta de estado (multi-selección)

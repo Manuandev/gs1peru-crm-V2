@@ -57,6 +57,8 @@ class CobranzaListView extends StatelessWidget {
                       cobranzas: state.cobranzas,
                       chipFiltro: state.chipFiltro,
                       estadosSeleccionados: state.estadosSeleccionados,
+                      asesorSeleccionado: state.asesorSeleccionado,
+                      conteosPorAsesor: state.conteosPorAsesor,
                     ),
                   ),
                 ],

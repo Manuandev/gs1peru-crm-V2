@@ -10,13 +10,38 @@ class CobranzaListPortrait extends StatelessWidget {
   final List<Cobranza> cobranzas;
   final CobranzaChipFiltro chipFiltro;
   final Set<String> estadosSeleccionados;
+  final String? asesorSeleccionado;
+  final Map<String, int> conteosPorAsesor;
 
   const CobranzaListPortrait({
     super.key,
     required this.cobranzas,
     required this.chipFiltro,
     required this.estadosSeleccionados,
+    this.asesorSeleccionado,
+    this.conteosPorAsesor = const {},
   });
+
+  Future<void> _onFiltroTap(BuildContext context, CobranzaChipFiltro filtro) async {
+    final bloc = context.read<CobranzaListBloc>();
+
+    if (filtro != CobranzaChipFiltro.asesores) {
+      bloc.add(CobranzaChipChanged(filtro));
+      return;
+    }
+
+    final codAsesor = await CobranzaAsesorPickerModal.show(
+      context,
+      conteosPorAsesor: conteosPorAsesor,
+      seleccionadoActual: asesorSeleccionado,
+    );
+
+    if (codAsesor == null) {
+      bloc.add(const CobranzaChipChanged(CobranzaChipFiltro.todos));
+    } else {
+      bloc.add(CobranzaAsesorSeleccionado(codAsesor));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +54,7 @@ class CobranzaListPortrait extends StatelessWidget {
             if (state is! CobranzaListSuccess) return const SizedBox.shrink();
             return CobranzaFilterChips(
               filtroActual: state.chipFiltro,
-              onFiltroTap: (filtro) => context.read<CobranzaListBloc>().add(
-                CobranzaChipChanged(filtro),
-              ),
+              onFiltroTap: (filtro) => _onFiltroTap(context, filtro),
             );
           },
         ),
@@ -66,8 +89,8 @@ class CobranzaListPortrait extends StatelessWidget {
   }
 
   String _mensajeVacio() {
-    if (chipFiltro == CobranzaChipFiltro.misCasos) {
-      return 'No tienes cobranzas asignadas.';
+    if (chipFiltro == CobranzaChipFiltro.asesores) {
+      return 'Este asesor no tiene cobranzas asignadas.';
     }
     if (chipFiltro == CobranzaChipFiltro.contado) {
       return 'No hay cobranzas al contado.';

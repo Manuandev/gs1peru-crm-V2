@@ -28,15 +28,25 @@ class CobranzaListSuccess extends CobranzaListState {
   // Conteos por estado calculados sobre la lista filtrada por chip (sin filtro de estado)
   final Map<String, int> conteosPorEstado;
 
+  // Asesor elegido en CobranzaAsesorPickerModal (chip "Asesores")
+  final String? asesorSeleccionado;
+
+  // Conteo de cobranzas por asesor (codUser), calculado sobre _allCobranzas
+  // — alimenta CobranzaAsesorPickerModal, no viene del backend
+  final Map<String, int> conteosPorAsesor;
+
   const CobranzaListSuccess({
     required this.cobranzas,
     required this.chipFiltro,
     required this.estadosSeleccionados,
     required this.conteosPorEstado,
+    this.asesorSeleccionado,
+    this.conteosPorAsesor = const {},
   });
 
   @override
-  List<Object?> get props => [cobranzas, chipFiltro, estadosSeleccionados];
+  List<Object?> get props =>
+      [cobranzas, chipFiltro, estadosSeleccionados, asesorSeleccionado];
 }
 
 class CobranzaListError extends CobranzaListState {

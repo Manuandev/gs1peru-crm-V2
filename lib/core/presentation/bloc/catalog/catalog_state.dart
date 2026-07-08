@@ -29,10 +29,11 @@ class CatalogsLoaded extends CatalogsState {
   List<InteresItem>     get intereses    => listas.intereses;
   List<EstadoItem>      get estados      => listas.estados;
   List<AsesorItem>      get asesores     => listas.asesores;
+  List<EstadoGestionItem> get estadosGestion => listas.estadosGestion;
 
   @override
   List<Object?> get props =>
-      [campanias, oportunidades, canales, intereses, estados, asesores];
+      [campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion];
 }
 
 class CatalogsError extends CatalogsState {

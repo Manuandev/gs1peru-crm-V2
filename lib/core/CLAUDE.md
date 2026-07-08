@@ -847,17 +847,21 @@ item.fieldCount   // total de campos
 
 | Clase | Campos |
 |---|---|
-| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores |
+| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion |
 | `CampaniaItem` | id(int), nombre |
 | `OportunidadItem` | idEvento(int), idCampania(int), nombre |
 | `CanalItem` | id(int), nombre |
 | `InteresItem` | id(int), nombre |
-| `EstadoItem` | id(String), nombre, idPadre(String?) — parte [4] del SP |
+| `EstadoItem` | id(String), nombre, idPadre(String?) — parte [4] del SP, estados de `lead/` (jerárquico) |
 | `AsesorItem` | codUser(String), nombre(String), disponible(bool) — parte [5] del SP; universo = todo `CODUSER` que alguna vez fue `ASESOR_PRINCIPAL` en `T_CONTACTO` (no depende de tener leads activos hoy) |
+| `EstadoGestionItem` | id(String), nombre — parte [6] del SP, `DBO.[edu.TIP_ESTADO_GES]`. Estados de `cobranza/` (plano, sin padre — no confundir con `EstadoItem` de leads) |
 
 Todas implementan `Comboable`. Parsear con `ListasGenericasModel.parse(rawResponse)`.
-`AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) — el conteo de
-leads por asesor NO viene del backend, se calcula en el cliente sobre los leads ya cargados.
+`AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) y en `CobranzaAsesorPickerModal` —
+el conteo por asesor NO viene del backend, se calcula en el cliente sobre los registros ya cargados.
+`EstadoGestionItem` es solo de referencia/etiqueta — `cobranza/` traduce el `ID_ESTADO_GES` crudo a
+sus 4 códigos internos (`PD`/`F`/`PP`/`CA`) con una tabla fija en `CobranzaModel`, no consultando este
+catálogo en tiempo de ejecución (ver `cobranza/CLAUDE.md`).
 
 ---
 

@@ -14,9 +14,9 @@ class CobranzaFilterChips extends StatelessWidget {
     required this.onFiltroTap,
   });
 
-  static const _chips = [
+  static const _chipsBase = [
     (filtro: CobranzaChipFiltro.todos, label: 'Todos'),
-    (filtro: CobranzaChipFiltro.misCasos, label: 'Mis casos'),
+    (filtro: CobranzaChipFiltro.asesores, label: 'Asesores'),
     (filtro: CobranzaChipFiltro.contado, label: 'Contado'),
     (filtro: CobranzaChipFiltro.credito, label: 'Crédito'),
   ];
@@ -24,6 +24,10 @@ class CobranzaFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isModerador = SessionService().isModerador;
+    final chips = isModerador
+        ? _chipsBase
+        : _chipsBase.where((c) => c.filtro != CobranzaChipFiltro.asesores);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -31,7 +35,7 @@ class CobranzaFilterChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
-          children: _chips.map((chip) {
+          children: chips.map((chip) {
             final isSelected = filtroActual == chip.filtro;
 
             return Padding(

@@ -1,15 +1,14 @@
 // lib/features/cobranza/presentation/bloc/lista/cobranza_list_bloc.dart
 
 import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   final GetCobranzasUseCase _getCobranzasUseCase;
-  final _session = SessionService();
 
   List<Cobranza> _allCobranzas = [];
   CobranzaChipFiltro _chipFiltro = CobranzaChipFiltro.todos;
+  String? _asesorSeleccionado;
 
   // Set vacío = todos los estados activos (ninguna tarjeta filtrada)
   Set<String> _estadosSeleccionados = {};
@@ -17,13 +16,11 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   static const _todosLosEstados = {'F', 'PD', 'PP', 'CA'};
 
   CobranzaListBloc(this._getCobranzasUseCase) : super(const CobranzaListInitial()) {
-    _chipFiltro = _session.isModerador
-        ? CobranzaChipFiltro.todos
-        : CobranzaChipFiltro.misCasos;
     on<CobranzaListStarted>(_onStarted);
     on<CobranzaListRefresh>(_onRefresh);
     on<CobranzaChipChanged>(_onChipChanged);
     on<CobranzaEstadoToggled>(_onEstadoToggled);
+    on<CobranzaAsesorSeleccionado>(_onAsesorSeleccionado);
   }
 
   Future<void> _onStarted(
@@ -54,6 +51,16 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
 
   void _onChipChanged(CobranzaChipChanged event, Emitter<CobranzaListState> emit) {
     _chipFiltro = event.filtro;
+    if (_chipFiltro != CobranzaChipFiltro.asesores) _asesorSeleccionado = null;
+    _emitFiltered(emit);
+  }
+
+  void _onAsesorSeleccionado(
+    CobranzaAsesorSeleccionado event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    _asesorSeleccionado = event.codAsesor;
+    _chipFiltro = CobranzaChipFiltro.asesores;
     _emitFiltered(emit);
   }
 
@@ -81,8 +88,8 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   void _emitFiltered(Emitter<CobranzaListState> emit) {
     // 1. Aplicar filtro de chip
     var porChip = List<Cobranza>.from(_allCobranzas);
-    if (_chipFiltro == CobranzaChipFiltro.misCasos) {
-      porChip = porChip.where((c) => c.asignadoA == _session.codUser).toList();
+    if (_chipFiltro == CobranzaChipFiltro.asesores) {
+      porChip = porChip.where((c) => c.asignadoA == _asesorSeleccionado).toList();
     } else if (_chipFiltro == CobranzaChipFiltro.contado) {
       porChip = porChip.where((c) => c.idCondicion == 'C').toList();
     } else if (_chipFiltro == CobranzaChipFiltro.credito) {
@@ -109,7 +116,20 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
         chipFiltro: _chipFiltro,
         estadosSeleccionados: Set.from(_estadosSeleccionados),
         conteosPorEstado: conteos,
+        asesorSeleccionado: _asesorSeleccionado,
+        conteosPorAsesor: _buildConteosPorAsesor(),
       ),
     );
+  }
+
+  // Conteo de cobranzas por asesor (codUser) sobre el total cargado —
+  // alimenta CobranzaAsesorPickerModal, no viene del backend
+  Map<String, int> _buildConteosPorAsesor() {
+    final conteos = <String, int>{};
+    for (final c in _allCobranzas) {
+      if (c.asignadoA.isEmpty) continue;
+      conteos[c.asignadoA] = (conteos[c.asignadoA] ?? 0) + 1;
+    }
+    return conteos;
   }
 }

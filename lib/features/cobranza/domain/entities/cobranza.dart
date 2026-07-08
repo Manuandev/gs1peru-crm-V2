@@ -4,7 +4,13 @@ class Cobranza {
   final String numSol;
   final String nombre;
   final String apellido;
+  final String apellidoMaterno;
+  final String nombreEmpresa;
+  final String cargo;
+  final String correo;
+  final String tipoPersona;
   final String evento;
+  final int idEvento;
   final double montoTotal;
   final String ejecutivo;
   final String asignadoA;
@@ -23,7 +29,13 @@ class Cobranza {
     required this.numSol,
     required this.nombre,
     required this.apellido,
+    this.apellidoMaterno = '',
+    this.nombreEmpresa = '',
+    this.cargo = '',
+    this.correo = '',
+    this.tipoPersona = '',
     required this.evento,
+    this.idEvento = 0,
     required this.montoTotal,
     required this.ejecutivo,
     required this.asignadoA,
@@ -40,7 +52,13 @@ class Cobranza {
   Cobranza copyWith({
     String? nombre,
     String? apellido,
+    String? apellidoMaterno,
+    String? nombreEmpresa,
+    String? cargo,
+    String? correo,
+    String? tipoPersona,
     String? evento,
+    int? idEvento,
     double? montoTotal,
     String? ejecutivo,
     String? asignadoA,
@@ -57,7 +75,13 @@ class Cobranza {
       numSol: numSol,
       nombre: nombre ?? this.nombre,
       apellido: apellido ?? this.apellido,
+      apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
+      nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
+      cargo: cargo ?? this.cargo,
+      correo: correo ?? this.correo,
+      tipoPersona: tipoPersona ?? this.tipoPersona,
       evento: evento ?? this.evento,
+      idEvento: idEvento ?? this.idEvento,
       montoTotal: montoTotal ?? this.montoTotal,
       ejecutivo: ejecutivo ?? this.ejecutivo,
       asignadoA: asignadoA ?? this.asignadoA,

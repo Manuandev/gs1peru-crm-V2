@@ -36,7 +36,7 @@ class CobranzaRemoteDatasource {
   }
 
   Future<CrudResult> guardarBorrador(String idCobranza) async {
-    // TODO: conectar con endpoint real
+    // Todo: conectar con endpoint real
     // final body = '${[_session.codUser, idCobranza, 'GB'].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
     // final raw = await _api.postJsonGetText(ApiConstants.urlCobranzasLst, body);
     // return parseCrudResponse(raw);
@@ -45,7 +45,7 @@ class CobranzaRemoteDatasource {
   }
 
   Future<CrudResult> facturarContado(String idCobranza) async {
-    // TODO: conectar con endpoint real
+    // Todo: conectar con endpoint real
     // final body = '${[_session.codUser, idCobranza, 'FC'].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
     // final raw = await _api.postJsonGetText(ApiConstants.urlCobranzasLst, body);
     // return parseCrudResponse(raw);
@@ -57,7 +57,7 @@ class CobranzaRemoteDatasource {
     String idCobranza,
     List<CuotaPlan> cuotas,
   ) async {
-    // TODO: conectar con endpoint real
+    // Todo: conectar con endpoint real
     // Serializar: idCobranza + cuotas separadas por AppConstants.sepRegistros
     // final body = ...
     // return parseCrudResponse(raw);

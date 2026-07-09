@@ -47,6 +47,10 @@ class ApiConstants {
   static const String lstPropuestas = 'Propuesta/SPPropuestaLSTApp';
   static const String cudPropuestas = 'Propuesta/SPPropuestaCUDApp';
 
+  // ========== SOLICITUD ==========
+  static const String lstSolicitudes = 'Solicitud/SPSolicitudLSTApp';
+  static const String cudSolicitudes = 'Solicitud/SPSolicitudCUDApp';
+
   // ========== COBRANZAS ==========
   static const String lstCobranzas = 'Cobranza/SPCobranzaLSTApp';
   static const String cudCobranzas = 'Cobranza/SPCobranzaCUDApp';
@@ -87,6 +91,10 @@ class ApiConstants {
   // ========== PROPUESTA ==========
   static String get urlPropuestasLst => '$baseUrl$lstPropuestas';
   static String get urlPropuestasCud => '$baseUrl$cudPropuestas';
+
+  // ========== SOLICITUD ==========
+  static String get urlSolicitudesLst => '$baseUrl$lstSolicitudes';
+  static String get urlSolicitudesCud => '$baseUrl$cudSolicitudes';
 
   // ========== COBRANZAS ==========
   static String get urlCobranzasLst => '$baseUrl$lstCobranzas';

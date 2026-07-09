@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
-import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudCargaMasivaView extends StatefulWidget {
   const SolicitudCargaMasivaView({super.key});
@@ -121,16 +120,17 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
             child: Row(
               children: [
                 Expanded(
-                  child: SolicitudBotonAtras(
-                    label: 'Cancelar',
+                  child: CustomSecondaryButton(
+                    text: 'Cancelar',
+                    backgroundColor: AppColors.brandRaspberryAccessible,
                     onPressed: () => context.goBack(),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: SolicitudBotonContinuar(
-                    label: 'Subir participantes',
-                    icono: AppIcons.upload,
+                  child: CustomPrimaryButton(
+                    text: 'Subir participantes',
+                    icon: AppIcons.upload,
                     onPressed: _archivoSeleccionado ? () {} : null,
                   ),
                 ),

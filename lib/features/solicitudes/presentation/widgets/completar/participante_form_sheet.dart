@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart';
 
 // ── Constantes de opciones ────────────────────────────────────────────────────
+// Mismas opciones que "Datos del solicitante" (paso 1) — permite reusar el
+// valor guardado tal cual al convertir al solicitante en participante.
 
-const _tiposDoc = ['DNI', 'PASAPORTE', 'CE', 'RUC'];
-const _tiposPago = ['Pagante', 'Cortesía'];
+const _tiposDoc = ['DNI', 'Pasaporte', 'Carnet de extranjería', 'RUC'];
+const _nacionalidades = ['PERUANO/A', 'EXTRANJERO/A'];
+const _tiposParticipante = ['Pagante', 'Invitado', 'Invitado auspicio', 'Online'];
 
 // ── Función helper para abrir el sheet ───────────────────────────────────────
 
@@ -49,15 +51,17 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   final _formKey = GlobalKey<FormState>();
 
   late String _tipoDoc;
-  late String _tipoPago;
+  late String _nacionalidad;
+  late String _tipoParticipante;
 
   late final TextEditingController _numDocCtrl;
-  late final TextEditingController _nombreCtrl;
-  late final TextEditingController _celularCtrl;
-  late final TextEditingController _nacionalidadCtrl;
+  late final TextEditingController _nombresCtrl;
+  late final TextEditingController _apellidoPaternoCtrl;
+  late final TextEditingController _apellidoMaternoCtrl;
   late final TextEditingController _correoCtrl;
   late final TextEditingController _cargoCtrl;
-  late final TextEditingController _precioCtrl;
+  late final TextEditingController _celularCtrl;
+  late final TextEditingController _importeCtrl;
 
   bool get _esEdicion => widget.participante != null;
 
@@ -66,50 +70,56 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     super.initState();
     final p = widget.participante;
     _tipoDoc = p?.tipoDoc ?? _tiposDoc.first;
-    _tipoPago = p?.tipoPago ?? _tiposPago.first;
+    _nacionalidad = p?.nacionalidad ?? _nacionalidades.first;
+    _tipoParticipante = p?.tipoParticipante ?? _tiposParticipante.first;
     _numDocCtrl = TextEditingController(text: p?.numDoc ?? '');
-    _nombreCtrl = TextEditingController(text: p?.nombre ?? '');
-    _celularCtrl = TextEditingController(text: p?.celular ?? '');
-    _nacionalidadCtrl = TextEditingController(text: p?.nacionalidad ?? '');
+    _nombresCtrl = TextEditingController(text: p?.nombres ?? '');
+    _apellidoPaternoCtrl = TextEditingController(
+      text: p?.apellidoPaterno ?? '',
+    );
+    _apellidoMaternoCtrl = TextEditingController(
+      text: p?.apellidoMaterno ?? '',
+    );
     _correoCtrl = TextEditingController(text: p?.correo ?? '');
     _cargoCtrl = TextEditingController(text: p?.cargo ?? '');
-    _precioCtrl = TextEditingController(
-      text: p?.precio != null && p!.precio > 0
-          ? p.precio.toStringAsFixed(2)
-          : '',
+    _celularCtrl = TextEditingController(text: p?.celular ?? '');
+    _importeCtrl = TextEditingController(
+      text: p != null && p.importe > 0 ? p.importe.toStringAsFixed(2) : '',
     );
   }
 
   @override
   void dispose() {
     _numDocCtrl.dispose();
-    _nombreCtrl.dispose();
-    _celularCtrl.dispose();
-    _nacionalidadCtrl.dispose();
+    _nombresCtrl.dispose();
+    _apellidoPaternoCtrl.dispose();
+    _apellidoMaternoCtrl.dispose();
     _correoCtrl.dispose();
     _cargoCtrl.dispose();
-    _precioCtrl.dispose();
+    _celularCtrl.dispose();
+    _importeCtrl.dispose();
     super.dispose();
   }
 
   void _guardar() {
     if (!_formKey.currentState!.validate()) return;
 
-    final precio = _tipoPago == 'Cortesía'
-        ? 0.0
-        : double.tryParse(_precioCtrl.text.trim()) ?? 0.0;
+    final importe = double.tryParse(_importeCtrl.text.trim()) ?? 0.0;
 
     final resultado = ParticipanteLocal(
       id: widget.participante?.id ?? 0,
       tipoDoc: _tipoDoc,
       numDoc: _numDocCtrl.text.trim().toUpperCase(),
-      nombre: _nombreCtrl.text.trim().toUpperCase(),
-      celular: _celularCtrl.text.trim(),
-      nacionalidad: _nacionalidadCtrl.text.trim().toUpperCase(),
+      nacionalidad: _nacionalidad,
+      nombres: _nombresCtrl.text.trim().toUpperCase(),
+      apellidoPaterno: _apellidoPaternoCtrl.text.trim().toUpperCase(),
+      apellidoMaterno: _apellidoMaternoCtrl.text.trim().toUpperCase(),
       correo: _correoCtrl.text.trim(),
       cargo: _cargoCtrl.text.trim().toUpperCase(),
-      tipoPago: _tipoPago,
-      precio: precio,
+      celular: _celularCtrl.text.trim(),
+      tipoParticipante: _tipoParticipante,
+      importe: importe,
+      esSolicitante: widget.participante?.esSolicitante ?? false,
     );
 
     widget.onGuardar(resultado);
@@ -203,8 +213,8 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
-                          width: 110,
-                          child: SolicitudComboField(
+                          width: 130,
+                          child: CustomComboSearchField(
                             label: 'Tipo doc.',
                             data: _tiposDoc,
                             displayIndex: 0,
@@ -218,7 +228,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
-                          child: SolicitudTextField(
+                          child: CustomTextField(
                             label: 'N° documento *',
                             controller: _numDocCtrl,
                             isUpperCase: true,
@@ -232,10 +242,45 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
 
-                    // Nombre completo
-                    SolicitudTextField(
-                      label: 'Nombre completo *',
-                      controller: _nombreCtrl,
+                    // Nacionalidad + Tipo de participante
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: CustomComboSearchField(
+                            label: 'Nacionalidad *',
+                            data: _nacionalidades,
+                            displayIndex: 0,
+                            initialValue: _nacionalidad,
+                            onChanged: (item) {
+                              if (item != null) {
+                                setState(() => _nacionalidad = item.id);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: CustomComboSearchField(
+                            label: 'Tipo *',
+                            data: _tiposParticipante,
+                            displayIndex: 0,
+                            initialValue: _tipoParticipante,
+                            onChanged: (item) {
+                              if (item != null) {
+                                setState(() => _tipoParticipante = item.id);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    // Nombres
+                    CustomTextField(
+                      label: 'Nombres *',
+                      controller: _nombresCtrl,
                       isUpperCase: true,
                       textCapitalization: TextCapitalization.characters,
                       validator: (v) =>
@@ -243,15 +288,16 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
 
-                    // Celular + Nacionalidad
+                    // Apellido paterno + Apellido materno
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: SolicitudTextField(
-                            label: 'Celular *',
-                            controller: _celularCtrl,
-                            keyboardType: TextInputType.phone,
+                          child: CustomTextField(
+                            label: 'Apellido paterno *',
+                            controller: _apellidoPaternoCtrl,
+                            isUpperCase: true,
+                            textCapitalization: TextCapitalization.characters,
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Requerido'
                                 : null,
@@ -259,13 +305,11 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
-                          child: SolicitudTextField(
-                            label: 'Nacionalidad *',
-                            controller: _nacionalidadCtrl,
+                          child: CustomTextField(
+                            label: 'Apellido materno',
+                            controller: _apellidoMaternoCtrl,
                             isUpperCase: true,
-                            validator: (v) => v == null || v.trim().isEmpty
-                                ? 'Requerido'
-                                : null,
+                            textCapitalization: TextCapitalization.characters,
                           ),
                         ),
                       ],
@@ -273,7 +317,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                     const SizedBox(height: AppSpacing.sm),
 
                     // Correo
-                    SolicitudTextField(
+                    CustomTextField(
                       label: 'Correo electrónico *',
                       controller: _correoCtrl,
                       keyboardType: TextInputType.emailAddress,
@@ -286,7 +330,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                     const SizedBox(height: AppSpacing.sm),
 
                     // Cargo
-                    SolicitudTextField(
+                    CustomTextField(
                       label: 'Cargo *',
                       controller: _cargoCtrl,
                       isUpperCase: true,
@@ -295,43 +339,30 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
 
-                    // Tipo pago + Precio
+                    // Celular + Importe
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          width: 120,
-                          child: SolicitudComboField(
-                            label: 'Tipo pago',
-                            data: _tiposPago,
-                            displayIndex: 0,
-                            initialValue: _tipoPago,
-                            onChanged: (item) {
-                              if (item != null) {
-                                setState(() {
-                                  _tipoPago = item.id;
-                                  if (_tipoPago == 'Cortesía') {
-                                    _precioCtrl.clear();
-                                  }
-                                });
-                              }
-                            },
+                        Expanded(
+                          child: CustomTextField(
+                            label: 'Celular *',
+                            controller: _celularCtrl,
+                            keyboardType: TextInputType.phone,
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Requerido'
+                                : null,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
-                          child: SolicitudTextField(
-                            label: 'Precio (USD)',
-                            controller: _precioCtrl,
+                          child: CustomTextField(
+                            label: 'Importe',
+                            controller: _importeCtrl,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            enabled: _tipoPago != 'Cortesía',
                             validator: (v) {
-                              if (_tipoPago == 'Cortesía') return null;
-                              if (v == null || v.trim().isEmpty) {
-                                return 'Requerido';
-                              }
+                              if (v == null || v.trim().isEmpty) return null;
                               if (double.tryParse(v.trim()) == null) {
                                 return 'Número inválido';
                               }
@@ -347,40 +378,16 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
+                          child: CustomOutlinedButton(
+                            text: 'Cancelar',
                             onPressed: () => Navigator.of(context).pop(),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.textSecondary,
-                              side: const BorderSide(color: AppColors.border),
-                              minimumSize: const Size.fromHeight(
-                                AppSizing.buttonHeightSmall,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSizing.radiusMd,
-                                ),
-                              ),
-                            ),
-                            child: const Text('Cancelar'),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
-                          child: ElevatedButton(
+                          child: CustomPrimaryButton(
+                            text: _esEdicion ? 'Guardar' : 'Crear',
                             onPressed: _guardar,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: AppColors.textOnDark,
-                              minimumSize: const Size.fromHeight(
-                                AppSizing.buttonHeightSmall,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppSizing.radiusMd,
-                                ),
-                              ),
-                            ),
-                            child: Text(_esEdicion ? 'Guardar' : 'Crear'),
                           ),
                         ),
                       ],
@@ -396,4 +403,3 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   );
   }
 }
-

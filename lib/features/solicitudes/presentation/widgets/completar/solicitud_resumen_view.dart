@@ -155,9 +155,10 @@ class SolicitudResumenView extends StatelessWidget {
                 // Cancelar
                 SizedBox(
                   width: double.infinity,
-                  child: SolicitudBotonAtras(
-                    label: 'Cancelar',
-                    icono: AppIcons.cancel,
+                  child: CustomSecondaryButton(
+                    text: 'Cancelar',
+                    icon: AppIcons.cancel,
+                    backgroundColor: AppColors.brandRaspberryAccessible,
                     onPressed: () => context.goBack(),
                   ),
                 ),
@@ -365,7 +366,7 @@ class _SeccionSolicitante extends StatelessWidget {
           derecho: _CampoDato(
             icono: AppIcons.info,
             label: '¿Cómo se enteró del evento?',
-            valor: d?.canalesTexto ?? '—',
+            valor: d?.canalTexto ?? '—',
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -459,7 +460,7 @@ class _SeccionParticipantes extends StatelessWidget {
           for (int i = 0; i < participantes.length; i++) ...[
             _FilaTabla(
               numero: '${i + 1}',
-              nombre: participantes[i].nombre,
+              nombre: participantes[i].nombreCompleto,
               documento: participantes[i].numDoc,
               cargo: participantes[i].cargo,
               celular: participantes[i].celular,

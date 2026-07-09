@@ -859,31 +859,23 @@ class _BotonesFooter extends StatelessWidget {
         children: [
           // Volver a solicitudes
           Expanded(
-            child: OutlinedButton.icon(
+            child: CustomOutlinedButton(
+              text: 'Volver a solicitudes',
+              icon: Icons.chevron_left,
+              foregroundColor: AppColors.textSecondary,
+              borderColor: AppColors.border,
+              borderWidth: 1.5,
+              height: AppSizing.buttonHeight,
               onPressed: () => context.goToSolicitudes(),
-              icon: const Icon(Icons.chevron_left, size: 18),
-              label: const Text('Volver a solicitudes'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textSecondary,
-                side: const BorderSide(color: AppColors.border, width: 1.5),
-                minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                ),
-                textStyle: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: AppTextStyles.weightMedium,
-                ),
-              ),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           // Enviar a cobranzas
           Expanded(
-            child: SolicitudBotonContinuar(
-              label: 'Enviar a cobranzas',
-              icono: Icons.send,
-              color: AppColors.purple,
+            child: CustomPrimaryButton(
+              text: 'Enviar a cobranzas',
+              icon: Icons.send,
+              backgroundColor: AppColors.purple,
               onPressed: () async {
                 final confirmado = await context.showConfirmDialog(
                   title: 'Enviar a cobranzas',

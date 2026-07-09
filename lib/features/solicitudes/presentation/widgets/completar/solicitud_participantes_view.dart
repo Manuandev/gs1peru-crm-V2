@@ -199,17 +199,25 @@ class SolicitudParticipantesView extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Expanded(child: SolicitudBotonBorrador(onPressed: () {})),
+                    Expanded(
+                      child: CustomSecondaryButton(
+                        text: 'Guardar',
+                        icon: AppIcons.save,
+                        onPressed: () {},
+                      ),
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
-                      child: SolicitudBotonAtras(
-                        label: 'Cancelar',
+                      child: CustomSecondaryButton(
+                        text: 'Cancelar',
+                        backgroundColor: AppColors.brandRaspberryAccessible,
                         onPressed: () => context.goBack(),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
-                      child: SolicitudBotonContinuar(
+                      child: CustomPrimaryButton(
+                        text: 'Continuar →',
                         onPressed: state.participantes.isEmpty
                             ? null
                             : () => context.goToFichaFacturacionSolicitud(
@@ -277,7 +285,7 @@ class _ParticipanteCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        participante.nombre,
+                        participante.nombreCompleto,
                         style: AppTextStyles.labelMedium.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: AppTextStyles.weightBold,
@@ -286,7 +294,7 @@ class _ParticipanteCard extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      participante.precioFormateado,
+                      participante.importeFormateado,
                       style: AppTextStyles.labelMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: AppTextStyles.weightBold,

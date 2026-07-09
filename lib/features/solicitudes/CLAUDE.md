@@ -13,6 +13,12 @@ Todo el feature funciona hoy con data en memoria (sin SP real conectado):
   borrador" y "Generar solicitud" (paso Resumen) no están conectados a ningún caso de uso.
 - "Carga masiva" (Excel) solo valida la extensión del archivo seleccionado — no procesa ni
   sube el archivo.
+- Combos con catálogo real ya conectado a `CatalogsBloc` (no hardcodear de nuevo si se
+  tocan estos campos): **Canal** (chips single-select en paso 1, `CanalItem`), **Campaña**
+  y **Evento** (paso 1, `CampaniaItem`/`OportunidadItem` — Evento se filtra por
+  `idCampania` de la Campaña seleccionada), **Moneda** (paso 3, `MonedaItem`). Combos sin
+  catálogo de backend (se mantienen como lista fija local porque no existe otro origen):
+  Tipo documento, Nacionalidad, Sexo, Comprobante, País, Tipo de participante.
 
 ## Pantallas
 - `SolicitudListPage` → lista de solicitudes con chips de filtro (Todas / Asesores /
@@ -32,8 +38,14 @@ Todo el feature funciona hoy con data en memoria (sin SP real conectado):
   en los pasos 1 y 3. Se crea **una sola vez** en `SolicitudCompletarPage` (paso 1) y se
   reenvía como argumento (`formCubit`) a través de todo el wizard vía `BlocProvider.value`
 - `ParticipantesCubit` (participantes/) → lista de `ParticipanteLocal` (agregar / editar /
-  eliminar / eliminarTodos). Se crea **junto con** `SolicitudFormCubit` en el paso 1 y se
-  reenvía igual (`participantesCubit`) hasta el Resumen — mismo patrón que `formCubit`
+  eliminar / eliminarTodos), inicia **vacía** (ya no trae participantes ficticios
+  hardcodeados). `sincronizarSolicitante(DatosSolicitante)` agrega/actualiza un
+  `ParticipanteLocal` marcado `esSolicitante: true` con los datos del solicitante cuando
+  el switch "El solicitante será participante" está activo (o lo retira si se desactiva) —
+  se llama junto con `guardarSolicitante` al presionar "Continuar" en el paso 1, es
+  idempotente (no duplica en sucesivos "Continuar"). Se crea **junto con**
+  `SolicitudFormCubit` en el paso 1 y se reenvía igual (`participantesCubit`) hasta el
+  Resumen — mismo patrón que `formCubit`
 
 ## Patrón de navegación del wizard — IMPORTANTE
 Los 4 pasos comparten los mismos dos cubits durante todo el recorrido. Cada método
@@ -49,11 +61,12 @@ Al agregar un paso nuevo al wizard:
 3. Nunca crear una instancia nueva de estos cubits fuera del paso 1
 
 ## Validación de "Continuar" (pasos 1, 2 y 3)
-Cada paso deshabilita su botón `SolicitudBotonContinuar` (pasando `onPressed: null`) hasta
-que los campos obligatorios (marcados con `*` en la UI) estén completos:
+Cada paso deshabilita su botón `CustomPrimaryButton` de "Continuar" (pasando
+`onPressed: null`) hasta que los campos obligatorios (marcados con `*` en la UI) estén
+completos:
 - **Paso 1** (`_formCompleto` en `solicitud_completar_view.dart`) — tipo/número documento,
   nacionalidad, sexo, nombres, apellido paterno, cargo, celular, correo, campaña, evento.
-  Opcionales: apellido materno, RUC/razón social, canales.
+  Opcionales: apellido materno, RUC/razón social, canal.
 - **Paso 2** — basta con tener al menos 1 participante en la lista.
 - **Paso 3** (`_formCompleto` en `solicitud_facturacion_view.dart`) — comprobante, país,
   moneda, tipo/número documento, nacionalidad, nombres/razón social, apellido paterno,
@@ -83,17 +96,26 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   (todas con datos reales, ya no hardcodeados). "Resumen comercial" (Inversión/IGV/Total)
   **sigue hardcodeado** — pendiente conectar a `ParticipantesCubit.state.totalInversion`
 - `SolicitudGeneradaView` (generada/) → pantalla de éxito tras generar la solicitud
-- `solicitud_inputs.dart` (completar/) → inputs compactos exclusivos del wizard
-  (`SolicitudTextField`, `SolicitudComboField`, `SolicitudCampoCelular`,
-  `SolicitudToggleTipoPersona`, `SolicitudBotonContinuar`, `SolicitudBotonAtras`,
-  `SolicitudBotonBorrador`, `SolicitudBadgePaso`) — no reusar `CustomTextField` aquí
+- `solicitud_inputs.dart` (completar/) → **solo** los widgets del wizard sin equivalente
+  en `lib/core/presentation/widgets` (`SolicitudToggleTipoPersona`, `SolicitudCampoCelular`,
+  `SolicitudBadgePaso`). Para texto/combos/botones usar siempre los widgets generales del
+  core — `CustomTextField`, `CustomComboField<T extends Comboable>` (catálogos reales),
+  `CustomComboSearchField` (listas fijas locales tipo `"id¦desc"`), `CustomPrimaryButton`,
+  `CustomSecondaryButton`, `CustomOutlinedButton`. No crear wrappers `SolicitudXxx` nuevos
+  para estos — si falta una variante, extender el widget core correspondiente
 
 ## Modelos relevantes
 - `Solicitud` (domain/entities) → entidad de la lista/detalle
 - `DatosSolicitante` / `DatosFacturacion` (bloc/form/solicitud_form_state.dart) → snapshots
-  inmutables de los pasos 1 y 3, capturados al presionar "Continuar"
+  inmutables de los pasos 1 y 3, capturados al presionar "Continuar". `DatosSolicitante`
+  incluye `nacionalidad` (descripción del combo) y `canalId`/`canalNombre` (del `CanalItem`
+  seleccionado en los chips — reemplazó al antiguo `canales: List<String>` multi-select)
 - `ParticipanteLocal` (bloc/participantes/participantes_state.dart) → participante en
-  memoria; `id` autogenerado por el cubit (`_nextId`), no viene del backend
+  memoria; `id` autogenerado por el cubit (`_nextId`), no viene del backend. Campos:
+  `tipoDoc`, `numDoc`, `nacionalidad`, `nombres`/`apellidoPaterno`/`apellidoMaterno`
+  (`nombreCompleto` los junta), `correo`, `cargo`, `celular`, `tipoParticipante` (Pagante /
+  Invitado / Invitado auspicio / Online), `importe` (sin moneda), `esSolicitante` (marca el
+  registro autogenerado por el switch "El solicitante será participante" — ver abajo)
 
 ## SPs que consume
 - Ninguno todavía — ver "Estado general" arriba. `SolicitudRemoteDatasource` es 100% mock.

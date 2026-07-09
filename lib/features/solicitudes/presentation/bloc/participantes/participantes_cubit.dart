@@ -2,80 +2,14 @@
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
+
 part 'participantes_state.dart';
 
 class ParticipantesCubit extends Cubit<ParticipantesState> {
   int _nextId = 1;
 
-  ParticipantesCubit()
-      : super(
-          ParticipantesState(
-            participantes: [
-              ParticipanteLocal(
-                id: 1,
-                tipoDoc: 'PASAPORTE',
-                numDoc: '057588685',
-                nombre: 'JOSE EDUARDO POSADA PEÑA',
-                celular: '503-76713284',
-                nacionalidad: 'SALVADOREÑA/O/A',
-                correo: 'eduardoposada20041998@gmail.com',
-                cargo: 'ADC JR.',
-                tipoPago: 'Pagante',
-                precio: 137.53,
-              ),
-              ParticipanteLocal(
-                id: 2,
-                tipoDoc: 'PASAPORTE',
-                numDoc: '054476059',
-                nombre: 'RODRIGO ALEJANDRO MAGAÑA BLANCO',
-                celular: '503-79150391',
-                nacionalidad: 'SALVADOREÑA/O/A',
-                correo: 'rodrigomagana96@gmail.com',
-                cargo: 'GERENTE REGIONAL CATEGORÍAS',
-                tipoPago: 'Pagante',
-                precio: 137.53,
-              ),
-              ParticipanteLocal(
-                id: 3,
-                tipoDoc: 'PASAPORTE',
-                numDoc: '053880352',
-                nombre: 'JOSUE ELISEO AMAYA RIVERA',
-                celular: '503-71077672',
-                nacionalidad: 'SALVADOREÑA/O/A',
-                correo: 'josueamaya1996@gmail.com',
-                cargo: 'ADC JR.',
-                tipoPago: 'Pagante',
-                precio: 137.53,
-              ),
-              ParticipanteLocal(
-                id: 4,
-                tipoDoc: 'DNI',
-                numDoc: '74521896',
-                nombre: 'MARIA FERNANDA LOPEZ QUISPE',
-                celular: '51-987654321',
-                nacionalidad: 'PERUANO/A',
-                correo: 'mflopez@empresa.com',
-                cargo: 'COORDINADORA COMERCIAL',
-                tipoPago: 'Cortesía',
-                precio: 0.0,
-              ),
-              ParticipanteLocal(
-                id: 5,
-                tipoDoc: 'DNI',
-                numDoc: '69834512',
-                nombre: 'CARLOS ANTONIO HERRERA VEGA',
-                celular: '51-912345678',
-                nacionalidad: 'PERUANO/A',
-                correo: 'cherrera@empresa.pe',
-                cargo: 'JEFE DE LOGÍSTICA',
-                tipoPago: 'Pagante',
-                precio: 137.53,
-              ),
-            ],
-          ),
-        ) {
-    _nextId = 6;
-  }
+  ParticipantesCubit() : super(const ParticipantesState(participantes: []));
 
   void agregar(ParticipanteLocal participante) {
     final nuevo = participante.copyWith(id: _nextId++);
@@ -99,5 +33,39 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
 
   void eliminarTodos() {
     emit(state.copyWith(participantes: const []));
+  }
+
+  /// Refleja el switch "El solicitante será participante" (paso 1) en la
+  /// lista de participantes: agrega/actualiza un registro marcado como
+  /// [ParticipanteLocal.esSolicitante] con los datos ya capturados del
+  /// solicitante, o lo retira si el switch se desactiva. Se llama cada vez
+  /// que se presiona "Continuar" en el paso 1 — idempotente, nunca duplica.
+  void sincronizarSolicitante(DatosSolicitante datos) {
+    final resto = state.participantes.where((p) => !p.esSolicitante).toList();
+
+    if (!datos.solicitanteEsParticipante) {
+      emit(state.copyWith(participantes: resto));
+      return;
+    }
+
+    final solicitanteParticipante = ParticipanteLocal(
+      id: _nextId++,
+      tipoDoc: datos.tipoDocLabel,
+      numDoc: datos.numDoc,
+      nacionalidad: datos.nacionalidad,
+      nombres: datos.nombres,
+      apellidoPaterno: datos.apellidoPaterno,
+      apellidoMaterno: datos.apellidoMaterno,
+      correo: datos.correo,
+      cargo: datos.cargo,
+      celular: datos.celular,
+      tipoParticipante: 'Pagante',
+      importe: 0,
+      esSolicitante: true,
+    );
+
+    emit(state.copyWith(
+      participantes: [solicitanteParticipante, ...resto],
+    ));
   }
 }

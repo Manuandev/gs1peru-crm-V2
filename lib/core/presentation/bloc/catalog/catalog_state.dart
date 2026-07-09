@@ -31,6 +31,11 @@ class CatalogsLoaded extends CatalogsState {
   List<AsesorItem>      get asesores     => listas.asesores;
   List<EstadoGestionItem> get estadosGestion => listas.estadosGestion;
   List<MonedaItem>       get monedas       => listas.monedas;
+  double                 get igvPorcentaje => listas.igvPorcentaje;
+  List<PaisItem>          get paises        => listas.paises;
+  List<TipoDocumentoItem> get tiposDocumento => listas.tiposDocumento;
+  List<ComprobanteItem>   get comprobantes   => listas.comprobantes;
+  List<NacionalidadItem>  get nacionalidades => listas.nacionalidades;
 
   @override
   List<Object?> get props => [
@@ -42,6 +47,11 @@ class CatalogsLoaded extends CatalogsState {
     asesores,
     estadosGestion,
     monedas,
+    igvPorcentaje,
+    paises,
+    tiposDocumento,
+    comprobantes,
+    nacionalidades,
   ];
 }
 

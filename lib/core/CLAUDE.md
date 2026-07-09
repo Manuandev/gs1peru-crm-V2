@@ -847,7 +847,7 @@ item.fieldCount   // total de campos
 
 | Clase | Campos |
 |---|---|
-| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion, monedas |
+| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion, monedas, igvPorcentaje, paises, tiposDocumento, comprobantes, nacionalidades |
 | `CampaniaItem` | id(int), nombre |
 | `OportunidadItem` | idEvento(int), idCampania(int), nombre |
 | `CanalItem` | id(int), nombre |
@@ -856,6 +856,11 @@ item.fieldCount   // total de campos
 | `AsesorItem` | codUser(String), nombre(String), disponible(bool) — parte [5] del SP; universo = todo `CODUSER` que alguna vez fue `ASESOR_PRINCIPAL` en `T_CONTACTO` (no depende de tener leads activos hoy) |
 | `EstadoGestionItem` | id(String), nombre — parte [6] del SP, `DBO.[edu.TIP_ESTADO_GES]`. Estados de `cobranza/` (plano, sin padre — no confundir con `EstadoItem` de leads) |
 | `MonedaItem` | id(String), codigo(String), nombre(String), simbolo(String) — parte [7] del SP, `SYSTABEXTER02 CODTABLA='MON'` (codargu ¦ deslarga ¦ descorta ¦ valor4). `id` = `codargu` (usado por `Comboable.fields[0]` y para autoseleccionar cuando el detalle de lead mande `idMoneda`); `codigo` = `valor4` (ISO: 'PEN'/'USD', para `NumberFormatUtils`) |
+| `igvPorcentaje` | `double`, campo directo de `ListasGenericas` (no es lista) — parte [8] del SP, `SYSTABEXTER02 CODTABLA='IGV' codargu='01'`, valor único (ej. `18`) |
+| `PaisItem` | id(String=codargu), nombre(String=deslarga), codigoTelefono(String=partidam) — parte [9] del SP, `SYSTABEXTER02 CODTABLA='CPA'`. Un solo catálogo sirve para el combo "País" (`id`+`nombre`) y para el selector de código telefónico (`codigoTelefono`+`nombre`, ej. "Perú (+51)") |
+| `TipoDocumentoItem` | id(String=codargu), nombre(String=deslarga) — parte [10] del SP, `SYSTABEXTER02 CODTABLA='F01'`. `id` es **String**, no parsear con `toInt` |
+| `ComprobanteItem` | id(String=codargu), nombre(String=deslarga) — parte [11] del SP, `SYSTABEXTER02 CODTABLA='DFA'` filtrado a Factura(01)/Boleta de venta(03)/Nota de crédito(07)/Nota de débito(08) |
+| `NacionalidadItem` | id(String=codargu), nombre(String=deslarga), valor4(String) — parte [12] del SP, `SYSTABEXTER02 CODTABLA='NPA'`. Es el **gentilicio** ("PERUANO/A", "BRASILEÑO/A"...) — no confundir con `PaisItem` (nombre de lugar: "PERÚ", "BRASIL"...) |
 
 Todas implementan `Comboable`. Parsear con `ListasGenericasModel.parse(rawResponse)`.
 `AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) y en `CobranzaAsesorPickerModal` —
@@ -866,6 +871,10 @@ catálogo en tiempo de ejecución (ver `cobranza/CLAUDE.md`).
 `MonedaItem` alimenta el combo "Moneda" de `EditLeadFinancieraSection` (`lead/`) vía `CatalogsBloc.monedas` —
 sin lista fija de respaldo; si el SP aún no devuelve la parte [7], el combo llega vacío y
 `_monedaItem` queda `null` (ver `edit_lead_portrait.dart._inicializarCombos`).
+`PaisItem`, `TipoDocumentoItem`, `ComprobanteItem`, `NacionalidadItem` e `igvPorcentaje` (partes
+[8]-[12]) fueron agregados para reemplazar listas fijas hardcodeadas del wizard de
+`solicitudes/` (Tipo documento, País, Comprobante, Nacionalidad, % IGV) — mientras el SP
+real no las devuelva, llegan vacías/en 0 y hay que mantener un fallback local en la UI.
 
 ---
 

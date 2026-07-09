@@ -15,6 +15,16 @@ class ListasGenericas {
   final List<EstadoGestionItem> estadosGestion;
   // Parte [7] del SP lstListas — SYSTABEXTER02 CODTABLA='MON', tipos de moneda
   final List<MonedaItem> monedas;
+  // Parte [8] del SP lstListas — SYSTABEXTER02 CODTABLA='IGV' codargu='01', valor único (no es lista)
+  final double igvPorcentaje;
+  // Parte [9] del SP lstListas — SYSTABEXTER02 CODTABLA='CPA', países
+  final List<PaisItem> paises;
+  // Parte [10] del SP lstListas — SYSTABEXTER02 CODTABLA='F01', tipos de documento (id STRING)
+  final List<TipoDocumentoItem> tiposDocumento;
+  // Parte [11] del SP lstListas — SYSTABEXTER02 CODTABLA='DFA' (01/03/07/08), tipos de comprobante
+  final List<ComprobanteItem> comprobantes;
+  // Parte [12] del SP lstListas — SYSTABEXTER02 CODTABLA='NPA', nacionalidades (gentilicio, distinto de País)
+  final List<NacionalidadItem> nacionalidades;
 
   const ListasGenericas({
     required this.campanias,
@@ -25,6 +35,11 @@ class ListasGenericas {
     this.asesores = const [],
     this.estadosGestion = const [],
     this.monedas = const [],
+    this.igvPorcentaje = 0,
+    this.paises = const [],
+    this.tiposDocumento = const [],
+    this.comprobantes = const [],
+    this.nacionalidades = const [],
   });
 }
 
@@ -38,6 +53,11 @@ class ListasGenericasModel extends ListasGenericas {
     super.asesores,
     super.estadosGestion,
     super.monedas,
+    super.igvPorcentaje,
+    super.paises,
+    super.tiposDocumento,
+    super.comprobantes,
+    super.nacionalidades,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -50,6 +70,11 @@ class ListasGenericasModel extends ListasGenericas {
     final asesoresRaw = partes.length > 5 ? partes[5] : '';
     final estadosGestionRaw = partes.length > 6 ? partes[6] : '';
     final monedasRaw = partes.length > 7 ? partes[7] : '';
+    final igvRaw = partes.length > 8 ? partes[8] : '';
+    final paisesRaw = partes.length > 9 ? partes[9] : '';
+    final tiposDocumentoRaw = partes.length > 10 ? partes[10] : '';
+    final comprobantesRaw = partes.length > 11 ? partes[11] : '';
+    final nacionalidadesRaw = partes.length > 12 ? partes[12] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -83,6 +108,24 @@ class ListasGenericasModel extends ListasGenericas {
         ? <MonedaItemModel>[]
         : MonedaItemModel.parseList(monedasRaw);
 
+    final igvPorcentaje = double.tryParse(igvRaw.trim()) ?? 0;
+
+    final paises = paisesRaw.trim().isEmpty
+        ? <PaisItemModel>[]
+        : PaisItemModel.parseList(paisesRaw);
+
+    final tiposDocumento = tiposDocumentoRaw.trim().isEmpty
+        ? <TipoDocumentoItemModel>[]
+        : TipoDocumentoItemModel.parseList(tiposDocumentoRaw);
+
+    final comprobantes = comprobantesRaw.trim().isEmpty
+        ? <ComprobanteItemModel>[]
+        : ComprobanteItemModel.parseList(comprobantesRaw);
+
+    final nacionalidades = nacionalidadesRaw.trim().isEmpty
+        ? <NacionalidadItemModel>[]
+        : NacionalidadItemModel.parseList(nacionalidadesRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -92,6 +135,11 @@ class ListasGenericasModel extends ListasGenericas {
       asesores: asesores,
       estadosGestion: estadosGestion,
       monedas: monedas,
+      igvPorcentaje: igvPorcentaje,
+      paises: paises,
+      tiposDocumento: tiposDocumento,
+      comprobantes: comprobantes,
+      nacionalidades: nacionalidades,
     );
   }
 }
@@ -390,6 +438,157 @@ class MonedaItemModel extends MonedaItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => MonedaItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+// SP lstListas parte [9]: codargu ¦ deslarga ¦ partidam — SYSTABEXTER02 CODTABLA='CPA'.
+// id = codargu (país), codigoTelefono = partidam (código de marcado, ej. '51' para Perú).
+// Sirve tanto para el combo "País" (id + nombre) como para el selector de código
+// telefónico del celular (codigoTelefono + nombre).
+class PaisItem with Comboable {
+  final String id;
+  final String nombre;
+  final String codigoTelefono;
+
+  const PaisItem({
+    required this.id,
+    required this.nombre,
+    required this.codigoTelefono,
+  });
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+class PaisItemModel extends PaisItem {
+  const PaisItemModel({
+    required super.id,
+    required super.nombre,
+    required super.codigoTelefono,
+  });
+
+  factory PaisItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return PaisItemModel(
+      id: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+      codigoTelefono: ParseUtils.str(c, 2),
+    );
+  }
+
+  static List<PaisItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => PaisItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+// SP lstListas parte [10]: codargu ¦ deslarga — SYSTABEXTER02 CODTABLA='F01'.
+// id es STRING (codargu), no int — no parsear con toInt.
+class TipoDocumentoItem with Comboable {
+  final String id;
+  final String nombre;
+
+  const TipoDocumentoItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+class TipoDocumentoItemModel extends TipoDocumentoItem {
+  const TipoDocumentoItemModel({required super.id, required super.nombre});
+
+  factory TipoDocumentoItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return TipoDocumentoItemModel(
+      id: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+    );
+  }
+
+  static List<TipoDocumentoItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => TipoDocumentoItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+// SP lstListas parte [11]: codargu ¦ deslarga — SYSTABEXTER02 CODTABLA='DFA',
+// filtrado a Factura(01)/Boleta de venta(03)/Nota de crédito(07)/Nota de débito(08).
+class ComprobanteItem with Comboable {
+  final String id;
+  final String nombre;
+
+  const ComprobanteItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+class ComprobanteItemModel extends ComprobanteItem {
+  const ComprobanteItemModel({required super.id, required super.nombre});
+
+  factory ComprobanteItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return ComprobanteItemModel(
+      id: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+    );
+  }
+
+  static List<ComprobanteItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => ComprobanteItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+// SP lstListas parte [12]: codargu ¦ deslarga ¦ valor4 — SYSTABEXTER02 CODTABLA='NPA'.
+// Nacionalidad (gentilicio: "PERUANO/A", "BRASILEÑO/A"...) — distinta de País (nombre de
+// lugar: "PERÚ", "BRASIL"...), no confundir con [PaisItem].
+class NacionalidadItem with Comboable {
+  final String id;
+  final String nombre;
+  final String valor4;
+
+  const NacionalidadItem({
+    required this.id,
+    required this.nombre,
+    required this.valor4,
+  });
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+class NacionalidadItemModel extends NacionalidadItem {
+  const NacionalidadItemModel({
+    required super.id,
+    required super.nombre,
+    required super.valor4,
+  });
+
+  factory NacionalidadItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return NacionalidadItemModel(
+      id: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+      valor4: ParseUtils.str(c, 2),
+    );
+  }
+
+  static List<NacionalidadItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => NacionalidadItemModel.fromRawString(r))
         .toList();
   }
 }

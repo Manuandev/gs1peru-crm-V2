@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_completar_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -26,8 +27,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // 'juridica' | 'natural'
   String _tipoPersona = 'juridica';
 
-  // Canales seleccionados (multi-select)
-  final Set<String> _canalesSeleccionados = {};
+  // Canal seleccionado (single-select) — catálogo real vía CatalogsBloc
+  CanalItem? _canalSeleccionado;
 
   // Switches — opciones del solicitante
   bool _solicitanteParticipante = false;
@@ -36,6 +37,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // Labels/ids de combos capturados desde _SeccionDatosSolicitante
   String _tipoDocLabel = '';
   String _nacionalidadId = '';
+  String _nacionalidadLabel = '';
   String _sexoId = '';
   String _campanaLabel = '';
   String _eventoLabel = '';
@@ -90,9 +92,21 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   }
 
   Future<void> _adjuntarArchivo(bool esVoucher) async {
-    final resultado = await FilePicker.platform.pickFiles(type: FileType.any);
+    final resultado = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
     final archivo = resultado?.files.single;
     if (archivo == null) return;
+
+    final extension = archivo.extension?.toLowerCase();
+    if (extension != 'pdf') {
+      if (mounted) {
+        AppSnackBar.error(context, 'Solo se permiten archivos PDF');
+      }
+      return;
+    }
+
     setState(() {
       if (esVoucher) {
         _archivoVoucher = archivo;
@@ -183,18 +197,28 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  _ChipsCanales(
-                    seleccionados: _canalesSeleccionados,
-                    habilitado: widget.modoEdicion,
-                    onToggle: (canal) {
-                      if (!widget.modoEdicion) return;
-                      setState(() {
-                        if (_canalesSeleccionados.contains(canal)) {
-                          _canalesSeleccionados.remove(canal);
-                        } else {
-                          _canalesSeleccionados.add(canal);
-                        }
-                      });
+                  Builder(
+                    builder: (context) {
+                      final catalogState = context
+                          .watch<CatalogsBloc>()
+                          .state;
+                      final canales = catalogState is CatalogsLoaded
+                          ? catalogState.canales
+                          : const <CanalItem>[];
+                      return _ChipsCanales(
+                        canales: canales,
+                        seleccionado: _canalSeleccionado,
+                        habilitado: widget.modoEdicion,
+                        onSeleccionar: (canal) {
+                          if (!widget.modoEdicion) return;
+                          setState(() {
+                            _canalSeleccionado =
+                                _canalSeleccionado?.id == canal.id
+                                ? null
+                                : canal;
+                          });
+                        },
+                      );
                     },
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -242,8 +266,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     ctrlCorreo: _ctrlCorreo,
                     onTipoDocLabelChanged: (v) =>
                         setState(() => _tipoDocLabel = v),
-                    onNacionalidadChanged: (v) =>
-                        setState(() => _nacionalidadId = v),
+                    onNacionalidadChanged: (item) => setState(() {
+                      _nacionalidadId = item?.id ?? '';
+                      _nacionalidadLabel = item?.descripcion ?? '';
+                    }),
                     onSexoChanged: (v) => setState(() => _sexoId = v),
                     onCampanaChanged: (v) => setState(() => _campanaLabel = v),
                     onEventoChanged: (v) => setState(() => _eventoLabel = v),
@@ -283,37 +309,47 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             ),
             child: Row(
               children: [
-                Expanded(child: SolicitudBotonBorrador(onPressed: () {})),
+                Expanded(
+                  child: CustomSecondaryButton(
+                    text: 'Guardar',
+                    icon: AppIcons.save,
+                    onPressed: () {},
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: SolicitudBotonContinuar(
+                  child: CustomPrimaryButton(
+                    text: 'Continuar →',
                     onPressed: !_formCompleto
                         ? null
                         : () {
+                            final datos = DatosSolicitante(
+                              tipoPersona: _tipoPersona,
+                              tipoDocLabel: _tipoDocLabel,
+                              numDoc: _ctrlNumDoc.text,
+                              nacionalidad: _nacionalidadLabel,
+                              nombres: _ctrlNombres.text,
+                              apellidoPaterno: _ctrlApellidoPaterno.text,
+                              apellidoMaterno: _ctrlApellidoMaterno.text,
+                              cargo: _ctrlCargo.text,
+                              celular: _ctrlCelular.text,
+                              correo: _ctrlCorreo.text,
+                              campana: _campanaLabel,
+                              evento: _eventoLabel,
+                              canalId: _canalSeleccionado?.id,
+                              canalNombre: _canalSeleccionado?.nombre ?? '',
+                              ruc: _ctrlRuc.text,
+                              razonSocial: _ctrlRazonSocial.text,
+                              solicitanteEsParticipante:
+                                  _solicitanteParticipante,
+                              facturarAlSolicitante: _facturarAlSolicitante,
+                            );
                             context
                                 .read<SolicitudFormCubit>()
-                                .guardarSolicitante(
-                                  DatosSolicitante(
-                                    tipoPersona: _tipoPersona,
-                                    tipoDocLabel: _tipoDocLabel,
-                                    numDoc: _ctrlNumDoc.text,
-                                    nombres: _ctrlNombres.text,
-                                    apellidoPaterno: _ctrlApellidoPaterno.text,
-                                    apellidoMaterno: _ctrlApellidoMaterno.text,
-                                    cargo: _ctrlCargo.text,
-                                    celular: _ctrlCelular.text,
-                                    correo: _ctrlCorreo.text,
-                                    campana: _campanaLabel,
-                                    evento: _eventoLabel,
-                                    canales: _canalesSeleccionados.toList(),
-                                    ruc: _ctrlRuc.text,
-                                    razonSocial: _ctrlRazonSocial.text,
-                                    solicitanteEsParticipante:
-                                        _solicitanteParticipante,
-                                    facturarAlSolicitante:
-                                        _facturarAlSolicitante,
-                                  ),
-                                );
+                                .guardarSolicitante(datos);
+                            context
+                                .read<ParticipantesCubit>()
+                                .sincronizarSolicitante(datos);
                             context.goToFichaParticipantesSolicitud(
                               solicitud: widget.solicitud,
                               modoEdicion: widget.modoEdicion,
@@ -354,28 +390,88 @@ class _BotonAdjuntar extends StatelessWidget {
   Widget build(BuildContext context) {
     final tieneArchivo = archivo != null;
 
-    return OutlinedButton.icon(
-      onPressed: habilitado ? (tieneArchivo ? onQuitar : onAdjuntar) : null,
-      icon: Icon(
-        tieneArchivo ? AppIcons.checkCircleFilled : Icons.attach_file_rounded,
-        size: AppSizing.iconActionSm,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          onPressed: (habilitado && !tieneArchivo) ? onAdjuntar : null,
+          icon: const Icon(
+            Icons.attach_file_rounded,
+            size: AppSizing.iconActionSm,
+          ),
+          label: Text(label, overflow: TextOverflow.ellipsis),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: const BorderSide(color: AppColors.primary),
+            minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+            ),
+            textStyle: AppTextStyles.labelMedium.copyWith(
+              fontWeight: AppTextStyles.weightMedium,
+            ),
+          ),
+        ),
+        if (tieneArchivo) ...[
+          const SizedBox(height: AppSpacing.xs),
+          _TarjetaArchivoAdjunto(
+            nombre: archivo!.name,
+            onQuitar: habilitado ? onQuitar : null,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Tarjeta de archivo adjunto (PDF) con opción de quitar ─────────────────────
+
+class _TarjetaArchivoAdjunto extends StatelessWidget {
+  final String nombre;
+  final VoidCallback? onQuitar;
+
+  const _TarjetaArchivoAdjunto({required this.nombre, required this.onQuitar});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
       ),
-      label: Text(
-        tieneArchivo ? archivo!.name : label,
-        overflow: TextOverflow.ellipsis,
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        border: Border.all(color: AppColors.success),
       ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: tieneArchivo ? AppColors.success : AppColors.primary,
-        side: BorderSide(
-          color: tieneArchivo ? AppColors.success : AppColors.primary,
-        ),
-        minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        ),
-        textStyle: AppTextStyles.labelMedium.copyWith(
-          fontWeight: AppTextStyles.weightMedium,
-        ),
+      child: Row(
+        children: [
+          const Icon(
+            AppIcons.pdf,
+            color: AppColors.success,
+            size: AppSizing.iconActionSm,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              nombre,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          if (onQuitar != null)
+            GestureDetector(
+              onTap: onQuitar,
+              child: const Icon(
+                AppIcons.close,
+                size: AppSizing.iconSm,
+                color: AppColors.error,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -607,19 +703,19 @@ class _SeccionInfoComercial extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'RUC',
                 hint: 'Ingrese el RUC',
                 controller: ctrlRuc,
                 keyboardType: TextInputType.number,
                 enabled: habilitado,
                 maxLength: 11,
-                digitsOnly: true,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Razón social',
                 hint: 'Ingrese la razón social',
                 controller: ctrlRazonSocial,
@@ -647,7 +743,7 @@ class _SeccionDatosSolicitante extends StatefulWidget {
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
   final ValueChanged<String>? onTipoDocLabelChanged;
-  final ValueChanged<String>? onNacionalidadChanged;
+  final ValueChanged<ComboItem?>? onNacionalidadChanged;
   final ValueChanged<String>? onSexoChanged;
   final ValueChanged<String>? onCampanaChanged;
   final ValueChanged<String>? onEventoChanged;
@@ -698,14 +794,25 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
   ];
   static const _nacionalidades = ['01¦PERUANO/A', '02¦EXTRANJERO/A'];
   static const _sexos = ['M¦Masculino', 'F¦Femenino', 'PD¦Por definir'];
-  static const _campanas = ['01¦SEPTIEMBRE 2026', '02¦OCTUBRE 2026'];
-  static const _eventos = ['01¦EXPOGESTIÓN 2026', '02¦OTRO EVENTO'];
+
+  // Filtro de "Evento" por campaña — se limpia si cambia la campaña.
+  int? _campaniaSeleccionadaId;
 
   @override
   Widget build(BuildContext context) {
     final maxLenDoc = _tipoDocId != null ? _maxLengthPorTipo[_tipoDocId] : null;
     final soloDigitos = _soloDigitosPorTipo[_tipoDocId] ?? false;
     final teclado = soloDigitos ? TextInputType.number : TextInputType.text;
+
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final campanias = catalogState is CatalogsLoaded
+        ? catalogState.campanias
+        : const <CampaniaItem>[];
+    final eventos = catalogState is CatalogsLoaded
+        ? catalogState.oportunidades
+              .where((o) => o.idCampania == _campaniaSeleccionadaId)
+              .toList()
+        : const <OportunidadItem>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,7 +841,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         Row(
           children: [
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboSearchField(
                 label: 'Tipo documento *',
                 data: _tiposDoc,
                 enabled: widget.habilitado,
@@ -749,13 +856,15 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Número documento *',
                 controller: widget.ctrlNumDoc,
                 keyboardType: teclado,
                 enabled: widget.habilitado,
                 maxLength: maxLenDoc,
-                digitsOnly: soloDigitos,
+                inputFormatters: soloDigitos
+                    ? [FilteringTextInputFormatter.digitsOnly]
+                    : null,
               ),
             ),
           ],
@@ -766,17 +875,16 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         Row(
           children: [
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboSearchField(
                 label: 'Nacionalidad *',
                 data: _nacionalidades,
                 enabled: widget.habilitado,
-                onChanged: (item) =>
-                    widget.onNacionalidadChanged?.call(item?.id ?? ''),
+                onChanged: (item) => widget.onNacionalidadChanged?.call(item),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboSearchField(
                 label: 'Sexo *',
                 data: _sexos,
                 enabled: widget.habilitado,
@@ -788,7 +896,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         const SizedBox(height: AppSpacing.xs),
 
         // Nombres
-        SolicitudTextField(
+        CustomTextField(
           label: 'Nombres *',
           controller: widget.ctrlNombres,
           enabled: widget.habilitado,
@@ -801,7 +909,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         Row(
           children: [
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Apellido paterno *',
                 controller: widget.ctrlApellidoPaterno,
                 enabled: widget.habilitado,
@@ -811,7 +919,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Apellido materno',
                 controller: widget.ctrlApellidoMaterno,
                 enabled: widget.habilitado,
@@ -824,7 +932,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         const SizedBox(height: AppSpacing.xs),
 
         // Cargo
-        SolicitudTextField(
+        CustomTextField(
           label: 'Cargo *',
           controller: widget.ctrlCargo,
           enabled: widget.habilitado,
@@ -845,7 +953,7 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Correo *',
                 controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
@@ -857,26 +965,30 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 5: Campaña + Evento
+        // Fila 5: Campaña + Evento — catálogo real vía CatalogsBloc
         Row(
           children: [
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboField<CampaniaItem>(
                 label: 'Campaña *',
-                data: _campanas,
+                data: campanias,
                 enabled: widget.habilitado,
-                onChanged: (item) =>
-                    widget.onCampanaChanged?.call(item?.descripcion ?? ''),
+                onChanged: (item) {
+                  setState(() => _campaniaSeleccionadaId = item?.id);
+                  widget.onCampanaChanged?.call(item?.nombre ?? '');
+                  widget.onEventoChanged?.call('');
+                },
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboField<OportunidadItem>(
                 label: 'Evento *',
-                data: _eventos,
+                data: eventos,
+                labelIndex: 2,
                 enabled: widget.habilitado,
                 onChanged: (item) =>
-                    widget.onEventoChanged?.call(item?.descripcion ?? ''),
+                    widget.onEventoChanged?.call(item?.nombre ?? ''),
               ),
             ),
           ],
@@ -927,66 +1039,36 @@ class _CampoNumeroSolicitud extends StatelessWidget {
   }
 }
 
-// ── Chips de canales ──────────────────────────────────────────────────────────
+// ── Chips de canales — catálogo real (CatalogsBloc), selección única ─────────
 
 class _ChipsCanales extends StatelessWidget {
-  final Set<String> seleccionados;
+  final List<CanalItem> canales;
+  final CanalItem? seleccionado;
   final bool habilitado;
-  final ValueChanged<String> onToggle;
+  final ValueChanged<CanalItem> onSeleccionar;
 
   const _ChipsCanales({
-    required this.seleccionados,
+    required this.canales,
+    required this.seleccionado,
     required this.habilitado,
-    required this.onToggle,
+    required this.onSeleccionar,
   });
-
-  static const _canales = [
-    (
-      id: 'facebook',
-      label: 'Facebook',
-      asset: AppImages.iconFacebook,
-      icon: Icons.facebook_rounded,
-    ),
-    (
-      id: 'linkedin',
-      label: 'LinkedIn',
-      asset: AppImages.iconLinkedin,
-      icon: Icons.work_outline_rounded,
-    ),
-    (
-      id: 'instagram',
-      label: 'Instagram',
-      asset: AppImages.iconInstagram,
-      icon: Icons.camera_alt_outlined,
-    ),
-    (
-      id: 'logistica',
-      label: 'Logística',
-      asset: AppImages.iconLogistica,
-      icon: Icons.inventory_2_outlined,
-    ),
-    (
-      id: 'logistica360',
-      label: 'Logística 360',
-      asset: '',
-      icon: Icons.cached_rounded,
-    ),
-    (id: 'otros', label: 'Otros', asset: '', icon: Icons.more_horiz_rounded),
-  ];
 
   @override
   Widget build(BuildContext context) {
+    if (canales.isEmpty) return const SizedBox.shrink();
+
     return Wrap(
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
-      children: _canales.map((canal) {
-        final activo = seleccionados.contains(canal.id);
+      children: canales.map((canal) {
+        final activo = seleccionado?.id == canal.id;
         final colorTexto = activo
             ? AppColors.primary
             : (habilitado ? AppColors.textSecondary : AppColors.textDisabled);
 
         return GestureDetector(
-          onTap: () => onToggle(canal.id),
+          onTap: habilitado ? () => onSeleccionar(canal) : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(
@@ -1006,21 +1088,10 @@ class _ChipsCanales extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (canal.asset.isNotEmpty)
-                  Image.asset(
-                    canal.asset,
-                    width: AppSizing.iconActionSm,
-                    height: AppSizing.iconActionSm,
-                  )
-                else
-                  Icon(
-                    canal.icon,
-                    size: AppSizing.iconActionSm,
-                    color: colorTexto,
-                  ),
+                CanalHelper.icon(canal.id, size: AppSizing.iconActionSm),
                 const SizedBox(width: AppSpacing.sm2),
                 Text(
-                  canal.label,
+                  canal.nombre,
                   style: AppTextStyles.labelMedium.copyWith(
                     color: colorTexto,
                     fontWeight: activo

@@ -7,7 +7,6 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart';
 
 class SolicitudFacturacionView extends StatefulWidget {
   final Solicitud solicitud;
@@ -128,6 +127,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   @override
   Widget build(BuildContext context) {
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final monedas = catalogState is CatalogsLoaded
+        ? catalogState.monedas
+        : const <MonedaItem>[];
+
     return BasePage(
       onPop: () => context.goBack(),
       drawerSide: DrawerSide.none,
@@ -209,6 +213,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     ctrlCelular: _ctrlCelular,
                     ctrlCorreo: _ctrlCorreo,
                     ctrlDireccion: _ctrlDireccion,
+                    monedas: monedas,
                     comprobanteInicialId: _comprobanteId.isNotEmpty
                         ? _comprobanteId
                         : null,
@@ -224,7 +229,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     }),
                     onMonedaChanged: (item) => setState(() {
                       _monedaId = item?.id ?? '';
-                      _monedaLabel = item?.descripcion ?? '';
+                      _monedaLabel = item?.nombre ?? '';
                     }),
                     tipoDocInicialId: _tipoDocId.isNotEmpty ? _tipoDocId : null,
                     nacionalidadInicialId: _nacionalidadId.isNotEmpty
@@ -236,14 +241,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     }),
                     onNacionalidadChanged: (item) =>
                         setState(() => _nacionalidadId = item?.id ?? ''),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── Información complementaria ─────────────────────
-                  _SeccionInfoComplementaria(
-                    habilitado: widget.modoEdicion,
-                    ctrlNit: _ctrlNit,
-                    ctrlObservaciones: _ctrlObservaciones,
                   ),
                 ],
               ),
@@ -292,7 +289,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                 colorFondo: AppColors.warning.withOpacity(0.12),
                                 label: 'Participantes pagantes',
                                 valor: state.participantes
-                                    .where((p) => p.tipoPago == 'Pagante')
+                                    .where(
+                                      (p) => p.tipoParticipante == 'Pagante',
+                                    )
                                     .length
                                     .toString(),
                               ),
@@ -307,16 +306,25 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                 Row(
                   children: [
                     Expanded(
-                      child: SolicitudBotonAtras(
-                        icono: AppIcons.back,
+                      child: CustomSecondaryButton(
+                        text: 'Atrás',
+                        icon: AppIcons.back,
+                        backgroundColor: AppColors.brandRaspberryAccessible,
                         onPressed: () => context.goBack(),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    Expanded(child: SolicitudBotonBorrador(onPressed: () {})),
+                    Expanded(
+                      child: CustomSecondaryButton(
+                        text: 'Guardar',
+                        icon: AppIcons.save,
+                        onPressed: () {},
+                      ),
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
-                      child: SolicitudBotonContinuar(
+                      child: CustomPrimaryButton(
+                        text: 'Continuar →',
                         onPressed: !_formCompleto
                             ? null
                             : () {
@@ -470,6 +478,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
   final TextEditingController ctrlDireccion;
+  final List<MonedaItem> monedas;
   final String? comprobanteInicialId;
   final String? paisInicialId;
   final String? monedaInicialId;
@@ -477,7 +486,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final String? nacionalidadInicialId;
   final ValueChanged<ComboItem?>? onComprobanteChanged;
   final ValueChanged<ComboItem?>? onPaisChanged;
-  final ValueChanged<ComboItem?>? onMonedaChanged;
+  final ValueChanged<MonedaItem?>? onMonedaChanged;
   final ValueChanged<ComboItem?>? onTipoDocChanged;
   final ValueChanged<ComboItem?>? onNacionalidadChanged;
 
@@ -490,6 +499,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     required this.ctrlCelular,
     required this.ctrlCorreo,
     required this.ctrlDireccion,
+    required this.monedas,
     this.comprobanteInicialId,
     this.paisInicialId,
     this.monedaInicialId,
@@ -509,7 +519,6 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     '03¦Colombia',
     '04¦México',
   ];
-  static const _monedas = ['01¦Soles (PEN)', '02¦Dólares (USD)'];
   static const _tiposDoc = [
     '01¦DNI',
     '02¦Pasaporte',
@@ -534,7 +543,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboSearchField(
                 label: 'Comprobante *',
                 data: _comprobantes,
                 enabled: habilitado,
@@ -544,7 +553,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboSearchField(
                 label: 'País *',
                 data: _paises,
                 enabled: habilitado,
@@ -554,9 +563,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboField<MonedaItem>(
                 label: 'Moneda *',
-                data: _monedas,
+                data: monedas,
                 enabled: habilitado,
                 initialValue: monedaInicialId,
                 onChanged: onMonedaChanged,
@@ -570,7 +579,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboSearchField(
                 label: 'Tipo documento *',
                 data: _tiposDoc,
                 enabled: habilitado,
@@ -580,7 +589,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Número documento *',
                 controller: ctrlNumDoc,
                 keyboardType: TextInputType.number,
@@ -595,7 +604,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: SolicitudComboField(
+              child: CustomComboSearchField(
                 label: 'Nacionalidad *',
                 data: _nacionalidades,
                 enabled: habilitado,
@@ -605,7 +614,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Nombres o Razón social *',
                 controller: ctrlNombresRazon,
                 enabled: habilitado,
@@ -621,7 +630,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Apellido paterno / razón legal *',
                 controller: ctrlApellidoPaterno,
                 enabled: habilitado,
@@ -631,7 +640,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Apellido materno / complemento',
                 hint: 'Opcional',
                 controller: ctrlApellidoMaterno,
@@ -656,7 +665,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: SolicitudTextField(
+              child: CustomTextField(
                 label: 'Correo para envío de boleta *',
                 controller: ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
@@ -668,7 +677,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
 
         // Dirección de domicilio (ancho completo)
-        SolicitudTextField(
+        CustomTextField(
           label: 'Dirección de domicilio *',
           controller: ctrlDireccion,
           enabled: habilitado,
@@ -680,84 +689,3 @@ class _SeccionDatosFacturacion extends StatelessWidget {
 }
 
 // ── Sección Información complementaria ───────────────────────────────────────
-
-class _SeccionInfoComplementaria extends StatelessWidget {
-  final bool habilitado;
-  final TextEditingController ctrlNit;
-  final TextEditingController ctrlObservaciones;
-
-  const _SeccionInfoComplementaria({
-    required this.habilitado,
-    required this.ctrlNit,
-    required this.ctrlObservaciones,
-  });
-
-  static const _actividades = [
-    '01¦Manufactura',
-    '02¦Comercio',
-    '03¦Servicios',
-    '04¦Agroindustria',
-    '05¦Tecnología',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Row(
-          children: [
-            const Icon(
-              Icons.apps_rounded,
-              color: AppColors.primary,
-              size: AppSizing.iconMd,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              'Información complementaria',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-
-        // Actividad económica + NIT
-        Row(
-          children: [
-            Expanded(
-              child: SolicitudComboField(
-                label: 'Actividad económica',
-                data: _actividades,
-                enabled: habilitado,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: SolicitudTextField(
-                label: 'NIT',
-                controller: ctrlNit,
-                enabled: habilitado,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-
-        // Observaciones
-        SolicitudTextField(
-          label: 'Observaciones',
-          hint: 'Opcional',
-          controller: ctrlObservaciones,
-          enabled: habilitado,
-          textCapitalization: TextCapitalization.sentences,
-          maxLines: 3,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-      ],
-    );
-  }
-}

@@ -6,6 +6,7 @@ class DatosSolicitante {
   final String tipoPersona;
   final String tipoDocLabel;
   final String numDoc;
+  final String nacionalidad;
   final String nombres;
   final String apellidoPaterno;
   final String apellidoMaterno;
@@ -14,7 +15,8 @@ class DatosSolicitante {
   final String correo;
   final String campana;
   final String evento;
-  final List<String> canales;
+  final int? canalId;
+  final String canalNombre;
   final String ruc;
   final String razonSocial;
   final bool solicitanteEsParticipante;
@@ -24,6 +26,7 @@ class DatosSolicitante {
     required this.tipoPersona,
     required this.tipoDocLabel,
     required this.numDoc,
+    required this.nacionalidad,
     required this.nombres,
     required this.apellidoPaterno,
     required this.apellidoMaterno,
@@ -32,7 +35,8 @@ class DatosSolicitante {
     required this.correo,
     required this.campana,
     required this.evento,
-    required this.canales,
+    this.canalId,
+    required this.canalNombre,
     required this.ruc,
     required this.razonSocial,
     required this.solicitanteEsParticipante,
@@ -46,7 +50,7 @@ class DatosSolicitante {
   String get documento =>
       tipoDocLabel.isNotEmpty ? '$tipoDocLabel $numDoc' : numDoc;
 
-  String get canalesTexto => canales.isEmpty ? '—' : canales.join(', ');
+  String get canalTexto => canalNombre.isEmpty ? '—' : canalNombre;
 }
 
 class DatosFacturacion {

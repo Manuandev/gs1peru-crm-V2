@@ -20,11 +20,13 @@ Todo el feature funciona hoy con data en memoria (sin SP real conectado):
   (paso 3, `MonedaItem`), **Tipo documento** (pasos 1/3 y formulario de participante,
   `TipoDocumentoItem` — `id` es **String**, no parsear con `toInt`), **Nacionalidad**
   (pasos 1/3 y formulario de participante, `NacionalidadItem` — gentilicio, no confundir
-  con `PaisItem`), **código telefónico del celular** (todos los campos de celular del
-  wizard, `PaisItem.codigoTelefono` — ver `SolicitudCampoCelular` abajo). Combos sin
-  catálogo de backend (se mantienen como lista fija local porque no existe otro origen):
-  Sexo (paso 1), Comprobante y País (paso 3), Tipo de participante (formulario de
-  participante).
+  con `PaisItem`), **Comprobante** (paso 3, `ComprobanteItem`), **País** (paso 3,
+  `CustomComboField<PaisItem>` — el mismo catálogo `CatalogsBloc.paises` que alimenta el
+  selector de código telefónico, ver abajo), **código telefónico del celular** (todos los
+  campos de celular del wizard, `PaisItem.codigoTelefono` — ver `SolicitudCampoCelular`
+  abajo). Combos sin catálogo de backend (se mantienen como lista fija local porque no
+  existe otro origen — **son los únicos que pueden seguir hardcodeados**): Sexo (paso 1),
+  Tipo de participante (formulario de participante).
 - Los chips de Canal usan `AppSocialUtils.widgetCanalById(canal.id)` (no
   `widgetCanal(canal.iconoApp)`) — el string `iconoApp` que trae el SP no siempre calza
   con las keys internas de `AppSocialUtils` y termina mostrando un ícono de interrogación;
@@ -120,7 +122,21 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 - `SolicitudCompletarView` (completar/) → formulario paso 1 (datos del solicitante). Pie de
   3 botones: **Cancelar** (izquierda, raspberry, pide confirmación "¿Desea cancelar el
   proceso de solicitud?" antes de salir) / **Guardar** (medio) / **Continuar** (derecha) —
-  mismo layout que el paso 3, solo cambia la etiqueta/función del botón izquierdo
+  mismo layout que el paso 3, solo cambia la etiqueta/función del botón izquierdo.
+  Dividido en varios archivos para no pasar de ~900 líneas — al tocar el paso 1, el widget
+  que corresponde puede estar en cualquiera de estos (todos en `completar/`):
+  - `solicitud_completar_view.dart` → `SolicitudCompletarView` (el State y el `build`
+    principal: toggle tipo persona, canal, adjuntos, switches, botón "Continuar")
+  - `solicitud_completar_adjuntos.dart` → `BotonAdjuntar` / `TarjetaArchivoAdjunto`
+  - `solicitud_completar_secciones.dart` → `TooltipPartesSolicitud`, `SeccionSwitches` +
+    `ItemSwitch`, `SeccionInfoComercial` (RUC/razón social)
+  - `solicitud_completar_datos_solicitante.dart` → `SeccionDatosSolicitante` (tipo/número
+    doc, nacionalidad, sexo, nombres, apellidos, cargo, celular, correo)
+  - `solicitud_chips_canales.dart` → `ChipsCanales`
+  Se importan directamente en `solicitud_completar_view.dart` (no vía el barrel
+  `index_solicitudes.dart`), mismo patrón que `solicitud_pasos_indicador.dart`. Regla
+  general del feature: ningún archivo debería pasar de ~900-1000 líneas — si uno se acerca,
+  extraer secciones a un archivo nuevo así en vez de seguir creciendo el mismo
 - `SolicitudParticipantesView` (completar/) → lista de participantes del paso 2; agregar
   abre `participante_form_sheet.dart` (bottom sheet); eliminar (individual o "todos") pide
   confirmación vía `context.showConfirmDialog`. Pie: Cancelar / Guardar / Continuar (mismo

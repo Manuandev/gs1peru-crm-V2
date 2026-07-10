@@ -143,6 +143,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final paises = catalogState is CatalogsLoaded
         ? catalogState.paises
         : const <PaisItem>[];
+    final comprobantes = catalogState is CatalogsLoaded
+        ? catalogState.comprobantes
+        : const <ComprobanteItem>[];
     final paisCelular =
         _paisCelular ??
         (paises.isEmpty
@@ -239,6 +242,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     tiposDocumento: tiposDocumento,
                     nacionalidades: nacionalidades,
                     paises: paises,
+                    comprobantes: comprobantes,
                     paisCelular: paisCelular,
                     onPaisCelularChanged: (p) =>
                         setState(() => _paisCelular = p),
@@ -249,11 +253,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     monedaInicialId: _monedaId.isNotEmpty ? _monedaId : null,
                     onComprobanteChanged: (item) => setState(() {
                       _comprobanteId = item?.id ?? '';
-                      _comprobanteLabel = item?.descripcion ?? '';
+                      _comprobanteLabel = item?.nombre ?? '';
                     }),
                     onPaisChanged: (item) => setState(() {
                       _paisId = item?.id ?? '';
-                      _paisLabel = item?.descripcion ?? '';
+                      _paisLabel = item?.nombre ?? '';
                     }),
                     onMonedaChanged: (item) => setState(() {
                       _monedaId = item?.id ?? '';
@@ -511,6 +515,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final List<TipoDocumentoItem> tiposDocumento;
   final List<NacionalidadItem> nacionalidades;
   final List<PaisItem> paises;
+  final List<ComprobanteItem> comprobantes;
   final PaisItem? paisCelular;
   final ValueChanged<PaisItem> onPaisCelularChanged;
   final String? comprobanteInicialId;
@@ -518,8 +523,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final String? monedaInicialId;
   final String? tipoDocInicialId;
   final String? nacionalidadInicialId;
-  final ValueChanged<ComboItem?>? onComprobanteChanged;
-  final ValueChanged<ComboItem?>? onPaisChanged;
+  final ValueChanged<ComprobanteItem?>? onComprobanteChanged;
+  final ValueChanged<PaisItem?>? onPaisChanged;
   final ValueChanged<MonedaItem?>? onMonedaChanged;
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
@@ -537,6 +542,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     required this.tiposDocumento,
     required this.nacionalidades,
     required this.paises,
+    required this.comprobantes,
     required this.paisCelular,
     required this.onPaisCelularChanged,
     this.comprobanteInicialId,
@@ -551,14 +557,6 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     this.onNacionalidadChanged,
   });
 
-  static const _comprobantes = ['01¦Boleta', '02¦Factura'];
-  static const _paises = [
-    '01¦Perú',
-    '02¦El Salvador',
-    '03¦Colombia',
-    '04¦México',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -568,9 +566,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: CustomComboSearchField(
+              child: CustomComboField<ComprobanteItem>(
                 label: 'Comprobante *',
-                data: _comprobantes,
+                data: comprobantes,
                 enabled: habilitado,
                 initialValue: comprobanteInicialId,
                 onChanged: onComprobanteChanged,
@@ -578,9 +576,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: CustomComboSearchField(
+              child: CustomComboField<PaisItem>(
                 label: 'País *',
-                data: _paises,
+                data: paises,
                 enabled: habilitado,
                 initialValue: paisInicialId,
                 onChanged: onPaisChanged,

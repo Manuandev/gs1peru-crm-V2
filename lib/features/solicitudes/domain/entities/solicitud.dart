@@ -23,6 +23,13 @@ class Solicitud {
   final String asesor;
   final String nombreAsesor;
 
+  /// ID_LEAD del lead de origen — solo se usa al crear una solicitud NUEVA
+  /// desde una negociación ganada (ContactoNegociacionCard "Generar
+  /// solicitud"). Vacío en cualquier solicitud ya existente: el SP de
+  /// listado ('LS') no lo trae y no hace falta para verla/editarla, solo
+  /// para el INSERT inicial en CSV_SOLICITUD_CUD_APP.
+  final String idLead;
+
   String get nombreCompleto => '$nombre $apellido'.trim();
 
   const Solicitud({
@@ -47,6 +54,7 @@ class Solicitud {
     required this.ibValidado,
     required this.asesor,
     required this.nombreAsesor,
+    this.idLead = '',
   });
 
   Solicitud copyWith({
@@ -71,6 +79,7 @@ class Solicitud {
     bool? ibValidado,
     String? asesor,
     String? nombreAsesor,
+    String? idLead,
   }) {
     return Solicitud(
       idSolicitud: idSolicitud ?? this.idSolicitud,
@@ -94,6 +103,7 @@ class Solicitud {
       ibValidado: ibValidado ?? this.ibValidado,
       asesor: asesor ?? this.asesor,
       nombreAsesor: nombreAsesor ?? this.nombreAsesor,
+      idLead: idLead ?? this.idLead,
     );
   }
 }

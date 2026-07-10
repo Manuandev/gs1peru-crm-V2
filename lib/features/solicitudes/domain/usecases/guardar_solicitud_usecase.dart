@@ -11,6 +11,7 @@ class GuardarSolicitudUseCase {
 
   Future<CrudResult> call({
     required String numSol,
+    String idLead = '',
     required String tipoPersona,
     required DatosSolicitante solicitante,
     DatosFacturacion? facturacion,
@@ -19,6 +20,7 @@ class GuardarSolicitudUseCase {
     required bool esBorrador,
   }) => _repository.guardarSolicitud(
     numSol: numSol,
+    idLead: idLead,
     tipoPersona: tipoPersona,
     solicitante: solicitante,
     facturacion: facturacion,

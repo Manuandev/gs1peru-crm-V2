@@ -3,6 +3,7 @@
 export 'data/datasources/remote/solicitud_remote_datasource.dart';
 
 export 'data/models/solicitud_model.dart';
+export 'data/models/solicitud_detalle_model.dart';
 
 export 'data/repositories/solicitud_repository_impl.dart';
 
@@ -14,6 +15,7 @@ export 'domain/enums/solicitud_accion_tipo.dart';
 export 'domain/repositories/solicitud_repository.dart';
 
 export 'domain/usecases/get_solicitudes_usecase.dart';
+export 'domain/usecases/get_solicitud_detalle_usecase.dart';
 export 'domain/usecases/guardar_solicitud_usecase.dart';
 export 'domain/usecases/guardar_archivo_solicitud_usecase.dart';
 
@@ -35,6 +37,12 @@ export 'presentation/pages/solicitud_carga_masiva_page.dart';
 
 export 'presentation/widgets/detail/solicitud_detalle_view.dart';
 export 'presentation/widgets/completar/solicitud_completar_view.dart';
+export 'presentation/widgets/completar/solicitud_guardar_helper.dart';
+export 'presentation/widgets/completar/solicitud_pasos_indicador.dart';
+export 'presentation/widgets/completar/solicitud_chips_canales.dart';
+export 'presentation/widgets/completar/solicitud_completar_adjuntos.dart';
+export 'presentation/widgets/completar/solicitud_completar_secciones.dart';
+export 'presentation/widgets/completar/solicitud_completar_datos_solicitante.dart';
 export 'presentation/widgets/completar/solicitud_participantes_view.dart';
 export 'presentation/widgets/completar/participante_form_sheet.dart';
 export 'presentation/widgets/completar/solicitud_facturacion_view.dart';

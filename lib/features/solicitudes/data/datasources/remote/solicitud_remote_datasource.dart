@@ -7,9 +7,7 @@
 //   '03' Lista p/Cobr.   — aprobada y lista para enviar a cobranza
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/solicitudes/data/models/solicitud_model.dart';
-import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
-import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 // Id de catálogo de "RUC" en TipoDocumentoItem (SYSTABEXTER02 CODTABLA='F01') —
 // mismo valor que _idTipoDocRuc en solicitud_facturacion_view.dart. Si cambia
@@ -35,6 +33,23 @@ class SolicitudRemoteDatasource {
     };
   }
 
+  // Task 'DT' — [CRM].[CSV_SOLICITUD_LST_APP] (misma SP que 'LS', endpoint
+  // urlSolicitudesLst). Trae solicitante + facturación + participantes +
+  // archivos de una solicitud ya guardada, dado su NUMSOL — usado para
+  // rehidratar el wizard al entrar por "Editar ficha"/"Continuar".
+  Future<SolicitudDetalleModel> getSolicitudDetalle(String numSol) async {
+    final body = '$numSol${AppConstants.sepListas}DT';
+
+    final result = await _api.postSafe(ApiConstants.urlSolicitudesLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => SolicitudDetalleModel.fromRawString(data),
+      ApiEmpty() => throw const AppException('La solicitud no existe.'),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   // Task 'U' — [CRM].[CSV_SOLICITUD_CUD_APP]. Crea (numSol vacío) o actualiza
   // (numSol existente) la cabecera + facturación + participantes de una
   // solicitud, en una sola llamada. Los archivos van aparte (task 'AR',
@@ -43,6 +58,7 @@ class SolicitudRemoteDatasource {
   // Cabecera: 41 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
   Future<CrudResult> guardarSolicitud({
     required String numSol,
+    required String idLead, // solo aplica al crear (numSol vacío) desde una negociación
     required String tipoPersona, // 'juridica' | 'natural'
     required DatosSolicitante solicitante,
     DatosFacturacion? facturacion,
@@ -66,7 +82,7 @@ class SolicitudRemoteDatasource {
     final dcImporteTotal = dcImporte + dcIgv;
 
     final cabecera = <String>[
-      '', // 1  ID_LEAD — no aplica hoy (no hay flujo de creación desde un Lead)
+      idLead, // 1  ID_LEAD — solo se usa en la rama de creación (numSol vacío)
       numSol, // 2  NUMSOL
       tipoPersona == 'juridica' ? 'J' : 'N', // 3  COD_TIP_REGISTRO
       solicitante.tipoDocId, // 4  ID_TIP_DOC_SOL

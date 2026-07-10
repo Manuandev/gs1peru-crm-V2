@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SeccionDatosSolicitante extends StatefulWidget {
   final bool habilitado;
@@ -22,6 +22,9 @@ class SeccionDatosSolicitante extends StatefulWidget {
   final List<PaisItem> paises;
   final PaisItem? paisCelular;
   final ValueChanged<PaisItem> onPaisCelularChanged;
+  final String? tipoDocInicialId;
+  final String? nacionalidadInicialId;
+  final String? sexoInicialId;
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   final ValueChanged<String>? onSexoChanged;
@@ -39,6 +42,9 @@ class SeccionDatosSolicitante extends StatefulWidget {
     required this.paises,
     required this.paisCelular,
     required this.onPaisCelularChanged,
+    this.tipoDocInicialId,
+    this.nacionalidadInicialId,
+    this.sexoInicialId,
     this.onTipoDocChanged,
     this.onNacionalidadChanged,
     this.onSexoChanged,
@@ -51,6 +57,12 @@ class SeccionDatosSolicitante extends StatefulWidget {
 
 class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
   String? _tipoDocId;
+
+  @override
+  void initState() {
+    super.initState();
+    _tipoDocId = widget.tipoDocInicialId;
+  }
 
   // Límite de caracteres y tipo de teclado según tipo de documento —
   // códigos reales de SYSTABEXTER02 CODTABLA='F01' (catálogo real).
@@ -116,6 +128,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 data: tiposDocumento,
                 labelIndex: 2, // abreviatura (DNI/CE/RUC/Pasaporte...)
                 enabled: widget.habilitado,
+                initialValue: widget.tipoDocInicialId,
                 onChanged: (item) {
                   setState(() {
                     _tipoDocId = item?.id;
@@ -150,6 +163,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 label: 'Nacionalidad *',
                 data: nacionalidades,
                 enabled: widget.habilitado,
+                initialValue: widget.nacionalidadInicialId,
                 onChanged: (item) => widget.onNacionalidadChanged?.call(item),
               ),
             ),
@@ -159,6 +173,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 label: 'Sexo *',
                 data: _sexos,
                 enabled: widget.habilitado,
+                initialValue: widget.sexoInicialId,
                 onChanged: (item) => widget.onSexoChanged?.call(item?.id ?? ''),
               ),
             ),

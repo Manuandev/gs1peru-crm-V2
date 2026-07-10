@@ -6,7 +6,7 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
 
 ## Estado general — ⚠️ wizard aún hardcodeado, lista ya conectada al SP real
 - `SolicitudRemoteDatasource.getSolicitudes()` ya está conectado a
-  `[CRM].[CSV_SOLICITUDES_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) — mismo patrón
+  `[CRM].[CSV_SOLICITUD_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) — mismo patrón
   que `CobranzaRemoteDatasource`. Ver mapeo posicional completo en el comentario de
   `SolicitudModel.fromRawString` y en "SPs que consume" abajo.
 - **Bug pendiente en el SP — campo Canal**: la sección comentada `-- CANAL` del SP repite las
@@ -18,12 +18,15 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   se corrija el SP, solo hay que cambiar esas dos columnas en el `SELECT` para que apunten a
   `CN` en vez de repetir `EG`. Hasta entonces, `idCanal`/`canal` en la lista llegan con el
   mismo valor que `idEstado`/`estado` (dato incorrecto, no usar para nada crítico).
-- El wizard (`SolicitudFormCubit` + `ParticipantesCubit`) guarda todo en memoria durante la
-  sesión de navegación. **`SolicitudRemoteDatasource.guardarSolicitud()` ya existe y está
-  conectado** al SP real (task `'U'`, ver "SPs que consume") — pero **todavía no está
-  llamado desde ningún botón**. Los botones "Guardar" (pasos 1/2/3) y "Guardar
-  borrador"/"Generar solicitud" (paso Resumen) siguen sin `onPressed` real — eso es lo que
-  falta para terminar de conectar el CUD, ver "Pendiente" abajo.
+- El wizard (`SolicitudFormCubit` + `ParticipantesCubit`) ya está conectado al CUD real de
+  punta a punta. Al entrar (por "Editar ficha"/"Continuar" o por "Generar solicitud" desde
+  una negociación ganada) el paso 1 llama `getSolicitudDetalle()` (task `'DT'`, ver abajo) y
+  prellena los cubits — ver `solicitud_completar_view.dart._cargarDetalle()`. Los 4 botones
+  "Guardar" (pasos 1/2/3/Resumen) llaman `guardarSolicitudDesdeWizard()` con
+  `esBorrador: true`; "Generar solicitud" (Resumen) con `esBorrador: false` y navega a
+  `SolicitudGeneradaPage` solo si el backend responde `CrudOk`. Ver
+  `solicitud_guardar_helper.dart` (punto único que arma la llamada, compartido por los 5
+  botones) y "Pendiente" abajo por lo que sigue faltando (archivos, carga masiva).
 - "Carga masiva" (Excel) solo valida la extensión del archivo seleccionado — no procesa ni
   sube el archivo.
 - **Archivos (voucher/OC) van en una llamada aparte** (task `'AR'`, aún no implementado en
@@ -34,28 +37,29 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
 ## Pendiente (roadmap del CUD) — leer esto primero si retomas el feature
 1. ~~`SolicitudRemoteDatasource.guardarSolicitud()` (task `'U'`)~~ — hecho.
 2. ~~`SolicitudRemoteDatasource.guardarArchivo()` (task `'AR'`)~~ — hecho, ver abajo.
-3. **Falta conectar los botones** — ningún widget llama a `guardarSolicitud()` ni
-   `guardarArchivo()` todavía. Esto es lo próximo:
-   - "Generar solicitud" (Resumen, `solicitud_resumen_view.dart`) → `GuardarSolicitudUseCase`
-     con `esBorrador: false`. Primera prioridad, acordado con el usuario.
-   - Botones "Guardar" (pasos 1/2/3/Resumen, hoy `onPressed: () {}`) → mismo usecase con
-     `esBorrador: true`.
-   - Flujo completo al presionar "Generar solicitud": 1) `GuardarSolicitudUseCase.call(...)`
-     con `numSol: solicitud.idSolicitud` (o `''` si es creación — hoy no hay ese caso, ver
-     punto 6) → 2) leer el `NUMSOL` de `CrudOk.data` → 3) si `_archivoVoucher`/`_archivoOC`
-     (`PlatformFile` capturados en paso 1, `solicitud_completar_view.dart`) no son null, por
-     cada uno llamar `GuardarArchivoSolicitudUseCase.call(numSol: ese NUMSOL, tipo:
-     'voucher'|'oc', fileName/fileExt/fileBytes: del `PlatformFile`) → 4) navegar a
-     `SolicitudGeneradaPage`. Los archivos se mandan DESPUÉS de confirmar el `NUMSOL`, nunca
-     antes (por eso está separado en dos tasks — ver "SPs que consume").
+3. ~~Conectar los botones "Guardar"/"Generar solicitud"~~ — hecho, ver "Estado general".
+   Sigue pendiente el tramo de archivos dentro de "Generar solicitud": hoy, al presionar ese
+   botón, **no** se suben `_archivoVoucher`/`_archivoOC` (`PlatformFile` capturados en el paso
+   1) aunque el usuario los haya adjuntado — solo se guarda cabecera+facturación+participantes.
+   Falta: 1) leer el `NUMSOL` de `CrudOk.data` tras el `guardarSolicitudDesdeWizard()` exitoso
+   → 2) si los `PlatformFile` no son null, llamar `GuardarArchivoSolicitudUseCase.call(numSol:
+   ese NUMSOL, tipo: 'voucher'|'oc', fileName/fileExt/fileBytes: del `PlatformFile`) antes de
+   navegar a `SolicitudGeneradaPage`. El obstáculo real: los `PlatformFile` viven solo en el
+   estado local de `solicitud_completar_view.dart` (paso 1) y no llegan hasta Resumen — hay
+   que subirlos a `SolicitudFormState` (o similar) para que sobrevivan el resto del wizard.
 4. ~~Ajuste en `guardarSolicitud()`: el SP dejó de recibir `ID_CONTACTO`~~ — hecho. La
    cabecera ahora manda 41 campos (`ID_LEAD` es field1) en vez de 42.
-5. `ID_LEAD` se manda vacío porque **no existe ninguna pantalla que cree una
-   solicitud nueva desde un Lead** — el único punto de entrada al wizard hoy es
-   "Editar ficha"/"Continuar" desde una solicitud ya existente
-   (`SolicitudDetalleView.goToFichaCompletarSolicitud`). Cuando se construya ese flujo, hay
-   que pasar el `idLead` real.
-6. "Carga masiva" (Excel) y el resto de los botones "Guardar borrador" siguen sin SP.
+5. ~~`ID_LEAD` se manda vacío porque no existe ninguna pantalla que cree una solicitud nueva
+   desde un Lead~~ — hecho. `ContactoNegociacionCard` (`lead/`, botón "Generar solicitud" en
+   una negociación ganada) navega a `SolicitudCompletarPage` con un `Solicitud` en blanco
+   (`idSolicitud: ''`, `idLead: negociacion.idLead.toString()`) — ver "Entidad `Solicitud`"
+   abajo. El otro botón "Generar solicitud" (`lead/lead_detail_sheet/negociacion_card.dart`,
+   pestaña Negociaciones de **Conversaciones**) sigue con `onGenerarSolicitud: () {}` — no se
+   tocó, decisión pendiente de si aplica igual ahí.
+6. "Carga masiva" (Excel) y guardar el `DatosFacturacion.actividadEconomica`/`nit`/
+   `observaciones` (capturados en el paso 3 pero el SP no tiene columna para
+   `actividadEconomica`/`observaciones`, y `nit` no se manda en `guardarSolicitud()`) siguen
+   sin SP/sin conectar.
 - **Campaña y Evento ya NO forman parte del paso 1** — se removieron por completo (campos,
   combos, validación y del modelo `DatosSolicitante`) porque este wizard ya no los usa.
 - Combos con catálogo real ya conectado a `CatalogsBloc` (no hardcodear de nuevo si se
@@ -288,7 +292,11 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   (`'Juridica'`/`'Natural'`), `idCondicionPago`/`condicionPago` (`'CR'`/`'C'` — crédito o
   contado), `canal` (label, ver bug de Canal en "Estado general"), `ibValidado` (bool). Ya
   **no tiene** `idContacto` ni `observaciones` — el SP no los trae y ninguna pantalla los
-  usaba
+  usaba. `idLead` (`String`, default `''`) es el único campo que **no** viene del SP de
+  listado — lo setea a mano `ContactoNegociacionCard._generarSolicitud()` (`lead/`) al armar
+  el `Solicitud` en blanco para crear una solicitud nueva desde una negociación ganada; en
+  cualquier solicitud ya existente queda vacío y no se usa para nada más que ese INSERT
+  inicial (`guardarSolicitud()` lo manda como `ID_LEAD`, field1 de la cabecera)
 - `DatosSolicitante` / `DatosFacturacion` (bloc/form/solicitud_form_state.dart) → snapshots
   inmutables de los pasos 1 y 3, capturados al presionar "Continuar". `DatosSolicitante`
   incluye `tipoDocId`/`nacionalidadId`/`sexoId` (ids de catálogo, no solo el label —
@@ -315,11 +323,20 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   solicitante será participante" — ver abajo)
 
 ## SPs que consume
-- `[CRM].[CSV_SOLICITUDES_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) → lista de
+- `[CRM].[CSV_SOLICITUD_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) → lista de
   solicitudes (`SolicitudModel.fromRawString`, 23 campos posicionales — ver mapeo comentado
   en el archivo del modelo y el bug de Canal en "Estado general"). Este SP solo tiene rama
   `@L_TASK = 'LS'` y filtra en el WHERE por `IB_MOD_APP = 1 OR ID_USUARIO_EJEC = @ID_USUARIO`
   (mismo patrón que moderador/asesor de Cobranza) más `IB_VALIDADO != 0`.
+- `[CRM].[CSV_SOLICITUD_LST_APP]` (task `'DT'`, body `numSol¯DT`, **mismo endpoint**
+  `urlSolicitudesLst` que `'LS'`) → `SolicitudRemoteDatasource.getSolicitudDetalle()`
+  (`SolicitudDetalleModel.fromRawString`). Trae solicitante + facturación + participantes +
+  archivos de una solicitud ya guardada, dado su `NUMSOL` — sin wrapper `OK`/`ERROR`, solo el
+  string crudo (mismo estilo que `'LS'`). Solo IDs de catálogo, sin descripciones —
+  `solicitud_completar_view.dart._cargarDetalle()` resuelve los labels contra `CatalogsBloc`.
+  Se llama una sola vez, al entrar al paso 1 (`modoEdicion` true o false); si `numSol` viene
+  vacío (creación nueva desde una negociación) se salta el fetch y el wizard arranca en
+  blanco.
 - `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'U'`, body `cabecera¦...¯detalle¦...¬detalle¦...¯U`)
   → `SolicitudRemoteDatasource.guardarSolicitud()`. Crea (si `numSol` viene vacío) o
   actualiza (si ya existe) cabecera + facturación + participantes de una solicitud, todo en
@@ -327,7 +344,8 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   cabecera, `ID_LEAD` es field1 — el SP ya no recibe `ID_CONTACTO`; 14 por participante).
   Devuelve `OK¯mensaje¯NUMSOL` (el `NUMSOL` es obligatorio
   leerlo de la respuesta en el flujo de creación — hace falta para la llamada de archivos
-  después). **Todavía no está llamado desde ningún botón** — ver "Pendiente" arriba.
+  después). Llamado desde los 5 botones "Guardar"/"Generar solicitud" vía
+  `guardarSolicitudDesdeWizard()` (`solicitud_guardar_helper.dart`) — ver "Estado general".
   - `IB_BORRADOR`: `1` cuando el usuario presiona "Guardar" (borrador), `0` cuando presiona
     "Generar solicitud" (final) — pasado como el parámetro `esBorrador` del usecase.
   - `IB_IGV` (por participante) siempre se manda `'1'` — no hay switch en la UI para

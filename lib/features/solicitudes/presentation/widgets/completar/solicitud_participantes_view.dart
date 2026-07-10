@@ -6,9 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
 
-class SolicitudParticipantesView extends StatelessWidget {
+class SolicitudParticipantesView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
 
@@ -17,6 +16,16 @@ class SolicitudParticipantesView extends StatelessWidget {
     required this.solicitud,
     required this.modoEdicion,
   });
+
+  @override
+  State<SolicitudParticipantesView> createState() =>
+      _SolicitudParticipantesViewState();
+}
+
+class _SolicitudParticipantesViewState
+    extends State<SolicitudParticipantesView> {
+  // true mientras se guarda el borrador (botón "Guardar")
+  bool _guardando = false;
 
   void _abrirFormularioNuevo(BuildContext context) {
     mostrarFormularioParticipante(
@@ -57,19 +66,38 @@ class SolicitudParticipantesView extends StatelessWidget {
     );
     if (soloInvitados) {
       context.goToFichaResumenSolicitud(
-        solicitud: solicitud,
-        modoEdicion: modoEdicion,
+        solicitud: widget.solicitud,
+        modoEdicion: widget.modoEdicion,
         formCubit: context.read<SolicitudFormCubit>(),
         participantesCubit: context.read<ParticipantesCubit>(),
       );
     } else {
       context.goToFichaFacturacionSolicitud(
-        solicitud: solicitud,
-        modoEdicion: modoEdicion,
+        solicitud: widget.solicitud,
+        modoEdicion: widget.modoEdicion,
         formCubit: context.read<SolicitudFormCubit>(),
         participantesCubit: context.read<ParticipantesCubit>(),
       );
     }
+  }
+
+  // Botón "Guardar" — borrador (IB_BORRADOR=1). Los participantes ya viven
+  // en ParticipantesCubit (cada alta/edición pasa por el modal), así que
+  // solo hace falta llamar al usecase con el estado actual de los cubits.
+  Future<void> _onGuardar() async {
+    if (_guardando) return;
+    setState(() => _guardando = true);
+
+    final result = await guardarSolicitudDesdeWizard(
+      context,
+      numSol: widget.solicitud.idSolicitud,
+      idLead: widget.solicitud.idLead,
+      esBorrador: true,
+    );
+
+    if (!mounted) return;
+    setState(() => _guardando = false);
+    mostrarResultadoGuardarSolicitud(context, result);
   }
 
   @override
@@ -155,7 +183,7 @@ class SolicitudParticipantesView extends StatelessWidget {
                         _BotonSeccionSmall(
                           icono: AppIcons.add,
                           label: 'Nuevo',
-                          onTap: modoEdicion
+                          onTap: widget.modoEdicion
                               ? () => _abrirFormularioNuevo(context)
                               : () {},
                         ),
@@ -201,7 +229,7 @@ class SolicitudParticipantesView extends StatelessWidget {
                           final p = state.participantes[index];
                           return _ParticipanteCard(
                             participante: p,
-                            habilitado: modoEdicion,
+                            habilitado: widget.modoEdicion,
                             onEditar: () => _abrirFormularioEditar(context, p),
                             onEliminar: () => context
                                 .read<ParticipantesCubit>()
@@ -230,7 +258,7 @@ class SolicitudParticipantesView extends StatelessWidget {
                   horizontal: AppSpacing.sm,
                   vertical: AppSpacing.sm,
                 ),
-                child: modoEdicion
+                child: widget.modoEdicion
                     ? Row(
                         children: [
                           Expanded(
@@ -246,7 +274,8 @@ class SolicitudParticipantesView extends StatelessWidget {
                             child: CustomSecondaryButton(
                               text: 'Guardar',
                               icon: AppIcons.save,
-                              onPressed: () {},
+                              isLoading: _guardando,
+                              onPressed: _onGuardar,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.xs),

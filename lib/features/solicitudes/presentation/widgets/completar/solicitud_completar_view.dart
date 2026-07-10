@@ -6,11 +6,10 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_chips_canales.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_completar_adjuntos.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_completar_secciones.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_completar_datos_solicitante.dart';
+
+// Id de catálogo de "RUC" en TipoDocumentoItem (SYSTABEXTER02 CODTABLA='F01') —
+// mismo valor que en solicitud_facturacion_view.dart y en el datasource.
+const _idTipoDocRucCompletar = '6';
 
 class SolicitudCompletarView extends StatefulWidget {
   final Solicitud solicitud;
@@ -27,6 +26,14 @@ class SolicitudCompletarView extends StatefulWidget {
 }
 
 class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
+  // true mientras se trae la solicitud del backend (task 'DT') — bloquea el
+  // formulario para que los combos (que solo leen su valor inicial una vez,
+  // en su propio initState) no se construyan antes de tener los datos.
+  bool _cargando = true;
+
+  // true mientras se guarda el borrador (botón "Guardar")
+  bool _guardando = false;
+
   // Canal seleccionado (single-select) — catálogo real vía CatalogsBloc
   CanalItem? _canalSeleccionado;
 
@@ -89,6 +96,187 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     ]) {
       ctrl.addListener(_onCampoTexto);
     }
+    _cargarDetalle();
+  }
+
+  // Trae solicitante + facturación + participantes + archivos ya guardados
+  // (task 'DT') y prellena el formulario + los cubits compartidos del
+  // wizard. Se llama una sola vez — el paso 1 solo se entra desde
+  // SolicitudDetalleView, nunca por "Atrás" desde otro paso.
+  Future<void> _cargarDetalle() async {
+    final numSol = widget.solicitud.idSolicitud;
+    if (numSol.isEmpty) {
+      setState(() => _cargando = false);
+      return;
+    }
+
+    try {
+      final detalle = await GetSolicitudDetalleUseCase(
+        context.read<SolicitudRepository>(),
+      ).call(numSol);
+
+      if (!mounted) return;
+
+      final catalogState = context.read<CatalogsBloc>().state;
+      final tiposDocumento = catalogState is CatalogsLoaded
+          ? catalogState.tiposDocumento
+          : const <TipoDocumentoItem>[];
+      final nacionalidades = catalogState is CatalogsLoaded
+          ? catalogState.nacionalidades
+          : const <NacionalidadItem>[];
+      final canales = catalogState is CatalogsLoaded
+          ? catalogState.canales
+          : const <CanalItem>[];
+      final comprobantes = catalogState is CatalogsLoaded
+          ? catalogState.comprobantes
+          : const <ComprobanteItem>[];
+      final monedas = catalogState is CatalogsLoaded
+          ? catalogState.monedas
+          : const <MonedaItem>[];
+      final paises = catalogState is CatalogsLoaded
+          ? catalogState.paises
+          : const <PaisItem>[];
+
+      final tipoDoc = tiposDocumento
+          .where((t) => t.id == detalle.tipoDocId)
+          .firstOrNull;
+      final nacionalidad = nacionalidades
+          .where((n) => n.id == detalle.nacionalidadId)
+          .firstOrNull;
+      final canal = detalle.canalId.isEmpty
+          ? null
+          : canales
+                .where((c) => c.id.toString() == detalle.canalId)
+                .firstOrNull;
+
+      final voucher = detalle.archivos
+          .where((a) => a.tipo == 'voucher')
+          .firstOrNull;
+      final oc = detalle.archivos.where((a) => a.tipo == 'oc').firstOrNull;
+
+      _tipoDocId = detalle.tipoDocId;
+      _tipoDocLabel = tipoDoc?.abreviatura ?? '';
+      _nacionalidadId = detalle.nacionalidadId;
+      _nacionalidadLabel = nacionalidad?.nombre ?? '';
+      _sexoId = detalle.sexoId;
+      _canalSeleccionado = canal;
+      _solicitanteParticipante = detalle.solicitanteEsParticipante;
+      _facturarAlSolicitante = detalle.facturarAlSolicitante;
+      _ctrlNumDoc.text = detalle.numDoc;
+      _ctrlNombres.text = detalle.nombres;
+      _ctrlApellidoPaterno.text = detalle.apellidoPaterno;
+      _ctrlApellidoMaterno.text = detalle.apellidoMaterno;
+      _ctrlCargo.text = detalle.cargo;
+      _ctrlCelular.text = detalle.celular;
+      _ctrlCorreo.text = detalle.correo;
+      _ctrlRuc.text = detalle.ruc;
+      _ctrlRazonSocial.text = detalle.razonSocial;
+
+      final datosSolicitante = DatosSolicitante(
+        tipoDocId: detalle.tipoDocId,
+        tipoDocLabel: _tipoDocLabel,
+        numDoc: detalle.numDoc,
+        nacionalidadId: detalle.nacionalidadId,
+        nacionalidad: _nacionalidadLabel,
+        sexoId: detalle.sexoId,
+        nombres: detalle.nombres,
+        apellidoPaterno: detalle.apellidoPaterno,
+        apellidoMaterno: detalle.apellidoMaterno,
+        cargo: detalle.cargo,
+        celular: detalle.celular,
+        correo: detalle.correo,
+        canalId: canal?.id,
+        canalNombre: detalle.canalNombre,
+        ruc: detalle.ruc,
+        razonSocial: detalle.razonSocial,
+        solicitanteEsParticipante: detalle.solicitanteEsParticipante,
+        facturarAlSolicitante: detalle.facturarAlSolicitante,
+        archivoVoucherNombre: voucher == null
+            ? ''
+            : '${voucher.nombre}${voucher.extension}',
+        archivoOCNombre: oc == null ? '' : '${oc.nombre}${oc.extension}',
+      );
+
+      if (!mounted) return;
+      context.read<SolicitudFormCubit>().cambiarTipoPersona(
+        detalle.tipoPersona,
+      );
+      context.read<SolicitudFormCubit>().guardarSolicitante(datosSolicitante);
+
+      if (!detalle.sinFacturacion) {
+        final esRuc = detalle.facTipoDocId == _idTipoDocRucCompletar;
+        final facTipoDoc = tiposDocumento
+            .where((t) => t.id == detalle.facTipoDocId)
+            .firstOrNull;
+        final facComprobante = comprobantes
+            .where((c) => c.id == detalle.facComprobanteId)
+            .firstOrNull;
+        final facMoneda = monedas
+            .where((m) => m.id == detalle.facMonedaId)
+            .firstOrNull;
+        final facPais = paises
+            .where((p) => p.id == detalle.facPaisId)
+            .firstOrNull;
+
+        context.read<SolicitudFormCubit>().guardarFacturacion(
+          DatosFacturacion(
+            comprobanteId: detalle.facComprobanteId,
+            comprobante: facComprobante?.nombre ?? '',
+            paisId: detalle.facPaisId,
+            pais: facPais?.nombre ?? '',
+            monedaId: detalle.facMonedaId,
+            moneda: facMoneda?.nombre ?? '',
+            tipoDocId: detalle.facTipoDocId,
+            tipoDocLabel: facTipoDoc?.abreviatura ?? '',
+            numDoc: detalle.facNumDoc,
+            nombresRazon: esRuc ? detalle.facNomEmpre : detalle.facNombres,
+            apellidoPaterno: esRuc ? '' : detalle.facApellidoPaterno,
+            apellidoMaterno: esRuc ? '' : detalle.facApellidoMaterno,
+            celular: detalle.facCelular,
+            correo: detalle.facCorreo,
+            direccion: detalle.facDireccion,
+            actividadEconomica: '',
+            nit: '',
+            observaciones: '',
+          ),
+        );
+      }
+
+      final participantes = detalle.participantes.map((p) {
+        final tipoDocP = tiposDocumento
+            .where((t) => t.id == p.tipoDocId)
+            .firstOrNull;
+        final nacionalidadP = nacionalidades
+            .where((n) => n.id == p.nacionalidadId)
+            .firstOrNull;
+        return ParticipanteLocal(
+          id: int.tryParse(p.id) ?? 0,
+          tipoDocId: p.tipoDocId,
+          tipoDoc: tipoDocP?.abreviatura ?? '',
+          numDoc: p.numDoc,
+          nacionalidadId: p.nacionalidadId,
+          nacionalidad: nacionalidadP?.nombre ?? '',
+          nombres: p.nombres,
+          apellidoPaterno: p.apellidoPaterno,
+          apellidoMaterno: p.apellidoMaterno,
+          correo: p.correo,
+          cargo: p.cargo,
+          celular: p.celular,
+          tipoParticipante: p.tipoParticipante,
+          importe: p.importe,
+          esSolicitante: p.id == detalle.idParticipanteSolicitante,
+        );
+      }).toList();
+
+      if (!mounted) return;
+      context.read<ParticipantesCubit>().cargarParticipantes(participantes);
+
+      setState(() => _cargando = false);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _cargando = false);
+      AppSnackBar.error(context, 'No se pudo cargar la solicitud: $e');
+    }
   }
 
   Future<void> _adjuntarArchivo(bool esVoucher) async {
@@ -136,17 +324,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     if (confirmado && mounted) context.goBack();
   }
 
-  // En modo edición valida los campos obligatorios antes de continuar; en
-  // modo solo-ver (modoEdicion == false) avanza directo, sin validar.
-  void _onContinuar(PaisItem? paisCelular) {
-    if (widget.modoEdicion && !_formCompleto) {
-      AppSnackBar.error(
-        context,
-        'Completa todos los campos obligatorios (*) para continuar',
-      );
-      return;
-    }
-    final datos = DatosSolicitante(
+  DatosSolicitante _construirDatosSolicitante(PaisItem? paisCelular) {
+    return DatosSolicitante(
       tipoDocId: _tipoDocId,
       tipoDocLabel: _tipoDocLabel,
       numDoc: _ctrlNumDoc.text,
@@ -169,6 +348,19 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       archivoVoucherNombre: _archivoVoucher?.name ?? '',
       archivoOCNombre: _archivoOC?.name ?? '',
     );
+  }
+
+  // En modo edición valida los campos obligatorios antes de continuar; en
+  // modo solo-ver (modoEdicion == false) avanza directo, sin validar.
+  void _onContinuar(PaisItem? paisCelular) {
+    if (widget.modoEdicion && !_formCompleto) {
+      AppSnackBar.error(
+        context,
+        'Completa todos los campos obligatorios (*) para continuar',
+      );
+      return;
+    }
+    final datos = _construirDatosSolicitante(paisCelular);
     context.read<SolicitudFormCubit>().guardarSolicitante(datos);
     context.read<ParticipantesCubit>().sincronizarSolicitante(datos);
     context.goToFichaParticipantesSolicitud(
@@ -177,6 +369,28 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       formCubit: context.read<SolicitudFormCubit>(),
       participantesCubit: context.read<ParticipantesCubit>(),
     );
+  }
+
+  // Botón "Guardar" — borrador (IB_BORRADOR=1), sin navegar ni validar
+  // campos obligatorios. Guarda lo que haya en los controllers tal cual.
+  Future<void> _onGuardar(PaisItem? paisCelular) async {
+    if (_guardando) return;
+    setState(() => _guardando = true);
+
+    final datos = _construirDatosSolicitante(paisCelular);
+    context.read<SolicitudFormCubit>().guardarSolicitante(datos);
+    context.read<ParticipantesCubit>().sincronizarSolicitante(datos);
+
+    final result = await guardarSolicitudDesdeWizard(
+      context,
+      numSol: widget.solicitud.idSolicitud,
+      idLead: widget.solicitud.idLead,
+      esBorrador: true,
+    );
+
+    if (!mounted) return;
+    setState(() => _guardando = false);
+    mostrarResultadoGuardarSolicitud(context, result);
   }
 
   @override
@@ -195,6 +409,15 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_cargando) {
+      return BasePage(
+        onPop: () => context.goBack(),
+        drawerSide: DrawerSide.none,
+        title: 'Solicitud de inscripción',
+        body: const AppLoadingView(),
+      );
+    }
+
     final tipoPersona = context.watch<SolicitudFormCubit>().state.tipoPersona;
     final catalogState = context.watch<CatalogsBloc>().state;
     final canales = catalogState is CatalogsLoaded
@@ -319,6 +542,13 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     paisCelular: paisCelular,
                     onPaisCelularChanged: (p) =>
                         setState(() => _paisCelular = p),
+                    tipoDocInicialId: _tipoDocId.isNotEmpty
+                        ? _tipoDocId
+                        : null,
+                    nacionalidadInicialId: _nacionalidadId.isNotEmpty
+                        ? _nacionalidadId
+                        : null,
+                    sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
                     onTipoDocChanged: (item) => setState(() {
                       _tipoDocId = item?.id ?? '';
                       _tipoDocLabel = item?.abreviatura ?? '';
@@ -380,7 +610,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         child: CustomSecondaryButton(
                           text: 'Guardar',
                           icon: AppIcons.save,
-                          onPressed: () {},
+                          isLoading: _guardando,
+                          onPressed: () => _onGuardar(paisCelular),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.xs),

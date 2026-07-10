@@ -1,6 +1,7 @@
 // lib/features/solicitudes/domain/repositories/solicitud_repository.dart
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/solicitudes/data/models/solicitud_detalle_model.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
@@ -8,8 +9,11 @@ import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/par
 abstract class SolicitudRepository {
   Future<List<Solicitud>> getSolicitudes();
 
+  Future<SolicitudDetalleModel> getSolicitudDetalle(String numSol);
+
   Future<CrudResult> guardarSolicitud({
     required String numSol,
+    required String idLead,
     required String tipoPersona,
     required DatosSolicitante solicitante,
     DatosFacturacion? facturacion,

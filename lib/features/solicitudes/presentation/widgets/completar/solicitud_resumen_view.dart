@@ -6,9 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
 
-class SolicitudResumenView extends StatelessWidget {
+class SolicitudResumenView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
 
@@ -17,6 +16,53 @@ class SolicitudResumenView extends StatelessWidget {
     required this.solicitud,
     required this.modoEdicion,
   });
+
+  @override
+  State<SolicitudResumenView> createState() => _SolicitudResumenViewState();
+}
+
+class _SolicitudResumenViewState extends State<SolicitudResumenView> {
+  // true mientras se guarda el borrador (botón "Guardar")
+  bool _guardando = false;
+  // true mientras se genera la solicitud final (botón "Generar solicitud")
+  bool _generando = false;
+
+  Future<void> _onGuardar() async {
+    if (_guardando || _generando) return;
+    setState(() => _guardando = true);
+
+    final result = await guardarSolicitudDesdeWizard(
+      context,
+      numSol: widget.solicitud.idSolicitud,
+      idLead: widget.solicitud.idLead,
+      esBorrador: true,
+    );
+
+    if (!mounted) return;
+    setState(() => _guardando = false);
+    mostrarResultadoGuardarSolicitud(context, result);
+  }
+
+  Future<void> _onGenerarSolicitud() async {
+    if (_guardando || _generando) return;
+    setState(() => _generando = true);
+
+    final result = await guardarSolicitudDesdeWizard(
+      context,
+      numSol: widget.solicitud.idSolicitud,
+      idLead: widget.solicitud.idLead,
+      esBorrador: false,
+    );
+
+    if (!mounted) return;
+    setState(() => _generando = false);
+
+    if (result is CrudOk) {
+      context.goToSolicitudGenerada(solicitud: widget.solicitud);
+    } else {
+      mostrarResultadoGuardarSolicitud(context, result);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +104,8 @@ class SolicitudResumenView extends StatelessWidget {
                   const _Separador(),
                   _SeccionParticipantes(
                     onVerTodos: () => context.goToFichaParticipantesSolicitud(
-                      solicitud: solicitud,
-                      modoEdicion: modoEdicion,
+                      solicitud: widget.solicitud,
+                      modoEdicion: widget.modoEdicion,
                       formCubit: context.read<SolicitudFormCubit>(),
                       participantesCubit: context.read<ParticipantesCubit>(),
                     ),
@@ -113,28 +159,11 @@ class SolicitudResumenView extends StatelessWidget {
                 // Guardar borrador
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(AppIcons.save, size: 16),
-                    label: const Text('Guardar'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textOnDark,
-                      backgroundColor: AppColors.primary,
-                      side: const BorderSide(
-                        color: AppColors.primary,
-                        width: 1.5,
-                      ),
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeight,
-                      ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.bodySmall.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
+                  child: CustomPrimaryButton(
+                    text: 'Guardar',
+                    icon: AppIcons.save,
+                    isLoading: _guardando,
+                    onPressed: _onGuardar,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -142,25 +171,11 @@ class SolicitudResumenView extends StatelessWidget {
                 // Generar solicitud
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () =>
-                        context.goToSolicitudGenerada(solicitud: solicitud),
-                    icon: const Icon(AppIcons.fileFactura, size: 16),
-                    label: const Text('Generar solicitud'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: AppColors.textOnDark,
-                      minimumSize: const Size.fromHeight(
-                        AppSizing.buttonHeight,
-                      ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                      ),
-                      textStyle: AppTextStyles.bodySmall.copyWith(
-                        fontWeight: AppTextStyles.weightSemiBold,
-                      ),
-                    ),
+                  child: CustomSecondaryButton(
+                    text: 'Generar solicitud',
+                    icon: AppIcons.fileFactura,
+                    isLoading: _generando,
+                    onPressed: _onGenerarSolicitud,
                   ),
                 ),
                 const SizedBox(height: 5),

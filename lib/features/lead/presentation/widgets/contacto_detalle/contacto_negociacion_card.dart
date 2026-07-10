@@ -5,6 +5,7 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class ContactoNegociacionCard extends StatelessWidget {
   final Negociacion negociacion;
@@ -35,6 +36,40 @@ class ContactoNegociacionCard extends StatelessWidget {
   // su propio InfoLeadCubit aislado, como en el resto de la app.
   void _irAEditar(BuildContext context) {
     context.goToEditarLead(idLead: negociacion.idLead);
+  }
+
+  // Crea una solicitud NUEVA (NUMSOL vacío) para esta negociación ganada —
+  // el wizard arranca en blanco (Solicitud.idSolicitud == '') y solo manda
+  // idLead, que CSV_SOLICITUD_CUD_APP usa para vincular la solicitud al
+  // lead de origen en la rama de creación.
+  void _generarSolicitud(BuildContext context) {
+    context.goToFichaCompletarSolicitud(
+      solicitud: Solicitud(
+        idSolicitud: '',
+        nombre: '',
+        apellido: '',
+        nombreEmpresa: '',
+        cargo: '',
+        correo: '',
+        telefono: '',
+        tipoPersona: '',
+        idCondicionPago: '',
+        condicionPago: '',
+        monto: 0,
+        fechaCreacion: '',
+        idOportunidad: 0,
+        oportunidad: '',
+        idCanal: 0,
+        canal: '',
+        idEstado: '',
+        estado: '',
+        ibValidado: false,
+        asesor: '',
+        nombreAsesor: '',
+        idLead: negociacion.idLead.toString(),
+      ),
+      modoEdicion: true,
+    );
   }
 
   @override
@@ -191,7 +226,7 @@ class ContactoNegociacionCard extends StatelessWidget {
                               text: 'Generar solicitud',
                               icon: AppIcons.fileFactura,
                               backgroundColor: AppColors.success,
-                              onPressed: () {},
+                              onPressed: () => _generarSolicitud(context),
                             ),
                           ),
                         ],

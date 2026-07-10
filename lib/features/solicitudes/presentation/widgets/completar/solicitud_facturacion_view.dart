@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
 
 // Ids reales de catálogo usados en las reglas de este paso (SYSTABEXTER02).
 const _idComprobanteFactura = '01';
@@ -46,6 +45,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // Evita pre-rellenar más de una vez
   bool _prefillDone = false;
 
+  // true mientras se guarda el borrador (botón "Guardar")
+  bool _guardando = false;
+
   // Controladores — Datos de facturación
   final _ctrlNumDoc = TextEditingController();
   final _ctrlNombresRazon = TextEditingController();
@@ -79,6 +81,30 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   void _onCampoTexto() => setState(() {});
 
+  DatosFacturacion _construirDatosFacturacion(PaisItem? paisCelular) {
+    return DatosFacturacion(
+      comprobanteId: _comprobanteId,
+      comprobante: _comprobanteLabel,
+      paisId: _paisId,
+      pais: _paisLabel,
+      monedaId: _monedaId,
+      moneda: _monedaLabel,
+      tipoDocId: _tipoDocId,
+      tipoDocLabel: _tipoDocLabel,
+      numDoc: _ctrlNumDoc.text,
+      nombresRazon: _ctrlNombresRazon.text,
+      apellidoPaterno: _ctrlApellidoPaterno.text,
+      apellidoMaterno: _ctrlApellidoMaterno.text,
+      celular: _ctrlCelular.text,
+      celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
+      correo: _ctrlCorreo.text,
+      direccion: _ctrlDireccion.text,
+      actividadEconomica: '',
+      nit: _ctrlNit.text,
+      observaciones: _ctrlObservaciones.text,
+    );
+  }
+
   // En modo edición valida los campos obligatorios antes de continuar; en
   // modo solo-ver (modoEdicion == false) avanza directo, sin validar.
   void _onContinuar(PaisItem? paisCelular) {
@@ -90,27 +116,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       return;
     }
     context.read<SolicitudFormCubit>().guardarFacturacion(
-      DatosFacturacion(
-        comprobanteId: _comprobanteId,
-        comprobante: _comprobanteLabel,
-        paisId: _paisId,
-        pais: _paisLabel,
-        monedaId: _monedaId,
-        moneda: _monedaLabel,
-        tipoDocId: _tipoDocId,
-        tipoDocLabel: _tipoDocLabel,
-        numDoc: _ctrlNumDoc.text,
-        nombresRazon: _ctrlNombresRazon.text,
-        apellidoPaterno: _ctrlApellidoPaterno.text,
-        apellidoMaterno: _ctrlApellidoMaterno.text,
-        celular: _ctrlCelular.text,
-        celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
-        correo: _ctrlCorreo.text,
-        direccion: _ctrlDireccion.text,
-        actividadEconomica: '',
-        nit: _ctrlNit.text,
-        observaciones: _ctrlObservaciones.text,
-      ),
+      _construirDatosFacturacion(paisCelular),
     );
     context.goToFichaResumenSolicitud(
       solicitud: widget.solicitud,
@@ -118,6 +124,28 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       formCubit: context.read<SolicitudFormCubit>(),
       participantesCubit: context.read<ParticipantesCubit>(),
     );
+  }
+
+  // Botón "Guardar" — borrador (IB_BORRADOR=1), sin navegar ni validar
+  // campos obligatorios. Guarda lo que haya en los controllers tal cual.
+  Future<void> _onGuardar(PaisItem? paisCelular) async {
+    if (_guardando) return;
+    setState(() => _guardando = true);
+
+    context.read<SolicitudFormCubit>().guardarFacturacion(
+      _construirDatosFacturacion(paisCelular),
+    );
+
+    final result = await guardarSolicitudDesdeWizard(
+      context,
+      numSol: widget.solicitud.idSolicitud,
+      idLead: widget.solicitud.idLead,
+      esBorrador: true,
+    );
+
+    if (!mounted) return;
+    setState(() => _guardando = false);
+    mostrarResultadoGuardarSolicitud(context, result);
   }
 
   @override
@@ -459,7 +487,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                             child: CustomSecondaryButton(
                               text: 'Guardar',
                               icon: AppIcons.save,
-                              onPressed: () {},
+                              isLoading: _guardando,
+                              onPressed: () => _onGuardar(paisCelular),
                             ),
                           ),
                           const SizedBox(width: AppSpacing.xs),

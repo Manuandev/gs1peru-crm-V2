@@ -11,6 +11,17 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
 
   ParticipantesCubit() : super(const ParticipantesState(participantes: []));
 
+  /// Reemplaza la lista completa con participantes traídos del backend
+  /// (task 'DT') al entrar al wizard sobre una solicitud existente. Ajusta
+  /// `_nextId` para que los ids nuevos (agregar) nunca choquen con los ya
+  /// guardados — a diferencia de [agregar], respeta el id real de cada
+  /// [ParticipanteLocal] en vez de reasignarlo.
+  void cargarParticipantes(List<ParticipanteLocal> lista) {
+    final maxId = lista.fold(0, (max, p) => p.id > max ? p.id : max);
+    _nextId = maxId + 1;
+    emit(state.copyWith(participantes: lista));
+  }
+
   void agregar(ParticipanteLocal participante) {
     final nuevo = participante.copyWith(id: _nextId++);
     emit(state.copyWith(

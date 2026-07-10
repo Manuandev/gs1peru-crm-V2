@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
-import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 // ── Constantes de opciones ────────────────────────────────────────────────────
 // "Tipo" de participante no tiene catálogo de backend — se mantiene hardcodeado.

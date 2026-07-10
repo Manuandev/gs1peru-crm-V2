@@ -33,4 +33,19 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     igvPorcentaje: igvPorcentaje,
     esBorrador: esBorrador,
   );
+
+  @override
+  Future<bool> guardarArchivo({
+    required String numSol,
+    required String tipo,
+    required String fileName,
+    required String fileExt,
+    required List<int> fileBytes,
+  }) => _remote.guardarArchivo(
+    numSol: numSol,
+    tipo: tipo,
+    fileName: fileName,
+    fileExt: fileExt,
+    fileBytes: fileBytes,
+  );
 }

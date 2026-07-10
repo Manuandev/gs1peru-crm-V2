@@ -144,4 +144,64 @@ class SolicitudRemoteDatasource {
       ApiError(:final message) => CrudError(message),
     };
   }
+
+  // Task 'AR' — [CRM].[CSV_SOLICITUD_CUD_APP] vía SPSolicitudCUDAppArchivos.
+  // Sube un archivo (voucher/OC) ya con el NUMSOL confirmado (viene de la
+  // respuesta de guardarSolicitud). Chunks de 2MB, mismo patrón que
+  // ChatRemoteDatasource.uploadAndSendFileMessage. Contrato acordado con
+  // backend: cabecera = NUMSOL¦ID_USUARIO¦IP_USUARIO¦LL_USUARIO,
+  // detalle = TIPO¦NOMBRE¦EXT (sin id — el GUID lo genera el backend).
+  Future<bool> guardarArchivo({
+    required String numSol,
+    required String tipo, // 'voucher' | 'oc'
+    required String fileName, // sin extensión
+    required String fileExt,
+    required List<int> fileBytes,
+  }) async {
+    if (fileBytes.isEmpty) return false;
+
+    final ip = await _deviceInfo.getLocalIp();
+    final coords = await _deviceInfo.getCoordenadasString();
+    final token = _session.token;
+
+    final cabecera = [numSol, _session.codUser, ip, coords].join(
+      AppConstants.sepCampos,
+    );
+    final detalle = [tipo, fileName, fileExt].join(AppConstants.sepCampos);
+
+    const chunkSize = 2 * 1024 * 1024;
+    final totalSize = fileBytes.length;
+    final totalChunks = (totalSize / chunkSize).ceil();
+    final urlUpload = ApiConstants.urlSolicitudesCudArchivos;
+
+    for (var i = 0; i < totalChunks; i++) {
+      final start = i * chunkSize;
+      final end = (start + chunkSize > totalSize) ? totalSize : start + chunkSize;
+      final chunkBytes = fileBytes.sublist(start, end);
+
+      final dataString = [
+        token,
+        cabecera,
+        detalle,
+        'AR',
+        i + 1,
+        totalChunks,
+      ].join(AppConstants.sepListas);
+
+      final result = await _api.postMultipart(
+        url: urlUpload,
+        fields: {'data': dataString},
+        fileFieldName: 'files',
+        fileBytes: chunkBytes,
+        fileName: '$fileName.$fileExt',
+        headers: {'Token': token},
+      );
+
+      if (result.isEmpty) return false;
+      final datos = result.split(AppConstants.sepCampos);
+      if (datos[0] != 'OK') return false;
+    }
+
+    return true;
+  }
 }

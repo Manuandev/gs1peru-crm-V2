@@ -17,4 +17,12 @@ abstract class SolicitudRepository {
     required double igvPorcentaje,
     required bool esBorrador,
   });
+
+  Future<bool> guardarArchivo({
+    required String numSol,
+    required String tipo,
+    required String fileName,
+    required String fileExt,
+    required List<int> fileBytes,
+  });
 }

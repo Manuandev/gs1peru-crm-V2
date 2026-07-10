@@ -31,22 +31,33 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   `'U'`), así que el flujo real es: 1) guardar cabecera+participantes → 2) con el `NUMSOL`
   de la respuesta, subir archivos por chunks a `SPSolicitudCUDAppArchivos`.
 
-## Pendiente (roadmap del CUD)
+## Pendiente (roadmap del CUD) — leer esto primero si retomas el feature
 1. ~~`SolicitudRemoteDatasource.guardarSolicitud()` (task `'U'`)~~ — hecho.
-2. Conectar el botón "Generar solicitud" (Resumen) a `GuardarSolicitudUseCase` con
-   `esBorrador: false` — primera prioridad, acordado con el usuario.
-3. Conectar los botones "Guardar" (pasos 1/2/3/Resumen) con `esBorrador: true`.
-4. Implementar la subida de archivos (task `'AR'`, chunked, mismo patrón que
-   `chat`/multimedia) — necesita el `NUMSOL` del paso 2/3.
-5. **Ajuste pendiente en `guardarSolicitud()`**: el SP va a dejar de recibir `ID_CONTACTO`
+2. ~~`SolicitudRemoteDatasource.guardarArchivo()` (task `'AR'`)~~ — hecho, ver abajo.
+3. **Falta conectar los botones** — ningún widget llama a `guardarSolicitud()` ni
+   `guardarArchivo()` todavía. Esto es lo próximo:
+   - "Generar solicitud" (Resumen, `solicitud_resumen_view.dart`) → `GuardarSolicitudUseCase`
+     con `esBorrador: false`. Primera prioridad, acordado con el usuario.
+   - Botones "Guardar" (pasos 1/2/3/Resumen, hoy `onPressed: () {}`) → mismo usecase con
+     `esBorrador: true`.
+   - Flujo completo al presionar "Generar solicitud": 1) `GuardarSolicitudUseCase.call(...)`
+     con `numSol: solicitud.idSolicitud` (o `''` si es creación — hoy no hay ese caso, ver
+     punto 6) → 2) leer el `NUMSOL` de `CrudOk.data` → 3) si `_archivoVoucher`/`_archivoOC`
+     (`PlatformFile` capturados en paso 1, `solicitud_completar_view.dart`) no son null, por
+     cada uno llamar `GuardarArchivoSolicitudUseCase.call(numSol: ese NUMSOL, tipo:
+     'voucher'|'oc', fileName/fileExt/fileBytes: del `PlatformFile`) → 4) navegar a
+     `SolicitudGeneradaPage`. Los archivos se mandan DESPUÉS de confirmar el `NUMSOL`, nunca
+     antes (por eso está separado en dos tasks — ver "SPs que consume").
+4. **Ajuste pendiente en `guardarSolicitud()`**: el SP va a dejar de recibir `ID_CONTACTO`
    (el usuario lo está quitando del `SELECT` de cabecera) — cuando eso pase, hay que correr
    todas las posiciones de `cabecera` en `SolicitudRemoteDatasource.guardarSolicitud()` un
-   lugar hacia atrás (queda en 41 campos en vez de 42).
-6. `ID_LEAD`/`ID_CONTACTO` se mandan vacíos porque **no existe ninguna pantalla que cree una
+   lugar hacia atrás (queda en 41 campos en vez de 42, `ID_LEAD` pasa a ser field1).
+5. `ID_LEAD`/`ID_CONTACTO` se mandan vacíos porque **no existe ninguna pantalla que cree una
    solicitud nueva desde un Lead** — el único punto de entrada al wizard hoy es
    "Editar ficha"/"Continuar" desde una solicitud ya existente
    (`SolicitudDetalleView.goToFichaCompletarSolicitud`). Cuando se construya ese flujo, hay
    que pasar el `idLead` real.
+6. "Carga masiva" (Excel) y el resto de los botones "Guardar borrador" siguen sin SP.
 - **Campaña y Evento ya NO forman parte del paso 1** — se removieron por completo (campos,
   combos, validación y del modelo `DatosSolicitante`) porque este wizard ya no los usa.
 - Combos con catálogo real ya conectado a `CatalogsBloc` (no hardcodear de nuevo si se
@@ -329,12 +340,20 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
     misma variable para `ID_NACIONALIDAD` e `ID_PAIS`) se llenan siempre.
   - `CARGO_FAC`/`UBIGEO_FAC` se mandan vacíos — el primero porque el SP no lo usa en ningún
     INSERT/UPDATE, el segundo porque no hay selector de ubigeo en la UI todavía.
-- `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'AR'`, archivos) → pendiente de implementar en
-  Flutter. Necesita el `NUMSOL` que devuelve el task `'U'`. Ver endpoint
-  `SPSolicitudCUDAppArchivos` (chunked, mismo patrón que multimedia de `chat/`) — contrato
-  acordado: Flutter manda `token¯cabecera¯detalle¯task¯chunkActual¯chunkTotal` por chunk,
-  donde `cabecera = NUMSOL¦ID_USUARIO¦IP_USUARIO¦LL_USUARIO` y
-  `detalle = TIPO¦NOMBRE¦EXT` (sin id — el GUID lo genera el backend).
+- `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'AR'`, archivos) →
+  `SolicitudRemoteDatasource.guardarArchivo()`, vía endpoint `SPSolicitudCUDAppArchivos`
+  (`ApiConstants.urlSolicitudesCudArchivos`) — **no** `urlSolicitudesCud` (esa es solo para
+  el task `'U'`, texto plano). Necesita el `NUMSOL` que devuelve el task `'U'` — nunca se
+  sube un archivo sin ese `NUMSOL` confirmado. Chunks de 2MB por `postMultipart`, mismo
+  patrón que `ChatRemoteDatasource.uploadAndSendFileMessage`, pero con una diferencia: acá
+  el chunk final (`chunkActual == chunkTotal`, 1-indexado) dispara el merge **en la misma
+  llamada** que trae los últimos bytes — no hay una llamada de merge separada con bytes
+  vacíos como en `chat`. Body por chunk:
+  `token¯cabecera¯detalle¯AR¯chunkActual¯chunkTotal`, donde
+  `cabecera = NUMSOL¦ID_USUARIO¦IP_USUARIO¦LL_USUARIO` y `detalle = TIPO¦NOMBRE¦EXT` (`TIPO`
+  = `'voucher'` o `'oc'`, sin id — el GUID del archivo lo genera el backend). Devuelve `bool`
+  (no `CrudResult` — la respuesta del endpoint es `OK¦N` por chunk, no el formato
+  `OK¯msg¯data`).
 - "Carga masiva" (Excel) todavía no tiene SP conectado.
 
 ## Dependencias externas

@@ -7,7 +7,6 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
 
 class ChatDetailView extends StatefulWidget {
   final int idNumero;
@@ -180,7 +179,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
           value: 'datos',
           icon: Icons.assignment_outlined,
           label: 'Datos',
-          subtitle: 'Información del lead',
+          subtitle: 'Información del contacto',
           showDividerAfter: false,
         ),
         AppBarPopupItem(
@@ -193,7 +192,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
           value: 'historial',
           icon: Icons.history_outlined,
           label: 'Historial',
-          subtitle: 'Actividades y mensajes',
+          subtitle: 'Actividades',
         ),
       ],
       onPopupSelected: (value) {

@@ -28,10 +28,9 @@ class NegociacionCard extends StatelessWidget {
   );
 
   // Usa el estado padre si existe (ej: "Con ficha" → muestra ícono de "En desarrollo")
-  String get _idAvatarEstado =>
-      negociacion.idEstadoPadre.isNotEmpty
-          ? negociacion.idEstadoPadre
-          : negociacion.idEstado;
+  String get _idAvatarEstado => negociacion.idEstadoPadre.isNotEmpty
+      ? negociacion.idEstadoPadre
+      : negociacion.idEstado;
 
   Future<void> _irAEditar() async {
     if (negociacion.idLead == 0) return;
@@ -177,7 +176,7 @@ class NegociacionCard extends StatelessWidget {
                           width: 80,
                           height: 26,
                           child: CustomOutlinedButton(
-                            text: 'Generar',
+                            text: 'Generar solicitud',
                             onPressed: onGenerarSolicitud,
                             height: 26,
                             textStyle: const TextStyle(
@@ -194,7 +193,7 @@ class NegociacionCard extends StatelessWidget {
                           width: 80,
                           height: 26,
                           child: CustomPrimaryButton(
-                            text: 'Editar lead',
+                            text: 'Editar negociación',
                             onPressed: () => _irAEditar(),
                             height: 26,
                             textStyle: const TextStyle(
@@ -235,10 +234,7 @@ class _AvatarEstado extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Center(
-        child: AppSocialUtils.widgetEstado(
-          idEstado,
-          size: AppSizing.iconSm,
-        ),
+        child: AppSocialUtils.widgetEstado(idEstado, size: AppSizing.iconSm),
       ),
     );
   }

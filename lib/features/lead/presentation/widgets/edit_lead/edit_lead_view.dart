@@ -48,7 +48,7 @@ class _EditLeadViewState extends State<EditLeadView> {
         builder: (context, state) {
           final esNuevo = state is InfoLeadSuccess && state.negociacion.idLead == 0;
           return Text(
-            esNuevo ? 'Crear lead' : 'Editar lead',
+            esNuevo ? 'Crear negociación' : 'Editar negociación',
             style: AppTextStyles.titleLarge.copyWith(
               color: Theme.of(context).colorScheme.onPrimary,
             ),

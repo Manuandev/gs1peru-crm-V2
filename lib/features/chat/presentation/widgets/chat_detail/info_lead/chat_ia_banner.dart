@@ -50,7 +50,7 @@ class ChatIaBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Este lead fue gestionado inicialmente por el bot',
+                  'Esta conversación fue gestionada inicialmente por el bot',
                   style: AppTextStyles.bodySub.copyWith(
                     fontWeight: AppTextStyles.weightBold,
                     color: AppColors.textPrimary,

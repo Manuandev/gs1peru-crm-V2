@@ -143,7 +143,7 @@ class ChatDetailAppBar extends StatelessWidget {
                   Expanded(
                     child: Text(
                       elapsed != null
-                          ? 'Derivado por IA · Última respuesta hace ${ElapsedTimeUtils.formatHyM(elapsed)}'
+                          ? ' · Última respuesta hace ${ElapsedTimeUtils.formatHyM(elapsed)}'
                           : 'Derivado por IA',
                       style: AppTextStyles.labelVerySmall8.copyWith(
                         color: colorScheme.onPrimary.withValues(

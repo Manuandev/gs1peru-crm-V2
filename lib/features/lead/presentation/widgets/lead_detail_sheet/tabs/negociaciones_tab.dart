@@ -96,11 +96,11 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   // genérico de AppSocialUtils.
   List<Negociacion> get _visibles => switch (_filtro) {
     _FiltroNeg.todas => widget.negociaciones,
-    _FiltroNeg.activa =>
-      widget.negociaciones.where((n) => n.activo).toList(),
-    _FiltroNeg.ganadas => widget.negociaciones
-        .where((n) => n.idEstado == '05' && n.idEstadoPadre == '04')
-        .toList(),
+    _FiltroNeg.activa => widget.negociaciones.where((n) => n.activo).toList(),
+    _FiltroNeg.ganadas =>
+      widget.negociaciones
+          .where((n) => n.idEstado == '05' && n.idEstadoPadre == '04')
+          .toList(),
   };
 
   String get _mensajeVacioFiltro => switch (_filtro) {
@@ -329,7 +329,7 @@ class _EstadoVacio extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Este lead aún no tiene negociaciones registradas.',
+              'Este contacto aún no tiene negociaciones registradas.',
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
               ),

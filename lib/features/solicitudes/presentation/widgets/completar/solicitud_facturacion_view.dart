@@ -66,7 +66,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _ctrlNombresRazon.text.trim().isNotEmpty &&
       _ctrlApellidoPaterno.text.trim().isNotEmpty &&
       _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.trim().isNotEmpty &&
+      _ctrlCorreo.text.emailValidator == null &&
       _ctrlDireccion.text.trim().isNotEmpty;
 
   void _onCampoTexto() => setState(() {});
@@ -126,7 +126,10 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   @override
   Widget build(BuildContext context) {
-    final tipoPersona = context.watch<SolicitudFormCubit>().state.tipoPersona;
+    final formState = context.watch<SolicitudFormCubit>().state;
+    final tipoPersona = formState.tipoPersona;
+    final facturarAlSolicitante =
+        formState.solicitante?.facturarAlSolicitante ?? false;
     final catalogState = context.watch<CatalogsBloc>().state;
     final monedas = catalogState is CatalogsLoaded
         ? catalogState.monedas
@@ -207,7 +210,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                       const SizedBox(width: AppSpacing.sm),
                       SolicitudToggleTipoPersona(
                         valor: tipoPersona,
-                        habilitado: widget.modoEdicion,
+                        // Solo editable en el paso 1 (solicitante) — aquí
+                        // solo se refleja el valor ya elegido.
+                        habilitado: false,
                         onChanged: (v) => context
                             .read<SolicitudFormCubit>()
                             .cambiarTipoPersona(v),
@@ -295,7 +300,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                           colorIcono: AppColors.brandForest,
                           colorFondo: AppColors.brandForest.withOpacity(0.12),
                           label: 'Facturar al solicitante',
-                          valor: 'No',
+                          valor: facturarAlSolicitante ? 'Sí' : 'No',
                         ),
                       ),
                       VerticalDivider(

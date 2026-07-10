@@ -68,7 +68,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlApellidoPaterno.text.trim().isNotEmpty &&
       _ctrlCargo.text.trim().isNotEmpty &&
       _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.trim().isNotEmpty;
+      _ctrlCorreo.text.emailValidator == null;
 
   void _onCampoTexto() => setState(() {});
 
@@ -120,6 +120,16 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         _archivoOC = null;
       }
     });
+  }
+
+  Future<void> _confirmarCancelar() async {
+    final confirmado = await context.showConfirmDialog(
+      title: 'Cancelar solicitud',
+      message: '¿Desea cancelar el proceso de solicitud?',
+      confirmText: 'Sí, cancelar',
+      cancelText: 'No',
+    );
+    if (confirmado && mounted) context.goBack();
   }
 
   @override
@@ -180,24 +190,16 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── N° de solicitud + Toggle tipo persona ──────────
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: _CampoNumeroSolicitud(
-                          numero: widget.solicitud.idSolicitud.toString(),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      SolicitudToggleTipoPersona(
-                        valor: tipoPersona,
-                        habilitado: widget.modoEdicion,
-                        onChanged: (v) => context
-                            .read<SolicitudFormCubit>()
-                            .cambiarTipoPersona(v),
-                      ),
-                    ],
+                  // ── Toggle tipo persona ─────────────────────────────
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SolicitudToggleTipoPersona(
+                      valor: tipoPersona,
+                      habilitado: widget.modoEdicion,
+                      onChanged: (v) => context
+                          .read<SolicitudFormCubit>()
+                          .cambiarTipoPersona(v),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
 
@@ -315,12 +317,20 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
               children: [
                 Expanded(
                   child: CustomSecondaryButton(
+                    text: 'Cancelar',
+                    backgroundColor: AppColors.brandRaspberryAccessible,
+                    onPressed: _confirmarCancelar,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: CustomSecondaryButton(
                     text: 'Guardar',
                     icon: AppIcons.save,
                     onPressed: () {},
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: CustomPrimaryButton(
                     text: 'Continuar →',
@@ -951,51 +961,9 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                 controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
                 enabled: widget.habilitado,
-                isUpperCase: true,
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-}
-
-// ── Campo N° de solicitud ─────────────────────────────────────────────────────
-
-class _CampoNumeroSolicitud extends StatelessWidget {
-  final String numero;
-
-  const _CampoNumeroSolicitud({required this.numero});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'N° de solicitud',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Container(
-          height: AppSizing.buttonHeightSmall,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceLightVariant,
-            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            border: Border.all(color: AppColors.border),
-          ),
-          alignment: Alignment.centerLeft,
-          child: Text(
-            numero,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: AppTextStyles.weightMedium,
-            ),
-          ),
         ),
       ],
     );
@@ -1050,8 +1018,8 @@ class _ChipsCanales extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppSocialUtils.widgetCanal(
-                  canal.iconoApp,
+                AppSocialUtils.widgetCanalById(
+                  canal.id,
                   size: AppSizing.iconActionSm,
                 ),
                 const SizedBox(width: AppSpacing.sm2),

@@ -25,6 +25,25 @@ Todo el feature funciona hoy con data en memoria (sin SP real conectado):
   catálogo de backend (se mantienen como lista fija local porque no existe otro origen):
   Sexo (paso 1), Comprobante y País (paso 3), Tipo de participante (formulario de
   participante).
+- Los chips de Canal usan `AppSocialUtils.widgetCanalById(canal.id)` (no
+  `widgetCanal(canal.iconoApp)`) — el string `iconoApp` que trae el SP no siempre calza
+  con las keys internas de `AppSocialUtils` y termina mostrando un ícono de interrogación;
+  `widgetCanalById` usa el mapa id→iconoApp mantenido en la app (mismo que usa el combo de
+  canal de `lead/edit_lead_negociacion_section.dart`), más confiable que el dato crudo.
+- **"Tipo de persona" (Jurídica/Natural) es un solo valor compartido** — vive en
+  `SolicitudFormCubit.state.tipoPersona` (no en `DatosSolicitante`/`DatosFacturacion`,
+  que antes tenían cada uno su propia copia y se desincronizaban). Solo se puede cambiar
+  en el paso 1; en el paso 3 el toggle se muestra pero con `habilitado: false` siempre.
+- **Regla de negocio — saltar Facturación**: si TODOS los participantes tienen
+  `tipoParticipante` en {`Invitado`, `Invitado auspicio`} (nadie paga), el paso 2 navega
+  directo a Resumen (`goToFichaResumenSolicitud`) sin pasar por Facturación. El Resumen
+  detecta esto porque `formState.facturacion` queda `null` y oculta la sección
+  "3. Facturación" (y su separador) — no renderizarla si `datos == null` en ese caso.
+- **Validación de email real** en los 3 lugares con campo Correo (paso 1, paso 3,
+  formulario de participante) — usa la extensión `String?.emailValidator` (core,
+  `utils/string/string_utils.dart`), no un simple `isNotEmpty`/`contains('@')` casero.
+- El contador de caracteres bajo los campos con `maxLength` (`CustomTextField`, core) está
+  suprimido (`buildCounter` → null) — decisión de diseño para todo el wizard, no solo aquí.
 
 ## Pantallas
 - `SolicitudListPage` → lista de solicitudes con chips de filtro (Todas / Asesores /
@@ -71,13 +90,20 @@ Cada paso deshabilita su botón `CustomPrimaryButton` de "Continuar" (pasando
 `onPressed: null`) hasta que los campos obligatorios (marcados con `*` en la UI) estén
 completos:
 - **Paso 1** (`_formCompleto` en `solicitud_completar_view.dart`) — tipo/número documento,
-  nacionalidad, sexo, nombres, apellido paterno, cargo, celular, correo. Opcionales:
-  apellido materno, RUC/razón social, canal.
-- **Paso 2** — basta con tener al menos 1 participante en la lista.
+  nacionalidad, sexo, nombres, apellido paterno, cargo, celular, correo (formato real vía
+  `.emailValidator`, no solo `isNotEmpty`). Opcionales: apellido materno, RUC/razón social,
+  canal. El N° de solicitud ya no se muestra en este paso (solo el toggle Jurídica/Natural).
+- **Paso 2** — basta con tener al menos 1 participante en la lista. Cada participante ya
+  pasó su propia validación al guardarse en el modal (`participante_form_sheet.dart`), así
+  que no hace falta re-validar aquí.
 - **Paso 3** (`_formCompleto` en `solicitud_facturacion_view.dart`) — comprobante, país,
   moneda, tipo/número documento, nacionalidad, nombres/razón social, apellido paterno,
-  celular, correo, dirección. Opcionales: apellido materno, actividad económica, NIT,
-  observaciones.
+  celular, correo (formato real), dirección. Opcionales: apellido materno, actividad
+  económica, NIT, observaciones.
+
+En el formulario de participante (`participante_form_sheet.dart`), todo es obligatorio
+excepto apellido materno — Importe es la única excepción "blanda": se puede dejar vacío y
+se guarda como `0` por defecto (no bloquea el guardado).
 
 Los campos de texto usan `TextEditingController.addListener` para recalcular la validez en
 vivo; los combos que antes no emitían su selección hacia el padre (Nacionalidad, Sexo en
@@ -91,16 +117,27 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 - `SolicitudDetalleView` (detail/) → detalle de solo lectura
 - `SolicitudPasosIndicador` / `SolicitudBadgePaso` (completar/) → indicador de paso 1-4
   compartido por las 4 vistas del wizard
-- `SolicitudCompletarView` (completar/) → formulario paso 1 (datos del solicitante)
+- `SolicitudCompletarView` (completar/) → formulario paso 1 (datos del solicitante). Pie de
+  3 botones: **Cancelar** (izquierda, raspberry, pide confirmación "¿Desea cancelar el
+  proceso de solicitud?" antes de salir) / **Guardar** (medio) / **Continuar** (derecha) —
+  mismo layout que el paso 3, solo cambia la etiqueta/función del botón izquierdo
 - `SolicitudParticipantesView` (completar/) → lista de participantes del paso 2; agregar
   abre `participante_form_sheet.dart` (bottom sheet); eliminar (individual o "todos") pide
-  confirmación vía `context.showConfirmDialog`
+  confirmación vía `context.showConfirmDialog`. Pie: Cancelar / Guardar / Continuar (mismo
+  orden que los demás pasos). "Continuar" aplica la regla de saltar Facturación (ver
+  "Estado general"). El resumen de inversión (`_ResumenInversion`) usa el IGV real de
+  `CatalogsBloc.igvPorcentaje` y muestra los montos sin símbolo de moneda
 - `SolicitudCargaMasivaView` (completar/) → selector de archivo Excel para carga masiva
-- `SolicitudFacturacionView` (completar/) → formulario paso 3 (datos de facturación)
+- `SolicitudFacturacionView` (completar/) → formulario paso 3 (datos de facturación). El
+  toggle Jurídica/Natural es de solo lectura aquí (`habilitado: false`); "Facturar al
+  solicitante" en el resumen del pie lee el valor real de
+  `formState.solicitante?.facturarAlSolicitante` (ya no hardcodeado a `'No'`)
 - `SolicitudResumenView` (completar/) → resumen de los 3 pasos; secciones Solicitante y
-  Facturación leen `SolicitudFormCubit`, sección Participantes lee `ParticipantesCubit`
-  (todas con datos reales, ya no hardcodeados). "Resumen comercial" (Inversión/IGV/Total)
-  **sigue hardcodeado** — pendiente conectar a `ParticipantesCubit.state.totalInversion`
+  Facturación leen `SolicitudFormCubit`, sección Participantes lee `ParticipantesCubit`.
+  La sección "3. Facturación" se **oculta** si `formState.facturacion == null` (paso 3
+  saltado). "Resumen comercial" (Inversión/IGV/Importe total) ya lee datos reales de
+  `ParticipantesCubit.state.totalInversion` + `CatalogsBloc.igvPorcentaje`, sin símbolo de
+  moneda — ya no está hardcodeado
 - `SolicitudGeneradaView` (generada/) → pantalla de éxito tras generar la solicitud
 - `solicitud_inputs.dart` (completar/) → **solo** los widgets del wizard sin equivalente
   en `lib/core/presentation/widgets` (`SolicitudToggleTipoPersona`, `SolicitudCampoCelular`,

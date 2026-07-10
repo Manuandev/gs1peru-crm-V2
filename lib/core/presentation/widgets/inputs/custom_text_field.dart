@@ -120,6 +120,15 @@ class CustomTextField extends StatelessWidget {
       textCapitalization: textCapitalization,
       focusNode: focusNode,
       obscureText: obscureText,
+      // Oculta el contador "x/y" bajo el campo cuando hay maxLength — el
+      // límite ya se aplica en silencio, no hace falta mostrarlo.
+      buildCounter:
+          (
+            context, {
+            required currentLength,
+            required isFocused,
+            maxLength,
+          }) => null,
       style: AppTextStyles.inputTextCompact.copyWith(
         color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
       ),

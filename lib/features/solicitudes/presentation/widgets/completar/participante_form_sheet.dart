@@ -351,11 +351,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                       label: 'Correo electrónico *',
                       controller: _correoCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Requerido';
-                        if (!v.contains('@')) return 'Email inválido';
-                        return null;
-                      },
+                      validator: (v) => v.emailValidator,
                     ),
                     const SizedBox(height: AppSpacing.sm),
 

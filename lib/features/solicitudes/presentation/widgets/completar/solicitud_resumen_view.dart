@@ -64,14 +64,21 @@ class SolicitudResumenView extends StatelessWidget {
                       participantesCubit: context.read<ParticipantesCubit>(),
                     ),
                   ),
-                  const _Separador(),
-                  _SeccionFacturacion(
-                    datos: formState.facturacion,
-                    tipoPersonaLabel: formState.tipoPersonaLabel,
-                    onEditar: () => Navigator.of(context).popUntil(
-                      ModalRoute.withName(AppRoutes.fichaFacturacionSolicitud),
+                  // "Facturación" solo aplica si hubo a quién facturar —
+                  // si todos los participantes son invitados, el paso 3 se
+                  // saltó y formState.facturacion queda null.
+                  if (formState.facturacion != null) ...[
+                    const _Separador(),
+                    _SeccionFacturacion(
+                      datos: formState.facturacion,
+                      tipoPersonaLabel: formState.tipoPersonaLabel,
+                      onEditar: () => Navigator.of(context).popUntil(
+                        ModalRoute.withName(
+                          AppRoutes.fichaFacturacionSolicitud,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                   const _Separador(),
                   const _SeccionResumenComercial(),
                   const _Separador(),
@@ -634,6 +641,14 @@ class _SeccionResumenComercial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inversion = context.watch<ParticipantesCubit>().state.totalInversion;
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final igvPorcentaje = catalogState is CatalogsLoaded
+        ? catalogState.igvPorcentaje
+        : 0.0;
+    final igv = inversion * igvPorcentaje / 100;
+    final total = inversion + igv;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -657,7 +672,7 @@ class _SeccionResumenComercial extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    'USD 687.65',
+                    inversion.toStringAsFixed(2),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: AppTextStyles.weightSemiBold,
@@ -685,7 +700,7 @@ class _SeccionResumenComercial extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    'USD 123.78',
+                    igv.toStringAsFixed(2),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: AppTextStyles.weightSemiBold,
@@ -722,7 +737,7 @@ class _SeccionResumenComercial extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      'USD 811.43',
+                      total.toStringAsFixed(2),
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: AppTextStyles.weightBold,

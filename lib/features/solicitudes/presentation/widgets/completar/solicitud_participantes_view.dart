@@ -49,6 +49,11 @@ class SolicitudParticipantesView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final igvPorcentaje = catalogState is CatalogsLoaded
+        ? catalogState.igvPorcentaje
+        : 0.0;
+
     return BlocBuilder<ParticipantesCubit, ParticipantesState>(
       builder: (context, state) {
         return BasePage(
@@ -186,7 +191,7 @@ class SolicitudParticipantesView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: _ResumenInversion(
                   inversion: state.totalInversion,
-                  igvPorcentaje: 18,
+                  igvPorcentaje: igvPorcentaje,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -201,17 +206,17 @@ class SolicitudParticipantesView extends StatelessWidget {
                   children: [
                     Expanded(
                       child: CustomSecondaryButton(
-                        text: 'Guardar',
-                        icon: AppIcons.save,
-                        onPressed: () {},
+                        text: 'Cancelar',
+                        backgroundColor: AppColors.brandRaspberryAccessible,
+                        onPressed: () => context.goBack(),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: CustomSecondaryButton(
-                        text: 'Cancelar',
-                        backgroundColor: AppColors.brandRaspberryAccessible,
-                        onPressed: () => context.goBack(),
+                        text: 'Guardar',
+                        icon: AppIcons.save,
+                        onPressed: () {},
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -220,13 +225,36 @@ class SolicitudParticipantesView extends StatelessWidget {
                         text: 'Continuar →',
                         onPressed: state.participantes.isEmpty
                             ? null
-                            : () => context.goToFichaFacturacionSolicitud(
-                                solicitud: solicitud,
-                                modoEdicion: modoEdicion,
-                                formCubit: context.read<SolicitudFormCubit>(),
-                                participantesCubit: context
-                                    .read<ParticipantesCubit>(),
-                              ),
+                            : () {
+                                // Si TODOS los participantes son invitados
+                                // (sin costo), no hay a quién facturar —
+                                // se salta el paso 3 directo al resumen.
+                                final soloInvitados = state.participantes.every(
+                                  (p) =>
+                                      p.tipoParticipante == 'Invitado' ||
+                                      p.tipoParticipante ==
+                                          'Invitado auspicio',
+                                );
+                                if (soloInvitados) {
+                                  context.goToFichaResumenSolicitud(
+                                    solicitud: solicitud,
+                                    modoEdicion: modoEdicion,
+                                    formCubit: context
+                                        .read<SolicitudFormCubit>(),
+                                    participantesCubit: context
+                                        .read<ParticipantesCubit>(),
+                                  );
+                                } else {
+                                  context.goToFichaFacturacionSolicitud(
+                                    solicitud: solicitud,
+                                    modoEdicion: modoEdicion,
+                                    formCubit: context
+                                        .read<SolicitudFormCubit>(),
+                                    participantesCubit: context
+                                        .read<ParticipantesCubit>(),
+                                  );
+                                }
+                              },
                       ),
                     ),
                   ],
@@ -523,7 +551,7 @@ class _Campo extends StatelessWidget {
 
 class _ResumenInversion extends StatelessWidget {
   final double inversion;
-  final int igvPorcentaje;
+  final double igvPorcentaje;
 
   const _ResumenInversion({
     required this.inversion,
@@ -534,6 +562,9 @@ class _ResumenInversion extends StatelessWidget {
   Widget build(BuildContext context) {
     final igv = inversion * igvPorcentaje / 100;
     final total = inversion + igv;
+    final igvLabel = igvPorcentaje % 1 == 0
+        ? igvPorcentaje.toInt().toString()
+        : igvPorcentaje.toStringAsFixed(1);
 
     return Container(
       decoration: BoxDecoration(
@@ -570,7 +601,7 @@ class _ResumenInversion extends StatelessWidget {
                 ),
                 const Divider(height: 1, thickness: 0.5),
                 _FilaMonto(
-                  label: 'IGV ($igvPorcentaje%)',
+                  label: 'IGV ($igvLabel%)',
                   monto: igv,
                   negrita: false,
                 ),
@@ -615,7 +646,7 @@ class _FilaMonto extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: estilo),
-          Text('\$${monto.toStringAsFixed(2)}', style: estilo),
+          Text(monto.toStringAsFixed(2), style: estilo),
         ],
       ),
     );

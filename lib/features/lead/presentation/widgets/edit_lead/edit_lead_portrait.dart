@@ -10,10 +10,7 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class EditLeadPortrait extends StatefulWidget {
   final Negociacion negociacion;
 
-  const EditLeadPortrait({
-    super.key,
-    required this.negociacion,
-  });
+  const EditLeadPortrait({super.key, required this.negociacion});
 
   @override
   State<EditLeadPortrait> createState() => _EditLeadPortraitState();
@@ -29,6 +26,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   EstadoItem? _estado;
   EstadoItem? _subEstado;
   List<EstadoItem> _subEstadosFiltrados = [];
+  CampaniaItem? _campania;
+  OportunidadItem? _oportunidad;
   CanalItem? _canal;
   InteresItem? _interes;
   MonedaItem? _monedaItem;
@@ -133,11 +132,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void _inicializarCombos(CatalogsLoaded state) {
     final n = widget.negociacion;
     _canal = state.canales.where((e) => e.id == n.idCanal).firstOrNull;
-    _interes = state.intereses
-        .where((e) => e.id == n.idInteres)
-        .firstOrNull;
+    _interes = state.intereses.where((e) => e.id == n.idInteres).firstOrNull;
 
-    _monedaItem = state.monedas.where((m) => m.id == n.idMoneda).firstOrNull ??
+    _monedaItem =
+        state.monedas.where((m) => m.id == n.idMoneda).firstOrNull ??
         state.monedas.firstOrNull;
 
     if (state.estados.isNotEmpty) {
@@ -295,26 +293,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              // 1. Contacto — comentada: la página solo muestra lo que se
-              // puede guardar/actualizar, no info de contacto de solo lectura.
-              // if (widget.negociacion.idLead != 0) ...[
-              //   EditLeadContactoSection(
-              //     key: _contactoKey,
-              //     nombreCtrl: _nombreCtrl,
-              //     apellidoPCtrl: _apellidoPCtrl,
-              //     apellidoMCtrl: _apellidoMCtrl,
-              //     empresaCtrl: _empresaCtrl,
-              //     correoCtrl: _correoCtrl,
-              //     cargoCtrl: _cargoCtrl,
-              //     telefonoPrefijo: widget.negociacion.prefijoPais,
-              //     telefonoNumero: widget.negociacion.numero,
-              //     isLoading: _isLoading,
-              //     onChanged: () => _seccionCambio.value++,
-              //   ),
-              //   const SizedBox(height: AppSpacing.lg),
-              // ],
-
-              // 1. Información adicional — arriba, es lo primero que se ve
               EditLeadAdicionalSection(
                 nombreLeadCtrl: _nombreLeadCtrl,
                 modalidadCtrl: _modalidadCtrl,
@@ -327,6 +305,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 catalogState: catalogState,
                 campaniaCtrl: _campaniaCtrl,
                 eventoCtrl: _eventoCtrl,
+                campania: _campania,
+                oportunidad: _oportunidad,
                 canal: _canal,
                 interes: _interes,
                 estado: _estado,
@@ -338,6 +318,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                     widget.negociacion.descripcionEstadoPadre,
                 idCanalFallback: widget.negociacion.idCanal,
                 isLoading: _isLoading,
+                onCampaniaChanged: (item) => setState(() => _campania = item),
+                onOportunidadChanged: (item) =>
+                    setState(() => _oportunidad = item),
                 onCanalChanged: (item) => setState(() => _canal = item),
                 onInteresChanged: (item) => setState(() => _interes = item),
                 onEstadoChanged: _onEstadoChanged,

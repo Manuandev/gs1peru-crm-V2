@@ -7,6 +7,8 @@ class EditLeadNegociacionSection extends StatelessWidget {
   final CatalogsLoaded catalogState;
   final TextEditingController campaniaCtrl;
   final TextEditingController eventoCtrl;
+  final CampaniaItem? campania;
+  final OportunidadItem? oportunidad;
   final CanalItem? canal;
   final InteresItem? interes;
   final EstadoItem? estado;
@@ -18,6 +20,8 @@ class EditLeadNegociacionSection extends StatelessWidget {
   final String? descripcionEstadoPadreFallback;
   final int idCanalFallback;
   final bool isLoading;
+  final ValueChanged<CampaniaItem?> onCampaniaChanged;
+  final ValueChanged<OportunidadItem?> onOportunidadChanged;
   final ValueChanged<CanalItem?> onCanalChanged;
   final ValueChanged<InteresItem?> onInteresChanged;
   final ValueChanged<EstadoItem?> onEstadoChanged;
@@ -28,6 +32,8 @@ class EditLeadNegociacionSection extends StatelessWidget {
     required this.catalogState,
     required this.campaniaCtrl,
     required this.eventoCtrl,
+    required this.campania,
+    required this.oportunidad,
     required this.canal,
     required this.interes,
     required this.estado,
@@ -38,6 +44,8 @@ class EditLeadNegociacionSection extends StatelessWidget {
     required this.descripcionEstadoPadreFallback,
     required this.idCanalFallback,
     required this.isLoading,
+    required this.onCampaniaChanged,
+    required this.onOportunidadChanged,
     required this.onCanalChanged,
     required this.onInteresChanged,
     required this.onEstadoChanged,
@@ -60,12 +68,13 @@ class EditLeadNegociacionSection extends StatelessWidget {
           derecho: _buildComboSubEstado(colorScheme, hayEstados),
         ),
         const SizedBox(height: AppSpacing.sm),
-
         FormFieldRow(
-          izquierdo: CustomTextField(
+          izquierdo: CustomComboField<CampaniaItem>(
+            enabled: !isLoading,
+            data: catalogState.campanias,
             label: 'Campaña',
-            controller: campaniaCtrl,
-            enabled: false,
+            initialValue: campania?.id.toString(),
+            onChanged: onCampaniaChanged,
             dense: true,
             prefixIcon: Icon(
               AppIcons.campaign,
@@ -73,14 +82,16 @@ class EditLeadNegociacionSection extends StatelessWidget {
               size: AppSizing.iconActionSm,
             ),
           ),
-          derecho: CustomTextField(
-            label: 'Evento',
-            controller: eventoCtrl,
-            enabled: false,
+          derecho: CustomComboField<OportunidadItem>(
+            enabled: !isLoading,
+            data: catalogState.oportunidades,
+            label: 'Oportunidad',
+            initialValue: oportunidad?.idEvento.toString(),
+            onChanged: onOportunidadChanged,
             dense: true,
             prefixIcon: Icon(
               AppIcons.calendar,
-              color: colorScheme.secondary,
+              color: colorScheme.primary,
               size: AppSizing.iconActionSm,
             ),
           ),

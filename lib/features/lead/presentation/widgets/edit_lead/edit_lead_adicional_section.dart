@@ -26,7 +26,7 @@ class EditLeadAdicionalSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
 
         CustomTextField(
-          label: 'Nombre del lead',
+          label: 'Nombre de la negociación',
           controller: nombreLeadCtrl,
           enabled: !isLoading,
           dense: true,

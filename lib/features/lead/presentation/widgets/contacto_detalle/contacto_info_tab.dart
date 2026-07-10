@@ -63,7 +63,7 @@ class ContactoInfoTab extends StatelessWidget {
               _FilaCampos(
                 izquierda: _CampoInfo(
                   icono: AppIcons.datosLead,
-                  etiqueta: 'Nombre del lead',
+                  etiqueta: 'Nombre de la negociación',
                   valor: lead.nombre.isEmpty ? '—' : lead.nombre,
                 ),
                 derecha: _CampoInfo(

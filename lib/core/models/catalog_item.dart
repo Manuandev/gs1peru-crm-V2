@@ -174,23 +174,23 @@ class CampaniaItemModel extends CampaniaItem {
 }
 
 class OportunidadItem with Comboable {
-  final int idEvento;
+  final int id;
   final int idCampania;
   final String nombre;
 
   const OportunidadItem({
-    required this.idEvento,
+    required this.id,
     required this.idCampania,
     required this.nombre,
   });
 
   @override
-  List<dynamic> get fields => [idEvento, idCampania, nombre];
+  List<dynamic> get fields => [id, idCampania, nombre];
 }
 
 class OportunidadItemModel extends OportunidadItem {
   const OportunidadItemModel({
-    required super.idEvento,
+    required super.id,
     required super.idCampania,
     required super.nombre,
   });
@@ -198,7 +198,7 @@ class OportunidadItemModel extends OportunidadItem {
   factory OportunidadItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return OportunidadItemModel(
-      idEvento: ParseUtils.toInt(c, 0),
+      id: ParseUtils.toInt(c, 0),
       idCampania: ParseUtils.toInt(c, 1),
       nombre: ParseUtils.str(c, 2),
     );

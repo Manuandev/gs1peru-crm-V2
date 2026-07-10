@@ -126,7 +126,7 @@ class _FiltroChatDrawerState extends State<FiltroChatDrawer> {
                       builder: (context, catState) {
                         if (catState is! CatalogsLoaded) return const SizedBox.shrink();
                         final data = catState.oportunidades
-                            .map((o) => '${o.idEvento}${AppConstants.sepCampos}${o.nombre}')
+                            .map((o) => '${o.id}${AppConstants.sepCampos}${o.nombre}')
                             .toList();
                         return CustomComboSearchField(
                           data: data,

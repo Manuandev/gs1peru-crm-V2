@@ -86,7 +86,7 @@ class EditLeadNegociacionSection extends StatelessWidget {
             enabled: !isLoading,
             data: catalogState.oportunidades,
             label: 'Oportunidad',
-            initialValue: oportunidad?.idEvento.toString(),
+            initialValue: oportunidad?.id.toString(),
             onChanged: onOportunidadChanged,
             dense: true,
             prefixIcon: Icon(

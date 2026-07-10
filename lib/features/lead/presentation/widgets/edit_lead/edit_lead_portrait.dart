@@ -131,6 +131,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   void _inicializarCombos(CatalogsLoaded state) {
     final n = widget.negociacion;
+    _campania = state.campanias.where((e) => e.id == n.idCampania).firstOrNull;
+    _oportunidad = state.oportunidades.where((e) => e.id == n.idOportunidad).firstOrNull;
     _canal = state.canales.where((e) => e.id == n.idCanal).firstOrNull;
     _interes = state.intereses.where((e) => e.id == n.idInteres).firstOrNull;
 

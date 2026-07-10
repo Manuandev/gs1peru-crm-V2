@@ -475,7 +475,7 @@ class _CardInfoSolicitud extends StatelessWidget {
                           icono: AppIcons.listAlt,
                           label: 'Oportunidad / Curso',
                           child: Text(
-                            solicitud.tipoSolicitud,
+                            solicitud.oportunidad,
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: AppTextStyles.weightBold,

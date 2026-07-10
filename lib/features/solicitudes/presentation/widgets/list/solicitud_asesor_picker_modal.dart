@@ -2,30 +2,32 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 /// Modal de búsqueda de asesor (por nombre o código) para el chip "Asesores"
-/// de la lista de Solicitudes. Retorna el código de asesor elegido, o `null`
-/// si se cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el
-/// llamador debe interpretar `null` como "volver al filtro Todas".
+/// de la lista de Solicitudes. Retorna el `codUser` elegido, o `null` si se
+/// cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el llamador
+/// debe interpretar `null` como "volver al filtro Todas".
 ///
-/// Los asesores mostrados son los que aparecen como "Ejecutivo responsable"
-/// en las solicitudes cargadas ([SolicitudListBloc._buildAsesoresDisponibles])
-/// — no se consulta un catálogo aparte.
+/// Reactivo a [CatalogsBloc] (no recibe la lista de asesores como snapshot
+/// estático) — el ícono de refrescar en el header dispara
+/// `CatalogsLoadRequested`. El conteo por asesor ([conteosPorAsesor]) NO viene
+/// del backend, se calcula en [SolicitudListBloc] sobre las solicitudes
+/// cargadas. Mismo patrón que `CobranzaAsesorPickerModal`.
 class SolicitudAsesorPickerModal extends StatefulWidget {
-  final List<AsesorResumen> asesores;
+  final Map<String, int> conteosPorAsesor;
   final String? seleccionadoActual;
 
   const SolicitudAsesorPickerModal({
     super.key,
-    required this.asesores,
+    required this.conteosPorAsesor,
     this.seleccionadoActual,
   });
 
   static Future<String?> show(
     BuildContext context, {
-    required List<AsesorResumen> asesores,
+    required Map<String, int> conteosPorAsesor,
     String? seleccionadoActual,
   }) {
     return showModalBottomSheet<String>(
@@ -38,7 +40,7 @@ class SolicitudAsesorPickerModal extends StatefulWidget {
         ),
       ),
       builder: (_) => SolicitudAsesorPickerModal(
-        asesores: asesores,
+        conteosPorAsesor: conteosPorAsesor,
         seleccionadoActual: seleccionadoActual,
       ),
     );
@@ -60,14 +62,14 @@ class _SolicitudAsesorPickerModalState
     super.dispose();
   }
 
-  List<AsesorResumen> _filtrar() {
+  List<AsesorItem> _filtrar(List<AsesorItem> asesores) {
     final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return widget.asesores;
-    return widget.asesores
+    if (q.isEmpty) return asesores;
+    return asesores
         .where(
           (a) =>
               a.nombre.toLowerCase().contains(q) ||
-              a.cod.toLowerCase().contains(q),
+              a.codUser.toLowerCase().contains(q),
         )
         .toList();
   }
@@ -76,7 +78,6 @@ class _SolicitudAsesorPickerModalState
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final filtrados = _filtrar();
 
     return SizedBox(
       height: screenHeight * 0.75,
@@ -116,6 +117,16 @@ class _SolicitudAsesorPickerModalState
                   ),
                 ),
                 IconButton(
+                  onPressed: () => context.read<CatalogsBloc>().add(
+                    const CatalogsLoadRequested(),
+                  ),
+                  icon: Icon(
+                    AppIcons.refresh,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: Icon(
                     AppIcons.close,
@@ -137,31 +148,54 @@ class _SolicitudAsesorPickerModalState
           ),
           const SizedBox(height: AppSpacing.sm),
           Expanded(
-            child: widget.asesores.isEmpty
-                ? const AppEmptyView(
-                    message: 'No hay asesores en las solicitudes cargadas.',
-                  )
-                : filtrados.isEmpty
-                ? const AppEmptyView(message: 'No se encontraron asesores.')
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.xxs,
-                      AppSpacing.md,
-                      AppSpacing.md,
+            child: BlocBuilder<CatalogsBloc, CatalogsState>(
+              builder: (context, state) {
+                if (state is CatalogsLoading || state is CatalogsInitial) {
+                  return const AppLoadingView();
+                }
+                if (state is CatalogsError) {
+                  return AppErrorView(
+                    message: state.message,
+                    onRetry: () => context.read<CatalogsBloc>().add(
+                      const CatalogsLoadRequested(),
                     ),
-                    itemCount: filtrados.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.xs),
-                    itemBuilder: (context, i) {
-                      final asesor = filtrados[i];
-                      return _AsesorTile(
-                        asesor: asesor,
-                        isSelected: asesor.cod == widget.seleccionadoActual,
-                        onTap: () => Navigator.of(context).pop(asesor.cod),
-                      );
-                    },
+                  );
+                }
+
+                final asesores = (state as CatalogsLoaded).asesores;
+                final filtrados = _filtrar(asesores);
+
+                if (asesores.isEmpty) {
+                  return const AppEmptyView(
+                    message: 'No hay asesores en el catálogo.',
+                  );
+                }
+                if (filtrados.isEmpty) {
+                  return const AppEmptyView(message: 'No se encontraron asesores.');
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.xxs,
+                    AppSpacing.md,
+                    AppSpacing.md,
                   ),
+                  itemCount: filtrados.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.xs),
+                  itemBuilder: (context, i) {
+                    final asesor = filtrados[i];
+                    return _AsesorTile(
+                      asesor: asesor,
+                      cantidad: widget.conteosPorAsesor[asesor.codUser] ?? 0,
+                      isSelected: asesor.codUser == widget.seleccionadoActual,
+                      onTap: () => Navigator.of(context).pop(asesor.codUser),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -170,12 +204,14 @@ class _SolicitudAsesorPickerModalState
 }
 
 class _AsesorTile extends StatelessWidget {
-  final AsesorResumen asesor;
+  final AsesorItem asesor;
+  final int cantidad;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _AsesorTile({
     required this.asesor,
+    required this.cantidad,
     required this.isSelected,
     required this.onTap,
   });
@@ -203,16 +239,37 @@ class _AsesorTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: AppSizing.avatarRadiusXs,
-              backgroundColor: asesor.nombre.avatarColor,
-              child: Text(
-                asesor.nombre.initials,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textOnDark,
-                  fontWeight: AppTextStyles.weightBold,
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: AppSizing.avatarRadiusXs,
+                  backgroundColor: asesor.nombre.avatarColor,
+                  child: Text(
+                    asesor.nombre.initials,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.textOnDark,
+                      fontWeight: AppTextStyles.weightBold,
+                    ),
+                  ),
                 ),
-              ),
+                if (asesor.disponible)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: AppSizing.dotIndicatorSize,
+                      height: AppSizing.dotIndicatorSize,
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: colorScheme.surface,
+                          width: AppSizing.hairline,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
@@ -229,7 +286,7 @@ class _AsesorTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    asesor.cod,
+                    asesor.codUser,
                     style: AppTextStyles.labelSmall.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -247,7 +304,7 @@ class _AsesorTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
               ),
               child: Text(
-                '${asesor.cantidad}',
+                '$cantidad',
                 style: AppTextStyles.labelSmall.copyWith(
                   fontWeight: AppTextStyles.weightBold,
                   color: colorScheme.onSurfaceVariant,

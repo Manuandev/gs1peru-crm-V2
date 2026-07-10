@@ -40,6 +40,7 @@ export 'presentation/widgets/completar/solicitud_resumen_view.dart';
 export 'presentation/widgets/generada/solicitud_generada_view.dart';
 export 'presentation/widgets/completar/solicitud_inputs.dart';
 export 'presentation/widgets/completar/solicitud_carga_masiva_view.dart';
+export 'presentation/widgets/list/solicitud_filter_chips.dart';
 export 'presentation/widgets/list/solicitud_list_view.dart';
 export 'presentation/widgets/list/solicitud_list_portrait.dart';
 export 'presentation/widgets/list/solicitud_card.dart';

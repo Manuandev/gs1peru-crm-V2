@@ -24,8 +24,11 @@ class SolicitudListSuccess extends SolicitudListState {
 
   // Asesor elegido en SolicitudAsesorPickerModal (chip "Asesores")
   final String? asesorSeleccionado;
-  // Asesores distintos presentes en las solicitudes (código, nombre, cantidad)
-  final List<AsesorResumen> asesoresDisponibles;
+
+  // Conteo de solicitudes por asesor (codUser), calculado sobre _allSolicitudes
+  // — alimenta SolicitudAsesorPickerModal (universo de asesores viene de
+  // CatalogsBloc, no de este mapa), no viene del backend
+  final Map<String, int> conteosPorAsesor;
 
   // Contadores para los indicadores del dashboard (calculados sobre el total)
   final int cntPorCompletar;
@@ -37,7 +40,7 @@ class SolicitudListSuccess extends SolicitudListState {
     required this.solicitudes,
     this.filtro = SolicitudFiltro.todas,
     this.asesorSeleccionado,
-    this.asesoresDisponibles = const [],
+    this.conteosPorAsesor = const {},
     this.cntPorCompletar = 0,
     this.cntPorValidar = 0,
     this.cntConDocumentos = 0,
@@ -46,23 +49,6 @@ class SolicitudListSuccess extends SolicitudListState {
 
   @override
   List<Object?> get props => [solicitudes, filtro, asesorSeleccionado];
-}
-
-/// Resumen de un asesor derivado de las solicitudes cargadas —
-/// usado por el modal del chip "Asesores" (ver [SolicitudAsesorPickerModal]).
-class AsesorResumen extends Equatable {
-  final String cod;
-  final String nombre;
-  final int cantidad;
-
-  const AsesorResumen({
-    required this.cod,
-    required this.nombre,
-    required this.cantidad,
-  });
-
-  @override
-  List<Object?> get props => [cod, nombre, cantidad];
 }
 
 class SolicitudListError extends SolicitudListState {

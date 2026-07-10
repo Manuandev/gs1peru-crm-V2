@@ -21,12 +21,12 @@ class SolicitudListPortrait extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // ── Tabs de filtro ────────────────────────────────────────
+        // ── Chips de filtro ────────────────────────────────────────
         BlocBuilder<SolicitudListBloc, SolicitudListState>(
           buildWhen: (_, curr) => curr is SolicitudListSuccess,
           builder: (context, state) {
             if (state is! SolicitudListSuccess) return const SizedBox.shrink();
-            return _SolicitudFilterTabs(
+            return SolicitudFilterChips(
               filtroActual: state.filtro,
               onFiltroTap: (f) async {
                 final bloc = context.read<SolicitudListBloc>();
@@ -38,7 +38,7 @@ class SolicitudListPortrait extends StatelessWidget {
 
                 final seleccionado = await SolicitudAsesorPickerModal.show(
                   context,
-                  asesores: state.asesoresDisponibles,
+                  conteosPorAsesor: state.conteosPorAsesor,
                   seleccionadoActual: state.asesorSeleccionado,
                 );
 
@@ -92,74 +92,6 @@ class SolicitudListPortrait extends StatelessWidget {
                 ),
         ),
       ],
-    );
-  }
-}
-
-// ─── Chips de filtro ──────────────────────────────────────────────────────────
-
-class _SolicitudFilterTabs extends StatelessWidget {
-  final SolicitudFiltro filtroActual;
-  final void Function(SolicitudFiltro) onFiltroTap;
-
-  const _SolicitudFilterTabs({
-    required this.filtroActual,
-    required this.onFiltroTap,
-  });
-
-  static const _opciones = [
-    (SolicitudFiltro.todas, 'Todas'),
-    (SolicitudFiltro.asesores, 'Asesores'),
-    (SolicitudFiltro.sinValidar, 'Sin validar'),
-    (SolicitudFiltro.enviarACobranza, 'Enviar a cobranza'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        child: Row(
-          children: _opciones.map((entry) {
-            final (filtro, label) = entry;
-            final seleccionado = filtroActual == filtro;
-            return Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.sm),
-              child: GestureDetector(
-                onTap: () => onFiltroTap(filtro),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: seleccionado
-                        ? AppColors.primary
-                        : AppColors.grey300.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(
-                      AppSizing.radiusCircular,
-                    ),
-                  ),
-                  child: Text(
-                    label,
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: seleccionado
-                          ? AppColors.textOnDark
-                          : AppColors.textPrimary,
-                      fontWeight: seleccionado
-                          ? AppTextStyles.weightSemiBold
-                          : AppTextStyles.weightRegular,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
     );
   }
 }

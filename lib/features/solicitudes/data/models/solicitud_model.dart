@@ -6,45 +6,69 @@ import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
 class SolicitudModel extends Solicitud {
   const SolicitudModel({
     required super.idSolicitud,
-    required super.idContacto,
     required super.nombre,
     required super.apellido,
     required super.nombreEmpresa,
+    required super.cargo,
     required super.correo,
     required super.telefono,
-    required super.idTipoSolicitud,
-    required super.tipoSolicitud,
+    required super.tipoPersona,
+    required super.idCondicionPago,
+    required super.condicionPago,
+    required super.monto,
+    required super.fechaCreacion,
+    required super.idOportunidad,
+    required super.oportunidad,
+    required super.idCanal,
+    required super.canal,
     required super.idEstado,
     required super.estado,
+    required super.ibValidado,
     required super.asesor,
     required super.nombreAsesor,
-    required super.idCanal,
-    required super.fechaCreacion,
-    required super.monto,
-    required super.observaciones,
   });
 
+  // Mapeo posicional — [CRM].[CSV_SOLICITUDES_LST_APP], separados por ¦:
+  // 0 numsol · 1 nombres · 2 apePaterno · 3 apeMaterno · 4 nomEmpre · 5 cargo ·
+  // 6 celular · 7 correo · 8 tipoPersona · 9 idCondicionPago · 10 condicionPago ·
+  // 11 impTotal · 12 fecha (últ. actualización, o creación si nunca se modificó) ·
+  // 13 FC_USUARIO_C (no se usa, ver nota abajo) · 14 idOportunidad ·
+  // 15 nombreOportunidad · 16 idCanal · 17 canal · 18 idEstadoGes ·
+  // 19 descripción estado · 20 ibValidado · 21 idUsuarioEjec · 22 nomUser.
+  // Ojo: las posiciones 16/17 (canal) dependen de que el SP seleccione
+  // CN.ID_CANAL/CN.DESCRIPCION en vez de repetir EG.ID_ESTADO_GES/DESCRIPCION
+  // (bug actual) — ver notas del CLAUDE.md de este feature. El índice 13 se
+  // deja sin leer a propósito para no desalinear el resto de posiciones.
   factory SolicitudModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
+    final apePaterno = ParseUtils.str(fields, 2);
+    final apeMaterno = ParseUtils.str(fields, 3);
 
     return SolicitudModel(
-      idSolicitud: ParseUtils.toInt(fields, 0),
-      idContacto: ParseUtils.toInt(fields, 1),
-      nombre: ParseUtils.str(fields, 2),
-      apellido: ParseUtils.str(fields, 3),
+      idSolicitud: ParseUtils.str(fields, 0),
+      nombre: ParseUtils.str(fields, 1),
+      apellido: [
+        apePaterno,
+        apeMaterno,
+      ].where((e) => e.isNotEmpty).join(' '),
       nombreEmpresa: ParseUtils.str(fields, 4),
-      correo: ParseUtils.str(fields, 5),
+      cargo: ParseUtils.str(fields, 5),
       telefono: ParseUtils.str(fields, 6),
-      idTipoSolicitud: ParseUtils.toInt(fields, 7),
-      tipoSolicitud: ParseUtils.str(fields, 8),
-      idEstado: ParseUtils.str(fields, 9),
-      estado: ParseUtils.str(fields, 10),
-      asesor: ParseUtils.str(fields, 11),
-      nombreAsesor: ParseUtils.str(fields, 12),
-      idCanal: ParseUtils.toInt(fields, 13),
-      fechaCreacion: ParseUtils.str(fields, 14),
-      monto: ParseUtils.toDouble(fields, 15),
-      observaciones: ParseUtils.str(fields, 16),
+      correo: ParseUtils.str(fields, 7),
+      tipoPersona: ParseUtils.str(fields, 8),
+      idCondicionPago: ParseUtils.str(fields, 9),
+      condicionPago: ParseUtils.str(fields, 10),
+      monto: ParseUtils.toDouble(fields, 11),
+      fechaCreacion: ParseUtils.str(fields, 12),
+      idOportunidad: ParseUtils.toInt(fields, 14),
+      oportunidad: ParseUtils.str(fields, 15),
+      idCanal: ParseUtils.toInt(fields, 16),
+      canal: ParseUtils.str(fields, 17),
+      idEstado: ParseUtils.str(fields, 18),
+      estado: ParseUtils.str(fields, 19),
+      ibValidado: ParseUtils.toBool(fields, 20),
+      asesor: ParseUtils.str(fields, 21),
+      nombreAsesor: ParseUtils.str(fields, 22),
     );
   }
 

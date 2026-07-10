@@ -4,10 +4,20 @@
 Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y un wizard de
 4 pasos para completar una solicitud (Solicitante → Participantes → Facturación → Resumen).
 
-## Estado general — ⚠️ datos hardcodeados, pendiente conectar al backend real
-Todo el feature funciona hoy con data en memoria (sin SP real conectado):
-- `SolicitudRemoteDatasource` retorna una lista hardcodeada (`_solicitudesHardcoded`) — ver
-  comentario en el archivo con el mapeo de estados/canales. Falta conectar al SP real.
+## Estado general — ⚠️ wizard aún hardcodeado, lista ya conectada al SP real
+- `SolicitudRemoteDatasource.getSolicitudes()` ya está conectado a
+  `[CRM].[CSV_SOLICITUDES_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) — mismo patrón
+  que `CobranzaRemoteDatasource`. Ver mapeo posicional completo en el comentario de
+  `SolicitudModel.fromRawString` y en "SPs que consume" abajo.
+- **Bug pendiente en el SP — campo Canal**: la sección comentada `-- CANAL` del SP repite las
+  mismas columnas que `-- ESTADO SOLICITUD` (`EG.ID_ESTADO_GES`/`EG.DESCRIPCION` dos veces) en
+  vez de seleccionar `CN.ID_CANAL`/`CN.DESCRIPCION` (la tabla `CN` = `CRM.T_CANAL` se une con
+  `LEFT JOIN` pero sus columnas nunca se seleccionan). El parser en Flutter (`SolicitudModel`)
+  ya está escrito asumiendo la posición **corregida** (`idCanal`/`canal` en los índices 16/17
+  del raw, antes del bloque de estado en 18/19) — no hace falta tocar Flutter de nuevo cuando
+  se corrija el SP, solo hay que cambiar esas dos columnas en el `SELECT` para que apunten a
+  `CN` en vez de repetir `EG`. Hasta entonces, `idCanal`/`canal` en la lista llegan con el
+  mismo valor que `idEstado`/`estado` (dato incorrecto, no usar para nada crítico).
 - El wizard (`SolicitudFormCubit` + `ParticipantesCubit`) guarda todo en memoria durante la
   sesión de navegación; no hay persistencia ni envío al backend. Los botones "Guardar
   borrador" y "Generar solicitud" (paso Resumen) no están conectados a ningún caso de uso.
@@ -95,8 +105,10 @@ Todo el feature funciona hoy con data en memoria (sin SP real conectado):
 - `SolicitudGeneradaPage` → pantalla de confirmación tras "Generar solicitud"
 
 ## BLoCs / Cubits
-- `SolicitudListBloc` (list/) → carga y filtra la lista; conteos por estado; agrupa
-  asesores disponibles para el picker
+- `SolicitudListBloc` (list/) → carga y filtra la lista; conteos por estado; calcula
+  `conteosPorAsesor` (`Map<String,int>`, sobre `_allSolicitudes`) para alimentar el picker —
+  el universo de asesores ya no sale de las solicitudes cargadas, viene de
+  `CatalogsBloc.asesores` (ver `SolicitudAsesorPickerModal` abajo)
 - `SolicitudFormCubit` (form/) → guarda `DatosSolicitante` y `DatosFacturacion` capturados
   en los pasos 1 y 3. Se crea **una sola vez** en `SolicitudCompletarPage` (paso 1) y se
   reenvía como argumento (`formCubit`) a través de todo el wizard vía `BlocProvider.value`
@@ -153,8 +165,20 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 
 ## Widgets principales
 - `SolicitudListView` / `SolicitudListPortrait` (list/) → lista + chips + `SolicitudCard`
+- `SolicitudFilterChips` (list/) → chips de filtro horizontal (Todas/Asesores/Sin
+  validar/Enviar a cobranza); el chip "Asesores" solo se muestra si
+  `SessionService().isModerador` — mismo patrón que `CobranzaFilterChips`. Antes de este
+  cambio el chip "Asesores" siempre estaba visible, incluso para un asesor no-moderador
 - `SolicitudAsesorPickerModal` (list/) → modal del chip "Asesores", mismo patrón que
-  `LeadAsesorPickerModal` mismo patrón que en `lead/`
+  `CobranzaAsesorPickerModal`: reactivo a `CatalogsBloc` (`BlocBuilder<CatalogsBloc,
+  CatalogsState>`, no un snapshot estático), ícono de refrescar dispara
+  `CatalogsLoadRequested`. Cada fila muestra avatar, nombre, código, punto verde si
+  `disponible` y el conteo (`SolicitudListSuccess.conteosPorAsesor`, calculado en el bloc
+  sobre las solicitudes cargadas — el backend no lo trae). Retorna el `codUser` elegido o
+  `null` — `SolicitudListPortrait` interpreta `null` como "volver a Todas". **Antes** este
+  modal armaba la lista de asesores agrupando las propias solicitudes cargadas
+  (`AsesorResumen`, sin catálogo real) — se reemplazó porque para un asesor no-moderador el
+  SP solo trae sus propias solicitudes, así que en la práctica solo se veía a sí mismo
 - `SolicitudDetalleView` (detail/) → detalle de solo lectura
 - `SolicitudPasosIndicador` / `SolicitudBadgePaso` (completar/) → indicador de paso 1-4
   compartido por las 4 vistas del wizard
@@ -209,7 +233,16 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   Perú (`codigoTelefono == '51'`) cuando el catálogo ya cargó
 
 ## Modelos relevantes
-- `Solicitud` (domain/entities) → entidad de la lista/detalle
+- `Solicitud` (domain/entities) → entidad de la lista/detalle. `idSolicitud` es `String`
+  (`NUMSOL`, no numérico garantizado — mismo patrón que `Cobranza.numSol`). `apellido` es un
+  solo campo que junta `apePaterno` + `apeMaterno` del SP (el SP los trae separados, la
+  entidad no). `idOportunidad`/`oportunidad` reemplazan al viejo `idTipoSolicitud`/
+  `tipoSolicitud` (vienen de `OP.ID_OPORTUNIDAD`/`OP.NOMBRE` — la oportunidad/curso de la
+  solicitud). Campos nuevos agregados al conectar el SP real: `cargo`, `tipoPersona`
+  (`'Juridica'`/`'Natural'`), `idCondicionPago`/`condicionPago` (`'CR'`/`'C'` — crédito o
+  contado), `canal` (label, ver bug de Canal en "Estado general"), `ibValidado` (bool). Ya
+  **no tiene** `idContacto` ni `observaciones` — el SP no los trae y ninguna pantalla los
+  usaba
 - `DatosSolicitante` / `DatosFacturacion` (bloc/form/solicitud_form_state.dart) → snapshots
   inmutables de los pasos 1 y 3, capturados al presionar "Continuar". `DatosSolicitante`
   incluye `tipoDocId`/`nacionalidadId` (ids de catálogo, no solo el label — necesarios para
@@ -229,10 +262,16 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   autogenerado por el switch "El solicitante será participante" — ver abajo)
 
 ## SPs que consume
-- Ninguno todavía — ver "Estado general" arriba. `SolicitudRemoteDatasource` es 100% mock.
+- `[CRM].[CSV_SOLICITUDES_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) → lista de
+  solicitudes (`SolicitudModel.fromRawString`, 23 campos posicionales — ver mapeo comentado
+  en el archivo del modelo y el bug de Canal en "Estado general"). Este SP solo tiene rama
+  `@L_TASK = 'LS'` y filtra en el WHERE por `IB_MOD_APP = 1 OR ID_USUARIO_EJEC = @ID_USUARIO`
+  (mismo patrón que moderador/asesor de Cobranza) más `IB_VALIDADO != 0`.
+- El resto del feature (wizard: guardar borrador, generar solicitud, carga masiva) todavía no
+  tiene SP conectado — ver "Estado general".
 
 ## Dependencias externas
-- `SolicitudRepository` (RepositoryProvider — implementación hardcodeada)
+- `SolicitudRepository` (RepositoryProvider — `getSolicitudes()` ya conectado al SP real)
 
 ## Notas importantes
 - `SolicitudFiltro` (`todas`, `asesores`, `sinValidar`, `enviarACobranza`) — `sinValidar` =
@@ -242,4 +281,5 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 - Estados de la solicitud: `'00'` Por Completar · `'01'` Por Validar · `'02'` Con
   Documentos · `'03'` Lista p/Cobranza
 - Separadores del backend: `AppConstants.sepListas` (`¯`), `AppConstants.sepCampos` (`¦`),
-  `AppConstants.sepRegistros` (`¬`) — aún sin uso real aquí porque no hay SP conectado
+  `AppConstants.sepRegistros` (`¬`) — usados por `SolicitudRemoteDatasource.getSolicitudes()`
+  y `SolicitudModel.parseList`/`fromRawString`

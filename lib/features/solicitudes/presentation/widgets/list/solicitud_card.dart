@@ -158,7 +158,7 @@ class SolicitudCard extends StatelessWidget {
                               const SizedBox(width: AppSpacing.xs),
                               Expanded(
                                 child: Text(
-                                  solicitud.tipoSolicitud,
+                                  solicitud.oportunidad,
                                   style: AppTextStyles.bodySmall.copyWith(
                                     fontWeight: AppTextStyles.weightMedium,
                                     color: AppColors.textPrimary,

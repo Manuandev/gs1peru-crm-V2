@@ -96,7 +96,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
                 s.apellido.toLowerCase().contains(q) ||
                 s.nombreEmpresa.toLowerCase().contains(q) ||
                 s.telefono.contains(q) ||
-                s.idSolicitud.toString().contains(q),
+                s.idSolicitud.toLowerCase().contains(q),
           )
           .toList();
     }
@@ -105,7 +105,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
       solicitudes: resultado,
       filtro: _filtroActivo,
       asesorSeleccionado: _asesorSeleccionado,
-      asesoresDisponibles: _buildAsesoresDisponibles(),
+      conteosPorAsesor: _buildConteosPorAsesor(),
       cntPorCompletar:
           _allSolicitudes.where((s) => s.idEstado == '00').length,
       cntPorValidar:
@@ -117,21 +117,14 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     ));
   }
 
-  // Asesores distintos entre todas las solicitudes — para el modal
-  // del chip "Asesores" (SolicitudAsesorPickerModal)
-  List<AsesorResumen> _buildAsesoresDisponibles() {
-    final agrupado = <String, AsesorResumen>{};
+  // Conteo de solicitudes por asesor (codUser) sobre el total cargado —
+  // alimenta SolicitudAsesorPickerModal, no viene del backend
+  Map<String, int> _buildConteosPorAsesor() {
+    final conteos = <String, int>{};
     for (final s in _allSolicitudes) {
       if (s.asesor.isEmpty) continue;
-      final actual = agrupado[s.asesor];
-      agrupado[s.asesor] = AsesorResumen(
-        cod: s.asesor,
-        nombre: s.nombreAsesor,
-        cantidad: (actual?.cantidad ?? 0) + 1,
-      );
+      conteos[s.asesor] = (conteos[s.asesor] ?? 0) + 1;
     }
-    final lista = agrupado.values.toList()
-      ..sort((a, b) => a.nombre.compareTo(b.nombre));
-    return lista;
+    return conteos;
   }
 }

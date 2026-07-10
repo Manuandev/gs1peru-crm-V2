@@ -47,6 +47,31 @@ class SolicitudParticipantesView extends StatelessWidget {
     if (confirmado) cubit.eliminarTodos();
   }
 
+  // Si TODOS los participantes son invitados (sin costo), no hay a quién
+  // facturar — se salta el paso 3 directo al resumen.
+  void _onContinuar(BuildContext context, ParticipantesState state) {
+    final soloInvitados = state.participantes.every(
+      (p) =>
+          p.tipoParticipante == 'Invitado' ||
+          p.tipoParticipante == 'Invitado auspicio',
+    );
+    if (soloInvitados) {
+      context.goToFichaResumenSolicitud(
+        solicitud: solicitud,
+        modoEdicion: modoEdicion,
+        formCubit: context.read<SolicitudFormCubit>(),
+        participantesCubit: context.read<ParticipantesCubit>(),
+      );
+    } else {
+      context.goToFichaFacturacionSolicitud(
+        solicitud: solicitud,
+        modoEdicion: modoEdicion,
+        formCubit: context.read<SolicitudFormCubit>(),
+        participantesCubit: context.read<ParticipantesCubit>(),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final catalogState = context.watch<CatalogsBloc>().state;
@@ -197,68 +222,48 @@ class SolicitudParticipantesView extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
 
               // ── Botones pie ─────────────────────────────────────────
+              // En modo solo-ver (modoEdicion == false) solo se muestra
+              // "Continuar", sin exigir participantes — es un recorrido de
+              // lectura, no una captura de datos.
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.sm,
                   vertical: AppSpacing.sm,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: CustomSecondaryButton(
-                        text: 'Cancelar',
-                        backgroundColor: AppColors.brandRaspberryAccessible,
-                        onPressed: () => context.goBack(),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: CustomSecondaryButton(
-                        text: 'Guardar',
-                        icon: AppIcons.save,
-                        onPressed: () {},
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: CustomPrimaryButton(
+                child: modoEdicion
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: CustomSecondaryButton(
+                              text: 'Cancelar',
+                              backgroundColor:
+                                  AppColors.brandRaspberryAccessible,
+                              onPressed: () => context.goBack(),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Expanded(
+                            child: CustomSecondaryButton(
+                              text: 'Guardar',
+                              icon: AppIcons.save,
+                              onPressed: () {},
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Expanded(
+                            child: CustomPrimaryButton(
+                              text: 'Continuar →',
+                              onPressed: state.participantes.isEmpty
+                                  ? null
+                                  : () => _onContinuar(context, state),
+                            ),
+                          ),
+                        ],
+                      )
+                    : CustomPrimaryButton(
                         text: 'Continuar →',
-                        onPressed: state.participantes.isEmpty
-                            ? null
-                            : () {
-                                // Si TODOS los participantes son invitados
-                                // (sin costo), no hay a quién facturar —
-                                // se salta el paso 3 directo al resumen.
-                                final soloInvitados = state.participantes.every(
-                                  (p) =>
-                                      p.tipoParticipante == 'Invitado' ||
-                                      p.tipoParticipante ==
-                                          'Invitado auspicio',
-                                );
-                                if (soloInvitados) {
-                                  context.goToFichaResumenSolicitud(
-                                    solicitud: solicitud,
-                                    modoEdicion: modoEdicion,
-                                    formCubit: context
-                                        .read<SolicitudFormCubit>(),
-                                    participantesCubit: context
-                                        .read<ParticipantesCubit>(),
-                                  );
-                                } else {
-                                  context.goToFichaFacturacionSolicitud(
-                                    solicitud: solicitud,
-                                    modoEdicion: modoEdicion,
-                                    formCubit: context
-                                        .read<SolicitudFormCubit>(),
-                                    participantesCubit: context
-                                        .read<ParticipantesCubit>(),
-                                  );
-                                }
-                              },
+                        onPressed: () => _onContinuar(context, state),
                       ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),

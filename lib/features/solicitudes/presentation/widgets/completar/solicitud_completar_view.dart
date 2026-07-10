@@ -136,6 +136,48 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     if (confirmado && mounted) context.goBack();
   }
 
+  // En modo edición valida los campos obligatorios antes de continuar; en
+  // modo solo-ver (modoEdicion == false) avanza directo, sin validar.
+  void _onContinuar(PaisItem? paisCelular) {
+    if (widget.modoEdicion && !_formCompleto) {
+      AppSnackBar.error(
+        context,
+        'Completa todos los campos obligatorios (*) para continuar',
+      );
+      return;
+    }
+    final datos = DatosSolicitante(
+      tipoDocId: _tipoDocId,
+      tipoDocLabel: _tipoDocLabel,
+      numDoc: _ctrlNumDoc.text,
+      nacionalidadId: _nacionalidadId,
+      nacionalidad: _nacionalidadLabel,
+      nombres: _ctrlNombres.text,
+      apellidoPaterno: _ctrlApellidoPaterno.text,
+      apellidoMaterno: _ctrlApellidoMaterno.text,
+      cargo: _ctrlCargo.text,
+      celular: _ctrlCelular.text,
+      celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
+      correo: _ctrlCorreo.text,
+      canalId: _canalSeleccionado?.id,
+      canalNombre: _canalSeleccionado?.nombre ?? '',
+      ruc: _ctrlRuc.text,
+      razonSocial: _ctrlRazonSocial.text,
+      solicitanteEsParticipante: _solicitanteParticipante,
+      facturarAlSolicitante: _facturarAlSolicitante,
+      archivoVoucherNombre: _archivoVoucher?.name ?? '',
+      archivoOCNombre: _archivoOC?.name ?? '',
+    );
+    context.read<SolicitudFormCubit>().guardarSolicitante(datos);
+    context.read<ParticipantesCubit>().sincronizarSolicitante(datos);
+    context.goToFichaParticipantesSolicitud(
+      solicitud: widget.solicitud,
+      modoEdicion: widget.modoEdicion,
+      formCubit: context.read<SolicitudFormCubit>(),
+      participantesCubit: context.read<ParticipantesCubit>(),
+    );
+  }
+
   @override
   void dispose() {
     _ctrlNumDoc.dispose();
@@ -314,81 +356,45 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
           ),
 
           // ── Botones de acción fijos al pie ──────────────────────────
+          // En modo solo-ver (modoEdicion == false) solo se muestra
+          // "Continuar", sin validar campos — es un recorrido de lectura,
+          // no una captura de datos.
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: CustomSecondaryButton(
-                    text: 'Cancelar',
-                    backgroundColor: AppColors.brandRaspberryAccessible,
-                    onPressed: _confirmarCancelar,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: CustomSecondaryButton(
-                    text: 'Guardar',
-                    icon: AppIcons.save,
-                    onPressed: () {},
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: CustomPrimaryButton(
+            child: widget.modoEdicion
+                ? Row(
+                    children: [
+                      Expanded(
+                        child: CustomSecondaryButton(
+                          text: 'Cancelar',
+                          backgroundColor: AppColors.brandRaspberryAccessible,
+                          onPressed: _confirmarCancelar,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: CustomSecondaryButton(
+                          text: 'Guardar',
+                          icon: AppIcons.save,
+                          onPressed: () {},
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: CustomPrimaryButton(
+                          text: 'Continuar →',
+                          onPressed: () => _onContinuar(paisCelular),
+                        ),
+                      ),
+                    ],
+                  )
+                : CustomPrimaryButton(
                     text: 'Continuar →',
-                    onPressed: () {
-                      if (!_formCompleto) {
-                        AppSnackBar.error(
-                          context,
-                          'Completa todos los campos obligatorios (*) para continuar',
-                        );
-                        return;
-                      }
-                      final datos = DatosSolicitante(
-                        tipoDocId: _tipoDocId,
-                        tipoDocLabel: _tipoDocLabel,
-                        numDoc: _ctrlNumDoc.text,
-                        nacionalidadId: _nacionalidadId,
-                        nacionalidad: _nacionalidadLabel,
-                        nombres: _ctrlNombres.text,
-                        apellidoPaterno: _ctrlApellidoPaterno.text,
-                        apellidoMaterno: _ctrlApellidoMaterno.text,
-                        cargo: _ctrlCargo.text,
-                        celular: _ctrlCelular.text,
-                        celularCodigoTelefono:
-                            paisCelular?.codigoTelefono ?? '',
-                        correo: _ctrlCorreo.text,
-                        canalId: _canalSeleccionado?.id,
-                        canalNombre: _canalSeleccionado?.nombre ?? '',
-                        ruc: _ctrlRuc.text,
-                        razonSocial: _ctrlRazonSocial.text,
-                        solicitanteEsParticipante: _solicitanteParticipante,
-                        facturarAlSolicitante: _facturarAlSolicitante,
-                        archivoVoucherNombre: _archivoVoucher?.name ?? '',
-                        archivoOCNombre: _archivoOC?.name ?? '',
-                      );
-                      context.read<SolicitudFormCubit>().guardarSolicitante(
-                        datos,
-                      );
-                      context
-                          .read<ParticipantesCubit>()
-                          .sincronizarSolicitante(datos);
-                      context.goToFichaParticipantesSolicitud(
-                        solicitud: widget.solicitud,
-                        modoEdicion: widget.modoEdicion,
-                        formCubit: context.read<SolicitudFormCubit>(),
-                        participantesCubit: context
-                            .read<ParticipantesCubit>(),
-                      );
-                    },
+                    onPressed: () => _onContinuar(paisCelular),
                   ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

@@ -136,6 +136,19 @@ Al agregar un paso nuevo al wizard:
 3. Nunca crear una instancia nueva de estos cubits fuera del paso 1
 
 ## Validación de "Continuar" (pasos 1, 2 y 3)
+**Todo lo de esta sección aplica solo cuando `modoEdicion == true`.** Cuando
+`modoEdicion == false` (se entró por "Continuar" desde `SolicitudDetalleView`, no por
+"Editar ficha"), los 3 pasos son un recorrido de **solo lectura**: el pie muestra
+únicamente el botón "Continuar" (ancho completo, sin "Cancelar"/"Guardar"/"Atrás") y su
+`onPressed` navega directo al siguiente paso sin evaluar `_formCompleto` ni el gate de
+participantes — no tiene sentido bloquear a alguien que solo quiere ver una solicitud ya
+cargada. Los 3 pasos factorizan esto igual: la lógica de "construir el snapshot y navegar"
+vive en un método `_onContinuar(...)` que el botón llama siempre; la validación
+(`if (widget.modoEdicion && !_formCompleto) { ... return; }` o, en el paso 2,
+`onPressed: state.participantes.isEmpty ? null : ...` solo dentro de la rama
+`modoEdicion`) solo se ejecuta cuando `modoEdicion` es `true`. El resto de esta sección
+describe el comportamiento en modo edición.
+
 El botón `CustomPrimaryButton` de "Continuar" en los pasos 1 y 3 **siempre está
 habilitado** — al presionarlo se evalúa `_formCompleto`; si falta algo obligatorio (`*`)
 se muestra un `AppSnackBar.error` y no navega, en vez de deshabilitar el botón sin

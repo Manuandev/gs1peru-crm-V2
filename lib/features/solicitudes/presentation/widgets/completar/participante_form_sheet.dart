@@ -78,7 +78,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
       _tipoDocInicialId = catalogState.tiposDocumento
-          .where((t) => t.nombre == _tipoDocLabel)
+          .where((t) => t.abreviatura == _tipoDocLabel)
           .firstOrNull
           ?.id;
       _nacionalidadInicialId = catalogState.nacionalidades
@@ -253,9 +253,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           child: CustomComboField<TipoDocumentoItem>(
                             label: 'Tipo doc.',
                             data: tiposDocumento,
+                            labelIndex: 2, // abreviatura (DNI/CE/RUC/...)
                             initialValue: _tipoDocInicialId,
                             onChanged: (item) => setState(
-                              () => _tipoDocLabel = item?.nombre ?? '',
+                              () => _tipoDocLabel = item?.abreviatura ?? '',
                             ),
                           ),
                         ),

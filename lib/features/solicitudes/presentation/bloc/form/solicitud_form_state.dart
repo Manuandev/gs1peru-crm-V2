@@ -3,8 +3,10 @@
 part of 'solicitud_form_cubit.dart';
 
 class DatosSolicitante {
+  final String tipoDocId;
   final String tipoDocLabel;
   final String numDoc;
+  final String nacionalidadId;
   final String nacionalidad;
   final String nombres;
   final String apellidoPaterno;
@@ -19,10 +21,14 @@ class DatosSolicitante {
   final String razonSocial;
   final bool solicitanteEsParticipante;
   final bool facturarAlSolicitante;
+  final String archivoVoucherNombre;
+  final String archivoOCNombre;
 
   const DatosSolicitante({
+    this.tipoDocId = '',
     required this.tipoDocLabel,
     required this.numDoc,
+    this.nacionalidadId = '',
     required this.nacionalidad,
     required this.nombres,
     required this.apellidoPaterno,
@@ -37,6 +43,8 @@ class DatosSolicitante {
     required this.razonSocial,
     required this.solicitanteEsParticipante,
     required this.facturarAlSolicitante,
+    this.archivoVoucherNombre = '',
+    this.archivoOCNombre = '',
   });
 
   String get nombreCompleto => [nombres, apellidoPaterno, apellidoMaterno]

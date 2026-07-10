@@ -494,8 +494,22 @@ class TipoDocumentoItem with Comboable {
 
   const TipoDocumentoItem({required this.id, required this.nombre});
 
+  // El SP solo trae la descripción larga (ej. "DOC. NACIONAL DE IDENTIDAD").
+  // La UI necesita la forma abreviada (DNI/CE/RUC/...) — no viene del backend,
+  // se mapea acá por id (mismos ids reales de SYSTABEXTER02 CODTABLA='F01').
+  static const Map<String, String> _abreviaturas = {
+    '0': 'Doc. sin RUC',
+    '1': 'DNI',
+    '4': 'CE',
+    '6': 'RUC',
+    '7': 'Pasaporte',
+    'A': 'Céd. Diplomática',
+  };
+
+  String get abreviatura => _abreviaturas[id] ?? nombre;
+
   @override
-  List<dynamic> get fields => [id, nombre];
+  List<dynamic> get fields => [id, nombre, abreviatura];
 }
 
 class TipoDocumentoItemModel extends TipoDocumentoItem {

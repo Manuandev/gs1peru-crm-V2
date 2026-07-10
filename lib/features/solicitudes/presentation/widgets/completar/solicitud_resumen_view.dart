@@ -82,7 +82,11 @@ class SolicitudResumenView extends StatelessWidget {
                   const _Separador(),
                   const _SeccionResumenComercial(),
                   const _Separador(),
-                  const _SeccionDocumentosAdjuntos(),
+                  _SeccionDocumentosAdjuntos(
+                    voucherNombre:
+                        formState.solicitante?.archivoVoucherNombre ?? '',
+                    ocNombre: formState.solicitante?.archivoOCNombre ?? '',
+                  ),
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),
@@ -757,7 +761,13 @@ class _SeccionResumenComercial extends StatelessWidget {
 // ── Seccion 5 — Documentos adjuntos ──────────────────────────────────────────
 
 class _SeccionDocumentosAdjuntos extends StatelessWidget {
-  const _SeccionDocumentosAdjuntos();
+  final String voucherNombre;
+  final String ocNombre;
+
+  const _SeccionDocumentosAdjuntos({
+    required this.voucherNombre,
+    required this.ocNombre,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -773,11 +783,10 @@ class _SeccionDocumentosAdjuntos extends StatelessWidget {
           children: [
             Expanded(
               child: _TarjetaArchivo(
-                icono: AppIcons.fileExcel,
+                icono: AppIcons.pdf,
                 colorIcono: AppColors.brandForest,
                 label: 'Voucher adjunto',
-                nombreArchivo:
-                    'JOSE EDUARDO POSADA PENA – IML MANUFACTURING.pdf',
+                nombreArchivo: voucherNombre,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -786,7 +795,7 @@ class _SeccionDocumentosAdjuntos extends StatelessWidget {
                 icono: AppIcons.pdf,
                 colorIcono: AppColors.brandRaspberryAccessible,
                 label: 'O/C adjunta',
-                nombreArchivo: 'OC_IML_2026_91001064.pdf',
+                nombreArchivo: ocNombre,
               ),
             ),
           ],
@@ -811,6 +820,9 @@ class _TarjetaArchivo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tieneArchivo = nombreArchivo.isNotEmpty;
+    final color = tieneArchivo ? colorIcono : AppColors.textDisabled;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
@@ -825,10 +837,10 @@ class _TarjetaArchivo extends StatelessWidget {
             width: AppSizing.iconLg,
             height: AppSizing.iconLg,
             decoration: BoxDecoration(
-              color: colorIcono.withOpacity(0.12),
+              color: color.withOpacity(0.12),
               borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             ),
-            child: Icon(icono, color: colorIcono, size: AppSizing.iconMd),
+            child: Icon(icono, color: color, size: AppSizing.iconMd),
           ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
@@ -843,10 +855,14 @@ class _TarjetaArchivo extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  nombreArchivo,
+                  tieneArchivo ? nombreArchivo : 'Sin adjuntar',
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: AppTextStyles.weightMedium,
+                    color: tieneArchivo
+                        ? AppColors.textPrimary
+                        : AppColors.textDisabled,
+                    fontWeight: tieneArchivo
+                        ? AppTextStyles.weightMedium
+                        : AppTextStyles.weightRegular,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

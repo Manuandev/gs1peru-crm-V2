@@ -22,7 +22,7 @@ class SeccionDatosSolicitante extends StatefulWidget {
   final List<PaisItem> paises;
   final PaisItem? paisCelular;
   final ValueChanged<PaisItem> onPaisCelularChanged;
-  final ValueChanged<String>? onTipoDocLabelChanged;
+  final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   final ValueChanged<String>? onSexoChanged;
 
@@ -39,7 +39,7 @@ class SeccionDatosSolicitante extends StatefulWidget {
     required this.paises,
     required this.paisCelular,
     required this.onPaisCelularChanged,
-    this.onTipoDocLabelChanged,
+    this.onTipoDocChanged,
     this.onNacionalidadChanged,
     this.onSexoChanged,
   });
@@ -114,13 +114,14 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
               child: CustomComboField<TipoDocumentoItem>(
                 label: 'Tipo documento *',
                 data: tiposDocumento,
+                labelIndex: 2, // abreviatura (DNI/CE/RUC/Pasaporte...)
                 enabled: widget.habilitado,
                 onChanged: (item) {
                   setState(() {
                     _tipoDocId = item?.id;
                     widget.ctrlNumDoc.clear();
                   });
-                  widget.onTipoDocLabelChanged?.call(item?.nombre ?? '');
+                  widget.onTipoDocChanged?.call(item);
                 },
               ),
             ),

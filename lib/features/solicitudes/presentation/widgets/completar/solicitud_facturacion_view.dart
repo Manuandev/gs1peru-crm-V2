@@ -8,6 +8,11 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_pasos_indicador.dart';
 
+// Ids reales de catálogo usados en las reglas de este paso (SYSTABEXTER02).
+const _idComprobanteFactura = '01';
+const _idComprobanteBoleta = '03';
+const _idTipoDocRuc = '6';
+
 class SolicitudFacturacionView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
@@ -54,8 +59,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   final _ctrlNit = TextEditingController();
   final _ctrlObservaciones = TextEditingController();
 
+  bool get _esRuc => _tipoDocId == _idTipoDocRuc;
+
   /// Campos obligatorios (marcados con *) del paso 3. Apellido materno,
-  /// actividad económica, NIT y observaciones son opcionales.
+  /// actividad económica, NIT y observaciones son opcionales. Apellido
+  /// paterno solo aplica cuando el tipo de documento NO es RUC.
   bool get _formCompleto =>
       _comprobanteId.isNotEmpty &&
       _paisId.isNotEmpty &&
@@ -64,7 +72,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _ctrlNumDoc.text.trim().isNotEmpty &&
       _nacionalidadId.isNotEmpty &&
       _ctrlNombresRazon.text.trim().isNotEmpty &&
-      _ctrlApellidoPaterno.text.trim().isNotEmpty &&
+      (_esRuc || _ctrlApellidoPaterno.text.trim().isNotEmpty) &&
       _ctrlCelular.text.trim().isNotEmpty &&
       _ctrlCorreo.text.emailValidator == null &&
       _ctrlDireccion.text.trim().isNotEmpty;
@@ -91,23 +99,50 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     super.didChangeDependencies();
     if (_prefillDone) return;
     _prefillDone = true;
-    final datos = context.read<SolicitudFormCubit>().state.facturacion;
-    if (datos == null) return;
-    _comprobanteId = datos.comprobanteId;
-    _comprobanteLabel = datos.comprobante;
-    _paisId = datos.paisId;
-    _paisLabel = datos.pais;
-    _monedaId = datos.monedaId;
-    _monedaLabel = datos.moneda;
-    _ctrlNumDoc.text = datos.numDoc;
-    _ctrlNombresRazon.text = datos.nombresRazon;
-    _ctrlApellidoPaterno.text = datos.apellidoPaterno;
-    _ctrlApellidoMaterno.text = datos.apellidoMaterno;
-    _ctrlCelular.text = datos.celular;
-    _ctrlCorreo.text = datos.correo;
-    _ctrlDireccion.text = datos.direccion;
-    _ctrlNit.text = datos.nit;
-    _ctrlObservaciones.text = datos.observaciones;
+
+    final formState = context.read<SolicitudFormCubit>().state;
+    final datos = formState.facturacion;
+    if (datos != null) {
+      // Ya se guardó facturación antes (venimos de "Atrás") — restaurar.
+      _comprobanteId = datos.comprobanteId;
+      _comprobanteLabel = datos.comprobante;
+      _paisId = datos.paisId;
+      _paisLabel = datos.pais;
+      _monedaId = datos.monedaId;
+      _monedaLabel = datos.moneda;
+      _ctrlNumDoc.text = datos.numDoc;
+      _ctrlNombresRazon.text = datos.nombresRazon;
+      _ctrlApellidoPaterno.text = datos.apellidoPaterno;
+      _ctrlApellidoMaterno.text = datos.apellidoMaterno;
+      _ctrlCelular.text = datos.celular;
+      _ctrlCorreo.text = datos.correo;
+      _ctrlDireccion.text = datos.direccion;
+      _ctrlNit.text = datos.nit;
+      _ctrlObservaciones.text = datos.observaciones;
+      return;
+    }
+
+    // Primera vez en este paso — si el solicitante marcó "Facturar al
+    // solicitante", autocompletar con sus mismos datos.
+    final solicitante = formState.solicitante;
+    if (solicitante != null && solicitante.facturarAlSolicitante) {
+      _tipoDocId = solicitante.tipoDocId;
+      _tipoDocLabel = solicitante.tipoDocLabel;
+      _nacionalidadId = solicitante.nacionalidadId;
+      _ctrlNumDoc.text = solicitante.numDoc;
+      _ctrlNombresRazon.text = solicitante.nombres;
+      _ctrlApellidoPaterno.text = solicitante.apellidoPaterno;
+      _ctrlApellidoMaterno.text = solicitante.apellidoMaterno;
+      _ctrlCelular.text = solicitante.celular;
+      _ctrlCorreo.text = solicitante.correo;
+
+      final catalogState = context.read<CatalogsBloc>().state;
+      if (catalogState is CatalogsLoaded) {
+        _paisCelular = catalogState.paises
+            .where((p) => p.codigoTelefono == solicitante.celularCodigoTelefono)
+            .firstOrNull;
+      }
+    }
   }
 
   @override
@@ -134,7 +169,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final monedas = catalogState is CatalogsLoaded
         ? catalogState.monedas
         : const <MonedaItem>[];
-    final tiposDocumento = catalogState is CatalogsLoaded
+    final tiposDocumentoTodos = catalogState is CatalogsLoaded
         ? catalogState.tiposDocumento
         : const <TipoDocumentoItem>[];
     final nacionalidades = catalogState is CatalogsLoaded
@@ -143,9 +178,25 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final paises = catalogState is CatalogsLoaded
         ? catalogState.paises
         : const <PaisItem>[];
-    final comprobantes = catalogState is CatalogsLoaded
+    final comprobantesTodos = catalogState is CatalogsLoaded
         ? catalogState.comprobantes
         : const <ComprobanteItem>[];
+
+    // Solo Factura/Boleta se muestran en este combo (aunque el catálogo
+    // real traiga también N. Crédito/N. Débito).
+    final comprobantes = comprobantesTodos
+        .where(
+          (c) => c.id == _idComprobanteFactura || c.id == _idComprobanteBoleta,
+        )
+        .toList();
+    // Factura exige RUC — Boleta admite cualquier tipo de documento.
+    final tiposDocumento = _comprobanteId == _idComprobanteFactura
+        ? tiposDocumentoTodos.where((t) => t.id == _idTipoDocRuc).toList()
+        : tiposDocumentoTodos;
+    final correoLabel = _comprobanteId == _idComprobanteFactura
+        ? 'Correo para envío de factura *'
+        : 'Correo para envío de boleta *';
+
     final paisCelular =
         _paisCelular ??
         (paises.isEmpty
@@ -231,6 +282,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                   // ── Formulario ─────────────────────────────────────
                   _SeccionDatosFacturacion(
                     habilitado: widget.modoEdicion,
+                    esRuc: _esRuc,
+                    correoLabel: correoLabel,
                     ctrlNumDoc: _ctrlNumDoc,
                     ctrlNombresRazon: _ctrlNombresRazon,
                     ctrlApellidoPaterno: _ctrlApellidoPaterno,
@@ -254,6 +307,15 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     onComprobanteChanged: (item) => setState(() {
                       _comprobanteId = item?.id ?? '';
                       _comprobanteLabel = item?.nombre ?? '';
+                      if (_comprobanteId == _idComprobanteFactura) {
+                        // Factura exige RUC — se fuerza el tipo documento.
+                        final ruc = tiposDocumentoTodos
+                            .where((t) => t.id == _idTipoDocRuc)
+                            .firstOrNull;
+                        _tipoDocId = ruc?.id ?? '';
+                        _tipoDocLabel = ruc?.abreviatura ?? '';
+                        _ctrlNumDoc.clear();
+                      }
                     }),
                     onPaisChanged: (item) => setState(() {
                       _paisId = item?.id ?? '';
@@ -269,7 +331,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                         : null,
                     onTipoDocChanged: (item) => setState(() {
                       _tipoDocId = item?.id ?? '';
-                      _tipoDocLabel = item?.nombre ?? '';
+                      _tipoDocLabel = item?.abreviatura ?? '';
+                      _ctrlNumDoc.clear();
                     }),
                     onNacionalidadChanged: (item) =>
                         setState(() => _nacionalidadId = item?.id ?? ''),
@@ -357,44 +420,45 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     Expanded(
                       child: CustomPrimaryButton(
                         text: 'Continuar →',
-                        onPressed: !_formCompleto
-                            ? null
-                            : () {
-                                context
-                                    .read<SolicitudFormCubit>()
-                                    .guardarFacturacion(
-                                      DatosFacturacion(
-                                        comprobanteId: _comprobanteId,
-                                        comprobante: _comprobanteLabel,
-                                        paisId: _paisId,
-                                        pais: _paisLabel,
-                                        monedaId: _monedaId,
-                                        moneda: _monedaLabel,
-                                        tipoDocLabel: _tipoDocLabel,
-                                        numDoc: _ctrlNumDoc.text,
-                                        nombresRazon: _ctrlNombresRazon.text,
-                                        apellidoPaterno:
-                                            _ctrlApellidoPaterno.text,
-                                        apellidoMaterno:
-                                            _ctrlApellidoMaterno.text,
-                                        celular: _ctrlCelular.text,
-                                        celularCodigoTelefono:
-                                            paisCelular?.codigoTelefono ?? '',
-                                        correo: _ctrlCorreo.text,
-                                        direccion: _ctrlDireccion.text,
-                                        actividadEconomica: '',
-                                        nit: _ctrlNit.text,
-                                        observaciones: _ctrlObservaciones.text,
-                                      ),
-                                    );
-                                context.goToFichaResumenSolicitud(
-                                  solicitud: widget.solicitud,
-                                  modoEdicion: widget.modoEdicion,
-                                  formCubit: context.read<SolicitudFormCubit>(),
-                                  participantesCubit: context
-                                      .read<ParticipantesCubit>(),
-                                );
-                              },
+                        onPressed: () {
+                          if (!_formCompleto) {
+                            AppSnackBar.error(
+                              context,
+                              'Completa todos los campos obligatorios (*) para continuar',
+                            );
+                            return;
+                          }
+                          context.read<SolicitudFormCubit>().guardarFacturacion(
+                            DatosFacturacion(
+                              comprobanteId: _comprobanteId,
+                              comprobante: _comprobanteLabel,
+                              paisId: _paisId,
+                              pais: _paisLabel,
+                              monedaId: _monedaId,
+                              moneda: _monedaLabel,
+                              tipoDocLabel: _tipoDocLabel,
+                              numDoc: _ctrlNumDoc.text,
+                              nombresRazon: _ctrlNombresRazon.text,
+                              apellidoPaterno: _ctrlApellidoPaterno.text,
+                              apellidoMaterno: _ctrlApellidoMaterno.text,
+                              celular: _ctrlCelular.text,
+                              celularCodigoTelefono:
+                                  paisCelular?.codigoTelefono ?? '',
+                              correo: _ctrlCorreo.text,
+                              direccion: _ctrlDireccion.text,
+                              actividadEconomica: '',
+                              nit: _ctrlNit.text,
+                              observaciones: _ctrlObservaciones.text,
+                            ),
+                          );
+                          context.goToFichaResumenSolicitud(
+                            solicitud: widget.solicitud,
+                            modoEdicion: widget.modoEdicion,
+                            formCubit: context.read<SolicitudFormCubit>(),
+                            participantesCubit: context
+                                .read<ParticipantesCubit>(),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -501,9 +565,15 @@ class _TooltipFacturacion extends StatelessWidget {
 }
 
 // ── Sección Datos de facturación ─────────────────────────────────────────────
+//
+// Los campos de identidad cambian según el tipo de documento (esRuc):
+// RUC -> RUC + Razón Social. Cualquier otro -> Número documento + Nombres +
+// Apellido paterno + Apellido materno (opcional).
 
 class _SeccionDatosFacturacion extends StatelessWidget {
   final bool habilitado;
+  final bool esRuc;
+  final String correoLabel;
   final TextEditingController ctrlNumDoc;
   final TextEditingController ctrlNombresRazon;
   final TextEditingController ctrlApellidoPaterno;
@@ -531,6 +601,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
 
   const _SeccionDatosFacturacion({
     required this.habilitado,
+    required this.esRuc,
+    required this.correoLabel,
     required this.ctrlNumDoc,
     required this.ctrlNombresRazon,
     required this.ctrlApellidoPaterno,
@@ -598,13 +670,14 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 2: Tipo documento + Número documento
+        // Fila 2: Tipo documento + Número documento / RUC
         Row(
           children: [
             Expanded(
               child: CustomComboField<TipoDocumentoItem>(
                 label: 'Tipo documento *',
                 data: tiposDocumento,
+                labelIndex: 2, // abreviatura (DNI/CE/RUC/Pasaporte...)
                 enabled: habilitado,
                 initialValue: tipoDocInicialId,
                 onChanged: onTipoDocChanged,
@@ -613,7 +686,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: 'Número documento *',
+                label: esRuc ? 'RUC *' : 'Número documento *',
                 controller: ctrlNumDoc,
                 keyboardType: TextInputType.number,
                 enabled: habilitado,
@@ -623,7 +696,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 3: Nacionalidad + Nombres o Razón social
+        // Fila 3: Nacionalidad + Nombres / Razón social
         Row(
           children: [
             Expanded(
@@ -638,7 +711,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: 'Nombres o Razón social *',
+                label: esRuc ? 'Razón Social *' : 'Nombres *',
                 controller: ctrlNombresRazon,
                 enabled: habilitado,
                 isUpperCase: true,
@@ -649,34 +722,36 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 4: Apellido paterno + Apellido materno
-        Row(
-          children: [
-            Expanded(
-              child: CustomTextField(
-                label: 'Apellido paterno / razón legal *',
-                controller: ctrlApellidoPaterno,
-                enabled: habilitado,
-                isUpperCase: true,
-                textCapitalization: TextCapitalization.words,
+        // Fila 4: Apellido paterno + Apellido materno — solo persona natural
+        if (!esRuc) ...[
+          Row(
+            children: [
+              Expanded(
+                child: CustomTextField(
+                  label: 'Apellido paterno *',
+                  controller: ctrlApellidoPaterno,
+                  enabled: habilitado,
+                  isUpperCase: true,
+                  textCapitalization: TextCapitalization.words,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: CustomTextField(
-                label: 'Apellido materno / complemento',
-                hint: 'Opcional',
-                controller: ctrlApellidoMaterno,
-                enabled: habilitado,
-                isUpperCase: true,
-                textCapitalization: TextCapitalization.words,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: CustomTextField(
+                  label: 'Apellido materno',
+                  hint: 'Opcional',
+                  controller: ctrlApellidoMaterno,
+                  enabled: habilitado,
+                  isUpperCase: true,
+                  textCapitalization: TextCapitalization.words,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
 
-        // Fila 5: Celular + Correo
+        // Fila 5: Celular + Correo (etiqueta según comprobante elegido)
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -692,7 +767,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: 'Correo para envío de boleta *',
+                label: correoLabel,
                 controller: ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
                 enabled: habilitado,
@@ -713,5 +788,3 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     );
   }
 }
-
-// ── Sección Información complementaria ───────────────────────────────────────

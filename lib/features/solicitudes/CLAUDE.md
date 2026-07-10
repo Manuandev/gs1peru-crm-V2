@@ -46,6 +46,42 @@ Todo el feature funciona hoy con data en memoria (sin SP real conectado):
   `utils/string/string_utils.dart`), no un simple `isNotEmpty`/`contains('@')` casero.
 - El contador de caracteres bajo los campos con `maxLength` (`CustomTextField`, core) está
   suprimido (`buildCounter` → null) — decisión de diseño para todo el wizard, no solo aquí.
+- **`TipoDocumentoItem.abreviatura`** (core, `catalog_item.dart`) — el SP solo trae la
+  descripción larga ("DOC. NACIONAL DE IDENTIDAD"); la UI necesita la forma corta
+  (DNI/CE/RUC/Pasaporte/...). Es un getter client-side (mapa fijo por id, no viene del
+  backend) expuesto como `fields[2]`. Dondequiera que se muestre un combo de Tipo
+  documento (paso 1, paso 3, formulario de participante) usar
+  `CustomComboField<TipoDocumentoItem>(labelIndex: 2, ...)` y guardar `item.abreviatura`
+  (no `item.nombre`) como el label persistido — así es consistente en todos lados.
+- **Regla de negocio — Comprobante ↔ Tipo documento (paso 3)**: el combo Comprobante solo
+  muestra Factura/Boleta (se filtra `CatalogsBloc.comprobantes` a los ids `'01'`/`'03'`,
+  aunque el catálogo real también trae N. Crédito/N. Débito). Si se elige **Factura**, el
+  combo Tipo documento se filtra a **solo RUC** (id `'6'`) y se fuerza esa selección
+  automáticamente; si se elige **Boleta**, se muestran todos los tipos de documento. La
+  etiqueta del campo Correo también cambia según el comprobante ("Correo para envío de
+  boleta" / "... de factura").
+- **Paso 3 — campos condicionados a RUC vs persona natural**: cuando el Tipo documento
+  elegido es RUC, se muestran los campos **RUC** + **Razón Social** (reusando
+  `ctrlNumDoc`/`ctrlNombresRazon`); para cualquier otro tipo de documento se muestran
+  **Número documento** + **Nombres** + **Apellido paterno** + **Apellido materno**
+  (opcional). Ya no existen las etiquetas híbridas ("Apellido paterno / razón legal") que
+  había antes — `_SeccionDatosFacturacion` recibe un `esRuc: bool` y renderiza un set de
+  campos u otro.
+- **Prefill de Facturación desde el Solicitante**: si en el paso 1 se activó "Facturar al
+  solicitante" y el usuario llega al paso 3 por primera vez (sin `DatosFacturacion` previo
+  guardado), `solicitud_facturacion_view.dart` autocompleta tipo/número documento,
+  nacionalidad, nombres/apellidos, celular (+ código de país) y correo con los mismos
+  datos ya capturados en `DatosSolicitante` — el usuario puede seguir editándolos.
+- **Botón "Continuar" siempre habilitado** (pasos 1 y 3) — ya no se deshabilita
+  (`onPressed: null`) cuando faltan campos obligatorios; ahora siempre tiene `onPressed`,
+  y al presionarlo evalúa `_formCompleto`: si falta algo, muestra
+  `AppSnackBar.error(context, 'Completa todos los campos obligatorios (*) para continuar')`
+  y no navega; si está completo, guarda y avanza como antes. El usuario ya no se pregunta
+  "¿por qué no puedo continuar?" sin explicación.
+- **Documentos adjuntos (Resumen) ya no están hardcodeados** — `DatosSolicitante` guarda
+  `archivoVoucherNombre`/`archivoOCNombre` (el nombre del PDF elegido en el paso 1, o `''`
+  si no se adjuntó nada) y `solicitud_resumen_view.dart` los muestra tal cual, con un
+  estado "Sin adjuntar" (gris) cuando están vacíos en vez de un nombre de archivo inventado.
 
 ## Pantallas
 - `SolicitudListPage` → lista de solicitudes con chips de filtro (Todas / Asesores /
@@ -88,9 +124,11 @@ Al agregar un paso nuevo al wizard:
 3. Nunca crear una instancia nueva de estos cubits fuera del paso 1
 
 ## Validación de "Continuar" (pasos 1, 2 y 3)
-Cada paso deshabilita su botón `CustomPrimaryButton` de "Continuar" (pasando
-`onPressed: null`) hasta que los campos obligatorios (marcados con `*` en la UI) estén
-completos:
+El botón `CustomPrimaryButton` de "Continuar" en los pasos 1 y 3 **siempre está
+habilitado** — al presionarlo se evalúa `_formCompleto`; si falta algo obligatorio (`*`)
+se muestra un `AppSnackBar.error` y no navega, en vez de deshabilitar el botón sin
+explicar por qué (ver "Estado general"). El paso 2 sigue con su gate simple
+(`participantes.isEmpty`) ya que solo exige tener al menos un participante:
 - **Paso 1** (`_formCompleto` en `solicitud_completar_view.dart`) — tipo/número documento,
   nacionalidad, sexo, nombres, apellido paterno, cargo, celular, correo (formato real vía
   `.emailValidator`, no solo `isNotEmpty`). Opcionales: apellido materno, RUC/razón social,
@@ -99,9 +137,10 @@ completos:
   pasó su propia validación al guardarse en el modal (`participante_form_sheet.dart`), así
   que no hace falta re-validar aquí.
 - **Paso 3** (`_formCompleto` en `solicitud_facturacion_view.dart`) — comprobante, país,
-  moneda, tipo/número documento, nacionalidad, nombres/razón social, apellido paterno,
-  celular, correo (formato real), dirección. Opcionales: apellido materno, actividad
-  económica, NIT, observaciones.
+  moneda, tipo/número documento, nacionalidad, nombres/razón social, celular, correo
+  (formato real), dirección. Apellido paterno solo es obligatorio si el tipo de documento
+  **no** es RUC (`_esRuc`). Opcionales: apellido materno, actividad económica, NIT,
+  observaciones.
 
 En el formulario de participante (`participante_form_sheet.dart`), todo es obligatorio
 excepto apellido materno — Importe es la única excepción "blanda": se puede dejar vacío y
@@ -173,9 +212,12 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 - `Solicitud` (domain/entities) → entidad de la lista/detalle
 - `DatosSolicitante` / `DatosFacturacion` (bloc/form/solicitud_form_state.dart) → snapshots
   inmutables de los pasos 1 y 3, capturados al presionar "Continuar". `DatosSolicitante`
-  incluye `nacionalidad` (descripción del combo), `canalId`/`canalNombre` (del `CanalItem`
-  seleccionado en los chips — reemplazó al antiguo `canales: List<String>` multi-select) y
-  `celularCodigoTelefono` (código telefónico del `PaisItem` elegido, ej. `'51'`). **Ya no
+  incluye `tipoDocId`/`nacionalidadId` (ids de catálogo, no solo el label — necesarios para
+  el prefill de Facturación y para preseleccionar combos), `nacionalidad` (descripción del
+  combo), `canalId`/`canalNombre` (del `CanalItem` seleccionado en los chips — reemplazó al
+  antiguo `canales: List<String>` multi-select), `celularCodigoTelefono` (código telefónico
+  del `PaisItem` elegido, ej. `'51'`) y `archivoVoucherNombre`/`archivoOCNombre` (nombre del
+  PDF adjuntado, o `''` — lo que muestra el Resumen en "Documentos adjuntos"). **Ya no
   tiene** `campana`/`evento` — se removieron del flujo. `DatosFacturacion` también tiene su
   propio `celularCodigoTelefono` (independiente del de `DatosSolicitante`)
 - `ParticipanteLocal` (bloc/participantes/participantes_state.dart) → participante en

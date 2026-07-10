@@ -38,6 +38,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   bool _facturarAlSolicitante = false;
 
   // Labels/ids de combos capturados desde SeccionDatosSolicitante
+  String _tipoDocId = '';
   String _tipoDocLabel = '';
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
@@ -275,8 +276,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     paisCelular: paisCelular,
                     onPaisCelularChanged: (p) =>
                         setState(() => _paisCelular = p),
-                    onTipoDocLabelChanged: (v) =>
-                        setState(() => _tipoDocLabel = v),
+                    onTipoDocChanged: (item) => setState(() {
+                      _tipoDocId = item?.id ?? '';
+                      _tipoDocLabel = item?.abreviatura ?? '';
+                    }),
                     onNacionalidadChanged: (item) => setState(() {
                       _nacionalidadId = item?.id ?? '';
                       _nacionalidadLabel = item?.nombre ?? '';
@@ -337,43 +340,51 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                 Expanded(
                   child: CustomPrimaryButton(
                     text: 'Continuar →',
-                    onPressed: !_formCompleto
-                        ? null
-                        : () {
-                            final datos = DatosSolicitante(
-                              tipoDocLabel: _tipoDocLabel,
-                              numDoc: _ctrlNumDoc.text,
-                              nacionalidad: _nacionalidadLabel,
-                              nombres: _ctrlNombres.text,
-                              apellidoPaterno: _ctrlApellidoPaterno.text,
-                              apellidoMaterno: _ctrlApellidoMaterno.text,
-                              cargo: _ctrlCargo.text,
-                              celular: _ctrlCelular.text,
-                              celularCodigoTelefono:
-                                  paisCelular?.codigoTelefono ?? '',
-                              correo: _ctrlCorreo.text,
-                              canalId: _canalSeleccionado?.id,
-                              canalNombre: _canalSeleccionado?.nombre ?? '',
-                              ruc: _ctrlRuc.text,
-                              razonSocial: _ctrlRazonSocial.text,
-                              solicitanteEsParticipante:
-                                  _solicitanteParticipante,
-                              facturarAlSolicitante: _facturarAlSolicitante,
-                            );
-                            context
-                                .read<SolicitudFormCubit>()
-                                .guardarSolicitante(datos);
-                            context
-                                .read<ParticipantesCubit>()
-                                .sincronizarSolicitante(datos);
-                            context.goToFichaParticipantesSolicitud(
-                              solicitud: widget.solicitud,
-                              modoEdicion: widget.modoEdicion,
-                              formCubit: context.read<SolicitudFormCubit>(),
-                              participantesCubit: context
-                                  .read<ParticipantesCubit>(),
-                            );
-                          },
+                    onPressed: () {
+                      if (!_formCompleto) {
+                        AppSnackBar.error(
+                          context,
+                          'Completa todos los campos obligatorios (*) para continuar',
+                        );
+                        return;
+                      }
+                      final datos = DatosSolicitante(
+                        tipoDocId: _tipoDocId,
+                        tipoDocLabel: _tipoDocLabel,
+                        numDoc: _ctrlNumDoc.text,
+                        nacionalidadId: _nacionalidadId,
+                        nacionalidad: _nacionalidadLabel,
+                        nombres: _ctrlNombres.text,
+                        apellidoPaterno: _ctrlApellidoPaterno.text,
+                        apellidoMaterno: _ctrlApellidoMaterno.text,
+                        cargo: _ctrlCargo.text,
+                        celular: _ctrlCelular.text,
+                        celularCodigoTelefono:
+                            paisCelular?.codigoTelefono ?? '',
+                        correo: _ctrlCorreo.text,
+                        canalId: _canalSeleccionado?.id,
+                        canalNombre: _canalSeleccionado?.nombre ?? '',
+                        ruc: _ctrlRuc.text,
+                        razonSocial: _ctrlRazonSocial.text,
+                        solicitanteEsParticipante: _solicitanteParticipante,
+                        facturarAlSolicitante: _facturarAlSolicitante,
+                        archivoVoucherNombre: _archivoVoucher?.name ?? '',
+                        archivoOCNombre: _archivoOC?.name ?? '',
+                      );
+                      context.read<SolicitudFormCubit>().guardarSolicitante(
+                        datos,
+                      );
+                      context
+                          .read<ParticipantesCubit>()
+                          .sincronizarSolicitante(datos);
+                      context.goToFichaParticipantesSolicitud(
+                        solicitud: widget.solicitud,
+                        modoEdicion: widget.modoEdicion,
+                        formCubit: context.read<SolicitudFormCubit>(),
+                        participantesCubit: context
+                            .read<ParticipantesCubit>(),
+                      );
+                    },
                   ),
                 ),
               ],

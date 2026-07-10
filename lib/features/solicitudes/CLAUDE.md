@@ -19,10 +19,34 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   `CN` en vez de repetir `EG`. Hasta entonces, `idCanal`/`canal` en la lista llegan con el
   mismo valor que `idEstado`/`estado` (dato incorrecto, no usar para nada crítico).
 - El wizard (`SolicitudFormCubit` + `ParticipantesCubit`) guarda todo en memoria durante la
-  sesión de navegación; no hay persistencia ni envío al backend. Los botones "Guardar
-  borrador" y "Generar solicitud" (paso Resumen) no están conectados a ningún caso de uso.
+  sesión de navegación. **`SolicitudRemoteDatasource.guardarSolicitud()` ya existe y está
+  conectado** al SP real (task `'U'`, ver "SPs que consume") — pero **todavía no está
+  llamado desde ningún botón**. Los botones "Guardar" (pasos 1/2/3) y "Guardar
+  borrador"/"Generar solicitud" (paso Resumen) siguen sin `onPressed` real — eso es lo que
+  falta para terminar de conectar el CUD, ver "Pendiente" abajo.
 - "Carga masiva" (Excel) solo valida la extensión del archivo seleccionado — no procesa ni
   sube el archivo.
+- **Archivos (voucher/OC) van en una llamada aparte** (task `'AR'`, aún no implementado en
+  Flutter) — necesitan el `NUMSOL` que devuelve la llamada de `guardarSolicitud()` (task
+  `'U'`), así que el flujo real es: 1) guardar cabecera+participantes → 2) con el `NUMSOL`
+  de la respuesta, subir archivos por chunks a `SPSolicitudCUDAppArchivos`.
+
+## Pendiente (roadmap del CUD)
+1. ~~`SolicitudRemoteDatasource.guardarSolicitud()` (task `'U'`)~~ — hecho.
+2. Conectar el botón "Generar solicitud" (Resumen) a `GuardarSolicitudUseCase` con
+   `esBorrador: false` — primera prioridad, acordado con el usuario.
+3. Conectar los botones "Guardar" (pasos 1/2/3/Resumen) con `esBorrador: true`.
+4. Implementar la subida de archivos (task `'AR'`, chunked, mismo patrón que
+   `chat`/multimedia) — necesita el `NUMSOL` del paso 2/3.
+5. **Ajuste pendiente en `guardarSolicitud()`**: el SP va a dejar de recibir `ID_CONTACTO`
+   (el usuario lo está quitando del `SELECT` de cabecera) — cuando eso pase, hay que correr
+   todas las posiciones de `cabecera` en `SolicitudRemoteDatasource.guardarSolicitud()` un
+   lugar hacia atrás (queda en 41 campos en vez de 42).
+6. `ID_LEAD`/`ID_CONTACTO` se mandan vacíos porque **no existe ninguna pantalla que cree una
+   solicitud nueva desde un Lead** — el único punto de entrada al wizard hoy es
+   "Editar ficha"/"Continuar" desde una solicitud ya existente
+   (`SolicitudDetalleView.goToFichaCompletarSolicitud`). Cuando se construya ese flujo, hay
+   que pasar el `idLead` real.
 - **Campaña y Evento ya NO forman parte del paso 1** — se removieron por completo (campos,
   combos, validación y del modelo `DatosSolicitante`) porque este wizard ya no los usa.
 - Combos con catálogo real ya conectado a `CatalogsBloc` (no hardcodear de nuevo si se
@@ -258,21 +282,28 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   usaba
 - `DatosSolicitante` / `DatosFacturacion` (bloc/form/solicitud_form_state.dart) → snapshots
   inmutables de los pasos 1 y 3, capturados al presionar "Continuar". `DatosSolicitante`
-  incluye `tipoDocId`/`nacionalidadId` (ids de catálogo, no solo el label — necesarios para
-  el prefill de Facturación y para preseleccionar combos), `nacionalidad` (descripción del
-  combo), `canalId`/`canalNombre` (del `CanalItem` seleccionado en los chips — reemplazó al
-  antiguo `canales: List<String>` multi-select), `celularCodigoTelefono` (código telefónico
-  del `PaisItem` elegido, ej. `'51'`) y `archivoVoucherNombre`/`archivoOCNombre` (nombre del
-  PDF adjuntado, o `''` — lo que muestra el Resumen en "Documentos adjuntos"). **Ya no
-  tiene** `campana`/`evento` — se removieron del flujo. `DatosFacturacion` también tiene su
-  propio `celularCodigoTelefono` (independiente del de `DatosSolicitante`)
+  incluye `tipoDocId`/`nacionalidadId`/`sexoId` (ids de catálogo, no solo el label —
+  necesarios tanto para el prefill de Facturación/preseleccionar combos como para el CUD),
+  `nacionalidad` (descripción del combo), `canalId`/`canalNombre` (del `CanalItem`
+  seleccionado en los chips — reemplazó al antiguo `canales: List<String>` multi-select),
+  `celularCodigoTelefono` (código telefónico del `PaisItem` elegido, ej. `'51'`) y
+  `archivoVoucherNombre`/`archivoOCNombre` (nombre del PDF adjuntado, o `''` — lo que
+  muestra el Resumen en "Documentos adjuntos"). **Ya no tiene** `campana`/`evento` — se
+  removieron del flujo. `DatosFacturacion` también tiene `tipoDocId` (agregado junto con
+  `sexoId` al conectar el CUD — antes solo se guardaba `tipoDocLabel`, el SP necesita el id)
+  y su propio `celularCodigoTelefono` (independiente del de `DatosSolicitante`)
 - `ParticipanteLocal` (bloc/participantes/participantes_state.dart) → participante en
-  memoria; `id` autogenerado por el cubit (`_nextId`), no viene del backend. Campos:
-  `tipoDoc`, `numDoc`, `nacionalidad`, `nombres`/`apellidoPaterno`/`apellidoMaterno`
-  (`nombreCompleto` los junta), `correo`, `cargo`, `celular`, `celularCodigoTelefono`
-  (código telefónico del `PaisItem` elegido), `tipoParticipante` (Pagante / Invitado /
-  Invitado auspicio / Online), `importe` (sin moneda), `esSolicitante` (marca el registro
-  autogenerado por el switch "El solicitante será participante" — ver abajo)
+  memoria; `id` autogenerado por el cubit (`_nextId`), no viene del backend — pero **sí es el
+  mismo id que se manda al SP** como `ID` de la fila (`T_TECMSOLINSCRIPCION02.ID` no es
+  autoincremental, inserta literalmente lo que se le mande). Campos: `tipoDocId`/
+  `nacionalidadId` (ids de catálogo, agregados junto con `sexoId`/`tipoDocId` de
+  `DatosSolicitante`/`DatosFacturacion` al conectar el CUD — antes solo se guardaban
+  `tipoDoc`/`nacionalidad`, la abreviatura/nombre), `numDoc`, `nombres`/`apellidoPaterno`/
+  `apellidoMaterno` (`nombreCompleto` los junta), `correo`, `cargo`, `celular`,
+  `celularCodigoTelefono` (código telefónico del `PaisItem` elegido), `tipoParticipante`
+  (Pagante / Invitado / Invitado auspicio / Online — sin catálogo real, string libre),
+  `importe` (sin moneda), `esSolicitante` (marca el registro autogenerado por el switch "El
+  solicitante será participante" — ver abajo)
 
 ## SPs que consume
 - `[CRM].[CSV_SOLICITUDES_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) → lista de
@@ -280,8 +311,31 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   en el archivo del modelo y el bug de Canal en "Estado general"). Este SP solo tiene rama
   `@L_TASK = 'LS'` y filtra en el WHERE por `IB_MOD_APP = 1 OR ID_USUARIO_EJEC = @ID_USUARIO`
   (mismo patrón que moderador/asesor de Cobranza) más `IB_VALIDADO != 0`.
-- El resto del feature (wizard: guardar borrador, generar solicitud, carga masiva) todavía no
-  tiene SP conectado — ver "Estado general".
+- `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'U'`, body `cabecera¦...¯detalle¦...¬detalle¦...¯U`)
+  → `SolicitudRemoteDatasource.guardarSolicitud()`. Crea (si `numSol` viene vacío) o
+  actualiza (si ya existe) cabecera + facturación + participantes de una solicitud, todo en
+  una transacción — ver el mapeo posicional completo comentado en el método (42 campos de
+  cabecera, 14 por participante). Devuelve `OK¯mensaje¯NUMSOL` (el `NUMSOL` es obligatorio
+  leerlo de la respuesta en el flujo de creación — hace falta para la llamada de archivos
+  después). **Todavía no está llamado desde ningún botón** — ver "Pendiente" arriba.
+  - `IB_BORRADOR`: `1` cuando el usuario presiona "Guardar" (borrador), `0` cuando presiona
+    "Generar solicitud" (final) — pasado como el parámetro `esBorrador` del usecase.
+  - `IB_IGV` (por participante) siempre se manda `'1'` — no hay switch en la UI para
+    desactivarlo. El monto de IGV por participante se calcula proporcional
+    (`importe * igvPorcentaje / 100`), igual que el cálculo global del Resumen.
+  - Campos de facturación RUC-vs-natural son mutuamente excluyentes, no duplicados: si es
+    RUC, `RUCEMPRE_FAC`/`NOMEMPRE_FAC` se llenan y `NOMBRES_FAC`/apellidos quedan `''`; si no
+    es RUC, es al revés. `NUM_DOC_FAC`/`ID_TIP_DOC_FAC`/`ID_NACION_FAC` (el SP reusa esta
+    misma variable para `ID_NACIONALIDAD` e `ID_PAIS`) se llenan siempre.
+  - `CARGO_FAC`/`UBIGEO_FAC` se mandan vacíos — el primero porque el SP no lo usa en ningún
+    INSERT/UPDATE, el segundo porque no hay selector de ubigeo en la UI todavía.
+- `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'AR'`, archivos) → pendiente de implementar en
+  Flutter. Necesita el `NUMSOL` que devuelve el task `'U'`. Ver endpoint
+  `SPSolicitudCUDAppArchivos` (chunked, mismo patrón que multimedia de `chat/`) — contrato
+  acordado: Flutter manda `token¯cabecera¯detalle¯task¯chunkActual¯chunkTotal` por chunk,
+  donde `cabecera = NUMSOL¦ID_USUARIO¦IP_USUARIO¦LL_USUARIO` y
+  `detalle = TIPO¦NOMBRE¦EXT` (sin id — el GUID lo genera el backend).
+- "Carga masiva" (Excel) todavía no tiene SP conectado.
 
 ## Dependencias externas
 - `SolicitudRepository` (RepositoryProvider — `getSolicitudes()` ya conectado al SP real)

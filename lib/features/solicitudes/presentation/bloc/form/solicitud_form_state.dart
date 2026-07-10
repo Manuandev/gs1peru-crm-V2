@@ -8,6 +8,7 @@ class DatosSolicitante {
   final String numDoc;
   final String nacionalidadId;
   final String nacionalidad;
+  final String sexoId;
   final String nombres;
   final String apellidoPaterno;
   final String apellidoMaterno;
@@ -30,6 +31,7 @@ class DatosSolicitante {
     required this.numDoc,
     this.nacionalidadId = '',
     required this.nacionalidad,
+    required this.sexoId,
     required this.nombres,
     required this.apellidoPaterno,
     required this.apellidoMaterno,
@@ -64,6 +66,7 @@ class DatosFacturacion {
   final String pais;
   final String monedaId;
   final String moneda;
+  final String tipoDocId;
   final String tipoDocLabel;
   final String numDoc;
   final String nombresRazon;
@@ -84,6 +87,7 @@ class DatosFacturacion {
     required this.pais,
     required this.monedaId,
     required this.moneda,
+    this.tipoDocId = '',
     required this.tipoDocLabel,
     required this.numDoc,
     required this.nombresRazon,

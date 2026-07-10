@@ -14,6 +14,7 @@ export 'domain/enums/solicitud_accion_tipo.dart';
 export 'domain/repositories/solicitud_repository.dart';
 
 export 'domain/usecases/get_solicitudes_usecase.dart';
+export 'domain/usecases/guardar_solicitud_usecase.dart';
 
 export 'presentation/bloc/list/solicitud_list_bloc.dart';
 export 'presentation/bloc/list/solicitud_list_event.dart';

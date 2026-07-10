@@ -97,6 +97,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         pais: _paisLabel,
         monedaId: _monedaId,
         moneda: _monedaLabel,
+        tipoDocId: _tipoDocId,
         tipoDocLabel: _tipoDocLabel,
         numDoc: _ctrlNumDoc.text,
         nombresRazon: _ctrlNombresRazon.text,

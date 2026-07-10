@@ -49,8 +49,10 @@ class _ParticipanteFormSheet extends StatefulWidget {
 class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   final _formKey = GlobalKey<FormState>();
 
+  String _tipoDocId = '';
   String _tipoDocLabel = '';
   String? _tipoDocInicialId;
+  String _nacionalidadId = '';
   String _nacionalidadLabel = '';
   String? _nacionalidadInicialId;
   late String _tipoParticipante;
@@ -72,19 +74,15 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     super.initState();
     final p = widget.participante;
     _tipoParticipante = p?.tipoParticipante ?? _tiposParticipante.first;
+    _tipoDocId = p?.tipoDocId ?? '';
     _tipoDocLabel = p?.tipoDoc ?? '';
+    _tipoDocInicialId = _tipoDocId.isNotEmpty ? _tipoDocId : null;
+    _nacionalidadId = p?.nacionalidadId ?? '';
     _nacionalidadLabel = p?.nacionalidad ?? '';
+    _nacionalidadInicialId = _nacionalidadId.isNotEmpty ? _nacionalidadId : null;
 
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
-      _tipoDocInicialId = catalogState.tiposDocumento
-          .where((t) => t.abreviatura == _tipoDocLabel)
-          .firstOrNull
-          ?.id;
-      _nacionalidadInicialId = catalogState.nacionalidades
-          .where((n) => n.nombre == _nacionalidadLabel)
-          .firstOrNull
-          ?.id;
       final paises = catalogState.paises;
       _paisSeleccionado = (p != null && p.celularCodigoTelefono.isNotEmpty)
           ? paises
@@ -133,8 +131,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
 
     final resultado = ParticipanteLocal(
       id: widget.participante?.id ?? 0,
+      tipoDocId: _tipoDocId,
       tipoDoc: _tipoDocLabel,
       numDoc: _numDocCtrl.text.trim().toUpperCase(),
+      nacionalidadId: _nacionalidadId,
       nacionalidad: _nacionalidadLabel,
       nombres: _nombresCtrl.text.trim().toUpperCase(),
       apellidoPaterno: _apellidoPaternoCtrl.text.trim().toUpperCase(),
@@ -255,9 +255,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             data: tiposDocumento,
                             labelIndex: 2, // abreviatura (DNI/CE/RUC/...)
                             initialValue: _tipoDocInicialId,
-                            onChanged: (item) => setState(
-                              () => _tipoDocLabel = item?.abreviatura ?? '',
-                            ),
+                            onChanged: (item) => setState(() {
+                              _tipoDocId = item?.id ?? '';
+                              _tipoDocLabel = item?.abreviatura ?? '';
+                            }),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -285,9 +286,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             label: 'Nacionalidad *',
                             data: nacionalidades,
                             initialValue: _nacionalidadInicialId,
-                            onChanged: (item) => setState(
-                              () => _nacionalidadLabel = item?.nombre ?? '',
-                            ),
+                            onChanged: (item) => setState(() {
+                              _nacionalidadId = item?.id ?? '';
+                              _nacionalidadLabel = item?.nombre ?? '';
+                            }),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),

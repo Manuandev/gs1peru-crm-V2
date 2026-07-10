@@ -50,8 +50,10 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
 
     final solicitanteParticipante = ParticipanteLocal(
       id: _nextId++,
+      tipoDocId: datos.tipoDocId,
       tipoDoc: datos.tipoDocLabel,
       numDoc: datos.numDoc,
+      nacionalidadId: datos.nacionalidadId,
       nacionalidad: datos.nacionalidad,
       nombres: datos.nombres,
       apellidoPaterno: datos.apellidoPaterno,

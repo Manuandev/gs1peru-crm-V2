@@ -4,8 +4,10 @@ part of 'participantes_cubit.dart';
 
 class ParticipanteLocal {
   final int id;
+  final String tipoDocId;
   final String tipoDoc;
   final String numDoc;
+  final String nacionalidadId;
   final String nacionalidad;
   final String nombres;
   final String apellidoPaterno;
@@ -23,8 +25,10 @@ class ParticipanteLocal {
 
   const ParticipanteLocal({
     required this.id,
+    this.tipoDocId = '',
     required this.tipoDoc,
     required this.numDoc,
+    this.nacionalidadId = '',
     required this.nacionalidad,
     required this.nombres,
     required this.apellidoPaterno,
@@ -46,8 +50,10 @@ class ParticipanteLocal {
 
   ParticipanteLocal copyWith({
     int? id,
+    String? tipoDocId,
     String? tipoDoc,
     String? numDoc,
+    String? nacionalidadId,
     String? nacionalidad,
     String? nombres,
     String? apellidoPaterno,
@@ -62,8 +68,10 @@ class ParticipanteLocal {
   }) {
     return ParticipanteLocal(
       id: id ?? this.id,
+      tipoDocId: tipoDocId ?? this.tipoDocId,
       tipoDoc: tipoDoc ?? this.tipoDoc,
       numDoc: numDoc ?? this.numDoc,
+      nacionalidadId: nacionalidadId ?? this.nacionalidadId,
       nacionalidad: nacionalidad ?? this.nacionalidad,
       nombres: nombres ?? this.nombres,
       apellidoPaterno: apellidoPaterno ?? this.apellidoPaterno,

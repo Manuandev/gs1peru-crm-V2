@@ -152,6 +152,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       numDoc: _ctrlNumDoc.text,
       nacionalidadId: _nacionalidadId,
       nacionalidad: _nacionalidadLabel,
+      sexoId: _sexoId,
       nombres: _ctrlNombres.text,
       apellidoPaterno: _ctrlApellidoPaterno.text,
       apellidoMaterno: _ctrlApellidoMaterno.text,

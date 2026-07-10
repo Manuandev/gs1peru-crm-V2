@@ -48,11 +48,9 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
      'voucher'|'oc', fileName/fileExt/fileBytes: del `PlatformFile`) → 4) navegar a
      `SolicitudGeneradaPage`. Los archivos se mandan DESPUÉS de confirmar el `NUMSOL`, nunca
      antes (por eso está separado en dos tasks — ver "SPs que consume").
-4. **Ajuste pendiente en `guardarSolicitud()`**: el SP va a dejar de recibir `ID_CONTACTO`
-   (el usuario lo está quitando del `SELECT` de cabecera) — cuando eso pase, hay que correr
-   todas las posiciones de `cabecera` en `SolicitudRemoteDatasource.guardarSolicitud()` un
-   lugar hacia atrás (queda en 41 campos en vez de 42, `ID_LEAD` pasa a ser field1).
-5. `ID_LEAD`/`ID_CONTACTO` se mandan vacíos porque **no existe ninguna pantalla que cree una
+4. ~~Ajuste en `guardarSolicitud()`: el SP dejó de recibir `ID_CONTACTO`~~ — hecho. La
+   cabecera ahora manda 41 campos (`ID_LEAD` es field1) en vez de 42.
+5. `ID_LEAD` se manda vacío porque **no existe ninguna pantalla que cree una
    solicitud nueva desde un Lead** — el único punto de entrada al wizard hoy es
    "Editar ficha"/"Continuar" desde una solicitud ya existente
    (`SolicitudDetalleView.goToFichaCompletarSolicitud`). Cuando se construya ese flujo, hay
@@ -325,8 +323,9 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 - `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'U'`, body `cabecera¦...¯detalle¦...¬detalle¦...¯U`)
   → `SolicitudRemoteDatasource.guardarSolicitud()`. Crea (si `numSol` viene vacío) o
   actualiza (si ya existe) cabecera + facturación + participantes de una solicitud, todo en
-  una transacción — ver el mapeo posicional completo comentado en el método (42 campos de
-  cabecera, 14 por participante). Devuelve `OK¯mensaje¯NUMSOL` (el `NUMSOL` es obligatorio
+  una transacción — ver el mapeo posicional completo comentado en el método (41 campos de
+  cabecera, `ID_LEAD` es field1 — el SP ya no recibe `ID_CONTACTO`; 14 por participante).
+  Devuelve `OK¯mensaje¯NUMSOL` (el `NUMSOL` es obligatorio
   leerlo de la respuesta en el flujo de creación — hace falta para la llamada de archivos
   después). **Todavía no está llamado desde ningún botón** — ver "Pendiente" arriba.
   - `IB_BORRADOR`: `1` cuando el usuario presiona "Guardar" (borrador), `0` cuando presiona

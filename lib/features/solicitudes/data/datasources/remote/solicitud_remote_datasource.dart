@@ -40,10 +40,7 @@ class SolicitudRemoteDatasource {
   // solicitud, en una sola llamada. Los archivos van aparte (task 'AR',
   // pendiente — necesita el NUMSOL que devuelve esta llamada).
   //
-  // Ojo posiciones de cabecera: hoy van 42 campos con ID_CONTACTO en la
-  // posición 1 (se manda vacío — el SP no lo usa en la rama de UPDATE, que es
-  // la única conectada por ahora). Cuando se quite ID_CONTACTO del SP hay que
-  // correr todas las posiciones un lugar acá.
+  // Cabecera: 41 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
   Future<CrudResult> guardarSolicitud({
     required String numSol,
     required String tipoPersona, // 'juridica' | 'natural'
@@ -69,48 +66,47 @@ class SolicitudRemoteDatasource {
     final dcImporteTotal = dcImporte + dcIgv;
 
     final cabecera = <String>[
-      '', // 1  ID_CONTACTO — no aplica (ver nota arriba)
-      '', // 2  ID_LEAD — no aplica hoy (no hay flujo de creación desde un Lead)
-      numSol, // 3  NUMSOL
-      tipoPersona == 'juridica' ? 'J' : 'N', // 4  COD_TIP_REGISTRO
-      solicitante.tipoDocId, // 5  ID_TIP_DOC_SOL
-      solicitante.numDoc, // 6  NUM_DOC_SOL
-      solicitante.ruc, // 7  RUCEMPRE_SOL
-      solicitante.razonSocial, // 8  NOMEMPRE_SOL
-      solicitante.nacionalidadId, // 9  ID_NACION_SOL
-      solicitante.sexoId, // 10 ID_SEXO_SOL
-      solicitante.nombres, // 11 NOMBRES_SOL
-      solicitante.apellidoPaterno, // 12 APELLIDO_P_SOL
-      solicitante.apellidoMaterno, // 13 APELLIDO_M_SOL
-      solicitante.cargo, // 14 CARGO_SOL
-      solicitante.celular, // 15 CELULAR_SOL
-      solicitante.correo, // 16 CORREO_SOL
-      solicitante.solicitanteEsParticipante ? '1' : '0', // 17 IB_PARTICIPANTE_SOLICITANTE
-      solicitante.facturarAlSolicitante ? '1' : '0', // 18 IB_FACTURA_SOLICITANTE
-      idParticipanteSolicitante ?? '', // 19 ID_PARTICIPANTE_SOLICITANTE
-      ParseUtils.orEmpty(solicitante.canalId), // 20 ID_CANAL
-      solicitante.canalNombre, // 21 NOMBRE_CANAL
-      facturacion?.tipoDocId ?? '', // 22 ID_TIP_DOC_FAC
-      facturacion?.numDoc ?? '', // 23 NUM_DOC_FAC
-      esRuc ? (facturacion?.numDoc ?? '') : '', // 24 RUCEMPRE_FAC
-      esRuc ? (facturacion?.nombresRazon ?? '') : '', // 25 NOMEMPRE_FAC
-      facturacion?.paisId ?? '', // 26 ID_NACION_FAC (el SP reusa esta misma variable para ID_PAIS)
-      esRuc ? '' : (facturacion?.nombresRazon ?? ''), // 27 NOMBRES_FAC
-      esRuc ? '' : (facturacion?.apellidoPaterno ?? ''), // 28 APELLIDO_P_FAC
-      esRuc ? '' : (facturacion?.apellidoMaterno ?? ''), // 29 APELLIDO_M_FAC
-      '', // 30 CARGO_FAC — el SP no lo usa en ningún INSERT/UPDATE
-      facturacion?.celular ?? '', // 31 CELULAR_FAC
-      facturacion?.correo ?? '', // 32 CORREO_FAC
-      facturacion?.direccion ?? '', // 33 DIRECCION_FAC
-      '', // 34 UBIGEO_FAC — sin selector en la UI todavía
-      facturacion?.monedaId ?? '', // 35 ID_MONEDA
-      dcImporte.toStringAsFixed(2), // 36 DC_IMPORTE
-      dcIgv.toStringAsFixed(2), // 37 DC_IGV
-      dcImporteTotal.toStringAsFixed(2), // 38 DC_IMPORTE_TOTAL
-      esBorrador ? '1' : '0', // 39 IB_BORRADOR
-      _session.codUser, // 40 ID_USUARIO
-      ip, // 41 IP_USUARIO
-      coords, // 42 LL_USUARIO
+      '', // 1  ID_LEAD — no aplica hoy (no hay flujo de creación desde un Lead)
+      numSol, // 2  NUMSOL
+      tipoPersona == 'juridica' ? 'J' : 'N', // 3  COD_TIP_REGISTRO
+      solicitante.tipoDocId, // 4  ID_TIP_DOC_SOL
+      solicitante.numDoc, // 5  NUM_DOC_SOL
+      solicitante.ruc, // 6  RUCEMPRE_SOL
+      solicitante.razonSocial, // 7  NOMEMPRE_SOL
+      solicitante.nacionalidadId, // 8  ID_NACION_SOL
+      solicitante.sexoId, // 9  ID_SEXO_SOL
+      solicitante.nombres, // 10 NOMBRES_SOL
+      solicitante.apellidoPaterno, // 11 APELLIDO_P_SOL
+      solicitante.apellidoMaterno, // 12 APELLIDO_M_SOL
+      solicitante.cargo, // 13 CARGO_SOL
+      solicitante.celular, // 14 CELULAR_SOL
+      solicitante.correo, // 15 CORREO_SOL
+      solicitante.solicitanteEsParticipante ? '1' : '0', // 16 IB_PARTICIPANTE_SOLICITANTE
+      solicitante.facturarAlSolicitante ? '1' : '0', // 17 IB_FACTURA_SOLICITANTE
+      idParticipanteSolicitante ?? '', // 18 ID_PARTICIPANTE_SOLICITANTE
+      ParseUtils.orEmpty(solicitante.canalId), // 19 ID_CANAL
+      solicitante.canalNombre, // 20 NOMBRE_CANAL
+      facturacion?.tipoDocId ?? '', // 21 ID_TIP_DOC_FAC
+      facturacion?.numDoc ?? '', // 22 NUM_DOC_FAC
+      esRuc ? (facturacion?.numDoc ?? '') : '', // 23 RUCEMPRE_FAC
+      esRuc ? (facturacion?.nombresRazon ?? '') : '', // 24 NOMEMPRE_FAC
+      facturacion?.paisId ?? '', // 25 ID_NACION_FAC (el SP reusa esta misma variable para ID_PAIS)
+      esRuc ? '' : (facturacion?.nombresRazon ?? ''), // 26 NOMBRES_FAC
+      esRuc ? '' : (facturacion?.apellidoPaterno ?? ''), // 27 APELLIDO_P_FAC
+      esRuc ? '' : (facturacion?.apellidoMaterno ?? ''), // 28 APELLIDO_M_FAC
+      '', // 29 CARGO_FAC — el SP no lo usa en ningún INSERT/UPDATE
+      facturacion?.celular ?? '', // 30 CELULAR_FAC
+      facturacion?.correo ?? '', // 31 CORREO_FAC
+      facturacion?.direccion ?? '', // 32 DIRECCION_FAC
+      '', // 33 UBIGEO_FAC — sin selector en la UI todavía
+      facturacion?.monedaId ?? '', // 34 ID_MONEDA
+      dcImporte.toStringAsFixed(2), // 35 DC_IMPORTE
+      dcIgv.toStringAsFixed(2), // 36 DC_IGV
+      dcImporteTotal.toStringAsFixed(2), // 37 DC_IMPORTE_TOTAL
+      esBorrador ? '1' : '0', // 38 IB_BORRADOR
+      _session.codUser, // 39 ID_USUARIO
+      ip, // 40 IP_USUARIO
+      coords, // 41 LL_USUARIO
     ].join(AppConstants.sepCampos);
 
     final detalle = participantes.map((p) {

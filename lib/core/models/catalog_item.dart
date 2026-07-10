@@ -177,11 +177,17 @@ class OportunidadItem with Comboable {
   final int id;
   final int idCampania;
   final String nombre;
+  final String idMoneda;
+  final double importeGeneral;
+  final double importeAsociado;
 
   const OportunidadItem({
     required this.id,
     required this.idCampania,
     required this.nombre,
+    required this.idMoneda,
+    required this.importeGeneral,
+    required this.importeAsociado,
   });
 
   @override
@@ -193,6 +199,9 @@ class OportunidadItemModel extends OportunidadItem {
     required super.id,
     required super.idCampania,
     required super.nombre,
+    required super.idMoneda,
+    required super.importeGeneral,
+    required super.importeAsociado,
   });
 
   factory OportunidadItemModel.fromRawString(String raw) {
@@ -201,6 +210,9 @@ class OportunidadItemModel extends OportunidadItem {
       id: ParseUtils.toInt(c, 0),
       idCampania: ParseUtils.toInt(c, 1),
       nombre: ParseUtils.str(c, 2),
+      idMoneda: ParseUtils.str(c, 3),
+      importeGeneral: ParseUtils.toDouble(c, 4),
+      importeAsociado: ParseUtils.toDouble(c, 5),
     );
   }
 

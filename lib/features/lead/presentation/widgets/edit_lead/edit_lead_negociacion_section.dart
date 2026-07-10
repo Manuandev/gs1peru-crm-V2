@@ -5,10 +5,9 @@ import 'package:app_crm/core/index_core.dart';
 
 class EditLeadNegociacionSection extends StatelessWidget {
   final CatalogsLoaded catalogState;
-  final TextEditingController campaniaCtrl;
-  final TextEditingController eventoCtrl;
   final CampaniaItem? campania;
   final OportunidadItem? oportunidad;
+  final List<OportunidadItem> oportunidadesFiltradas;
   final CanalItem? canal;
   final InteresItem? interes;
   final EstadoItem? estado;
@@ -30,10 +29,9 @@ class EditLeadNegociacionSection extends StatelessWidget {
   const EditLeadNegociacionSection({
     super.key,
     required this.catalogState,
-    required this.campaniaCtrl,
-    required this.eventoCtrl,
     required this.campania,
     required this.oportunidad,
+    required this.oportunidadesFiltradas,
     required this.canal,
     required this.interes,
     required this.estado,
@@ -83,8 +81,9 @@ class EditLeadNegociacionSection extends StatelessWidget {
             ),
           ),
           derecho: CustomComboField<OportunidadItem>(
-            enabled: !isLoading,
-            data: catalogState.oportunidades,
+            enabled: oportunidadesFiltradas.isNotEmpty && !isLoading,
+            data: oportunidadesFiltradas,
+            labelIndex: 2,
             label: 'Oportunidad',
             initialValue: oportunidad?.id.toString(),
             onChanged: onOportunidadChanged,

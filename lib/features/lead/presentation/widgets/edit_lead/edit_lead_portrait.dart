@@ -28,6 +28,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   List<EstadoItem> _subEstadosFiltrados = [];
   CampaniaItem? _campania;
   OportunidadItem? _oportunidad;
+  List<OportunidadItem> _oportunidadesFiltradas = [];
   CanalItem? _canal;
   InteresItem? _interes;
   MonedaItem? _monedaItem;
@@ -36,18 +37,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   late final TextEditingController _cantidadCtrl;
   late final TextEditingController _precioBaseCtrl;
   late final TextEditingController _descuentoCtrl;
-
-  // ── Solo lectura — contacto (viene de Negociacion, no se edita acá) ───────
-  late final TextEditingController _nombreCtrl;
-  late final TextEditingController _apellidoPCtrl;
-  late final TextEditingController _apellidoMCtrl;
-  late final TextEditingController _empresaCtrl;
-  late final TextEditingController _correoCtrl;
-  late final TextEditingController _cargoCtrl;
-
-  // ── Solo lectura — negociación ─────────────────────────────────────────────
-  late final TextEditingController _campaniaCtrl;
-  late final TextEditingController _eventoCtrl;
 
   // ── Información adicional ──────────────────────────────────────────────────
   late final TextEditingController _nombreLeadCtrl;
@@ -62,14 +51,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void initState() {
     super.initState();
     final n = widget.negociacion;
-    _nombreCtrl = TextEditingController(text: n.nombres);
-    _apellidoPCtrl = TextEditingController(text: n.apellidoPaterno);
-    _apellidoMCtrl = TextEditingController(text: n.apellidoMaterno);
-    _empresaCtrl = TextEditingController(text: n.nombreEmpresa);
-    _correoCtrl = TextEditingController(text: n.correo);
-    // Cargo no viene en el SP de detalle de lead — pendiente de conectar
-    // con la pantalla de contacto.
-    _cargoCtrl = TextEditingController();
     _cantidadCtrl = TextEditingController(
       text: NumberFormatUtils.fmtInt(n.cantidad),
     );
@@ -79,8 +60,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _descuentoCtrl = TextEditingController(
       text: NumberFormatUtils.fmtDecimal(n.descuento),
     );
-    _campaniaCtrl = TextEditingController(text: n.nombreCampania);
-    _eventoCtrl = TextEditingController(text: n.nombreOportunidad);
     _nombreLeadCtrl = TextEditingController(text: n.nombre);
     _modalidadCtrl = TextEditingController(text: n.modalidad);
   }
@@ -110,17 +89,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   @override
   void dispose() {
-    _nombreCtrl.dispose();
-    _apellidoPCtrl.dispose();
-    _apellidoMCtrl.dispose();
-    _empresaCtrl.dispose();
-    _correoCtrl.dispose();
-    _cargoCtrl.dispose();
     _cantidadCtrl.dispose();
     _precioBaseCtrl.dispose();
     _descuentoCtrl.dispose();
-    _campaniaCtrl.dispose();
-    _eventoCtrl.dispose();
     _nombreLeadCtrl.dispose();
     _modalidadCtrl.dispose();
     // _seccionCambio.dispose();
@@ -132,7 +103,14 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void _inicializarCombos(CatalogsLoaded state) {
     final n = widget.negociacion;
     _campania = state.campanias.where((e) => e.id == n.idCampania).firstOrNull;
-    _oportunidad = state.oportunidades.where((e) => e.id == n.idOportunidad).firstOrNull;
+    _oportunidadesFiltradas = _campania == null
+        ? []
+        : state.oportunidades
+              .where((e) => e.idCampania == _campania!.id)
+              .toList();
+    _oportunidad = _oportunidadesFiltradas
+        .where((e) => e.id == n.idOportunidad)
+        .firstOrNull;
     _canal = state.canales.where((e) => e.id == n.idCanal).firstOrNull;
     _interes = state.intereses.where((e) => e.id == n.idInteres).firstOrNull;
 
@@ -196,12 +174,14 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     final n = widget.negociacion;
     // idLead 0 → el guardado crea el lead, no hay nada que "cambiar" primero.
     return n.idLead == 0 ||
-        _canal?.id != n.idCanal ||
-        _interes?.id != n.idInteres ||
-        (_estado != null && _subEstado?.id != n.idEstado) ||
-        (_estado != null && _estado?.id != n.idEstado && _subEstado == null) ||
         _nombreLeadCtrl.text.trim() != n.nombre ||
         _modalidadCtrl.text.trim() != n.modalidad ||
+        (_estado != null && _subEstado?.id != n.idEstado) ||
+        (_estado != null && _estado?.id != n.idEstado && _subEstado == null) ||
+        _campania?.id != n.idCampania ||
+        _oportunidad?.id != n.idOportunidad ||
+        _canal?.id != n.idCanal ||
+        _interes?.id != n.idInteres ||
         _cantidadCtrl.text != NumberFormatUtils.fmtInt(n.cantidad) ||
         _precioBaseCtrl.text != NumberFormatUtils.fmtDecimal(n.precioBase) ||
         _descuentoCtrl.text != NumberFormatUtils.fmtDecimal(n.descuento) ||
@@ -209,6 +189,35 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   }
 
   // ── Callbacks de combos ───────────────────────────────────────────────────
+
+  void _onCampaniaChanged(CampaniaItem? item) {
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return;
+    setState(() {
+      _campania = item;
+      _oportunidad = null;
+      _oportunidadesFiltradas = item == null
+          ? []
+          : catalogState.oportunidades
+                .where((e) => e.idCampania == item.id)
+                .toList();
+    });
+  }
+
+  void _onOportunidadChanged(OportunidadItem? item) {
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return;
+    setState(() {
+      _oportunidad = item;
+      _monedaItem = catalogState.monedas
+          .where((m) => m.id == item?.idMoneda)
+          .firstOrNull;
+
+      _precioBaseCtrl.text = item != null
+          ? NumberFormatUtils.fmtDecimal(item.importeGeneral)
+          : '';
+    });
+  }
 
   void _onEstadoChanged(EstadoItem? item) {
     final catalogState = context.read<CatalogsBloc>().state;
@@ -247,6 +256,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         estado: estadoEfectivo,
         idEstadoPadre: tieneSubEstado ? _estado?.id : '',
         descripcionEstadoPadre: tieneSubEstado ? _estado?.nombre : '',
+        idCampania: _campania?.id,
+        campania: _campania?.nombre,
+        idOportunidad: _oportunidad?.id,
+        oportunidad: _oportunidad?.nombre,
         idCanal: _canal?.id,
         canal: _canal?.nombre,
         idInteres: _interes?.id,
@@ -305,10 +318,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
               // 2. Negociación
               EditLeadNegociacionSection(
                 catalogState: catalogState,
-                campaniaCtrl: _campaniaCtrl,
-                eventoCtrl: _eventoCtrl,
                 campania: _campania,
                 oportunidad: _oportunidad,
+                oportunidadesFiltradas: _oportunidadesFiltradas,
                 canal: _canal,
                 interes: _interes,
                 estado: _estado,
@@ -320,9 +332,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                     widget.negociacion.descripcionEstadoPadre,
                 idCanalFallback: widget.negociacion.idCanal,
                 isLoading: _isLoading,
-                onCampaniaChanged: (item) => setState(() => _campania = item),
-                onOportunidadChanged: (item) =>
-                    setState(() => _oportunidad = item),
+                onCampaniaChanged: _onCampaniaChanged,
+                onOportunidadChanged: _onOportunidadChanged,
                 onCanalChanged: (item) => setState(() => _canal = item),
                 onInteresChanged: (item) => setState(() => _interes = item),
                 onEstadoChanged: _onEstadoChanged,

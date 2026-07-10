@@ -61,8 +61,8 @@ class _SolicitudParticipantesViewState
   void _onContinuar(BuildContext context, ParticipantesState state) {
     final soloInvitados = state.participantes.every(
       (p) =>
-          p.tipoParticipante == 'Invitado' ||
-          p.tipoParticipante == 'Invitado auspicio',
+          p.tipoParticipante == '2' || // Invitado
+          p.tipoParticipante == '3', // Invitado auspicio
     );
     if (soloInvitados) {
       context.goToFichaResumenSolicitud(
@@ -90,7 +90,6 @@ class _SolicitudParticipantesViewState
 
     final result = await guardarSolicitudDesdeWizard(
       context,
-      numSol: widget.solicitud.idSolicitud,
       idLead: widget.solicitud.idLead,
       esBorrador: true,
     );

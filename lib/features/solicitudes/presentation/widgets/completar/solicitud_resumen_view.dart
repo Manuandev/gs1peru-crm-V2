@@ -33,7 +33,6 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
 
     final result = await guardarSolicitudDesdeWizard(
       context,
-      numSol: widget.solicitud.idSolicitud,
       idLead: widget.solicitud.idLead,
       esBorrador: true,
     );
@@ -49,7 +48,6 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
 
     final result = await guardarSolicitudDesdeWizard(
       context,
-      numSol: widget.solicitud.idSolicitud,
       idLead: widget.solicitud.idLead,
       esBorrador: false,
     );

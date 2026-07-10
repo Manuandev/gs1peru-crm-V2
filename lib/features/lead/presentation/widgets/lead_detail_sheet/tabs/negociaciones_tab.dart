@@ -5,6 +5,7 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class NegociacionesTab extends StatefulWidget {
   final int leadId;
@@ -132,6 +133,41 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
     }
   }
 
+  // Crea una solicitud NUEVA (NUMSOL vacío) para esta negociación — el
+  // wizard arranca en blanco (Solicitud.idSolicitud == '') y solo manda
+  // idLead, que CSV_SOLICITUD_CUD_APP usa para vincular la solicitud al
+  // lead de origen en la rama de creación. Mismo patrón que
+  // ContactoNegociacionCard._generarSolicitud() (Seguimiento).
+  void _generarSolicitud(Negociacion negociacion) {
+    context.goToFichaCompletarSolicitud(
+      solicitud: Solicitud(
+        idSolicitud: '',
+        nombre: '',
+        apellido: '',
+        nombreEmpresa: '',
+        cargo: '',
+        correo: '',
+        telefono: '',
+        tipoPersona: '',
+        idCondicionPago: '',
+        condicionPago: '',
+        monto: 0,
+        fechaCreacion: '',
+        idOportunidad: 0,
+        oportunidad: '',
+        idCanal: 0,
+        canal: '',
+        idEstado: '',
+        estado: '',
+        ibValidado: false,
+        asesor: '',
+        nombreAsesor: '',
+        idLead: negociacion.idLead.toString(),
+      ),
+      modoEdicion: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.negociaciones.isEmpty) {
@@ -183,7 +219,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
             (negociacion) => NegociacionCard(
               negociacion: negociacion,
               leadId: widget.leadId,
-              onGenerarSolicitud: () {},
+              onGenerarSolicitud: () => _generarSolicitud(negociacion),
               onEdited: () => context
                   .read<NegociacionesCubit>()
                   .cargarNegociaciones(widget.idNumero),

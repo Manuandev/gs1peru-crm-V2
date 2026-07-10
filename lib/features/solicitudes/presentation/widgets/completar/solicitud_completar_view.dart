@@ -105,6 +105,11 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // SolicitudDetalleView, nunca por "Atrás" desde otro paso.
   Future<void> _cargarDetalle() async {
     final numSol = widget.solicitud.idSolicitud;
+    // Siembra el NUMSOL en el cubit compartido — vacío si es creación nueva,
+    // real si se está editando. guardarSolicitudDesdeWizard() lo actualiza
+    // solo después de la primera creación exitosa.
+    context.read<SolicitudFormCubit>().actualizarNumSol(numSol);
+
     if (numSol.isEmpty) {
       setState(() => _cargando = false);
       return;
@@ -383,7 +388,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
     final result = await guardarSolicitudDesdeWizard(
       context,
-      numSol: widget.solicitud.idSolicitud,
       idLead: widget.solicitud.idLead,
       esBorrador: true,
     );

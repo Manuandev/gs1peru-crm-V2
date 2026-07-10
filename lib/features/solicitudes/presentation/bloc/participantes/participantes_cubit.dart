@@ -73,7 +73,7 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       cargo: datos.cargo,
       celular: datos.celular,
       celularCodigoTelefono: datos.celularCodigoTelefono,
-      tipoParticipante: 'Pagante',
+      tipoParticipante: '1', // Pagante — ver ids en participante_form_sheet.dart
       importe: 0,
       esSolicitante: true,
     );

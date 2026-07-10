@@ -52,10 +52,13 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
 5. ~~`ID_LEAD` se manda vacío porque no existe ninguna pantalla que cree una solicitud nueva
    desde un Lead~~ — hecho. `ContactoNegociacionCard` (`lead/`, botón "Generar solicitud" en
    una negociación ganada) navega a `SolicitudCompletarPage` con un `Solicitud` en blanco
-   (`idSolicitud: ''`, `idLead: negociacion.idLead.toString()`) — ver "Entidad `Solicitud`"
-   abajo. El otro botón "Generar solicitud" (`lead/lead_detail_sheet/negociacion_card.dart`,
-   pestaña Negociaciones de **Conversaciones**) sigue con `onGenerarSolicitud: () {}` — no se
-   tocó, decisión pendiente de si aplica igual ahí.
+   (`idSolicitud: ''`, `idLead: negociacion.idLead.toString()`) — mismo patrón en el botón
+   "Generar" de `NegociacionCard` (`lead/lead_detail_sheet/negociacion_card.dart`, pestaña
+   Negociaciones de **Conversaciones** — `ChatLeadPanel`), wireado en
+   `NegociacionesTab._generarSolicitud()`. A diferencia de `ContactoNegociacionCard`
+   (Seguimiento, solo visible si la negociación está ganada), acá el botón "Generar" se
+   muestra para toda negociación no cerrada (`idEstadoPadre != '04'`) — no valida que esté
+   ganada antes de dejar crear la solicitud.
 6. "Carga masiva" (Excel) y guardar el `DatosFacturacion.actividadEconomica`/`nit`/
    `observaciones` (capturados en el paso 3 pero el SP no tiene columna para
    `actividadEconomica`/`observaciones`, y `nit` no se manda en `guardarSolicitud()`) siguen
@@ -83,10 +86,17 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   `SolicitudFormCubit.state.tipoPersona` (no en `DatosSolicitante`/`DatosFacturacion`,
   que antes tenían cada uno su propia copia y se desincronizaban). Solo se puede cambiar
   en el paso 1; en el paso 3 el toggle se muestra pero con `habilitado: false` siempre.
+- **`tipoParticipante` es el id, no el label** — `'1'` Pagante · `'2'` Invitado ·
+  `'3'` Invitado auspicio · `'4'` Online (lista fija en `participante_form_sheet.dart`,
+  `_tiposParticipante`, formato `id¦desc` como cualquier combo). Antes se mandaba el label
+  completo como `ID_TIP_PARTICIPANTE` y truncaba esa columna en
+  `EVT.T_TECMSOLINSCRIPCION02` (`'Invitado auspicio'` no entraba) — se cambió a ids el
+  2026-07-10. Si agregas un tipo nuevo, el id lo define el backend (columna angosta), no
+  Flutter.
 - **Regla de negocio — saltar Facturación**: si TODOS los participantes tienen
-  `tipoParticipante` en {`Invitado`, `Invitado auspicio`} (nadie paga), el paso 2 navega
-  directo a Resumen (`goToFichaResumenSolicitud`) sin pasar por Facturación. El Resumen
-  detecta esto porque `formState.facturacion` queda `null` y oculta la sección
+  `tipoParticipante` en `{'2', '3'}` (Invitado / Invitado auspicio — nadie paga), el paso 2
+  navega directo a Resumen (`goToFichaResumenSolicitud`) sin pasar por Facturación. El
+  Resumen detecta esto porque `formState.facturacion` queda `null` y oculta la sección
   "3. Facturación" (y su separador) — no renderizarla si `datos == null` en ese caso.
 - **Validación de email real** en los 3 lugares con campo Correo (paso 1, paso 3,
   formulario de participante) — usa la extensión `String?.emailValidator` (core,
@@ -318,9 +328,9 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   `tipoDoc`/`nacionalidad`, la abreviatura/nombre), `numDoc`, `nombres`/`apellidoPaterno`/
   `apellidoMaterno` (`nombreCompleto` los junta), `correo`, `cargo`, `celular`,
   `celularCodigoTelefono` (código telefónico del `PaisItem` elegido), `tipoParticipante`
-  (Pagante / Invitado / Invitado auspicio / Online — sin catálogo real, string libre),
-  `importe` (sin moneda), `esSolicitante` (marca el registro autogenerado por el switch "El
-  solicitante será participante" — ver abajo)
+  (id `'1'`-`'4'`, sin catálogo real — lista fija en `participante_form_sheet.dart`, ver
+  "Notas importantes"), `importe` (sin moneda), `esSolicitante` (marca el registro
+  autogenerado por el switch "El solicitante será participante" — ver abajo)
 
 ## SPs que consume
 - `[CRM].[CSV_SOLICITUD_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) → lista de

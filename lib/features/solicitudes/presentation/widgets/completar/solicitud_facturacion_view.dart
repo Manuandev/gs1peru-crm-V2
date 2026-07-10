@@ -138,7 +138,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
     final result = await guardarSolicitudDesdeWizard(
       context,
-      numSol: widget.solicitud.idSolicitud,
       idLead: widget.solicitud.idLead,
       esBorrador: true,
     );
@@ -454,7 +453,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                 label: 'Participantes pagantes',
                                 valor: state.participantes
                                     .where(
-                                      (p) => p.tipoParticipante == 'Pagante',
+                                      (p) => p.tipoParticipante == '1', // Pagante
                                     )
                                     .length
                                     .toString(),

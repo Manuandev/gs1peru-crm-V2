@@ -13,16 +13,14 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 Future<CrudResult> guardarSolicitudDesdeWizard(
   BuildContext context, {
-  required String numSol,
   String idLead = '',
   required bool esBorrador,
-}) {
-  final formState = context.read<SolicitudFormCubit>().state;
+}) async {
+  final formCubit = context.read<SolicitudFormCubit>();
+  final formState = formCubit.state;
   final solicitante = formState.solicitante;
   if (solicitante == null) {
-    return Future.value(
-      const CrudError('Completa los datos del solicitante antes de guardar.'),
-    );
+    return const CrudError('Completa los datos del solicitante antes de guardar.');
   }
 
   final participantes = context
@@ -34,8 +32,10 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
       ? catalogState.igvPorcentaje
       : 0.0;
 
-  return GuardarSolicitudUseCase(context.read<SolicitudRepository>()).call(
-    numSol: numSol,
+  final result = await GuardarSolicitudUseCase(
+    context.read<SolicitudRepository>(),
+  ).call(
+    numSol: formState.numSol,
     idLead: idLead,
     tipoPersona: formState.tipoPersona,
     solicitante: solicitante,
@@ -44,6 +44,16 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
     igvPorcentaje: igvPorcentaje,
     esBorrador: esBorrador,
   );
+
+  // La primera vez que se crea (numSol venía vacío), el backend genera el
+  // NUMSOL real y lo devuelve en CrudOk.data — hay que guardarlo para que
+  // el próximo "Guardar" actualice esta misma solicitud en vez de crear
+  // otra.
+  if (result case CrudOk(:final data) when data != null && data.isNotEmpty) {
+    formCubit.actualizarNumSol(data);
+  }
+
+  return result;
 }
 
 /// Traduce un [CrudResult] a un snackbar — mismo criterio en los 4 pasos.

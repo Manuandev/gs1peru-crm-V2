@@ -8,8 +8,17 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 // ── Constantes de opciones ────────────────────────────────────────────────────
 // "Tipo" de participante no tiene catálogo de backend — se mantiene hardcodeado.
+// El id (1-4) es lo que se manda como ID_TIP_PARTICIPANTE al CUD — antes se
+// mandaba el label completo ('Invitado auspicio', 18 chars) y truncaba la
+// columna en EVT.T_TECMSOLINSCRIPCION02.
 
-const _tiposParticipante = ['Pagante', 'Invitado', 'Invitado auspicio', 'Online'];
+const _tiposParticipante = [
+  '1¦Pagante',
+  '2¦Invitado',
+  '3¦Invitado auspicio',
+  '4¦Online',
+];
+const _idTipoParticipantePagante = '1';
 
 // ── Función helper para abrir el sheet ───────────────────────────────────────
 
@@ -72,7 +81,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   void initState() {
     super.initState();
     final p = widget.participante;
-    _tipoParticipante = p?.tipoParticipante ?? _tiposParticipante.first;
+    _tipoParticipante = p?.tipoParticipante ?? _idTipoParticipantePagante;
     _tipoDocId = p?.tipoDocId ?? '';
     _tipoDocLabel = p?.tipoDoc ?? '';
     _tipoDocInicialId = _tipoDocId.isNotEmpty ? _tipoDocId : null;
@@ -296,7 +305,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           child: CustomComboSearchField(
                             label: 'Tipo *',
                             data: _tiposParticipante,
-                            displayIndex: 0,
+                            displayIndex: 1,
                             initialValue: _tipoParticipante,
                             onChanged: (item) {
                               if (item != null) {

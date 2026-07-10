@@ -107,11 +107,20 @@ class SolicitudFormState {
   /// 'juridica' | 'natural' — compartido por los pasos 1 (solicitante) y 3
   /// (facturación): ambos representan el mismo dato, no dos independientes.
   final String tipoPersona;
+
+  /// NUMSOL de la solicitud — vacío mientras es una creación nueva. Se
+  /// setea una vez al entrar al wizard (con el NUMSOL real si se edita una
+  /// solicitud existente) y se actualiza sola con el NUMSOL que devuelve el
+  /// backend tras el primer guardado exitoso — así cualquier "Guardar"
+  /// posterior en la misma sesión actualiza en vez de crear otra solicitud.
+  /// Ver `guardarSolicitudDesdeWizard()`.
+  final String numSol;
   final DatosSolicitante? solicitante;
   final DatosFacturacion? facturacion;
 
   const SolicitudFormState({
     this.tipoPersona = 'juridica',
+    this.numSol = '',
     this.solicitante,
     this.facturacion,
   });
@@ -121,10 +130,12 @@ class SolicitudFormState {
 
   SolicitudFormState copyWith({
     String? tipoPersona,
+    String? numSol,
     DatosSolicitante? solicitante,
     DatosFacturacion? facturacion,
   }) => SolicitudFormState(
     tipoPersona: tipoPersona ?? this.tipoPersona,
+    numSol: numSol ?? this.numSol,
     solicitante: solicitante ?? this.solicitante,
     facturacion: facturacion ?? this.facturacion,
   );

@@ -80,10 +80,10 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
           .where((s) => s.asesor == _asesorSeleccionado)
           .toList(),
       SolicitudFiltro.sinValidar => _allSolicitudes
-          .where((s) => s.idEstado == '01')
+          .where((s) => !s.ibValidado)
           .toList(),
       SolicitudFiltro.enviarACobranza => _allSolicitudes
-          .where((s) => s.idEstado == '03')
+          .where((s) => s.ibValidado)
           .toList(),
     };
 
@@ -106,14 +106,10 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
       filtro: _filtroActivo,
       asesorSeleccionado: _asesorSeleccionado,
       conteosPorAsesor: _buildConteosPorAsesor(),
-      cntPorCompletar:
-          _allSolicitudes.where((s) => s.idEstado == '00').length,
-      cntPorValidar:
-          _allSolicitudes.where((s) => s.idEstado == '01').length,
+      cntSinValidar: _allSolicitudes.where((s) => !s.ibValidado).length,
       cntConDocumentos:
           _allSolicitudes.where((s) => s.idEstado == '02').length,
-      cntListasCobranza:
-          _allSolicitudes.where((s) => s.idEstado == '03').length,
+      cntListasCobranza: _allSolicitudes.where((s) => s.ibValidado).length,
     ));
   }
 

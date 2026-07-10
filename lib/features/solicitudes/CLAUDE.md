@@ -275,11 +275,29 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 
 ## Notas importantes
 - `SolicitudFiltro` (`todas`, `asesores`, `sinValidar`, `enviarACobranza`) — `sinValidar` =
-  `idEstado == '01'`, `enviarACobranza` = `idEstado == '03'`
-- `SolicitudAccionTipo` decide qué botones muestra `SolicitudCard` según el filtro activo:
-  `ninguna` (solo ver), `sinValidar` (Ver + Validar), `cobranza` (Ver + Completar)
-- Estados de la solicitud: `'00'` Por Completar · `'01'` Por Validar · `'02'` Con
-  Documentos · `'03'` Lista p/Cobranza
+  `!ibValidado`, `enviarACobranza` = `ibValidado`. **Ya no usan `idEstado`** — antes
+  `sinValidar` era `idEstado == '01'` y `enviarACobranza` era `idEstado == '03'`; se cambió
+  porque "sin validar" y "listo para cobranza" son, en realidad, los dos lados de
+  `IB_VALIDADO` (0/false = pendiente de validar, 1/true = ya validado → listo para
+  cobranza), no un estado de gestión. Ya no existe un filtro/contador "Por completar" — se
+  consideraba lo mismo que "Sin validar" y se eliminó
+- Indicadores del dashboard (`_IndicadoresRow`, `solicitud_list_view.dart`): **3** tarjetas
+  — "Sin validar" (`cntSinValidar` = `!ibValidado`), "Con documentos" (`cntConDocumentos` =
+  `idEstado == '02'`, sin cambios), "Listas para cobranza" (`cntListasCobranza` =
+  `ibValidado`). Antes había una 4ta tarjeta "Por completar" (`idEstado == '00'`) — se quitó
+  por ser redundante con "Sin validar"
+- **Ojo — mismatch pendiente con `SolicitudCard`**: `SolicitudAccionTipo`/
+  `SolicitudCard._accion()`/`colorEstado()` (widgets/list/solicitud_card.dart) todavía
+  deciden qué botón mostrar (Validar/Completar) y de qué color es el chip de estado
+  mirando `idEstado` (`'00'`/`'01'`/`'02'`/`'03'`, el estado de gestión crudo del SP — ver
+  "SPs que consume"), **no** `ibValidado`. Por ahora es intencional (el usuario pidió dejar
+  los estados de gestión para después), pero puede haber solicitudes que aparezcan en el
+  filtro "Sin validar" (por `ibValidado`) mostrando el botón "Completar" en vez de
+  "Validar" (porque su `idEstado` no es `'01'`), o viceversa. Pendiente de que se defina la
+  relación real entre `idEstado` (estado de gestión) e `IB_VALIDADO` para unificar esto
+- Estados de la solicitud (`idEstado`, estado de gestión — dimensión aparte de
+  `ibValidado`): `'00'` Por Completar · `'01'` Por Validar · `'02'` Con Documentos · `'03'`
+  Lista p/Cobranza
 - Separadores del backend: `AppConstants.sepListas` (`¯`), `AppConstants.sepCampos` (`¦`),
   `AppConstants.sepRegistros` (`¬`) — usados por `SolicitudRemoteDatasource.getSolicitudes()`
   y `SolicitudModel.parseList`/`fromRawString`

@@ -153,18 +153,9 @@ class _IndicadoresRow extends StatelessWidget {
           children: [
             Expanded(
               child: _IndicadorItem(
-                icono: Icons.assignment_outlined,
-                label: 'Por\ncompletar',
-                conteo: state.cntPorCompletar,
-                color: AppColors.info,
-              ),
-            ),
-            _VerticalDivider(),
-            Expanded(
-              child: _IndicadorItem(
                 icono: Icons.access_time_outlined,
-                label: 'Por\nvalidar',
-                conteo: state.cntPorValidar,
+                label: 'Sin\nvalidar',
+                conteo: state.cntSinValidar,
                 color: AppColors.warning,
               ),
             ),

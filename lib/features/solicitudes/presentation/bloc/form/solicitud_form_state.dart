@@ -118,11 +118,20 @@ class SolicitudFormState {
   final DatosSolicitante? solicitante;
   final DatosFacturacion? facturacion;
 
+  /// Voucher/O.C. adjuntados en el paso 1 — viven acá (no en el estado local
+  /// de `solicitud_completar_view.dart`) para que "Generar solicitud"
+  /// (Resumen) también pueda subirlos, no solo "Guardar"/"Continuar" del
+  /// paso 1. Ver `SolicitudFormCubit.guardarArchivoVoucher/OC`.
+  final PlatformFile? archivoVoucher;
+  final PlatformFile? archivoOC;
+
   const SolicitudFormState({
     this.tipoPersona = 'juridica',
     this.numSol = '',
     this.solicitante,
     this.facturacion,
+    this.archivoVoucher,
+    this.archivoOC,
   });
 
   String get tipoPersonaLabel =>
@@ -133,10 +142,18 @@ class SolicitudFormState {
     String? numSol,
     DatosSolicitante? solicitante,
     DatosFacturacion? facturacion,
+    PlatformFile? archivoVoucher,
+    bool limpiarArchivoVoucher = false,
+    PlatformFile? archivoOC,
+    bool limpiarArchivoOC = false,
   }) => SolicitudFormState(
     tipoPersona: tipoPersona ?? this.tipoPersona,
     numSol: numSol ?? this.numSol,
     solicitante: solicitante ?? this.solicitante,
     facturacion: facturacion ?? this.facturacion,
+    archivoVoucher: limpiarArchivoVoucher
+        ? null
+        : (archivoVoucher ?? this.archivoVoucher),
+    archivoOC: limpiarArchivoOC ? null : (archivoOC ?? this.archivoOC),
   );
 }

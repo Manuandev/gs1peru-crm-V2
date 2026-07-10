@@ -64,10 +64,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   final _ctrlRuc = TextEditingController();
   final _ctrlRazonSocial = TextEditingController();
 
-  // Archivos adjuntos — voucher y orden de compra
-  PlatformFile? _archivoVoucher;
-  PlatformFile? _archivoOC;
-
   /// Campos obligatorios (marcados con *) del paso 1. Los opcionales
   /// (apellido materno, RUC/razón social, canales) no se exigen.
   bool get _formCompleto =>
@@ -288,6 +284,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     final resultado = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
+      withData: true, // asegura PlatformFile.bytes en todas las plataformas
     );
     final archivo = resultado?.files.single;
     if (archivo == null) return;
@@ -300,23 +297,22 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       return;
     }
 
-    setState(() {
-      if (esVoucher) {
-        _archivoVoucher = archivo;
-      } else {
-        _archivoOC = archivo;
-      }
-    });
+    if (!mounted) return;
+    final formCubit = context.read<SolicitudFormCubit>();
+    if (esVoucher) {
+      formCubit.guardarArchivoVoucher(archivo);
+    } else {
+      formCubit.guardarArchivoOC(archivo);
+    }
   }
 
   void _quitarArchivo(bool esVoucher) {
-    setState(() {
-      if (esVoucher) {
-        _archivoVoucher = null;
-      } else {
-        _archivoOC = null;
-      }
-    });
+    final formCubit = context.read<SolicitudFormCubit>();
+    if (esVoucher) {
+      formCubit.quitarArchivoVoucher();
+    } else {
+      formCubit.quitarArchivoOC();
+    }
   }
 
   Future<void> _confirmarCancelar() async {
@@ -330,6 +326,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   }
 
   DatosSolicitante _construirDatosSolicitante(PaisItem? paisCelular) {
+    final archivos = context.read<SolicitudFormCubit>().state;
     return DatosSolicitante(
       tipoDocId: _tipoDocId,
       tipoDocLabel: _tipoDocLabel,
@@ -350,8 +347,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       razonSocial: _ctrlRazonSocial.text,
       solicitanteEsParticipante: _solicitanteParticipante,
       facturarAlSolicitante: _facturarAlSolicitante,
-      archivoVoucherNombre: _archivoVoucher?.name ?? '',
-      archivoOCNombre: _archivoOC?.name ?? '',
+      archivoVoucherNombre: archivos.archivoVoucher?.name ?? '',
+      archivoOCNombre: archivos.archivoOC?.name ?? '',
     );
   }
 
@@ -368,6 +365,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     final datos = _construirDatosSolicitante(paisCelular);
     context.read<SolicitudFormCubit>().guardarSolicitante(datos);
     context.read<ParticipantesCubit>().sincronizarSolicitante(datos);
+    // Si ya existe NUMSOL (edición) y hay un archivo recién adjuntado, se
+    // sube en segundo plano — no bloquea la navegación. En creación nueva
+    // (NUMSOL aún vacío) no hace nada hasta que se presione "Guardar".
+    subirArchivosPendientes(context);
     context.goToFichaParticipantesSolicitud(
       solicitud: widget.solicitud,
       modoEdicion: widget.modoEdicion,
@@ -391,6 +392,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       idLead: widget.solicitud.idLead,
       esBorrador: true,
     );
+
+    // Recién acá hay NUMSOL confirmado (si era creación nueva, lo generó
+    // este mismo guardado) — es el punto correcto para subir voucher/OC.
+    if (result is CrudOk && mounted) await subirArchivosPendientes(context);
 
     if (!mounted) return;
     setState(() => _guardando = false);
@@ -422,7 +427,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       );
     }
 
-    final tipoPersona = context.watch<SolicitudFormCubit>().state.tipoPersona;
+    final formState = context.watch<SolicitudFormCubit>().state;
+    final tipoPersona = formState.tipoPersona;
     final catalogState = context.watch<CatalogsBloc>().state;
     final canales = catalogState is CatalogsLoaded
         ? catalogState.canales
@@ -508,7 +514,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                       Expanded(
                         child: BotonAdjuntar(
                           label: 'Adjuntar voucher',
-                          archivo: _archivoVoucher,
+                          archivo: formState.archivoVoucher,
                           habilitado: widget.modoEdicion,
                           onAdjuntar: () => _adjuntarArchivo(true),
                           onQuitar: () => _quitarArchivo(true),
@@ -518,7 +524,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                       Expanded(
                         child: BotonAdjuntar(
                           label: 'Adjuntar O/C',
-                          archivo: _archivoOC,
+                          archivo: formState.archivoOC,
                           habilitado: widget.modoEdicion,
                           onAdjuntar: () => _adjuntarArchivo(false),
                           onQuitar: () => _quitarArchivo(false),

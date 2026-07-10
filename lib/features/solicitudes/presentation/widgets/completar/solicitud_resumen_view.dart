@@ -36,20 +36,25 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
       idLead: widget.solicitud.idLead,
       esBorrador: true,
     );
+    if (result is CrudOk && mounted) await subirArchivosPendientes(context);
 
     if (!mounted) return;
     setState(() => _guardando = false);
     mostrarResultadoGuardarSolicitud(context, result);
   }
 
+  // Guarda el CUD (IB_BORRADOR=0) y, solo si eso sale bien, sube voucher/OC
+  // pendientes con el NUMSOL recién confirmado — recién ahí se considera
+  // generada y navega a SolicitudGeneradaPage. Si el CUD falla o un archivo
+  // no se pudo subir, se queda en Resumen mostrando el error (ver
+  // generarSolicitudCompleta en solicitud_guardar_helper.dart).
   Future<void> _onGenerarSolicitud() async {
     if (_guardando || _generando) return;
     setState(() => _generando = true);
 
-    final result = await guardarSolicitudDesdeWizard(
+    final result = await generarSolicitudCompleta(
       context,
       idLead: widget.solicitud.idLead,
-      esBorrador: false,
     );
 
     if (!mounted) return;

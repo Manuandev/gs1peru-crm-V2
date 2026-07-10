@@ -6,8 +6,8 @@
 // lectura de SolicitudFormCubit/ParticipantesCubit/CatalogsBloc.
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:app_crm/index_dependencies.dart'; // context.read, PlatformFile
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
@@ -51,6 +51,90 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   // otra.
   if (result case CrudOk(:final data) when data != null && data.isNotEmpty) {
     formCubit.actualizarNumSol(data);
+  }
+
+  return result;
+}
+
+Future<bool> _subirArchivo(
+  BuildContext context,
+  String numSol,
+  String tipo,
+  PlatformFile archivo,
+) async {
+  final bytes = archivo.bytes;
+  if (bytes == null) return false;
+
+  final ext = archivo.extension ?? 'pdf';
+  final sufijo = '.$ext';
+  final nombre = archivo.name.toLowerCase().endsWith(sufijo.toLowerCase())
+      ? archivo.name.substring(0, archivo.name.length - sufijo.length)
+      : archivo.name;
+
+  return GuardarArchivoSolicitudUseCase(context.read<SolicitudRepository>())
+      .call(
+        numSol: numSol,
+        tipo: tipo,
+        fileName: nombre,
+        fileExt: ext,
+        fileBytes: bytes,
+      );
+}
+
+/// Sube voucher/O.C. pendientes (`SolicitudFormCubit.state`) usando el
+/// NUMSOL ya confirmado — no hace nada (retorna `true`) si todavía no hay
+/// NUMSOL o no hay archivos adjuntados. Usado por el paso 1
+/// (Guardar/Continuar) y por [generarSolicitudCompleta] (Resumen).
+///
+/// OJO — riesgo real en el SP: el task `'AR'` de `CSV_SOLICITUD_CUD_APP`
+/// borra TODOS los archivos de ese NUMSOL antes de insertar el nuevo (no
+/// solo el tipo que se sube) — si hay voucher y O.C. juntos, la segunda
+/// llamada pisa a la primera. Sin confirmar con backend si conviene mandar
+/// ambos juntos en un solo `'AR'`.
+Future<bool> subirArchivosPendientes(BuildContext context) async {
+  final formState = context.read<SolicitudFormCubit>().state;
+  final numSol = formState.numSol;
+  if (numSol.isEmpty) return true;
+
+  final voucher = formState.archivoVoucher;
+  if (voucher != null) {
+    final ok = await _subirArchivo(context, numSol, 'voucher', voucher);
+    if (!ok) return false;
+  }
+
+  final oc = formState.archivoOC;
+  if (oc != null) {
+    final ok = await _subirArchivo(context, numSol, 'oc', oc);
+    if (!ok) return false;
+  }
+
+  return true;
+}
+
+/// Flujo completo de "Generar solicitud": guarda el CUD (`esBorrador:
+/// false`) y, si sale bien, sube voucher/O.C. pendientes con el NUMSOL
+/// recién confirmado. Solo se considera generada si TODO sale bien — si el
+/// CUD falla no sube nada (retorna ese resultado tal cual); si el CUD sale
+/// bien pero un archivo falla, informa el error sin perder el NUMSOL (la
+/// solicitud ya quedó creada/actualizada) — el usuario puede volver a
+/// presionar "Generar solicitud" para reintentar solo la subida.
+Future<CrudResult> generarSolicitudCompleta(
+  BuildContext context, {
+  required String idLead,
+}) async {
+  final result = await guardarSolicitudDesdeWizard(
+    context,
+    idLead: idLead,
+    esBorrador: false,
+  );
+  if (result is! CrudOk) return result;
+
+  final archivosOk = await subirArchivosPendientes(context);
+  if (!archivosOk) {
+    return const CrudAlert(
+      'La solicitud se generó, pero un archivo adjunto no se pudo subir. '
+      'Presiona "Generar solicitud" de nuevo para reintentar la subida.',
+    );
   }
 
   return result;

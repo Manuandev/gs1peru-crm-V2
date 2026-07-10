@@ -20,33 +20,50 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   mismo valor que `idEstado`/`estado` (dato incorrecto, no usar para nada crítico).
 - El wizard (`SolicitudFormCubit` + `ParticipantesCubit`) ya está conectado al CUD real de
   punta a punta. Al entrar (por "Editar ficha"/"Continuar" o por "Generar solicitud" desde
-  una negociación ganada) el paso 1 llama `getSolicitudDetalle()` (task `'DT'`, ver abajo) y
+  una negociación) el paso 1 llama `getSolicitudDetalle()` (task `'DT'`, ver abajo) y
   prellena los cubits — ver `solicitud_completar_view.dart._cargarDetalle()`. Los 4 botones
   "Guardar" (pasos 1/2/3/Resumen) llaman `guardarSolicitudDesdeWizard()` con
   `esBorrador: true`; "Generar solicitud" (Resumen) con `esBorrador: false` y navega a
   `SolicitudGeneradaPage` solo si el backend responde `CrudOk`. Ver
   `solicitud_guardar_helper.dart` (punto único que arma la llamada, compartido por los 5
-  botones) y "Pendiente" abajo por lo que sigue faltando (archivos, carga masiva).
+  botones) y "Pendiente" abajo por lo que sigue faltando (archivos desde Resumen, carga
+  masiva).
+- **`SolicitudFormCubit.state.numSol`** — el wizard ya no lee `widget.solicitud.idSolicitud`
+  para saber a qué NUMSOL guardar; lo lee del cubit. Se siembra una vez al entrar al paso 1
+  (`_cargarDetalle()`, vacío si es creación) y `guardarSolicitudDesdeWizard()` lo actualiza
+  solo con el NUMSOL que devuelve `CrudOk.data` tras el primer guardado exitoso — así
+  cualquier "Guardar"/"Generar solicitud" posterior en la misma sesión actualiza esa misma
+  solicitud en vez de crear una nueva cada vez (bug real: antes cada "Guardar" repetía la
+  rama de creación del SP porque `numSol` seguía viajando vacío).
+- **Voucher/O.C. viven en `SolicitudFormCubit.state.archivoVoucher/archivoOC`**
+  (`PlatformFile?`, no en estado local de la vista) — así sobreviven todo el wizard, no
+  solo el paso 1 donde se capturan (`solicitud_completar_view.dart._adjuntarArchivo()`,
+  con `withData: true` en el picker para asegurar `.bytes` en todas las plataformas).
+  `SolicitudFormCubit.guardarArchivoVoucher/OC` / `quitarArchivoVoucher/OC` los setean.
+- **Subida de archivos** — `subirArchivosPendientes()` (`solicitud_guardar_helper.dart`)
+  sube lo que haya en el cubit usando `GuardarArchivoSolicitudUseCase` +
+  `SolicitudFormCubit.state.numSol` — no hace nada si `numSol` sigue vacío (creación nueva
+  sin confirmar). La llaman los 4 botones "Guardar" (tras `CrudOk`) y el paso 1 también la
+  dispara al "Continuar" (sin bloquear, solo si ya había NUMSOL de antes — edición).
+  **"Generar solicitud" (Resumen) usa `generarSolicitudCompleta()`**, que encadena
+  `guardarSolicitudDesdeWizard(esBorrador: false)` → si sale `CrudOk`, recién ahí
+  `subirArchivosPendientes()` → solo si TODO sale bien navega a `SolicitudGeneradaPage`; si
+  el CUD falla no sube nada; si el CUD sale bien pero un archivo falla, devuelve `CrudAlert`
+  (la solicitud ya quedó creada/actualizada, el usuario puede volver a presionar "Generar
+  solicitud" para reintentar solo la subida — es idempotente, `numSol` ya está fijo).
+  **OJO — riesgo real en el SP**: el task `'AR'` de `CSV_SOLICITUD_CUD_APP` hace
+  `DELETE FROM EVT.T_TECMSOLINSCRIPCION01_ARCHIVOS WHERE NUMSOL = @NUMSOL` (borra TODOS los
+  archivos de esa solicitud, no solo el tipo que se está subiendo) antes de insertar el
+  nuevo — si se suben voucher y O/C en la misma sesión, la segunda llamada borra a la
+  primera. Sin confirmar con backend todavía si conviene mandarlos juntos en un solo `'AR'`.
 - "Carga masiva" (Excel) solo valida la extensión del archivo seleccionado — no procesa ni
   sube el archivo.
-- **Archivos (voucher/OC) van en una llamada aparte** (task `'AR'`, aún no implementado en
-  Flutter) — necesitan el `NUMSOL` que devuelve la llamada de `guardarSolicitud()` (task
-  `'U'`), así que el flujo real es: 1) guardar cabecera+participantes → 2) con el `NUMSOL`
-  de la respuesta, subir archivos por chunks a `SPSolicitudCUDAppArchivos`.
 
 ## Pendiente (roadmap del CUD) — leer esto primero si retomas el feature
 1. ~~`SolicitudRemoteDatasource.guardarSolicitud()` (task `'U'`)~~ — hecho.
 2. ~~`SolicitudRemoteDatasource.guardarArchivo()` (task `'AR'`)~~ — hecho, ver abajo.
 3. ~~Conectar los botones "Guardar"/"Generar solicitud"~~ — hecho, ver "Estado general".
-   Sigue pendiente el tramo de archivos dentro de "Generar solicitud": hoy, al presionar ese
-   botón, **no** se suben `_archivoVoucher`/`_archivoOC` (`PlatformFile` capturados en el paso
-   1) aunque el usuario los haya adjuntado — solo se guarda cabecera+facturación+participantes.
-   Falta: 1) leer el `NUMSOL` de `CrudOk.data` tras el `guardarSolicitudDesdeWizard()` exitoso
-   → 2) si los `PlatformFile` no son null, llamar `GuardarArchivoSolicitudUseCase.call(numSol:
-   ese NUMSOL, tipo: 'voucher'|'oc', fileName/fileExt/fileBytes: del `PlatformFile`) antes de
-   navegar a `SolicitudGeneradaPage`. El obstáculo real: los `PlatformFile` viven solo en el
-   estado local de `solicitud_completar_view.dart` (paso 1) y no llegan hasta Resumen — hay
-   que subirlos a `SolicitudFormState` (o similar) para que sobrevivan el resto del wizard.
+   ~~Subir voucher/OC desde Resumen~~ — hecho, ver "Estado general" (`generarSolicitudCompleta()`).
 4. ~~Ajuste en `guardarSolicitud()`: el SP dejó de recibir `ID_CONTACTO`~~ — hecho. La
    cabecera ahora manda 41 campos (`ID_LEAD` es field1) en vez de 42.
 5. ~~`ID_LEAD` se manda vacío porque no existe ninguna pantalla que cree una solicitud nueva
@@ -157,8 +174,11 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   el universo de asesores ya no sale de las solicitudes cargadas, viene de
   `CatalogsBloc.asesores` (ver `SolicitudAsesorPickerModal` abajo)
 - `SolicitudFormCubit` (form/) → guarda `DatosSolicitante` y `DatosFacturacion` capturados
-  en los pasos 1 y 3. Se crea **una sola vez** en `SolicitudCompletarPage` (paso 1) y se
-  reenvía como argumento (`formCubit`) a través de todo el wizard vía `BlocProvider.value`
+  en los pasos 1 y 3, más `numSol` (ver "Estado general" — se actualiza solo tras crear) y
+  `archivoVoucher`/`archivoOC` (`PlatformFile?`, capturados en paso 1 pero vivos acá para
+  que "Generar solicitud" en Resumen también pueda subirlos). Se crea **una sola vez** en
+  `SolicitudCompletarPage` (paso 1) y se reenvía como argumento (`formCubit`) a través de
+  todo el wizard vía `BlocProvider.value`
 - `ParticipantesCubit` (participantes/) → lista de `ParticipanteLocal` (agregar / editar /
   eliminar / eliminarTodos), inicia **vacía** (ya no trae participantes ficticios
   hardcodeados). `sincronizarSolicitante(DatosSolicitante)` agrega/actualiza un

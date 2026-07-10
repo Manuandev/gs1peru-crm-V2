@@ -93,6 +93,7 @@ class _SolicitudParticipantesViewState
       idLead: widget.solicitud.idLead,
       esBorrador: true,
     );
+    if (result is CrudOk && mounted) await subirArchivosPendientes(context);
 
     if (!mounted) return;
     setState(() => _guardando = false);

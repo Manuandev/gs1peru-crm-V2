@@ -1,6 +1,6 @@
 // lib/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart
 
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:app_crm/index_dependencies.dart'; // Cubit, PlatformFile
 
 part 'solicitud_form_state.dart';
 
@@ -24,4 +24,18 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
   /// creación) y de nuevo tras el primer guardado exitoso de una solicitud
   /// nueva, con el NUMSOL que generó el backend.
   void actualizarNumSol(String numSol) => emit(state.copyWith(numSol: numSol));
+
+  /// Voucher/O.C. adjuntados en el paso 1 — viven acá (no en el estado local
+  /// de la vista) para que sobrevivan hasta Resumen y "Generar solicitud"
+  /// pueda subirlos con el NUMSOL recién confirmado.
+  void guardarArchivoVoucher(PlatformFile archivo) =>
+      emit(state.copyWith(archivoVoucher: archivo));
+
+  void quitarArchivoVoucher() =>
+      emit(state.copyWith(limpiarArchivoVoucher: true));
+
+  void guardarArchivoOC(PlatformFile archivo) =>
+      emit(state.copyWith(archivoOC: archivo));
+
+  void quitarArchivoOC() => emit(state.copyWith(limpiarArchivoOC: true));
 }

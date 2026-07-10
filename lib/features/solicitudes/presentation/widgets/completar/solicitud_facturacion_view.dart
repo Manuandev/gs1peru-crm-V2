@@ -24,9 +24,6 @@ class SolicitudFacturacionView extends StatefulWidget {
 }
 
 class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
-  // 'juridica' | 'natural'
-  String _tipoPersona = 'juridica';
-
   // IDs y labels de combos (id para pre-selección, label para guardar en cubit)
   String _comprobanteId = '';
   String _comprobanteLabel = '';
@@ -37,6 +34,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   String _tipoDocId = '';
   String _tipoDocLabel = '';
   String _nacionalidadId = '';
+
+  // País del código telefónico del celular — catálogo real vía CatalogsBloc
+  PaisItem? _paisCelular;
 
   // Evita pre-rellenar más de una vez
   bool _prefillDone = false;
@@ -93,7 +93,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     _prefillDone = true;
     final datos = context.read<SolicitudFormCubit>().state.facturacion;
     if (datos == null) return;
-    _tipoPersona = datos.tipoPersona;
     _comprobanteId = datos.comprobanteId;
     _comprobanteLabel = datos.comprobante;
     _paisId = datos.paisId;
@@ -127,10 +126,26 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   @override
   Widget build(BuildContext context) {
+    final tipoPersona = context.watch<SolicitudFormCubit>().state.tipoPersona;
     final catalogState = context.watch<CatalogsBloc>().state;
     final monedas = catalogState is CatalogsLoaded
         ? catalogState.monedas
         : const <MonedaItem>[];
+    final tiposDocumento = catalogState is CatalogsLoaded
+        ? catalogState.tiposDocumento
+        : const <TipoDocumentoItem>[];
+    final nacionalidades = catalogState is CatalogsLoaded
+        ? catalogState.nacionalidades
+        : const <NacionalidadItem>[];
+    final paises = catalogState is CatalogsLoaded
+        ? catalogState.paises
+        : const <PaisItem>[];
+    final paisCelular =
+        _paisCelular ??
+        (paises.isEmpty
+            ? null
+            : paises.where((p) => p.codigoTelefono == '51').firstOrNull ??
+                  paises.first);
 
     return BasePage(
       onPop: () => context.goBack(),
@@ -191,9 +206,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       SolicitudToggleTipoPersona(
-                        valor: _tipoPersona,
+                        valor: tipoPersona,
                         habilitado: widget.modoEdicion,
-                        onChanged: (v) => setState(() => _tipoPersona = v),
+                        onChanged: (v) => context
+                            .read<SolicitudFormCubit>()
+                            .cambiarTipoPersona(v),
                       ),
                     ],
                   ),
@@ -214,6 +231,12 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     ctrlCorreo: _ctrlCorreo,
                     ctrlDireccion: _ctrlDireccion,
                     monedas: monedas,
+                    tiposDocumento: tiposDocumento,
+                    nacionalidades: nacionalidades,
+                    paises: paises,
+                    paisCelular: paisCelular,
+                    onPaisCelularChanged: (p) =>
+                        setState(() => _paisCelular = p),
                     comprobanteInicialId: _comprobanteId.isNotEmpty
                         ? _comprobanteId
                         : null,
@@ -237,7 +260,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                         : null,
                     onTipoDocChanged: (item) => setState(() {
                       _tipoDocId = item?.id ?? '';
-                      _tipoDocLabel = item?.descripcion ?? '';
+                      _tipoDocLabel = item?.nombre ?? '';
                     }),
                     onNacionalidadChanged: (item) =>
                         setState(() => _nacionalidadId = item?.id ?? ''),
@@ -332,7 +355,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                     .read<SolicitudFormCubit>()
                                     .guardarFacturacion(
                                       DatosFacturacion(
-                                        tipoPersona: _tipoPersona,
                                         comprobanteId: _comprobanteId,
                                         comprobante: _comprobanteLabel,
                                         paisId: _paisId,
@@ -347,6 +369,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                         apellidoMaterno:
                                             _ctrlApellidoMaterno.text,
                                         celular: _ctrlCelular.text,
+                                        celularCodigoTelefono:
+                                            paisCelular?.codigoTelefono ?? '',
                                         correo: _ctrlCorreo.text,
                                         direccion: _ctrlDireccion.text,
                                         actividadEconomica: '',
@@ -479,6 +503,11 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final TextEditingController ctrlCorreo;
   final TextEditingController ctrlDireccion;
   final List<MonedaItem> monedas;
+  final List<TipoDocumentoItem> tiposDocumento;
+  final List<NacionalidadItem> nacionalidades;
+  final List<PaisItem> paises;
+  final PaisItem? paisCelular;
+  final ValueChanged<PaisItem> onPaisCelularChanged;
   final String? comprobanteInicialId;
   final String? paisInicialId;
   final String? monedaInicialId;
@@ -487,8 +516,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final ValueChanged<ComboItem?>? onComprobanteChanged;
   final ValueChanged<ComboItem?>? onPaisChanged;
   final ValueChanged<MonedaItem?>? onMonedaChanged;
-  final ValueChanged<ComboItem?>? onTipoDocChanged;
-  final ValueChanged<ComboItem?>? onNacionalidadChanged;
+  final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
+  final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
 
   const _SeccionDatosFacturacion({
     required this.habilitado,
@@ -500,6 +529,11 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     required this.ctrlCorreo,
     required this.ctrlDireccion,
     required this.monedas,
+    required this.tiposDocumento,
+    required this.nacionalidades,
+    required this.paises,
+    required this.paisCelular,
+    required this.onPaisCelularChanged,
     this.comprobanteInicialId,
     this.paisInicialId,
     this.monedaInicialId,
@@ -518,20 +552,6 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     '02¦El Salvador',
     '03¦Colombia',
     '04¦México',
-  ];
-  static const _tiposDoc = [
-    '01¦DNI',
-    '02¦Pasaporte',
-    '03¦Carnet de extranjería',
-    '04¦RUC',
-    '05¦Otros',
-  ];
-  static const _nacionalidades = [
-    '01¦Peruano/a',
-    '02¦Salvadoreño/a',
-    '03¦Colombiano/a',
-    '04¦Mexicano/a',
-    '05¦Extranjero/a',
   ];
 
   @override
@@ -579,9 +599,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: CustomComboSearchField(
+              child: CustomComboField<TipoDocumentoItem>(
                 label: 'Tipo documento *',
-                data: _tiposDoc,
+                data: tiposDocumento,
                 enabled: habilitado,
                 initialValue: tipoDocInicialId,
                 onChanged: onTipoDocChanged,
@@ -604,9 +624,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: CustomComboSearchField(
+              child: CustomComboField<NacionalidadItem>(
                 label: 'Nacionalidad *',
-                data: _nacionalidades,
+                data: nacionalidades,
                 enabled: habilitado,
                 initialValue: nacionalidadInicialId,
                 onChanged: onNacionalidadChanged,
@@ -661,6 +681,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
               child: SolicitudCampoCelular(
                 controller: ctrlCelular,
                 habilitado: habilitado,
+                paises: paises,
+                paisSeleccionado: paisCelular,
+                onPaisChanged: onPaisCelularChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),

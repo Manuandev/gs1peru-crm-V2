@@ -24,11 +24,11 @@ class SolicitudCompletarView extends StatefulWidget {
 }
 
 class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
-  // 'juridica' | 'natural'
-  String _tipoPersona = 'juridica';
-
   // Canal seleccionado (single-select) — catálogo real vía CatalogsBloc
   CanalItem? _canalSeleccionado;
+
+  // País del código telefónico del celular — catálogo real vía CatalogsBloc
+  PaisItem? _paisCelular;
 
   // Switches — opciones del solicitante
   bool _solicitanteParticipante = false;
@@ -39,8 +39,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
   String _sexoId = '';
-  String _campanaLabel = '';
-  String _eventoLabel = '';
 
   // Controladores — Datos del solicitante
   final _ctrlNumDoc = TextEditingController();
@@ -70,9 +68,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlApellidoPaterno.text.trim().isNotEmpty &&
       _ctrlCargo.text.trim().isNotEmpty &&
       _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.trim().isNotEmpty &&
-      _campanaLabel.isNotEmpty &&
-      _eventoLabel.isNotEmpty;
+      _ctrlCorreo.text.trim().isNotEmpty;
 
   void _onCampoTexto() => setState(() {});
 
@@ -142,6 +138,21 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
   @override
   Widget build(BuildContext context) {
+    final tipoPersona = context.watch<SolicitudFormCubit>().state.tipoPersona;
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final canales = catalogState is CatalogsLoaded
+        ? catalogState.canales
+        : const <CanalItem>[];
+    final paises = catalogState is CatalogsLoaded
+        ? catalogState.paises
+        : const <PaisItem>[];
+    final paisCelular =
+        _paisCelular ??
+        (paises.isEmpty
+            ? null
+            : paises.where((p) => p.codigoTelefono == '51').firstOrNull ??
+                  paises.first);
+
     return BasePage(
       onPop: () => context.goBack(),
       drawerSide: DrawerSide.none,
@@ -180,9 +191,11 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       SolicitudToggleTipoPersona(
-                        valor: _tipoPersona,
+                        valor: tipoPersona,
                         habilitado: widget.modoEdicion,
-                        onChanged: (v) => setState(() => _tipoPersona = v),
+                        onChanged: (v) => context
+                            .read<SolicitudFormCubit>()
+                            .cambiarTipoPersona(v),
                       ),
                     ],
                   ),
@@ -197,28 +210,17 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Builder(
-                    builder: (context) {
-                      final catalogState = context
-                          .watch<CatalogsBloc>()
-                          .state;
-                      final canales = catalogState is CatalogsLoaded
-                          ? catalogState.canales
-                          : const <CanalItem>[];
-                      return _ChipsCanales(
-                        canales: canales,
-                        seleccionado: _canalSeleccionado,
-                        habilitado: widget.modoEdicion,
-                        onSeleccionar: (canal) {
-                          if (!widget.modoEdicion) return;
-                          setState(() {
-                            _canalSeleccionado =
-                                _canalSeleccionado?.id == canal.id
-                                ? null
-                                : canal;
-                          });
-                        },
-                      );
+                  _ChipsCanales(
+                    canales: canales,
+                    seleccionado: _canalSeleccionado,
+                    habilitado: widget.modoEdicion,
+                    onSeleccionar: (canal) {
+                      if (!widget.modoEdicion) return;
+                      setState(() {
+                        _canalSeleccionado = _canalSeleccionado?.id == canal.id
+                            ? null
+                            : canal;
+                      });
                     },
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -264,17 +266,19 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     ctrlCargo: _ctrlCargo,
                     ctrlCelular: _ctrlCelular,
                     ctrlCorreo: _ctrlCorreo,
+                    paises: paises,
+                    paisCelular: paisCelular,
+                    onPaisCelularChanged: (p) =>
+                        setState(() => _paisCelular = p),
                     onTipoDocLabelChanged: (v) =>
                         setState(() => _tipoDocLabel = v),
                     onNacionalidadChanged: (item) => setState(() {
                       _nacionalidadId = item?.id ?? '';
-                      _nacionalidadLabel = item?.descripcion ?? '';
+                      _nacionalidadLabel = item?.nombre ?? '';
                     }),
                     onSexoChanged: (v) => setState(() => _sexoId = v),
-                    onCampanaChanged: (v) => setState(() => _campanaLabel = v),
-                    onEventoChanged: (v) => setState(() => _eventoLabel = v),
                   ),
-                  if (_tipoPersona == 'juridica') ...[
+                  if (tipoPersona == 'juridica') ...[
                     const SizedBox(height: AppSpacing.sm),
 
                     // ── Información comercial (solo jurídica) ──────────
@@ -324,7 +328,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         ? null
                         : () {
                             final datos = DatosSolicitante(
-                              tipoPersona: _tipoPersona,
                               tipoDocLabel: _tipoDocLabel,
                               numDoc: _ctrlNumDoc.text,
                               nacionalidad: _nacionalidadLabel,
@@ -333,9 +336,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                               apellidoMaterno: _ctrlApellidoMaterno.text,
                               cargo: _ctrlCargo.text,
                               celular: _ctrlCelular.text,
+                              celularCodigoTelefono:
+                                  paisCelular?.codigoTelefono ?? '',
                               correo: _ctrlCorreo.text,
-                              campana: _campanaLabel,
-                              evento: _eventoLabel,
                               canalId: _canalSeleccionado?.id,
                               canalNombre: _canalSeleccionado?.nombre ?? '',
                               ruc: _ctrlRuc.text,
@@ -742,11 +745,12 @@ class _SeccionDatosSolicitante extends StatefulWidget {
   final TextEditingController ctrlCargo;
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
+  final List<PaisItem> paises;
+  final PaisItem? paisCelular;
+  final ValueChanged<PaisItem> onPaisCelularChanged;
   final ValueChanged<String>? onTipoDocLabelChanged;
-  final ValueChanged<ComboItem?>? onNacionalidadChanged;
+  final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   final ValueChanged<String>? onSexoChanged;
-  final ValueChanged<String>? onCampanaChanged;
-  final ValueChanged<String>? onEventoChanged;
 
   const _SeccionDatosSolicitante({
     required this.habilitado,
@@ -757,11 +761,12 @@ class _SeccionDatosSolicitante extends StatefulWidget {
     required this.ctrlCargo,
     required this.ctrlCelular,
     required this.ctrlCorreo,
+    required this.paises,
+    required this.paisCelular,
+    required this.onPaisCelularChanged,
     this.onTipoDocLabelChanged,
     this.onNacionalidadChanged,
     this.onSexoChanged,
-    this.onCampanaChanged,
-    this.onEventoChanged,
   });
 
   @override
@@ -772,31 +777,18 @@ class _SeccionDatosSolicitante extends StatefulWidget {
 class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
   String? _tipoDocId;
 
-  // Límite de caracteres y tipo de teclado según tipo de documento
+  // Límite de caracteres y tipo de teclado según tipo de documento —
+  // códigos reales de SYSTABEXTER02 CODTABLA='F01' (catálogo real).
   static const _maxLengthPorTipo = {
-    '01': 8, // DNI
-    '02': 12, // Pasaporte
-    '03': 12, // Carnet de extranjería
-    '04': 11, // RUC como doc de persona
+    '1': 8, // DNI
+    '4': 12, // Carnet de extranjería
+    '6': 11, // RUC
+    '7': 12, // Pasaporte
   };
-  static const _soloDigitosPorTipo = {
-    '01': true,
-    '02': false,
-    '03': false,
-    '04': true,
-  };
+  static const _soloDigitosPorTipo = {'1': true, '4': false, '6': true, '7': false};
 
-  static const _tiposDoc = [
-    '01¦DNI',
-    '02¦Pasaporte',
-    '03¦Carnet de extranjería',
-    '04¦RUC',
-  ];
-  static const _nacionalidades = ['01¦PERUANO/A', '02¦EXTRANJERO/A'];
+  // Sexo no tiene catálogo de backend — se mantiene hardcodeado por ahora.
   static const _sexos = ['M¦Masculino', 'F¦Femenino', 'PD¦Por definir'];
-
-  // Filtro de "Evento" por campaña — se limpia si cambia la campaña.
-  int? _campaniaSeleccionadaId;
 
   @override
   Widget build(BuildContext context) {
@@ -805,14 +797,12 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
     final teclado = soloDigitos ? TextInputType.number : TextInputType.text;
 
     final catalogState = context.watch<CatalogsBloc>().state;
-    final campanias = catalogState is CatalogsLoaded
-        ? catalogState.campanias
-        : const <CampaniaItem>[];
-    final eventos = catalogState is CatalogsLoaded
-        ? catalogState.oportunidades
-              .where((o) => o.idCampania == _campaniaSeleccionadaId)
-              .toList()
-        : const <OportunidadItem>[];
+    final tiposDocumento = catalogState is CatalogsLoaded
+        ? catalogState.tiposDocumento
+        : const <TipoDocumentoItem>[];
+    final nacionalidades = catalogState is CatalogsLoaded
+        ? catalogState.nacionalidades
+        : const <NacionalidadItem>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -841,16 +831,16 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         Row(
           children: [
             Expanded(
-              child: CustomComboSearchField(
+              child: CustomComboField<TipoDocumentoItem>(
                 label: 'Tipo documento *',
-                data: _tiposDoc,
+                data: tiposDocumento,
                 enabled: widget.habilitado,
                 onChanged: (item) {
                   setState(() {
                     _tipoDocId = item?.id;
                     widget.ctrlNumDoc.clear();
                   });
-                  widget.onTipoDocLabelChanged?.call(item?.descripcion ?? '');
+                  widget.onTipoDocLabelChanged?.call(item?.nombre ?? '');
                 },
               ),
             ),
@@ -875,9 +865,9 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
         Row(
           children: [
             Expanded(
-              child: CustomComboSearchField(
+              child: CustomComboField<NacionalidadItem>(
                 label: 'Nacionalidad *',
-                data: _nacionalidades,
+                data: nacionalidades,
                 enabled: widget.habilitado,
                 onChanged: (item) => widget.onNacionalidadChanged?.call(item),
               ),
@@ -949,6 +939,9 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
               child: SolicitudCampoCelular(
                 controller: widget.ctrlCelular,
                 habilitado: widget.habilitado,
+                paises: widget.paises,
+                paisSeleccionado: widget.paisCelular,
+                onPaisChanged: widget.onPaisCelularChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -959,36 +952,6 @@ class _SeccionDatosSolicitanteState extends State<_SeccionDatosSolicitante> {
                 keyboardType: TextInputType.emailAddress,
                 enabled: widget.habilitado,
                 isUpperCase: true,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-
-        // Fila 5: Campaña + Evento — catálogo real vía CatalogsBloc
-        Row(
-          children: [
-            Expanded(
-              child: CustomComboField<CampaniaItem>(
-                label: 'Campaña *',
-                data: campanias,
-                enabled: widget.habilitado,
-                onChanged: (item) {
-                  setState(() => _campaniaSeleccionadaId = item?.id);
-                  widget.onCampanaChanged?.call(item?.nombre ?? '');
-                  widget.onEventoChanged?.call('');
-                },
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: CustomComboField<OportunidadItem>(
-                label: 'Evento *',
-                data: eventos,
-                labelIndex: 2,
-                enabled: widget.habilitado,
-                onChanged: (item) =>
-                    widget.onEventoChanged?.call(item?.nombre ?? ''),
               ),
             ),
           ],
@@ -1082,13 +1045,15 @@ class _ChipsCanales extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizing.radiusSm),
               border: Border.all(
                 color: activo ? AppColors.primary : AppColors.border,
-                width: activo ? 1.5 : 1,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CanalHelper.icon(canal.id, size: AppSizing.iconActionSm),
+                AppSocialUtils.widgetCanal(
+                  canal.iconoApp,
+                  size: AppSizing.iconActionSm,
+                ),
                 const SizedBox(width: AppSpacing.sm2),
                 Text(
                   canal.nombre,

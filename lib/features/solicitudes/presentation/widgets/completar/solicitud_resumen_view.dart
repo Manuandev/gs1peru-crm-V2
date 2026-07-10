@@ -67,6 +67,7 @@ class SolicitudResumenView extends StatelessWidget {
                   const _Separador(),
                   _SeccionFacturacion(
                     datos: formState.facturacion,
+                    tipoPersonaLabel: formState.tipoPersonaLabel,
                     onEditar: () => Navigator.of(context).popUntil(
                       ModalRoute.withName(AppRoutes.fichaFacturacionSolicitud),
                     ),
@@ -377,22 +378,11 @@ class _SeccionSolicitante extends StatelessWidget {
             valor: d?.cargo ?? '—',
           ),
           derecho: _CampoDato(
-            icono: AppIcons.calendar,
-            label: 'Campaña',
-            valor: d?.campana ?? '—',
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _FilaCampos(
-          izquierdo: _CampoDato(
             icono: AppIcons.phone,
             label: 'Celular',
-            valor: d?.celular ?? '—',
-          ),
-          derecho: _CampoDato(
-            icono: AppIcons.listAlt,
-            label: 'Evento',
-            valor: d?.evento ?? '—',
+            valor: d != null && d.celular.isNotEmpty
+                ? '+${d.celularCodigoTelefono} ${d.celular}'
+                : '—',
           ),
         ),
       ],
@@ -560,9 +550,14 @@ class _FilaTabla extends StatelessWidget {
 
 class _SeccionFacturacion extends StatelessWidget {
   final DatosFacturacion? datos;
+  final String tipoPersonaLabel;
   final VoidCallback onEditar;
 
-  const _SeccionFacturacion({required this.onEditar, this.datos});
+  const _SeccionFacturacion({
+    required this.onEditar,
+    required this.tipoPersonaLabel,
+    this.datos,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -580,7 +575,7 @@ class _SeccionFacturacion extends StatelessWidget {
           izquierdo: _CampoDato(
             icono: AppIcons.documento,
             label: 'Tipo de solicitante',
-            valor: d?.tipoPersonaLabel ?? '—',
+            valor: tipoPersonaLabel,
           ),
           derecho: _CampoDato(
             icono: AppIcons.business,

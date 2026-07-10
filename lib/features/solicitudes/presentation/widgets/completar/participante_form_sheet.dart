@@ -1,16 +1,15 @@
 // lib/features/solicitudes/presentation/widgets/completar/participante_form_sheet.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
+import 'package:app_crm/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart';
 
 // ── Constantes de opciones ────────────────────────────────────────────────────
-// Mismas opciones que "Datos del solicitante" (paso 1) — permite reusar el
-// valor guardado tal cual al convertir al solicitante en participante.
+// "Tipo" de participante no tiene catálogo de backend — se mantiene hardcodeado.
 
-const _tiposDoc = ['DNI', 'Pasaporte', 'Carnet de extranjería', 'RUC'];
-const _nacionalidades = ['PERUANO/A', 'EXTRANJERO/A'];
 const _tiposParticipante = ['Pagante', 'Invitado', 'Invitado auspicio', 'Online'];
 
 // ── Función helper para abrir el sheet ───────────────────────────────────────
@@ -50,9 +49,12 @@ class _ParticipanteFormSheet extends StatefulWidget {
 class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   final _formKey = GlobalKey<FormState>();
 
-  late String _tipoDoc;
-  late String _nacionalidad;
+  String _tipoDocLabel = '';
+  String? _tipoDocInicialId;
+  String _nacionalidadLabel = '';
+  String? _nacionalidadInicialId;
   late String _tipoParticipante;
+  PaisItem? _paisSeleccionado;
 
   late final TextEditingController _numDocCtrl;
   late final TextEditingController _nombresCtrl;
@@ -69,9 +71,32 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   void initState() {
     super.initState();
     final p = widget.participante;
-    _tipoDoc = p?.tipoDoc ?? _tiposDoc.first;
-    _nacionalidad = p?.nacionalidad ?? _nacionalidades.first;
     _tipoParticipante = p?.tipoParticipante ?? _tiposParticipante.first;
+    _tipoDocLabel = p?.tipoDoc ?? '';
+    _nacionalidadLabel = p?.nacionalidad ?? '';
+
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is CatalogsLoaded) {
+      _tipoDocInicialId = catalogState.tiposDocumento
+          .where((t) => t.nombre == _tipoDocLabel)
+          .firstOrNull
+          ?.id;
+      _nacionalidadInicialId = catalogState.nacionalidades
+          .where((n) => n.nombre == _nacionalidadLabel)
+          .firstOrNull
+          ?.id;
+      final paises = catalogState.paises;
+      _paisSeleccionado = (p != null && p.celularCodigoTelefono.isNotEmpty)
+          ? paises
+                .where((x) => x.codigoTelefono == p.celularCodigoTelefono)
+                .firstOrNull
+          : null;
+      _paisSeleccionado ??= paises.isEmpty
+          ? null
+          : paises.where((x) => x.codigoTelefono == '51').firstOrNull ??
+                paises.first;
+    }
+
     _numDocCtrl = TextEditingController(text: p?.numDoc ?? '');
     _nombresCtrl = TextEditingController(text: p?.nombres ?? '');
     _apellidoPaternoCtrl = TextEditingController(
@@ -108,15 +133,16 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
 
     final resultado = ParticipanteLocal(
       id: widget.participante?.id ?? 0,
-      tipoDoc: _tipoDoc,
+      tipoDoc: _tipoDocLabel,
       numDoc: _numDocCtrl.text.trim().toUpperCase(),
-      nacionalidad: _nacionalidad,
+      nacionalidad: _nacionalidadLabel,
       nombres: _nombresCtrl.text.trim().toUpperCase(),
       apellidoPaterno: _apellidoPaternoCtrl.text.trim().toUpperCase(),
       apellidoMaterno: _apellidoMaternoCtrl.text.trim().toUpperCase(),
       correo: _correoCtrl.text.trim(),
       cargo: _cargoCtrl.text.trim().toUpperCase(),
       celular: _celularCtrl.text.trim(),
+      celularCodigoTelefono: _paisSeleccionado?.codigoTelefono ?? '',
       tipoParticipante: _tipoParticipante,
       importe: importe,
       esSolicitante: widget.participante?.esSolicitante ?? false,
@@ -129,6 +155,16 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final tiposDocumento = catalogState is CatalogsLoaded
+        ? catalogState.tiposDocumento
+        : const <TipoDocumentoItem>[];
+    final nacionalidades = catalogState is CatalogsLoaded
+        ? catalogState.nacionalidades
+        : const <NacionalidadItem>[];
+    final paises = catalogState is CatalogsLoaded
+        ? catalogState.paises
+        : const <PaisItem>[];
 
     return SafeArea(
       top: false,
@@ -214,16 +250,13 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                       children: [
                         SizedBox(
                           width: 130,
-                          child: CustomComboSearchField(
+                          child: CustomComboField<TipoDocumentoItem>(
                             label: 'Tipo doc.',
-                            data: _tiposDoc,
-                            displayIndex: 0,
-                            initialValue: _tipoDoc,
-                            onChanged: (item) {
-                              if (item != null) {
-                                setState(() => _tipoDoc = item.id);
-                              }
-                            },
+                            data: tiposDocumento,
+                            initialValue: _tipoDocInicialId,
+                            onChanged: (item) => setState(
+                              () => _tipoDocLabel = item?.nombre ?? '',
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -247,16 +280,13 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: CustomComboSearchField(
+                          child: CustomComboField<NacionalidadItem>(
                             label: 'Nacionalidad *',
-                            data: _nacionalidades,
-                            displayIndex: 0,
-                            initialValue: _nacionalidad,
-                            onChanged: (item) {
-                              if (item != null) {
-                                setState(() => _nacionalidad = item.id);
-                              }
-                            },
+                            data: nacionalidades,
+                            initialValue: _nacionalidadInicialId,
+                            onChanged: (item) => setState(
+                              () => _nacionalidadLabel = item?.nombre ?? '',
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -344,10 +374,13 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: CustomTextField(
-                            label: 'Celular *',
+                          child: SolicitudCampoCelular(
                             controller: _celularCtrl,
-                            keyboardType: TextInputType.phone,
+                            habilitado: true,
+                            paises: paises,
+                            paisSeleccionado: _paisSeleccionado,
+                            onPaisChanged: (p) =>
+                                setState(() => _paisSeleccionado = p),
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Requerido'
                                 : null,

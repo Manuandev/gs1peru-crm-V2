@@ -59,6 +59,7 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       correo: datos.correo,
       cargo: datos.cargo,
       celular: datos.celular,
+      celularCodigoTelefono: datos.celularCodigoTelefono,
       tipoParticipante: 'Pagante',
       importe: 0,
       esSolicitante: true,

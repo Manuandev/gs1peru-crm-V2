@@ -3,7 +3,6 @@
 part of 'solicitud_form_cubit.dart';
 
 class DatosSolicitante {
-  final String tipoPersona;
   final String tipoDocLabel;
   final String numDoc;
   final String nacionalidad;
@@ -12,9 +11,8 @@ class DatosSolicitante {
   final String apellidoMaterno;
   final String cargo;
   final String celular;
+  final String celularCodigoTelefono;
   final String correo;
-  final String campana;
-  final String evento;
   final int? canalId;
   final String canalNombre;
   final String ruc;
@@ -23,7 +21,6 @@ class DatosSolicitante {
   final bool facturarAlSolicitante;
 
   const DatosSolicitante({
-    required this.tipoPersona,
     required this.tipoDocLabel,
     required this.numDoc,
     required this.nacionalidad,
@@ -32,9 +29,8 @@ class DatosSolicitante {
     required this.apellidoMaterno,
     required this.cargo,
     required this.celular,
+    this.celularCodigoTelefono = '',
     required this.correo,
-    required this.campana,
-    required this.evento,
     this.canalId,
     required this.canalNombre,
     required this.ruc,
@@ -54,7 +50,6 @@ class DatosSolicitante {
 }
 
 class DatosFacturacion {
-  final String tipoPersona;
   final String comprobanteId;
   final String comprobante;
   final String paisId;
@@ -67,6 +62,7 @@ class DatosFacturacion {
   final String apellidoPaterno;
   final String apellidoMaterno;
   final String celular;
+  final String celularCodigoTelefono;
   final String correo;
   final String direccion;
   final String actividadEconomica;
@@ -74,7 +70,6 @@ class DatosFacturacion {
   final String observaciones;
 
   const DatosFacturacion({
-    required this.tipoPersona,
     required this.comprobanteId,
     required this.comprobante,
     required this.paisId,
@@ -87,27 +82,37 @@ class DatosFacturacion {
     required this.apellidoPaterno,
     required this.apellidoMaterno,
     required this.celular,
+    this.celularCodigoTelefono = '',
     required this.correo,
     required this.direccion,
     required this.actividadEconomica,
     required this.nit,
     required this.observaciones,
   });
-
-  String get tipoPersonaLabel =>
-      tipoPersona == 'juridica' ? 'Jurídica' : 'Natural';
 }
 
 class SolicitudFormState {
+  /// 'juridica' | 'natural' — compartido por los pasos 1 (solicitante) y 3
+  /// (facturación): ambos representan el mismo dato, no dos independientes.
+  final String tipoPersona;
   final DatosSolicitante? solicitante;
   final DatosFacturacion? facturacion;
 
-  const SolicitudFormState({this.solicitante, this.facturacion});
+  const SolicitudFormState({
+    this.tipoPersona = 'juridica',
+    this.solicitante,
+    this.facturacion,
+  });
+
+  String get tipoPersonaLabel =>
+      tipoPersona == 'juridica' ? 'Jurídica' : 'Natural';
 
   SolicitudFormState copyWith({
+    String? tipoPersona,
     DatosSolicitante? solicitante,
     DatosFacturacion? facturacion,
   }) => SolicitudFormState(
+    tipoPersona: tipoPersona ?? this.tipoPersona,
     solicitante: solicitante ?? this.solicitante,
     facturacion: facturacion ?? this.facturacion,
   );

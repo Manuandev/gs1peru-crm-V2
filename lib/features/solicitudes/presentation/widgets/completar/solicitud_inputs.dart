@@ -121,26 +121,53 @@ class SolicitudToggleTipoPersona extends StatelessWidget {
   }
 }
 
-// ── SolicitudCampoCelular (prefijo de país + input) ───────────────────────────
+// ── SolicitudCampoCelular (código telefónico por país, vía catálogo + input) ──
+//
+// El código telefónico viene de PaisItem.codigoTelefono (catálogo real,
+// CatalogsBloc.paises). En el campo cerrado solo se muestra el código
+// (ej. "+51") — el nombre del país solo aparece en la lista del selector,
+// para poder buscarlo.
 
 class SolicitudCampoCelular extends StatelessWidget {
   final TextEditingController controller;
   final bool habilitado;
+  final List<PaisItem> paises;
+  final PaisItem? paisSeleccionado;
+  final ValueChanged<PaisItem> onPaisChanged;
+  final String? Function(String?)? validator;
 
   const SolicitudCampoCelular({
     super.key,
     required this.controller,
     required this.habilitado,
+    required this.paises,
+    required this.paisSeleccionado,
+    required this.onPaisChanged,
+    this.validator,
   });
+
+  Future<void> _abrirSelector(BuildContext context) async {
+    if (paises.isEmpty) return;
+    final seleccionado = await showModalBottomSheet<PaisItem>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SelectorPaisTelefono(paises: paises),
+    );
+    if (seleccionado != null) onPaisChanged(seleccionado);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final codigo = paisSeleccionado?.codigoTelefono ?? '';
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GestureDetector(
-            onTap: habilitado ? () {} : null,
+            onTap: habilitado ? () => _abrirSelector(context) : null,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               decoration: BoxDecoration(
@@ -154,12 +181,7 @@ class SolicitudCampoCelular extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '🇵🇪',
-                    style: TextStyle(fontSize: AppTextStyles.sizeMd),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '+51',
+                    codigo.isEmpty ? '+ --' : '+$codigo',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: AppTextStyles.weightMedium,
@@ -184,9 +206,107 @@ class SolicitudCampoCelular extends StatelessWidget {
               enabled: habilitado,
               maxLength: 9,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              validator: validator,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Selector de país (código telefónico) — bottom sheet con búsqueda ─────────
+
+class _SelectorPaisTelefono extends StatefulWidget {
+  final List<PaisItem> paises;
+
+  const _SelectorPaisTelefono({required this.paises});
+
+  @override
+  State<_SelectorPaisTelefono> createState() => _SelectorPaisTelefonoState();
+}
+
+class _SelectorPaisTelefonoState extends State<_SelectorPaisTelefono> {
+  late List<PaisItem> _filtrados;
+
+  @override
+  void initState() {
+    super.initState();
+    _filtrados = widget.paises;
+  }
+
+  void _filtrar(String query) {
+    final q = query.trim().toLowerCase();
+    setState(() {
+      _filtrados = q.isEmpty
+          ? widget.paises
+          : widget.paises
+                .where(
+                  (p) =>
+                      p.nombre.toLowerCase().contains(q) ||
+                      p.codigoTelefono.contains(q),
+                )
+                .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppSizing.radiusXl),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: CustomTextField(
+                label: 'Buscar país',
+                prefixIcon: const Icon(AppIcons.search),
+                onChanged: _filtrar,
+              ),
+            ),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _filtrados.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (_, i) {
+                  final pais = _filtrados[i];
+                  return ListTile(
+                    title: Text(pais.nombre),
+                    trailing: Text(
+                      '+${pais.codigoTelefono}',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: AppTextStyles.weightSemiBold,
+                      ),
+                    ),
+                    onTap: () => Navigator.of(context).pop(pais),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

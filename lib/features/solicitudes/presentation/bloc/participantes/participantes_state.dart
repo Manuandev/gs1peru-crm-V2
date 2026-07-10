@@ -13,6 +13,7 @@ class ParticipanteLocal {
   final String correo;
   final String cargo;
   final String celular;
+  final String celularCodigoTelefono;
   final String tipoParticipante;
   final double importe;
 
@@ -31,6 +32,7 @@ class ParticipanteLocal {
     required this.correo,
     required this.cargo,
     required this.celular,
+    this.celularCodigoTelefono = '',
     required this.tipoParticipante,
     required this.importe,
     this.esSolicitante = false,
@@ -53,6 +55,7 @@ class ParticipanteLocal {
     String? correo,
     String? cargo,
     String? celular,
+    String? celularCodigoTelefono,
     String? tipoParticipante,
     double? importe,
     bool? esSolicitante,
@@ -68,6 +71,7 @@ class ParticipanteLocal {
       correo: correo ?? this.correo,
       cargo: cargo ?? this.cargo,
       celular: celular ?? this.celular,
+      celularCodigoTelefono: celularCodigoTelefono ?? this.celularCodigoTelefono,
       tipoParticipante: tipoParticipante ?? this.tipoParticipante,
       importe: importe ?? this.importe,
       esSolicitante: esSolicitante ?? this.esSolicitante,

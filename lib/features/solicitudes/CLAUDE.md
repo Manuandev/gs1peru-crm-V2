@@ -13,12 +13,18 @@ Todo el feature funciona hoy con data en memoria (sin SP real conectado):
   borrador" y "Generar solicitud" (paso Resumen) no están conectados a ningún caso de uso.
 - "Carga masiva" (Excel) solo valida la extensión del archivo seleccionado — no procesa ni
   sube el archivo.
+- **Campaña y Evento ya NO forman parte del paso 1** — se removieron por completo (campos,
+  combos, validación y del modelo `DatosSolicitante`) porque este wizard ya no los usa.
 - Combos con catálogo real ya conectado a `CatalogsBloc` (no hardcodear de nuevo si se
-  tocan estos campos): **Canal** (chips single-select en paso 1, `CanalItem`), **Campaña**
-  y **Evento** (paso 1, `CampaniaItem`/`OportunidadItem` — Evento se filtra por
-  `idCampania` de la Campaña seleccionada), **Moneda** (paso 3, `MonedaItem`). Combos sin
+  tocan estos campos): **Canal** (chips single-select en paso 1, `CanalItem`), **Moneda**
+  (paso 3, `MonedaItem`), **Tipo documento** (pasos 1/3 y formulario de participante,
+  `TipoDocumentoItem` — `id` es **String**, no parsear con `toInt`), **Nacionalidad**
+  (pasos 1/3 y formulario de participante, `NacionalidadItem` — gentilicio, no confundir
+  con `PaisItem`), **código telefónico del celular** (todos los campos de celular del
+  wizard, `PaisItem.codigoTelefono` — ver `SolicitudCampoCelular` abajo). Combos sin
   catálogo de backend (se mantienen como lista fija local porque no existe otro origen):
-  Tipo documento, Nacionalidad, Sexo, Comprobante, País, Tipo de participante.
+  Sexo (paso 1), Comprobante y País (paso 3), Tipo de participante (formulario de
+  participante).
 
 ## Pantallas
 - `SolicitudListPage` → lista de solicitudes con chips de filtro (Todas / Asesores /
@@ -65,8 +71,8 @@ Cada paso deshabilita su botón `CustomPrimaryButton` de "Continuar" (pasando
 `onPressed: null`) hasta que los campos obligatorios (marcados con `*` en la UI) estén
 completos:
 - **Paso 1** (`_formCompleto` en `solicitud_completar_view.dart`) — tipo/número documento,
-  nacionalidad, sexo, nombres, apellido paterno, cargo, celular, correo, campaña, evento.
-  Opcionales: apellido materno, RUC/razón social, canal.
+  nacionalidad, sexo, nombres, apellido paterno, cargo, celular, correo. Opcionales:
+  apellido materno, RUC/razón social, canal.
 - **Paso 2** — basta con tener al menos 1 participante en la lista.
 - **Paso 3** (`_formCompleto` en `solicitud_facturacion_view.dart`) — comprobante, país,
   moneda, tipo/número documento, nacionalidad, nombres/razón social, apellido paterno,
@@ -102,20 +108,30 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   core — `CustomTextField`, `CustomComboField<T extends Comboable>` (catálogos reales),
   `CustomComboSearchField` (listas fijas locales tipo `"id¦desc"`), `CustomPrimaryButton`,
   `CustomSecondaryButton`, `CustomOutlinedButton`. No crear wrappers `SolicitudXxx` nuevos
-  para estos — si falta una variante, extender el widget core correspondiente
+  para estos — si falta una variante, extender el widget core correspondiente.
+  `SolicitudCampoCelular` recibe `paises: List<PaisItem>` + `paisSeleccionado` +
+  `onPaisChanged` (y un `validator` opcional) — el recuadro cerrado solo muestra el código
+  (`+51`), el nombre del país solo aparece en el selector (`_SelectorPaisTelefono`, bottom
+  sheet con buscador) para poder ubicarlo. Se usa en las 3 pantallas con campo de celular:
+  paso 1 (solicitante), paso 3 (facturación) y el formulario de participante — default
+  Perú (`codigoTelefono == '51'`) cuando el catálogo ya cargó
 
 ## Modelos relevantes
 - `Solicitud` (domain/entities) → entidad de la lista/detalle
 - `DatosSolicitante` / `DatosFacturacion` (bloc/form/solicitud_form_state.dart) → snapshots
   inmutables de los pasos 1 y 3, capturados al presionar "Continuar". `DatosSolicitante`
-  incluye `nacionalidad` (descripción del combo) y `canalId`/`canalNombre` (del `CanalItem`
-  seleccionado en los chips — reemplazó al antiguo `canales: List<String>` multi-select)
+  incluye `nacionalidad` (descripción del combo), `canalId`/`canalNombre` (del `CanalItem`
+  seleccionado en los chips — reemplazó al antiguo `canales: List<String>` multi-select) y
+  `celularCodigoTelefono` (código telefónico del `PaisItem` elegido, ej. `'51'`). **Ya no
+  tiene** `campana`/`evento` — se removieron del flujo. `DatosFacturacion` también tiene su
+  propio `celularCodigoTelefono` (independiente del de `DatosSolicitante`)
 - `ParticipanteLocal` (bloc/participantes/participantes_state.dart) → participante en
   memoria; `id` autogenerado por el cubit (`_nextId`), no viene del backend. Campos:
   `tipoDoc`, `numDoc`, `nacionalidad`, `nombres`/`apellidoPaterno`/`apellidoMaterno`
-  (`nombreCompleto` los junta), `correo`, `cargo`, `celular`, `tipoParticipante` (Pagante /
-  Invitado / Invitado auspicio / Online), `importe` (sin moneda), `esSolicitante` (marca el
-  registro autogenerado por el switch "El solicitante será participante" — ver abajo)
+  (`nombreCompleto` los junta), `correo`, `cargo`, `celular`, `celularCodigoTelefono`
+  (código telefónico del `PaisItem` elegido), `tipoParticipante` (Pagante / Invitado /
+  Invitado auspicio / Online), `importe` (sin moneda), `esSolicitante` (marca el registro
+  autogenerado por el switch "El solicitante será participante" — ver abajo)
 
 ## SPs que consume
 - Ninguno todavía — ver "Estado general" arriba. `SolicitudRemoteDatasource` es 100% mock.

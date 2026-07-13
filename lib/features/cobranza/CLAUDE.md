@@ -13,16 +13,34 @@ Gestiona el flujo completo de facturación: lista de cobranzas, detalle, factura
 - `CobranzaListBloc` (lista/) → carga y filtra la lista; conteos por filtro; conteos por asesor
   (`conteosPorAsesor`, calculado en el cliente sobre `_allCobranzas`) para alimentar el picker
 - `CobranzaDetalleBloc` (detalle/) → carga detalle + historial de una cobranza
-- `CobranzaFacturaBloc` (factura/) → maneja el formulario de facturación; `FacturarPressed` y `GuardarBorradorPressed`
-- `CobranzaPlanBloc` (plan/) → configura cuotas, cronograma y validación de plan de crédito
+- `CobranzaFacturaBloc` (factura/) → maneja el formulario de facturación; `PlanValidarPressed`
+  (crédito, navega al plan) y `FacturarPressed` (contado y crédito, finaliza). Ya no existe
+  "Guardar borrador" (`GuardarBorradorPressed`/`GuardarBorradorUseCase` se eliminaron por completo
+  — el usuario pidió quitar esa función)
+- `CobranzaPlanBloc` (plan/) → configura cuotas, cronograma y validación de plan de crédito.
+  `NumCuotasDeseadasChanged` solo actualiza el número deseado; `VistaPreviaPressed` regenera
+  **todo** el cronograma (N cuotas, monto = importe comprobante ÷ N, días por defecto `7*i`);
+  `CuotaSeleccionada` (tap en una fila) carga esa cuota en el formulario; `DiasChanged`/
+  `FechaCuotaChanged` editan el formulario; `ModificarCuotaPressed` aplica esos cambios **solo**
+  a la cuota seleccionada (no recalcula las demás); `LimpiarPressed` vacía todo el cronograma
+  (no solo el formulario)
 
 ## Widgets principales
-- `CobranzaFacturaView` (factura/) → vista principal del formulario de factura con campos comunes
+- `CobranzaFacturaView` (factura/) → vista principal del formulario de factura con campos
+  comunes. Footer: **solo** "Cancelar" (pop) y "Facturar" (siempre el mismo label, contado y
+  crédito) — ya no hay "Guardar borrador"/"Continuar"/"Facturar ahora"
 - `CobranzaFacturaHeader` (factura/) → header fijo con nombre, curso, monto y chip de condición
-- `CobranzaCamposExtra` (factura/) → campos que cambian según condición de pago (crédito/contado)
-- `CobranzaResumenCard` (factura/) → resumen calculado del cobro (crédito o contado)
-- `CobranzaDetalleStepper` (detalle/) → stepper con estados: PD → F → PP → CA
-- `CobranzaDetalleAcciones` (detalle/) → botones de acción según estado
+- `CobranzaCamposExtra` (factura/) → campos que cambian según condición de pago (crédito/contado).
+  En crédito, "Fecha de vencimiento" siempre nace con la fecha de hoy (editable vía date picker)
+  y "Validar plan de crédito" navega a `CobranzaPlanPage` (ya no es un simple flag local)
+- `CobranzaResumenCard` (factura/) → resumen calculado del cobro (crédito o contado).
+  `detraccion` ya es real (`montoTotal * 0.12`, antes hardcodeado a 0)
+- `CobranzaDetalleStepper` (detalle/) → stepper con estados (por `idEstado` int): 0 → 2 → 5 → 3.
+  Círculos y labels van en filas separadas (no en la misma Column por paso) para que un label de
+  2 líneas ("Pend.\ndocumento") no desalinee los círculos de los demás pasos
+- `CobranzaDetalleAcciones` (detalle/) → WhatsApp/Llamar usan `detalle.celular` (el de
+  facturación) vía `LauncherUtils.abrirWhatsApp`/`abrirTelefono`; "Adjuntar voucher"/"Facturar"
+  siguen sin wire (`onTap: () {}`)
 - `CobranzaSummaryCards` (lista/) → 4 tarjetas resumen (Pend. documento / Facturar / Pend. pago /
   Cancelado) con conteos de `CobranzaListBloc`; mismo tamaño en las 4 (`IntrinsicHeight` +
   `CrossAxisAlignment.stretch`, igual que `LeadListStatsRow`)
@@ -37,36 +55,58 @@ Gestiona el flujo completo de facturación: lista de cobranzas, detalle, factura
 
 ## SPs que consume
 - `[CRM].[CSV_COBRANZAS_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) → lista de
-  cobranzas (`CobranzaModel.fromRawString`, 20 campos posicionales — ver mapeo abajo).
+  cobranzas (`CobranzaModel.fromRawString`, 21 campos posicionales — ver mapeo abajo).
   **Ojo:** este SP solo tiene rama `@L_TASK = 'LS'` y esa rama ignora cualquier `numSol` —
-  siempre trae el `TOP 100` completo. `CobranzaDetalleBloc`/`getDetalleCobranza()` todavía no
-  tiene un SP real conectado (usa el mismo endpoint con un 3er parámetro `numSol` que este SP
-  no procesa) — pendiente de que backend defina cómo se resuelve el detalle de un solo registro
-- `[CRM].[SP_CobranzaDet]` → detalle + historial de una cobranza (pendiente, ver nota arriba)
+  siempre trae el `TOP 100` completo.
+- `[CRM].[CSV_COBRANZAS_LST_APP]` (task `'DT'`, body `numSol¯DT`, **mismo endpoint**
+  `urlCobranzasLst` que `'LS'`) → `CobranzaRemoteDatasource.getDetalleCobranza()`
+  (`CobranzaDetalleModel.parse`). Versión **recortada** — solo trae lo que usa Flutter hoy (sin
+  datos de solicitante/facturación completos ni participantes, a diferencia de la plantilla de
+  detalle de Solicitud de la que salió). Joins: `EVT.T_TECMSOLINSCRIPCION01` + `_FACTURACION`
+  (celular/correo/moneda/comprobante/condición vienen de facturación, no del solicitante),
+  oportunidad/ejecutivo/estado igual que `'LS'` (`CRM.T_LEAD_TECMSOLINSCRIPCION01`→
+  `CRM.T_LEAD`→`CRM.T_OPORTUNIDAD`, `DBO.SYSMUSER01`, `DBO.[edu.TIP_ESTADO_GES]`), más un
+  `OUTER APPLY` de historial (`CRM.T_LEAD_SEGUIMIENTO` + `CRM.T_LEAD_ACTIVIDAD`, correlacionado
+  por `LD.ID_LEAD`). Formato de respuesta: 3 secciones separadas por `sepListas` — `[0]` campos
+  principales (`sepCampos`, 17 posiciones) · `[1]` archivos · `[2]` historial.
 - `[CRM].[SP_FacturarContado]` → facturación al contado
-- `[CRM].[SP_GuardarBorrador]` → guardar borrador de factura
 - `[CRM].[SP_GuardarPlanCredito]` → guardar plan de crédito
 
-### Mapeo de campos — `CobranzaModel.fromRawString` (`CSV_COBRANZAS_LST_APP`)
+### Mapeo de campos — `CobranzaModel.fromRawString` (`CSV_COBRANZAS_LST_APP`, task `'LS'`)
 Campos posicionales separados por `¦` (0-indexados): `0` numSol · `1` nombres · `2` apePaterno ·
 `3` apeMaterno · `4` nomEmpresa · `5` cargo · `6` celular (→ `telefono`) · `7` correo ·
 `8` codTipoRegistro crudo (`J`/`N`, → `codTipoPersona`) · `9` label (`Natural`/`Juridica`, →
 `tipoPersona`) · `10` fchCreacion (→ `fecha`) · `11` impTotal (→ `montoTotal`) · `12`
 idCondicion (`C`/`CR`) · `13` condicion (label) · `14` nomUser (→ `ejecutivo`) · `15`
 idOportunidad (→ `idEvento`) · `16` nombre de la oportunidad (→ `evento`) · `17` **idEstadoGes
-crudo** · `18` descripción del estado (→ `estado`, se usa tal cual del backend) · `19`
-`ibValidado` (bit, siempre `1` porque el SP ya filtra `IB_VALIDADO != 0`) · `20` `idUsuarioEjec`
-(→ `asignadoA`). Este SP **no** trae `fechaVencimiento`/`diasVencimiento` — quedan `null` en la
-lista (solo detalle los tendría, cuando exista ese SP).
+crudo** (→ `idEstado`, se guarda tal cual, sin traducir a código corto — ver nota abajo) · `18`
+descripción del estado (→ `estado`) · `19` `ibValidado` (bit, siempre `1` porque el SP ya filtra
+`IB_VALIDADO != 0`) · `20` `idUsuarioEjec` (→ `asignadoA`). Este SP **no** trae
+`fechaVencimiento`/`diasVencimiento` — quedan `null` en la lista (sí vienen en el detalle si el
+comprobante es a crédito, una vez conectado el plan).
 
-### Mapeo de estado — `ID_ESTADO_GES` → código interno
-`DBO.[edu.TIP_ESTADO_GES]` (parte [6] de `lstListas`, `EstadoGestionItem` en core) trae:
-`0`=Pend. de Documento · `1`=FreePass · `2`=Facturar · `3`=Cancelado · `4`=Anulado ·
-`5`=Pend.factura. Los 6 se traducen con una tabla fija en `CobranzaModel._mapaIdEstado`
-(`0→PD 1→FP 2→F 3→CA 4→AN 5→PP`), **no** consultando el catálogo en tiempo de ejecución. Solo
-`PD/F/PP/CA` son parte del flujo de 4 etapas del stepper/chips y de `CobranzaSummaryCards`;
-`FP` (FreePass) y `AN` (Anulado) no tienen tarjeta/bucket propio hoy — una cobranza con esos
-códigos no cae en ninguna de las 4 tarjetas pero sí aparece en la lista sin filtro activo.
+### Mapeo de campos — `CobranzaDetalleModel.parse` (`CSV_COBRANZAS_LST_APP`, task `'DT'`)
+Sección `[0]` (`sepCampos`, 0-indexada, 17 campos): `0` numSol · `1/2/3` nombres/apePaterno/
+apeMaterno · `4` celular de **facturación** (no del solicitante) · `5` correo de facturación ·
+`6` moneda · `7` tipo de comprobante elegido (Boleta/Factura) · `8/9` idCondicion/condicion
+(CASE sobre `TC.CONDICION_PAGO`) · `10` montoTotal (`DC_IMPORTE_TOTAL`) · `11/12` idEstadoGes
+crudo/descripción · `13` ejecutivo (`NOMUSER`) · `14/15` idOportunidad/oportunidad · `16` fecha
+de solicitud (`FC_USUARIO_C`). Sección `[1]` (archivos, `sepRegistros`):
+`TIPO¦ARCHIVO_ID¦NOMBRE¦EXT` → `ArchivoCobranzaModel`. Sección `[2]` (historial, `sepRegistros`):
+`idLead¦LS.DESCRIPCION¦LA.ORIGEN¦LA.NOMBRE¦LA.DESCRIPCION¦fecha` → `HistorialCobranzaModel`
+(usa `LS.DESCRIPCION` como `descripcion`, con `LA.DESCRIPCION` de respaldo si el seguimiento no
+trae texto). Si más adelante hace falta algún dato de solicitante/facturación/participantes que
+no está aquí (documento, RUC, dirección, canal...), agregarlo a este mismo `SELECT` — no crear
+un task nuevo.
+
+### Estado — `ID_ESTADO_GES` (`idEstado`, `int`, sin traducir)
+`DBO.[edu.TIP_ESTADO_GES]`: `0`=Pend. de Documento · `1`=FreePass · `2`=Facturar ·
+`3`=Cancelado · `4`=Anulado · `5`=Pend.factura. **`idEstado` se guarda tal cual (int crudo,
+0-5)** en `Cobranza`/`CobranzaDetalle` — no hay tabla de traducción a código corto ('PD'/'F'/...);
+todo el código (stepper, badges, tarjetas, filtros de lista) compara directamente contra estos
+6 números. Solo `0/2/5/3` son parte del flujo de 4 etapas (stepper/`CobranzaSummaryCards`/chips
+de lista); `1` (FreePass) y `4` (Anulado) no tienen tarjeta/bucket propio hoy — caen al color/
+label por defecto pero sí aparecen en la lista sin filtro de tarjeta activo.
 
 ## Dependencias externas
 - `CobranzaRepository` (RepositoryProvider global)
@@ -77,10 +117,53 @@ códigos no cae en ninguna de las 4 tarjetas pero sí aparece en la lista sin fi
   cargado una sola vez al iniciar sesión
 
 ## Notas importantes
-- `idEstado` en `CobranzaDetalle` es `int`. Los códigos de estado en `CobranzaDetalleStepper` son String: `'PD'`, `'F'`, `'PP'`, `'CA'` → usar campo `estado` (String) para comparaciones de texto, no `idEstado`
+- `idEstado` es `int` de punta a punta (`Cobranza`, `CobranzaDetalle`, `CobranzaListBloc`
+  — `Set<int> estadosSeleccionados`/`Map<int,int> conteosPorEstado`/`CobranzaEstadoToggled(int)`,
+  `CobranzaSummaryCards` — `idEstado` de cada tarjeta es `int`). No comparar contra strings tipo
+  `'PD'`/`'F'` en ningún lado nuevo — usar los números crudos (ver sección "Estado" arriba)
+- `CobranzaDetalle.correo`/`celular` vienen de la **facturación** (`TC.CORREO_ENVIO`/
+  `TC.CELULAR`), no del solicitante — y ya no son nullable (el join `TC` es `INNER`)
+- `CobranzaDetalle.observacion` no existe — el backend no la persiste (confirmado con negocio),
+  no mostrarla hasta que exista una columna real
 - La carpeta de widgets para facturación es `widgets/factura/` (no `fractura/`)
 - `CobranzaCamposExtra` usa `esArriba` para controlar qué campos aparecen arriba/abajo del formulario según la condición
-- El plan de crédito requiere validar fecha de vencimiento antes de poder facturar (`planValidado`)
+- **Moneda del plan de crédito**: `TC.MONEDA` guarda el **id** (varchar) de `MonedaItem`, no el
+  símbolo — viaja como ese id de punta a punta (`CobranzaDetalle.moneda` →
+  `goToFacturarCobranza(moneda: ...)` → `CobranzaFacturaState.moneda` →
+  `goToPlanCredito(moneda: ...)` → `CobranzaPlanState.moneda`) y se resuelve a símbolo recién
+  al pintarlo, con `resolverSimboloMoneda(context, idMoneda)` (`presentation/utils/
+  resolver_moneda.dart`) contra `CatalogsBloc.monedas` (parte [7] de `lstListas`). Si el
+  catálogo no cargó o el id no matchea, devuelve el id crudo como fallback. Se muestra **una
+  sola vez** en `CobranzaPlanResumenCard` y en el footer del plan — no hay columna de moneda
+  por cuota en el cronograma. Mismo resolver se usa en "Datos clave" del detalle
+- **Regla de negocio del cronograma**: `CobranzaPlanBloc._onModificarCuota` no deja que una
+  cuota venza antes que la cuota anterior (compara `formFecha` contra `numeroCuota - 1`) — no
+  valida contra la cuota siguiente, solo hacia atrás, porque es lo único que pidió el usuario
+- `PlanValidarPressed` y `CuotaSeleccionada`/`ModificarCuotaPressed` emiten su status y lo
+  resetean a `idle` en el mismo handler (dos `emit` seguidos) — si el status se quedara fijo
+  (`continuarPlan`/`error`), `listenWhen` (que compara contra el status previo) no volvería a
+  notificar si el usuario repite la misma acción dos veces seguidas
+- **Guardar el plan de crédito es un paso extra antes de facturar, no el final del flujo** —
+  `context.goToPlanCredito(...)` devuelve `Future<String?>` (la fecha de vencimiento más alta
+  entre las cuotas, `CobranzaPlanState.fechaMasAlta`, o `null` si el usuario volvió con la
+  flecha sin guardar). Al guardar, `CobranzaPlanPage` hace `context.goBack(state.fechaMasAlta)`
+  — **no** `context.goToCobranza()` (eso limpiaría el stack y no volvería a Facturar).
+  `CobranzaFacturaPage` espera ese resultado (`listener` async) y, si no es null, dispara
+  `PlanGuardado(fecha)` — **recién ahí** `CobranzaFacturaBloc` marca `planValidado = true` y
+  actualiza `fechaVencimiento`. `PlanValidarPressed` (el botón "Validar") **ya no** marca
+  `planValidado` — solo navega; si el usuario entra al plan y vuelve sin guardar, el badge
+  "Plan de crédito validado" no debe aparecer
+- **Nunca usar `DateFormatter.parseDate` (core) sobre fechas del plan de crédito** — solo
+  entiende ISO o formato SQL Server, no `'dd/MM/yyyy'` (que es justo lo que produce
+  `AppDateFormat.shortDate`, usado en todo `fechaVencimiento`). Da `null` en silencio y los
+  cálculos de días quedan siempre en 0. Usar `parseFechaCorta`/`diasDesdeHoy`
+  (`presentation/utils/fecha_corta_utils.dart`) en su lugar — ya está aplicado en el bloc del
+  plan, el cronograma, `CobranzaPlanState.fechaMasAlta` y el date picker de `CobranzaCamposExtra`
+- **Todos los inputs del plan de crédito (editables o de solo lectura) usan `CustomTextField`**
+  (los de solo lectura con `enabled: false` y un `TextEditingController` armado inline) — nunca
+  un `Container` a mano intentando igualar la altura/estilo del `CustomTextField` real; se
+  desalinean visualmente porque `CustomTextField` es `isDense` con padding compacto propio, no
+  el alto estándar `AppSizing.inputHeight`
 - Separadores del backend: `AppConstants.sepListas` (`¯`), `AppConstants.sepCampos` (`¦`), `AppConstants.sepRegistros` (`¬`)
 - Chip "Asesores" (antes "Mis casos") solo lo ve el moderador. Nunca filtra directo — `CobranzaListPortrait`
   intercepta su tap y abre `CobranzaAsesorPickerModal`; filtra por `asignadoA == codUser` del asesor

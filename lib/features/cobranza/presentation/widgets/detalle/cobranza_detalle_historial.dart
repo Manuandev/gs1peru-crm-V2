@@ -34,14 +34,17 @@ class CobranzaDetalleHistorial extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          ...List.generate(historial.length, (i) {
-            final entrada = historial[i];
-            final esUltima = i == historial.length - 1;
-            return _EntradaHistorial(
-              entrada: entrada,
-              esUltima: esUltima,
-            );
-          }),
+          if (historial.isEmpty)
+            const AppEmptyView(message: 'No tiene historial registrado')
+          else
+            ...List.generate(historial.length, (i) {
+              final entrada = historial[i];
+              final esUltima = i == historial.length - 1;
+              return _EntradaHistorial(
+                entrada: entrada,
+                esUltima: esUltima,
+              );
+            }),
         ],
       ),
     );
@@ -56,8 +59,8 @@ class _EntradaHistorial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _colorTipo(entrada.idTipo);
-    final icono = _iconoTipo(entrada.idTipo);
+    const color = AppColors.primary;
+    const icono = AppIcons.fileGeneric;
 
     return IntrinsicHeight(
       child: Row(
@@ -108,12 +111,13 @@ class _EntradaHistorial extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Text(
-                        entrada.ejecutivo,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
+                      if (entrada.origen.isNotEmpty)
+                        Text(
+                          entrada.origen,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xxs),
@@ -125,7 +129,8 @@ class _EntradaHistorial extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    '${entrada.fecha} • ${entrada.hora}',
+                    '${entrada.fecha.formatDate(AppDateFormat.shortDate)} • '
+                    '${entrada.fecha.formatDate(AppDateFormat.hourMinute)}',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textDisabled,
                     ),
@@ -137,29 +142,5 @@ class _EntradaHistorial extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Color _colorTipo(String idTipo) {
-    switch (idTipo) {
-      case 'estado':
-        return AppColors.warning;
-      case 'pago':
-        return AppColors.success;
-      default:
-        return AppColors.primary;
-    }
-  }
-
-  IconData _iconoTipo(String idTipo) {
-    switch (idTipo) {
-      case 'estado':
-        return AppIcons.fileOutlined;
-      case 'recordatorio':
-        return AppIcons.email;
-      case 'pago':
-        return AppIcons.moneda;
-      default:
-        return AppIcons.fileGeneric;
-    }
   }
 }

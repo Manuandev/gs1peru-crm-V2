@@ -6,7 +6,6 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaFacturaBloc
     extends Bloc<CobranzaFacturaEvent, CobranzaFacturaState> {
-  final GuardarBorradorUseCase _guardarBorrador;
   final FacturarContadoUseCase _facturarContado;
 
   CobranzaFacturaBloc({
@@ -14,20 +13,21 @@ class CobranzaFacturaBloc
     required String nombre,
     required String oportunidad,
     required double montoTotal,
+    required String moneda,
     required String idCondicion,
     required String condicion,
-    required GuardarBorradorUseCase guardarBorradorUseCase,
     required FacturarContadoUseCase facturarContadoUseCase,
-  })  : _guardarBorrador = guardarBorradorUseCase,
-        _facturarContado = facturarContadoUseCase,
+  })  : _facturarContado = facturarContadoUseCase,
         super(
           CobranzaFacturaState(
             idCobranza: idCobranza,
             nombre: nombre,
             oportunidad: oportunidad,
             montoTotal: montoTotal,
+            moneda: moneda,
             idCondicion: idCondicion,
             condicion: condicion,
+            fechaVencimiento: idCondicion == 'CR' ? _hoy() : '',
           ),
         ) {
     on<CondicionChanged>(_onCondicionChanged);
@@ -36,19 +36,22 @@ class CobranzaFacturaBloc
     on<DescripcionChanged>(_onDescripcionChanged);
     on<HojaAceptacionChanged>(_onHojaChanged);
     on<PlanValidarPressed>(_onPlanValidar);
-    on<GuardarBorradorPressed>(_onGuardarBorradorPressed);
+    on<PlanGuardado>(_onPlanGuardado);
     on<FacturarPressed>(_onFacturarPressed);
   }
+
+  static String _hoy() => DateTime.now().format(AppDateFormat.shortDate);
 
   void _onCondicionChanged(
     CondicionChanged event,
     Emitter<CobranzaFacturaState> emit,
   ) {
+    final esCredito = event.idCondicion == 'CR';
     emit(state.copyWith(
       idCondicion: event.idCondicion,
       condicion: event.condicion,
       planValidado: false,
-      fechaVencimiento: '',
+      fechaVencimiento: esCredito ? _hoy() : '',
       status: CobranzaFacturaStatus.idle,
     ));
   }
@@ -78,59 +81,42 @@ class CobranzaFacturaBloc
     emit(state.copyWith(hojaAceptacion: event.valor));
   }
 
+  // "Validar plan de crédito" — lleva al usuario a CobranzaPlanPage (status
+  // continuarPlan, escuchado en CobranzaFacturaPage). Ojo: esto NO marca
+  // planValidado — eso solo pasa si el usuario efectivamente guarda el plan
+  // (ver _onPlanGuardado); si solo entra y vuelve sin guardar, no debe
+  // quedar marcado como validado. Se resetea a idle justo después para
+  // poder volver a disparar la navegación si presiona "Validar" de nuevo.
   void _onPlanValidar(
     PlanValidarPressed event,
     Emitter<CobranzaFacturaState> emit,
   ) {
-    emit(state.copyWith(planValidado: true));
+    emit(state.copyWith(status: CobranzaFacturaStatus.continuarPlan));
+    emit(state.copyWith(status: CobranzaFacturaStatus.idle));
   }
 
-  Future<void> _onGuardarBorradorPressed(
-    GuardarBorradorPressed event,
+  // Resultado de CobranzaPlanPage tras guardar el plan de crédito — recién
+  // acá se marca planValidado y se actualiza la fecha de vencimiento con la
+  // más alta de las cuotas guardadas.
+  void _onPlanGuardado(
+    PlanGuardado event,
     Emitter<CobranzaFacturaState> emit,
-  ) async {
-    emit(state.copyWith(status: CobranzaFacturaStatus.loading));
-    try {
-      final result = await _guardarBorrador(state.idCobranza);
-      switch (result) {
-        case CrudOk():
-          emit(state.copyWith(status: CobranzaFacturaStatus.borradorGuardado));
-        case CrudAlert(:final message):
-          emit(state.copyWith(
-            status: CobranzaFacturaStatus.error,
-            mensajeError: message,
-          ));
-        case CrudError(:final message):
-          emit(state.copyWith(
-            status: CobranzaFacturaStatus.error,
-            mensajeError: message,
-          ));
-        case CrudNoInternet():
-          emit(state.copyWith(
-            status: CobranzaFacturaStatus.error,
-            mensajeError: 'Sin conexión a Internet.',
-          ));
-        case CrudEmpty():
-          emit(state.copyWith(
-            status: CobranzaFacturaStatus.error,
-            mensajeError: 'Sin respuesta del servidor.',
-          ));
-      }
-    } catch (e, st) {
-      addError(e, st);
-      emit(state.copyWith(
-        status: CobranzaFacturaStatus.error,
-        mensajeError: e.toString(),
-      ));
-    }
+  ) {
+    emit(state.copyWith(
+      fechaVencimiento: event.fechaVencimiento,
+      planValidado: true,
+    ));
   }
 
   Future<void> _onFacturarPressed(
     FacturarPressed event,
     Emitter<CobranzaFacturaState> emit,
   ) async {
-    if (state.esCredito) {
-      emit(state.copyWith(status: CobranzaFacturaStatus.continuarPlan));
+    if (state.esCredito && !state.planValidado) {
+      emit(state.copyWith(
+        status: CobranzaFacturaStatus.error,
+        mensajeError: 'Valida el plan de crédito antes de facturar.',
+      ));
       return;
     }
 

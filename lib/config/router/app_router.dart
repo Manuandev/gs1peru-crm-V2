@@ -209,13 +209,14 @@ class AppRouter {
           nombre: args['nombre'] as String,
           oportunidad: args['oportunidad'] as String,
           montoTotal: args['montoTotal'] as double,
+          moneda: args['moneda'] as String,
           idCondicion: args['idCondicion'] as String,
           condicion: args['condicion'] as String,
         );
       },
     ),
 
-    AppRoutes.planCredito: RouteDefinition(
+    AppRoutes.planCredito: RouteDefinition<String>(
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
@@ -224,6 +225,7 @@ class AppRouter {
           nombre: args['nombre'] as String,
           oportunidad: args['oportunidad'] as String,
           montoTotal: args['montoTotal'] as double,
+          moneda: args['moneda'] as String,
           detraccion: args['detraccion'] as double,
           importeCredito: args['importeCredito'] as double,
         );

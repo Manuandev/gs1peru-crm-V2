@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class CobranzaSummaryCards extends StatelessWidget {
-  final Map<String, int> conteosPorEstado;
-  final Set<String> estadosSeleccionados;
-  final void Function(String idEstado) onEstadoTap;
+  final Map<int, int> conteosPorEstado;
+  final Set<int> estadosSeleccionados;
+  final void Function(int idEstado) onEstadoTap;
 
   const CobranzaSummaryCards({
     super.key,
@@ -15,27 +15,29 @@ class CobranzaSummaryCards extends StatelessWidget {
     required this.onEstadoTap,
   });
 
+  // ID_ESTADO_GES crudo (DBO.[edu.TIP_ESTADO_GES]): 0=Pend.deDocumento
+  // 2=Facturar 5=Pend.factura 3=Cancelado.
   static const _tarjetas = [
     _TarjetaDef(
-      idEstado: 'PD',
+      idEstado: 0,
       label: 'Pend.\ndocumento',
       icon: AppIcons.fileOutlined,
       color: AppColors.warning,
     ),
     _TarjetaDef(
-      idEstado: 'F',
+      idEstado: 2,
       label: 'Facturar',
       icon: AppIcons.receipt,
       color: AppColors.primary,
     ),
     _TarjetaDef(
-      idEstado: 'PP',
+      idEstado: 5,
       label: 'Pend. pago',
       icon: AppIcons.time,
       color: AppColors.secondary,
     ),
     _TarjetaDef(
-      idEstado: 'CA',
+      idEstado: 3,
       label: 'Cancelado',
       icon: AppIcons.checkCircle,
       color: AppColors.success,
@@ -151,7 +153,7 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _TarjetaDef {
-  final String idEstado;
+  final int idEstado;
   final String label;
   final IconData icon;
   final Color color;

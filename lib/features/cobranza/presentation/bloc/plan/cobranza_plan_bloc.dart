@@ -12,6 +12,7 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     required String nombre,
     required String oportunidad,
     required double montoTotal,
+    required String moneda,
     required double detraccion,
     required double importeCredito,
     required GuardarPlanCreditoUseCase guardarPlanCreditoUseCase,
@@ -21,34 +22,36 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
           nombre: nombre,
           oportunidad: oportunidad,
           montoTotal: montoTotal,
+          moneda: moneda,
           detraccion: detraccion,
           importeCredito: importeCredito,
         )) {
     on<CobranzaPlanStarted>(_onStarted);
-    on<NumeroCuotaChanged>(_onNumeroCuotaChanged);
-    on<DiasChanged>(_onDiasChanged);
-    on<FechaCuotaChanged>(_onFechaChanged);
-    on<MontoCuotaChanged>(_onMontoChanged);
+    on<NumCuotasDeseadasChanged>(_onNumCuotasDeseadasChanged);
     on<VistaPreviaPressed>(_onVistaPrevia);
     on<LimpiarPressed>(_onLimpiar);
+    on<CuotaSeleccionada>(_onCuotaSeleccionada);
+    on<DiasChanged>(_onDiasChanged);
+    on<FechaCuotaChanged>(_onFechaChanged);
+    on<ModificarCuotaPressed>(_onModificarCuota);
     on<GuardarPlanPressed>(_onGuardarPlan);
   }
+
+  static String _fechaMasDias(int dias) =>
+      DateTime.now().add(Duration(days: dias)).format(AppDateFormat.shortDate);
 
   static CobranzaPlanState _estadoInicial({
     required String idCobranza,
     required String nombre,
     required String oportunidad,
     required double montoTotal,
+    required String moneda,
     required double detraccion,
     required double importeCredito,
   }) {
-    final fechaDefault = DateTime.now()
-        .add(const Duration(days: 7))
-        .format(AppDateFormat.shortDate);
-
     final cuotaInicial = CuotaPlan(
       numeroCuota: 1,
-      fechaVencimiento: fechaDefault,
+      fechaVencimiento: _fechaMasDias(7),
       monto: importeCredito,
     );
 
@@ -57,32 +60,83 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
       nombre: nombre,
       oportunidad: oportunidad,
       montoTotal: montoTotal,
+      moneda: moneda,
       detraccion: detraccion,
       cuotas: [cuotaInicial],
-      formNumeroCuota: 1,
+      numCuotasDeseadas: 1,
+      formNumeroCuota: 0,
       formDias: 7,
-      formFecha: fechaDefault,
-      formMonto: importeCredito,
+      formFecha: _fechaMasDias(7),
     );
   }
 
   void _onStarted(CobranzaPlanStarted event, Emitter<CobranzaPlanState> emit) {}
 
-  void _onNumeroCuotaChanged(
-    NumeroCuotaChanged event,
+  void _onNumCuotasDeseadasChanged(
+    NumCuotasDeseadasChanged event,
     Emitter<CobranzaPlanState> emit,
   ) {
-    emit(state.copyWith(formNumeroCuota: event.valor));
+    if (event.valor <= 0) return;
+    emit(state.copyWith(numCuotasDeseadas: event.valor));
+  }
+
+  // Regenera todo el cronograma: numCuotasDeseadas cuotas, monto = importe
+  // comprobante / N cada una, días por defecto 7*i (i=1..N) — el único dato
+  // confirmado es que la cuota única por defecto es 7 días; ajustable a mano
+  // después vía "Modificar" en cada cuota.
+  void _onVistaPrevia(
+    VistaPreviaPressed event,
+    Emitter<CobranzaPlanState> emit,
+  ) {
+    final n = state.numCuotasDeseadas;
+    final montoPorCuota = state.montoTotal / n;
+
+    final cuotas = List<CuotaPlan>.generate(
+      n,
+      (i) => CuotaPlan(
+        numeroCuota: i + 1,
+        fechaVencimiento: _fechaMasDias(7 * (i + 1)),
+        monto: montoPorCuota,
+      ),
+    );
+
+    emit(state.copyWith(
+      cuotas: cuotas,
+      formNumeroCuota: 0,
+      status: CobranzaPlanStatus.idle,
+    ));
+  }
+
+  void _onLimpiar(
+    LimpiarPressed event,
+    Emitter<CobranzaPlanState> emit,
+  ) {
+    emit(state.copyWith(
+      cuotas: const [],
+      numCuotasDeseadas: 1,
+      formNumeroCuota: 0,
+      formDias: 7,
+      formFecha: _fechaMasDias(7),
+      status: CobranzaPlanStatus.idle,
+    ));
+  }
+
+  void _onCuotaSeleccionada(
+    CuotaSeleccionada event,
+    Emitter<CobranzaPlanState> emit,
+  ) {
+    emit(state.copyWith(
+      formNumeroCuota: event.cuota.numeroCuota,
+      formDias: diasDesdeHoy(event.cuota.fechaVencimiento),
+      formFecha: event.cuota.fechaVencimiento,
+    ));
   }
 
   void _onDiasChanged(
     DiasChanged event,
     Emitter<CobranzaPlanState> emit,
   ) {
-    final fecha = DateTime.now()
-        .add(Duration(days: event.dias))
-        .format(AppDateFormat.shortDate);
-    emit(state.copyWith(formDias: event.dias, formFecha: fecha));
+    emit(state.copyWith(formDias: event.dias, formFecha: _fechaMasDias(event.dias)));
   }
 
   void _onFechaChanged(
@@ -92,51 +146,42 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     emit(state.copyWith(formFecha: event.fecha));
   }
 
-  void _onMontoChanged(
-    MontoCuotaChanged event,
+  // Aplica Días/Fecha del formulario a la cuota seleccionada. Regla de
+  // negocio: una cuota no puede vencer antes que la cuota anterior.
+  void _onModificarCuota(
+    ModificarCuotaPressed event,
     Emitter<CobranzaPlanState> emit,
   ) {
-    emit(state.copyWith(formMonto: event.monto));
-  }
-
-  void _onVistaPrevia(
-    VistaPreviaPressed event,
-    Emitter<CobranzaPlanState> emit,
-  ) {
-    final nueva = CuotaPlan(
-      numeroCuota: state.formNumeroCuota,
-      fechaVencimiento: state.formFecha,
-      monto: state.formMonto,
-    );
-
-    final lista = List<CuotaPlan>.from(state.cuotas);
-    final idx = lista.indexWhere((c) => c.numeroCuota == nueva.numeroCuota);
-    if (idx >= 0) {
-      lista[idx] = nueva;
-    } else {
-      lista.add(nueva);
-      lista.sort((a, b) => a.numeroCuota.compareTo(b.numeroCuota));
+    if (state.formNumeroCuota == 0) {
+      emit(state.copyWith(
+        status: CobranzaPlanStatus.error,
+        mensajeError: 'Selecciona una cuota del cronograma para modificarla.',
+      ));
+      emit(state.copyWith(status: CobranzaPlanStatus.idle));
+      return;
     }
 
+    final lista = List<CuotaPlan>.from(state.cuotas);
+    final idx = lista.indexWhere((c) => c.numeroCuota == state.formNumeroCuota);
+    if (idx < 0) return;
+
+    final anterior = lista.where((c) => c.numeroCuota == state.formNumeroCuota - 1).firstOrNull;
+    if (anterior != null) {
+      final fechaNueva = parseFechaCorta(state.formFecha);
+      final fechaAnterior = parseFechaCorta(anterior.fechaVencimiento);
+      if (fechaNueva != null && fechaAnterior != null && fechaNueva.isBefore(fechaAnterior)) {
+        emit(state.copyWith(
+          status: CobranzaPlanStatus.error,
+          mensajeError:
+              'La cuota ${state.formNumeroCuota} no puede vencer antes que la cuota ${anterior.numeroCuota}.',
+        ));
+        emit(state.copyWith(status: CobranzaPlanStatus.idle));
+        return;
+      }
+    }
+
+    lista[idx] = lista[idx].copyWith(fechaVencimiento: state.formFecha);
     emit(state.copyWith(cuotas: lista, status: CobranzaPlanStatus.idle));
-  }
-
-  void _onLimpiar(
-    LimpiarPressed event,
-    Emitter<CobranzaPlanState> emit,
-  ) {
-    final siguienteCuota = state.cuotas.length + 1;
-    final fechaDefault = DateTime.now()
-        .add(const Duration(days: 7))
-        .format(AppDateFormat.shortDate);
-
-    emit(state.copyWith(
-      formNumeroCuota: siguienteCuota,
-      formDias: 7,
-      formFecha: fechaDefault,
-      formMonto: state.importeCredito,
-      status: CobranzaPlanStatus.limpiado,
-    ));
   }
 
   Future<void> _onGuardarPlan(

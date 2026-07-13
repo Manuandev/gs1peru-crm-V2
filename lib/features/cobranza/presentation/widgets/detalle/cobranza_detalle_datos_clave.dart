@@ -17,28 +17,30 @@ class CobranzaDetalleDatosClave extends StatelessWidget {
         label: 'Boleta / Factura',
         valor: detalle.tipoComprobante,
       ),
-      if (detalle.correo != null)
+      if (detalle.moneda.isNotEmpty)
+        _FilaDato(
+          icono: AppIcons.moneda,
+          label: 'Moneda',
+          valor: resolverSimboloMoneda(context, detalle.moneda),
+        ),
+      if (detalle.correo.isNotEmpty)
         _FilaDato(
           icono: AppIcons.email,
           label: 'Correo',
-          valor: detalle.correo!,
+          valor: detalle.correo,
           esTappable: true,
-          onTap: () => Clipboard.setData(ClipboardData(text: detalle.correo!)),
+          onTap: () => Clipboard.setData(ClipboardData(text: detalle.correo)),
         ),
-      if (detalle.celular != null)
+      if (detalle.celular.isNotEmpty)
         _FilaDato(
           icono: AppIcons.phone,
           label: 'Celular',
-          valor: detalle.celular!,
+          valor: detalle.celular,
           esTappable: true,
-          onTap: () => Clipboard.setData(ClipboardData(text: detalle.celular!)),
+          onTap: () => Clipboard.setData(ClipboardData(text: detalle.celular)),
         ),
-      if (detalle.observacion != null)
-        _FilaDato(
-          icono: AppIcons.file,
-          label: 'Observación',
-          valor: detalle.observacion!,
-        ),
+      // Observación: el backend no la persiste hoy (confirmado con negocio) —
+      // no se muestra hasta que exista una columna real para guardarla.
     ];
 
     return Container(
@@ -65,7 +67,15 @@ class CobranzaDetalleDatosClave extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          ...filas.map((fila) => _FilaDatoWidget(fila: fila)),
+          if (detalle.sinFacturacion)
+            const AppEmptyView(message: 'No tiene registros en facturación')
+          else ...[
+            ...filas.map((fila) => _FilaDatoWidget(fila: fila)),
+            if (detalle.archivos.isNotEmpty) ...[
+              const Divider(height: AppSpacing.lg),
+              ...detalle.archivos.map((a) => _FilaArchivo(archivo: a)),
+            ],
+          ],
         ],
       ),
     );
@@ -114,6 +124,46 @@ class _FilaDatoWidget extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Fila de un archivo adjunto (voucher/factura/etc.) — reutiliza fileIcon/
+// fileColor (core) por extensión, igual que en chat/multimedia.
+class _FilaArchivo extends StatelessWidget {
+  final ArchivoCobranza archivo;
+  const _FilaArchivo({required this.archivo});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        children: [
+          Icon(
+            fileIcon(archivo.nombreCompleto),
+            size: AppSizing.iconSm,
+            color: fileColor(archivo.nombreCompleto),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              archivo.nombreCompleto,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            archivo.tipo.toUpperCase(),
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

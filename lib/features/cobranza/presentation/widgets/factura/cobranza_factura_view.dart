@@ -266,35 +266,31 @@ class _BotonesFactura extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Guardar borrador
+          // Cancelar
           Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () => context.read<CobranzaFacturaBloc>().add(
-                const GuardarBorradorPressed(),
-              ),
-              icon: Icon(AppIcons.save, size: AppSizing.iconSm),
-              label: const Text('Guardar borrador'),
+            child: OutlinedButton(
+              onPressed: () => context.goBack(),
               style: OutlinedButton.styleFrom(
                 minimumSize: Size(double.infinity, AppSizing.buttonHeight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizing.radiusMd),
                 ),
               ),
+              child: const Text('Cancelar'),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
 
-          // Continuar / Facturar ahora
+          // Facturar
           Expanded(
             child: FilledButton.icon(
-              onPressed: () => context.read<CobranzaFacturaBloc>().add(
-                const FacturarPressed(),
-              ),
-              icon: Icon(
-                state.esCredito ? AppIcons.forward : AppIcons.fileFactura,
-                size: AppSizing.iconSm,
-              ),
-              label: Text(state.esCredito ? 'Continuar' : 'Facturar ahora'),
+              onPressed: state.status == CobranzaFacturaStatus.loading
+                  ? null
+                  : () => context.read<CobranzaFacturaBloc>().add(
+                        const FacturarPressed(),
+                      ),
+              icon: Icon(AppIcons.fileFactura, size: AppSizing.iconSm),
+              label: const Text('Facturar'),
               style: FilledButton.styleFrom(
                 minimumSize: Size(double.infinity, AppSizing.buttonHeight),
                 shape: RoundedRectangleBorder(

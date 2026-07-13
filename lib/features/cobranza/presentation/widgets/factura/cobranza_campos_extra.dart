@@ -71,9 +71,8 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
 
   Future<void> _seleccionarFecha() async {
     final inicial = widget.state.fechaVencimiento.isNotEmpty
-        ? DateFormatter.parseDate(widget.state.fechaVencimiento) ??
-              DateTime.now().add(const Duration(days: 30))
-        : DateTime.now().add(const Duration(days: 30));
+        ? parseFechaCorta(widget.state.fechaVencimiento) ?? DateTime.now()
+        : DateTime.now();
 
     final fecha = await showDatePicker(
       context: context,

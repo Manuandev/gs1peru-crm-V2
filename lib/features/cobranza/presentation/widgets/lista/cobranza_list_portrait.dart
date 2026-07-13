@@ -9,7 +9,7 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 class CobranzaListPortrait extends StatelessWidget {
   final List<Cobranza> cobranzas;
   final CobranzaChipFiltro chipFiltro;
-  final Set<String> estadosSeleccionados;
+  final Set<int> estadosSeleccionados;
   final String? asesorSeleccionado;
   final Map<String, int> conteosPorAsesor;
 

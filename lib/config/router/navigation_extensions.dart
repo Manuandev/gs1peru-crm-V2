@@ -141,6 +141,7 @@ extension NavigationExtensions on BuildContext {
     required String nombre,
     required String oportunidad,
     required double montoTotal,
+    required String moneda,
     required String idCondicion,
     required String condicion,
   }) => _push(AppRoutes.facturarCobranza, arguments: {
@@ -148,22 +149,27 @@ extension NavigationExtensions on BuildContext {
         'nombre': nombre,
         'oportunidad': oportunidad,
         'montoTotal': montoTotal,
+        'moneda': moneda,
         'idCondicion': idCondicion,
         'condicion': condicion,
       });
 
-  Future<void> goToPlanCredito({
+  // Devuelve la fecha de vencimiento más alta del plan guardado (String), o
+  // null si el usuario volvió sin guardar (solo pop, ver CobranzaPlanView).
+  Future<String?> goToPlanCredito({
     required String idCobranza,
     required String nombre,
     required String oportunidad,
     required double montoTotal,
+    required String moneda,
     required double detraccion,
     required double importeCredito,
-  }) => _push(AppRoutes.planCredito, arguments: {
+  }) => _push<String>(AppRoutes.planCredito, arguments: {
         'idCobranza': idCobranza,
         'nombre': nombre,
         'oportunidad': oportunidad,
         'montoTotal': montoTotal,
+        'moneda': moneda,
         'detraccion': detraccion,
         'importeCredito': importeCredito,
       });

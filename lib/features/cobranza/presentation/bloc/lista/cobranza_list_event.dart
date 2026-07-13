@@ -38,7 +38,7 @@ class CobranzaAsesorSeleccionado extends CobranzaListEvent {
 
 // Activa o desactiva una tarjeta de estado (multi-selección)
 class CobranzaEstadoToggled extends CobranzaListEvent {
-  final String idEstado;
+  final int idEstado;
   const CobranzaEstadoToggled(this.idEstado);
 
   @override

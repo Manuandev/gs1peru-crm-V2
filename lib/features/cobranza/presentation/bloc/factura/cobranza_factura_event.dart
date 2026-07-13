@@ -53,8 +53,11 @@ class PlanValidarPressed extends CobranzaFacturaEvent {
   const PlanValidarPressed();
 }
 
-class GuardarBorradorPressed extends CobranzaFacturaEvent {
-  const GuardarBorradorPressed();
+// Resultado al volver de CobranzaPlanPage tras guardar el plan — fecha de
+// vencimiento más alta entre las cuotas guardadas.
+class PlanGuardado extends CobranzaFacturaEvent {
+  final String fechaVencimiento;
+  const PlanGuardado(this.fechaVencimiento);
 }
 
 class FacturarPressed extends CobranzaFacturaEvent {

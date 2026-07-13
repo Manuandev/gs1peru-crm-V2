@@ -11,6 +11,7 @@ class CobranzaFacturaPage extends StatelessWidget {
   final String nombre;
   final String oportunidad;
   final double montoTotal;
+  final String moneda;
   final String idCondicion;
   final String condicion;
 
@@ -20,6 +21,7 @@ class CobranzaFacturaPage extends StatelessWidget {
     required this.nombre,
     required this.oportunidad,
     required this.montoTotal,
+    required this.moneda,
     required this.idCondicion,
     required this.condicion,
   });
@@ -33,9 +35,9 @@ class CobranzaFacturaPage extends StatelessWidget {
         nombre: nombre,
         oportunidad: oportunidad,
         montoTotal: montoTotal,
+        moneda: moneda,
         idCondicion: idCondicion,
         condicion: condicion,
-        guardarBorradorUseCase: GuardarBorradorUseCase(repo),
         facturarContadoUseCase: FacturarContadoUseCase(repo),
       ),
       child: BlocListener<CobranzaFacturaBloc, CobranzaFacturaState>(
@@ -43,23 +45,30 @@ class CobranzaFacturaPage extends StatelessWidget {
             curr.status != prev.status &&
             curr.status != CobranzaFacturaStatus.idle &&
             curr.status != CobranzaFacturaStatus.loading,
-        listener: (context, state) {
+        listener: (context, state) async {
           switch (state.status) {
-            case CobranzaFacturaStatus.borradorGuardado:
-              AppSnackBar.success(context, 'Borrador guardado correctamente');
-              context.goToCobranza();
             case CobranzaFacturaStatus.facturadoOk:
               AppSnackBar.success(context, 'Factura generada correctamente');
               context.goToCobranza();
             case CobranzaFacturaStatus.continuarPlan:
-              context.goToPlanCredito(
+              // Espera el resultado: null si el usuario volvió sin guardar
+              // el plan, o la fecha de vencimiento más alta si lo guardó.
+              final fechaGuardada = await context.goToPlanCredito(
                 idCobranza: state.idCobranza,
                 nombre: state.nombre,
                 oportunidad: state.oportunidad,
                 montoTotal: state.montoTotal,
+                moneda: state.moneda,
                 detraccion: state.detraccion,
                 importeCredito: state.importeCredito,
               );
+              if (fechaGuardada != null && fechaGuardada.isNotEmpty && context.mounted) {
+                context.read<CobranzaFacturaBloc>().add(PlanGuardado(fechaGuardada));
+                AppSnackBar.success(
+                  context,
+                  'Plan de crédito guardado — continúa con la facturación',
+                );
+              }
             case CobranzaFacturaStatus.error:
               AppSnackBar.error(
                 context,

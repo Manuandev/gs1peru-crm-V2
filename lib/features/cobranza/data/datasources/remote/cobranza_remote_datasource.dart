@@ -21,9 +21,10 @@ class CobranzaRemoteDatasource {
     };
   }
 
+  // Task 'DT' — mismo endpoint urlCobranzasLst, body numSol¯DT (mismo patrón
+  // que SolicitudRemoteDatasource.getSolicitudDetalle()).
   Future<CobranzaDetalle?> getDetalleCobranza(String numSol) async {
-    final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0, numSol].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
+    final body = '$numSol${AppConstants.sepListas}DT';
 
     final result = await _api.postSafe(ApiConstants.urlCobranzasLst, body);
 
@@ -33,15 +34,6 @@ class CobranzaRemoteDatasource {
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };
-  }
-
-  Future<CrudResult> guardarBorrador(String idCobranza) async {
-    // Todo: conectar con endpoint real
-    // final body = '${[_session.codUser, idCobranza, 'GB'].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
-    // final raw = await _api.postJsonGetText(ApiConstants.urlCobranzasLst, body);
-    // return parseCrudResponse(raw);
-    await Future.delayed(const Duration(milliseconds: 500));
-    return const CrudOk('Borrador guardado correctamente');
   }
 
   Future<CrudResult> facturarContado(String idCobranza) async {

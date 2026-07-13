@@ -12,15 +12,16 @@ class CobranzaDetallePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          CobranzaDetalleBloc()..add(CobranzaDetalleStarted(idCobranza)),
+      create: (context) => CobranzaDetalleBloc(
+        GetDetalleCobranzaUseCase(context.read<CobranzaRepository>()),
+      )..add(CobranzaDetalleStarted(idCobranza)),
       child: BlocListener<CobranzaDetalleBloc, CobranzaDetalleState>(
         listener: (context, state) {
           if (state is CobranzaDetalleError) {
             AppSnackBar.error(context, state.mensaje);
           }
         },
-        child: const CobranzaDetalleView(),
+        child: CobranzaDetalleView(idCobranza: idCobranza),
       ),
     );
   }

@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class CobranzaDetalleStepper extends StatelessWidget {
-  final String idEstadoActual;
+  // ID_ESTADO_GES crudo (DBO.[edu.TIP_ESTADO_GES]): 0=Pend.deDocumento
+  // 2=Facturar 5=Pend.factura 3=Cancelado. 1=FreePass y 4=Anulado no forman
+  // parte de este flujo de 4 etapas (indexOf devuelve -1 → ningún paso activo).
+  final int idEstadoActual;
   const CobranzaDetalleStepper({super.key, required this.idEstadoActual});
 
   static const _pasos = [
-    _PasoDef(id: 'PD', label: 'Pend.\ndocumento', icono: AppIcons.fileOutlined),
-    _PasoDef(id: 'F', label: 'Facturar', icono: AppIcons.receipt),
-    _PasoDef(id: 'PP', label: 'Pend. pago', icono: AppIcons.time),
-    _PasoDef(id: 'CA', label: 'Cancelado', icono: AppIcons.checkCircle),
+    _PasoDef(id: 0, label: 'Pend.\ndocumento', icono: AppIcons.fileOutlined),
+    _PasoDef(id: 2, label: 'Facturar', icono: AppIcons.receipt),
+    _PasoDef(id: 5, label: 'Pend. pago', icono: AppIcons.time),
+    _PasoDef(id: 3, label: 'Cancelado', icono: AppIcons.checkCircle),
   ];
 
-  static const _orden = ['PD', 'F', 'PP', 'CA'];
+  static const _orden = [0, 2, 5, 3];
 
   @override
   Widget build(BuildContext context) {
@@ -37,40 +40,77 @@ class CobranzaDetalleStepper extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: List.generate(_pasos.length, (i) {
-          final paso = _pasos[i];
-          final esActivo = i == indiceActual;
-          final esCompletado = i < indiceActual;
-          final esUltimo = i == _pasos.length - 1;
+      // Círculos+líneas y labels van en filas separadas: así el alto variable
+      // de cada label (1 o 2 líneas) nunca desalinea los círculos entre sí
+      // (antes vivían en la misma Column por paso y el Row los centraba según
+      // el paso más alto, corriendo los círculos de labels más cortas).
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: List.generate(_pasos.length, (i) {
+              final esActivo = i == indiceActual;
+              final esCompletado = i < indiceActual;
+              final esUltimo = i == _pasos.length - 1;
 
-          return Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: _PasoItem(
-                    paso: paso,
-                    esActivo: esActivo,
-                    esCompletado: esCompletado,
-                  ),
+              return Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: _Circulo(
+                          paso: _pasos[i],
+                          esActivo: esActivo,
+                          esCompletado: esCompletado,
+                        ),
+                      ),
+                    ),
+                    if (!esUltimo) _Linea(completada: esCompletado || esActivo),
+                  ],
                 ),
-                if (!esUltimo)
-                  _Linea(completada: esCompletado || esActivo),
-              ],
-            ),
-          );
-        }),
+              );
+            }),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(_pasos.length, (i) {
+              final paso = _pasos[i];
+              final esActivo = i == indiceActual;
+              final esCompletado = i < indiceActual;
+
+              return Expanded(
+                child: Text(
+                  paso.label,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: esActivo
+                        ? AppColors.warning
+                        : esCompletado
+                            ? AppColors.primary
+                            : AppColors.textDisabled,
+                    fontWeight: esActivo
+                        ? AppTextStyles.weightSemiBold
+                        : AppTextStyles.weightRegular,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _PasoItem extends StatelessWidget {
+class _Circulo extends StatelessWidget {
   final _PasoDef paso;
   final bool esActivo;
   final bool esCompletado;
 
-  const _PasoItem({
+  const _Circulo({
     required this.paso,
     required this.esActivo,
     required this.esCompletado,
@@ -84,45 +124,19 @@ class _PasoItem extends StatelessWidget {
             ? AppColors.primary
             : AppColors.border;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: AppSizing.avatarSm,
-          height: AppSizing.avatarSm,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: esActivo
-                ? AppColors.warning.withValues(alpha: 0.1)
-                : esCompletado
-                    ? AppColors.primary.withValues(alpha: 0.08)
-                    : AppColors.transparent,
-            border: Border.all(color: color, width: AppSizing.borderWidthThin * 2),
-          ),
-          child: Icon(
-            paso.icono,
-            size: AppSizing.iconSm,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          paso.label,
-          style: AppTextStyles.labelSmall.copyWith(
-            color: esActivo
-                ? AppColors.warning
-                : esCompletado
-                    ? AppColors.primary
-                    : AppColors.textDisabled,
-            fontWeight: esActivo
-                ? AppTextStyles.weightSemiBold
-                : AppTextStyles.weightRegular,
-            height: 1.2,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-        ),
-      ],
+    return Container(
+      width: AppSizing.avatarSm,
+      height: AppSizing.avatarSm,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: esActivo
+            ? AppColors.warning.withValues(alpha: 0.1)
+            : esCompletado
+                ? AppColors.primary.withValues(alpha: 0.08)
+                : AppColors.transparent,
+        border: Border.all(color: color, width: AppSizing.borderWidthThin * 2),
+      ),
+      child: Icon(paso.icono, size: AppSizing.iconSm, color: color),
     );
   }
 }
@@ -142,7 +156,7 @@ class _Linea extends StatelessWidget {
 }
 
 class _PasoDef {
-  final String id;
+  final int id;
   final String label;
   final IconData icono;
   const _PasoDef({required this.id, required this.label, required this.icono});

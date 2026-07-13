@@ -23,10 +23,10 @@ class CobranzaListSuccess extends CobranzaListState {
   final CobranzaChipFiltro chipFiltro;
 
   // Set vacío = todos los estados visibles
-  final Set<String> estadosSeleccionados;
+  final Set<int> estadosSeleccionados;
 
   // Conteos por estado calculados sobre la lista filtrada por chip (sin filtro de estado)
-  final Map<String, int> conteosPorEstado;
+  final Map<int, int> conteosPorEstado;
 
   // Asesor elegido en CobranzaAsesorPickerModal (chip "Asesores")
   final String? asesorSeleccionado;

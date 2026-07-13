@@ -11,9 +11,10 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   String? _asesorSeleccionado;
 
   // Set vacío = todos los estados activos (ninguna tarjeta filtrada)
-  Set<String> _estadosSeleccionados = {};
+  Set<int> _estadosSeleccionados = {};
 
-  static const _todosLosEstados = {'F', 'PD', 'PP', 'CA'};
+  // ID_ESTADO_GES crudo: 2=Facturar 0=Pend.deDocumento 5=Pend.factura 3=Cancelado
+  static const _todosLosEstados = {2, 0, 5, 3};
 
   CobranzaListBloc(this._getCobranzasUseCase) : super(const CobranzaListInitial()) {
     on<CobranzaListStarted>(_onStarted);
@@ -66,7 +67,7 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
 
   void _onEstadoToggled(CobranzaEstadoToggled event, Emitter<CobranzaListState> emit) {
     final id = event.idEstado;
-    final actuales = Set<String>.from(
+    final actuales = Set<int>.from(
       _estadosSeleccionados.isEmpty ? _todosLosEstados : _estadosSeleccionados,
     );
 
@@ -97,11 +98,11 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     }
 
     // 2. Conteos por estado sobre lista ya filtrada por chip (antes del filtro de tarjetas)
-    final conteos = <String, int>{
-      'F': porChip.where((c) => c.idEstado == 'F').length,
-      'PD': porChip.where((c) => c.idEstado == 'PD').length,
-      'PP': porChip.where((c) => c.idEstado == 'PP').length,
-      'CA': porChip.where((c) => c.idEstado == 'CA').length,
+    final conteos = <int, int>{
+      2: porChip.where((c) => c.idEstado == 2).length,
+      0: porChip.where((c) => c.idEstado == 0).length,
+      5: porChip.where((c) => c.idEstado == 5).length,
+      3: porChip.where((c) => c.idEstado == 3).length,
     };
 
     // 3. Aplicar filtro de estados (tarjetas)

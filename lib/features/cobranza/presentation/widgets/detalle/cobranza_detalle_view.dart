@@ -7,7 +7,8 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaDetalleView extends StatelessWidget {
-  const CobranzaDetalleView({super.key});
+  final String idCobranza;
+  const CobranzaDetalleView({super.key, required this.idCobranza});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +34,7 @@ class CobranzaDetalleView extends StatelessWidget {
             return AppErrorView(
               message: state.mensaje,
               onRetry: () => context.read<CobranzaDetalleBloc>().add(
-                CobranzaDetalleStarted("0"),
+                CobranzaDetalleStarted(idCobranza),
               ),
             );
           }
@@ -55,7 +56,7 @@ class _CobranzaDetalleBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tieneAccion = detalle.estado != 'CA';
+    final tieneAccion = detalle.idEstado != 3; // 3 = Cancelado
 
     return Column(
       children: [
@@ -67,7 +68,7 @@ class _CobranzaDetalleBody extends StatelessWidget {
               children: [
                 CobranzaDetalleInfoCard(detalle: detalle),
                 const SizedBox(height: AppSpacing.md),
-                CobranzaDetalleStepper(idEstadoActual: detalle.idEstado.toString()),
+                CobranzaDetalleStepper(idEstadoActual: detalle.idEstado),
                 const SizedBox(height: AppSpacing.md),
                 CobranzaDetalleAcciones(detalle: detalle),
                 const SizedBox(height: AppSpacing.md),
@@ -95,7 +96,7 @@ class _BottomActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _configBoton(detalle.idEstado.toString());
+    final config = _configBoton(detalle.idEstado);
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -118,7 +119,8 @@ class _BottomActionButton extends StatelessWidget {
             nombre: detalle.nombreCompleto,
             oportunidad: detalle.oportunidad,
             montoTotal: detalle.montoTotal,
-            idCondicion: detalle.idCondicion.toString(),
+            moneda: detalle.moneda,
+            idCondicion: detalle.idCondicion,
             condicion: detalle.condicion,
           ),
           icon: Icon(config.icono, size: AppSizing.iconMd),
@@ -133,19 +135,20 @@ class _BottomActionButton extends StatelessWidget {
     );
   }
 
-  _BotonConfig _configBoton(String idEstado) {
+  // ID_ESTADO_GES crudo: 0=Pend.deDocumento 2=Facturar 5=Pend.factura.
+  _BotonConfig _configBoton(int idEstado) {
     switch (idEstado) {
-      case 'PD':
+      case 0:
         return _BotonConfig(
           texto: 'Continuar facturación',
           icono: AppIcons.receipt,
         );
-      case 'F':
+      case 2:
         return _BotonConfig(
           texto: 'Marcar como facturado',
           icono: AppIcons.checkCircle,
         );
-      case 'PP':
+      case 5:
         return _BotonConfig(texto: 'Confirmar pago', icono: AppIcons.moneda);
       default:
         return _BotonConfig(texto: '', icono: AppIcons.check);

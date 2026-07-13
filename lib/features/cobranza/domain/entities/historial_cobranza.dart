@@ -1,19 +1,18 @@
 // lib/features/cobranza/domain/entities/historial_cobranza.dart
 
 class HistorialCobranza {
-  final String idTipo;      // 'registro' | 'estado' | 'recordatorio' | 'pago'
-  final String titulo;
-  final String descripcion;
+  final String origen; // LA.ORIGEN — canal/origen de la actividad
+  final String titulo; // LA.NOMBRE — nombre de la actividad
+  final String descripcion; // LS.DESCRIPCION — detalle del seguimiento
+  // Fecha+hora crudas del backend ('yyyy-MM-dd HH:mm:ss') — formatear en la
+  // UI con las extensions de core (formatDate(AppDateFormat.shortDate) /
+  // formatDate(AppDateFormat.hourMinute)), no separadas desde el backend.
   final String fecha;
-  final String hora;
-  final String ejecutivo;
 
   const HistorialCobranza({
-    required this.idTipo,
+    required this.origen,
     required this.titulo,
     required this.descripcion,
     required this.fecha,
-    required this.hora,
-    required this.ejecutivo,
   });
 }

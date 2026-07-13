@@ -43,13 +43,17 @@ class CobranzaDetalleAcciones extends StatelessWidget {
                 esFontAwesome: true,
                 color: AppSocialUtils.colorCanalById(5),
                 label: 'WhatsApp',
-                onTap: () {},
+                onTap: detalle.celular.isEmpty
+                    ? () {}
+                    : () => LauncherUtils.abrirWhatsApp(detalle.celular),
               ),
               _AccionBtn(
                 icono: AppIcons.phone,
                 color: AppColors.primary,
                 label: 'Llamar',
-                onTap: () {},
+                onTap: detalle.celular.isEmpty
+                    ? () {}
+                    : () => LauncherUtils.abrirTelefono(detalle.celular),
               ),
               _AccionBtn(
                 icono: AppIcons.attach,

@@ -11,6 +11,7 @@ class CobranzaPlanPage extends StatelessWidget {
   final String nombre;
   final String oportunidad;
   final double montoTotal;
+  final String moneda;
   final double detraccion;
   final double importeCredito;
 
@@ -20,6 +21,7 @@ class CobranzaPlanPage extends StatelessWidget {
     required this.nombre,
     required this.oportunidad,
     required this.montoTotal,
+    required this.moneda,
     required this.detraccion,
     required this.importeCredito,
   });
@@ -33,6 +35,7 @@ class CobranzaPlanPage extends StatelessWidget {
         nombre: nombre,
         oportunidad: oportunidad,
         montoTotal: montoTotal,
+        moneda: moneda,
         detraccion: detraccion,
         importeCredito: importeCredito,
         guardarPlanCreditoUseCase: GuardarPlanCreditoUseCase(repo),
@@ -45,11 +48,10 @@ class CobranzaPlanPage extends StatelessWidget {
         listener: (context, state) {
           switch (state.status) {
             case CobranzaPlanStatus.guardado:
-              AppSnackBar.success(
-                context,
-                'Plan de crédito guardado correctamente',
-              );
-              context.goToCobranza();
+              // Guardar el plan es un paso extra antes de facturar, no el
+              // final del flujo — vuelve a CobranzaFacturaPage (no a la
+              // lista) devolviendo la fecha de vencimiento más alta.
+              context.goBack(state.fechaMasAlta);
             case CobranzaPlanStatus.error:
               AppSnackBar.error(
                 context,

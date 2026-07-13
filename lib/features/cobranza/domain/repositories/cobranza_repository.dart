@@ -7,7 +7,6 @@ abstract class CobranzaRepository {
   Future<List<Cobranza>> getCobranzas();
   Future<CobranzaDetalle?> getDetalleCobranza(String numSol);
 
-  Future<CrudResult> guardarBorrador(String idCobranza);
   Future<CrudResult> facturarContado(String idCobranza);
   Future<CrudResult> guardarPlanCredito(String idCobranza, List<CuotaPlan> cuotas);
 }

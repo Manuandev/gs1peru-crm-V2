@@ -94,7 +94,7 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              _EstadoBadge(idEstado: detalle.idEstado.toString(), estado: detalle.estado),
+              _EstadoBadge(idEstado: detalle.idEstado, estado: detalle.estado),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Condición de pago',
@@ -181,7 +181,7 @@ class _InfoFila extends StatelessWidget {
 }
 
 class _EstadoBadge extends StatelessWidget {
-  final String idEstado;
+  final int idEstado;
   final String estado;
   const _EstadoBadge({required this.idEstado, required this.estado});
 
@@ -207,15 +207,17 @@ class _EstadoBadge extends StatelessWidget {
     );
   }
 
-  Color _colorEstado(String id) {
+  // ID_ESTADO_GES crudo: 0=Pend.deDocumento 2=Facturar 5=Pend.factura
+  // 3=Cancelado (1=FreePass y 4=Anulado caen al color por defecto).
+  Color _colorEstado(int id) {
     switch (id) {
-      case 'F':
+      case 2:
         return AppColors.primary;
-      case 'PD':
+      case 0:
         return AppColors.warning;
-      case 'PP':
+      case 5:
         return AppColors.secondary;
-      case 'CA':
+      case 3:
         return AppColors.success;
       default:
         return AppColors.textDisabled;

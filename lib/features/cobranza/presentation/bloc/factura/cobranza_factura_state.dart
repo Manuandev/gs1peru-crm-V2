@@ -7,7 +7,6 @@ import 'package:app_crm/core/index_core.dart';
 enum CobranzaFacturaStatus {
   idle,
   loading,
-  borradorGuardado,
   facturadoOk,
   continuarPlan,
   error,
@@ -37,6 +36,7 @@ class CobranzaFacturaState {
   final String nombre;
   final String oportunidad;
   final double montoTotal;
+  final String moneda;
 
   // Formulario
   final String idCondicion;
@@ -52,7 +52,8 @@ class CobranzaFacturaState {
   final String? mensajeError;
 
   // ── Calculados para el resumen ──────────────────────────────
-  double get detraccion => 0.0;
+  // Detracción 12% sobre el importe del comprobante (confirmado: 460.20*0.12=55.22)
+  double get detraccion => montoTotal * 0.12;
   double get importeCredito => montoTotal - detraccion;
   int get numCuotas => 1;
   double get pagoACuenta => 0.0;
@@ -65,6 +66,7 @@ class CobranzaFacturaState {
     required this.nombre,
     required this.oportunidad,
     required this.montoTotal,
+    this.moneda = '',
     required this.idCondicion,
     required this.condicion,
     this.fechaVencimiento = '',
@@ -92,6 +94,7 @@ class CobranzaFacturaState {
       nombre: nombre,
       oportunidad: oportunidad,
       montoTotal: montoTotal,
+      moneda: moneda,
       idCondicion: idCondicion ?? this.idCondicion,
       condicion: condicion ?? this.condicion,
       fechaVencimiento: fechaVencimiento ?? this.fechaVencimiento,

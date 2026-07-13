@@ -1,10 +1,12 @@
 // lib/features/cobranza/presentation/widgets/plan/cobranza_plan_cronograma_card.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
-/// Tabla de cuotas del plan de crédito con encabezado y conteo de filas.
+/// Tabla de cuotas del plan de crédito. Cada fila es tappable — selecciona
+/// la cuota para editarla en CobranzaPlanConfigurarCard.
 class CobranzaPlanCronogramaCard extends StatelessWidget {
   final CobranzaPlanState state;
   const CobranzaPlanCronogramaCard({super.key, required this.state});
@@ -45,17 +47,25 @@ class CobranzaPlanCronogramaCard extends StatelessWidget {
             child: Row(
               children: [
                 SizedBox(
-                  width: AppSizing.avatarSm,
+                  width: AppSizing.iconLg,
                   child: Text(
                     'N°',
                     style: AppTextStyles.labelMedium.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: AppTextStyles.weightSemiBold,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(
+                  width: AppSizing.iconLg,
+                  child: Text(
+                    'Días',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: AppTextStyles.weightSemiBold,
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: Text(
                     'Vencimiento',
@@ -72,7 +82,6 @@ class CobranzaPlanCronogramaCard extends StatelessWidget {
                     fontWeight: AppTextStyles.weightSemiBold,
                   ),
                 ),
-                const SizedBox(width: AppSizing.iconSm),
               ],
             ),
           ),
@@ -90,7 +99,12 @@ class CobranzaPlanCronogramaCard extends StatelessWidget {
               ),
             )
           else
-            ...cuotas.map((c) => _FilaCuota(cuota: c)),
+            ...cuotas.map(
+              (c) => _FilaCuota(
+                cuota: c,
+                seleccionada: c.numeroCuota == state.formNumeroCuota,
+              ),
+            ),
           // ── Conteo de filas ──────────────────────────────────
           Divider(height: 1, thickness: 1, color: AppColors.divider),
           Padding(
@@ -108,7 +122,7 @@ class CobranzaPlanCronogramaCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Total: S/ ${state.totalCuotas.toStringAsFixed(2)}',
+                  'Total: ${state.totalCuotas.toStringAsFixed(2)}',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: AppColors.primary,
                     fontWeight: AppTextStyles.weightBold,
@@ -127,62 +141,65 @@ class CobranzaPlanCronogramaCard extends StatelessWidget {
 
 class _FilaCuota extends StatelessWidget {
   final CuotaPlan cuota;
-  const _FilaCuota({required this.cuota});
+  final bool seleccionada;
+  const _FilaCuota({required this.cuota, required this.seleccionada});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              // Círculo numerado
-              Container(
-                width: AppSizing.avatarSm,
-                height: AppSizing.avatarSm,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primaryWithOpacity(0.1),
-                ),
-                child: Center(
+        InkWell(
+          onTap: () =>
+              context.read<CobranzaPlanBloc>().add(CuotaSeleccionada(cuota)),
+          child: Container(
+            color: seleccionada
+                ? AppColors.primaryWithOpacity(0.06)
+                : AppColors.transparent,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                // N° — número plano, sin fondo de avatar
+                SizedBox(
+                  width: AppSizing.iconLg,
                   child: Text(
                     '${cuota.numeroCuota}',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: AppTextStyles.weightBold,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: AppTextStyles.weightSemiBold,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              // Fecha de vencimiento
-              Expanded(
-                child: Text(
-                  cuota.fechaVencimiento,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
+                SizedBox(
+                  width: AppSizing.iconLg,
+                  child: Text(
+                    '${diasDesdeHoy(cuota.fechaVencimiento)}',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-              // Monto
-              Text(
-                'S/ ${cuota.monto.toStringAsFixed(2)}',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: AppTextStyles.weightMedium,
+                // Fecha de vencimiento
+                Expanded(
+                  child: Text(
+                    cuota.fechaVencimiento,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Icon(
-                AppIcons.forward,
-                size: AppSizing.iconSm,
-                color: AppColors.textSecondary,
-              ),
-            ],
+                // Monto
+                Text(
+                  cuota.monto.toStringAsFixed(2),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: AppTextStyles.weightMedium,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         Divider(height: 1, thickness: 1, color: AppColors.divider),

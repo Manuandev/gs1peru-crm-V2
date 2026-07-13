@@ -6,22 +6,20 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
-/// Card de configuración de una cuota: N°, Días, Fecha, Importe + acciones.
+/// Card de configuración de una cuota ya seleccionada del cronograma (tap en
+/// una fila). N° cuota es de solo lectura; Días y Fecha son los únicos
+/// campos editables. "Modificar" aplica los cambios solo a esa cuota.
 class CobranzaPlanConfigurarCard extends StatelessWidget {
   final CobranzaPlanState state;
-  final TextEditingController numCuotaCtrl;
   final TextEditingController diasCtrl;
   final TextEditingController fechaCtrl;
-  final TextEditingController montoCtrl;
   final VoidCallback onFechaTap;
 
   const CobranzaPlanConfigurarCard({
     super.key,
     required this.state,
-    required this.numCuotaCtrl,
     required this.diasCtrl,
     required this.fechaCtrl,
-    required this.montoCtrl,
     required this.onFechaTap,
   });
 
@@ -29,6 +27,7 @@ class CobranzaPlanConfigurarCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bloc = context.read<CobranzaPlanBloc>();
     final estaCargando = state.status == CobranzaPlanStatus.loading;
+    final haySeleccion = state.formNumeroCuota != 0;
 
     return Container(
       width: double.infinity,
@@ -55,32 +54,37 @@ class CobranzaPlanConfigurarCard extends StatelessWidget {
               fontWeight: AppTextStyles.weightSemiBold,
             ),
           ),
+          const SizedBox(height: AppSpacing.xs),
+          if (!haySeleccion)
+            Text(
+              'Toca una cuota del cronograma para editarla.',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           const SizedBox(height: AppSpacing.sm),
-          // ── Fila de 4 inputs ─────────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // N° cuota
-              Flexible(
+              // N° cuota — solo lectura, mismo CustomTextField que los demás
+              // para garantizar el mismo alto/estilo (antes era un Container
+              // aparte que se veía de otro tamaño)
+              Expanded(
                 child: CustomTextField(
                   label: 'N° cuota',
-                  controller: numCuotaCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (v) {
-                    final n = int.tryParse(v);
-                    if (n != null && n > 0) {
-                      bloc.add(NumeroCuotaChanged(n));
-                    }
-                  },
+                  enabled: false,
+                  controller: TextEditingController(
+                    text: haySeleccion ? '${state.formNumeroCuota}' : '—',
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
               // Días
-              Flexible(
+              Expanded(
                 child: CustomTextField(
                   label: 'Días',
                   controller: diasCtrl,
+                  enabled: haySeleccion,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   onChanged: (v) {
@@ -93,63 +97,26 @@ class CobranzaPlanConfigurarCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.xs),
               // Fecha vencimiento
-              Flexible(
+              Expanded(
                 flex: 2,
                 child: CustomTextField(
                   label: 'Fecha venc.',
                   controller: fechaCtrl,
                   readOnly: true,
+                  enabled: haySeleccion,
                   suffixIcon: const Icon(AppIcons.calendar),
-                  onTap: onFechaTap,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              // Importe
-              Flexible(
-                flex: 2,
-                child: CustomTextField(
-                  label: 'Importe',
-                  controller: montoCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d+\.?\d{0,2}'),
-                    ),
-                  ],
-                  onChanged: (v) {
-                    final m = double.tryParse(v);
-                    if (m != null && m >= 0) {
-                      bloc.add(MontoCuotaChanged(m));
-                    }
-                  },
+                  onTap: haySeleccion ? onFechaTap : null,
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          // ── Botones de acción ─────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: CustomPrimaryButton(
-                  text: 'Vista previa',
-                  onPressed: estaCargando
-                      ? null
-                      : () => bloc.add(const VistaPreviaPressed()),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: CustomSecondaryButton(
-                  text: 'Limpiar',
-                  onPressed: estaCargando
-                      ? null
-                      : () => bloc.add(const LimpiarPressed()),
-                ),
-              ),
-            ],
+          CustomPrimaryButton(
+            text: 'Modificar',
+            isEnabled: haySeleccion,
+            onPressed: estaCargando
+                ? null
+                : () => bloc.add(const ModificarCuotaPressed()),
           ),
         ],
       ),

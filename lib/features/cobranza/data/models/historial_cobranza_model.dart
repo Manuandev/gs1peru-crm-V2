@@ -3,27 +3,29 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
+// CRM.T_LEAD_SEGUIMIENTO + CRM.T_LEAD_ACTIVIDAD (historial del lead asociado
+// al NUMSOL, ver task 'DT' de CSV_COBRANZAS_LST_APP).
 class HistorialCobranzaModel extends HistorialCobranza {
   const HistorialCobranzaModel({
-    required super.idTipo,
+    required super.origen,
     required super.titulo,
     required super.descripcion,
     required super.fecha,
-    required super.hora,
-    required super.ejecutivo,
   });
 
+  // Posiciones: 0 idLead (no se usa acá) · 1 LS.DESCRIPCION (seguimiento) ·
+  // 2 LA.ORIGEN · 3 LA.NOMBRE · 4 LA.DESCRIPCION (actividad, fallback si el
+  // seguimiento no trae texto) · 5 fecha cruda (yyyy-MM-dd HH:mm:ss).
   factory HistorialCobranzaModel.fromRawString(String raw) {
-    final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    final descripcionSeguimiento = ParseUtils.str(c, 1);
     return HistorialCobranzaModel(
-      idTipo: f(0),
-      titulo: f(1),
-      descripcion: f(2),
-      fecha: f(3),
-      hora: f(4),
-      ejecutivo: f(5),
+      origen: ParseUtils.str(c, 2),
+      titulo: ParseUtils.str(c, 3),
+      descripcion: descripcionSeguimiento.isNotEmpty
+          ? descripcionSeguimiento
+          : ParseUtils.str(c, 4),
+      fecha: ParseUtils.str(c, 5),
     );
   }
 

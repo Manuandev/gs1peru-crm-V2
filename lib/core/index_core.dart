@@ -43,6 +43,7 @@ export 'models/combo_item.dart';
 export 'models/user_model.dart';
 export 'models/catalog_item.dart';
 export 'models/configuracion_item.dart';
+export 'models/documento_externo.dart';
 // #endregion models
 
 export 'navigation/app_route_observer.dart';
@@ -134,6 +135,7 @@ export 'presentation/widgets/skeleton/skeleton_box.dart';
 export 'services/session_service.dart';
 export 'services/device_info_service.dart';
 export 'services/location_permission_manager.dart';
+export 'services/documento_externo_service.dart';
 
 export 'services/catalog_repository_impl.dart';
 export 'services/catalog_repository.dart';

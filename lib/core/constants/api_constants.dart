@@ -56,6 +56,10 @@ class ApiConstants {
   static const String lstCobranzas = 'Cobranza/SPCobranzaLSTApp';
   static const String cudCobranzas = 'Cobranza/SPCobranzaCUDApp';
 
+  // ========== CLIENTES ==========
+  // Autocompletado por DNI/RUC — interno primero, RENIEC/SUNAT de fallback.
+  static const String buscarDocumento = 'Clientes/BuscarDocumento';
+
   // ========== HELPERS ==========
 
   // URLs completas (helpers)
@@ -101,4 +105,7 @@ class ApiConstants {
   // ========== COBRANZAS ==========
   static String get urlCobranzasLst => '$baseUrl$lstCobranzas';
   static String get urlCobranzasCud => '$baseUrl$cudCobranzas';
+
+  // ========== CLIENTES ==========
+  static String get urlBuscarDocumento => '$baseUrl$buscarDocumento';
 }

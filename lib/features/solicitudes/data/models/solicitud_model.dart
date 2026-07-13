@@ -7,7 +7,8 @@ class SolicitudModel extends Solicitud {
   const SolicitudModel({
     required super.idSolicitud,
     required super.nombre,
-    required super.apellido,
+    required super.apellidoPaterno,
+    required super.apellidoMaterno,
     required super.nombreEmpresa,
     required super.cargo,
     required super.correo,
@@ -41,16 +42,12 @@ class SolicitudModel extends Solicitud {
   // deja sin leer a propósito para no desalinear el resto de posiciones.
   factory SolicitudModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
-    final apePaterno = ParseUtils.str(fields, 2);
-    final apeMaterno = ParseUtils.str(fields, 3);
 
     return SolicitudModel(
       idSolicitud: ParseUtils.str(fields, 0),
       nombre: ParseUtils.str(fields, 1),
-      apellido: [
-        apePaterno,
-        apeMaterno,
-      ].where((e) => e.isNotEmpty).join(' '),
+      apellidoPaterno: ParseUtils.str(fields, 2),
+      apellidoMaterno: ParseUtils.str(fields, 3),
       nombreEmpresa: ParseUtils.str(fields, 4),
       cargo: ParseUtils.str(fields, 5),
       telefono: ParseUtils.str(fields, 6),

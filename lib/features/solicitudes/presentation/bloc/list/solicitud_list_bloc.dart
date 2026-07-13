@@ -93,7 +93,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
           .where(
             (s) =>
                 s.nombre.toLowerCase().contains(q) ||
-                s.apellido.toLowerCase().contains(q) ||
+                s.apellidos.toLowerCase().contains(q) ||
                 s.nombreEmpresa.toLowerCase().contains(q) ||
                 s.telefono.contains(q) ||
                 s.idSolicitud.toLowerCase().contains(q),

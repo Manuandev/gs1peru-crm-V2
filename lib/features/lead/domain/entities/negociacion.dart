@@ -57,6 +57,9 @@ class Negociacion extends Equatable {
   final String nombreEmpresa;
   final String correo;
 
+  final String numSol;
+  final int idEstadoSol;
+
   /// Id de estado a mostrar/agrupar: si hay un sub-estado (idEstadoPadre
   /// presente), se usa el padre — ej. "Con ficha" agrupa bajo "En desarrollo".
   String get idEstadoEfectivo =>
@@ -113,6 +116,8 @@ class Negociacion extends Equatable {
     this.apellidoMaterno = '',
     this.nombreEmpresa = '',
     this.correo = '',
+    this.numSol = '',
+    this.idEstadoSol = 0,
   });
 
   @override
@@ -149,6 +154,8 @@ class Negociacion extends Equatable {
     apellidoMaterno,
     nombreEmpresa,
     correo,
+    numSol,
+    idEstadoSol,
   ];
 
   Negociacion copyWith({
@@ -184,6 +191,8 @@ class Negociacion extends Equatable {
     String? apellidoMaterno,
     String? nombreEmpresa,
     String? correo,
+    String? numSol,
+    int? idEstadoSol,
   }) {
     return Negociacion(
       idLead: idLead ?? this.idLead,
@@ -219,6 +228,8 @@ class Negociacion extends Equatable {
       apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
       nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
       correo: correo ?? this.correo,
+      numSol: numSol ?? this.numSol,
+      idEstadoSol: idEstadoSol ?? this.idEstadoSol,
     );
   }
 }

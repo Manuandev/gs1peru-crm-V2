@@ -3,7 +3,8 @@
 class Solicitud {
   final String idSolicitud;
   final String nombre;
-  final String apellido;
+  final String apellidoPaterno;
+  final String apellidoMaterno;
   final String nombreEmpresa;
   final String cargo;
   final String correo;
@@ -30,12 +31,16 @@ class Solicitud {
   /// para el INSERT inicial en CSV_SOLICITUD_CUD_APP.
   final String idLead;
 
-  String get nombreCompleto => '$nombre $apellido'.trim();
+  String get nombreCompleto =>
+      '$nombre $apellidoPaterno $apellidoMaterno'.trim();
+
+  String get apellidos => '$apellidoPaterno $apellidoMaterno'.trim();
 
   const Solicitud({
     required this.idSolicitud,
     required this.nombre,
-    required this.apellido,
+    required this.apellidoPaterno,
+    required this.apellidoMaterno,
     required this.nombreEmpresa,
     required this.cargo,
     required this.correo,
@@ -60,7 +65,8 @@ class Solicitud {
   Solicitud copyWith({
     String? idSolicitud,
     String? nombre,
-    String? apellido,
+    String? apellidoPaterno,
+    String? apellidoMaterno,
     String? nombreEmpresa,
     String? cargo,
     String? correo,
@@ -84,7 +90,8 @@ class Solicitud {
     return Solicitud(
       idSolicitud: idSolicitud ?? this.idSolicitud,
       nombre: nombre ?? this.nombre,
-      apellido: apellido ?? this.apellido,
+      apellidoPaterno: apellidoPaterno ?? this.apellidoPaterno,
+      apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
       nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
       cargo: cargo ?? this.cargo,
       correo: correo ?? this.correo,

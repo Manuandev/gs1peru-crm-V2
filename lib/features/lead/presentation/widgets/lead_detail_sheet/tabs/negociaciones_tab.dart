@@ -143,7 +143,8 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
       solicitud: Solicitud(
         idSolicitud: '',
         nombre: '',
-        apellido: '',
+        apellidoPaterno: '',
+        apellidoMaterno: '',
         nombreEmpresa: '',
         cargo: '',
         correo: '',

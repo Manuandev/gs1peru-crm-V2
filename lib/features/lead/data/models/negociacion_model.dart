@@ -46,6 +46,8 @@ class NegociacionModel extends Negociacion {
     super.apellidoMaterno,
     super.nombreEmpresa,
     super.correo,
+    super.numSol,
+    super.idEstadoSol,
   });
 
   factory NegociacionModel.fromRawString(String raw) {
@@ -76,6 +78,8 @@ class NegociacionModel extends Negociacion {
       activo: ParseUtils.toBool(fields, 21),
       // 22 → LD.ID_TIP_MONEDA, agregada al final sin correr los índices existentes.
       idMoneda: ParseUtils.str(fields, 22),
+      numSol: ParseUtils.str(fields, 23),
+      idEstadoSol: ParseUtils.toInt(fields, 24),
     );
   }
 
@@ -152,6 +156,8 @@ class NegociacionModel extends Negociacion {
       correo: ParseUtils.str(fields, 12),
       idMoneda: ParseUtils.str(fields, 33),
       totalLeadsNumero: ParseUtils.toInt(fields, 34),
+      numSol: ParseUtils.str(fields, 35),
+      idEstadoSol: ParseUtils.toInt(fields, 36),
     );
   }
 

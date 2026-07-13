@@ -47,7 +47,8 @@ class ContactoNegociacionCard extends StatelessWidget {
       solicitud: Solicitud(
         idSolicitud: '',
         nombre: '',
-        apellido: '',
+        apellidoPaterno: '',
+        apellidoMaterno: '',
         nombreEmpresa: '',
         cargo: '',
         correo: '',

@@ -160,16 +160,20 @@ class _EstadoBadge extends StatelessWidget {
     );
   }
 
-  Color _colorEstado(String idEstado) {
+  Color _colorEstado(int idEstado) {
     switch (idEstado) {
-      case 'F':
+      case 0: // Pend.deDocumento
+        return AppColors.textDisabled;
+      case 1: // FreePass
         return AppColors.primary;
-      case 'PD':
-        return AppColors.warning;
-      case 'PP':
-        return AppColors.secondary;
-      case 'CA':
+      case 2: // Facturar
         return AppColors.success;
+      case 3: // Cancelado
+        return AppColors.warning;
+      case 4: // Anulado
+        return Colors.red;
+      case 5: // Pend.factura
+        return AppColors.primary;
       default:
         return AppColors.textDisabled;
     }

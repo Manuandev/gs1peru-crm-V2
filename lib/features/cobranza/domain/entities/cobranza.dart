@@ -2,26 +2,46 @@
 
 class Cobranza {
   final String numSol;
+
+  // Datos del contacto
   final String nombre;
   final String apellido;
   final String apellidoMaterno;
   final String nombreEmpresa;
   final String cargo;
+  final String telefono;
   final String correo;
+
+  // Tipo de persona — codTipoPersona: 'J'/'N' crudo · tipoPersona: label ('Juridica'/'Natural')
+  final String codTipoPersona;
   final String tipoPersona;
-  final String evento;
-  final int idEvento;
+
+  final String fecha;
   final double montoTotal;
-  final String ejecutivo;
-  final String asignadoA;
+
+  // Condición de pago
   final String idCondicion;
   final String condicion;
-  final String fecha;
+
+  final String ejecutivo;
+
+  // Oportunidad/evento asociado
+  final int idEvento;
+  final String evento;
+
+  // Estado de gestión de cobranza — ver DBO.[edu.TIP_ESTADO_GES] (0=Pend.deDocumento
+  // 1=FreePass 2=Facturar 3=Cancelado 4=Anulado 5=Pend.factura). idEstado es el código
+  // interno de la app (PD/FP/F/CA/AN/PP) traducido en CobranzaModel; estado es la
+  // descripción tal cual la manda el backend.
+  final int idEstado;
+  final String estado;
+  final bool ibValidado;
+
+  final String asignadoA;
+
+  // Solo disponibles en el detalle (el SP de lista aún no los trae)
   final String? fechaVencimiento;
   final int? diasVencimiento;
-  final String idEstado;
-  final String estado;
-  final String telefono;
 
   String get nombreCompleto => '$nombre $apellido'.trim();
 
@@ -32,21 +52,23 @@ class Cobranza {
     this.apellidoMaterno = '',
     this.nombreEmpresa = '',
     this.cargo = '',
+    required this.telefono,
     this.correo = '',
+    this.codTipoPersona = '',
     this.tipoPersona = '',
-    required this.evento,
-    this.idEvento = 0,
+    required this.fecha,
     required this.montoTotal,
-    required this.ejecutivo,
-    required this.asignadoA,
     required this.idCondicion,
     required this.condicion,
-    required this.fecha,
-    this.fechaVencimiento,
-    this.diasVencimiento,
+    required this.ejecutivo,
+    this.idEvento = 0,
+    required this.evento,
     required this.idEstado,
     required this.estado,
-    required this.telefono,
+    this.ibValidado = true,
+    required this.asignadoA,
+    this.fechaVencimiento,
+    this.diasVencimiento,
   });
 
   Cobranza copyWith({
@@ -55,21 +77,23 @@ class Cobranza {
     String? apellidoMaterno,
     String? nombreEmpresa,
     String? cargo,
+    String? telefono,
     String? correo,
+    String? codTipoPersona,
     String? tipoPersona,
-    String? evento,
-    int? idEvento,
+    String? fecha,
     double? montoTotal,
-    String? ejecutivo,
-    String? asignadoA,
     String? idCondicion,
     String? condicion,
-    String? fecha,
+    String? ejecutivo,
+    int? idEvento,
+    String? evento,
+    int? idEstado,
+    String? estado,
+    bool? ibValidado,
+    String? asignadoA,
     String? fechaVencimiento,
     int? diasVencimiento,
-    String? idEstado,
-    String? estado,
-    String? telefono,
   }) {
     return Cobranza(
       numSol: numSol,
@@ -78,21 +102,23 @@ class Cobranza {
       apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
       nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
       cargo: cargo ?? this.cargo,
+      telefono: telefono ?? this.telefono,
       correo: correo ?? this.correo,
+      codTipoPersona: codTipoPersona ?? this.codTipoPersona,
       tipoPersona: tipoPersona ?? this.tipoPersona,
-      evento: evento ?? this.evento,
-      idEvento: idEvento ?? this.idEvento,
+      fecha: fecha ?? this.fecha,
       montoTotal: montoTotal ?? this.montoTotal,
-      ejecutivo: ejecutivo ?? this.ejecutivo,
-      asignadoA: asignadoA ?? this.asignadoA,
       idCondicion: idCondicion ?? this.idCondicion,
       condicion: condicion ?? this.condicion,
-      fecha: fecha ?? this.fecha,
-      fechaVencimiento: fechaVencimiento ?? this.fechaVencimiento,
-      diasVencimiento: diasVencimiento ?? this.diasVencimiento,
+      ejecutivo: ejecutivo ?? this.ejecutivo,
+      idEvento: idEvento ?? this.idEvento,
+      evento: evento ?? this.evento,
       idEstado: idEstado ?? this.idEstado,
       estado: estado ?? this.estado,
-      telefono: telefono ?? this.telefono,
+      ibValidado: ibValidado ?? this.ibValidado,
+      asignadoA: asignadoA ?? this.asignadoA,
+      fechaVencimiento: fechaVencimiento ?? this.fechaVencimiento,
+      diasVencimiento: diasVencimiento ?? this.diasVencimiento,
     );
   }
 }

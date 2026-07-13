@@ -50,22 +50,23 @@ Gestiona el flujo completo de facturación: lista de cobranzas, detalle, factura
 ### Mapeo de campos — `CobranzaModel.fromRawString` (`CSV_COBRANZAS_LST_APP`)
 Campos posicionales separados por `¦` (0-indexados): `0` numSol · `1` nombres · `2` apePaterno ·
 `3` apeMaterno · `4` nomEmpresa · `5` cargo · `6` celular (→ `telefono`) · `7` correo ·
-`8` tipoPersona (`Natural`/`Juridica`) · `9` fchCreacion (→ `fecha`) · `10` impTotal (→
-`montoTotal`) · `11` idCondicion (`C`/`CR`) · `12` condicion (label) · `13` nomUser (→
-`ejecutivo`) · `14` idEvento · `15` descripción evento · `16` **idEstadoGes crudo** · `17`
-descripción del estado (→ `estado`, se usa tal cual del backend) · `18` `idEstadoSol` (otra
-dimensión de estado, de la solicitud — no se usa hoy) · `19` `idUsuarioEjec` (→ `asignadoA`).
-Este SP **no** trae `fechaVencimiento`/`diasVencimiento` — quedan `null` en la lista (solo
-detalle los tendría, cuando exista ese SP).
+`8` codTipoRegistro crudo (`J`/`N`, → `codTipoPersona`) · `9` label (`Natural`/`Juridica`, →
+`tipoPersona`) · `10` fchCreacion (→ `fecha`) · `11` impTotal (→ `montoTotal`) · `12`
+idCondicion (`C`/`CR`) · `13` condicion (label) · `14` nomUser (→ `ejecutivo`) · `15`
+idOportunidad (→ `idEvento`) · `16` nombre de la oportunidad (→ `evento`) · `17` **idEstadoGes
+crudo** · `18` descripción del estado (→ `estado`, se usa tal cual del backend) · `19`
+`ibValidado` (bit, siempre `1` porque el SP ya filtra `IB_VALIDADO != 0`) · `20` `idUsuarioEjec`
+(→ `asignadoA`). Este SP **no** trae `fechaVencimiento`/`diasVencimiento` — quedan `null` en la
+lista (solo detalle los tendría, cuando exista ese SP).
 
 ### Mapeo de estado — `ID_ESTADO_GES` → código interno
 `DBO.[edu.TIP_ESTADO_GES]` (parte [6] de `lstListas`, `EstadoGestionItem` en core) trae:
 `0`=Pend. de Documento · `1`=FreePass · `2`=Facturar · `3`=Cancelado · `4`=Anulado ·
-`5`=Pend.factura. Solo `0/2/3/5` son parte del flujo de 4 etapas del stepper/chips; se
-traducen con una tabla fija en `CobranzaModel._mapaIdEstado` (`0→PD 2→F 3→CA 5→PP`), **no**
-consultando el catálogo en tiempo de ejecución. `1` (FreePass) y `4` (Anulado) no tienen
-bucket propio hoy — una cobranza con esos ids no cae en ninguna de las 4 tarjetas de
-`CobranzaSummaryCards` pero sí aparece en la lista sin filtro de tarjeta activo.
+`5`=Pend.factura. Los 6 se traducen con una tabla fija en `CobranzaModel._mapaIdEstado`
+(`0→PD 1→FP 2→F 3→CA 4→AN 5→PP`), **no** consultando el catálogo en tiempo de ejecución. Solo
+`PD/F/PP/CA` son parte del flujo de 4 etapas del stepper/chips y de `CobranzaSummaryCards`;
+`FP` (FreePass) y `AN` (Anulado) no tienen tarjeta/bucket propio hoy — una cobranza con esos
+códigos no cae en ninguna de las 4 tarjetas pero sí aparece en la lista sin filtro activo.
 
 ## Dependencias externas
 - `CobranzaRepository` (RepositoryProvider global)

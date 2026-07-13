@@ -866,8 +866,8 @@ Todas implementan `Comboable`. Parsear con `ListasGenericasModel.parse(rawRespon
 `AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) y en `CobranzaAsesorPickerModal` —
 el conteo por asesor NO viene del backend, se calcula en el cliente sobre los registros ya cargados.
 `EstadoGestionItem` es solo de referencia/etiqueta — `cobranza/` traduce el `ID_ESTADO_GES` crudo a
-sus 4 códigos internos (`PD`/`F`/`PP`/`CA`) con una tabla fija en `CobranzaModel`, no consultando este
-catálogo en tiempo de ejecución (ver `cobranza/CLAUDE.md`).
+sus 6 códigos internos (`PD`/`FP`/`F`/`CA`/`AN`/`PP`) con una tabla fija en `CobranzaModel`, no
+consultando este catálogo en tiempo de ejecución (ver `cobranza/CLAUDE.md`).
 `MonedaItem` alimenta el combo "Moneda" de `EditLeadFinancieraSection` (`lead/`) vía `CatalogsBloc.monedas` —
 sin lista fija de respaldo; si el SP aún no devuelve la parte [7], el combo llega vacío y
 `_monedaItem` queda `null` (ver `edit_lead_portrait.dart._inicializarCombos`).

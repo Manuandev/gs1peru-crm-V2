@@ -11,61 +11,53 @@ class CobranzaModel extends Cobranza {
     super.apellidoMaterno,
     super.nombreEmpresa,
     super.cargo,
+    required super.telefono,
     super.correo,
+    super.codTipoPersona,
     super.tipoPersona,
-    required super.evento,
-    super.idEvento,
+    required super.fecha,
     required super.montoTotal,
-    required super.ejecutivo,
-    required super.asignadoA,
     required super.idCondicion,
     required super.condicion,
-    required super.fecha,
-    super.fechaVencimiento,
-    super.diasVencimiento,
+    required super.ejecutivo,
+    super.idEvento,
+    required super.evento,
     required super.idEstado,
     required super.estado,
-    required super.telefono,
+    super.ibValidado,
+    required super.asignadoA,
   });
 
   // idEstadoGes (crudo, [CRM].[CSV_COBRANZAS_LST_APP]) → código interno de la app.
   // DBO.[edu.TIP_ESTADO_GES]: 0=Pend.deDocumento 1=FreePass 2=Facturar
-  // 3=Cancelado 4=Anulado 5=Pend.factura — solo 0/2/3/5 son parte del flujo
-  // de 4 etapas (PD/F/CA/PP); 1 y 4 no tienen bucket propio hoy.
-  static const _mapaIdEstado = {
-    '0': 'PD',
-    '2': 'F',
-    '3': 'CA',
-    '5': 'PP',
-  };
+  // 3=Cancelado 4=Anulado 5=Pend.factura.
+ 
 
   factory CobranzaModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
-    String f(int i) => i < fields.length ? fields[i].trim() : '';
-
-    final idEstadoGes = f(16);
 
     return CobranzaModel(
-      numSol: f(0),
-      nombre: f(1),
-      apellido: f(2),
-      apellidoMaterno: f(3),
-      nombreEmpresa: f(4),
-      cargo: f(5),
-      telefono: f(6),
-      correo: f(7),
-      tipoPersona: f(8),
-      fecha: f(9),
-      montoTotal: double.tryParse(f(10)) ?? 0.0,
-      idCondicion: f(11),
-      condicion: f(12),
-      ejecutivo: f(13),
-      idEvento: int.tryParse(f(14)) ?? 0,
-      evento: f(15),
-      idEstado: _mapaIdEstado[idEstadoGes] ?? idEstadoGes,
-      estado: f(17),
-      // f(18) = CI.ID_ESTADO_SOL — estado de la solicitud (otra dimensión, no usada aquí)
-      asignadoA: f(19),
+      numSol: ParseUtils.str(fields,0),
+      nombre: ParseUtils.str(fields,1),
+      apellido: ParseUtils.str(fields,2),
+      apellidoMaterno: ParseUtils.str(fields,3),
+      nombreEmpresa: ParseUtils.str(fields,4),
+      cargo: ParseUtils.str(fields,5),
+      telefono: ParseUtils.str(fields,6),
+      correo: ParseUtils.str(fields,7),
+      codTipoPersona: ParseUtils.str(fields,8),
+      tipoPersona: ParseUtils.str(fields,9),
+      fecha: ParseUtils.str(fields,10),
+      montoTotal: ParseUtils.toDouble(fields,11),
+      idCondicion: ParseUtils.str(fields,12),
+      condicion: ParseUtils.str(fields,13),
+      ejecutivo: ParseUtils.str(fields,14),
+      idEvento: ParseUtils.toInt(fields,15),
+      evento: ParseUtils.str(fields,16),
+      idEstado: ParseUtils.toInt(fields,17),
+      estado: ParseUtils.str(fields,18),
+      ibValidado: ParseUtils.toBool(fields,19),
+      asignadoA: ParseUtils.str(fields,20),
     );
   }
 

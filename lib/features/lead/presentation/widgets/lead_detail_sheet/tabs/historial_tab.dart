@@ -8,9 +8,16 @@ import 'package:app_crm/features/lead/presentation/cubit/historial/historial_lea
 import 'package:app_crm/features/lead/presentation/cubit/historial/historial_lead_state.dart';
 
 class HistorialTab extends StatefulWidget {
-  final int idNumero;
+  // Comentarios de todos los leads del número (SP 'LCG') — usado en Contacto.
+  final int? idNumero;
+  // Seguimiento de un lead puntual (SP 'LH') — usado en el chat.
+  final int? idLead;
 
-  const HistorialTab({super.key, required this.idNumero});
+  const HistorialTab({super.key, this.idNumero, this.idLead})
+    : assert(
+        idNumero != null || idLead != null,
+        'HistorialTab requiere idNumero o idLead',
+      );
 
   @override
   State<HistorialTab> createState() => _HistorialTabState();
@@ -27,7 +34,17 @@ class _HistorialTabState extends State<HistorialTab>
   @override
   void initState() {
     super.initState();
-    context.read<HistorialLeadCubit>().cargarHistorial(widget.idNumero);
+    _cargar();
+  }
+
+  void _cargar() {
+    final cubit = context.read<HistorialLeadCubit>();
+    final idLead = widget.idLead;
+    if (idLead != null) {
+      cubit.cargarHistorialSeguimiento(idLead);
+    } else {
+      cubit.cargarHistorial(widget.idNumero!);
+    }
   }
 
   List<HistorialComentario> _aplicarFiltro(List<HistorialComentario> eventos) {
@@ -53,9 +70,7 @@ class _HistorialTabState extends State<HistorialTab>
             const AppLoadingView(),
           HistorialLeadError(:final mensaje) => AppErrorView(
             message: mensaje,
-            onRetry: () => context
-                .read<HistorialLeadCubit>()
-                .cargarHistorial(widget.idNumero),
+            onRetry: _cargar,
           ),
           HistorialLeadSuccess(:final eventos) => eventos.isEmpty
               ? const _EstadoVacio()

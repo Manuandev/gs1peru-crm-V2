@@ -126,4 +126,22 @@ class LeadRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  // Task 'LH' — historial de seguimiento de un lead puntual (no de todos los
+  // leads del número, como 'LCG'). Usado por el tab Historial del chat.
+  Future<List<HistorialComentarioModel>> obtenerHistorialSeguimiento(
+    int idLead,
+  ) async {
+    final String body = '$idLead${sep}LH';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) =>
+        HistorialComentarioModel.parseListSeguimiento(data),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
 }

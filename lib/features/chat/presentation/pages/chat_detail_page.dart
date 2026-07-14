@@ -75,8 +75,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             ),
             BlocProvider(
               create: (_) => HistorialLeadCubit(
-                obtenerHistorialUseCase:
-                    GetHistorialComentarios(context.read<LeadRepository>()),
+                obtenerHistorialSeguimientoUseCase:
+                    GetHistorialSeguimiento(context.read<LeadRepository>()),
               ),
             ),
           ],

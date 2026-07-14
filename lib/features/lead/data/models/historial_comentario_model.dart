@@ -56,4 +56,48 @@ class HistorialComentarioModel extends HistorialComentario {
         .map((r) => HistorialComentarioModel.fromRawString(r))
         .toList();
   }
+
+  /// Campo 6 (TIPO_ACTOR del SP 'LH'): 'ASE' asesor · 'SIS' sistema ·
+  /// 'AIA' bot IA — este SP no distingue 'CLI' (cliente), a diferencia de 'LCG'.
+  static TipoActor _parseTipoActorSeguimiento(List<String> campos) {
+    switch (ParseUtils.str(campos, 6).toUpperCase()) {
+      case 'ASE':
+        return TipoActor.asesor;
+      case 'SIS':
+        return TipoActor.sistema;
+      case 'AIA':
+      default:
+        return TipoActor.botIA;
+    }
+  }
+
+  /// Parseo del SP 'LH' (seguimiento de un lead puntual) — trae menos campos
+  /// que 'LCG' (sin ícono/color de actividad ni usuario nominal), pero lo
+  /// importante (DESCRIPCION y fecha) sí viene.
+  factory HistorialComentarioModel.fromRawStringSeguimiento(String raw) {
+    final fields = raw.split(AppConstants.sepCampos);
+
+    return HistorialComentarioModel(
+      idLead: ParseUtils.toInt(fields, 0),
+      idComentario: 0,
+      notas: ParseUtils.str(fields, 1),
+      actividadNombre: ParseUtils.str(fields, 3),
+      actividadIcono: '',
+      actividadColor: '',
+      nombreUsuario: '',
+      idUsuarioC: '',
+      fechaHora: ParseUtils.str(fields, 5),
+      tipoActor: _parseTipoActorSeguimiento(fields),
+    );
+  }
+
+  static List<HistorialComentarioModel> parseListSeguimiento(
+    String rawResponse,
+  ) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => HistorialComentarioModel.fromRawStringSeguimiento(r))
+        .toList();
+  }
 }

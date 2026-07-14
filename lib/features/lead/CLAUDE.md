@@ -31,6 +31,8 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 
 ## SPs que consume
 - `[CRM].[SP_LeadsLst]` → lista de leads por tipo ('PO' o 'PA') y agente/moderador
+- Task `'LCG'` (`obtenerHistorialComentarios(idNumero)`) → comentarios de **todos los leads** del mismo número. Usado por `HistorialTab` en `ContactoDetalleView` (`HistorialTab(idNumero: ...)`)
+- Task `'LH'` (`obtenerHistorialSeguimiento(idLead)`) → seguimiento de **un lead puntual** (no agrupa por número). Usado por `HistorialTab` en `ChatLeadPanel` (`HistorialTab(idLead: ...)`). Trae menos columnas que 'LCG' (sin ícono/color de actividad ni usuario nominal) y no distingue `TipoActor.cliente` — ambos SPs comparten la entidad `HistorialComentario` y el cubit `HistorialLeadCubit`, que expone `cargarHistorial(idNumero)` y `cargarHistorialSeguimiento(idLead)` por separado
 
 ## Dependencias externas
 - `LeadRepository` (RepositoryProvider global)

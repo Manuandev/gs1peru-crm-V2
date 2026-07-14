@@ -14,4 +14,6 @@ abstract class LeadRepository {
   Future<List<Negociacion>> obtenerNegociaciones(int idNumero);
   // SP 'LCG' — historial de comentarios de todos los leads del mismo número
   Future<List<HistorialComentario>> obtenerHistorialComentarios(int idNumero);
+  // SP 'LH' — historial de seguimiento de un lead puntual
+  Future<List<HistorialComentario>> obtenerHistorialSeguimiento(int idLead);
 }

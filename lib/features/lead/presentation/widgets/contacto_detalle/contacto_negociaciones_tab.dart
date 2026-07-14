@@ -212,8 +212,16 @@ class _ResumenSeccion extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: icon is FaIconData
-                    ? FaIcon(icon as FaIconData, size: AppSizing.iconXs, color: color)
-                    : Icon(icon as IconData, size: AppSizing.iconXs, color: color),
+                    ? FaIcon(
+                        icon as FaIconData,
+                        size: AppSizing.iconXs,
+                        color: color,
+                      )
+                    : Icon(
+                        icon as IconData,
+                        size: AppSizing.iconXs,
+                        color: color,
+                      ),
               ),
               const SizedBox(width: AppSpacing.xs),
               Text(

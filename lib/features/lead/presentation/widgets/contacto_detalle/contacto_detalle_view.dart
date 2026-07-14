@@ -59,9 +59,9 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
       // dispara acá y no en initState (ahí solo se tiene idLead).
       listener: (context, state) {
         if (state is InfoLeadSuccess) {
-          context
-              .read<NegociacionesCubit>()
-              .cargarNegociaciones(state.negociacion.idNumero);
+          context.read<NegociacionesCubit>().cargarNegociaciones(
+            state.negociacion.idNumero,
+          );
         }
       },
       builder: (context, state) {
@@ -80,8 +80,9 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
             ],
             body: AppErrorView(
               message: state.message,
-              onRetry: () =>
-                  context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero),
+              onRetry: () => context.read<InfoLeadCubit>().cargarPorIdNumero(
+                widget.idNumero,
+              ),
             ),
           );
         }

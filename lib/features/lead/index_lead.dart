@@ -47,7 +47,6 @@ export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';
 export 'presentation/widgets/lead_detail_sheet/negociacion_card.dart';
 export 'presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart';
 
-
 export 'presentation/widgets/list/lead_list_portrait.dart';
 export 'presentation/widgets/list/lead_list_view.dart';
 export 'presentation/widgets/list/lead_list_skeleton.dart';
@@ -74,7 +73,6 @@ export 'presentation/widgets/edit_lead/agregar_numero_panel.dart';
 export 'presentation/widgets/edit_lead/agregar_correo_panel.dart';
 export 'presentation/widgets/edit_lead/agregar_empresa_panel.dart';
 
-
 // Cubits de LeadDetailSheet
 export 'presentation/cubit/negociaciones/negociaciones_state.dart';
 export 'presentation/cubit/negociaciones/negociaciones_cubit.dart';
@@ -82,5 +80,3 @@ export 'presentation/cubit/historial/historial_lead_state.dart';
 export 'presentation/cubit/historial/historial_lead_cubit.dart';
 
 export 'presentation/widgets/lead_detail_sheet/tabs/negociaciones_tab.dart';
-
-

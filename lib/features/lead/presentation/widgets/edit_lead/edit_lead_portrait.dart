@@ -27,24 +27,26 @@ class EditLeadPortrait extends StatefulWidget {
 
 // ── Reglas de negocio ──────────────────────────────────────────────────────
 // - Información adicional (nombre/modalidad de la negociación) nunca se
-//   muestra, en ningún origen — Conversaciones, Seguimiento, etc. El campo
-//   sigue existiendo en el backend pero no es editable desde esta pantalla.
+//   muestra, en ningún origen. El campo sigue existiendo en el backend pero
+//   no es editable desde esta pantalla.
+// - Precio base y Descuento NUNCA son editables por el usuario, en ningún
+//   origen: Precio base se autocompleta al elegir Oportunidad
+//   (item.importeGeneral) y Descuento se autocalcula
+//   (subtotal - costo final). El único campo editable de esa fila es
+//   Costo final.
+// - Campaña/Oportunidad solo son editables al CREAR (negociacion.idLead ==
+//   0), sin importar el origen — al editar una negociación ya creada quedan
+//   siempre bloqueadas.
+// - Cantidad arranca en 1 por defecto al crear.
+// - Para crear una negociación son obligatorios: Campaña, Oportunidad, Canal
+//   y Cantidad — el botón Guardar no se habilita hasta tenerlos completos.
 //
 // Al entrar desde el chat de Conversaciones (desdeConversacion == true, crear
 // o editar negociación):
-// - Canal siempre bloqueado en WhatsApp (id 1), en crear y en editar.
+// - Canal siempre bloqueado en WhatsApp, en crear y en editar.
 // - Estado/Subestado bloqueados en "Nuevo" (id '00') solo al CREAR — al
 //   editar una negociación ya creada, sí se pueden mover de estado.
-// - Campaña/Oportunidad solo editables al CREAR — al editar quedan fijas.
-// - Interés y toda la Información financiera siempre editables.
-// - Información financiera: Costo final es el campo editable y Descuento se
-//   autocompleta (subtotal - costo final) — al revés que en el resto de la
-//   app, donde Descuento es editable y Costo final se deriva.
-//
-// Al crear una negociación desde otros orígenes (ej. "Crear negociación" en
-// Seguimiento/lead_detail_sheet, desdeConversacion == false), no hay ninguna
-// restricción — Campaña, Oportunidad, Canal, Interés y toda la financiera son
-// editables normalmente, como si fuera una negociación cualquiera.
+// - Interés siempre editable.
 class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── EditLeadContactoSection comentada — la página solo muestra lo que se
   // puede guardar/actualizar, no info de contacto de solo lectura. ──────────
@@ -64,9 +66,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   // ── Campos editables ──────────────────────────────────────────────────────
   late final TextEditingController _cantidadCtrl;
+  // Precio base ya no lo escribe el usuario — se autocompleta desde la
+  // Oportunidad elegida (_onOportunidadChanged), pero se mantiene como
+  // controller porque igual viaja en el guardado.
   late final TextEditingController _precioBaseCtrl;
-  late final TextEditingController _descuentoCtrl;
-  // Solo se usa cuando desdeConversacion == true — ver nota de reglas arriba.
+  // Costo final es el único campo editable de la fila financiera; Descuento
+  // se deriva de él (ver getters financieros).
   late final TextEditingController _costoFinalCtrl;
 
   bool _isLoading = false;
@@ -78,14 +83,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void initState() {
     super.initState();
     final n = widget.negociacion;
+    // Al crear, Cantidad arranca en 1 por defecto — no en blanco/0.
+    final cantidadInicial = (n.idLead == 0 && n.cantidad == 0) ? 1 : n.cantidad;
     _cantidadCtrl = TextEditingController(
-      text: NumberFormatUtils.fmtInt(n.cantidad),
+      text: NumberFormatUtils.fmtInt(cantidadInicial),
     );
     _precioBaseCtrl = TextEditingController(
       text: NumberFormatUtils.fmtDecimal(n.precioBase),
-    );
-    _descuentoCtrl = TextEditingController(
-      text: NumberFormatUtils.fmtDecimal(n.descuento),
     );
     _costoFinalCtrl = TextEditingController(
       text: NumberFormatUtils.fmtDecimal(n.precio),
@@ -119,7 +123,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void dispose() {
     _cantidadCtrl.dispose();
     _precioBaseCtrl.dispose();
-    _descuentoCtrl.dispose();
     _costoFinalCtrl.dispose();
     // _seccionCambio.dispose();
     super.dispose();
@@ -139,10 +142,16 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         .where((e) => e.id == n.idOportunidad)
         .firstOrNull;
     _canal = state.canales.where((e) => e.id == n.idCanal).firstOrNull;
-    // Desde conversación el canal siempre es WhatsApp (id 1) y no se muestra
-    // editable — ver nota de reglas en la cabecera de este State.
+    // Desde conversación el canal siempre es WhatsApp y no se muestra
+    // editable — matchea por id (convención documentada: 1) y, si no
+    // aparece, por nombre — robusto ante cualquier diferencia de catálogo.
     if (widget.desdeConversacion) {
-      _canal = state.canales.where((e) => e.id == 1).firstOrNull ?? _canal;
+      _canal =
+          state.canales.where((e) => e.id == 1).firstOrNull ??
+          state.canales
+              .where((e) => e.nombre.toLowerCase().contains('whatsapp'))
+              .firstOrNull ??
+          _canal;
     }
     _interes = state.intereses.where((e) => e.id == n.idInteres).firstOrNull;
 
@@ -191,16 +200,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     }
 
     // Desde conversación, al CREAR (idLead == 0) el estado siempre arranca
-    // en "Nuevo" (id '00') y no se muestra editable. Al editar una
-    // negociación ya creada, el estado real cargado arriba se respeta.
+    // en "Nuevo" y no se muestra editable — ver _EstadoNuevoNombre/id fijos
+    // usados directamente en _guardar(), sin depender de que el catálogo
+    // marque '00' como esPadre.
     if (widget.desdeConversacion && _esNuevo) {
-      _estado = state.estados
-          .where((e) => e.id == '00' && e.esPadre)
-          .firstOrNull;
+      _estado = null;
       _subEstado = null;
-      _subEstadosFiltrados = _estado == null
-          ? []
-          : state.estados.where((e) => e.idPadre == _estado!.id).toList();
+      _subEstadosFiltrados = [];
     }
   }
 
@@ -218,17 +224,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       NumberFormatUtils.parseDecimal(_precioBaseCtrl.text);
   double get _subtotal => _precioBase * _cantidad;
 
-  // Desde conversación el campo editable es Costo final y Descuento se
-  // autocompleta; en el resto de la app es al revés — ver nota de reglas.
-  double get _descuento => widget.desdeConversacion
-      ? (_subtotal - _costoFinalIngresado).clamp(0, double.infinity)
-      : NumberFormatUtils.parseDecimal(_descuentoCtrl.text);
-  double get _costoFinalIngresado =>
-      NumberFormatUtils.parseDecimal(_costoFinalCtrl.text);
+  // Costo final es el campo editable; Descuento siempre se autocompleta —
+  // en toda la app, sin excepción (ver reglas arriba).
   double get _costoFinal =>
-      widget.desdeConversacion ? _costoFinalIngresado : _subtotal - _descuento;
+      NumberFormatUtils.parseDecimal(_costoFinalCtrl.text);
+  double get _descuento => (_subtotal - _costoFinal).clamp(0, double.infinity);
 
-  // ── Detección de cambios ──────────────────────────────────────────────────
+  // ── Detección de cambios / validación de campos obligatorios ──────────────
 
   bool get _hayCambios {
     final n = widget.negociacion;
@@ -242,12 +244,21 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         _interes?.id != n.idInteres ||
         _cantidadCtrl.text != NumberFormatUtils.fmtInt(n.cantidad) ||
         _precioBaseCtrl.text != NumberFormatUtils.fmtDecimal(n.precioBase) ||
-        (widget.desdeConversacion
-            ? _costoFinalCtrl.text != NumberFormatUtils.fmtDecimal(n.precio)
-            : _descuentoCtrl.text !=
-                  NumberFormatUtils.fmtDecimal(n.descuento)) ||
+        _costoFinalCtrl.text != NumberFormatUtils.fmtDecimal(n.precio) ||
         (_monedaItem?.id ?? '') != n.idMoneda;
   }
+
+  // Al crear son obligatorios Campaña, Oportunidad, Canal y Cantidad — el
+  // canal cuenta como puesto si está bloqueado (desde conversación siempre
+  // hay uno fijo, aunque _canal no haya podido matchear contra el catálogo).
+  bool get _camposObligatoriosCompletos =>
+      _campania != null &&
+      _oportunidad != null &&
+      (_canal != null || (widget.desdeConversacion && _esNuevo)) &&
+      _cantidad > 0;
+
+  bool get _puedeGuardar =>
+      _esNuevo ? _camposObligatoriosCompletos : _hayCambios;
 
   // ── Callbacks de combos ───────────────────────────────────────────────────
 
@@ -295,7 +306,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── Guardar ───────────────────────────────────────────────────────────────
 
   Future<void> _guardar() async {
-    if (!_hayCambios) return;
+    if (!_puedeGuardar) return;
 
     final confirmar = await context.showConfirmDialog(
       title: 'Confirmar cambio',
@@ -305,9 +316,17 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
     setState(() => _isLoading = true);
 
-    final idEstadoEfectivo = _subEstado?.id ?? _estado?.id;
-    final estadoEfectivo = _subEstado?.nombre ?? _estado?.nombre;
-    final tieneSubEstado = _subEstado != null;
+    // Al crear desde conversación el estado va fijo en "Nuevo" ('00'),
+    // directo — no depende de que el catálogo haya matcheado nada en
+    // _estado/_subEstado (ver _inicializarCombos).
+    final estadoNuevoForzado = widget.desdeConversacion && _esNuevo;
+    final idEstadoEfectivo = estadoNuevoForzado
+        ? '00'
+        : (_subEstado?.id ?? _estado?.id);
+    final estadoEfectivo = estadoNuevoForzado
+        ? 'Nuevo'
+        : (_subEstado?.nombre ?? _estado?.nombre);
+    final tieneSubEstado = !estadoNuevoForzado && _subEstado != null;
 
     if (context.mounted) {
       // ignore: use_build_context_synchronously
@@ -351,14 +370,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             listenable: Listenable.merge([
               _cantidadCtrl,
               _precioBaseCtrl,
-              _descuentoCtrl,
               _costoFinalCtrl,
             ]),
             builder: (context, _) => FormSaveBar(
               onCancelar: () => context.goBack(),
               onGuardar: _guardar,
               isLoading: _isLoading,
-              isEnabled: _hayCambios,
+              isEnabled: _puedeGuardar,
               iconoGuardar: AppIcons.save,
               textoGuardar: 'Guardar cambios',
             ),
@@ -393,10 +411,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 estadoBloqueado: widget.desdeConversacion && _esNuevo,
                 // El canal desde conversación siempre es WhatsApp fijo.
                 canalBloqueado: widget.desdeConversacion,
-                // Campaña/Oportunidad solo se activan al crear desde
-                // conversación; al editar quedan fijas.
-                campaniaOportunidadBloqueada:
-                    widget.desdeConversacion && !_esNuevo,
+                // Campaña/Oportunidad solo se activan al crear, en
+                // cualquier origen — al editar quedan fijas siempre.
+                campaniaOportunidadBloqueada: !_esNuevo,
                 onCampaniaChanged: _onCampaniaChanged,
                 onOportunidadChanged: _onOportunidadChanged,
                 onCanalChanged: (item) => setState(() => _canal = item),
@@ -411,17 +428,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 listenable: Listenable.merge([
                   _cantidadCtrl,
                   _precioBaseCtrl,
-                  _descuentoCtrl,
                   _costoFinalCtrl,
                 ]),
                 builder: (context, _) => EditLeadFinancieraSection(
                   cantidadCtrl: _cantidadCtrl,
                   precioBaseCtrl: _precioBaseCtrl,
-                  descuentoCtrl: _descuentoCtrl,
                   costoFinalCtrl: _costoFinalCtrl,
-                  // Desde conversación se edita Costo final y Descuento se
-                  // autocompleta — al revés que en el resto de la app.
-                  costoFinalEditable: widget.desdeConversacion,
                   monedas: catalogState.monedas,
                   monedaItem: _monedaItem,
                   isLoading: _bloqueado,

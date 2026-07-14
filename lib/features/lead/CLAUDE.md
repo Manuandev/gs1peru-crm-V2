@@ -121,7 +121,7 @@ Ambas pantallas usan `SkeletonBox` (animación pulse grey300↔grey200, 900ms) d
 
 ---
 
-## EditLeadPortrait — flag `desdeConversacion`
+## EditLeadPortrait — reglas de negocio y flag `desdeConversacion`
 
 `EditLeadPortrait` (widgets/edit_lead/) es la pantalla "Crear/Editar negociación", compartida por
 varios orígenes (Conversaciones, `NegociacionesTab` de Lead, `ContactoNegociacionesTab` de
@@ -130,22 +130,43 @@ e **Información financiera** — nunca "Información adicional" (nombre/modalid
 ese widget se eliminó (`EditLeadAdicionalSection`, ya no existe) porque el campo no se muestra en
 ningún origen, edite o cree, venga o no de conversación.
 
-El flag `desdeConversacion` (viaja `context.goToEditarLead(desdeConversacion: true)` →
-`AppRoutes.detalleEditarLead` → `EditLeadPage` → `EditLeadView` → `EditLeadPortrait`) se activa
-solo cuando se entra desde el AppBar de `ChatDetailView` (Conversaciones) y restringe el formulario así:
+### Reglas universales (todos los orígenes)
 
-- **Canal** siempre bloqueado (`enabled: false`), fijo en WhatsApp (id `1`) — tanto al crear como al editar.
-- **Estado/Subestado** bloqueados fijos en "Nuevo" (id `'00'`) **solo al crear** (`negociacion.idLead == 0`);
+- **Precio base** y **Descuento** nunca son editables por el usuario, en ningún origen ni
+  pantalla — `EditLeadFinancieraSection` los renderiza siempre `enabled: false`. Precio base se
+  autocompleta al elegir Oportunidad (`item.importeGeneral`, en `_onOportunidadChanged`);
+  Descuento se autocalcula como `subtotal - costoFinal`. El único campo editable de esa fila es
+  **Costo final** (`_costoFinalCtrl`) — ya no existe el toggle `costoFinalEditable`, es el
+  comportamiento único.
+- **Campaña/Oportunidad** solo son editables al **crear** (`negociacion.idLead == 0`), sin
+  importar el origen — al editar una negociación ya existente quedan siempre bloqueadas
+  (`campaniaOportunidadBloqueada: !_esNuevo` en `_EditLeadPortraitState.build()`).
+- **Cantidad** arranca en `1` por defecto al crear (antes quedaba en 0/blanco) — ver
+  `initState()._cantidadInicial`.
+- Para **crear** una negociación son obligatorios Campaña, Oportunidad, Canal y Cantidad — el
+  botón Guardar no se habilita hasta tenerlos completos (`_puedeGuardar` /
+  `_camposObligatoriosCompletos`, reemplaza a `_hayCambios` como gate del `FormSaveBar` cuando
+  `_esNuevo`). Los labels llevan `(*)` en `EditLeadNegociacionSection`/`EditLeadFinancieraSection`.
+
+### Flag `desdeConversacion`
+
+Viaja `context.goToEditarLead(desdeConversacion: true)` → `AppRoutes.detalleEditarLead` →
+`EditLeadPage` → `EditLeadView` → `EditLeadPortrait`, y se activa solo cuando se entra desde el
+AppBar de `ChatDetailView` (Conversaciones). Restringe además:
+
+- **Canal** siempre bloqueado, fijo en WhatsApp — tanto al crear como al editar.
+- **Estado/Subestado** bloqueados fijos en "Nuevo" **solo al crear** (`negociacion.idLead == 0`);
   al editar una negociación ya creada, se pueden mover de estado normalmente.
-- **Campaña/Oportunidad** editables **solo al crear**; al editar quedan bloqueadas (`enabled: false`).
-- **Interés** y toda la **Información financiera** siempre editables.
-- **Información financiera:** el campo editable pasa a ser **Costo final** (en vez de Descuento) —
-  Descuento se autocompleta como `subtotal - costoFinal`. Es la única pantalla de la app donde el
-  cálculo va en ese sentido; en el resto (`desdeConversacion == false`), Descuento es el campo
-  editable y Costo final se deriva (`subtotal - descuento`), sin cambios.
+- **Interés** siempre editable.
 
-Los flags de bloqueo (`estadoBloqueado`, `canalBloqueado`, `campaniaOportunidadBloqueada`) se
-calculan en `_EditLeadPortraitState.build()` y se pasan a `EditLeadNegociacionSection`;
-`costoFinalEditable` + `costoFinalCtrl` se pasan a `EditLeadFinancieraSection`. Si se agrega un
-nuevo origen que también deba usar este modo restringido, reusar el mismo flag — no crear uno
-paralelo.
+**Ojo — Estado/Canal bloqueados se renderizan como `CustomTextField` deshabilitado con texto fijo
+("Nuevo"/"WhatsApp"), NUNCA como `CustomComboField` con `enabled: false`.** Motivo: `CustomComboField`
+solo lee `initialValue` en su propio `initState()` (`custom_combo_field.dart`) — si el valor forzado
+se calcula después del primer build del combo (o el catálogo no trae ese estado marcado `esPadre`),
+el combo queda visualmente vacío y no refleja el valor bloqueado. `_guardar()` tampoco depende de que
+`_estado`/`_canal` hayan matcheado contra el catálogo: al crear desde conversación manda `idEstado:
+'00'`/`estado: 'Nuevo'` directo. El canal si intenta matchear por id `1` y, si falla, por nombre
+(`contains('whatsapp')`) — ver `_inicializarCombos`.
+
+Si se agrega un nuevo origen que también deba usar el modo restringido de conversación, reusar el
+flag `desdeConversacion` — no crear uno paralelo.

@@ -9,8 +9,13 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class EditLeadPortrait extends StatefulWidget {
   final Negociacion negociacion;
+  final bool soloLectura;
 
-  const EditLeadPortrait({super.key, required this.negociacion});
+  const EditLeadPortrait({
+    super.key,
+    required this.negociacion,
+    this.soloLectura = false,
+  });
 
   @override
   State<EditLeadPortrait> createState() => _EditLeadPortraitState();
@@ -161,6 +166,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   // ── Getters financieros ───────────────────────────────────────────────────
 
+  // Solo lectura (negociación con solicitud ya generada) o guardando — en
+  // ambos casos ningún campo debe aceptar interacción.
+  bool get _bloqueado => _isLoading || widget.soloLectura;
+
   int get _cantidad => NumberFormatUtils.parseInt(_cantidadCtrl.text);
   double get _precioBase =>
       NumberFormatUtils.parseDecimal(_precioBaseCtrl.text);
@@ -284,23 +293,27 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is! CatalogsLoaded) return const AppLoadingView();
 
-    final formSaveBar = ListenableBuilder(
-      listenable: Listenable.merge([
-        _nombreLeadCtrl,
-        _modalidadCtrl,
-        _cantidadCtrl,
-        _precioBaseCtrl,
-        _descuentoCtrl,
-      ]),
-      builder: (context, _) => FormSaveBar(
-        onCancelar: () => context.goBack(),
-        onGuardar: _guardar,
-        isLoading: _isLoading,
-        isEnabled: _hayCambios,
-        iconoGuardar: AppIcons.save,
-        textoGuardar: 'Guardar cambios',
-      ),
-    );
+    // Solo lectura: ni el botón "Guardar" ni "Cancelar" tienen sentido — no
+    // hay nada que guardar ni cancelar, solo volver con el back del AppBar.
+    final formSaveBar = widget.soloLectura
+        ? const SizedBox.shrink()
+        : ListenableBuilder(
+            listenable: Listenable.merge([
+              _nombreLeadCtrl,
+              _modalidadCtrl,
+              _cantidadCtrl,
+              _precioBaseCtrl,
+              _descuentoCtrl,
+            ]),
+            builder: (context, _) => FormSaveBar(
+              onCancelar: () => context.goBack(),
+              onGuardar: _guardar,
+              isLoading: _isLoading,
+              isEnabled: _hayCambios,
+              iconoGuardar: AppIcons.save,
+              textoGuardar: 'Guardar cambios',
+            ),
+          );
 
     return Column(
       children: [
@@ -311,7 +324,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
               EditLeadAdicionalSection(
                 nombreLeadCtrl: _nombreLeadCtrl,
                 modalidadCtrl: _modalidadCtrl,
-                isLoading: _isLoading,
+                isLoading: _bloqueado,
               ),
               const SizedBox(height: AppSpacing.lg),
 
@@ -331,7 +344,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 descripcionEstadoPadreFallback:
                     widget.negociacion.descripcionEstadoPadre,
                 idCanalFallback: widget.negociacion.idCanal,
-                isLoading: _isLoading,
+                isLoading: _bloqueado,
                 onCampaniaChanged: _onCampaniaChanged,
                 onOportunidadChanged: _onOportunidadChanged,
                 onCanalChanged: (item) => setState(() => _canal = item),
@@ -354,7 +367,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                   descuentoCtrl: _descuentoCtrl,
                   monedas: catalogState.monedas,
                   monedaItem: _monedaItem,
-                  isLoading: _isLoading,
+                  isLoading: _bloqueado,
                   onMonedaChanged: (item) => setState(() => _monedaItem = item),
                   subtotal: _subtotal,
                   descuento: _descuento,

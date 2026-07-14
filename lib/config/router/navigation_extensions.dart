@@ -208,9 +208,10 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToEditarLead({
     required int idLead,
     InfoLeadCubit? cubit,
+    bool soloLectura = false,
   }) => _push(
     AppRoutes.detalleEditarLead,
-    arguments: {'idLead': idLead, 'cubit': cubit},
+    arguments: {'idLead': idLead, 'cubit': cubit, 'soloLectura': soloLectura},
   );
 
   /// Retorna el [Template] seleccionado, o null si el usuario canceló.

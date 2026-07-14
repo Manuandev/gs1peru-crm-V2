@@ -18,7 +18,7 @@ class Solicitud {
   final String oportunidad;
   final int idCanal;
   final String canal;
-  final String idEstado;
+  final int idEstado;
   final String estado;
   final bool ibValidado;
   final String asesor;
@@ -35,6 +35,11 @@ class Solicitud {
       '$nombre $apellidoPaterno $apellidoMaterno'.trim();
 
   String get apellidos => '$apellidoPaterno $apellidoMaterno'.trim();
+
+  /// Editable solo mientras está "Por Completar" (`idEstado == 0`) y aún
+  /// no fue validada — igual que [Negociacion.accionSolicitud], una vez que
+  /// avanza de estado o se valida deja de poder editarse, solo verse.
+  bool get puedeEditar => idEstado == 0 && !ibValidado;
 
   const Solicitud({
     required this.idSolicitud,
@@ -80,7 +85,7 @@ class Solicitud {
     String? oportunidad,
     int? idCanal,
     String? canal,
-    String? idEstado,
+    int? idEstado,
     String? estado,
     bool? ibValidado,
     String? asesor,

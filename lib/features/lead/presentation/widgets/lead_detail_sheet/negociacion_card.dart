@@ -43,7 +43,7 @@ class NegociacionCard extends StatelessWidget {
     oportunidad: negociacion.nombreOportunidad,
     idCanal: negociacion.idCanal,
     canal: negociacion.descripcionCanal,
-    idEstado: negociacion.idEstadoSol.toString().padLeft(2, '0'),
+    idEstado: negociacion.idEstadoSol,
     estado: '',
     ibValidado: false,
     asesor: '',
@@ -62,11 +62,12 @@ class NegociacionCard extends StatelessWidget {
     context.goToDetalleSolicitud(solicitud: _solicitudDesdeNegociacion());
   }
 
-  // Ya existe una solicitud para esta negociación — no se puede editar el
-  // lead, solo ver su información (mismo destino que "Ver detalle" en
-  // Seguimiento).
-  void _verInformacion(BuildContext context) {
-    context.goToDetalleContacto(idNumero: negociacion.idNumero);
+  // Ya existe una solicitud para esta negociación — ya no se puede editar,
+  // pero se reusa la misma pantalla de Editar negociación en modo solo
+  // lectura (campos deshabilitados, sin barra de Guardar/Cancelar) en vez
+  // de mandar a otra pantalla distinta.
+  void _verNegociacion(BuildContext context) {
+    context.goToEditarLead(idLead: negociacion.idLead, soloLectura: true);
   }
 
   static const TextStyle _estiloMicro = TextStyle(
@@ -253,10 +254,10 @@ class NegociacionCard extends StatelessWidget {
                           height: 26,
                           child: CustomPrimaryButton(
                             text: negociacion.tieneSolicitud
-                                ? 'Ver información'
+                                ? 'Ver negociación'
                                 : 'Editar negociación',
                             onPressed: negociacion.tieneSolicitud
-                                ? () => _verInformacion(context)
+                                ? () => _verNegociacion(context)
                                 : () => _irAEditar(),
                             height: 26,
                             textStyle: const TextStyle(

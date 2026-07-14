@@ -108,7 +108,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
       conteosPorAsesor: _buildConteosPorAsesor(),
       cntSinValidar: _allSolicitudes.where((s) => !s.ibValidado).length,
       cntConDocumentos:
-          _allSolicitudes.where((s) => s.idEstado == '02').length,
+          _allSolicitudes.where((s) => s.idEstado == 2).length,
       cntListasCobranza: _allSolicitudes.where((s) => s.ibValidado).length,
     ));
   }

@@ -61,7 +61,9 @@ class SolicitudModel extends Solicitud {
       oportunidad: ParseUtils.str(fields, 15),
       idCanal: ParseUtils.toInt(fields, 16),
       canal: ParseUtils.str(fields, 17),
-      idEstado: ParseUtils.str(fields, 18),
+      // ID_ESTADO_GES es un INT en el SP — se parsea como tal, no como
+      // string con padding (ver Solicitud.idEstado).
+      idEstado: ParseUtils.toInt(fields, 18),
       estado: ParseUtils.str(fields, 19),
       ibValidado: ParseUtils.toBool(fields, 20),
       asesor: ParseUtils.str(fields, 21),

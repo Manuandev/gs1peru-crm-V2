@@ -6,13 +6,21 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class EditLeadPage extends StatelessWidget {
   final int idLead;
-  const EditLeadPage({super.key, required this.idLead});
+  // true cuando la negociación ya tiene solicitud generada (numSol) — se
+  // reusa esta misma pantalla para mostrar sus datos, pero sin permitir
+  // ningún cambio (ver NegociacionCard._verNegociacion).
+  final bool soloLectura;
+  const EditLeadPage({
+    super.key,
+    required this.idLead,
+    this.soloLectura = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => EditLeadBloc()..add(const EditLeadStarted()),
-      child: const EditLeadView(),
+      child: EditLeadView(soloLectura: soloLectura),
     );
   }
 }

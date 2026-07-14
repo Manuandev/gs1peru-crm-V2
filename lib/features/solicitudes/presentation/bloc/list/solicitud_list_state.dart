@@ -32,7 +32,7 @@ class SolicitudListSuccess extends SolicitudListState {
 
   // Contadores para los indicadores del dashboard (calculados sobre el total).
   // cntSinValidar / cntListasCobranza se basan en `ibValidado` (false/true) —
-  // no en `idEstado`. cntConDocumentos sigue basado en `idEstado == '02'`
+  // no en `idEstado`. cntConDocumentos sigue basado en `idEstado == 2`
   // (estado de gestión, dimensión aparte — ver CLAUDE.md del feature)
   final int cntSinValidar;
   final int cntConDocumentos;

@@ -9,7 +9,8 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 class EditLeadView extends StatefulWidget {
-  const EditLeadView({super.key});
+  final bool soloLectura;
+  const EditLeadView({super.key, this.soloLectura = false});
 
   @override
   State<EditLeadView> createState() => _EditLeadViewState();
@@ -47,8 +48,11 @@ class _EditLeadViewState extends State<EditLeadView> {
         buildWhen: (prev, curr) => curr is InfoLeadSuccess,
         builder: (context, state) {
           final esNuevo = state is InfoLeadSuccess && state.negociacion.idLead == 0;
+          final titulo = widget.soloLectura
+              ? 'Ver negociación'
+              : (esNuevo ? 'Crear negociación' : 'Editar negociación');
           return Text(
-            esNuevo ? 'Crear negociación' : 'Editar negociación',
+            titulo,
             style: AppTextStyles.titleLarge.copyWith(
               color: Theme.of(context).colorScheme.onPrimary,
             ),
@@ -91,6 +95,7 @@ class _EditLeadViewState extends State<EditLeadView> {
               if (state is EditLeadLoaded) {
                 return EditLeadPortrait(
                   negociacion: infoState.negociacion, // ← del cubit
+                  soloLectura: widget.soloLectura,
                 );
               }
               return const SizedBox.shrink();

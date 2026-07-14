@@ -20,18 +20,18 @@ class SolicitudCard extends StatelessWidget {
   });
 
   // ── Color por estado ─────────────────────────────────────────────
-  static Color colorEstado(String idEstado) => switch (idEstado) {
-    '00' => AppColors.info,
-    '01' => AppColors.warning,
-    '02' => AppColors.success,
-    '03' => AppColors.purple,
+  static Color colorEstado(int idEstado) => switch (idEstado) {
+    0 => AppColors.info,
+    1 => AppColors.warning,
+    2 => AppColors.success,
+    3 => AppColors.purple,
     _ => AppColors.textDisabled,
   };
 
   // ── Acción según estado: ninguna = solo "Ver" ─────────────────────
-  static SolicitudAccionTipo _accion(String idEstado) => switch (idEstado) {
-    '00' || '03' => SolicitudAccionTipo.cobranza, // "Completar"
-    '01' => SolicitudAccionTipo.sinValidar, // "Validar"
+  static SolicitudAccionTipo _accion(int idEstado) => switch (idEstado) {
+    0 || 3 => SolicitudAccionTipo.cobranza, // "Completar"
+    1 => SolicitudAccionTipo.sinValidar, // "Validar"
     _ => SolicitudAccionTipo.ninguna,
   };
 
@@ -333,7 +333,7 @@ class SolicitudCard extends StatelessWidget {
 // ─── Chip de estado coloreado ─────────────────────────────────────────────────
 
 class _EstadoChip extends StatelessWidget {
-  final String idEstado;
+  final int idEstado;
   final String label;
 
   const _EstadoChip({required this.idEstado, required this.label});

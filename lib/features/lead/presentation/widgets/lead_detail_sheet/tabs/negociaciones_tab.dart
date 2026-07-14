@@ -158,7 +158,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
         oportunidad: '',
         idCanal: 0,
         canal: '',
-        idEstado: '',
+        idEstado: 0,
         estado: '',
         ibValidado: false,
         asesor: '',

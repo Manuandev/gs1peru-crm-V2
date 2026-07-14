@@ -274,6 +274,7 @@ class AppRouter {
         final args = _requireArgs<Map<String, dynamic>>(context);
         final idLead = args['idLead'] as int? ?? 0;
         final existingCubit = args['cubit'] as InfoLeadCubit?;
+        final soloLectura = args['soloLectura'] as bool? ?? false;
 
         // Siempre se necesita un InfoLeadCubit en el árbol para EditLeadView.
         Widget infoLeadProvider(Widget child) {
@@ -291,7 +292,9 @@ class AppRouter {
           );
         }
 
-        return infoLeadProvider(EditLeadPage(idLead: idLead));
+        return infoLeadProvider(
+          EditLeadPage(idLead: idLead, soloLectura: soloLectura),
+        );
       },
     ),
     AppRoutes.templates: RouteDefinition<Plantilla>(

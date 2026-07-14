@@ -403,6 +403,40 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   `OK¯msg¯data`).
 - "Carga masiva" (Excel) todavía no tiene SP conectado.
 
+## `Solicitud.idEstado` es `int` (2026-07-14)
+`ID_ESTADO_GES` es una columna INT en el SP (`CSV_SOLICITUDES_LST_APP`, task `'LS'`) — llega
+crudo (`'0'`/`'1'`/`'2'`/`'3'`, sin padding). Antes `Solicitud.idEstado` era `String` y todo el
+código (`colorEstado`, `_accion` de `SolicitudCard`, conteos de `SolicitudListBloc`,
+`Solicitud.puedeEditar`) comparaba contra literales con padding (`'00'`-`'03'`) que nunca
+matcheaban con el dato real → todas las solicitudes caían al valor por defecto (chip gris
+`textDisabled`, sin botón de acción en la lista). Se corrigió cambiando el tipo del campo a
+`int` de punta a punta — mismo patrón que `Negociacion.idEstadoSol` (`lead/`), que siempre fue
+`int` y nunca tuvo este bug:
+- `SolicitudModel.fromRawString` → `ParseUtils.toInt(fields, 18)` (antes `ParseUtils.str` +
+  padding).
+- `SolicitudCard.colorEstado(int)`/`_accion(int)`/`_EstadoChip.idEstado` (`int`) — switches
+  ahora comparan `0`/`1`/`2`/`3`, no `'00'`/`'01'`/`'02'`/`'03'`.
+- `SolicitudListBloc` → `cntConDocumentos` compara `idEstado == 2`.
+- Los 4 lugares que arman un `Solicitud` a mano (`_generarSolicitud` en
+  `ContactoNegociacionCard`/`NegociacionesTab`, `_solicitudDesdeNegociacion` en
+  `NegociacionCard`/`ContactoNegociacionCard`) mandan `idEstado: 0` (blanco) o
+  `idEstado: negociacion.idEstadoSol` directo — ya no hace falta
+  `.toString().padLeft(2, '0')`.
+- Si se vuelve a tocar este campo, **no** reintroducir un `String` con padding — comparar
+  siempre como `int` (`0` Por Completar · `1` Por Validar · `2` Con Documentos · `3` Lista
+  p/Cobranza, ver "Estados de la solicitud" más abajo).
+
+## Regla de negocio — edición de una solicitud ya existente (2026-07-14)
+`Solicitud.puedeEditar` (`domain/entities/solicitud.dart`) = `idEstado == 0 && !ibValidado`
+— mismo patrón que `Negociacion.accionSolicitud`. `_BotonesDetalle`
+(`presentation/widgets/detail/solicitud_detalle_view.dart`) solo muestra "Editar ficha" cuando
+`puedeEditar` es `true`; si no, el pie queda con un único botón "Continuar" (ancho completo,
+`modoEdicion: false` — recorrido de solo lectura, ver "Validación de 'Continuar'" arriba). No se
+tocó `SolicitudCard._accion()` (lista) — sus botones "Completar"/"Validar" ya navegaban a
+`SolicitudDetallePage` sin editar nada directo, así que el gate real queda cubierto acá; el
+mismatch de `SolicitudCard` con `idEstado` (ver nota debajo, "Ojo — mismatch pendiente") sigue
+pendiente tal cual, no es lo que se resolvió con esta regla.
+
 ## Regla de negocio — negociación con solicitud ya generada (2026-07-13)
 Una vez que una negociación tiene `NUMSOL` (campo `Negociacion.numSol`, `lead/`), deja de ser
 editable **en cualquier flujo** (ni desde Seguimiento ni desde Conversación) — el botón deja de
@@ -415,14 +449,30 @@ decir "Generar solicitud" y pasa a reflejar el estado real de esa solicitud:
   el paso 1 prellene con `getSolicitudDetalle()`); con `numSol` y `idEstadoSol > 0` (ya procesada)
   → `SolicitudAccion.ver` (botón "Ver solicitud", `goToDetalleSolicitud` — solo lectura).
 - `idEstadoSol` es `ID_ESTADO_GES` (`EVT.T_TECMSOLINSCRIPCION01`, tasks `'DT'`/`'DN'`/`'LS'` de
-  `SP_LeadsLst`) — no confundir con `Solicitud.idEstado` (mismo dato pero como string `'00'`-`'03'`
-  del SP de Solicitudes; acá se reconstruye con `idEstadoSol.toString().padLeft(2, '0')` al armar
-  el `Solicitud` de paso).
+  `SP_LeadsLst`) — mismo dato y mismo tipo (`int`) que `Solicitud.idEstado` (del SP de
+  Solicitudes); se pasa directo al armar el `Solicitud` de paso, sin conversión.
 - La edición del **lead/negociación en sí** (no la solicitud) también se bloquea si
   `negociacion.tieneSolicitud`: `NegociacionCard` (Conversaciones) cambia "Editar negociación" por
-  "Ver información" (navega a `goToDetalleContacto`, solo lectura); `ContactoNegociacionCard`
-  (Seguimiento) deja el `onTap` del card en `null` (ya está dentro de la pestaña Información,
-  de solo lectura, de esa misma pantalla — no hace falta re-navegar).
+  "Ver negociación", que navega a **la misma** `EditLeadPage` pero en modo solo lectura
+  (`context.goToEditarLead(idLead: negociacion.idLead, soloLectura: true)`) — no a
+  `ContactoDetallePage` (eso mandaba a una pantalla distinta y, encima, `negociacion.idNumero`
+  siempre es `0` en este SP — ver nota abajo). `ContactoNegociacionCard` (Seguimiento) deja el
+  `onTap` del card en `null` en el mismo caso (no tiene un botón "Ver negociación" propio, y ya
+  está dentro de la pestaña Información de solo lectura de esa misma pantalla).
+- **`EditLeadPage`/`EditLeadView`/`EditLeadPortrait` soportan `soloLectura: bool`** (default
+  `false`) — se agregó específicamente para "Ver negociación". Con `soloLectura: true`: el
+  título pasa a "Ver negociación", `EditLeadPortrait._bloqueado` (`_isLoading ||
+  widget.soloLectura`) se pasa como `isLoading` a las 3 secciones (`EditLeadAdicionalSection`/
+  `EditLeadNegociacionSection`/`EditLeadFinancieraSection`, que ya deshabilitan todos sus
+  campos/combos con `enabled: !isLoading` — se reusa ese mecanismo, no uno nuevo) y
+  `FormSaveBar` (Cancelar/Guardar) se reemplaza por `SizedBox.shrink()` — no debe quedar ningún
+  botón de acción al pie. El flag viaja `goToEditarLead(soloLectura: ...)` →
+  `AppRoutes.detalleEditarLead` (argumento `'soloLectura'`, default `false` si no viene) →
+  `EditLeadPage` → `EditLeadView` → `EditLeadPortrait`.
+  **Ojo — usar siempre `negociacion.idLead`, nunca `negociacion.idNumero`, para navegar desde
+  una `Negociacion` cargada por el SP `'LN'`** (historial de negociaciones,
+  `NegociacionModel.fromRawString`): ese task nunca trae `idNumero`, siempre queda en `0` (bug
+  real ya corregido, 2026-07-14 — navegar con `idNumero: 0` no cargaba nada).
 - Ambas cards arman un `Solicitud` "de paso" con los campos disponibles en `Negociacion`
   (`_solicitudDesdeNegociacion()`, duplicado a propósito en los 2 archivos — es corto y cada
   card vive en features distintas) — campos que `Negociacion` no trae (`cargo`, `tipoPersona`,
@@ -435,28 +485,28 @@ decir "Generar solicitud" y pasa a reflejar el estado real de esa solicitud:
 ## Notas importantes
 - `SolicitudFiltro` (`todas`, `asesores`, `sinValidar`, `enviarACobranza`) — `sinValidar` =
   `!ibValidado`, `enviarACobranza` = `ibValidado`. **Ya no usan `idEstado`** — antes
-  `sinValidar` era `idEstado == '01'` y `enviarACobranza` era `idEstado == '03'`; se cambió
+  `sinValidar` era `idEstado == 1` y `enviarACobranza` era `idEstado == 3`; se cambió
   porque "sin validar" y "listo para cobranza" son, en realidad, los dos lados de
   `IB_VALIDADO` (0/false = pendiente de validar, 1/true = ya validado → listo para
   cobranza), no un estado de gestión. Ya no existe un filtro/contador "Por completar" — se
   consideraba lo mismo que "Sin validar" y se eliminó
 - Indicadores del dashboard (`_IndicadoresRow`, `solicitud_list_view.dart`): **3** tarjetas
   — "Sin validar" (`cntSinValidar` = `!ibValidado`), "Con documentos" (`cntConDocumentos` =
-  `idEstado == '02'`, sin cambios), "Listas para cobranza" (`cntListasCobranza` =
-  `ibValidado`). Antes había una 4ta tarjeta "Por completar" (`idEstado == '00'`) — se quitó
+  `idEstado == 2`, sin cambios), "Listas para cobranza" (`cntListasCobranza` =
+  `ibValidado`). Antes había una 4ta tarjeta "Por completar" (`idEstado == 0`) — se quitó
   por ser redundante con "Sin validar"
 - **Ojo — mismatch pendiente con `SolicitudCard`**: `SolicitudAccionTipo`/
   `SolicitudCard._accion()`/`colorEstado()` (widgets/list/solicitud_card.dart) todavía
   deciden qué botón mostrar (Validar/Completar) y de qué color es el chip de estado
-  mirando `idEstado` (`'00'`/`'01'`/`'02'`/`'03'`, el estado de gestión crudo del SP — ver
+  mirando `idEstado` (`0`/`1`/`2`/`3`, el estado de gestión crudo del SP — ver
   "SPs que consume"), **no** `ibValidado`. Por ahora es intencional (el usuario pidió dejar
   los estados de gestión para después), pero puede haber solicitudes que aparezcan en el
   filtro "Sin validar" (por `ibValidado`) mostrando el botón "Completar" en vez de
-  "Validar" (porque su `idEstado` no es `'01'`), o viceversa. Pendiente de que se defina la
+  "Validar" (porque su `idEstado` no es `1`), o viceversa. Pendiente de que se defina la
   relación real entre `idEstado` (estado de gestión) e `IB_VALIDADO` para unificar esto
-- Estados de la solicitud (`idEstado`, estado de gestión — dimensión aparte de
-  `ibValidado`): `'00'` Por Completar · `'01'` Por Validar · `'02'` Con Documentos · `'03'`
-  Lista p/Cobranza
+- Estados de la solicitud (`idEstado`, `int`, estado de gestión — dimensión aparte de
+  `ibValidado`): `0` Por Completar · `1` Por Validar · `2` Con Documentos · `3` Lista
+  p/Cobranza
 - Separadores del backend: `AppConstants.sepListas` (`¯`), `AppConstants.sepCampos` (`¦`),
   `AppConstants.sepRegistros` (`¬`) — usados por `SolicitudRemoteDatasource.getSolicitudes()`
   y `SolicitudModel.parseList`/`fromRawString`

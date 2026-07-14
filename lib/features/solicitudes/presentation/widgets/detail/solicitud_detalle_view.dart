@@ -624,25 +624,27 @@ class _BotonesDetalle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () => context.goToFichaCompletarSolicitud(
-                solicitud: solicitud,
-                modoEdicion: true,
-              ),
-              icon: const Icon(AppIcons.edit, size: AppSizing.iconActionSm),
-              label: const Text('Editar ficha'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.border),
-                minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          if (solicitud.puedeEditar) ...[
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => context.goToFichaCompletarSolicitud(
+                  solicitud: solicitud,
+                  modoEdicion: true,
+                ),
+                icon: const Icon(AppIcons.edit, size: AppSizing.iconActionSm),
+                label: const Text('Editar ficha'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.border),
+                  minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
+          ],
           Expanded(
             child: FilledButton.icon(
               onPressed: () => context.goToFichaCompletarSolicitud(

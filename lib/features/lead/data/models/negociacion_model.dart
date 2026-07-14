@@ -96,10 +96,10 @@ class NegociacionModel extends Negociacion {
     return NegociacionModel.fromRawString(rawResponse);
   }
 
-  // Índices del SP de detalle de lead (task 'DT'). No trae LD.NOMBRE ni
-  // LD.MODALIDAD — nombre/modalidad quedan en su valor por defecto ('').
-  // Sí trae contacto/número/correo (1-12) — se usan para no depender de
-  // Chat en la pantalla de editar lead.
+  // Índices del SP de detalle de lead (tasks 'DT' y 'DN' — mismo shape de
+  // columnas en ambas desde que se agregó NUMSOL/ESTADO_GES/NOMBRE/MODALIDAD
+  // también a 'DN'). Trae contacto/número/correo (1-12) — se usan para no
+  // depender de Chat en la pantalla de editar lead.
   //  0  LD.ID_LEAD            17 CP.ID_CAMPANIA
   //  1  CT.ID_CONTACTO        18 CP.NOMBRE
   //  2  CT.NOMBRES            19 OP.ID_OPORTUNIDAD
@@ -120,13 +120,17 @@ class NegociacionModel extends Negociacion {
   //                               parsea acá todavía)
   //                            33 LD.ID_TIP_MONEDA
   //                            34 CL.CT_LEADS (total de leads del número)
+  //                            35 LI.NUMSOL
+  //                            36 CI.ID_ESTADO_GES
+  //                            37 LD.NOMBRE
+  //                            38 LD.MODALIDAD
   factory NegociacionModel.fromDetalleRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
     return NegociacionModel(
       idLead: ParseUtils.toInt(fields, 0),
-      nombre: '',
-      modalidad: '',
+      nombre: ParseUtils.str(fields, 37),
+      modalidad: ParseUtils.str(fields, 38),
       cantidad: ParseUtils.toInt(fields, 28),
       precioBase: ParseUtils.toDouble(fields, 26),
       descuento: ParseUtils.toDouble(fields, 29),

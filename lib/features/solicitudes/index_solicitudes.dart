@@ -4,10 +4,12 @@ export 'data/datasources/remote/solicitud_remote_datasource.dart';
 
 export 'data/models/solicitud_model.dart';
 export 'data/models/solicitud_detalle_model.dart';
+export 'data/models/solicitud_detalle_real_model.dart';
 
 export 'data/repositories/solicitud_repository_impl.dart';
 
 export 'domain/entities/solicitud.dart';
+export 'domain/entities/solicitud_detalle.dart';
 
 export 'domain/enums/solicitud_filtro.dart';
 export 'domain/enums/solicitud_accion_tipo.dart';
@@ -16,12 +18,17 @@ export 'domain/repositories/solicitud_repository.dart';
 
 export 'domain/usecases/get_solicitudes_usecase.dart';
 export 'domain/usecases/get_solicitud_detalle_usecase.dart';
+export 'domain/usecases/get_detalle_solicitud_usecase.dart';
 export 'domain/usecases/guardar_solicitud_usecase.dart';
 export 'domain/usecases/guardar_archivo_solicitud_usecase.dart';
 
 export 'presentation/bloc/list/solicitud_list_bloc.dart';
 export 'presentation/bloc/list/solicitud_list_event.dart';
 export 'presentation/bloc/list/solicitud_list_state.dart';
+
+export 'presentation/bloc/detalle/solicitud_detalle_bloc.dart';
+export 'presentation/bloc/detalle/solicitud_detalle_event.dart';
+export 'presentation/bloc/detalle/solicitud_detalle_state.dart';
 
 export 'presentation/bloc/participantes/participantes_cubit.dart';
 export 'presentation/bloc/form/solicitud_form_cubit.dart';

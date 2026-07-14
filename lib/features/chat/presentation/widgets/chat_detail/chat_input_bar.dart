@@ -270,11 +270,13 @@ class _NormalBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         // ── Botón adjuntar (cuadrado redondeado) ──────────────
+        // Mismo alto que Plantillas y que el botón mic/enviar — todos a
+        // buttonHeightSmall, para que ninguno domine sobre el input.
         GestureDetector(
           onTap: onAttach,
           child: Container(
-            width: AppSizing.buttonHeight,
-            height: AppSizing.buttonHeight,
+            width: AppSizing.buttonHeightSmall,
+            height: AppSizing.buttonHeightSmall,
             decoration: BoxDecoration(
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -286,7 +288,7 @@ class _NormalBar extends StatelessWidget {
             child: Icon(
               isAttachOpen ? AppIcons.close : AppIcons.attach,
               color: colorScheme.onSurfaceVariant,
-              size: AppSizing.iconMd,
+              size: AppSizing.iconActionSm,
             ),
           ),
         ),
@@ -297,7 +299,7 @@ class _NormalBar extends StatelessWidget {
         GestureDetector(
           onTap: onPlantilla,
           child: Container(
-            height: AppSizing.buttonHeight,
+            height: AppSizing.buttonHeightSmall,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm2),
             decoration: BoxDecoration(
               color: colorScheme.surface,
@@ -330,7 +332,7 @@ class _NormalBar extends StatelessWidget {
 
         const SizedBox(width: AppSpacing.sm),
 
-        // ── Campo de texto + enviar ───────────────────────────
+        // ── Campo de texto ─────────────────────────────────────
         Expanded(
           child: ConstrainedBox(
             constraints: const BoxConstraints(
@@ -343,25 +345,30 @@ class _NormalBar extends StatelessWidget {
               maxLines: 3,
               minLines: 1,
               textCapitalization: TextCapitalization.sentences,
-              suffixIcon: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (child, anim) =>
-                    ScaleTransition(scale: anim, child: child),
-                child: hasText
-                    ? _GreenCircleBtn(
-                        key: const ValueKey('send'),
-                        icon: AppIcons.send,
-                        onTap: onSend,
-                      )
-                    : _GreenCircleBtn(
-                        key: const ValueKey('mic'),
-                        icon: AppIcons.mic,
-                        onTap: onMic,
-                      ),
-              ),
               onSubmitted: (_) => onSend(),
             ),
           ),
+        ),
+
+        const SizedBox(width: AppSpacing.sm),
+
+        // ── Botón enviar / mic — separado del input, mismo alto
+        // que adjuntar y plantillas ────────────────────────────
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (child, anim) =>
+              ScaleTransition(scale: anim, child: child),
+          child: hasText
+              ? _GreenCircleBtn(
+                  key: const ValueKey('send'),
+                  icon: AppIcons.send,
+                  onTap: onSend,
+                )
+              : _GreenCircleBtn(
+                  key: const ValueKey('mic'),
+                  icon: AppIcons.mic,
+                  onTap: onMic,
+                ),
         ),
       ],
     );

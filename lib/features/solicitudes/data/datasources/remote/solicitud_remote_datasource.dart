@@ -50,6 +50,24 @@ class SolicitudRemoteDatasource {
     };
   }
 
+  // Task 'DV' — [CRM].[CSV_SOLICITUD_LST_APP] (misma SP, endpoint
+  // urlSolicitudesLst que 'LS'/'DT'). A diferencia de 'DT' (solo ids de
+  // catálogo, pensada para rehidratar el wizard), 'DV' resuelve las
+  // descripciones en el propio SP y trae también participantes/historial —
+  // pensada para SolicitudDetalleView (solo lectura), no para el formulario.
+  Future<SolicitudDetalle> getDetalleSolicitud(String numSol) async {
+    final body = '$numSol${AppConstants.sepListas}DV';
+
+    final result = await _api.postSafe(ApiConstants.urlSolicitudesLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => SolicitudDetalleRealModel.fromRawString(data),
+      ApiEmpty() => throw const AppException('La solicitud no existe.'),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   // Task 'U' — [CRM].[CSV_SOLICITUD_CUD_APP]. Crea (numSol vacío) o actualiza
   // (numSol existente) la cabecera + facturación + participantes de una
   // solicitud, en una sola llamada. Los archivos van aparte (task 'AR',

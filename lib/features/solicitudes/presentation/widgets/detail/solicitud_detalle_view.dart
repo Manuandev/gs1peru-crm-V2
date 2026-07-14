@@ -4,6 +4,7 @@ import 'package:app_crm/config/router/navigation_extensions.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudDetalleView extends StatelessWidget {
@@ -56,11 +57,45 @@ class SolicitudDetalleView extends StatelessWidget {
                   children: [
                     SolicitudCard(solicitud: solicitud, mostrarBotones: false),
                     const SizedBox(height: AppSpacing.sm),
-                    _SeccionDatosParticipante(solicitud: solicitud),
-                    const SizedBox(height: AppSpacing.sm),
-                    _SeccionDatosFacturacion(solicitud: solicitud),
-                    const SizedBox(height: AppSpacing.sm),
-                    _SeccionHistorial(fechaCreacion: solicitud.fechaCreacion),
+                    BlocBuilder<SolicitudDetalleBloc, SolicitudDetalleState>(
+                      builder: (context, state) {
+                        if (state is SolicitudDetalleLoading ||
+                            state is SolicitudDetalleInitial) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: AppSpacing.xl,
+                            ),
+                            child: AppLoadingView(),
+                          );
+                        }
+                        if (state is SolicitudDetalleError) {
+                          return AppErrorView(
+                            message: state.mensaje,
+                            onRetry: () => context
+                                .read<SolicitudDetalleBloc>()
+                                .add(
+                                  SolicitudDetalleStarted(
+                                    solicitud.idSolicitud,
+                                  ),
+                                ),
+                          );
+                        }
+                        if (state is! SolicitudDetalleSuccess) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final detalle = state.detalle;
+                        return Column(
+                          children: [
+                            _SeccionDatosParticipante(detalle: detalle),
+                            const SizedBox(height: AppSpacing.sm),
+                            _SeccionDatosFacturacion(detalle: detalle),
+                            const SizedBox(height: AppSpacing.sm),
+                            _SeccionHistorial(historial: detalle.historial),
+                          ],
+                        );
+                      },
+                    ),
                     const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
@@ -358,23 +393,37 @@ class _FilaInfo extends StatelessWidget {
 // ── Datos del participante ────────────────────────────────────────────────────
 
 class _SeccionDatosParticipante extends StatelessWidget {
-  final Solicitud solicitud;
+  final SolicitudDetalle detalle;
 
-  const _SeccionDatosParticipante({required this.solicitud});
+  const _SeccionDatosParticipante({required this.detalle});
 
   @override
   Widget build(BuildContext context) {
+    // El SP trae el id crudo de TipoDocumentoItem (SYSTABEXTER02 CODTABLA=
+    // 'F01') — se resuelve a abreviatura ("DNI"/"CE"/"RUC"...) contra el
+    // mismo catálogo que ya usa el wizard, no viene resuelto del backend.
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final tiposDocumento = catalogState is CatalogsLoaded
+        ? catalogState.tiposDocumento
+        : const <TipoDocumentoItem>[];
+    final tipoDoc = tiposDocumento
+        .where((t) => t.id == detalle.tipoDocumentoId)
+        .firstOrNull;
+
     return _SeccionCard(
       colorIcono: AppColors.primary,
       icono: AppIcons.user,
       titulo: 'Datos del participante',
       children: [
-        _FilaInfo(etiqueta: 'Correo', valor: solicitud.correo),
-        _FilaInfo(etiqueta: 'Celular', valor: solicitud.telefono),
-        const _FilaInfo(etiqueta: 'Documento', valor: 'DNI 45678912'),
-        const _FilaInfo(
+        _FilaInfo(etiqueta: 'Correo', valor: detalle.correo),
+        _FilaInfo(etiqueta: 'Celular', valor: detalle.celular),
+        _FilaInfo(
+          etiqueta: 'Documento',
+          valor: '${tipoDoc?.abreviatura ?? ''} ${detalle.numDoc}'.trim(),
+        ),
+        _FilaInfo(
           etiqueta: 'Cargo',
-          valor: 'Jefe de Logística',
+          valor: detalle.cargo,
           mostrarDivisor: false,
         ),
       ],
@@ -385,9 +434,9 @@ class _SeccionDatosParticipante extends StatelessWidget {
 // ── Datos de facturación ──────────────────────────────────────────────────────
 
 class _SeccionDatosFacturacion extends StatelessWidget {
-  final Solicitud solicitud;
+  final SolicitudDetalle detalle;
 
-  const _SeccionDatosFacturacion({required this.solicitud});
+  const _SeccionDatosFacturacion({required this.detalle});
 
   @override
   Widget build(BuildContext context) {
@@ -396,12 +445,15 @@ class _SeccionDatosFacturacion extends StatelessWidget {
       icono: AppIcons.receipt,
       titulo: 'Datos de facturación',
       children: [
-        const _FilaInfo(etiqueta: 'Tipo de comprobante', valor: 'Factura'),
-        _FilaInfo(etiqueta: 'Razón social', valor: solicitud.nombreEmpresa),
-        const _FilaInfo(etiqueta: 'RUC', valor: '20501234567'),
-        const _FilaInfo(
+        _FilaInfo(
+          etiqueta: 'Tipo de comprobante',
+          valor: detalle.facTipoComprobante,
+        ),
+        _FilaInfo(etiqueta: 'Razón social', valor: detalle.facRazonSocial),
+        _FilaInfo(etiqueta: 'RUC', valor: detalle.facRuc),
+        _FilaInfo(
           etiqueta: 'Dirección fiscal',
-          valor: 'Av. Javier Prado Este 1234, San Isidro, Lima',
+          valor: detalle.facDireccion,
           mostrarDivisor: false,
         ),
       ],
@@ -412,51 +464,40 @@ class _SeccionDatosFacturacion extends StatelessWidget {
 // ── Historial ─────────────────────────────────────────────────────────────────
 
 class _SeccionHistorial extends StatelessWidget {
-  final String fechaCreacion;
+  final List<HistorialSolicitud> historial;
 
-  const _SeccionHistorial({required this.fechaCreacion});
+  const _SeccionHistorial({required this.historial});
 
   @override
   Widget build(BuildContext context) {
-    final fechaFormateada = fechaCreacion.formatDate(AppDateFormat.shortDate);
-
-    final entradas = [
-      (
-        fechaFormateada,
-        '10:35',
-        'Solicitud creada',
-        'La solicitud fue registrada por el ejecutivo.',
-        true,
-      ),
-      (
-        fechaFormateada,
-        '10:40',
-        'Ficha iniciada',
-        'Se comenzó a completar la información del participante.',
-        false,
-      ),
-      (
-        fechaFormateada,
-        '11:05',
-        'Guardado parcial',
-        'La información fue guardada como borrador.',
-        false,
-      ),
-    ];
+    if (historial.isEmpty) {
+      return _SeccionCard(
+        colorIcono: AppColors.warning,
+        icono: AppIcons.time,
+        titulo: 'Historial',
+        children: const [
+          _FilaInfo(
+            etiqueta: '',
+            valor: 'Todavía no hay movimientos registrados.',
+            mostrarDivisor: false,
+          ),
+        ],
+      );
+    }
 
     return _SeccionCard(
       colorIcono: AppColors.warning,
       icono: AppIcons.time,
       titulo: 'Historial',
       children: [
-        for (int i = 0; i < entradas.length; i++)
+        for (int i = 0; i < historial.length; i++)
           _EntradaHistorial(
-            fecha: entradas[i].$1,
-            hora: entradas[i].$2,
-            titulo: entradas[i].$3,
-            descripcion: entradas[i].$4,
-            activo: entradas[i].$5,
-            esUltimo: i == entradas.length - 1,
+            fecha: historial[i].fecha.formatDate(AppDateFormat.shortDate),
+            hora: historial[i].fecha.formatDate(AppDateFormat.hourMinute),
+            titulo: historial[i].titulo,
+            descripcion: historial[i].descripcion,
+            activo: i == 0,
+            esUltimo: i == historial.length - 1,
           ),
       ],
     );

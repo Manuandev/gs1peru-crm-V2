@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudDetallePage extends StatelessWidget {
@@ -11,6 +12,11 @@ class SolicitudDetallePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SolicitudDetalleView(solicitud: solicitud);
+    return BlocProvider(
+      create: (context) => SolicitudDetalleBloc(
+        GetDetalleSolicitudUseCase(context.read<SolicitudRepository>()),
+      )..add(SolicitudDetalleStarted(solicitud.idSolicitud)),
+      child: SolicitudDetalleView(solicitud: solicitud),
+    );
   }
 }

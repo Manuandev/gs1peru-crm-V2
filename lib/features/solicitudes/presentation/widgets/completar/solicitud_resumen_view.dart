@@ -428,8 +428,10 @@ class _SeccionParticipantes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final participantes =
-        context.watch<ParticipantesCubit>().state.participantes;
+    final participantes = context
+        .watch<ParticipantesCubit>()
+        .state
+        .participantes;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

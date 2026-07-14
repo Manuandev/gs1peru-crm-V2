@@ -4,6 +4,7 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/data/datasources/remote/solicitud_remote_datasource.dart';
 import 'package:app_crm/features/solicitudes/data/models/solicitud_detalle_model.dart';
 import 'package:app_crm/features/solicitudes/data/models/solicitud_model.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/solicitud_detalle.dart';
 import 'package:app_crm/features/solicitudes/domain/repositories/solicitud_repository.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
@@ -19,6 +20,10 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
   @override
   Future<SolicitudDetalleModel> getSolicitudDetalle(String numSol) =>
       _remote.getSolicitudDetalle(numSol);
+
+  @override
+  Future<SolicitudDetalle> getDetalleSolicitud(String numSol) =>
+      _remote.getDetalleSolicitud(numSol);
 
   @override
   Future<CrudResult> guardarSolicitud({

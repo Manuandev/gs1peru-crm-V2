@@ -27,9 +27,17 @@ class _SolicitudParticipantesViewState
   // true mientras se guarda el borrador (botón "Guardar")
   bool _guardando = false;
 
+  // null si esta solicitud no viene de una negociación con precio ya
+  // definido — en ese caso el importe del participante sí se puede editar.
+  double? _importeFijo(BuildContext context) {
+    final formState = context.read<SolicitudFormCubit>().state;
+    return formState.cantidadEsperada != null ? formState.precioBaseLead : null;
+  }
+
   void _abrirFormularioNuevo(BuildContext context) {
     mostrarFormularioParticipante(
       context,
+      importeFijo: _importeFijo(context),
       onGuardar: (p) => context.read<ParticipantesCubit>().agregar(p),
     );
   }
@@ -41,6 +49,7 @@ class _SolicitudParticipantesViewState
     mostrarFormularioParticipante(
       context,
       participante: participante,
+      importeFijo: _importeFijo(context),
       onGuardar: (p) => context.read<ParticipantesCubit>().editar(p),
     );
   }

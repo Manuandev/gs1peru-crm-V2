@@ -166,6 +166,10 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
         idLead: negociacion.idLead.toString(),
       ),
       modoEdicion: true,
+      cantidadNegociacion: negociacion.cantidad,
+      precioBaseNegociacion: negociacion.precioBase,
+      descuentoNegociacion: negociacion.descuento,
+      idMonedaNegociacion: negociacion.idMoneda,
     );
   }
 

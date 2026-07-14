@@ -125,6 +125,10 @@ class AppRouter {
         return SolicitudCompletarPage(
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
+          cantidadNegociacion: args['cantidadNegociacion'] as int?,
+          precioBaseNegociacion: args['precioBaseNegociacion'] as double?,
+          descuentoNegociacion: args['descuentoNegociacion'] as double?,
+          idMonedaNegociacion: args['idMonedaNegociacion'] as String?,
         );
       },
     ),

@@ -1073,6 +1073,7 @@ msg.receivedAt   // DateTime de recepción
 | `WhatsAppMessagePayload` | `MENSAJE_WHATSAPP` | Mensaje nuevo del cliente |
 | `UpdatePantallaWhatsAppPayload` | `UPDATE_PANTALLA_WHATSAPP` | Confirmación de mensaje enviado |
 | `UpdateMensajeWhatsAppPayload` | `UPDATE_MENSAJE_WHATSAPP` | Cambio de estado (checks) |
+| `NuevoLeadBotPayload` | `NUEVO_LEAD_BOT` | Lead nuevo creado por el bot — conversación puede no existir aún en la lista |
 
 ```dart
 final payload = WhatsAppMessagePayload.fromMessage(wsMessage);

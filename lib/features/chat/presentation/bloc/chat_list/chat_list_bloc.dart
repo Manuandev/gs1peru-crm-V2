@@ -294,6 +294,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
         await _handleMensajeWhatsApp(event.message, emit);
       case 'UPDATE_PANTALLA_WHATSAPP':
         await _handleUpdatePantalla(event.message, emit);
+      case 'NUEVO_LEAD_BOT':
+        await _handleNuevoLeadBot(event.message, emit);
       default:
         break;
     }
@@ -357,14 +359,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     final idx = chats.indexWhere((c) => c.idChatCab == idChatCab);
 
     if (idx == -1) {
-      try {
-        final nuevoChat = await _getChatByIdChatCab(idChatCab);
-        if (nuevoChat == null || isClosed) return;
-        _allChats = [nuevoChat, ..._allChats];
-        _emitFiltered(emit);
-      } catch (_) {
-        // Falla silenciosa — el chat seguirá faltando hasta el próximo refresh
-      }
+      await _insertChatFromDbIfMissing(idChatCab, emit);
       return;
     }
 
@@ -381,6 +376,37 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     chats.insert(0, updatedChat);
     _allChats = chats;
     _emitFiltered(emit);
+  }
+
+  /// Trama NUEVO_LEAD_BOT — el bot creó un lead con conversación nueva.
+  /// Si ya la tenemos en la lista no hace nada; si no, la trae de la BD
+  /// igual que [_updateChatInList] cuando el chat todavía no existe.
+  Future<void> _handleNuevoLeadBot(
+    WebSocketMessage message,
+    Emitter<ChatListState> emit,
+  ) async {
+    final payload = NuevoLeadBotPayload.fromMessage(message);
+    if (payload == null) return;
+    if (_allChats.any((c) => c.idChatCab == payload.idChatCab)) return;
+
+    await _insertChatFromDbIfMissing(payload.idChatCab, emit);
+  }
+
+  /// Trae de la BD el chat de [idChatCab] (task 'LU') y lo inserta al
+  /// inicio de la lista. Usado cuando el WebSocket avisa de una
+  /// conversación que todavía no está en memoria.
+  Future<void> _insertChatFromDbIfMissing(
+    int idChatCab,
+    Emitter<ChatListState> emit,
+  ) async {
+    try {
+      final nuevoChat = await _getChatByIdChatCab(idChatCab);
+      if (nuevoChat == null || isClosed) return;
+      _allChats = [nuevoChat, ..._allChats];
+      _emitFiltered(emit);
+    } catch (_) {
+      // Falla silenciosa — el chat seguirá faltando hasta el próximo refresh
+    }
   }
 
   static String _extractExt(String fileName) {

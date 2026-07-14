@@ -27,6 +27,8 @@ class MessageDispatcher {
         _dispatchUpdateMensaje(message, route);
       case 'NUEVO_LEAD':
         _dispatchLead(message, route);
+      case 'NUEVO_LEAD_BOT':
+        _dispatchLeadBot(message, route);
       default:
         // proceso desconocido → solo al stream por si alguien escucha
         _toStream(message);
@@ -76,6 +78,13 @@ class MessageDispatcher {
     if (route != AppRoutes.seguimiento) {
       NotificationHandler.instance.show(message);
     }
+  }
+
+  // ── NUEVO LEAD BOT — conversación nueva creada por el bot ─────
+
+  void _dispatchLeadBot(WebSocketMessage message, String? route) {
+    // Al stream — ChatListBloc trae el chat de la BD si aún no lo tiene
+    _toStream(message);
   }
 
   // ── helpers ──────────────────────────────────────────────────

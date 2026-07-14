@@ -26,6 +26,13 @@ Future<void> mostrarFormularioParticipante(
   BuildContext context, {
   ParticipanteLocal? participante,
   required void Function(ParticipanteLocal) onGuardar,
+  // Importe fijo (precio base de la negociación de origen) cuando la
+  // solicitud viene de una negociación con precio ya definido — no nulo
+  // deshabilita el campo Importe. Se pasa por parámetro (no se lee
+  // SolicitudFormCubit dentro del modal): showModalBottomSheet empuja una
+  // ruta nueva y hermana sobre el mismo Navigator, no un descendiente del
+  // BlocProvider.value de este paso — context.read ahí adentro revienta.
+  double? importeFijo,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -35,6 +42,7 @@ Future<void> mostrarFormularioParticipante(
     builder: (_) => _ParticipanteFormSheet(
       participante: participante,
       onGuardar: onGuardar,
+      importeFijo: importeFijo,
     ),
   );
 }
@@ -44,10 +52,12 @@ Future<void> mostrarFormularioParticipante(
 class _ParticipanteFormSheet extends StatefulWidget {
   final ParticipanteLocal? participante;
   final void Function(ParticipanteLocal) onGuardar;
+  final double? importeFijo;
 
   const _ParticipanteFormSheet({
     required this.participante,
     required this.onGuardar,
+    this.importeFijo,
   });
 
   @override
@@ -79,6 +89,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   late final TextEditingController _cargoCtrl;
   late final TextEditingController _celularCtrl;
   late final TextEditingController _importeCtrl;
+  late final bool _importeBloqueado;
 
   bool get _esEdicion => widget.participante != null;
 
@@ -122,8 +133,15 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     _correoCtrl = TextEditingController(text: p?.correo ?? '');
     _cargoCtrl = TextEditingController(text: p?.cargo ?? '');
     _celularCtrl = TextEditingController(text: p?.celular ?? '');
+
+    // Si la solicitud viene de una negociación con precio ya definido, el
+    // importe de CADA participante es el precio base del lead — no se
+    // puede editar (ver SolicitudFormState.cantidadEsperada).
+    _importeBloqueado = widget.importeFijo != null;
     _importeCtrl = TextEditingController(
-      text: p != null && p.importe > 0 ? p.importe.toStringAsFixed(2) : '',
+      text: _importeBloqueado
+          ? widget.importeFijo!.toStringAsFixed(2)
+          : (p != null && p.importe > 0 ? p.importe.toStringAsFixed(2) : ''),
     );
   }
 
@@ -472,6 +490,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             child: CustomTextField(
                               label: 'Importe',
                               controller: _importeCtrl,
+                              enabled: !_importeBloqueado,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
                                     decimal: true,

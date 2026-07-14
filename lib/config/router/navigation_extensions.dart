@@ -72,9 +72,22 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToFichaCompletarSolicitud({
     required Solicitud solicitud,
     required bool modoEdicion,
+    // Datos de la negociación de origen — solo al crear una solicitud
+    // nueva ("Generar solicitud"). Ver SolicitudFormCubit.sembrarDatosNegociacion.
+    int? cantidadNegociacion,
+    double? precioBaseNegociacion,
+    double? descuentoNegociacion,
+    String? idMonedaNegociacion,
   }) => _push(
         AppRoutes.fichaCompletarSolicitud,
-        arguments: {'solicitud': solicitud, 'modoEdicion': modoEdicion},
+        arguments: {
+          'solicitud': solicitud,
+          'modoEdicion': modoEdicion,
+          'cantidadNegociacion': cantidadNegociacion,
+          'precioBaseNegociacion': precioBaseNegociacion,
+          'descuentoNegociacion': descuentoNegociacion,
+          'idMonedaNegociacion': idMonedaNegociacion,
+        },
       );
 
   Future<void> goToFichaParticipantesSolicitud({

@@ -109,6 +109,10 @@ class ContactoNegociacionCard extends StatelessWidget {
         idLead: negociacion.idLead.toString(),
       ),
       modoEdicion: true,
+      cantidadNegociacion: negociacion.cantidad,
+      precioBaseNegociacion: negociacion.precioBase,
+      descuentoNegociacion: negociacion.descuento,
+      idMonedaNegociacion: negociacion.idMoneda,
     );
   }
 
@@ -283,6 +287,13 @@ class ContactoNegociacionCard extends StatelessWidget {
                                 SolicitudAccion.ver => () =>
                                     _verSolicitud(context),
                               },
+                              // Sin precio total definido no hay
+                              // cantidad/importe/moneda que bloquear en la
+                              // solicitud — no se puede generar todavía.
+                              isEnabled:
+                                  negociacion.accionSolicitud !=
+                                      SolicitudAccion.generar ||
+                                  negociacion.precio > 0,
                             ),
                           ),
                         ],

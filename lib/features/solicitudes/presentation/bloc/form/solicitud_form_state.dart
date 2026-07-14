@@ -125,6 +125,22 @@ class SolicitudFormState {
   final PlatformFile? archivoVoucher;
   final PlatformFile? archivoOC;
 
+  /// Datos "de paso" de la negociación de origen — solo presentes cuando la
+  /// solicitud se generó desde una negociación con precio ya definido (ver
+  /// `SolicitudFormCubit.sembrarDatosNegociacion`). `cantidadEsperada` no
+  /// nulo es la señal de que este wizard viene "bloqueado": cada
+  /// participante debe usar `precioBaseLead` como importe (no editable, ver
+  /// `participante_form_sheet.dart`), la moneda del paso 3 queda fija en
+  /// `idMonedaBloqueada`, y `descuentoLead` se resta del total antes del
+  /// IGV al guardar (ver `guardarSolicitudDesdeWizard`). Al editar una
+  /// solicitud ya existente (numSol no vacío) esto siempre queda `null` —
+  /// no hay forma de recuperar la negociación de origen de una solicitud ya
+  /// guardada (ver CLAUDE.md).
+  final int? cantidadEsperada;
+  final double precioBaseLead;
+  final double descuentoLead;
+  final String? idMonedaBloqueada;
+
   const SolicitudFormState({
     this.tipoPersona = 'juridica',
     this.numSol = '',
@@ -132,6 +148,10 @@ class SolicitudFormState {
     this.facturacion,
     this.archivoVoucher,
     this.archivoOC,
+    this.cantidadEsperada,
+    this.precioBaseLead = 0,
+    this.descuentoLead = 0,
+    this.idMonedaBloqueada,
   });
 
   String get tipoPersonaLabel =>
@@ -146,6 +166,10 @@ class SolicitudFormState {
     bool limpiarArchivoVoucher = false,
     PlatformFile? archivoOC,
     bool limpiarArchivoOC = false,
+    int? cantidadEsperada,
+    double? precioBaseLead,
+    double? descuentoLead,
+    String? idMonedaBloqueada,
   }) => SolicitudFormState(
     tipoPersona: tipoPersona ?? this.tipoPersona,
     numSol: numSol ?? this.numSol,
@@ -155,5 +179,9 @@ class SolicitudFormState {
         ? null
         : (archivoVoucher ?? this.archivoVoucher),
     archivoOC: limpiarArchivoOC ? null : (archivoOC ?? this.archivoOC),
+    cantidadEsperada: cantidadEsperada ?? this.cantidadEsperada,
+    precioBaseLead: precioBaseLead ?? this.precioBaseLead,
+    descuentoLead: descuentoLead ?? this.descuentoLead,
+    idMonedaBloqueada: idMonedaBloqueada ?? this.idMonedaBloqueada,
   );
 }

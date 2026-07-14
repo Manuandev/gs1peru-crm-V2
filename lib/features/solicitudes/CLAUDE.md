@@ -1,5 +1,50 @@
 # Solicitudes Feature
 
+## Regla de negocio — cantidad/importe/moneda bloqueados desde la negociación (2026-07-14)
+Solo aplica al **crear** una solicitud nueva desde "Generar solicitud" (una negociación con
+`Negociacion.precio > 0` ya definido) — nunca al editar una ya guardada, porque el backend no
+guarda de qué lead vino una solicitud existente (ver nota de `Solicitud.idLead` más abajo).
+
+- **Gate del botón**: `NegociacionCard` (Conversaciones) y `ContactoNegociacionCard`
+  (Seguimiento) deshabilitan "Generar solicitud" (`isEnabled`) si `negociacion.precio <= 0` —
+  sin precio total no hay cantidad/importe que bloquear.
+- **`SolicitudFormState.cantidadEsperada`/`precioBaseLead`/`descuentoLead`/
+  `idMonedaBloqueada`** (`presentation/bloc/form/solicitud_form_state.dart`) — se siembran una
+  sola vez con `SolicitudFormCubit.sembrarDatosNegociacion(...)`, llamado desde
+  `SolicitudCompletarPage` al crear el cubit (`solicitud.idSolicitud.isEmpty && cantidadNegociacion
+  != null`). Los 4 valores viajan por navegación desde `NegociacionCard`/`ContactoNegociacionCard`/
+  `NegociacionesTab` → `goToFichaCompletarSolicitud(cantidadNegociacion:, precioBaseNegociacion:,
+  descuentoNegociacion:, idMonedaNegociacion:)` → argumento de ruta → `SolicitudCompletarPage`.
+- **Importe de participante bloqueado** (`participante_form_sheet.dart`) — si viene con
+  `importeFijo` no nulo, el campo Importe queda deshabilitado y prellenado con `precioBaseLead`.
+  **Ojo — `importeFijo` se pasa por parámetro, no se lee `SolicitudFormCubit` dentro del
+  modal**: `mostrarFormularioParticipante` abre un `showModalBottomSheet`, que empuja una ruta
+  **hermana** sobre el mismo `Navigator` global — no un descendiente del `BlocProvider.value`
+  que envuelve la página de este paso. `context.read<SolicitudFormCubit>()` ahí adentro
+  revienta en tiempo real. `solicitud_participantes_view.dart._importeFijo(context)` lee el
+  cubit con el `context` correcto (el de la página, no el del modal) y lo pasa como parámetro.
+  Mismo patrón que ya usaban los callbacks `onGuardar` (capturan el `context` del caller).
+- **Moneda bloqueada** (`solicitud_facturacion_view.dart`) — `_SeccionDatosFacturacion` recibe
+  `monedaBloqueada: formState.idMonedaBloqueada != null` y deshabilita solo el combo Moneda
+  (`enabled: habilitado && !monedaBloqueada`), independiente del resto de campos. Se siembra en
+  `didChangeDependencies()` (rama "primera vez", `datos == null`).
+- **Descuento respetado en el total** — `SolicitudRemoteDatasource.guardarSolicitud()` recibe
+  `descuento` (default 0, threaded por `GuardarSolicitudUseCase`/`SolicitudRepository`/
+  `guardarSolicitudDesdeWizard`, que lo lee de `formState.descuentoLead`) y lo resta del importe
+  bruto **antes** del IGV: `dcImporte = (sum(participantes.importe) - descuento).clamp(0, ∞)`,
+  `dcIgv`/`dcImporteTotal` se calculan sobre ese neto. No viaja como columna propia al backend —
+  el SP no tiene una, y no hace falta: el resultado ya neto se manda en `DC_IMPORTE`.
+- **Validación de cantidad — solo al generar, nunca al guardar borrador**:
+  `generarSolicitudCompleta()` (`solicitud_guardar_helper.dart`) compara
+  `ParticipantesCubit.state.participantes.length` contra `cantidadEsperada` **antes** de llamar
+  `guardarSolicitudDesdeWizard` — si no calzan, retorna `CrudError` sin guardar nada. Los 4
+  botones "Guardar" (borrador) de los pasos 1-4 **no** validan esto, dejan guardar con
+  cualquier cantidad.
+- **`Solicitud.idLead` solo existe al crear** — una vez guardada, no hay forma de recuperar de
+  qué lead vino una solicitud existente (el SP no lo trae de vuelta). Por eso esta regla entera
+  es exclusiva del flujo de creación — no intentar extenderla a "editar una solicitud ya
+  guardada" sin antes resolver esa limitación de backend.
+
 ## Propósito
 Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y un wizard de
 4 pasos para completar una solicitud (Solicitante → Participantes → Facturación → Resumen).

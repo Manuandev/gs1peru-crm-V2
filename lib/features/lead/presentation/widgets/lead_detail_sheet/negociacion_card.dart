@@ -238,6 +238,13 @@ class NegociacionCard extends StatelessWidget {
                               SolicitudAccion.ver => () =>
                                   _verSolicitud(context),
                             },
+                            // Sin precio total definido en la negociación no
+                            // hay cantidad/importe/moneda que bloquear en la
+                            // solicitud — no se puede generar todavía.
+                            isEnabled:
+                                negociacion.accionSolicitud !=
+                                    SolicitudAccion.generar ||
+                                negociacion.precio > 0,
                             height: 26,
                             textStyle: const TextStyle(
                               fontSize: 9,

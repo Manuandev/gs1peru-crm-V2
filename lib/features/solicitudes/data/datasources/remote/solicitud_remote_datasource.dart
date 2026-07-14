@@ -83,6 +83,11 @@ class SolicitudRemoteDatasource {
     required List<ParticipanteLocal> participantes,
     required double igvPorcentaje,
     required bool esBorrador,
+    // Descuento de la negociación de origen (0 si no viene de una) — se
+    // resta del importe bruto ANTES del IGV. No viaja como columna propia
+    // al backend, el SP no tiene una — se refleja directo en DC_IMPORTE/
+    // DC_IGV/DC_IMPORTE_TOTAL (ver CLAUDE.md).
+    double descuento = 0,
   }) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
@@ -95,7 +100,8 @@ class SolicitudRemoteDatasource {
         ?.id
         .toString();
 
-    final dcImporte = participantes.fold(0.0, (sum, p) => sum + p.importe);
+    final dcImporteBruto = participantes.fold(0.0, (sum, p) => sum + p.importe);
+    final dcImporte = (dcImporteBruto - descuento).clamp(0.0, double.infinity);
     final dcIgv = dcImporte * igvPorcentaje / 100;
     final dcImporteTotal = dcImporte + dcIgv;
 

@@ -43,6 +43,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
     participantes: participantes,
     igvPorcentaje: igvPorcentaje,
     esBorrador: esBorrador,
+    descuento: formState.descuentoLead,
   );
 
   // La primera vez que se crea (numSol venía vacío), el backend genera el
@@ -122,6 +123,25 @@ Future<CrudResult> generarSolicitudCompleta(
   BuildContext context, {
   required String idLead,
 }) async {
+  // Si la solicitud viene de una negociación con precio ya definido, la
+  // cantidad de participantes tiene que calzar exacto con la de la
+  // negociación — pero SOLO acá, al generar. Cualquier "Guardar" (borrador)
+  // de los 4 pasos deja pasar con menos participantes sin problema.
+  final cantidadEsperada = context.read<SolicitudFormCubit>().state.cantidadEsperada;
+  if (cantidadEsperada != null) {
+    final cantidadActual = context
+        .read<ParticipantesCubit>()
+        .state
+        .participantes
+        .length;
+    if (cantidadActual != cantidadEsperada) {
+      return CrudError(
+        'Esta negociación tiene $cantidadEsperada participante(s) — '
+        'registraste $cantidadActual. Ajusta la lista antes de generar.',
+      );
+    }
+  }
+
   final result = await guardarSolicitudDesdeWizard(
     context,
     idLead: idLead,

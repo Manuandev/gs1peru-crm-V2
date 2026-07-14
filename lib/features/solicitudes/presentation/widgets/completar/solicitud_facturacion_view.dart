@@ -175,6 +175,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       // Ya se guardó facturación antes (venimos de "Atrás") — restaurar.
       _comprobanteId = datos.comprobanteId;
       _comprobanteLabel = datos.comprobante;
+      _tipoDocId = datos.tipoDocId;
+      _tipoDocLabel = datos.tipoDocLabel;
       _paisId = datos.paisId;
       _paisLabel = datos.pais;
       _monedaId = datos.monedaId;
@@ -189,6 +191,22 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _ctrlNit.text = datos.nit;
       _ctrlObservaciones.text = datos.observaciones;
       return;
+    }
+
+    // Solicitud generada desde una negociación con precio ya definido — la
+    // moneda no se elige acá, viene fija del lead (ver
+    // SolicitudFormState.idMonedaBloqueada).
+    final idMonedaBloqueada = formState.idMonedaBloqueada;
+    if (idMonedaBloqueada != null && idMonedaBloqueada.isNotEmpty) {
+      _monedaId = idMonedaBloqueada;
+      final catalogState = context.read<CatalogsBloc>().state;
+      if (catalogState is CatalogsLoaded) {
+        _monedaLabel = catalogState.monedas
+                .where((m) => m.id == idMonedaBloqueada)
+                .firstOrNull
+                ?.nombre ??
+            '';
+      }
     }
 
     // Primera vez en este paso — si el solicitante marcó "Facturar al
@@ -351,6 +369,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                   // ── Formulario ─────────────────────────────────────
                   _SeccionDatosFacturacion(
                     habilitado: widget.modoEdicion,
+                    monedaBloqueada: formState.idMonedaBloqueada != null,
                     esRuc: _esRuc,
                     correoLabel: correoLabel,
                     ctrlNumDoc: _ctrlNumDoc,
@@ -613,6 +632,10 @@ class _TooltipFacturacion extends StatelessWidget {
 
 class _SeccionDatosFacturacion extends StatelessWidget {
   final bool habilitado;
+  // true si la solicitud viene de una negociación con precio ya definido —
+  // la moneda no se elige acá, queda fija (ver
+  // SolicitudFormState.idMonedaBloqueada).
+  final bool monedaBloqueada;
   final bool esRuc;
   final String correoLabel;
   final TextEditingController ctrlNumDoc;
@@ -642,6 +665,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
 
   const _SeccionDatosFacturacion({
     required this.habilitado,
+    this.monedaBloqueada = false,
     required this.esRuc,
     required this.correoLabel,
     required this.ctrlNumDoc,
@@ -702,7 +726,7 @@ class _SeccionDatosFacturacion extends StatelessWidget {
               child: CustomComboField<MonedaItem>(
                 label: 'Moneda *',
                 data: monedas,
-                enabled: habilitado,
+                enabled: habilitado && !monedaBloqueada,
                 initialValue: monedaInicialId,
                 onChanged: onMonedaChanged,
               ),

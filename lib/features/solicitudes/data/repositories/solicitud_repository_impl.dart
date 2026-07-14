@@ -35,6 +35,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     required List<ParticipanteLocal> participantes,
     required double igvPorcentaje,
     required bool esBorrador,
+    double descuento = 0,
   }) => _remote.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -44,6 +45,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     participantes: participantes,
     igvPorcentaje: igvPorcentaje,
     esBorrador: esBorrador,
+    descuento: descuento,
   );
 
   @override

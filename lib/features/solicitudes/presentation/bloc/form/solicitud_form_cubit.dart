@@ -25,6 +25,24 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
   /// nueva, con el NUMSOL que generó el backend.
   void actualizarNumSol(String numSol) => emit(state.copyWith(numSol: numSol));
 
+  /// Bloquea cantidad/importe/moneda del wizard a los valores ya definidos
+  /// en la negociación de origen — llamado una sola vez, al crear una
+  /// solicitud nueva desde "Generar solicitud" (nunca al editar una ya
+  /// existente). Ver `SolicitudFormState.cantidadEsperada`.
+  void sembrarDatosNegociacion({
+    required int cantidad,
+    required double precioBase,
+    required double descuento,
+    required String idMoneda,
+  }) => emit(
+    state.copyWith(
+      cantidadEsperada: cantidad,
+      precioBaseLead: precioBase,
+      descuentoLead: descuento,
+      idMonedaBloqueada: idMoneda,
+    ),
+  );
+
   /// Voucher/O.C. adjuntados en el paso 1 — viven acá (no en el estado local
   /// de la vista) para que sobrevivan hasta Resumen y "Generar solicitud"
   /// pueda subirlos con el NUMSOL recién confirmado.

@@ -544,9 +544,9 @@ decir "Generar solicitud" y pasa a reflejar el estado real de esa solicitud:
 - **`EditLeadPage`/`EditLeadView`/`EditLeadPortrait` soportan `soloLectura: bool`** (default
   `false`) — se agregó específicamente para "Ver negociación". Con `soloLectura: true`: el
   título pasa a "Ver negociación", `EditLeadPortrait._bloqueado` (`_isLoading ||
-  widget.soloLectura`) se pasa como `isLoading` a las 3 secciones (`EditLeadAdicionalSection`/
-  `EditLeadNegociacionSection`/`EditLeadFinancieraSection`, que ya deshabilitan todos sus
-  campos/combos con `enabled: !isLoading` — se reusa ese mecanismo, no uno nuevo) y
+  widget.soloLectura`) se pasa como `isLoading` a las 2 secciones (`EditLeadNegociacionSection`/
+  `EditLeadFinancieraSection`, que ya deshabilitan todos sus campos/combos con
+  `enabled: !isLoading` — se reusa ese mecanismo, no uno nuevo) y
   `FormSaveBar` (Cancelar/Guardar) se reemplaza por `SizedBox.shrink()` — no debe quedar ningún
   botón de acción al pie. El flag viaja `goToEditarLead(soloLectura: ...)` →
   `AppRoutes.detalleEditarLead` (argumento `'soloLectura'`, default `false` si no viene) →

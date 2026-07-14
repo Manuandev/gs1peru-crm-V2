@@ -142,6 +142,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
                 context.goToEditarLead(
                   idLead: infoState.negociacion.idLead,
                   cubit: context.read<InfoLeadCubit>(),
+                  desdeConversacion: true,
                 );
               },
             ),
@@ -221,7 +222,8 @@ class _ChatDetailViewState extends State<ChatDetailView>
                     if (curr is! InfoLeadSuccess) return false;
                     if (prev is! InfoLeadSuccess) return true;
                     return prev.negociacion.idLead != curr.negociacion.idLead ||
-                        prev.negociacion.idEstado != curr.negociacion.idEstado ||
+                        prev.negociacion.idEstado !=
+                            curr.negociacion.idEstado ||
                         prev.negociacion.idEstadoPadre !=
                             curr.negociacion.idEstadoPadre;
                   },

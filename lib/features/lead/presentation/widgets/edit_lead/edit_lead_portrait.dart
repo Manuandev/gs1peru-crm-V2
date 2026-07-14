@@ -10,17 +10,41 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class EditLeadPortrait extends StatefulWidget {
   final Negociacion negociacion;
   final bool soloLectura;
+  // true cuando se entra desde el chat de Conversaciones — ver reglas de
+  // negocio en el comentario de _EditLeadPortraitState.
+  final bool desdeConversacion;
 
   const EditLeadPortrait({
     super.key,
     required this.negociacion,
     this.soloLectura = false,
+    this.desdeConversacion = false,
   });
 
   @override
   State<EditLeadPortrait> createState() => _EditLeadPortraitState();
 }
 
+// ── Reglas de negocio ──────────────────────────────────────────────────────
+// - Información adicional (nombre/modalidad de la negociación) nunca se
+//   muestra, en ningún origen — Conversaciones, Seguimiento, etc. El campo
+//   sigue existiendo en el backend pero no es editable desde esta pantalla.
+//
+// Al entrar desde el chat de Conversaciones (desdeConversacion == true, crear
+// o editar negociación):
+// - Canal siempre bloqueado en WhatsApp (id 1), en crear y en editar.
+// - Estado/Subestado bloqueados en "Nuevo" (id '00') solo al CREAR — al
+//   editar una negociación ya creada, sí se pueden mover de estado.
+// - Campaña/Oportunidad solo editables al CREAR — al editar quedan fijas.
+// - Interés y toda la Información financiera siempre editables.
+// - Información financiera: Costo final es el campo editable y Descuento se
+//   autocompleta (subtotal - costo final) — al revés que en el resto de la
+//   app, donde Descuento es editable y Costo final se deriva.
+//
+// Al crear una negociación desde otros orígenes (ej. "Crear negociación" en
+// Seguimiento/lead_detail_sheet, desdeConversacion == false), no hay ninguna
+// restricción — Campaña, Oportunidad, Canal, Interés y toda la financiera son
+// editables normalmente, como si fuera una negociación cualquiera.
 class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── EditLeadContactoSection comentada — la página solo muestra lo que se
   // puede guardar/actualizar, no info de contacto de solo lectura. ──────────
@@ -42,10 +66,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   late final TextEditingController _cantidadCtrl;
   late final TextEditingController _precioBaseCtrl;
   late final TextEditingController _descuentoCtrl;
-
-  // ── Información adicional ──────────────────────────────────────────────────
-  late final TextEditingController _nombreLeadCtrl;
-  late final TextEditingController _modalidadCtrl;
+  // Solo se usa cuando desdeConversacion == true — ver nota de reglas arriba.
+  late final TextEditingController _costoFinalCtrl;
 
   bool _isLoading = false;
   bool _combosInicializados = false;
@@ -65,8 +87,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _descuentoCtrl = TextEditingController(
       text: NumberFormatUtils.fmtDecimal(n.descuento),
     );
-    _nombreLeadCtrl = TextEditingController(text: n.nombre);
-    _modalidadCtrl = TextEditingController(text: n.modalidad);
+    _costoFinalCtrl = TextEditingController(
+      text: NumberFormatUtils.fmtDecimal(n.precio),
+    );
   }
 
   @override
@@ -97,8 +120,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _cantidadCtrl.dispose();
     _precioBaseCtrl.dispose();
     _descuentoCtrl.dispose();
-    _nombreLeadCtrl.dispose();
-    _modalidadCtrl.dispose();
+    _costoFinalCtrl.dispose();
     // _seccionCambio.dispose();
     super.dispose();
   }
@@ -117,6 +139,11 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         .where((e) => e.id == n.idOportunidad)
         .firstOrNull;
     _canal = state.canales.where((e) => e.id == n.idCanal).firstOrNull;
+    // Desde conversación el canal siempre es WhatsApp (id 1) y no se muestra
+    // editable — ver nota de reglas en la cabecera de este State.
+    if (widget.desdeConversacion) {
+      _canal = state.canales.where((e) => e.id == 1).firstOrNull ?? _canal;
+    }
     _interes = state.intereses.where((e) => e.id == n.idInteres).firstOrNull;
 
     _monedaItem =
@@ -162,6 +189,19 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         }
       }
     }
+
+    // Desde conversación, al CREAR (idLead == 0) el estado siempre arranca
+    // en "Nuevo" (id '00') y no se muestra editable. Al editar una
+    // negociación ya creada, el estado real cargado arriba se respeta.
+    if (widget.desdeConversacion && _esNuevo) {
+      _estado = state.estados
+          .where((e) => e.id == '00' && e.esPadre)
+          .firstOrNull;
+      _subEstado = null;
+      _subEstadosFiltrados = _estado == null
+          ? []
+          : state.estados.where((e) => e.idPadre == _estado!.id).toList();
+    }
   }
 
   // ── Getters financieros ───────────────────────────────────────────────────
@@ -170,12 +210,23 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ambos casos ningún campo debe aceptar interacción.
   bool get _bloqueado => _isLoading || widget.soloLectura;
 
+  // idLead 0 → aún no se creó el lead (pantalla "Crear negociación").
+  bool get _esNuevo => widget.negociacion.idLead == 0;
+
   int get _cantidad => NumberFormatUtils.parseInt(_cantidadCtrl.text);
   double get _precioBase =>
       NumberFormatUtils.parseDecimal(_precioBaseCtrl.text);
-  double get _descuento => NumberFormatUtils.parseDecimal(_descuentoCtrl.text);
   double get _subtotal => _precioBase * _cantidad;
-  double get _costoFinal => _subtotal - _descuento;
+
+  // Desde conversación el campo editable es Costo final y Descuento se
+  // autocompleta; en el resto de la app es al revés — ver nota de reglas.
+  double get _descuento => widget.desdeConversacion
+      ? (_subtotal - _costoFinalIngresado).clamp(0, double.infinity)
+      : NumberFormatUtils.parseDecimal(_descuentoCtrl.text);
+  double get _costoFinalIngresado =>
+      NumberFormatUtils.parseDecimal(_costoFinalCtrl.text);
+  double get _costoFinal =>
+      widget.desdeConversacion ? _costoFinalIngresado : _subtotal - _descuento;
 
   // ── Detección de cambios ──────────────────────────────────────────────────
 
@@ -183,8 +234,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     final n = widget.negociacion;
     // idLead 0 → el guardado crea el lead, no hay nada que "cambiar" primero.
     return n.idLead == 0 ||
-        _nombreLeadCtrl.text.trim() != n.nombre ||
-        _modalidadCtrl.text.trim() != n.modalidad ||
         (_estado != null && _subEstado?.id != n.idEstado) ||
         (_estado != null && _estado?.id != n.idEstado && _subEstado == null) ||
         _campania?.id != n.idCampania ||
@@ -193,7 +242,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         _interes?.id != n.idInteres ||
         _cantidadCtrl.text != NumberFormatUtils.fmtInt(n.cantidad) ||
         _precioBaseCtrl.text != NumberFormatUtils.fmtDecimal(n.precioBase) ||
-        _descuentoCtrl.text != NumberFormatUtils.fmtDecimal(n.descuento) ||
+        (widget.desdeConversacion
+            ? _costoFinalCtrl.text != NumberFormatUtils.fmtDecimal(n.precio)
+            : _descuentoCtrl.text !=
+                  NumberFormatUtils.fmtDecimal(n.descuento)) ||
         (_monedaItem?.id ?? '') != n.idMoneda;
   }
 
@@ -273,11 +325,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         canal: _canal?.nombre,
         idInteres: _interes?.id,
         interes: _interes?.nombre,
-        nombreLead: _nombreLeadCtrl.text.trim(),
-        modalidad: _modalidadCtrl.text.trim(),
         cantidad: int.tryParse(_cantidadCtrl.text),
         precioBase: double.tryParse(_precioBaseCtrl.text),
-        descuento: double.tryParse(_descuentoCtrl.text),
+        descuento: _descuento,
         precio: _costoFinal > 0 ? _costoFinal : null,
         idMoneda: _monedaItem?.id,
       );
@@ -299,11 +349,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         ? const SizedBox.shrink()
         : ListenableBuilder(
             listenable: Listenable.merge([
-              _nombreLeadCtrl,
-              _modalidadCtrl,
               _cantidadCtrl,
               _precioBaseCtrl,
               _descuentoCtrl,
+              _costoFinalCtrl,
             ]),
             builder: (context, _) => FormSaveBar(
               onCancelar: () => context.goBack(),
@@ -321,14 +370,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              EditLeadAdicionalSection(
-                nombreLeadCtrl: _nombreLeadCtrl,
-                modalidadCtrl: _modalidadCtrl,
-                isLoading: _bloqueado,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // 2. Negociación
+              // 1. Negociación — Información adicional (nombre/modalidad) ya
+              // no se muestra en ningún origen, ver nota de reglas arriba.
               EditLeadNegociacionSection(
                 catalogState: catalogState,
                 campania: _campania,
@@ -345,6 +388,15 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                     widget.negociacion.descripcionEstadoPadre,
                 idCanalFallback: widget.negociacion.idCanal,
                 isLoading: _bloqueado,
+                // Solo al crear desde conversación el estado queda fijo en
+                // "Nuevo"; al editar sí se puede mover de estado.
+                estadoBloqueado: widget.desdeConversacion && _esNuevo,
+                // El canal desde conversación siempre es WhatsApp fijo.
+                canalBloqueado: widget.desdeConversacion,
+                // Campaña/Oportunidad solo se activan al crear desde
+                // conversación; al editar quedan fijas.
+                campaniaOportunidadBloqueada:
+                    widget.desdeConversacion && !_esNuevo,
                 onCampaniaChanged: _onCampaniaChanged,
                 onOportunidadChanged: _onOportunidadChanged,
                 onCanalChanged: (item) => setState(() => _canal = item),
@@ -354,17 +406,22 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // 3. Financiera
+              // 2. Financiera
               ListenableBuilder(
                 listenable: Listenable.merge([
                   _cantidadCtrl,
                   _precioBaseCtrl,
                   _descuentoCtrl,
+                  _costoFinalCtrl,
                 ]),
                 builder: (context, _) => EditLeadFinancieraSection(
                   cantidadCtrl: _cantidadCtrl,
                   precioBaseCtrl: _precioBaseCtrl,
                   descuentoCtrl: _descuentoCtrl,
+                  costoFinalCtrl: _costoFinalCtrl,
+                  // Desde conversación se edita Costo final y Descuento se
+                  // autocompleta — al revés que en el resto de la app.
+                  costoFinalEditable: widget.desdeConversacion,
                   monedas: catalogState.monedas,
                   monedaItem: _monedaItem,
                   isLoading: _bloqueado,

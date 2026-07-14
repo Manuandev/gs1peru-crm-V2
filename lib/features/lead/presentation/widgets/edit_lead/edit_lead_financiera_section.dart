@@ -9,6 +9,11 @@ class EditLeadFinancieraSection extends StatelessWidget {
   final TextEditingController cantidadCtrl;
   final TextEditingController precioBaseCtrl;
   final TextEditingController descuentoCtrl;
+  // Solo se usa cuando costoFinalEditable == true.
+  final TextEditingController? costoFinalCtrl;
+  // Desde conversación: Costo final es el campo editable y Descuento se
+  // autocompleta — al revés que en el resto de la app.
+  final bool costoFinalEditable;
   final List<MonedaItem> monedas;
   final MonedaItem? monedaItem;
   final bool isLoading;
@@ -22,6 +27,8 @@ class EditLeadFinancieraSection extends StatelessWidget {
     required this.cantidadCtrl,
     required this.precioBaseCtrl,
     required this.descuentoCtrl,
+    this.costoFinalCtrl,
+    this.costoFinalEditable = false,
     required this.monedas,
     required this.monedaItem,
     required this.isLoading,
@@ -29,7 +36,10 @@ class EditLeadFinancieraSection extends StatelessWidget {
     required this.subtotal,
     required this.descuento,
     required this.costoFinal,
-  });
+  }) : assert(
+         !costoFinalEditable || costoFinalCtrl != null,
+         'costoFinalCtrl es obligatorio cuando costoFinalEditable es true',
+       );
 
   String get _simbolo => monedaItem?.simbolo ?? '';
 
@@ -85,28 +95,53 @@ class EditLeadFinancieraSection extends StatelessWidget {
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
             ],
           ),
-          derecho: CustomTextField(
-            label: 'Descuento',
-            controller: descuentoCtrl,
-            enabled: !isLoading,
-            prefixText: '$_simbolo ',
-            dense: true,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-            ],
-          ),
+          derecho: costoFinalEditable
+              ? CustomTextField(
+                  label: 'Descuento',
+                  controller: TextEditingController(
+                    text: NumberFormatUtils.formatMoneda(_simbolo, descuento),
+                  ),
+                  enabled: false,
+                  dense: true,
+                )
+              : CustomTextField(
+                  label: 'Descuento',
+                  controller: descuentoCtrl,
+                  enabled: !isLoading,
+                  prefixText: '$_simbolo ',
+                  dense: true,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
+                ),
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        CustomTextField(
-          label: 'Costo final',
-          controller: TextEditingController(
-            text: NumberFormatUtils.formatMoneda(_simbolo, costoFinal),
-          ),
-          enabled: false,
-          dense: true,
-        ),
+        costoFinalEditable
+            ? CustomTextField(
+                label: 'Costo final',
+                controller: costoFinalCtrl,
+                enabled: !isLoading,
+                prefixText: '$_simbolo ',
+                dense: true,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+              )
+            : CustomTextField(
+                label: 'Costo final',
+                controller: TextEditingController(
+                  text: NumberFormatUtils.formatMoneda(_simbolo, costoFinal),
+                ),
+                enabled: false,
+                dense: true,
+              ),
         const SizedBox(height: AppSpacing.md),
 
         NegociacionResumenCard(

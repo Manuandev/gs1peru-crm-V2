@@ -118,3 +118,34 @@ Ambas pantallas usan `SkeletonBox` (animación pulse grey300↔grey200, 900ms) d
 - **Archivo:** `presentation/widgets/detalle/lead_detalle_skeleton.dart`
 - **Uso:** devuelve un `BasePage` completo desde `LeadDetallePage` mientras `LeadDetalleBloc` está en `Initial | Loading`
 - **Estructura:** AppBar con nombre placeholder + stepper + última interacción + 2 info-cards + comentarios
+
+---
+
+## EditLeadPortrait — flag `desdeConversacion`
+
+`EditLeadPortrait` (widgets/edit_lead/) es la pantalla "Crear/Editar negociación", compartida por
+varios orígenes (Conversaciones, `NegociacionesTab` de Lead, `ContactoNegociacionesTab` de
+Seguimiento, `ContactoDetallePage`). Solo muestra 2 secciones — **Información de la negociación**
+e **Información financiera** — nunca "Información adicional" (nombre/modalidad de la negociación):
+ese widget se eliminó (`EditLeadAdicionalSection`, ya no existe) porque el campo no se muestra en
+ningún origen, edite o cree, venga o no de conversación.
+
+El flag `desdeConversacion` (viaja `context.goToEditarLead(desdeConversacion: true)` →
+`AppRoutes.detalleEditarLead` → `EditLeadPage` → `EditLeadView` → `EditLeadPortrait`) se activa
+solo cuando se entra desde el AppBar de `ChatDetailView` (Conversaciones) y restringe el formulario así:
+
+- **Canal** siempre bloqueado (`enabled: false`), fijo en WhatsApp (id `1`) — tanto al crear como al editar.
+- **Estado/Subestado** bloqueados fijos en "Nuevo" (id `'00'`) **solo al crear** (`negociacion.idLead == 0`);
+  al editar una negociación ya creada, se pueden mover de estado normalmente.
+- **Campaña/Oportunidad** editables **solo al crear**; al editar quedan bloqueadas (`enabled: false`).
+- **Interés** y toda la **Información financiera** siempre editables.
+- **Información financiera:** el campo editable pasa a ser **Costo final** (en vez de Descuento) —
+  Descuento se autocompleta como `subtotal - costoFinal`. Es la única pantalla de la app donde el
+  cálculo va en ese sentido; en el resto (`desdeConversacion == false`), Descuento es el campo
+  editable y Costo final se deriva (`subtotal - descuento`), sin cambios.
+
+Los flags de bloqueo (`estadoBloqueado`, `canalBloqueado`, `campaniaOportunidadBloqueada`) se
+calculan en `_EditLeadPortraitState.build()` y se pasan a `EditLeadNegociacionSection`;
+`costoFinalEditable` + `costoFinalCtrl` se pasan a `EditLeadFinancieraSection`. Si se agrega un
+nuevo origen que también deba usar este modo restringido, reusar el mismo flag — no crear uno
+paralelo.

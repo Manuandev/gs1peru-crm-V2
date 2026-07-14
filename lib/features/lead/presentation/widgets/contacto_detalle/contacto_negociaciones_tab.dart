@@ -3,18 +3,26 @@
 // Pestaña "Negociaciones" de Seguimiento (ContactoDetalleView) — distinta de
 // NegociacionesTab (Conversaciones/ChatLeadPanel): acá el resumen es de 3
 // tarjetas informativas (Negociaciones totales / Lista para propuesta /
-// Ganada), sin chips de filtro ni flujo de "crear negociación". Por decisión
-// explícita este diseño es solo para Seguimiento — Conversaciones no cambia.
+// Ganada), sin chips de filtro. Sí comparte con esa pestaña el flujo de
+// "Crear negociación" (mismo patrón: prepararNuevaNegociacion() sobre el
+// InfoLeadCubit compartido + goToEditarLead(idLead: 0) + restaurar si el
+// usuario cancela sin guardar).
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoNegociacionesTab extends StatelessWidget {
+  final int idNumero;
   final List<Negociacion> negociaciones;
 
-  const ContactoNegociacionesTab({super.key, required this.negociaciones});
+  const ContactoNegociacionesTab({
+    super.key,
+    required this.idNumero,
+    required this.negociaciones,
+  });
 
   // "Ganada" = negociación cerrada (idEstadoPadre '04') en el sub-estado '05'
   // — mismo código de negocio que NegociacionesTab (lead_detail_sheet), no
@@ -27,9 +35,36 @@ class ContactoNegociacionesTab extends StatelessWidget {
   int get _listasParaPropuesta =>
       negociaciones.where((n) => n.idEstadoEfectivo == '02').length;
 
+  // Deja el InfoLeadCubit compartido listo para crear una negociación nueva
+  // del mismo contacto/número, navega a Crear/Editar lead y, si el usuario
+  // cancela sin guardar, restaura la negociación que estaba activa antes.
+  // Mismo patrón que NegociacionesTab._crearNegociacion() (Conversaciones).
+  Future<void> _crearNegociacion(BuildContext context) async {
+    final cubit = context.read<InfoLeadCubit>();
+    final estadoPrevio = cubit.state;
+    final idLeadPrevio = estadoPrevio is InfoLeadSuccess
+        ? estadoPrevio.negociacion.idLead
+        : 0;
+
+    cubit.prepararNuevaNegociacion();
+    await context.goToEditarLead(idLead: 0, cubit: cubit);
+
+    final estadoActual = cubit.state;
+    final sigueEnBlanco =
+        estadoActual is InfoLeadSuccess && estadoActual.negociacion.idLead == 0;
+    if (sigueEnBlanco && idLeadPrevio != 0) {
+      cubit.load(idLeadPrevio);
+    }
+    if (context.mounted) {
+      context.read<NegociacionesCubit>().cargarNegociaciones(idNumero);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (negociaciones.isEmpty) return const _EstadoVacio();
+    if (negociaciones.isEmpty) {
+      return _EstadoVacio(onCrear: () => _crearNegociacion(context));
+    }
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -50,6 +85,11 @@ class ContactoNegociacionesTab extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: ContactoNegociacionCard(negociacion: n),
           ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        CustomOutlinedButton(
+          text: '+ Crear negociación',
+          onPressed: () => _crearNegociacion(context),
         ),
       ],
     );
@@ -204,7 +244,9 @@ class _ResumenSeccion extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EstadoVacio extends StatelessWidget {
-  const _EstadoVacio();
+  final VoidCallback onCrear;
+
+  const _EstadoVacio({required this.onCrear});
 
   @override
   Widget build(BuildContext context) {
@@ -241,6 +283,11 @@ class _EstadoVacio extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            CustomOutlinedButton(
+              text: '+ Crear negociación',
+              onPressed: onCrear,
             ),
           ],
         ),

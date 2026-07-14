@@ -53,13 +53,10 @@ extension NavigationExtensions on BuildContext {
 
   // ── Módulos principales ────────────────────────────────────
 
-  Future<void> goToSeguimiento({LeadListFiltro? filtroInicial}) =>
-      clearAndPush(
-        AppRoutes.seguimiento,
-        arguments: filtroInicial != null
-            ? {'filtroInicial': filtroInicial}
-            : null,
-      );
+  Future<void> goToSeguimiento({LeadListFiltro? filtroInicial}) => clearAndPush(
+    AppRoutes.seguimiento,
+    arguments: filtroInicial != null ? {'filtroInicial': filtroInicial} : null,
+  );
   Future<void> goToContactos() => clearAndPush(AppRoutes.contactos);
   Future<void> goToSolicitudes() => clearAndPush(AppRoutes.solicitudes);
   Future<void> goToMisCasos() => clearAndPush(AppRoutes.misCasos);
@@ -79,16 +76,16 @@ extension NavigationExtensions on BuildContext {
     double? descuentoNegociacion,
     String? idMonedaNegociacion,
   }) => _push(
-        AppRoutes.fichaCompletarSolicitud,
-        arguments: {
-          'solicitud': solicitud,
-          'modoEdicion': modoEdicion,
-          'cantidadNegociacion': cantidadNegociacion,
-          'precioBaseNegociacion': precioBaseNegociacion,
-          'descuentoNegociacion': descuentoNegociacion,
-          'idMonedaNegociacion': idMonedaNegociacion,
-        },
-      );
+    AppRoutes.fichaCompletarSolicitud,
+    arguments: {
+      'solicitud': solicitud,
+      'modoEdicion': modoEdicion,
+      'cantidadNegociacion': cantidadNegociacion,
+      'precioBaseNegociacion': precioBaseNegociacion,
+      'descuentoNegociacion': descuentoNegociacion,
+      'idMonedaNegociacion': idMonedaNegociacion,
+    },
+  );
 
   Future<void> goToFichaParticipantesSolicitud({
     required Solicitud solicitud,
@@ -96,14 +93,14 @@ extension NavigationExtensions on BuildContext {
     required SolicitudFormCubit formCubit,
     required ParticipantesCubit participantesCubit,
   }) => _push(
-        AppRoutes.fichaParticipantesSolicitud,
-        arguments: {
-          'solicitud': solicitud,
-          'modoEdicion': modoEdicion,
-          'formCubit': formCubit,
-          'participantesCubit': participantesCubit,
-        },
-      );
+    AppRoutes.fichaParticipantesSolicitud,
+    arguments: {
+      'solicitud': solicitud,
+      'modoEdicion': modoEdicion,
+      'formCubit': formCubit,
+      'participantesCubit': participantesCubit,
+    },
+  );
 
   Future<void> goToFichaFacturacionSolicitud({
     required Solicitud solicitud,
@@ -111,14 +108,14 @@ extension NavigationExtensions on BuildContext {
     required SolicitudFormCubit formCubit,
     required ParticipantesCubit participantesCubit,
   }) => _push(
-        AppRoutes.fichaFacturacionSolicitud,
-        arguments: {
-          'solicitud': solicitud,
-          'modoEdicion': modoEdicion,
-          'formCubit': formCubit,
-          'participantesCubit': participantesCubit,
-        },
-      );
+    AppRoutes.fichaFacturacionSolicitud,
+    arguments: {
+      'solicitud': solicitud,
+      'modoEdicion': modoEdicion,
+      'formCubit': formCubit,
+      'participantesCubit': participantesCubit,
+    },
+  );
 
   Future<void> goToFichaResumenSolicitud({
     required Solicitud solicitud,
@@ -126,27 +123,21 @@ extension NavigationExtensions on BuildContext {
     required SolicitudFormCubit formCubit,
     required ParticipantesCubit participantesCubit,
   }) => _push(
-        AppRoutes.fichaResumenSolicitud,
-        arguments: {
-          'solicitud': solicitud,
-          'modoEdicion': modoEdicion,
-          'formCubit': formCubit,
-          'participantesCubit': participantesCubit,
-        },
-      );
+    AppRoutes.fichaResumenSolicitud,
+    arguments: {
+      'solicitud': solicitud,
+      'modoEdicion': modoEdicion,
+      'formCubit': formCubit,
+      'participantesCubit': participantesCubit,
+    },
+  );
 
   Future<void> goToSolicitudGenerada({required Solicitud solicitud}) =>
-      _push(
-        AppRoutes.solicitudGenerada,
-        arguments: {'solicitud': solicitud},
-      );
+      _push(AppRoutes.solicitudGenerada, arguments: {'solicitud': solicitud});
 
   Future<void> goToCargaMasivaParticipantes({
     required ParticipantesCubit cubit,
-  }) => _push(
-        AppRoutes.cargaMasivaParticipantes,
-        arguments: {'cubit': cubit},
-      );
+  }) => _push(AppRoutes.cargaMasivaParticipantes, arguments: {'cubit': cubit});
 
   Future<void> goToDetalleCobranza({required String numSol}) =>
       _push(AppRoutes.detalleCobranza, arguments: {'numSol': numSol});
@@ -159,15 +150,18 @@ extension NavigationExtensions on BuildContext {
     required String moneda,
     required String idCondicion,
     required String condicion,
-  }) => _push(AppRoutes.facturarCobranza, arguments: {
-        'idCobranza': idCobranza,
-        'nombre': nombre,
-        'oportunidad': oportunidad,
-        'montoTotal': montoTotal,
-        'moneda': moneda,
-        'idCondicion': idCondicion,
-        'condicion': condicion,
-      });
+  }) => _push(
+    AppRoutes.facturarCobranza,
+    arguments: {
+      'idCobranza': idCobranza,
+      'nombre': nombre,
+      'oportunidad': oportunidad,
+      'montoTotal': montoTotal,
+      'moneda': moneda,
+      'idCondicion': idCondicion,
+      'condicion': condicion,
+    },
+  );
 
   // Devuelve fecha de vencimiento más alta + cuotas del plan "guardado"
   // localmente (RC real todavía no se llamó — eso lo dispara Facturar), o
@@ -181,16 +175,19 @@ extension NavigationExtensions on BuildContext {
     required double detraccion,
     required double importeCredito,
     List<CuotaPlan> cuotasIniciales = const [],
-  }) => _push<PlanCreditoResultado>(AppRoutes.planCredito, arguments: {
-        'idCobranza': idCobranza,
-        'nombre': nombre,
-        'oportunidad': oportunidad,
-        'montoTotal': montoTotal,
-        'moneda': moneda,
-        'detraccion': detraccion,
-        'importeCredito': importeCredito,
-        'cuotasIniciales': cuotasIniciales,
-      });
+  }) => _push<PlanCreditoResultado>(
+    AppRoutes.planCredito,
+    arguments: {
+      'idCobranza': idCobranza,
+      'nombre': nombre,
+      'oportunidad': oportunidad,
+      'montoTotal': montoTotal,
+      'moneda': moneda,
+      'detraccion': detraccion,
+      'importeCredito': importeCredito,
+      'cuotasIniciales': cuotasIniciales,
+    },
+  );
   Future<void> goToSettings() => clearAndPush(AppRoutes.settings);
   Future<void> goToChangePassword() => clearAndPush(AppRoutes.changePassword);
 
@@ -199,10 +196,8 @@ extension NavigationExtensions on BuildContext {
 
   // ── Lead — detalle contacto ────────────────────────────────
 
-  Future<void> goToDetalleContacto({required int idNumero}) => _push(
-    AppRoutes.detalleContacto,
-    arguments: {'idNumero': idNumero},
-  );
+  Future<void> goToDetalleContacto({required int idNumero}) =>
+      _push(AppRoutes.detalleContacto, arguments: {'idNumero': idNumero});
 
   // ── Lead — detalle ─────────────────────────────────────────
 
@@ -222,9 +217,15 @@ extension NavigationExtensions on BuildContext {
     required int idLead,
     InfoLeadCubit? cubit,
     bool soloLectura = false,
+    bool desdeConversacion = false,
   }) => _push(
     AppRoutes.detalleEditarLead,
-    arguments: {'idLead': idLead, 'cubit': cubit, 'soloLectura': soloLectura},
+    arguments: {
+      'idLead': idLead,
+      'cubit': cubit,
+      'soloLectura': soloLectura,
+      'desdeConversacion': desdeConversacion,
+    },
   );
 
   /// Retorna el [Template] seleccionado, o null si el usuario canceló.
@@ -237,10 +238,7 @@ extension NavigationExtensions on BuildContext {
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return Future.value();
     state.pushNamedAndRemoveUntil(AppRoutes.chats, (_) => false);
-    state.pushNamed(
-      AppRoutes.detalleChat,
-      arguments: {'idChatCab': idChatCab},
-    );
+    state.pushNamed(AppRoutes.detalleChat, arguments: {'idChatCab': idChatCab});
     return Future.value();
   }
 

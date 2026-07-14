@@ -10,17 +10,25 @@ class EditLeadPage extends StatelessWidget {
   // reusa esta misma pantalla para mostrar sus datos, pero sin permitir
   // ningún cambio (ver NegociacionCard._verNegociacion).
   final bool soloLectura;
+  // true cuando se entra desde el chat de Conversaciones (ChatDetailView) —
+  // oculta Información adicional y restringe Estado/Canal/Campaña/Oportunidad
+  // (ver EditLeadPortrait).
+  final bool desdeConversacion;
   const EditLeadPage({
     super.key,
     required this.idLead,
     this.soloLectura = false,
+    this.desdeConversacion = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => EditLeadBloc()..add(const EditLeadStarted()),
-      child: EditLeadView(soloLectura: soloLectura),
+      child: EditLeadView(
+        soloLectura: soloLectura,
+        desdeConversacion: desdeConversacion,
+      ),
     );
   }
 }

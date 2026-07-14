@@ -19,6 +19,13 @@ class EditLeadNegociacionSection extends StatelessWidget {
   final String? descripcionEstadoPadreFallback;
   final int idCanalFallback;
   final bool isLoading;
+  // Desde conversación al crear — Estado/Subestado se muestran fijos en
+  // "Nuevo", sin poder seleccionarse.
+  final bool estadoBloqueado;
+  // Desde conversación — Canal siempre fijo en WhatsApp.
+  final bool canalBloqueado;
+  // Desde conversación al editar — Campaña/Oportunidad quedan fijas.
+  final bool campaniaOportunidadBloqueada;
   final ValueChanged<CampaniaItem?> onCampaniaChanged;
   final ValueChanged<OportunidadItem?> onOportunidadChanged;
   final ValueChanged<CanalItem?> onCanalChanged;
@@ -42,6 +49,9 @@ class EditLeadNegociacionSection extends StatelessWidget {
     required this.descripcionEstadoPadreFallback,
     required this.idCanalFallback,
     required this.isLoading,
+    this.estadoBloqueado = false,
+    this.canalBloqueado = false,
+    this.campaniaOportunidadBloqueada = false,
     required this.onCampaniaChanged,
     required this.onOportunidadChanged,
     required this.onCanalChanged,
@@ -68,7 +78,7 @@ class EditLeadNegociacionSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         FormFieldRow(
           izquierdo: CustomComboField<CampaniaItem>(
-            enabled: !isLoading,
+            enabled: !isLoading && !campaniaOportunidadBloqueada,
             data: catalogState.campanias,
             label: 'Campaña',
             initialValue: campania?.id.toString(),
@@ -81,7 +91,10 @@ class EditLeadNegociacionSection extends StatelessWidget {
             ),
           ),
           derecho: CustomComboField<OportunidadItem>(
-            enabled: oportunidadesFiltradas.isNotEmpty && !isLoading,
+            enabled:
+                oportunidadesFiltradas.isNotEmpty &&
+                !isLoading &&
+                !campaniaOportunidadBloqueada,
             data: oportunidadesFiltradas,
             labelIndex: 2,
             label: 'Oportunidad',
@@ -99,7 +112,7 @@ class EditLeadNegociacionSection extends StatelessWidget {
 
         FormFieldRow(
           izquierdo: CustomComboField<CanalItem>(
-            enabled: !isLoading,
+            enabled: !isLoading && !canalBloqueado,
             data: catalogState.canales,
             label: 'Canal',
             initialValue: canal?.id.toString(),
@@ -143,7 +156,7 @@ class EditLeadNegociacionSection extends StatelessWidget {
       );
     }
     return CustomComboField<EstadoItem>(
-      enabled: !isLoading,
+      enabled: !isLoading && !estadoBloqueado,
       data: catalogState.estados.where((e) => e.esPadre).toList(),
       label: 'Estado',
       initialValue: estado?.id,
@@ -174,7 +187,7 @@ class EditLeadNegociacionSection extends StatelessWidget {
       );
     }
     return CustomComboField<EstadoItem>(
-      enabled: subEstadosFiltrados.isNotEmpty && !isLoading,
+      enabled: subEstadosFiltrados.isNotEmpty && !isLoading && !estadoBloqueado,
       data: subEstadosFiltrados,
       label: 'Subestado',
       initialValue: subEstado?.id,

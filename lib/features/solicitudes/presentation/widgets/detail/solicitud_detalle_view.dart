@@ -14,99 +14,108 @@ class SolicitudDetalleView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BasePage(
-      onPop: () => context.goBack(),
-      drawerSide: DrawerSide.none,
-      bodyPadding: EdgeInsets.zero,
-      title: 'Detalle de Solicitud',
-      appBarLeadingButtons: [
-        IconButton(
-          onPressed: () => context.goBack(),
-          icon: Icon(
-            AppIcons.back,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
-      ],
-      body: Column(
-        children: [
-          // ── Header azul — conectado con el AppBar ─────────────
-          const _DetalleHeader(),
+    return BlocBuilder<SolicitudDetalleBloc, SolicitudDetalleState>(
+      builder: (context, state) {
+        // Nunca se usa el Solicitud de navegación para pintar — puede venir
+        // de una lista cacheada hace rato, o de un Solicitud "de paso" casi
+        // vacío armado desde una Negociacion (ver NegociacionCard). Solo se
+        // usa como último respaldo si la solicitud ya no aparece en la
+        // lista recién traída (caso raro).
+        final solicitudActual = state is SolicitudDetalleSuccess
+            ? (state.solicitud ?? solicitud)
+            : solicitud;
 
-          // ── Indicador de pasos — superpuesto al header ─────────
-          Transform.translate(
-            offset: const Offset(0, -AppSpacing.md),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: const _PasosIndicador(pasoActual: 1),
+        return BasePage(
+          onPop: () => context.goBack(),
+          drawerSide: DrawerSide.none,
+          bodyPadding: EdgeInsets.zero,
+          title: 'Detalle de Solicitud',
+          appBarLeadingButtons: [
+            IconButton(
+              onPressed: () => context.goBack(),
+              icon: Icon(
+                AppIcons.back,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
             ),
-          ),
+          ],
+          body: Column(
+            children: [
+              // ── Header azul — conectado con el AppBar ─────────────
+              const _DetalleHeader(),
 
-          // ── Contenido scrollable ───────────────────────────────
-          Expanded(
-            child: Transform.translate(
-              offset: const Offset(0, -AppSpacing.md),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.lg,
+              // ── Indicador de pasos — superpuesto al header ─────────
+              Transform.translate(
+                offset: const Offset(0, -AppSpacing.md),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  child: const _PasosIndicador(pasoActual: 1),
                 ),
-                child: Column(
-                  children: [
-                    SolicitudCard(solicitud: solicitud, mostrarBotones: false),
-                    const SizedBox(height: AppSpacing.sm),
-                    BlocBuilder<SolicitudDetalleBloc, SolicitudDetalleState>(
-                      builder: (context, state) {
-                        if (state is SolicitudDetalleLoading ||
-                            state is SolicitudDetalleInitial) {
-                          return const Padding(
+              ),
+
+              // ── Contenido scrollable ───────────────────────────────
+              Expanded(
+                child: Transform.translate(
+                  offset: const Offset(0, -AppSpacing.md),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.lg,
+                    ),
+                    child: Column(
+                      children: [
+                        SolicitudCard(
+                          solicitud: solicitudActual,
+                          mostrarBotones: false,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        switch (state) {
+                          SolicitudDetalleLoading() ||
+                          SolicitudDetalleInitial() => const Padding(
                             padding: EdgeInsets.symmetric(
                               vertical: AppSpacing.xl,
                             ),
                             child: AppLoadingView(),
-                          );
-                        }
-                        if (state is SolicitudDetalleError) {
-                          return AppErrorView(
-                            message: state.mensaje,
-                            onRetry: () => context
-                                .read<SolicitudDetalleBloc>()
-                                .add(
-                                  SolicitudDetalleStarted(
-                                    solicitud.idSolicitud,
+                          ),
+                          SolicitudDetalleError(:final mensaje) =>
+                            AppErrorView(
+                              message: mensaje,
+                              onRetry: () => context
+                                  .read<SolicitudDetalleBloc>()
+                                  .add(
+                                    SolicitudDetalleStarted(
+                                      solicitud.idSolicitud,
+                                    ),
                                   ),
-                                ),
-                          );
-                        }
-                        if (state is! SolicitudDetalleSuccess) {
-                          return const SizedBox.shrink();
-                        }
-
-                        final detalle = state.detalle;
-                        return Column(
-                          children: [
-                            _SeccionDatosParticipante(detalle: detalle),
-                            const SizedBox(height: AppSpacing.sm),
-                            _SeccionDatosFacturacion(detalle: detalle),
-                            const SizedBox(height: AppSpacing.sm),
-                            _SeccionHistorial(historial: detalle.historial),
-                          ],
-                        );
-                      },
+                            ),
+                          SolicitudDetalleSuccess(:final detalle) => Column(
+                            children: [
+                              _SeccionDatosParticipante(detalle: detalle),
+                              const SizedBox(height: AppSpacing.sm),
+                              _SeccionDatosFacturacion(detalle: detalle),
+                              const SizedBox(height: AppSpacing.sm),
+                              _SeccionHistorial(historial: detalle.historial),
+                            ],
+                          ),
+                          _ => const SizedBox.shrink(),
+                        },
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
 
-          // ── Botones de acción fijos al pie ─────────────────────
-          _BotonesDetalle(solicitud: solicitud),
-        ],
-      ),
+              // ── Botones de acción fijos al pie ─────────────────────
+              _BotonesDetalle(solicitud: solicitudActual),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -403,6 +403,28 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   `OK¯msg¯data`).
 - "Carga masiva" (Excel) todavía no tiene SP conectado.
 
+## `SolicitudDetalleView` ya no confía en el `Solicitud` de navegación (2026-07-14)
+`SolicitudDetalleView`/`_BotonesDetalle` mostraban el header y decidían `puedeEditar` con el
+`Solicitud` que llegaba como argumento de navegación — que puede venir de la lista cacheada hace
+rato (`SolicitudListPortrait`), o peor, de un `Solicitud` "de paso" casi vacío armado a mano
+desde una `Negociacion` (`NegociacionCard`/`ContactoNegociacionCard._solicitudDesdeNegociacion()`
+— sin `estado`, `ibValidado` siempre `false`, `monto` es el de la negociación no el de la
+solicitud, etc.). Se corrigió trayendo todo fresco en el momento:
+- `SolicitudDetalleBloc` ahora recibe también `GetSolicitudesUseCase` y, en
+  `SolicitudDetalleStarted`, pide **en paralelo** (`Future.wait`) el detalle (`'DV'`) y la lista
+  completa (`'LS'`) — de esta última saca el `Solicitud` que matchea el `NUMSOL` y lo manda en
+  `SolicitudDetalleSuccess.solicitud` (nullable — `null` solo si esa solicitud ya no aparece en
+  la lista recién traída, caso raro).
+- `SolicitudDetalleView` calcula `solicitudActual = state.solicitud ?? solicitud` (el de
+  navegación queda solo como último respaldo) y lo usa tanto para el header (`SolicitudCard`)
+  como para `_BotonesDetalle` (que decide "Editar ficha" con `puedeEditar`, sensible a
+  `idEstado`/`ibValidado` — con el `Solicitud` viejo podía mostrar "Editar ficha" cuando no
+  correspondía). El `Solicitud` que llega por navegación (constructor de `SolicitudDetalleView`)
+  ya casi no se usa — solo mientras `SolicitudDetalleLoading`/`Initial`, antes de que llegue la
+  respuesta fresca.
+- No se tocó el `Solicitud` "de paso" que arman `NegociacionCard`/`ContactoNegociacionCard` — ya
+  no hace falta, este fix lo hace irrelevante para lo que se pinta en pantalla.
+
 ## `Solicitud.idEstado` es `int` (2026-07-14)
 `ID_ESTADO_GES` es una columna INT en el SP (`CSV_SOLICITUDES_LST_APP`, task `'LS'`) — llega
 crudo (`'0'`/`'1'`/`'2'`/`'3'`, sin padding). Antes `Solicitud.idEstado` era `String` y todo el

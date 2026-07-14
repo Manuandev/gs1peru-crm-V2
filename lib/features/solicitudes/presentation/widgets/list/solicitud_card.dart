@@ -28,16 +28,26 @@ class SolicitudCard extends StatelessWidget {
     _ => AppColors.textDisabled,
   };
 
-  // ── Acción según estado: ninguna = solo "Ver" ─────────────────────
-  static SolicitudAccionTipo _accion(int idEstado) => switch (idEstado) {
-    0 || 3 => SolicitudAccionTipo.cobranza, // "Completar"
-    1 => SolicitudAccionTipo.sinValidar, // "Validar"
-    _ => SolicitudAccionTipo.ninguna,
-  };
+  // ── Acción según validación + estado ──────────────────────────────
+  // 1. Sin validar y aún "Por Completar" (ibValidado == false && idEstado
+  //    == 0) → "Validar".
+  // 2. Validada y con estado > 0 (ya avanzó más allá de "Por Completar")
+  //    → ninguna acción, solo "Ver": ya no hay nada que completar.
+  // 3. Validada y con estado == 0 (aún "Por Completar") → "Completar":
+  //    en el detalle podrá elegir "Editar ficha" o "Continuar" (ver
+  //    Solicitud.puedeEditar, que solo mira idEstado == 0).
+  // El caso restante (sin validar y estado > 0) no está definido por
+  // negocio todavía — cae a "ninguna" (solo "Ver"), el default más
+  // conservador, igual que antes de esta regla.
+  static SolicitudAccionTipo _accion(bool ibValidado, int idEstado) {
+    if (!ibValidado && idEstado == 0) return SolicitudAccionTipo.sinValidar;
+    if (ibValidado && idEstado == 0) return SolicitudAccionTipo.cobranza;
+    return SolicitudAccionTipo.ninguna;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final accion = _accion(solicitud.idEstado);
+    final accion = _accion(solicitud.ibValidado, solicitud.idEstado);
     final canalInfo = CanalHelper.get(solicitud.idCanal);
 
     return Container(

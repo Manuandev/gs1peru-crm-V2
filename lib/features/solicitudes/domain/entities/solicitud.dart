@@ -36,10 +36,11 @@ class Solicitud {
 
   String get apellidos => '$apellidoPaterno $apellidoMaterno'.trim();
 
-  /// Editable solo mientras está "Por Completar" (`idEstado == 0`) y aún
-  /// no fue validada — igual que [Negociacion.accionSolicitud], una vez que
-  /// avanza de estado o se valida deja de poder editarse, solo verse.
-  bool get puedeEditar => idEstado == 0 && !ibValidado;
+  /// Editable solo mientras está "Por Completar" (`idEstado == 0`) —
+  /// independiente de `ibValidado` (validar y completar son dimensiones
+  /// separadas, ver `SolicitudCard._accion`). En cuanto avanza de estado
+  /// deja de poder editarse, solo verse.
+  bool get puedeEditar => idEstado == 0;
 
   const Solicitud({
     required this.idSolicitud,

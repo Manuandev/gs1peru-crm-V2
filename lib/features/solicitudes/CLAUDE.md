@@ -448,16 +448,31 @@ matcheaban con el dato real → todas las solicitudes caían al valor por defect
   siempre como `int` (`0` Por Completar · `1` Por Validar · `2` Con Documentos · `3` Lista
   p/Cobranza, ver "Estados de la solicitud" más abajo).
 
-## Regla de negocio — edición de una solicitud ya existente (2026-07-14)
-`Solicitud.puedeEditar` (`domain/entities/solicitud.dart`) = `idEstado == 0 && !ibValidado`
-— mismo patrón que `Negociacion.accionSolicitud`. `_BotonesDetalle`
-(`presentation/widgets/detail/solicitud_detalle_view.dart`) solo muestra "Editar ficha" cuando
-`puedeEditar` es `true`; si no, el pie queda con un único botón "Continuar" (ancho completo,
-`modoEdicion: false` — recorrido de solo lectura, ver "Validación de 'Continuar'" arriba). No se
-tocó `SolicitudCard._accion()` (lista) — sus botones "Completar"/"Validar" ya navegaban a
-`SolicitudDetallePage` sin editar nada directo, así que el gate real queda cubierto acá; el
-mismatch de `SolicitudCard` con `idEstado` (ver nota debajo, "Ojo — mismatch pendiente") sigue
-pendiente tal cual, no es lo que se resolvió con esta regla.
+## Regla de negocio — edición de una solicitud ya existente (2026-07-14, ajustada el mismo día)
+Dos dimensiones independientes — `ibValidado` (¿ya la revisó/validó un supervisor?) e `idEstado`
+(¿en qué paso del flujo va, `0`-`3`?) — deciden cosas distintas, no se combinan en un solo gate:
+
+- **`Solicitud.puedeEditar`** (`domain/entities/solicitud.dart`) = `idEstado == 0` — punto,
+  **no** mira `ibValidado`. Mientras la solicitud siga "Por Completar" se puede editar, esté o
+  no validada; en cuanto avanza de estado deja de poder editarse. `_BotonesDetalle`
+  (`presentation/widgets/detail/solicitud_detalle_view.dart`) solo muestra "Editar ficha" cuando
+  `puedeEditar` es `true`; si no, el pie queda con un único botón "Continuar" (ancho completo,
+  `modoEdicion: false` — recorrido de solo lectura, ver "Validación de 'Continuar'" arriba).
+- **`SolicitudCard._accion()`** (lista, `presentation/widgets/list/solicitud_card.dart`) decide
+  el segundo botón de la card (además de "Ver", que siempre está) combinando `ibValidado` **e**
+  `idEstado` (no solo uno de los dos):
+  1. `!ibValidado && idEstado == 0` → **"Validar"**.
+  2. `ibValidado && idEstado > 0` → **ninguna acción**, solo "Ver" — ya avanzó más allá de "Por
+     Completar", no hay nada que completar.
+  3. `ibValidado && idEstado == 0` → **"Completar"** — al entrar al detalle, `puedeEditar` (que
+     solo mira `idEstado`) da `true`, así que ahí sí puede elegir "Editar ficha" o "Continuar".
+  4. Caso restante (`!ibValidado && idEstado > 0`, ej. "Por Validar" con `idEstado == 1`) **sin
+     definir por negocio todavía** — cae al default conservador, `ninguna` (solo "Ver"). Si
+     luego se define una acción real para este caso, agregarla como un 4to `if` explícito, no
+     como el default silencioso.
+  Esto **reemplaza** el mismatch que estaba documentado más abajo ("Ojo — mismatch pendiente")
+  — ya no está pendiente, `_accion()` ahora recibe `(ibValidado, idEstado)` en vez de solo
+  `idEstado`.
 
 ## Regla de negocio — negociación con solicitud ya generada (2026-07-13)
 Una vez que una negociación tiene `NUMSOL` (campo `Negociacion.numSol`, `lead/`), deja de ser
@@ -517,15 +532,9 @@ decir "Generar solicitud" y pasa a reflejar el estado real de esa solicitud:
   `idEstado == 2`, sin cambios), "Listas para cobranza" (`cntListasCobranza` =
   `ibValidado`). Antes había una 4ta tarjeta "Por completar" (`idEstado == 0`) — se quitó
   por ser redundante con "Sin validar"
-- **Ojo — mismatch pendiente con `SolicitudCard`**: `SolicitudAccionTipo`/
-  `SolicitudCard._accion()`/`colorEstado()` (widgets/list/solicitud_card.dart) todavía
-  deciden qué botón mostrar (Validar/Completar) y de qué color es el chip de estado
-  mirando `idEstado` (`0`/`1`/`2`/`3`, el estado de gestión crudo del SP — ver
-  "SPs que consume"), **no** `ibValidado`. Por ahora es intencional (el usuario pidió dejar
-  los estados de gestión para después), pero puede haber solicitudes que aparezcan en el
-  filtro "Sin validar" (por `ibValidado`) mostrando el botón "Completar" en vez de
-  "Validar" (porque su `idEstado` no es `1`), o viceversa. Pendiente de que se defina la
-  relación real entre `idEstado` (estado de gestión) e `IB_VALIDADO` para unificar esto
+- ~~Ojo — mismatch pendiente con `SolicitudCard`~~ — resuelto, ver "Regla de negocio — edición
+  de una solicitud ya existente" arriba: `_accion()` ahora combina `ibValidado` + `idEstado`
+  (`colorEstado()` sigue mirando solo `idEstado`, para el color del chip — eso no cambió).
 - Estados de la solicitud (`idEstado`, `int`, estado de gestión — dimensión aparte de
   `ibValidado`): `0` Por Completar · `1` Por Validar · `2` Con Documentos · `3` Lista
   p/Cobranza

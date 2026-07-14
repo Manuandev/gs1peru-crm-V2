@@ -38,6 +38,45 @@ class ContactoNegociacionCard extends StatelessWidget {
     context.goToEditarLead(idLead: negociacion.idLead);
   }
 
+  // Solicitud "en blanco" con los datos disponibles en la negociación — para
+  // editar una ya creada (idSolicitud = NUMSOL) o verla de solo lectura.
+  Solicitud _solicitudDesdeNegociacion() => Solicitud(
+    idSolicitud: negociacion.numSol,
+    nombre: negociacion.nombres,
+    apellidoPaterno: negociacion.apellidoPaterno,
+    apellidoMaterno: negociacion.apellidoMaterno,
+    nombreEmpresa: negociacion.nombreEmpresa,
+    cargo: '',
+    correo: negociacion.correo,
+    telefono: negociacion.telefonoCompleto,
+    tipoPersona: '',
+    idCondicionPago: '',
+    condicionPago: '',
+    monto: negociacion.precio,
+    fechaCreacion: negociacion.fechaHoraCreacion,
+    idOportunidad: negociacion.idOportunidad,
+    oportunidad: negociacion.nombreOportunidad,
+    idCanal: negociacion.idCanal,
+    canal: negociacion.descripcionCanal,
+    idEstado: negociacion.idEstadoSol.toString().padLeft(2, '0'),
+    estado: '',
+    ibValidado: false,
+    asesor: '',
+    nombreAsesor: '',
+    idLead: negociacion.idLead.toString(),
+  );
+
+  void _editarSolicitud(BuildContext context) {
+    context.goToFichaCompletarSolicitud(
+      solicitud: _solicitudDesdeNegociacion(),
+      modoEdicion: true,
+    );
+  }
+
+  void _verSolicitud(BuildContext context) {
+    context.goToDetalleSolicitud(solicitud: _solicitudDesdeNegociacion());
+  }
+
   // Crea una solicitud NUEVA (NUMSOL vacío) para esta negociación ganada —
   // el wizard arranca en blanco (Solicitud.idSolicitud == '') y solo manda
   // idLead, que CSV_SOLICITUD_CUD_APP usa para vincular la solicitud al
@@ -80,8 +119,13 @@ class ContactoNegociacionCard extends StatelessWidget {
     );
     final simbolo = _simbolo(context);
 
+    // Con solicitud ya generada, la negociación deja de ser editable — el
+    // tap ya no navega a ningún lado (la info del lead ya se ve en la
+    // pestaña Información de esta misma pantalla).
+    final puedeEditar = negociacion.idLead != 0 && !negociacion.tieneSolicitud;
+
     return GestureDetector(
-      onTap: negociacion.idLead == 0 ? null : () => _irAEditar(context),
+      onTap: puedeEditar ? () => _irAEditar(context) : null,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -219,15 +263,26 @@ class ContactoNegociacionCard extends StatelessWidget {
                           ],
                         ),
 
-                        if (_esGanada) ...[
+                        if (_esGanada || negociacion.tieneSolicitud) ...[
                           const SizedBox(height: AppSpacing.sm),
                           SizedBox(
-                            width: double.infinity, 
+                            width: double.infinity,
                             child: CustomPrimaryButton(
-                              text: 'Generar solicitud',
+                              text: switch (negociacion.accionSolicitud) {
+                                SolicitudAccion.generar => 'Generar solicitud',
+                                SolicitudAccion.editar => 'Editar solicitud',
+                                SolicitudAccion.ver => 'Ver solicitud',
+                              },
                               icon: AppIcons.fileFactura,
                               backgroundColor: AppColors.success,
-                              onPressed: () => _generarSolicitud(context),
+                              onPressed: switch (negociacion.accionSolicitud) {
+                                SolicitudAccion.generar => () =>
+                                    _generarSolicitud(context),
+                                SolicitudAccion.editar => () =>
+                                    _editarSolicitud(context),
+                                SolicitudAccion.ver => () =>
+                                    _verSolicitud(context),
+                              },
                             ),
                           ),
                         ],

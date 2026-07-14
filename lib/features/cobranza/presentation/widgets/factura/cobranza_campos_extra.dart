@@ -67,12 +67,25 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
   // sea crédito, así que initState solo corre una vez — sin esto, cuando
   // PlanGuardado actualiza fechaVencimiento en el bloc (al volver del plan
   // de crédito), el campo se quedaba mostrando la fecha vieja.
+  //
+  // OJO: asignar _fechaCtrl.text acá mismo (síncrono) dispara el listener
+  // del controller, que a su vez llama Form.of(context)!._fieldDidChange()
+  // → setState() en el FormState ancestro (CobranzaFacturaView) — pero
+  // didUpdateWidget corre en medio del build de ese mismo Form, así que
+  // revienta con "setState() or markNeedsBuild() called during build".
+  // Se difiere al siguiente frame para que el Form ya haya terminado de
+  // construirse cuando el controller notifique a sus listeners.
   @override
   void didUpdateWidget(covariant _ExtraCredito oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.state.fechaVencimiento != widget.state.fechaVencimiento &&
         _fechaCtrl.text != widget.state.fechaVencimiento) {
-      _fechaCtrl.text = widget.state.fechaVencimiento;
+      final nuevaFecha = widget.state.fechaVencimiento;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _fechaCtrl.text != nuevaFecha) {
+          _fechaCtrl.text = nuevaFecha;
+        }
+      });
     }
   }
 

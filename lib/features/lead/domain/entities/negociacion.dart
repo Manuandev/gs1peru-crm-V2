@@ -2,6 +2,10 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
+/// Acción disponible en el botón de solicitud de una negociación — ver
+/// [Negociacion.accionSolicitud].
+enum SolicitudAccion { generar, editar, ver }
+
 class Negociacion extends Equatable {
   final int idLead;
 
@@ -71,6 +75,19 @@ class Negociacion extends Equatable {
             ? descripcionEstadoPadre
             : descripcionEstado)
       : descripcionEstado;
+
+  /// true si ya existe una solicitud generada para esta negociación
+  /// (NUMSOL no vacío) — a partir de acá la negociación deja de ser
+  /// editable, sin importar su estado.
+  bool get tieneSolicitud => numSol.trim().isNotEmpty;
+
+  /// Qué acción corresponde al botón de solicitud: sin NUMSOL, generar una
+  /// nueva; con NUMSOL y estado de gestión en 0 (borrador), editarla; con
+  /// NUMSOL y estado de gestión mayor a 0 (ya procesada), solo verla.
+  SolicitudAccion get accionSolicitud {
+    if (!tieneSolicitud) return SolicitudAccion.generar;
+    return idEstadoSol == 0 ? SolicitudAccion.editar : SolicitudAccion.ver;
+  }
 
   /// Nombre completo del contacto — vacío si no hay nombres/apellidos
   /// registrados (solo lo trae 'DT', no 'LN').

@@ -164,7 +164,13 @@ label por defecto pero sí aparecen en la lista sin filtro de tarjeta activo.
 - **`_ExtraCreditoState` necesita `didUpdateWidget`** para resincronizar `_fechaCtrl.text` con
   `widget.state.fechaVencimiento` — como vive con `ValueKey('credito')` estable mientras la
   condición sea crédito, `initState` solo corre una vez; sin el `didUpdateWidget` el campo se
-  quedaba mostrando la fecha vieja después de `PlanGuardado` (bug real ya corregido)
+  quedaba mostrando la fecha vieja después de `PlanGuardado` (bug real ya corregido). La
+  asignación a `_fechaCtrl.text` dentro de `didUpdateWidget` va envuelta en
+  `WidgetsBinding.instance.addPostFrameCallback` — hacerlo síncrono dispara el listener del
+  controller, que llama `Form.of(context)!._fieldDidChange()` → `setState()` en el `FormState`
+  de `CobranzaFacturaView` en medio de su propio build (`FlutterError: setState() or
+  markNeedsBuild() called during build` — reproducible configurando varias cuotas y validando
+  el plan, que dispara `PlanGuardado` con una `fechaVencimiento` nueva)
 - **`CobranzaFacturaState.numCuotas`** ya no es el stub `=> 1` — es `cuotasCredito.length`
   (con fallback a 1 si está vacío), así el resumen de crédito muestra el número real configurado
 - **`CobranzaPlanBloc` recuerda el plan ya configurado al reentrar** — `cuotasIniciales` viaja

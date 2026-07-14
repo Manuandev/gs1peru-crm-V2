@@ -403,6 +403,32 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   `OK¯msg¯data`).
 - "Carga masiva" (Excel) todavía no tiene SP conectado.
 
+## Regla de negocio — negociación con solicitud ya generada (2026-07-13)
+Una vez que una negociación tiene `NUMSOL` (campo `Negociacion.numSol`, `lead/`), deja de ser
+editable **en cualquier flujo** (ni desde Seguimiento ni desde Conversación) — el botón deja de
+decir "Generar solicitud" y pasa a reflejar el estado real de esa solicitud:
+- `Negociacion.accionSolicitud` (getter en la entidad, `lead/domain/entities/negociacion.dart`)
+  centraliza la regla: sin `numSol` → `SolicitudAccion.generar` (botón "Generar solicitud",
+  arranca un `Solicitud` en blanco como antes); con `numSol` y `idEstadoSol == 0` (borrador, aún
+  no procesada) → `SolicitudAccion.editar` (botón "Editar solicitud", abre el wizard en modo
+  edición vía `goToFichaCompletarSolicitud(modoEdicion: true)` con `idSolicitud: numSol` para que
+  el paso 1 prellene con `getSolicitudDetalle()`); con `numSol` y `idEstadoSol > 0` (ya procesada)
+  → `SolicitudAccion.ver` (botón "Ver solicitud", `goToDetalleSolicitud` — solo lectura).
+- `idEstadoSol` es `ID_ESTADO_GES` (`EVT.T_TECMSOLINSCRIPCION01`, tasks `'DT'`/`'DN'`/`'LS'` de
+  `SP_LeadsLst`) — no confundir con `Solicitud.idEstado` (mismo dato pero como string `'00'`-`'03'`
+  del SP de Solicitudes; acá se reconstruye con `idEstadoSol.toString().padLeft(2, '0')` al armar
+  el `Solicitud` de paso).
+- La edición del **lead/negociación en sí** (no la solicitud) también se bloquea si
+  `negociacion.tieneSolicitud`: `NegociacionCard` (Conversaciones) cambia "Editar negociación" por
+  "Ver información" (navega a `goToDetalleContacto`, solo lectura); `ContactoNegociacionCard`
+  (Seguimiento) deja el `onTap` del card en `null` (ya está dentro de la pestaña Información,
+  de solo lectura, de esa misma pantalla — no hace falta re-navegar).
+- Ambas cards arman un `Solicitud` "de paso" con los campos disponibles en `Negociacion`
+  (`_solicitudDesdeNegociacion()`, duplicado a propósito en los 2 archivos — es corto y cada
+  card vive en features distintas) — campos que `Negociacion` no trae (`cargo`, `tipoPersona`,
+  `idCondicionPago`, `asesor`, etc.) quedan vacíos; no afecta la carga real del detalle, que
+  siempre viene de `getSolicitudDetalle()`/`GetDetalleSolicitudUseCase` por `NUMSOL`.
+
 ## Dependencias externas
 - `SolicitudRepository` (RepositoryProvider — `getSolicitudes()` ya conectado al SP real)
 

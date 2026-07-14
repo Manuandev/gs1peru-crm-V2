@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class NegociacionCard extends StatelessWidget {
   final Negociacion negociacion;
@@ -19,6 +20,54 @@ class NegociacionCard extends StatelessWidget {
     required this.onGenerarSolicitud,
     this.onEdited,
   });
+
+  // Solicitud "en blanco" con los datos disponibles en la negociación —
+  // mismo patrón que ContactoNegociacionCard._generarSolicitud, usado tanto
+  // para editar una solicitud ya creada (idSolicitud = NUMSOL) como para
+  // verla de solo lectura.
+  Solicitud _solicitudDesdeNegociacion() => Solicitud(
+    idSolicitud: negociacion.numSol,
+    nombre: negociacion.nombres,
+    apellidoPaterno: negociacion.apellidoPaterno,
+    apellidoMaterno: negociacion.apellidoMaterno,
+    nombreEmpresa: negociacion.nombreEmpresa,
+    cargo: '',
+    correo: negociacion.correo,
+    telefono: negociacion.telefonoCompleto,
+    tipoPersona: '',
+    idCondicionPago: '',
+    condicionPago: '',
+    monto: negociacion.precio,
+    fechaCreacion: negociacion.fechaHoraCreacion,
+    idOportunidad: negociacion.idOportunidad,
+    oportunidad: negociacion.nombreOportunidad,
+    idCanal: negociacion.idCanal,
+    canal: negociacion.descripcionCanal,
+    idEstado: negociacion.idEstadoSol.toString().padLeft(2, '0'),
+    estado: '',
+    ibValidado: false,
+    asesor: '',
+    nombreAsesor: '',
+    idLead: negociacion.idLead.toString(),
+  );
+
+  void _editarSolicitud(BuildContext context) {
+    context.goToFichaCompletarSolicitud(
+      solicitud: _solicitudDesdeNegociacion(),
+      modoEdicion: true,
+    );
+  }
+
+  void _verSolicitud(BuildContext context) {
+    context.goToDetalleSolicitud(solicitud: _solicitudDesdeNegociacion());
+  }
+
+  // Ya existe una solicitud para esta negociación — no se puede editar el
+  // lead, solo ver su información (mismo destino que "Ver detalle" en
+  // Seguimiento).
+  void _verInformacion(BuildContext context) {
+    context.goToDetalleContacto(idNumero: negociacion.idNumero);
+  }
 
   static const TextStyle _estiloMicro = TextStyle(
     fontSize: 9,
@@ -176,8 +225,18 @@ class NegociacionCard extends StatelessWidget {
                           width: 80,
                           height: 26,
                           child: CustomOutlinedButton(
-                            text: 'Generar solicitud',
-                            onPressed: onGenerarSolicitud,
+                            text: switch (negociacion.accionSolicitud) {
+                              SolicitudAccion.generar => 'Generar solicitud',
+                              SolicitudAccion.editar => 'Editar solicitud',
+                              SolicitudAccion.ver => 'Ver solicitud',
+                            },
+                            onPressed: switch (negociacion.accionSolicitud) {
+                              SolicitudAccion.generar => onGenerarSolicitud,
+                              SolicitudAccion.editar => () =>
+                                  _editarSolicitud(context),
+                              SolicitudAccion.ver => () =>
+                                  _verSolicitud(context),
+                            },
                             height: 26,
                             textStyle: const TextStyle(
                               fontSize: 9,
@@ -193,8 +252,12 @@ class NegociacionCard extends StatelessWidget {
                           width: 80,
                           height: 26,
                           child: CustomPrimaryButton(
-                            text: 'Editar negociación',
-                            onPressed: () => _irAEditar(),
+                            text: negociacion.tieneSolicitud
+                                ? 'Ver información'
+                                : 'Editar negociación',
+                            onPressed: negociacion.tieneSolicitud
+                                ? () => _verInformacion(context)
+                                : () => _irAEditar(),
                             height: 26,
                             textStyle: const TextStyle(
                               fontSize: 9,

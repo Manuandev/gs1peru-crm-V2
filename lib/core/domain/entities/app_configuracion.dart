@@ -22,7 +22,9 @@ class AppConfiguracion extends Equatable {
   List<ConfiguracionItem> _opciones(String idConfig) =>
       items.where((c) => c.idConfig == idConfig && c.id > 0).toList();
 
-  // ── TDE — Tiempo de espera / chat abierto (minutos) ────────
+  // ── TDE — Tiempo de espera / chat abierto (horas) ───────────
+  // Ventana desde el primer mensaje del cliente durante la cual se puede
+  // seguir escribiendo en la conversación — ver ChatInputBar.
   double get tiempoChatAbierto {
     final item = _opciones(ConfiguracionKeys.tiempoEspera)
         .where((c) => c.id == ConfiguracionKeys.idTiempoChatAbierto)

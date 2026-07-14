@@ -254,6 +254,19 @@ Ruta: `AppRoutes.mediaPicker` con `TransitionType.slideRight`.
 Una conversación puede estar:
 - **Expirada** (`isExpirado = true`) — ventana de 24h cerrada, solo templates
 - **Cerrada** (`isCerrado = true`) — lead en estado "Cerrado"
+- **Tiempo de chat abierto vencido** — ver abajo, bloquea todo (ni texto ni templates)
 - **Activa** — envío libre de texto y multimedia
 
-Siempre verificar ambas flags antes de permitir envío de texto libre.
+Siempre verificar ambas flags (`isExpirado`/`isCerrado`) antes de permitir envío de texto libre.
+
+### Tiempo de chat abierto (TDE) — `ChatInputBar`
+
+Independiente de `isExpirado`/`isCerrado`. Se calcula en el cliente, en
+`ChatInputBar` (`presentation/widgets/chat_detail/chat_input_bar.dart`):
+compara `Chat.fcPrimerMensajeCliente` (fecha del primer mensaje del cliente)
+contra `ConfiguracionService().tiempoChatAbierto` (grupo `TDE`, opción
+`idTiempoChatAbierto = 1`, valor en **horas**). Si ya se superó, se reemplaza
+toda la barra (texto, mic, adjuntar y plantillas) por `_TiempoVencidoBar` —
+a diferencia de la barra de "Expirada", aquí no se ofrece reabrir con
+plantilla. Un `Timer.periodic` de 1 minuto reevalúa mientras el chat está
+abierto, para bloquear sin necesidad de reingresar a la pantalla.

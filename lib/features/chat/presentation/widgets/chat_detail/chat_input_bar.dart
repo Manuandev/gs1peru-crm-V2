@@ -1,5 +1,7 @@
 // lib/features/chat/presentation/widgets/chat_detail/chat_input_bar.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -34,6 +36,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
   InputMode _mode = InputMode.text;
   bool _hasText = false;
 
+  // Reevalúa cada minuto si la conversación superó el tiempo de chat
+  // abierto (TDE), para bloquear la barra sin necesidad de reabrir el chat.
+  Timer? _tiempoTicker;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +48,23 @@ class _ChatInputBarState extends State<ChatInputBar> {
       final hasText = _textController.text.trim().isNotEmpty;
       if (hasText != _hasText) setState(() => _hasText = hasText);
     });
+    _tiempoTicker = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  // Ventana desde el primer mensaje del cliente (fcPrimerMensajeCliente)
+  // durante la cual se puede seguir escribiendo — configurable vía TDE
+  // (ConfiguracionService().tiempoChatAbierto, en horas).
+  bool _tiempoChatAbiertoVencido() {
+    final fechaPrimerMensaje = DateFormatter.parseDate(
+      widget.chat.fcPrimerMensajeCliente,
+    );
+    if (fechaPrimerMensaje == null) return false;
+
+    final transcurrido = DateTime.now().difference(fechaPrimerMensaje);
+    final limite = ConfiguracionService().tiempoChatAbierto;
+    return transcurrido.inMinutes >= limite * 60;
   }
 
   @override
@@ -70,6 +93,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   void dispose() {
+    _tiempoTicker?.cancel();
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -171,6 +195,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final tiempoVencido = _tiempoChatAbiertoVencido();
 
     // Con el panel de datos/negociaciones/historial abierto, toda la barra
     // queda bloqueada al toque — no solo el foco del input.
@@ -180,14 +205,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // ── Attachment picker ─────────────────────────────────
-          if (_mode == InputMode.attachment)
+          if (!tiempoVencido && _mode == InputMode.attachment)
             AttachmentPickerWidget(
               onFilesBatchPicked: _onFilesBatchPicked,
               onClose: () => setState(() => _mode = InputMode.text),
             ),
 
           // ── Audio recorder ────────────────────────────────────
-          if (_mode == InputMode.audio)
+          if (!tiempoVencido && _mode == InputMode.audio)
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm2,
@@ -200,7 +225,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
             ),
 
           // ── Input principal ───────────────────────────────────
-          if (_mode != InputMode.audio)
+          if (tiempoVencido || _mode != InputMode.audio)
             Container(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.sm,
@@ -217,7 +242,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   ),
                 ),
               ),
-              child: widget.chat.isExpirado
+              child: tiempoVencido
+                  ? const _TiempoVencidoBar()
+                  : widget.chat.isExpirado
                   ? _ExpiradoBar(onPlantilla: _onTemplateSelected)
                   : _NormalBar(
                       textController: _textController,
@@ -423,6 +450,41 @@ class _ExpiradoBar extends StatelessWidget {
         Expanded(
           child: Text(
             'Sesión cerrada — usa una plantilla para reabrir la conversación.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Barra de tiempo de chat abierto vencido ──────────────────────────────────────
+// No muestra texto, mic, adjuntar ni plantillas — a diferencia de _ExpiradoBar,
+// aquí ya no se puede reabrir la conversación desde el chat.
+
+class _TiempoVencidoBar extends StatelessWidget {
+  const _TiempoVencidoBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(
+          AppIcons.time,
+          color: colorScheme.onSurfaceVariant,
+          size: AppSizing.iconActionSm,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            'Se superó el tiempo de chat abierto de esta conversación. Ya no se pueden enviar mensajes.',
             style: AppTextStyles.bodySmall.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),

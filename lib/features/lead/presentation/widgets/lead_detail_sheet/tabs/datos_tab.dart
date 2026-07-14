@@ -120,18 +120,6 @@ class DatosTab extends StatelessWidget {
                       : negociacion.nombreCampania,
                 ),
                 derecha: _CampoDato(
-                  icono: AppSocialUtils.widgetCanalById(
-                    negociacion.idCanal,
-                    size: AppSizing.iconActionSm,
-                  ),
-                  etiqueta: 'Canal',
-                  valor: negociacion.descripcionCanal.isEmpty
-                      ? '—'
-                      : negociacion.descripcionCanal,
-                ),
-              ),
-              _ParFila(
-                izquierda: _CampoDato(
                   icono: Icon(
                     AppIcons.cursoEvento,
                     size: AppSizing.iconActionSm,
@@ -141,6 +129,18 @@ class DatosTab extends StatelessWidget {
                   valor: negociacion.nombreOportunidad.isEmpty
                       ? '—'
                       : negociacion.nombreOportunidad,
+                ),
+              ),
+              _ParFila(
+                izquierda: _CampoDato(
+                  icono: AppSocialUtils.widgetCanalById(
+                    negociacion.idCanal,
+                    size: AppSizing.iconActionSm,
+                  ),
+                  etiqueta: 'Canal',
+                  valor: negociacion.descripcionCanal.isEmpty
+                      ? '—'
+                      : negociacion.descripcionCanal,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -177,17 +177,6 @@ class DatosTab extends StatelessWidget {
               ),
               _ParFila(
                 izquierda: _CampoDato(
-                  icono: Icon(
-                    AppIcons.origen,
-                    size: AppSizing.iconActionSm,
-                    color: colorScheme.primary,
-                  ),
-                  etiqueta: 'Origen',
-                  valor: negociacion.descripcionCanal.isEmpty
-                      ? '—'
-                      : negociacion.descripcionCanal,
-                ),
-                derecha: _CampoDato(
                   icono: Icon(
                     AppIcons.calendar,
                     size: AppSizing.iconActionSm,
@@ -316,10 +305,7 @@ class _CampoDato extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: AppSizing.iconActionSm + AppSpacing.xxs,
-          child: icono,
-        ),
+        SizedBox(width: AppSizing.iconActionSm + AppSpacing.xxs, child: icono),
         const SizedBox(width: AppSpacing.xs),
         Expanded(
           child: Column(
@@ -349,4 +335,3 @@ class _CampoDato extends StatelessWidget {
     );
   }
 }
-

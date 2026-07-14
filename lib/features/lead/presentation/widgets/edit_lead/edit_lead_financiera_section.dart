@@ -5,10 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
-// Precio base y Descuento nunca son editables por el usuario (ver reglas de
-// negocio en edit_lead_portrait.dart): Precio base se autocompleta al elegir
-// Oportunidad y Descuento se autocalcula (subtotal - costo final). El único
-// campo editable de esta sección es Costo final.
+// Moneda, Precio base y Descuento nunca son editables por el usuario (ver
+// reglas de negocio en edit_lead_portrait.dart): los tres se autocompletan
+// al elegir Oportunidad (item.idMoneda / item.importeGeneral) y Descuento
+// además se autocalcula (subtotal - costo final). El único campo editable
+// de esta sección es Costo final.
 class EditLeadFinancieraSection extends StatelessWidget {
   final TextEditingController cantidadCtrl;
   final TextEditingController precioBaseCtrl;
@@ -16,7 +17,6 @@ class EditLeadFinancieraSection extends StatelessWidget {
   final List<MonedaItem> monedas;
   final MonedaItem? monedaItem;
   final bool isLoading;
-  final ValueChanged<MonedaItem?> onMonedaChanged;
   final double subtotal;
   final double descuento;
   final double costoFinal;
@@ -29,7 +29,6 @@ class EditLeadFinancieraSection extends StatelessWidget {
     required this.monedas,
     required this.monedaItem,
     required this.isLoading,
-    required this.onMonedaChanged,
     required this.subtotal,
     required this.descuento,
     required this.costoFinal,
@@ -52,8 +51,7 @@ class EditLeadFinancieraSection extends StatelessWidget {
             data: monedas,
             label: 'Moneda (*)',
             initialValue: monedaItem?.id,
-            onChanged: onMonedaChanged,
-            enabled: !isLoading,
+            enabled: false,
             dense: true,
             prefixIcon: Icon(
               AppIcons.moneda,

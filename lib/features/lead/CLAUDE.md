@@ -132,12 +132,33 @@ ningún origen, edite o cree, venga o no de conversación.
 
 ### Reglas universales (todos los orígenes)
 
-- **Precio base** y **Descuento** nunca son editables por el usuario, en ningún origen ni
-  pantalla — `EditLeadFinancieraSection` los renderiza siempre `enabled: false`. Precio base se
-  autocompleta al elegir Oportunidad (`item.importeGeneral`, en `_onOportunidadChanged`);
-  Descuento se autocalcula como `subtotal - costoFinal`. El único campo editable de esa fila es
-  **Costo final** (`_costoFinalCtrl`) — ya no existe el toggle `costoFinalEditable`, es el
-  comportamiento único.
+- **Moneda**, **Precio base** y **Descuento** nunca son editables por el usuario, en ningún origen
+  ni pantalla — `EditLeadFinancieraSection` los renderiza siempre `enabled: false`. Moneda y Precio
+  base se autocompletan al elegir Oportunidad (`item.idMoneda`/`item.importeGeneral`, ambos en
+  `_onOportunidadChanged`); Descuento se autocalcula como `subtotal - costoFinal`. El único campo
+  editable de esa fila es **Costo final** (`_costoFinalCtrl`) — ya no existe el toggle
+  `costoFinalEditable`, es el comportamiento único. `EditLeadFinancieraSection` ya no recibe
+  `onMonedaChanged` — al quedar siempre `enabled: false` el combo nunca dispara `onChanged`, así
+  que el callback quedaba muerto y se eliminó.
+- **`_onOportunidadChanged` también resetea Costo final al subtotal** (`precioBase × cantidad`),
+  no solo Precio base — bug real detectado en vivo: al cambiar de Oportunidad, Costo final se
+  quedaba en su valor anterior (0/vacío en negociación nueva), y como Descuento = subtotal -
+  costoFinal, el Descuento mostrado terminaba siendo igual al precio base completo en vez de 0.
+  Con el fix, al elegir Oportunidad Costo final arranca igual al subtotal (Descuento = 0) y el
+  usuario lo baja manualmente si corresponde un descuento real.
+- **Mismo reset de Costo final al cambiar Cantidad** — `_cantidadCtrl` tiene un listener
+  (`_onCantidadChanged`, agregado en `initState()`) que recalcula Costo final = `precioBase ×
+  nuevaCantidad` cada vez que cambia el texto de Cantidad. Bug real detectado en vivo: al editar
+  una negociación con Costo final ya puesto a mano (ej. 100) y luego subir Cantidad, el subtotal
+  crecía pero Costo final se quedaba congelado en 100, así que Descuento (subtotal - costoFinal)
+  se inflaba solo por el cambio de cantidad, sin que hubiera un descuento real. El reset solo se
+  dispara por cambios del usuario en el campo (el valor inicial cargado desde la negociación, con
+  su descuento real ya guardado, no se toca — el listener se registra después de setear el texto
+  inicial en `initState()`).
+- El combo de Moneda sigue actualizando su **valor visible** cuando cambia `_monedaItem` (aunque
+  esté deshabilitado) gracias al fix de `CustomComboField.didUpdateWidget` en `core/CLAUDE.md` —
+  sin ese fix, un combo con `enabled:false` y `initialValue` cambiante quedaría visualmente
+  congelado en el primer valor que tuvo.
 - **Campaña/Oportunidad** solo son editables al **crear** (`negociacion.idLead == 0`), sin
   importar el origen — al editar una negociación ya existente quedan siempre bloqueadas
   (`campaniaOportunidadBloqueada: !_esNuevo` en `_EditLeadPortraitState.build()`).
@@ -148,6 +169,19 @@ ningún origen, edite o cree, venga o no de conversación.
   (`_puedeGuardar` / `_camposObligatoriosCompletos`, reemplaza a `_hayCambios` como gate del
   `FormSaveBar` cuando `_esNuevo`). Los labels llevan `(*)` en
   `EditLeadNegociacionSection`/`EditLeadFinancieraSection`.
+- **Redirect automático a "Generar solicitud"** — en `_guardar()`: si el guardado deja la
+  negociación en sub-estado `'05'` bajo estado padre `'04'` (Ganada) **por primera vez** (no si ya
+  estaba ahí antes de este guardado) y todavía no tiene solicitud (`negociacion.accionSolicitud ==
+  SolicitudAccion.generar`), y el servidor confirmó el guardado (`InfoLeadCubit.updateLead` ahora
+  retorna `bool`, `true` solo en el caso `CrudOk`), se navega directo a
+  `context.goToFichaCompletarSolicitud(...)` con una `Solicitud` en blanco — mismo patrón exacto
+  que el botón manual "Generar solicitud" de `NegociacionCard`/`ContactoNegociacionCard` (ver
+  comentario en `negociaciones_tab.dart._generarSolicitud`): `idSolicitud: ''`, todos los campos de
+  contacto vacíos, solo `idLead` (el real, tomado del estado del cubit tras guardar — importante si
+  la negociación se creó recién en este mismo guardado) y los `*Negociacion` (`cantidadNegociacion`,
+  `precioBaseNegociacion`, `descuentoNegociacion`, `idMonedaNegociacion`) que siembran el wizard.
+  Aplica en los 3 orígenes de `EditLeadPortrait` (Conversaciones, Lead, Seguimiento) porque vive en
+  el `_guardar()` compartido.
 
 ### Flag `desdeConversacion`
 

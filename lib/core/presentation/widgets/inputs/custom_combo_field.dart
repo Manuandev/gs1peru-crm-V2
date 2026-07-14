@@ -71,12 +71,15 @@ class _CustomComboFieldState<T extends Comboable>
   @override
   void didUpdateWidget(covariant CustomComboField<T> old) {
     super.didUpdateWidget(old);
-    if (old.data != widget.data) {
-      // si el item seleccionado ya no existe en la nueva lista, resetea
-      if (_selected != null &&
-          !widget.data.any((e) => _getId(e) == _getId(_selected as T))) {
-        _selected = null;
-      }
+    // Resincroniza cuando cambia la lista o el valor forzado desde el padre
+    // (ej. un combo que se autoselecciona al cambiar otro campo relacionado)
+    // — sin esto, initialValue solo se lee una vez en initState() y el combo
+    // queda visualmente desactualizado pese a que el estado del padre ya
+    // cambió.
+    if (old.data != widget.data || old.initialValue != widget.initialValue) {
+      _selected = widget.initialValue != null
+          ? widget.data.where((e) => _getId(e) == widget.initialValue).firstOrNull
+          : null;
     }
   }
 

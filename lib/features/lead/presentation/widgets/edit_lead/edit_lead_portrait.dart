@@ -6,6 +6,7 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 // Id real del canal WhatsApp en el catálogo — confirmado en vivo (5), NO el
 // 1 que documenta core/CLAUDE.md (dato desactualizado ahí, sin corregir en
@@ -101,6 +102,22 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _costoFinalCtrl = TextEditingController(
       text: NumberFormatUtils.fmtDecimal(n.precio),
     );
+    // Costo final se resetea al nuevo subtotal cada vez que cambia Cantidad
+    // — mismo comportamiento que al cambiar Oportunidad (ver
+    // _onOportunidadChanged). Bug real detectado en vivo: sin esto, un Costo
+    // final manual quedaba "congelado" mientras el subtotal (precioBase ×
+    // cantidad) crecía, y Descuento (subtotal - costoFinal) se inflaba solo
+    // por subir la cantidad, no porque hubiera un descuento real.
+    _cantidadCtrl.addListener(_onCantidadChanged);
+  }
+
+  void _onCantidadChanged() {
+    final nuevoCostoFinal = NumberFormatUtils.fmtDecimal(
+      _precioBase * _cantidad,
+    );
+    if (_costoFinalCtrl.text != nuevoCostoFinal) {
+      _costoFinalCtrl.text = nuevoCostoFinal;
+    }
   }
 
   @override
@@ -294,8 +311,17 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           .where((m) => m.id == item?.idMoneda)
           .firstOrNull;
 
+      final precioBase = item?.importeGeneral ?? 0;
       _precioBaseCtrl.text = item != null
-          ? NumberFormatUtils.fmtDecimal(item.importeGeneral)
+          ? NumberFormatUtils.fmtDecimal(precioBase)
+          : '';
+      // Costo final arranca igual al subtotal (precio base × cantidad) —
+      // sin esto se quedaba en 0/vacío al cambiar de Oportunidad, y
+      // Descuento (subtotal - costo final) salía igual al precio base
+      // completo en vez de 0. El usuario ajusta Costo final manualmente
+      // si corresponde un descuento real.
+      _costoFinalCtrl.text = item != null
+          ? NumberFormatUtils.fmtDecimal(precioBase * _cantidad)
           : '';
     });
   }
@@ -332,9 +358,25 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     final estadoEfectivo = _subEstado?.nombre ?? _estado?.nombre;
     final tieneSubEstado = _subEstado != null;
 
+    // "Ganada": sub-estado '05' bajo el estado padre '04' (Cerrado). Si el
+    // guardado la deja en ese estado por primera vez (no si ya estaba ahí
+    // antes de este guardado, ni si ya tiene una solicitud generada), se
+    // pasa directo al wizard de generar solicitud — mismo flujo/mismo
+    // Solicitud en blanco que el botón manual "Generar solicitud" de
+    // NegociacionCard/ContactoNegociacionCard (ver negociaciones_tab.dart).
+    final n = widget.negociacion;
+    final yaEstabaGanada = n.idEstado == '05' && n.idEstadoPadre == '04';
+    final quedaGanada =
+        tieneSubEstado && _estado?.id == '04' && _subEstado?.id == '05';
+    final debeGenerarSolicitud =
+        quedaGanada &&
+        !yaEstabaGanada &&
+        n.accionSolicitud == SolicitudAccion.generar;
+
+    var guardadoOk = false;
     if (context.mounted) {
       // ignore: use_build_context_synchronously
-      await context.read<InfoLeadCubit>().updateLead(
+      guardadoOk = await context.read<InfoLeadCubit>().updateLead(
         idNumero: widget.negociacion.idNumero,
         idEstado: idEstadoEfectivo,
         estado: estadoEfectivo,
@@ -357,6 +399,46 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     }
 
     if (mounted) setState(() => _isLoading = false);
+
+    if (guardadoOk && debeGenerarSolicitud && mounted) {
+      final estadoInfoLead = context.read<InfoLeadCubit>().state;
+      final idLeadFinal = estadoInfoLead is InfoLeadSuccess
+          ? estadoInfoLead.negociacion.idLead
+          : n.idLead;
+      // ignore: use_build_context_synchronously
+      context.goToFichaCompletarSolicitud(
+        solicitud: Solicitud(
+          idSolicitud: '',
+          nombre: '',
+          apellidoPaterno: '',
+          apellidoMaterno: '',
+          nombreEmpresa: '',
+          cargo: '',
+          correo: '',
+          telefono: '',
+          tipoPersona: '',
+          idCondicionPago: '',
+          condicionPago: '',
+          monto: 0,
+          fechaCreacion: '',
+          idOportunidad: 0,
+          oportunidad: '',
+          idCanal: 0,
+          canal: '',
+          idEstado: 0,
+          estado: '',
+          ibValidado: false,
+          asesor: '',
+          nombreAsesor: '',
+          idLead: idLeadFinal.toString(),
+        ),
+        modoEdicion: true,
+        cantidadNegociacion: int.tryParse(_cantidadCtrl.text),
+        precioBaseNegociacion: _precioBase,
+        descuentoNegociacion: _descuento,
+        idMonedaNegociacion: _monedaItem?.id,
+      );
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -441,7 +523,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                   monedas: catalogState.monedas,
                   monedaItem: _monedaItem,
                   isLoading: _bloqueado,
-                  onMonedaChanged: (item) => setState(() => _monedaItem = item),
                   subtotal: _subtotal,
                   descuento: _descuento,
                   costoFinal: _costoFinal,

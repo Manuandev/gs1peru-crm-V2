@@ -539,6 +539,14 @@ CustomComboField<CampaniaItem>(
 )
 ```
 
+**`initialValue` se resincroniza en `didUpdateWidget`, no solo en `initState()`.** Si un combo se
+autoselecciona programáticamente (ej. Moneda cambiando al elegir Oportunidad en
+`lead/edit_lead_portrait.dart`), el nuevo `initialValue` que llega desde el padre se refleja en la
+selección visible aunque el widget ya esté montado — antes solo se leía una vez en `initState()` y
+quedaba visualmente congelado en el primer valor pese a que el estado del padre sí cambiaba. Esto
+aplica también con `enabled: false` (combo deshabilitado pero cuyo valor mostrado igual debe
+actualizarse desde afuera).
+
 ### CustomComboSearchField
 Combo con búsqueda por texto (Autocomplete). Recibe `List<String>` crudas.
 ```dart

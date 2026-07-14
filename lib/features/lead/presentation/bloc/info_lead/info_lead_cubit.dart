@@ -298,7 +298,9 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
 
   // Actualiza solo campos de Negociacion — nombre/apellidos/correo del
   // contacto ya no se editan desde acá (son de solo lectura en el form).
-  Future<void> updateLead({
+  // Retorna true solo si el servidor confirmó el guardado (CrudOk) — lo usa
+  // EditLeadPortrait para saber si puede redirigir a "Generar solicitud".
+  Future<bool> updateLead({
     required int idNumero,
     String? idEstado,
     String? estado,
@@ -320,7 +322,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     double? precio,
     String? idMoneda,
   }) async {
-    if (state is! InfoLeadSuccess) return;
+    if (state is! InfoLeadSuccess) return false;
     final s = state as InfoLeadSuccess;
     final current = s.negociacion;
 
@@ -355,7 +357,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     try {
       final result = await _updateInfo(updated, idNumero);
 
-      if (isClosed) return;
+      if (isClosed) return false;
 
       switch (result) {
         case CrudOk(:final message, :final data):
@@ -375,7 +377,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
             updatedLead: leadFinal,
             source: this,
           );
-          break;
+          return true;
         case CrudAlert(:final message):
           _errorController.add(message);
         case CrudError(:final message):
@@ -388,10 +390,12 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
           emit(InfoLeadSuccess(current));
           _errorController.add('Respuesta inesperada del servidor.');
       }
+      return false;
     } catch (e) {
-      if (isClosed) return;
+      if (isClosed) return false;
       emit(InfoLeadSuccess(current));
       _errorController.add('No se pudo cambiar el estado. Intenta de nuevo.');
+      return false;
     }
   }
 }

@@ -196,6 +196,12 @@ class SolicitudRemoteDatasource {
   }) async {
     if (fileBytes.isEmpty) return false;
 
+    // El backend arma una ruta de archivo en disco con estos dos valores tal
+    // cual — sanear acá evita mandar separadores de ruta ("..", "/", "\") que
+    // el nombre de un archivo local podría llegar a traer.
+    final fileNameSeguro = _sanitizarNombreArchivo(fileName);
+    final fileExtSeguro = _sanitizarExtensionArchivo(fileExt);
+
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
     final token = _session.token;
@@ -203,7 +209,11 @@ class SolicitudRemoteDatasource {
     final cabecera = [numSol, _session.codUser, ip, coords].join(
       AppConstants.sepCampos,
     );
-    final detalle = [tipo, fileName, fileExt].join(AppConstants.sepCampos);
+    final detalle = [
+      tipo,
+      fileNameSeguro,
+      fileExtSeguro,
+    ].join(AppConstants.sepCampos);
 
     const chunkSize = 2 * 1024 * 1024;
     final totalSize = fileBytes.length;
@@ -229,7 +239,7 @@ class SolicitudRemoteDatasource {
         fields: {'data': dataString},
         fileFieldName: 'files',
         fileBytes: chunkBytes,
-        fileName: '$fileName.$fileExt',
+        fileName: '$fileNameSeguro.$fileExtSeguro',
         headers: {'Token': token},
       );
 
@@ -239,5 +249,18 @@ class SolicitudRemoteDatasource {
     }
 
     return true;
+  }
+
+  // Quita separadores de ruta y ".." — el backend arma la ruta física del
+  // archivo concatenando este valor directo, sin volver a validarlo.
+  String _sanitizarNombreArchivo(String nombre) {
+    final sinRuta = nombre.replaceAll(RegExp(r'[\\/]'), '_').replaceAll('..', '_').trim();
+    return sinRuta.isEmpty ? 'archivo' : sinRuta;
+  }
+
+  // La extensión solo debe traer letras/números (pdf, jpg, docx, etc.).
+  String _sanitizarExtensionArchivo(String ext) {
+    final limpio = ext.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+    return limpio.isEmpty ? 'bin' : limpio;
   }
 }

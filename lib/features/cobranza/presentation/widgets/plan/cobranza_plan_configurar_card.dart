@@ -66,10 +66,12 @@ class CobranzaPlanConfigurarCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // N° cuota — solo lectura, mismo CustomTextField que los demás
-              // para garantizar el mismo alto/estilo (antes era un Container
-              // aparte que se veía de otro tamaño)
-              Expanded(
+              // N° cuota y Días son numéricos de 1-3 dígitos — ancho fijo
+              // chico (SizedBox) en vez de Expanded a igual flex que Fecha,
+              // que los dejaba innecesariamente anchos. Mismo CustomTextField
+              // que los demás para garantizar el mismo alto/estilo.
+              SizedBox(
+                width: AppSizing.inputWidthCorto,
                 child: CustomTextField(
                   label: 'N° cuota',
                   enabled: false,
@@ -80,7 +82,8 @@ class CobranzaPlanConfigurarCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.xs),
               // Días
-              Expanded(
+              SizedBox(
+                width: AppSizing.inputWidthCorto,
                 child: CustomTextField(
                   label: 'Días',
                   controller: diasCtrl,
@@ -98,13 +101,12 @@ class CobranzaPlanConfigurarCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.xs),
               // Fecha vencimiento
               Expanded(
-                flex: 2,
                 child: CustomTextField(
                   label: 'Fecha venc.',
                   controller: fechaCtrl,
                   readOnly: true,
                   enabled: haySeleccion,
-                  suffixIcon: const Icon(AppIcons.calendar),
+                  suffixIcon: Icon(AppIcons.calendar, size: AppSizing.iconSm),
                   onTap: haySeleccion ? onFechaTap : null,
                 ),
               ),

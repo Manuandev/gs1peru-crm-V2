@@ -235,6 +235,12 @@ class AppSizing {
   /// Alinea etiqueta y valor en _InfoFila (LeadContactoCard / LeadContextoCard)
   static const double infoLabelWidth = 96.0;
 
+  /// Ancho fijo para un campo numérico corto (1-3 dígitos: N° cuota, Días) —
+  /// úsalo en un SizedBox junto a un Expanded (ej. Fecha) en vez de repartir
+  /// el ancho por flex parejo, que deja campos de 1-2 dígitos innecesariamente
+  /// anchos. Ver CobranzaPlanConfigurarCard.
+  static const double inputWidthCorto = 76.0;
+
   // ============================================================
   // SPINNERS
   // ============================================================

@@ -50,24 +50,6 @@ class CobranzaPlanResumenCard extends StatelessWidget {
                   fontWeight: AppTextStyles.weightSemiBold,
                 ),
               ),
-              if (state.moneda.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xxs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryWithOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppSizing.radiusXl),
-                  ),
-                  child: Text(
-                    resolverSimboloMoneda(context, state.moneda),
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: AppTextStyles.weightBold,
-                    ),
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -116,9 +98,9 @@ class CobranzaPlanResumenCard extends StatelessWidget {
                   onChanged: (v) {
                     final n = int.tryParse(v);
                     if (n != null && n > 0) {
-                      context
-                          .read<CobranzaPlanBloc>()
-                          .add(NumCuotasDeseadasChanged(n));
+                      context.read<CobranzaPlanBloc>().add(
+                        NumCuotasDeseadasChanged(n),
+                      );
                     }
                   },
                 ),

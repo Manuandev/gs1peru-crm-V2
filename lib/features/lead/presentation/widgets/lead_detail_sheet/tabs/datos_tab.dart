@@ -213,7 +213,11 @@ class DatosTab extends StatelessWidget {
               }
               NavigationService.navigateTo(
                 AppRoutes.detalleEditarLead,
-                arguments: {'idLead': negociacion.idLead, 'cubit': cubit},
+                arguments: {
+                  'idLead': negociacion.idLead,
+                  'cubit': cubit,
+                  'desdeConversacion': true,
+                },
               );
             },
           ),

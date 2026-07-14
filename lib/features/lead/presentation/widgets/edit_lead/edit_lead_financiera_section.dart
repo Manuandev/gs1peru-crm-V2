@@ -50,7 +50,7 @@ class EditLeadFinancieraSection extends StatelessWidget {
         FormFieldRow(
           izquierdo: CustomComboField<MonedaItem>(
             data: monedas,
-            label: 'Moneda',
+            label: 'Moneda (*)',
             initialValue: monedaItem?.id,
             onChanged: onMonedaChanged,
             enabled: !isLoading,

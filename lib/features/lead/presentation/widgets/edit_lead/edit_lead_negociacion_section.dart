@@ -1,7 +1,6 @@
 // lib/features/lead/presentation/widgets/edit_lead/edit_lead_negociacion_section.dart
 
 import 'package:flutter/material.dart';
-import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class EditLeadNegociacionSection extends StatelessWidget {
@@ -21,12 +20,11 @@ class EditLeadNegociacionSection extends StatelessWidget {
   final int idCanalFallback;
   final bool isLoading;
   // Desde conversación al crear — Estado/Subestado se muestran fijos en
-  // "Nuevo", sin poder seleccionarse. Se renderiza como texto fijo (no como
-  // combo deshabilitado) para no depender de que el catálogo tenga ese
-  // estado marcado como esPadre.
+  // "Nuevo": mismo CustomComboField que el resto, solo con enabled:false.
+  // El valor ('00') ya viene matcheado por id contra el catálogo desde
+  // _inicializarCombos antes de este build — nunca un literal acá.
   final bool estadoBloqueado;
-  // Desde conversación — Canal siempre fijo en WhatsApp. Mismo motivo que
-  // arriba: texto fijo, no combo deshabilitado.
+  // Desde conversación — Canal siempre fijo en WhatsApp, mismo patrón.
   final bool canalBloqueado;
   // Solo editables al crear (negociacion.idLead == 0), en cualquier origen
   // — al editar quedan siempre fijas.
@@ -136,21 +134,8 @@ class EditLeadNegociacionSection extends StatelessWidget {
   }
 
   Widget _buildComboCanal(ColorScheme colorScheme) {
-    if (canalBloqueado) {
-      return CustomTextField(
-        label: 'Canal (*)',
-        controller: TextEditingController(text: canal?.nombre ?? 'WhatsApp'),
-        enabled: false,
-        dense: true,
-        prefixIcon: FaIcon(
-          AppIcons.whatsapp,
-          color: AppColors.success,
-          size: AppSizing.iconActionSm,
-        ),
-      );
-    }
     return CustomComboField<CanalItem>(
-      enabled: !isLoading,
+      enabled: !isLoading && !canalBloqueado,
       data: catalogState.canales,
       label: 'Canal (*)',
       initialValue: canal?.id.toString(),
@@ -164,23 +149,13 @@ class EditLeadNegociacionSection extends StatelessWidget {
   }
 
   Widget _buildComboEstado(ColorScheme colorScheme, bool hayEstados) {
-    if (estadoBloqueado) {
-      return CustomTextField(
-        label: 'Estado',
-        controller: TextEditingController(text: 'Nuevo'),
-        enabled: false,
-        dense: true,
-        prefixIcon: AppSocialUtils.widgetEstado('00'),
-      );
-    }
-
     final colorEstado = AppSocialUtils.colorEstado(
       estado?.id ?? idEstadoFallback,
     );
 
     if (!hayEstados) {
       return CustomTextField(
-        label: 'Estado',
+        label: 'Estado (*)',
         controller: TextEditingController(text: estadoFallback),
         enabled: false,
         prefixIcon: AppSocialUtils.widgetEstado(idEstadoFallback),
@@ -188,9 +163,9 @@ class EditLeadNegociacionSection extends StatelessWidget {
       );
     }
     return CustomComboField<EstadoItem>(
-      enabled: !isLoading,
+      enabled: !isLoading && !estadoBloqueado,
       data: catalogState.estados.where((e) => e.esPadre).toList(),
-      label: 'Estado',
+      label: 'Estado (*)',
       initialValue: estado?.id,
       onChanged: onEstadoChanged,
       dense: true,
@@ -203,20 +178,6 @@ class EditLeadNegociacionSection extends StatelessWidget {
   }
 
   Widget _buildComboSubEstado(ColorScheme colorScheme, bool hayEstados) {
-    if (estadoBloqueado) {
-      return CustomTextField(
-        label: 'Subestado',
-        controller: TextEditingController(text: ''),
-        enabled: false,
-        dense: true,
-        prefixIcon: Icon(
-          AppIcons.listAlt,
-          color: colorScheme.primary,
-          size: AppSizing.iconActionSm,
-        ),
-      );
-    }
-
     if (!hayEstados) {
       return CustomTextField(
         label: 'Subestado',

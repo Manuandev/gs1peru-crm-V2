@@ -7,6 +7,12 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
+// Id real del canal WhatsApp en el catálogo — confirmado en vivo (5), NO el
+// 1 que documenta core/CLAUDE.md (dato desactualizado ahí, sin corregir en
+// este cambio por no tener certeza de que ese "1" esté mal en TODOS los usos
+// del resto de la app — solo se corrige acá, donde se confirmó).
+const int _idCanalWhatsApp = 5;
+
 class EditLeadPortrait extends StatefulWidget {
   final Negociacion negociacion;
   final bool soloLectura;
@@ -38,8 +44,9 @@ class EditLeadPortrait extends StatefulWidget {
 //   0), sin importar el origen — al editar una negociación ya creada quedan
 //   siempre bloqueadas.
 // - Cantidad arranca en 1 por defecto al crear.
-// - Para crear una negociación son obligatorios: Campaña, Oportunidad, Canal
-//   y Cantidad — el botón Guardar no se habilita hasta tenerlos completos.
+// - Para crear una negociación son obligatorios: Estado, Campaña, Oportunidad,
+//   Canal, Moneda y Cantidad — el botón Guardar no se habilita hasta tenerlos
+//   completos. Subestado NUNCA es obligatorio.
 //
 // Al entrar desde el chat de Conversaciones (desdeConversacion == true, crear
 // o editar negociación):
@@ -143,14 +150,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         .firstOrNull;
     _canal = state.canales.where((e) => e.id == n.idCanal).firstOrNull;
     // Desde conversación el canal siempre es WhatsApp y no se muestra
-    // editable — matchea por id (convención documentada: 1) y, si no
-    // aparece, por nombre — robusto ante cualquier diferencia de catálogo.
+    // editable — matchea SOLO por id (5, confirmado en vivo; el
+    // core/CLAUDE.md documentaba 1, dato desactualizado). Nada de matchear
+    // por nombre — lo que se guarda es el id real del catálogo.
     if (widget.desdeConversacion) {
       _canal =
-          state.canales.where((e) => e.id == 1).firstOrNull ??
-          state.canales
-              .where((e) => e.nombre.toLowerCase().contains('whatsapp'))
-              .firstOrNull ??
+          state.canales.where((e) => e.id == _idCanalWhatsApp).firstOrNull ??
           _canal;
     }
     _interes = state.intereses.where((e) => e.id == n.idInteres).firstOrNull;
@@ -200,11 +205,11 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     }
 
     // Desde conversación, al CREAR (idLead == 0) el estado siempre arranca
-    // en "Nuevo" y no se muestra editable — ver _EstadoNuevoNombre/id fijos
-    // usados directamente en _guardar(), sin depender de que el catálogo
-    // marque '00' como esPadre.
+    // en "Nuevo" (id '00') y no se muestra editable — matchea SOLO por id,
+    // sin exigir esPadre (acá no se usa como opción de un combo con data
+    // filtrada, es el valor fijo que se manda tal cual al guardar).
     if (widget.desdeConversacion && _esNuevo) {
-      _estado = null;
+      _estado = state.estados.where((e) => e.id == '00').firstOrNull;
       _subEstado = null;
       _subEstadosFiltrados = [];
     }
@@ -248,13 +253,17 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         (_monedaItem?.id ?? '') != n.idMoneda;
   }
 
-  // Al crear son obligatorios Campaña, Oportunidad, Canal y Cantidad — el
-  // canal cuenta como puesto si está bloqueado (desde conversación siempre
-  // hay uno fijo, aunque _canal no haya podido matchear contra el catálogo).
+  // Al crear son obligatorios Estado, Campaña, Oportunidad, Canal, Moneda y
+  // Cantidad (Subestado nunca). Estado/Canal siempre deben venir matcheados
+  // por id contra el catálogo (incluidos los valores fijos de conversación,
+  // '00' y WhatsApp) — si no matchearon, Guardar debe quedar deshabilitado
+  // en vez de guardar con un valor vacío.
   bool get _camposObligatoriosCompletos =>
+      _estado != null &&
       _campania != null &&
       _oportunidad != null &&
-      (_canal != null || (widget.desdeConversacion && _esNuevo)) &&
+      _canal != null &&
+      _monedaItem != null &&
       _cantidad > 0;
 
   bool get _puedeGuardar =>
@@ -316,17 +325,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
     setState(() => _isLoading = true);
 
-    // Al crear desde conversación el estado va fijo en "Nuevo" ('00'),
-    // directo — no depende de que el catálogo haya matcheado nada en
-    // _estado/_subEstado (ver _inicializarCombos).
-    final estadoNuevoForzado = widget.desdeConversacion && _esNuevo;
-    final idEstadoEfectivo = estadoNuevoForzado
-        ? '00'
-        : (_subEstado?.id ?? _estado?.id);
-    final estadoEfectivo = estadoNuevoForzado
-        ? 'Nuevo'
-        : (_subEstado?.nombre ?? _estado?.nombre);
-    final tieneSubEstado = !estadoNuevoForzado && _subEstado != null;
+    // Siempre se manda lo que quedó matcheado en _estado/_subEstado contra
+    // el catálogo (por id) — al crear desde conversación eso ya es "Nuevo"
+    // ('00'), forzado por id en _inicializarCombos, no un literal acá.
+    final idEstadoEfectivo = _subEstado?.id ?? _estado?.id;
+    final estadoEfectivo = _subEstado?.nombre ?? _estado?.nombre;
+    final tieneSubEstado = _subEstado != null;
 
     if (context.mounted) {
       // ignore: use_build_context_synchronously

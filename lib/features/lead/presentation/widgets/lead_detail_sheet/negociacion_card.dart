@@ -82,11 +82,13 @@ class NegociacionCard extends StatelessWidget {
       ? negociacion.idEstadoPadre
       : negociacion.idEstado;
 
+  // Esta card solo vive dentro de NegociacionesTab (ChatLeadPanel de
+  // Conversaciones) — editar acá siempre es "desde conversación".
   Future<void> _irAEditar() async {
     if (negociacion.idLead == 0) return;
     await NavigationService.navigateTo(
       AppRoutes.detalleEditarLead,
-      arguments: {'idLead': negociacion.idLead},
+      arguments: {'idLead': negociacion.idLead, 'desdeConversacion': true},
     );
     onEdited?.call();
   }

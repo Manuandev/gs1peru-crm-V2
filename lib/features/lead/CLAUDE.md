@@ -143,10 +143,11 @@ ningún origen, edite o cree, venga o no de conversación.
   (`campaniaOportunidadBloqueada: !_esNuevo` en `_EditLeadPortraitState.build()`).
 - **Cantidad** arranca en `1` por defecto al crear (antes quedaba en 0/blanco) — ver
   `initState()._cantidadInicial`.
-- Para **crear** una negociación son obligatorios Campaña, Oportunidad, Canal y Cantidad — el
-  botón Guardar no se habilita hasta tenerlos completos (`_puedeGuardar` /
-  `_camposObligatoriosCompletos`, reemplaza a `_hayCambios` como gate del `FormSaveBar` cuando
-  `_esNuevo`). Los labels llevan `(*)` en `EditLeadNegociacionSection`/`EditLeadFinancieraSection`.
+- Para **crear** una negociación son obligatorios Estado, Campaña, Oportunidad, Canal, Moneda y
+  Cantidad (Subestado nunca) — el botón Guardar no se habilita hasta tenerlos completos
+  (`_puedeGuardar` / `_camposObligatoriosCompletos`, reemplaza a `_hayCambios` como gate del
+  `FormSaveBar` cuando `_esNuevo`). Los labels llevan `(*)` en
+  `EditLeadNegociacionSection`/`EditLeadFinancieraSection`.
 
 ### Flag `desdeConversacion`
 
@@ -159,14 +160,56 @@ AppBar de `ChatDetailView` (Conversaciones). Restringe además:
   al editar una negociación ya creada, se pueden mover de estado normalmente.
 - **Interés** siempre editable.
 
-**Ojo — Estado/Canal bloqueados se renderizan como `CustomTextField` deshabilitado con texto fijo
-("Nuevo"/"WhatsApp"), NUNCA como `CustomComboField` con `enabled: false`.** Motivo: `CustomComboField`
-solo lee `initialValue` en su propio `initState()` (`custom_combo_field.dart`) — si el valor forzado
-se calcula después del primer build del combo (o el catálogo no trae ese estado marcado `esPadre`),
-el combo queda visualmente vacío y no refleja el valor bloqueado. `_guardar()` tampoco depende de que
-`_estado`/`_canal` hayan matcheado contra el catálogo: al crear desde conversación manda `idEstado:
-'00'`/`estado: 'Nuevo'` directo. El canal si intenta matchear por id `1` y, si falla, por nombre
-(`contains('whatsapp')`) — ver `_inicializarCombos`.
+**Ojo — Estado/Canal bloqueados se renderizan con el MISMO `CustomComboField` que el resto de
+combos, solo con `enabled: false`** (`estadoBloqueado`/`canalBloqueado` en
+`EditLeadNegociacionSection`) — ya no existe una rama con `CustomTextField` y texto hardcodeado
+("Nuevo"/"WhatsApp" como literal). Se probó y se descartó esa rama especial: el temor original era
+que `CustomComboField` solo lee `initialValue` en su propio `initState()`
+(`custom_combo_field.dart`), así que si el valor forzado se calculaba después del primer build del
+combo quedaría vacío pese a `enabled: false` — pero en la práctica `_inicializarCombos` corre en
+`didChangeDependencies`, **antes** de que `EditLeadPortrait.build()` construya por primera vez
+`EditLeadNegociacionSection` (el propio `build()` retorna `AppLoadingView` mientras
+`CatalogsLoaded` no esté listo), así que el combo siempre nace con el `initialValue` ya matcheado.
+El VALOR que se guarda **siempre sale de matchear por id contra el catálogo en
+`_inicializarCombos`** — nunca un literal hardcodeado en `_guardar()`:
+
+- Canal: `_canal = state.canales.where((e) => e.id == _idCanalWhatsApp).firstOrNull` — SOLO por id
+  (const privada del archivo, valor **5**, confirmado en vivo; NUNCA matchear por nombre —
+  decisión explícita del usuario, "por algo te estoy dando los IDs").
+- Estado: `_estado = state.estados.where((e) => e.id == '00').firstOrNull` (sin exigir `esPadre` en
+  `_inicializarCombos`, pero el combo de Estado sí filtra `data` por `esPadre` — si '00' no viniera
+  marcado `esPadre` en el catálogo, el combo se vería vacío pese a `_estado` estar seteado; no
+  detectado en vivo, asumido correcto por ahora).
+- Si el id no matchea (dato de catálogo raro), `_estado`/`_canal` quedan `null`, el combo se ve
+  vacío (comportamiento nativo de `CustomComboField` cuando `initialValue` no matchea ningún item
+  de `data`) y Guardar se deshabilita (`_camposObligatoriosCompletos`) — nunca se guarda con un
+  valor vacío o inventado.
+
+**Ojo — el `1=WhatsApp` que documenta la tabla de Canales más abajo en este mismo archivo (sección
+`core/CLAUDE.md`) está desactualizado/es incorrecto** — el id real es `5`. Solo se corrigió en
+`edit_lead_portrait.dart` (`_idCanalWhatsApp`); otros usos del literal `1` para WhatsApp en el resto
+de la app (ej. `AppSocialUtils.colorCanalById(1)` en `contacto_acciones_footer.dart`, `LeadCardActions`)
+**no se tocaron todavía** — quedan pendientes de auditar/corregir en una tarea aparte.
 
 Si se agrega un nuevo origen que también deba usar el modo restringido de conversación, reusar el
 flag `desdeConversacion` — no crear uno paralelo.
+
+**Ojo — todos los puntos de entrada dentro de `ChatLeadPanel` (Conversaciones) deben propagar el
+flag, no solo el tap del AppBar.** `ChatLeadPanel` (`chat/presentation/widgets/chat_detail/`)
+monta 3 tabs — `DatosTab`, `NegociacionesTab`, `HistorialTab` — y **las dos primeras navegan a
+`EditLeadPage` por su cuenta**, sin pasar por `ChatDetailView`. Bug real detectado en vivo: esos
+dos tabs olvidaban `desdeConversacion: true` y el usuario podía editar Estado/Subestado/Canal
+libremente al crear/editar desde ahí, pese a que el AppBar de `ChatDetailView` sí lo bloqueaba
+correctamente. Corregido en los 3 sitios — si se toca cualquiera de estos archivos, verificar que
+siga mandando el flag:
+
+- `lead_detail_sheet/tabs/datos_tab.dart` → botón "Crear/Editar lead" —
+  `NavigationService.navigateTo(AppRoutes.detalleEditarLead, arguments: {..., 'desdeConversacion': true})`
+- `lead_detail_sheet/tabs/negociaciones_tab.dart` → `_crearNegociacion()` —
+  `context.goToEditarLead(idLead: 0, cubit: cubit, desdeConversacion: true)`
+- `lead_detail_sheet/negociacion_card.dart` → `_irAEditar()` —
+  `NavigationService.navigateTo(AppRoutes.detalleEditarLead, arguments: {..., 'desdeConversacion': true})`
+
+Todas estas clases (`DatosTab`, `NegociacionesTab`, `NegociacionCard`) solo se instancian dentro de
+`ChatLeadPanel` — no comparten código con `ContactoNegociacionesTab`/`ContactoNegociacionCard`
+(Seguimiento), que a propósito **no** mandan el flag porque ese origen no es conversación.

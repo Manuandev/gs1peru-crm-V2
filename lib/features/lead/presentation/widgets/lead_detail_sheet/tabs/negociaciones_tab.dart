@@ -120,7 +120,11 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
         : 0;
 
     cubit.prepararNuevaNegociacion();
-    await context.goToEditarLead(idLead: 0, cubit: cubit);
+    await context.goToEditarLead(
+      idLead: 0,
+      cubit: cubit,
+      desdeConversacion: true,
+    );
 
     final estadoActual = cubit.state;
     final sigueEnBlanco =

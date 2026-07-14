@@ -216,7 +216,7 @@ class AppRouter {
       },
     ),
 
-    AppRoutes.planCredito: RouteDefinition<String>(
+    AppRoutes.planCredito: RouteDefinition<PlanCreditoResultado>(
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
@@ -228,6 +228,7 @@ class AppRouter {
           moneda: args['moneda'] as String,
           detraccion: args['detraccion'] as double,
           importeCredito: args['importeCredito'] as double,
+          cuotasIniciales: args['cuotasIniciales'] as List<CuotaPlan>? ?? const [],
         );
       },
     ),

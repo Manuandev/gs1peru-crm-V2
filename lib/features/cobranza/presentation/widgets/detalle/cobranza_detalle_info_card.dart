@@ -126,7 +126,11 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.xxs),
                   Text(
-                    detalle.fechaSolicitud,
+                    // fechaSolicitud viene crudo del backend (DATETIME sin
+                    // CONVERT) — mismo formato que en CobranzaCard, para que
+                    // se vea igual en lista y detalle.
+                    '${detalle.fechaSolicitud.formatDate(AppDateFormat.longDate)} - '
+                    '${detalle.fechaSolicitud.formatDate(AppDateFormat.hourMinute)}',
                     style: AppTextStyles.bodySmall.copyWith(
                       fontWeight: AppTextStyles.weightMedium,
                     ),

@@ -7,6 +7,9 @@ class GuardarPlanCreditoUseCase {
   final CobranzaRepository _repository;
   const GuardarPlanCreditoUseCase(this._repository);
 
-  Future<CrudResult> call(String idCobranza, List<CuotaPlan> cuotas) =>
-      _repository.guardarPlanCredito(idCobranza, cuotas);
+  Future<CrudResult> call({
+    required String numSol,
+    required String moneda,
+    required List<CuotaPlan> cuotas,
+  }) => _repository.guardarPlanCredito(numSol: numSol, moneda: moneda, cuotas: cuotas);
 }

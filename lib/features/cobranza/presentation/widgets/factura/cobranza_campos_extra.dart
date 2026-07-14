@@ -63,6 +63,19 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
     _fechaCtrl = TextEditingController(text: widget.state.fechaVencimiento);
   }
 
+  // Este widget vive con una key estable ('credito') mientras la condición
+  // sea crédito, así que initState solo corre una vez — sin esto, cuando
+  // PlanGuardado actualiza fechaVencimiento en el bloc (al volver del plan
+  // de crédito), el campo se quedaba mostrando la fecha vieja.
+  @override
+  void didUpdateWidget(covariant _ExtraCredito oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.fechaVencimiento != widget.state.fechaVencimiento &&
+        _fechaCtrl.text != widget.state.fechaVencimiento) {
+      _fechaCtrl.text = widget.state.fechaVencimiento;
+    }
+  }
+
   @override
   void dispose() {
     _fechaCtrl.dispose();
@@ -161,6 +174,9 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
 // Extra para CONTADO (aparece debajo de los 3 campos)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// PENDIENTE — adjuntar archivo (voucher) todavía no está implementado: no
+// hay picker ni endpoint de subida conectados. Queda a propósito como stub
+// visual (onTap vacío) hasta que se defina el flujo con backend.
 class _ExtraContado extends StatelessWidget {
   const _ExtraContado({super.key});
 
@@ -169,7 +185,7 @@ class _ExtraContado extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.md),
       child: GestureDetector(
-        onTap: () {},
+        onTap: () {}, // TODO: pendiente — adjuntar archivo (ver comentario arriba)
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(

@@ -1,5 +1,7 @@
 // lib/features/cobranza/presentation/bloc/factura/cobranza_factura_event.dart
 
+import 'package:app_crm/features/cobranza/index_cobranza.dart';
+
 abstract class CobranzaFacturaEvent {
   const CobranzaFacturaEvent();
 }
@@ -54,10 +56,11 @@ class PlanValidarPressed extends CobranzaFacturaEvent {
 }
 
 // Resultado al volver de CobranzaPlanPage tras guardar el plan — fecha de
-// vencimiento más alta entre las cuotas guardadas.
+// vencimiento más alta + las cuotas (el RC real recién se manda al facturar).
 class PlanGuardado extends CobranzaFacturaEvent {
   final String fechaVencimiento;
-  const PlanGuardado(this.fechaVencimiento);
+  final List<CuotaPlan> cuotas;
+  const PlanGuardado(this.fechaVencimiento, this.cuotas);
 }
 
 class FacturarPressed extends CobranzaFacturaEvent {

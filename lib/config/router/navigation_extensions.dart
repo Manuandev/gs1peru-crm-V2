@@ -10,6 +10,8 @@ import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/features/cobranza/domain/entities/plan_credito_resultado.dart';
+import 'package:app_crm/features/cobranza/domain/entities/cobranza_plan.dart';
 
 extension NavigationExtensions on BuildContext {
   // ── Primitivos (no usar directamente desde features) ───────
@@ -154,9 +156,10 @@ extension NavigationExtensions on BuildContext {
         'condicion': condicion,
       });
 
-  // Devuelve la fecha de vencimiento más alta del plan guardado (String), o
+  // Devuelve fecha de vencimiento más alta + cuotas del plan "guardado"
+  // localmente (RC real todavía no se llamó — eso lo dispara Facturar), o
   // null si el usuario volvió sin guardar (solo pop, ver CobranzaPlanView).
-  Future<String?> goToPlanCredito({
+  Future<PlanCreditoResultado?> goToPlanCredito({
     required String idCobranza,
     required String nombre,
     required String oportunidad,
@@ -164,7 +167,8 @@ extension NavigationExtensions on BuildContext {
     required String moneda,
     required double detraccion,
     required double importeCredito,
-  }) => _push<String>(AppRoutes.planCredito, arguments: {
+    List<CuotaPlan> cuotasIniciales = const [],
+  }) => _push<PlanCreditoResultado>(AppRoutes.planCredito, arguments: {
         'idCobranza': idCobranza,
         'nombre': nombre,
         'oportunidad': oportunidad,
@@ -172,6 +176,7 @@ extension NavigationExtensions on BuildContext {
         'moneda': moneda,
         'detraccion': detraccion,
         'importeCredito': importeCredito,
+        'cuotasIniciales': cuotasIniciales,
       });
   Future<void> goToSettings() => clearAndPush(AppRoutes.settings);
   Future<void> goToChangePassword() => clearAndPush(AppRoutes.changePassword);

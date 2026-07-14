@@ -14,6 +14,7 @@ export 'domain/entities/cobranza_detalle.dart';
 export 'domain/entities/historial_cobranza.dart';
 export 'domain/entities/archivo_cobranza.dart';
 export 'domain/entities/cobranza_plan.dart';
+export 'domain/entities/plan_credito_resultado.dart';
 
 export 'domain/enums/cobranza_chip_filtro.dart';
 
@@ -21,7 +22,7 @@ export 'domain/repositories/cobranza_repository.dart';
 
 export 'domain/usecases/get_cobranzas_usecase.dart';
 export 'domain/usecases/get_detalle_cobranza_usecase.dart';
-export 'domain/usecases/facturar_contado_usecase.dart';
+export 'domain/usecases/cambiar_estado_facturar_usecase.dart';
 export 'domain/usecases/guardar_plan_credito_usecase.dart';
 
 export 'presentation/bloc/lista/cobranza_list_bloc.dart';

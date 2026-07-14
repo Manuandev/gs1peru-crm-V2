@@ -16,12 +16,28 @@ class CobranzaRepositoryImpl implements CobranzaRepository {
       _remote.getDetalleCobranza(numSol);
 
   @override
-  Future<CrudResult> facturarContado(String idCobranza) =>
-      _remote.facturarContado(idCobranza);
+  Future<CrudResult> cambiarEstadoFacturar({
+    required String numSol,
+    required String estado,
+    required String condicionPago,
+    required String fechaVencimiento,
+    required String ordenCompra,
+    required String descripcionSugerida,
+    required String hojaAceptacion,
+  }) => _remote.cambiarEstadoFacturar(
+        numSol: numSol,
+        estado: estado,
+        condicionPago: condicionPago,
+        fechaVencimiento: fechaVencimiento,
+        ordenCompra: ordenCompra,
+        descripcionSugerida: descripcionSugerida,
+        hojaAceptacion: hojaAceptacion,
+      );
 
   @override
-  Future<CrudResult> guardarPlanCredito(
-    String idCobranza,
-    List<CuotaPlan> cuotas,
-  ) => _remote.guardarPlanCredito(idCobranza, cuotas);
+  Future<CrudResult> guardarPlanCredito({
+    required String numSol,
+    required String moneda,
+    required List<CuotaPlan> cuotas,
+  }) => _remote.guardarPlanCredito(numSol: numSol, moneda: moneda, cuotas: cuotas);
 }

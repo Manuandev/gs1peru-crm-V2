@@ -38,7 +38,8 @@ class CobranzaFacturaPage extends StatelessWidget {
         moneda: moneda,
         idCondicion: idCondicion,
         condicion: condicion,
-        facturarContadoUseCase: FacturarContadoUseCase(repo),
+        cambiarEstadoFacturarUseCase: CambiarEstadoFacturarUseCase(repo),
+        guardarPlanCreditoUseCase: GuardarPlanCreditoUseCase(repo),
       ),
       child: BlocListener<CobranzaFacturaBloc, CobranzaFacturaState>(
         listenWhen: (prev, curr) =>
@@ -52,8 +53,9 @@ class CobranzaFacturaPage extends StatelessWidget {
               context.goToCobranza();
             case CobranzaFacturaStatus.continuarPlan:
               // Espera el resultado: null si el usuario volvió sin guardar
-              // el plan, o la fecha de vencimiento más alta si lo guardó.
-              final fechaGuardada = await context.goToPlanCredito(
+              // el plan, o fecha+cuotas si lo guardó localmente (el RC real
+              // recién se manda al presionar "Facturar", ver el bloc).
+              final resultadoPlan = await context.goToPlanCredito(
                 idCobranza: state.idCobranza,
                 nombre: state.nombre,
                 oportunidad: state.oportunidad,
@@ -61,9 +63,14 @@ class CobranzaFacturaPage extends StatelessWidget {
                 moneda: state.moneda,
                 detraccion: state.detraccion,
                 importeCredito: state.importeCredito,
+                // Si ya había un plan guardado localmente antes, se lo
+                // pasamos de vuelta para que no arranque desde cero.
+                cuotasIniciales: state.cuotasCredito,
               );
-              if (fechaGuardada != null && fechaGuardada.isNotEmpty && context.mounted) {
-                context.read<CobranzaFacturaBloc>().add(PlanGuardado(fechaGuardada));
+              if (resultadoPlan != null && context.mounted) {
+                context.read<CobranzaFacturaBloc>().add(
+                  PlanGuardado(resultadoPlan.fechaVencimiento, resultadoPlan.cuotas),
+                );
                 AppSnackBar.success(
                   context,
                   'Plan de crédito guardado — continúa con la facturación',

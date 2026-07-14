@@ -14,6 +14,7 @@ class CobranzaPlanPage extends StatelessWidget {
   final String moneda;
   final double detraccion;
   final double importeCredito;
+  final List<CuotaPlan> cuotasIniciales;
 
   const CobranzaPlanPage({
     super.key,
@@ -24,11 +25,11 @@ class CobranzaPlanPage extends StatelessWidget {
     required this.moneda,
     required this.detraccion,
     required this.importeCredito,
+    this.cuotasIniciales = const [],
   });
 
   @override
   Widget build(BuildContext context) {
-    final repo = context.read<CobranzaRepository>();
     return BlocProvider(
       create: (_) => CobranzaPlanBloc(
         idCobranza: idCobranza,
@@ -38,7 +39,7 @@ class CobranzaPlanPage extends StatelessWidget {
         moneda: moneda,
         detraccion: detraccion,
         importeCredito: importeCredito,
-        guardarPlanCreditoUseCase: GuardarPlanCreditoUseCase(repo),
+        cuotasIniciales: cuotasIniciales,
       )..add(const CobranzaPlanStarted()),
       child: BlocListener<CobranzaPlanBloc, CobranzaPlanState>(
         listenWhen: (prev, curr) =>
@@ -50,8 +51,12 @@ class CobranzaPlanPage extends StatelessWidget {
             case CobranzaPlanStatus.guardado:
               // Guardar el plan es un paso extra antes de facturar, no el
               // final del flujo — vuelve a CobranzaFacturaPage (no a la
-              // lista) devolviendo la fecha de vencimiento más alta.
-              context.goBack(state.fechaMasAlta);
+              // lista) devolviendo fecha + cuotas. El RC real lo dispara
+              // CobranzaFacturaPage al presionar "Facturar".
+              context.goBack(PlanCreditoResultado(
+                fechaVencimiento: state.fechaMasAlta,
+                cuotas: state.cuotas,
+              ));
             case CobranzaPlanStatus.error:
               AppSnackBar.error(
                 context,

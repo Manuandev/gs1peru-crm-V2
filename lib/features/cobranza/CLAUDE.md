@@ -69,8 +69,36 @@ Gestiona el flujo completo de facturación: lista de cobranzas, detalle, factura
   `OUTER APPLY` de historial (`CRM.T_LEAD_SEGUIMIENTO` + `CRM.T_LEAD_ACTIVIDAD`, correlacionado
   por `LD.ID_LEAD`). Formato de respuesta: 3 secciones separadas por `sepListas` — `[0]` campos
   principales (`sepCampos`, 17 posiciones) · `[1]` archivos · `[2]` historial.
-- `[CRM].[SP_FacturarContado]` → facturación al contado
-- `[CRM].[SP_GuardarPlanCredito]` → guardar plan de crédito
+- `[CRM].[CSV_COBRANZAS_CUD_APP]` (task `'UE'`, body `data¯¯UE`) →
+  `CobranzaRemoteDatasource.cambiarEstadoFacturar()`. Único endpoint para cambiar el estado de
+  una cobranza — **hoy solo hace algo si `estado='2'`** (Facturar): guarda los campos de
+  facturación (`CONDICION_PAGO`/`FCH_VENCIMIENTO_COMPROBANTE`/`ORDEN_COMPRA`/
+  `DESCRIPCION_SUGERIDA`/`HOJA_ACEPTACION`) y recién ahí hace `UPDATE ID_ESTADO_GES`. Cualquier
+  otro valor de estado no hace nada (ni siquiera cambia `ID_ESTADO_GES`) — por eso `estado` se
+  manda hardcodeado en `'2'` desde el bloc, es el único valor útil hoy. Se usa tanto para
+  contado como para crédito (en crédito, después de `guardarPlanCredito`). `CONDICION_PAGO`
+  usa `'1'`=Crédito/`'2'`=Contado (**no** `'CR'`/`'C'`, esos son solo la convención interna de
+  la app — `CobranzaFacturaBloc._condicionPagoBackend` traduce). Body (10 campos, `sepCampos`):
+  `NUMSOL¦ESTADO¦CONDICION_PAGO¦FCH_VENCIMIENTO_COMPROBANTE¦ORDEN_COMPRA¦DESCRIPCION_SUGERIDA¦
+  HOJA_ACEPTACION¦ID_USUARIO¦IP_USUARIO¦LL_USUARIO` (sin detalle — `dataDet` va vacío).
+- `[CRM].[CSV_COBRANZAS_CUD_APP]` (task `'RC'`, body `data¯dataDet¯RC`) →
+  `CobranzaRemoteDatasource.guardarPlanCredito()`. Inserta el cronograma completo en
+  `EVT.T_TECMSOLINSCRIPCION01_FACTURACION_CREDITO_CRM`. Header (`data`, 5 campos):
+  `NUMSOL¦MONEDA¦ID_USUARIO¦IP_USUARIO¦LL_USUARIO` — moneda va **general**, no por cuota.
+  Detalle (`dataDet`, una fila por cuota, `sepRegistros` entre filas): `CORRELATIVO¦
+  CORRELATIVO_DESC("CuotaXXX")¦DIAS¦FC_VENCIMIENTO¦DIA_VENCIMIENTO(siempre vacío)¦IMPORTE` — el
+  importe va **con IGV incluido**, el SP lo divide entre `(1+igv)` para sacar neto+IGV. Ambos
+  campos `NUMSOL` e `IP`/`LL_USUARIO` por fila que traía la plantilla original se sacaron
+  porque el SP los ignoraba (usa los del header).
+  **Flujo real** (confirmado con la web de referencia, no exactamente el mismo SP pero mismo
+  patrón): guardar el plan de crédito es un **paso intermedio**, no un guardado final — el RC
+  recién se manda cuando el usuario presiona **"Facturar"** en `CobranzaFacturaPage`
+  (`CobranzaFacturaBloc._onFacturarPressed`: si es crédito, `RC` primero y solo si sale
+  `CrudOk` continúa con `UE`; si es contado, solo `UE`). El botón "Guardar plan" de
+  `CobranzaPlanPage` **no** llama al backend — solo valida que haya cuotas, confirma
+  localmente y hace `pop` con `PlanCreditoResultado(fechaVencimiento, cuotas)` de vuelta a
+  Factura (`CobranzaPlanBloc` ya no depende de `GuardarPlanCreditoUseCase`/`CobranzaRepository`
+  en absoluto)
 
 ### Mapeo de campos — `CobranzaModel.fromRawString` (`CSV_COBRANZAS_LST_APP`, task `'LS'`)
 Campos posicionales separados por `¦` (0-indexados): `0` numSol · `1` nombres · `2` apePaterno ·
@@ -127,6 +155,26 @@ label por defecto pero sí aparecen en la lista sin filtro de tarjeta activo.
   no mostrarla hasta que exista una columna real
 - La carpeta de widgets para facturación es `widgets/factura/` (no `fractura/`)
 - `CobranzaCamposExtra` usa `esArriba` para controlar qué campos aparecen arriba/abajo del formulario según la condición
+- **`O/C` es obligatorio siempre** (contado y crédito) — se valida con un `Form`+`GlobalKey` real
+  en `CobranzaFacturaView` (rojo inline bajo el campo), no con un snackbar. El bloc ya no
+  chequea O/C vacío — el `Form` no deja ni disparar `FacturarPressed` si falla
+- **`_CampoCompartido` (O/C, Descripción, Hoja) usa `textInputAction: TextInputAction.done`** +
+  `onSubmitted` que hace `unfocus()` — sin esto, al ser multilinea (`maxLines: 3`) el teclado
+  mostraba flecha de "nueva línea" en vez de check, y no había forma de cerrarlo
+- **`_ExtraCreditoState` necesita `didUpdateWidget`** para resincronizar `_fechaCtrl.text` con
+  `widget.state.fechaVencimiento` — como vive con `ValueKey('credito')` estable mientras la
+  condición sea crédito, `initState` solo corre una vez; sin el `didUpdateWidget` el campo se
+  quedaba mostrando la fecha vieja después de `PlanGuardado` (bug real ya corregido)
+- **`CobranzaFacturaState.numCuotas`** ya no es el stub `=> 1` — es `cuotasCredito.length`
+  (con fallback a 1 si está vacío), así el resumen de crédito muestra el número real configurado
+- **`CobranzaPlanBloc` recuerda el plan ya configurado al reentrar** — `cuotasIniciales` viaja
+  por navegación (`goToPlanCredito(cuotasIniciales: state.cuotasCredito)` →
+  `CobranzaPlanPage.cuotasIniciales` → `CobranzaPlanBloc._estadoInicial`); si viene no vacío se
+  usa tal cual (y `numCuotasDeseadas` = su largo) en vez de resetear siempre a 1 cuota por
+  defecto. Antes, presionar "Validar" una segunda vez perdía todo lo ya configurado
+- **Adjuntar voucher (contado) — pendiente a propósito.** `_ExtraContado` (`cobranza_campos_extra.dart`)
+  sigue siendo un stub visual (`onTap: () {}`, sin picker ni endpoint de subida) — no implementar
+  hasta que se defina el flujo con backend
 - **Moneda del plan de crédito**: `TC.MONEDA` guarda el **id** (varchar) de `MonedaItem`, no el
   símbolo — viaja como ese id de punta a punta (`CobranzaDetalle.moneda` →
   `goToFacturarCobranza(moneda: ...)` → `CobranzaFacturaState.moneda` →
@@ -144,15 +192,27 @@ label por defecto pero sí aparecen en la lista sin filtro de tarjeta activo.
   (`continuarPlan`/`error`), `listenWhen` (que compara contra el status previo) no volvería a
   notificar si el usuario repite la misma acción dos veces seguidas
 - **Guardar el plan de crédito es un paso extra antes de facturar, no el final del flujo** —
-  `context.goToPlanCredito(...)` devuelve `Future<String?>` (la fecha de vencimiento más alta
-  entre las cuotas, `CobranzaPlanState.fechaMasAlta`, o `null` si el usuario volvió con la
-  flecha sin guardar). Al guardar, `CobranzaPlanPage` hace `context.goBack(state.fechaMasAlta)`
-  — **no** `context.goToCobranza()` (eso limpiaría el stack y no volvería a Facturar).
+  `context.goToPlanCredito(...)` devuelve `Future<PlanCreditoResultado?>` (fecha de vencimiento
+  más alta + la lista de cuotas, o `null` si el usuario volvió con la flecha sin guardar). Al
+  guardar, `CobranzaPlanPage` hace `context.goBack(PlanCreditoResultado(...))` — **no**
+  `context.goToCobranza()` (eso limpiaría el stack y no volvería a Facturar).
   `CobranzaFacturaPage` espera ese resultado (`listener` async) y, si no es null, dispara
-  `PlanGuardado(fecha)` — **recién ahí** `CobranzaFacturaBloc` marca `planValidado = true` y
-  actualiza `fechaVencimiento`. `PlanValidarPressed` (el botón "Validar") **ya no** marca
-  `planValidado` — solo navega; si el usuario entra al plan y vuelve sin guardar, el badge
-  "Plan de crédito validado" no debe aparecer
+  `PlanGuardado(fecha, cuotas)` — **recién ahí** `CobranzaFacturaBloc` marca `planValidado =
+  true`, guarda las cuotas en `state.cuotasCredito` y actualiza `fechaVencimiento`.
+  `PlanValidarPressed` (el botón "Validar") **ya no** marca `planValidado` — solo navega; si
+  el usuario entra al plan y vuelve sin guardar, el badge "Plan de crédito validado" no debe
+  aparecer, y tampoco se puede facturar (`_onFacturarPressed` exige `planValidado` en crédito)
+- **Validación de "Facturar"**: O/C es obligatorio siempre (contado y crédito); en crédito
+  además son obligatorios haber validado/guardado el plan y tener fecha de vencimiento.
+  Descripción sugerida y hoja de aceptación siguen siendo opcionales en ambos casos. Se valida
+  dentro de `CobranzaFacturaBloc._onFacturarPressed` (no en el `Form` de la vista)
+- **El botón "Continuar facturación" del detalle solo aparece si `idEstado == 0`** (Pend. de
+  documento) — `_CobranzaDetalleBody.tieneAccion` en `cobranza_detalle_view.dart`. Antes se
+  mostraba (con otro label) para cualquier estado salvo Cancelado, pero el `UE` real solo hace
+  algo con `estado='2'`; para los demás estados (2, 5, 1, 4) no hay ninguna acción de backend
+  definida todavía, así que no tiene sentido ofrecer un botón que no hace nada. Si más adelante
+  se define una acción real para otro estado (ej. "Confirmar pago" en estado 5), agregar su
+  propio caso ahí en vez de reusar este botón genérico
 - **Nunca usar `DateFormatter.parseDate` (core) sobre fechas del plan de crédito** — solo
   entiende ISO o formato SQL Server, no `'dd/MM/yyyy'` (que es justo lo que produce
   `AppDateFormat.shortDate`, usado en todo `fechaVencimiento`). Da `null` en silencio y los

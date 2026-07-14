@@ -1,6 +1,7 @@
 // lib/features/cobranza/presentation/bloc/factura/cobranza_factura_state.dart
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 // ── Estado de operación del formulario de facturación ────────────────────────
 
@@ -46,6 +47,9 @@ class CobranzaFacturaState {
   final String descripcion;
   final String hojaAceptacion;
   final bool planValidado;
+  // Cuotas del plan de crédito ya "guardado" localmente (viene de
+  // CobranzaPlanPage) — se mandan recién al presionar Facturar (task RC).
+  final List<CuotaPlan> cuotasCredito;
 
   // ── Estado de la operación ──────────────────────────────────
   final CobranzaFacturaStatus status;
@@ -55,7 +59,7 @@ class CobranzaFacturaState {
   // Detracción 12% sobre el importe del comprobante (confirmado: 460.20*0.12=55.22)
   double get detraccion => montoTotal * 0.12;
   double get importeCredito => montoTotal - detraccion;
-  int get numCuotas => 1;
+  int get numCuotas => cuotasCredito.isEmpty ? 1 : cuotasCredito.length;
   double get pagoACuenta => 0.0;
   double get saldo => montoTotal - pagoACuenta;
 
@@ -74,6 +78,7 @@ class CobranzaFacturaState {
     this.descripcion = '',
     this.hojaAceptacion = '',
     this.planValidado = false,
+    this.cuotasCredito = const [],
     this.status = CobranzaFacturaStatus.idle,
     this.mensajeError,
   });
@@ -86,6 +91,7 @@ class CobranzaFacturaState {
     String? descripcion,
     String? hojaAceptacion,
     bool? planValidado,
+    List<CuotaPlan>? cuotasCredito,
     CobranzaFacturaStatus? status,
     String? mensajeError,
   }) {
@@ -102,6 +108,7 @@ class CobranzaFacturaState {
       descripcion: descripcion ?? this.descripcion,
       hojaAceptacion: hojaAceptacion ?? this.hojaAceptacion,
       planValidado: planValidado ?? this.planValidado,
+      cuotasCredito: cuotasCredito ?? this.cuotasCredito,
       status: status ?? this.status,
       mensajeError: mensajeError ?? this.mensajeError,
     );

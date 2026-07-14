@@ -56,7 +56,10 @@ class _CobranzaDetalleBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tieneAccion = detalle.idEstado != 3; // 3 = Cancelado
+    // Solo se puede facturar cuando está en Pend. de documento (0) — el UE
+    // real solo hace algo con estado='2' (Facturar); para cualquier otro
+    // estado actual no hay una acción de backend definida todavía.
+    final tieneAccion = detalle.idEstado == 0;
 
     return Column(
       children: [
@@ -90,13 +93,15 @@ class _CobranzaDetalleBody extends StatelessWidget {
 // Botón de acción contextual fijo en la parte inferior
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Solo se renderiza cuando detalle.idEstado == 0 (Pend. de documento) — ver
+// _CobranzaDetalleBody.tieneAccion. Los demás estados no tienen una acción
+// de backend definida todavía (el UE real solo hace algo con estado='2').
 class _BottomActionButton extends StatelessWidget {
   final CobranzaDetalle detalle;
   const _BottomActionButton({required this.detalle});
 
   @override
   Widget build(BuildContext context) {
-    final config = _configBoton(detalle.idEstado);
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
@@ -123,8 +128,8 @@ class _BottomActionButton extends StatelessWidget {
             idCondicion: detalle.idCondicion,
             condicion: detalle.condicion,
           ),
-          icon: Icon(config.icono, size: AppSizing.iconMd),
-          label: Text(config.texto, style: AppTextStyles.button),
+          icon: Icon(AppIcons.receipt, size: AppSizing.iconMd),
+          label: Text('Continuar facturación', style: AppTextStyles.button),
           style: FilledButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -134,30 +139,4 @@ class _BottomActionButton extends StatelessWidget {
       ),
     );
   }
-
-  // ID_ESTADO_GES crudo: 0=Pend.deDocumento 2=Facturar 5=Pend.factura.
-  _BotonConfig _configBoton(int idEstado) {
-    switch (idEstado) {
-      case 0:
-        return _BotonConfig(
-          texto: 'Continuar facturación',
-          icono: AppIcons.receipt,
-        );
-      case 2:
-        return _BotonConfig(
-          texto: 'Marcar como facturado',
-          icono: AppIcons.checkCircle,
-        );
-      case 5:
-        return _BotonConfig(texto: 'Confirmar pago', icono: AppIcons.moneda);
-      default:
-        return _BotonConfig(texto: '', icono: AppIcons.check);
-    }
-  }
-}
-
-class _BotonConfig {
-  final String texto;
-  final IconData icono;
-  const _BotonConfig({required this.texto, required this.icono});
 }

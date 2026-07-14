@@ -4,9 +4,10 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
+// Ojo: este bloc NO llama al backend — "Guardar plan" solo valida y
+// confirma localmente. El RC real (guardarPlanCredito) se dispara recién al
+// presionar "Facturar" en CobranzaFacturaPage, ver cobranza/CLAUDE.md.
 class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
-  final GuardarPlanCreditoUseCase _guardarPlanCredito;
-
   CobranzaPlanBloc({
     required String idCobranza,
     required String nombre,
@@ -15,9 +16,8 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     required String moneda,
     required double detraccion,
     required double importeCredito,
-    required GuardarPlanCreditoUseCase guardarPlanCreditoUseCase,
-  })  : _guardarPlanCredito = guardarPlanCreditoUseCase,
-        super(_estadoInicial(
+    List<CuotaPlan> cuotasIniciales = const [],
+  })  : super(_estadoInicial(
           idCobranza: idCobranza,
           nombre: nombre,
           oportunidad: oportunidad,
@@ -25,6 +25,7 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
           moneda: moneda,
           detraccion: detraccion,
           importeCredito: importeCredito,
+          cuotasIniciales: cuotasIniciales,
         )) {
     on<CobranzaPlanStarted>(_onStarted);
     on<NumCuotasDeseadasChanged>(_onNumCuotasDeseadasChanged);
@@ -48,12 +49,14 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     required String moneda,
     required double detraccion,
     required double importeCredito,
+    required List<CuotaPlan> cuotasIniciales,
   }) {
-    final cuotaInicial = CuotaPlan(
-      numeroCuota: 1,
-      fechaVencimiento: _fechaMasDias(7),
-      monto: importeCredito,
-    );
+    // Si ya había un plan configurado antes (el usuario volvió a "Validar"
+    // tras haberlo guardado localmente), se restaura tal cual en vez de
+    // resetear siempre a la cuota única por defecto.
+    final cuotas = cuotasIniciales.isNotEmpty
+        ? cuotasIniciales
+        : [CuotaPlan(numeroCuota: 1, fechaVencimiento: _fechaMasDias(7), monto: importeCredito)];
 
     return CobranzaPlanState(
       idCobranza: idCobranza,
@@ -62,8 +65,8 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
       montoTotal: montoTotal,
       moneda: moneda,
       detraccion: detraccion,
-      cuotas: [cuotaInicial],
-      numCuotasDeseadas: 1,
+      cuotas: cuotas,
+      numCuotasDeseadas: cuotas.length,
       formNumeroCuota: 0,
       formDias: 7,
       formFecha: _fechaMasDias(7),
@@ -184,43 +187,21 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     emit(state.copyWith(cuotas: lista, status: CobranzaPlanStatus.idle));
   }
 
-  Future<void> _onGuardarPlan(
+  // "Guardar plan" — solo valida y confirma localmente (no llama al
+  // backend). CobranzaPlanPage hace pop con las cuotas + fechaMasAlta al ver
+  // este status; el RC real lo dispara CobranzaFacturaPage al facturar.
+  void _onGuardarPlan(
     GuardarPlanPressed event,
     Emitter<CobranzaPlanState> emit,
-  ) async {
-    emit(state.copyWith(status: CobranzaPlanStatus.loading));
-    try {
-      final result = await _guardarPlanCredito(state.idCobranza, state.cuotas);
-      switch (result) {
-        case CrudOk():
-          emit(state.copyWith(status: CobranzaPlanStatus.guardado));
-        case CrudAlert(:final message):
-          emit(state.copyWith(
-            status: CobranzaPlanStatus.error,
-            mensajeError: message,
-          ));
-        case CrudError(:final message):
-          emit(state.copyWith(
-            status: CobranzaPlanStatus.error,
-            mensajeError: message,
-          ));
-        case CrudNoInternet():
-          emit(state.copyWith(
-            status: CobranzaPlanStatus.error,
-            mensajeError: 'Sin conexión a Internet.',
-          ));
-        case CrudEmpty():
-          emit(state.copyWith(
-            status: CobranzaPlanStatus.error,
-            mensajeError: 'Sin respuesta del servidor.',
-          ));
-      }
-    } catch (e, st) {
-      addError(e, st);
+  ) {
+    if (state.cuotas.isEmpty) {
       emit(state.copyWith(
         status: CobranzaPlanStatus.error,
-        mensajeError: e.toString(),
+        mensajeError: 'Agrega al menos una cuota antes de guardar.',
       ));
+      emit(state.copyWith(status: CobranzaPlanStatus.idle));
+      return;
     }
+    emit(state.copyWith(status: CobranzaPlanStatus.guardado));
   }
 }

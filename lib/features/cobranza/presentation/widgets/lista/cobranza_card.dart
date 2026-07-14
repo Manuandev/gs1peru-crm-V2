@@ -313,8 +313,13 @@ class _CobranzaFechaVer extends StatelessWidget {
     final esUrgente = dias != null && dias <= 7;
 
     if (!tieneVencimiento) {
+      // cobranza.fecha viene crudo del backend (DATETIME sin CONVERT) — hay
+      // que formatearlo, no mostrarlo tal cual.
+      final fechaTexto =
+          '${cobranza.fecha.formatDate(AppDateFormat.longDate)} - '
+          '${cobranza.fecha.formatDate(AppDateFormat.hourMinute)}';
       return Text(
-        cobranza.fecha,
+        fechaTexto,
         style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
       );
     }

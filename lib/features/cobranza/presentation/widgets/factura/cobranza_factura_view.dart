@@ -16,6 +16,7 @@ class CobranzaFacturaView extends StatefulWidget {
 }
 
 class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _ocCtrl;
   late final TextEditingController _descCtrl;
   late final TextEditingController _hojaCtrl;
@@ -39,6 +40,13 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
     super.dispose();
   }
 
+  void _onFacturarPressed() {
+    // El Form valida O/C inline (rojo bajo el campo) — si falla, ni
+    // siquiera se dispara el evento (nada de snackbar para esto).
+    if (!_formKey.currentState!.validate()) return;
+    context.read<CobranzaFacturaBloc>().add(const FacturarPressed());
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CobranzaFacturaBloc, CobranzaFacturaState>(
@@ -53,96 +61,101 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
               onPressed: () => context.goBack(),
             ),
           ],
-          body: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── 1. Header fijo ─────────────────────────
-                      CobranzaFacturaHeader(state: state),
-                      const SizedBox(height: AppSpacing.sm),
+          body: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── 1. Header fijo ─────────────────────────
+                        CobranzaFacturaHeader(state: state),
+                        const SizedBox(height: AppSpacing.sm),
 
-                      // ── 2. Card de formulario ──────────────────
-                      _FormCard(
-                        children: [
-                          // Combo condición de pago
-                          CustomComboField<CondicionItem>(
-                            label: 'Condición de pago',
-                            data: condicionesDisponibles,
-                            idIndex: 0,
-                            labelIndex: 1,
-                            initialValue: state.idCondicion,
-                            onChanged: (item) {
-                              if (item != null) {
-                                context.read<CobranzaFacturaBloc>().add(
-                                  CondicionChanged(
-                                    item.fields[0],
-                                    item.fields[1],
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
+                        // ── 2. Card de formulario ──────────────────
+                        _FormCard(
+                          children: [
+                            // Combo condición de pago
+                            CustomComboField<CondicionItem>(
+                              label: 'Condición de pago',
+                              data: condicionesDisponibles,
+                              idIndex: 0,
+                              labelIndex: 1,
+                              initialValue: state.idCondicion,
+                              onChanged: (item) {
+                                if (item != null) {
+                                  context.read<CobranzaFacturaBloc>().add(
+                                    CondicionChanged(
+                                      item.fields[0],
+                                      item.fields[1],
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
 
-                          // Extra ARRIBA — solo crédito muestra fecha+validar
-                          CobranzaCamposExtra(esArriba: true, state: state),
+                            // Extra ARRIBA — solo crédito muestra fecha+validar
+                            CobranzaCamposExtra(esArriba: true, state: state),
 
-                          // O/C — siempre
-                          _CampoCompartido(
-                            label: 'O/C',
-                            hint:
-                                'Ingresa el número de orden de compra (opcional)',
-                            controller: _ocCtrl,
-                            maxChars: _maxChars,
-                            onChanged: (v) => context
-                                .read<CobranzaFacturaBloc>()
-                                .add(OcChanged(v)),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
+                            // O/C — siempre obligatorio
+                            _CampoCompartido(
+                              label: 'O/C *',
+                              hint: 'Ingresa el número de orden de compra',
+                              controller: _ocCtrl,
+                              maxChars: _maxChars,
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? 'El O/C es obligatorio'
+                                  : null,
+                              onChanged: (v) => context
+                                  .read<CobranzaFacturaBloc>()
+                                  .add(OcChanged(v)),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
 
-                          // Descripción — siempre
-                          _CampoCompartido(
-                            label: 'Descripción sugerida',
-                            hint: 'Ingresa una descripción para el documento',
-                            controller: _descCtrl,
-                            maxChars: _maxChars,
-                            onChanged: (v) => context
-                                .read<CobranzaFacturaBloc>()
-                                .add(DescripcionChanged(v)),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
+                            // Descripción — siempre
+                            _CampoCompartido(
+                              label: 'Descripción sugerida',
+                              hint: 'Ingresa una descripción para el documento',
+                              controller: _descCtrl,
+                              maxChars: _maxChars,
+                              onChanged: (v) => context
+                                  .read<CobranzaFacturaBloc>()
+                                  .add(DescripcionChanged(v)),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
 
-                          // Hoja de aceptación — siempre
-                          _CampoCompartido(
-                            label: 'Hoja de aceptación',
-                            hint: 'Ingresa observaciones o notas (opcional)',
-                            controller: _hojaCtrl,
-                            maxChars: _maxChars,
-                            onChanged: (v) => context
-                                .read<CobranzaFacturaBloc>()
-                                .add(HojaAceptacionChanged(v)),
-                          ),
+                            // Hoja de aceptación — siempre
+                            _CampoCompartido(
+                              label: 'Hoja de aceptación',
+                              hint: 'Ingresa observaciones o notas (opcional)',
+                              controller: _hojaCtrl,
+                              maxChars: _maxChars,
+                              onChanged: (v) => context
+                                  .read<CobranzaFacturaBloc>()
+                                  .add(HojaAceptacionChanged(v)),
+                            ),
 
-                          // Extra ABAJO — solo contado muestra adjuntar
-                          CobranzaCamposExtra(esArriba: false, state: state),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
+                            // Extra ABAJO — solo contado muestra adjuntar
+                            CobranzaCamposExtra(esArriba: false, state: state),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
 
-                      // ── 3. Resumen + aviso ─────────────────────
-                      CobranzaResumenCard(state: state),
-                    ],
+                        // ── 3. Resumen + aviso ─────────────────────
+                        CobranzaResumenCard(state: state),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // ── 4. Botones fijos ──────────────────────────────
-              _BotonesFactura(state: state),
-            ],
+                // ── 4. Botones fijos ──────────────────────────────
+                _BotonesFactura(state: state, onFacturar: _onFacturarPressed),
+              ],
+            ),
           ),
         );
       },
@@ -193,6 +206,7 @@ class _CampoCompartido extends StatelessWidget {
   final TextEditingController controller;
   final int maxChars;
   final void Function(String) onChanged;
+  final String? Function(String?)? validator;
 
   const _CampoCompartido({
     required this.label,
@@ -200,6 +214,7 @@ class _CampoCompartido extends StatelessWidget {
     required this.controller,
     required this.maxChars,
     required this.onChanged,
+    this.validator,
   });
 
   @override
@@ -221,21 +236,11 @@ class _CampoCompartido extends StatelessWidget {
           minLines: 1,
           maxLines: 3,
           maxLength: maxChars,
+          textInputAction: TextInputAction.done,
           onChanged: onChanged,
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+          validator: validator,
         ),
-        // Contador de caracteres
-        // Align(
-        //   alignment: Alignment.centerRight,
-        //   child: ValueListenableBuilder<TextEditingValue>(
-        //     valueListenable: controller,
-        //     builder: (_, value, __) => Text(
-        //       '${value.text.length}/$maxChars',
-        //       style: AppTextStyles.labelSmall.copyWith(
-        //         color: AppColors.textSecondary,
-        //       ),
-        //     ),
-        //   ),
-        // ),
       ],
     );
   }
@@ -247,7 +252,8 @@ class _CampoCompartido extends StatelessWidget {
 
 class _BotonesFactura extends StatelessWidget {
   final CobranzaFacturaState state;
-  const _BotonesFactura({required this.state});
+  final VoidCallback onFacturar;
+  const _BotonesFactura({required this.state, required this.onFacturar});
 
   @override
   Widget build(BuildContext context) {
@@ -284,11 +290,8 @@ class _BotonesFactura extends StatelessWidget {
           // Facturar
           Expanded(
             child: FilledButton.icon(
-              onPressed: state.status == CobranzaFacturaStatus.loading
-                  ? null
-                  : () => context.read<CobranzaFacturaBloc>().add(
-                        const FacturarPressed(),
-                      ),
+              onPressed:
+                  state.status == CobranzaFacturaStatus.loading ? null : onFacturar,
               icon: Icon(AppIcons.fileFactura, size: AppSizing.iconSm),
               label: const Text('Facturar'),
               style: FilledButton.styleFrom(

@@ -145,9 +145,10 @@ class CustomTextField extends StatelessWidget {
         // cada ícono sin importar su propio `size` — infla el campo por
         // encima del alto compacto (isDense) de los campos sin ícono, aunque
         // el ícono en sí sea chico. minHeight:0 deja que el alto lo defina
-        // el contenido (igual que un campo sin ícono).
-        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+        // el contenido (igual que un campo sin ícono); minWidth chico (no 0)
+        // le deja algo de aire al ícono para que no quede pegado al borde.
+        prefixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 0),
+        suffixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 0),
         prefixText: prefixText,
         suffixText: suffixText,
         filled: true,

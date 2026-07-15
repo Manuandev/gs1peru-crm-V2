@@ -46,6 +46,7 @@ class NegociacionModel extends Negociacion {
     super.apellidoMaterno,
     super.nombreEmpresa,
     super.correo,
+    super.ruc,
     super.numSol,
     super.idEstadoSol,
   });
@@ -124,6 +125,7 @@ class NegociacionModel extends Negociacion {
   //                            36 CI.ID_ESTADO_GES
   //                            37 LD.NOMBRE
   //                            38 LD.MODALIDAD
+  //                            39 EM.RUC (2026-07-15, agregado al final)
   factory NegociacionModel.fromDetalleRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -158,6 +160,7 @@ class NegociacionModel extends Negociacion {
       apellidoMaterno: ParseUtils.str(fields, 4),
       nombreEmpresa: ParseUtils.str(fields, 5),
       correo: ParseUtils.str(fields, 12),
+      ruc: ParseUtils.str(fields, 39),
       idMoneda: ParseUtils.str(fields, 33),
       totalLeadsNumero: ParseUtils.toInt(fields, 34),
       numSol: ParseUtils.str(fields, 35),

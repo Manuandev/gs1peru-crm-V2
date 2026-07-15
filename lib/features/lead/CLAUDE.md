@@ -189,12 +189,34 @@ ningún origen, edite o cree, venga o no de conversación.
   retorna `bool`, `true` solo en el caso `CrudOk`), se navega directo a
   `context.goToFichaCompletarSolicitud(...)` con una `Solicitud` en blanco — mismo patrón exacto
   que el botón manual "Generar solicitud" de `NegociacionCard`/`ContactoNegociacionCard` (ver
-  comentario en `negociaciones_tab.dart._generarSolicitud`): `idSolicitud: ''`, todos los campos de
-  contacto vacíos, solo `idLead` (el real, tomado del estado del cubit tras guardar — importante si
-  la negociación se creó recién en este mismo guardado) y los `*Negociacion` (`cantidadNegociacion`,
-  `precioBaseNegociacion`, `descuentoNegociacion`, `idMonedaNegociacion`) que siembran el wizard.
-  Aplica en los 3 orígenes de `EditLeadPortrait` (Conversaciones, Lead, Seguimiento) porque vive en
-  el `_guardar()` compartido.
+  comentario en `negociaciones_tab.dart._generarSolicitud`): `idSolicitud: ''`, el `Solicitud` en
+  sí sigue con todos sus campos de contacto vacíos (`idLead` es el único que sí lleva un valor
+  real, tomado del estado del cubit tras guardar — importante si la negociación se creó recién en
+  este mismo guardado), pero desde 2026-07-15 se agregaron **12 parámetros más** a
+  `goToFichaCompletarSolicitud` que sí llevan datos reales de `Negociacion` para sembrar el
+  wizard (`SolicitudFormCubit.sembrarDatosNegociacion`, ver `solicitudes/CLAUDE.md` → "Más datos
+  de la negociación se prellenan en el paso 1" y "RUC de la negociación + fix real de
+  arquitectura"): los 4 que ya bloquean edición (`cantidadNegociacion`/`precioBaseNegociacion`/
+  `descuentoNegociacion`/`idMonedaNegociacion`) más 8 nuevos que solo prellenan sin bloquear
+  (`nombresNegociacion`/`apellidoPaternoNegociacion`/`apellidoMaternoNegociacion`/
+  `nombreEmpresaNegociacion`/`correoNegociacion`/`celularNegociacion`/
+  `celularCodigoTelefonoNegociacion`/`rucNegociacion`) y uno más solo para validación de
+  consistencia (`precioTotalNegociacion`, nunca se muestra ni bloquea nada). **Cargo quedó
+  fuera** — llega como id crudo sin catálogo (`CT.ID_CARGO`), nunca parseado; resolverlo de
+  verdad necesita un catálogo nuevo, no solo threading del lado del cliente. **RUC sí se agregó**
+  (`Negociacion.ruc`, `CRM.T_EMPRESA.RUC` — ver `solicitudes/CLAUDE.md`).
+  **Ojo — `Negociacion.ruc`/`nombres`/`apellidoPaterno`/`apellidoMaterno`/`nombreEmpresa`/
+  `correo` solo los trae el SP de detalle (`'DT'`/`'DN'`) — el de historial (`'LN'`, el que
+  alimenta `NegociacionesCubit`) no hace join con `T_CONTACTO`/`T_EMPRESA`/`T_CONTACTO_CORREO`,
+  esos campos quedan `''` en cualquier `Negociacion` que venga de ahí.** Por eso
+  `ContactoNegociacionCard`/`NegociacionesTab` (los 2 orígenes que usan `NegociacionesCubit`) NO
+  usan el objeto `Negociacion` que ya tienen en memoria para armar estos parámetros — antes de
+  navegar, hacen una llamada fresca a `GetLeadDetalleUseCase(idLead)` (task `'DT'`, mismo que ya
+  usa `_irAEditar`) y usan ESE resultado para todo (contacto + financiero), mostrando
+  `AppLoadingOverlay` mientras tanto (`ContactoNegociacionCard` se convirtió de
+  `StatelessWidget` a `StatefulWidget` solo para esto). `EditLeadPortrait`'s `widget.negociacion`
+  ya viene de `InfoLeadCubit` (`'DT'`/`'DN'`) en todos sus caminos, así que ese origen no
+  necesita la llamada extra — usa `n.*` directo.
 
 ### Flag `desdeConversacion`
 

@@ -221,6 +221,78 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     }
   }
 
+  // Al crear desde "Generar solicitud" (negociación con precio ya definido,
+  // `cantidadEsperada != null`) — prellena Nombres/Apellidos/Correo/Celular/
+  // Razón social con los datos ya capturados en la negociación
+  // (`SolicitudFormCubit.sembrarDatosNegociacion`, ver solicitudes/CLAUDE.md).
+  // A diferencia de precioBase/descuento/moneda, estos campos NO quedan
+  // bloqueados — es solo un prellenado, el asesor los puede corregir si algo
+  // cambió desde que se registró la negociación.
+  void _prellenarDesdeNegociacion() {
+    final formState = context.read<SolicitudFormCubit>().state;
+    if (formState.cantidadEsperada == null) return;
+
+    if (formState.nombresLead.isNotEmpty) {
+      _ctrlNombres.text = formState.nombresLead;
+    }
+    if (formState.apellidoPaternoLead.isNotEmpty) {
+      _ctrlApellidoPaterno.text = formState.apellidoPaternoLead;
+    }
+    if (formState.apellidoMaternoLead.isNotEmpty) {
+      _ctrlApellidoMaterno.text = formState.apellidoMaternoLead;
+    }
+    if (formState.correoLead.isNotEmpty) {
+      _ctrlCorreo.text = formState.correoLead;
+    }
+    if (formState.celularLead.isNotEmpty) {
+      _ctrlCelular.text = formState.celularLead;
+    }
+    // Nombre de empresa / RUC de la negociación → Razón social / RUC
+    // (Información comercial, solo visible con tipo de persona Jurídica —
+    // default del wizard).
+    if (formState.nombreEmpresaLead.isNotEmpty) {
+      _ctrlRazonSocial.text = formState.nombreEmpresaLead;
+    }
+    if (formState.rucLead.isNotEmpty) {
+      _ctrlRuc.text = formState.rucLead;
+    }
+
+    if (formState.celularCodigoTelefonoLead.isNotEmpty) {
+      final catalogState = context.read<CatalogsBloc>().state;
+      if (catalogState is CatalogsLoaded) {
+        _paisCelular = catalogState.paises
+            .where(
+              (p) => p.codigoTelefono == formState.celularCodigoTelefonoLead,
+            )
+            .firstOrNull;
+      }
+    }
+
+    _avisarSiPrecioTotalNoCalza(formState);
+  }
+
+  // Aviso de consistencia (no bloquea nada) — si precioBase × cantidad −
+  // descuento no calza con el precio total que tenía la negociación
+  // (`precioTotalLead`), es señal de que la negociación se editó/desfasó
+  // después de fijar esos valores. Se muestra una sola vez, al entrar.
+  void _avisarSiPrecioTotalNoCalza(SolicitudFormState formState) {
+    if (formState.precioTotalLead <= 0) return;
+    final cantidad = formState.cantidadEsperada ?? 0;
+    final calculado =
+        (formState.precioBaseLead * cantidad) - formState.descuentoLead;
+    if ((calculado - formState.precioTotalLead).abs() <= 0.01) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AppSnackBar.warning(
+        context,
+        'El precio base × cantidad − descuento no coincide con el precio '
+        'total de la negociación. Verifica los montos antes de generar la '
+        'solicitud.',
+      );
+    });
+  }
+
   // Trae solicitante + facturación + participantes + archivos ya guardados
   // (task 'DT') y prellena el formulario + los cubits compartidos del
   // wizard. Se llama una sola vez — el paso 1 solo se entra desde
@@ -234,6 +306,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
     if (numSol.isEmpty) {
       _sembrarValoresPorDefecto();
+      _prellenarDesdeNegociacion();
       setState(() => _cargando = false);
       return;
     }

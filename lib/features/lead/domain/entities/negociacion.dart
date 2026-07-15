@@ -61,6 +61,10 @@ class Negociacion extends Equatable {
   final String nombreEmpresa;
   final String correo;
 
+  // RUC de la empresa (EM.RUC) — mismo candado que nombres/apellidos/correo
+  // de arriba: solo lo trae 'DT'/'DN', 'LN' lo deja vacío.
+  final String ruc;
+
   final String numSol;
   final int idEstadoSol;
 
@@ -133,6 +137,7 @@ class Negociacion extends Equatable {
     this.apellidoMaterno = '',
     this.nombreEmpresa = '',
     this.correo = '',
+    this.ruc = '',
     this.numSol = '',
     this.idEstadoSol = 0,
   });
@@ -171,6 +176,7 @@ class Negociacion extends Equatable {
     apellidoMaterno,
     nombreEmpresa,
     correo,
+    ruc,
     numSol,
     idEstadoSol,
   ];
@@ -208,6 +214,7 @@ class Negociacion extends Equatable {
     String? apellidoMaterno,
     String? nombreEmpresa,
     String? correo,
+    String? ruc,
     String? numSol,
     int? idEstadoSol,
   }) {
@@ -245,6 +252,7 @@ class Negociacion extends Equatable {
       apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
       nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
       correo: correo ?? this.correo,
+      ruc: ruc ?? this.ruc,
       numSol: numSol ?? this.numSol,
       idEstadoSol: idEstadoSol ?? this.idEstadoSol,
     );

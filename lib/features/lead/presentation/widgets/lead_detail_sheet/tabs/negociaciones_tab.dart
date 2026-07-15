@@ -91,6 +91,10 @@ class _ListaNegociaciones extends StatefulWidget {
 class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   _FiltroNeg _filtro = _FiltroNeg.todas;
 
+  // true mientras se trae el detalle fresco de la negociación (task 'DT')
+  // antes de generar la solicitud — ver comentario de _generarSolicitud.
+  bool _generandoSolicitud = false;
+
   // "Ganada" = negociación cerrada (idEstadoPadre '04') en el sub-estado
   // '05' — códigos de negocio, no confundir con el catálogo de etapas
   // genérico de AppSocialUtils.
@@ -142,7 +146,34 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   // idLead, que CSV_SOLICITUD_CUD_APP usa para vincular la solicitud al
   // lead de origen en la rama de creación. Mismo patrón que
   // ContactoNegociacionCard._generarSolicitud() (Seguimiento).
-  void _generarSolicitud(Negociacion negociacion) {
+  //
+  // El `negociacion` que llega acá viene de `NegociacionesCubit` (task
+  // 'LN', historial) — ese task NO trae nombres/apellidos/empresa/correo/
+  // celular/RUC (solo lo trae 'DT'/'DN', ver negociacion_model.dart). Por
+  // eso, antes de navegar, se trae un detalle fresco por `idLead` (mismo
+  // 'DT' que ya usa `_irAEditar`/`InfoLeadCubit`) y se usa ESE objeto para
+  // todos los datos que siembran el wizard — no solo los de contacto, para
+  // no mezclar un dato fresco con uno potencialmente desactualizado del
+  // historial.
+  Future<void> _generarSolicitud(Negociacion negociacion) async {
+    if (_generandoSolicitud) return;
+    setState(() => _generandoSolicitud = true);
+
+    Negociacion detalle;
+    try {
+      detalle = await GetLeadDetalleUseCase(
+        context.read<LeadRepository>(),
+      ).call(negociacion.idLead);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _generandoSolicitud = false);
+      AppSnackBar.error(context, 'No se pudo cargar la negociación: $e');
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _generandoSolicitud = false);
+
     context.goToFichaCompletarSolicitud(
       solicitud: Solicitud(
         idSolicitud: '',
@@ -167,13 +198,22 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
         ibValidado: false,
         asesor: '',
         nombreAsesor: '',
-        idLead: negociacion.idLead.toString(),
+        idLead: detalle.idLead.toString(),
       ),
       modoEdicion: true,
-      cantidadNegociacion: negociacion.cantidad,
-      precioBaseNegociacion: negociacion.precioBase,
-      descuentoNegociacion: negociacion.descuento,
-      idMonedaNegociacion: negociacion.idMoneda,
+      cantidadNegociacion: detalle.cantidad,
+      precioBaseNegociacion: detalle.precioBase,
+      descuentoNegociacion: detalle.descuento,
+      idMonedaNegociacion: detalle.idMoneda,
+      precioTotalNegociacion: detalle.precio,
+      nombresNegociacion: detalle.nombres,
+      apellidoPaternoNegociacion: detalle.apellidoPaterno,
+      apellidoMaternoNegociacion: detalle.apellidoMaterno,
+      nombreEmpresaNegociacion: detalle.nombreEmpresa,
+      correoNegociacion: detalle.correo,
+      celularNegociacion: detalle.numero,
+      celularCodigoTelefonoNegociacion: detalle.prefijoPais,
+      rucNegociacion: detalle.ruc,
     );
   }
 
@@ -185,92 +225,100 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
 
     final visibles = _visibles;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.xxl,
-      ),
+    return Stack(
       children: [
-        // ── Chips de filtro ───────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: Row(
-            children: [
-              const Spacer(),
-              _FiltroChip(
-                label: 'Todas',
-                seleccionado: _filtro == _FiltroNeg.todas,
-                onTap: () => setState(() => _filtro = _FiltroNeg.todas),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              _FiltroChip(
-                label: 'Activa',
-                seleccionado: _filtro == _FiltroNeg.activa,
-                onTap: () => setState(() => _filtro = _FiltroNeg.activa),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              _FiltroChip(
-                label: 'Ganadas',
-                seleccionado: _filtro == _FiltroNeg.ganadas,
-                onTap: () => setState(() => _filtro = _FiltroNeg.ganadas),
-              ),
-            ],
+        ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.xxl,
           ),
-        ),
-
-        // ── Cards (o vacío del filtro activo) ───────────────────────────────────
-        if (visibles.isEmpty)
-          _EstadoVacioFiltro(mensaje: _mensajeVacioFiltro)
-        else
-          ...visibles.map(
-            (negociacion) => NegociacionCard(
-              negociacion: negociacion,
-              leadId: widget.leadId,
-              onGenerarSolicitud: () => _generarSolicitud(negociacion),
-              onEdited: () => context
-                  .read<NegociacionesCubit>()
-                  .cargarNegociaciones(widget.idNumero),
-            ),
-          ),
-
-        const SizedBox(height: AppSpacing.sm),
-        CustomOutlinedButton(
-          text: '+ Crear negociación',
-          onPressed: _crearNegociacion,
-        ),
-
-        const SizedBox(height: AppSpacing.sm),
-
-        // ── Info banner ───────────────────────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: AppColors.info.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-            border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                AppIcons.infoCircle,
-                size: AppSizing.iconSm,
-                color: AppColors.info,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Expanded(
-                child: Text(
-                  'La negociación seleccionada es la que se utiliza para actualizar el CRM y, en su caso, cerrar como ganada para generar una solicitud.',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
+          children: [
+            // ── Chips de filtro ───────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  _FiltroChip(
+                    label: 'Todas',
+                    seleccionado: _filtro == _FiltroNeg.todas,
+                    onTap: () => setState(() => _filtro = _FiltroNeg.todas),
                   ),
+                  const SizedBox(width: AppSpacing.xs),
+                  _FiltroChip(
+                    label: 'Activa',
+                    seleccionado: _filtro == _FiltroNeg.activa,
+                    onTap: () => setState(() => _filtro = _FiltroNeg.activa),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  _FiltroChip(
+                    label: 'Ganadas',
+                    seleccionado: _filtro == _FiltroNeg.ganadas,
+                    onTap: () => setState(() => _filtro = _FiltroNeg.ganadas),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Cards (o vacío del filtro activo) ───────────────────────────────────
+            if (visibles.isEmpty)
+              _EstadoVacioFiltro(mensaje: _mensajeVacioFiltro)
+            else
+              ...visibles.map(
+                (negociacion) => NegociacionCard(
+                  negociacion: negociacion,
+                  leadId: widget.leadId,
+                  onGenerarSolicitud: () => _generarSolicitud(negociacion),
+                  onEdited: () => context
+                      .read<NegociacionesCubit>()
+                      .cargarNegociaciones(widget.idNumero),
                 ),
               ),
-            ],
-          ),
+
+            const SizedBox(height: AppSpacing.sm),
+            CustomOutlinedButton(
+              text: '+ Crear negociación',
+              onPressed: _crearNegociacion,
+            ),
+
+            const SizedBox(height: AppSpacing.sm),
+
+            // ── Info banner ───────────────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                border: Border.all(
+                  color: AppColors.info.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    AppIcons.infoCircle,
+                    size: AppSizing.iconSm,
+                    color: AppColors.info,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      'La negociación seleccionada es la que se utiliza para actualizar el CRM y, en su caso, cerrar como ganada para generar una solicitud.',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+        if (_generandoSolicitud)
+          const AppLoadingOverlay(message: 'Cargando negociación...'),
       ],
     );
   }

@@ -1,5 +1,119 @@
 # Solicitudes Feature
 
+## Bug real — Dirección no se autocompletaba al buscar RUC en Facturación (2026-07-15)
+`DocumentoExterno.direccion` (`core/models/documento_externo.dart`, campo [3] de
+`Clientes/BuscarDocumento`) **sí trae dirección cuando el resultado viene de SUNAT/RUC**
+(ej. `"SUNAT¦NATCODEE S.A.C.¦150135¦MZA. I1 LOTE 5 URB. SAN FRANCISCO DE CAYRAN¦ACTIVO¦..."` —
+campo [3] = dirección) — DNI/RENIEC no la trae (queda vacío ahí, el backend solo devuelve
+nombres/apellidos para ese caso). `_buscarDocumento()` en el paso 3
+(`solicitud_facturacion_view.dart`) ya usaba `resultado.nomEmpresa`/`nombres`/`apePaterno`/
+`apeMaterno`/`correo` para autocompletar, pero **nunca leía `resultado.direccion`** — el campo
+Dirección se quedaba vacío incluso buscando un RUC que sí trae ese dato. Corregido: se agregó
+`if (resultado.direccion.isNotEmpty) { _ctrlDireccion.text = resultado.direccion; }` al final del
+mismo bloque, sin condicionarlo a `_esRuc` (para DNI simplemente llega vacío y el `if` no hace
+nada, mismo patrón que ya usa `correo` ahí mismo).
+**Ojo — esto es distinto del caso "Facturar al solicitante"**: cuando ese switch autocompleta el
+paso 3 con los datos del paso 1, la Dirección se queda vacía por una razón totalmente distinta
+— `DatosSolicitante` (paso 1) no tiene ningún campo de dirección, el solicitante nunca la
+captura ahí. Ese caso se dejó como está a propósito (el usuario lo confirmó) — no agregar un
+campo Dirección al paso 1 sin que lo pidan explícitamente.
+
+## RUC de la negociación + fix real de arquitectura (2026-07-15)
+Siguiendo la sección de abajo ("Más datos..."), se agregó RUC (`Negociacion.ruc`/`EM.RUC`) y de
+paso se corrigió un problema más de fondo que esa primera pasada dejó sin detectar:
+
+- **`'LN'` (task que alimenta `NegociacionesCubit`, historial de negociaciones en Conversaciones
+  y Seguimiento) nunca trajo contacto** — solo `'DT'`/`'DN'` hacen join con `T_CONTACTO`/
+  `T_EMPRESA`/`T_CONTACTO_CORREO`. Esto significaba que 2 de los 3 orígenes de "Generar
+  solicitud" (`NegociacionCard`/Conversaciones y `ContactoNegociacionCard`/Seguimiento, ambos
+  alimentados por `NegociacionesCubit` → `'LN'`) mandaban `nombresNegociacion`/
+  `apellidoPaternoNegociacion`/etc. **siempre vacíos** — el wiring de la sección de abajo
+  compilaba y no rompía nada, pero no prellenaba nada de verdad en esos 2 orígenes. Solo el
+  auto-redirect de `EditLeadPortrait` (que sí usa un `Negociacion` sacado de `InfoLeadCubit`,
+  `'DT'`/`'DN'`) prellenaba correctamente.
+- **Se decidió NO agregar los joins de contacto a `'LN'`** (una opción real que se evaluó) —
+  ese task se usa para listas (posible impacto de performance por fila) y ya es consumido en
+  varios lugares. En su lugar: **al presionar "Generar solicitud" en los 2 orígenes de `'LN'`,
+  se trae un detalle fresco por `idLead` (`GetLeadDetalleUseCase`, task `'DT'` — el mismo que ya
+  usa `_irAEditar`/`InfoLeadCubit` en estos mismos archivos) antes de navegar**, y se usan
+  TODOS los datos de ese detalle fresco (no solo contacto — también cantidad/precioBase/
+  descuento/moneda/precioTotal) para armar los parámetros de `goToFichaCompletarSolicitud`, en
+  vez de los del objeto `Negociacion` que ya estaba en memoria (potencialmente incompleto o
+  desactualizado). `ContactoNegociacionCard` (antes `StatelessWidget`) se convirtió a
+  `StatefulWidget` para poder mostrar `AppLoadingOverlay` mientras se trae el detalle (mismo
+  patrón que `_ListaNegociacionesState` en `negociaciones_tab.dart`, que ya era Stateful).
+- **`Negociacion.ruc`** (nuevo campo, default `''`) — parseado solo en
+  `NegociacionModel.fromDetalleRawString` (índice 39, agregado al final del SP tras
+  `LD.MODALIDAD`) — `fromRawString` (`'LN'`) no lo trae, queda en `''` para esos objetos (ya no
+  importa, porque los 2 orígenes de `'LN'` ahora ignoran el objeto en memoria para generar
+  solicitud, como se explicó arriba). `SolicitudFormCubit.sembrarDatosNegociacion`/
+  `SolicitudFormState.rucLead` y el prellenado en `_cargarDetalle()` siguen el mismo patrón que
+  el resto de datos de contacto (solo prellenado, no bloquea, el asesor lo puede corregir).
+- **Columna real en la BD**: `CRM.T_EMPRESA.RUC` (alias `EM` en el SP `[CRM].[CSV_LEADS_LST_APP]`,
+  tasks `'DT'`/`'DN'`) — agregada al `SELECT` de ambos tasks (son idénticos en forma) como el
+  último campo, después de `LD.MODALIDAD`.
+
+## Más datos de la negociación se prellenan en el paso 1 (2026-07-15)
+Auditoría pedida por el usuario: de 11 datos de la negociación que la encargada quería ver
+reflejados en el paso 1 al generar una solicitud (correo, RUC, nombre de empresa, nombres,
+apellidos, precio base, cantidad de participantes, cargo, celular, precio total, descuento),
+antes solo **3** llegaban de verdad al wizard (precio base, cantidad, descuento — vía
+`SolicitudFormCubit.sembrarDatosNegociacion`). El resto se mandaba `''`/`0` a propósito en los 3
+call sites de "Generar solicitud" (`ContactoNegociacionCard`/`NegociacionesTab`/
+`EditLeadPortrait` auto-redirect), y aunque `_solicitudDesdeNegociacion()` (usado solo para
+editar/ver, no para generar) sí copiaba varios de estos campos a un `Solicitud`, **nunca se leían
+de vuelta** — `_cargarDetalle()` (paso 1) solo lee `idSolicitud` del `Solicitud` de navegación,
+ignora todo lo demás (mismo patrón que documenta "SolicitudDetalleView ya no confía en el
+Solicitud de navegación" más abajo).
+
+- **RUC y Cargo quedan sin resolver — no es un problema de threading, el dato no existe en
+  ningún lado todavía.** `Negociacion` (`lead/domain/entities/negociacion.dart`) no tiene campo
+  RUC (ninguna columna del SP lo trae). `Cargo` sí llega como un id crudo sin catálogo
+  (`CT.ID_CARGO`, parte del SP `'DT'`/`'DN'` de negociación) pero nunca se parsea a la entidad,
+  y `Contacto.cargo` (otro modelo, lista de contactos) tampoco se parsea nunca
+  (`ContactoModel.fromFields` lo deja en blanco a propósito, comentario "llega como id crudo sin
+  catálogo — no se parsea todavía"). La única sección que alguna vez mostró un campo "Cargo" de
+  contacto (`EditLeadContactoSection`) está comentada/muerta en `EditLeadPortrait` desde antes.
+  **Conclusión: quedan vacíos como hoy** — el asesor los completa a mano en el paso 1; resolver
+  esto de verdad requiere trabajo de backend (nueva columna RUC en el SP, catálogo para
+  `ID_CARGO`) que no existe todavía.
+- **Correo, Nombres, Apellidos, Nombre de empresa, Celular** — sí existen en `Negociacion` y
+  ahora sí llegan al paso 1, pero **solo como prellenado, no como bloqueo** (a diferencia de
+  precio base/cantidad/descuento/moneda, que sí bloquean edición): el asesor puede corregirlos
+  libremente si algo cambió desde que se registró la negociación. Flujo completo:
+  1. Los 3 call sites de "Generar solicitud" (`contacto_negociacion_card.dart._generarSolicitud`,
+     `negociaciones_tab.dart._generarSolicitud`, `edit_lead_portrait.dart._guardar()` auto-redirect)
+     ahora pasan 7 parámetros nuevos a `goToFichaCompletarSolicitud`:
+     `nombresNegociacion`/`apellidoPaternoNegociacion`/`apellidoMaternoNegociacion`/
+     `nombreEmpresaNegociacion`/`correoNegociacion`/`celularNegociacion`/
+     `celularCodigoTelefonoNegociacion` (celular y su prefijo separados —
+     `Negociacion.numero`/`.prefijoPais` — mismo formato que `PaisItem.codigoTelefono`, no el
+     getter `telefonoCompleto` que ya los junta en un string).
+  2. `SolicitudCompletarPage` los recibe y se los pasa a
+     `SolicitudFormCubit.sembrarDatosNegociacion()` (extendido con los mismos 7 params +
+     `precioTotal`), que ahora también los guarda en `SolicitudFormState` (`nombresLead`,
+     `apellidoPaternoLead`, `apellidoMaternoLead`, `nombreEmpresaLead`, `correoLead`,
+     `celularLead`, `celularCodigoTelefonoLead`).
+  3. `_SolicitudCompletarViewState._prellenarDesdeNegociacion()` (nuevo método,
+     `solicitud_completar_view.dart`) — llamado junto a `_sembrarValoresPorDefecto()` en la rama
+     de creación de `_cargarDetalle()` — copia lo que venga no-vacío a
+     `_ctrlNombres`/`_ctrlApellidoPaterno`/`_ctrlApellidoMaterno`/`_ctrlCorreo`/`_ctrlCelular`, y
+     resuelve `_paisCelular` contra `CatalogsBloc.paises` por `codigoTelefono`. **Nombre de
+     empresa va a Razón Social** (`_ctrlRazonSocial`, sección "Información comercial" — el RUC
+     sigue vacío, el asesor lo busca con `DocumentoExternoService` o lo tipea).
+  4. Si `formState.cantidadEsperada == null` (no vino de negociación), el método no hace nada —
+     mismo candado que ya usa `cantidadEsperada` para todo lo demás.
+- **Precio total** (`Negociacion.precio`) — el usuario pidió pasarlo, pero confirmó que es
+  **solo para validación/consistencia**, no para mostrarlo ni bloquear nada (el Resumen del
+  wizard ya calcula su propio total sumando el importe de cada participante). Se guarda en
+  `SolicitudFormState.precioTotalLead` y `_avisarSiPrecioTotalNoCalza()` (mismo archivo) compara
+  `precioBaseLead × cantidadEsperada − descuentoLead` contra ese valor — si difieren en más de
+  `0.01`, muestra un `AppSnackBar.warning` una sola vez al entrar (vía
+  `WidgetsBinding.instance.addPostFrameCallback`, porque `_cargarDetalle()` corre en
+  `initState()` antes del primer frame — mostrar el snackbar directo ahí no funciona). No
+  bloquea nada, solo avisa — señal de que la negociación se desfasó (se editó el precio después
+  de fijar precio base/cantidad/descuento).
+
 ## Sincronización switch ↔ lista de participantes + renumeración de ids (2026-07-15)
 Dos ajustes sobre la relación entre el switch "El solicitante será participante" (paso 1) y la
 lista de participantes (paso 2), pedidos con ejemplos concretos por el usuario:

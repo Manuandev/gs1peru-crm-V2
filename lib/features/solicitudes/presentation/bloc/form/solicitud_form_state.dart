@@ -49,9 +49,11 @@ class DatosSolicitante {
     this.archivoOCNombre = '',
   });
 
-  String get nombreCompleto => [nombres, apellidoPaterno, apellidoMaterno]
-      .where((s) => s.isNotEmpty)
-      .join(' ');
+  String get nombreCompleto => [
+    nombres,
+    apellidoPaterno,
+    apellidoMaterno,
+  ].where((s) => s.isNotEmpty).join(' ');
 
   String get documento =>
       tipoDocLabel.isNotEmpty ? '$tipoDocLabel $numDoc' : numDoc;
@@ -145,6 +147,33 @@ class SolicitudFormState {
   final double descuentoLead;
   final String? idMonedaBloqueada;
 
+  /// Precio total de la negociación (`Negociacion.precio`, "Costo final") —
+  /// no bloquea nada por sí solo, es solo el valor de referencia contra el
+  /// que `_cargarDetalle()` (paso 1) valida que `precioBaseLead × cantidadEsperada
+  /// − descuentoLead` calce (ver solicitudes/CLAUDE.md). `0` = no vino de
+  /// una negociación (`cantidadEsperada == null`) o la negociación no tenía
+  /// precio definido todavía.
+  final double precioTotalLead;
+
+  /// Datos de contacto de la negociación de origen — mismo momento/mismo
+  /// candado que `cantidadEsperada` (solo se siembran al crear desde
+  /// "Generar solicitud", nunca al editar). Se usan **solo para prellenar**
+  /// los controllers del paso 1 en `_cargarDetalle()` — a diferencia de
+  /// `precioBaseLead`/`descuentoLead`/`idMonedaBloqueada`, el asesor SÍ puede
+  /// editarlos después (no hay ninguna regla de negocio que los bloquee).
+  final String nombresLead;
+  final String apellidoPaternoLead;
+  final String apellidoMaternoLead;
+  final String nombreEmpresaLead;
+  final String correoLead;
+  final String celularLead;
+  final String celularCodigoTelefonoLead;
+
+  /// RUC de la empresa de la negociación (`Negociacion.ruc`, `EM.RUC`) —
+  /// mismo candado/mismo trato de solo-prellenado que el resto de datos de
+  /// contacto de arriba.
+  final String rucLead;
+
   const SolicitudFormState({
     this.tipoPersona = 'juridica',
     this.numSol = '',
@@ -156,6 +185,15 @@ class SolicitudFormState {
     this.precioBaseLead = 0,
     this.descuentoLead = 0,
     this.idMonedaBloqueada,
+    this.precioTotalLead = 0,
+    this.nombresLead = '',
+    this.apellidoPaternoLead = '',
+    this.apellidoMaternoLead = '',
+    this.nombreEmpresaLead = '',
+    this.correoLead = '',
+    this.celularLead = '',
+    this.celularCodigoTelefonoLead = '',
+    this.rucLead = '',
   });
 
   String get tipoPersonaLabel =>
@@ -174,6 +212,15 @@ class SolicitudFormState {
     double? precioBaseLead,
     double? descuentoLead,
     String? idMonedaBloqueada,
+    double? precioTotalLead,
+    String? nombresLead,
+    String? apellidoPaternoLead,
+    String? apellidoMaternoLead,
+    String? nombreEmpresaLead,
+    String? correoLead,
+    String? celularLead,
+    String? celularCodigoTelefonoLead,
+    String? rucLead,
   }) => SolicitudFormState(
     tipoPersona: tipoPersona ?? this.tipoPersona,
     numSol: numSol ?? this.numSol,
@@ -187,5 +234,15 @@ class SolicitudFormState {
     precioBaseLead: precioBaseLead ?? this.precioBaseLead,
     descuentoLead: descuentoLead ?? this.descuentoLead,
     idMonedaBloqueada: idMonedaBloqueada ?? this.idMonedaBloqueada,
+    precioTotalLead: precioTotalLead ?? this.precioTotalLead,
+    nombresLead: nombresLead ?? this.nombresLead,
+    apellidoPaternoLead: apellidoPaternoLead ?? this.apellidoPaternoLead,
+    apellidoMaternoLead: apellidoMaternoLead ?? this.apellidoMaternoLead,
+    nombreEmpresaLead: nombreEmpresaLead ?? this.nombreEmpresaLead,
+    correoLead: correoLead ?? this.correoLead,
+    celularLead: celularLead ?? this.celularLead,
+    celularCodigoTelefonoLead:
+        celularCodigoTelefonoLead ?? this.celularCodigoTelefonoLead,
+    rucLead: rucLead ?? this.rucLead,
   );
 }

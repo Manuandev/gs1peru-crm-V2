@@ -73,6 +73,17 @@ extension NavigationExtensions on BuildContext {
     double? precioBaseNegociacion,
     double? descuentoNegociacion,
     String? idMonedaNegociacion,
+    // Datos "de referencia" de la negociación — solo prellenan el paso 1,
+    // no bloquean nada (a diferencia de los 4 de arriba).
+    double? precioTotalNegociacion,
+    String? nombresNegociacion,
+    String? apellidoPaternoNegociacion,
+    String? apellidoMaternoNegociacion,
+    String? nombreEmpresaNegociacion,
+    String? correoNegociacion,
+    String? celularNegociacion,
+    String? celularCodigoTelefonoNegociacion,
+    String? rucNegociacion,
   }) => _push(
     AppRoutes.fichaCompletarSolicitud,
     arguments: {
@@ -82,6 +93,15 @@ extension NavigationExtensions on BuildContext {
       'precioBaseNegociacion': precioBaseNegociacion,
       'descuentoNegociacion': descuentoNegociacion,
       'idMonedaNegociacion': idMonedaNegociacion,
+      'precioTotalNegociacion': precioTotalNegociacion,
+      'nombresNegociacion': nombresNegociacion,
+      'apellidoPaternoNegociacion': apellidoPaternoNegociacion,
+      'apellidoMaternoNegociacion': apellidoMaternoNegociacion,
+      'nombreEmpresaNegociacion': nombreEmpresaNegociacion,
+      'correoNegociacion': correoNegociacion,
+      'celularNegociacion': celularNegociacion,
+      'celularCodigoTelefonoNegociacion': celularCodigoTelefonoNegociacion,
+      'rucNegociacion': rucNegociacion,
     },
   );
 

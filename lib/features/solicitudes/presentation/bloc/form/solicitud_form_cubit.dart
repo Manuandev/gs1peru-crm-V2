@@ -29,17 +29,42 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
   /// en la negociación de origen — llamado una sola vez, al crear una
   /// solicitud nueva desde "Generar solicitud" (nunca al editar una ya
   /// existente). Ver `SolicitudFormState.cantidadEsperada`.
+  ///
+  /// Los datos de contacto (`nombres`/`apellidoPaterno`/`apellidoMaterno`/
+  /// `nombreEmpresa`/`correo`/`celular`/`celularCodigoTelefono`) y
+  /// `precioTotal` son solo de **prellenado/referencia** — a diferencia de
+  /// cantidad/precioBase/descuento/moneda, no bloquean nada; el asesor puede
+  /// editarlos en el paso 1 como cualquier otro dato. Ver
+  /// solicitudes/CLAUDE.md.
   void sembrarDatosNegociacion({
     required int cantidad,
     required double precioBase,
     required double descuento,
     required String idMoneda,
+    double precioTotal = 0,
+    String nombres = '',
+    String apellidoPaterno = '',
+    String apellidoMaterno = '',
+    String nombreEmpresa = '',
+    String correo = '',
+    String celular = '',
+    String celularCodigoTelefono = '',
+    String ruc = '',
   }) => emit(
     state.copyWith(
       cantidadEsperada: cantidad,
       precioBaseLead: precioBase,
       descuentoLead: descuento,
       idMonedaBloqueada: idMoneda,
+      precioTotalLead: precioTotal,
+      nombresLead: nombres,
+      apellidoPaternoLead: apellidoPaterno,
+      apellidoMaternoLead: apellidoMaterno,
+      nombreEmpresaLead: nombreEmpresa,
+      correoLead: correo,
+      celularLead: celular,
+      celularCodigoTelefonoLead: celularCodigoTelefono,
+      rucLead: ruc,
     ),
   );
 

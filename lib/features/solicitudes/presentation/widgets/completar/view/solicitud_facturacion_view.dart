@@ -156,6 +156,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       if (resultado.correo.isNotEmpty) {
         _ctrlCorreo.text = resultado.correo;
       }
+      // Solo RUC/SUNAT trae dirección — DNI/RENIEC no, resultado.direccion
+      // llega vacío en ese caso y el if no hace nada.
+      if (resultado.direccion.isNotEmpty) {
+        _ctrlDireccion.text = resultado.direccion;
+      }
     } catch (_) {
       if (!mounted) return;
       AppSnackBar.error(

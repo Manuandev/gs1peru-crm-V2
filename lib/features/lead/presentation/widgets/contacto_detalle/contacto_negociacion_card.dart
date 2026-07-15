@@ -7,10 +7,22 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
-class ContactoNegociacionCard extends StatelessWidget {
+class ContactoNegociacionCard extends StatefulWidget {
   final Negociacion negociacion;
 
   const ContactoNegociacionCard({super.key, required this.negociacion});
+
+  @override
+  State<ContactoNegociacionCard> createState() =>
+      _ContactoNegociacionCardState();
+}
+
+class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
+  // true mientras se trae el detalle fresco de la negociación (task 'DT')
+  // antes de generar la solicitud — ver comentario de _generarSolicitud.
+  bool _generandoSolicitud = false;
+
+  Negociacion get negociacion => widget.negociacion;
 
   // Mismo código de negocio que ContactoNegociacionesTab/NegociacionesTab.
   bool get _esGanada =>
@@ -81,7 +93,31 @@ class ContactoNegociacionCard extends StatelessWidget {
   // el wizard arranca en blanco (Solicitud.idSolicitud == '') y solo manda
   // idLead, que CSV_SOLICITUD_CUD_APP usa para vincular la solicitud al
   // lead de origen en la rama de creación.
-  void _generarSolicitud(BuildContext context) {
+  //
+  // `negociacion` acá viene de `NegociacionesCubit` (task 'LN', historial de
+  // Seguimiento) — igual que en `negociaciones_tab.dart` (Conversaciones),
+  // ese task NO trae nombres/apellidos/empresa/correo/celular/RUC. Antes de
+  // navegar se trae un detalle fresco por `idLead` (task 'DT') y se usa ESE
+  // objeto para todos los datos que siembran el wizard.
+  Future<void> _generarSolicitud() async {
+    if (_generandoSolicitud) return;
+    setState(() => _generandoSolicitud = true);
+
+    Negociacion detalle;
+    try {
+      detalle = await GetLeadDetalleUseCase(
+        context.read<LeadRepository>(),
+      ).call(negociacion.idLead);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _generandoSolicitud = false);
+      AppSnackBar.error(context, 'No se pudo cargar la negociación: $e');
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _generandoSolicitud = false);
+
     context.goToFichaCompletarSolicitud(
       solicitud: Solicitud(
         idSolicitud: '',
@@ -106,13 +142,22 @@ class ContactoNegociacionCard extends StatelessWidget {
         ibValidado: false,
         asesor: '',
         nombreAsesor: '',
-        idLead: negociacion.idLead.toString(),
+        idLead: detalle.idLead.toString(),
       ),
       modoEdicion: true,
-      cantidadNegociacion: negociacion.cantidad,
-      precioBaseNegociacion: negociacion.precioBase,
-      descuentoNegociacion: negociacion.descuento,
-      idMonedaNegociacion: negociacion.idMoneda,
+      cantidadNegociacion: detalle.cantidad,
+      precioBaseNegociacion: detalle.precioBase,
+      descuentoNegociacion: detalle.descuento,
+      idMonedaNegociacion: detalle.idMoneda,
+      precioTotalNegociacion: detalle.precio,
+      nombresNegociacion: detalle.nombres,
+      apellidoPaternoNegociacion: detalle.apellidoPaterno,
+      apellidoMaternoNegociacion: detalle.apellidoMaterno,
+      nombreEmpresaNegociacion: detalle.nombreEmpresa,
+      correoNegociacion: detalle.correo,
+      celularNegociacion: detalle.numero,
+      celularCodigoTelefonoNegociacion: detalle.prefijoPais,
+      rucNegociacion: detalle.ruc,
     );
   }
 
@@ -128,184 +173,197 @@ class ContactoNegociacionCard extends StatelessWidget {
     // pestaña Información de esta misma pantalla).
     final puedeEditar = negociacion.idLead != 0 && !negociacion.tieneSolicitud;
 
-    return GestureDetector(
-      onTap: puedeEditar ? () => _irAEditar(context) : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cardShadow,
-              blurRadius: AppSizing.shadowBlurMd,
-              offset: const Offset(0, AppSizing.shadowOffsetCardY),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: AppSizing.cardBorderEstadoAncho,
-                  color: colorEstado,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Título + chip de estado + chevron ─────────────
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                negociacion.nombreOportunidad,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  fontWeight: AppTextStyles.weightBold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            AppSocialUtils.chipEstado(
-                              negociacion.idEstadoEfectivo,
-                              label: negociacion.estadoEfectivo,
-                              fontSize: AppTextStyles.sizeXs,
-                            ),
-                            const SizedBox(width: AppSpacing.xxs),
-                            const Icon(
-                              AppIcons.forward,
-                              size: AppSizing.iconXs,
-                              color: AppColors.textDisabled,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-
-                        // ── Izquierda: fecha/canal — Derecha: montos ──────
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _IconLinea(
-                                    icon: const Icon(
-                                      AppIcons.calendar,
-                                      size: AppSizing.iconSm,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    texto: negociacion.fechaHoraInteraccion
-                                        .formatDate(AppDateFormat.shortDate),
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  _IconLinea(
-                                    icon: AppSocialUtils.widgetCanalById(
-                                      negociacion.idCanal,
-                                      size: AppSizing.iconSm,
-                                    ),
-                                    texto: negociacion.descripcionCanal,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _FilaValor(
-                                    label: 'Cantidad',
-                                    valor: NumberFormatUtils.fmtInt(
-                                      negociacion.cantidad,
-                                    ),
-                                  ),
-                                  _FilaValor(
-                                    label: 'Precio base',
-                                    valor: NumberFormatUtils.formatMoneda(
-                                      simbolo,
-                                      negociacion.precioBase,
-                                    ),
-                                  ),
-                                  _FilaValor(
-                                    label: 'Descuento',
-                                    valor: negociacion.descuento > 0
-                                        ? '- ${NumberFormatUtils.formatMoneda(simbolo, negociacion.descuento)}'
-                                        : NumberFormatUtils.formatMoneda(
-                                            simbolo,
-                                            negociacion.descuento,
-                                          ),
-                                    valorColor: negociacion.descuento > 0
-                                        ? AppColors.warning
-                                        : null,
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: AppSpacing.xs,
-                                    ),
-                                    child: _DashedDivider(),
-                                  ),
-                                  _FilaValor(
-                                    label: 'Costo final',
-                                    valor: NumberFormatUtils.formatMoneda(
-                                      simbolo,
-                                      negociacion.precio,
-                                    ),
-                                    negrita: true,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (_esGanada || negociacion.tieneSolicitud) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          SizedBox(
-                            width: double.infinity,
-                            child: CustomPrimaryButton(
-                              text: switch (negociacion.accionSolicitud) {
-                                SolicitudAccion.generar => 'Generar solicitud',
-                                SolicitudAccion.editar => 'Editar solicitud',
-                                SolicitudAccion.ver => 'Ver solicitud',
-                              },
-                              icon: AppIcons.fileFactura,
-                              backgroundColor: AppColors.success,
-                              onPressed: switch (negociacion.accionSolicitud) {
-                                SolicitudAccion.generar => () =>
-                                    _generarSolicitud(context),
-                                SolicitudAccion.editar => () =>
-                                    _editarSolicitud(context),
-                                SolicitudAccion.ver => () =>
-                                    _verSolicitud(context),
-                              },
-                              // Sin precio total definido no hay
-                              // cantidad/importe/moneda que bloquear en la
-                              // solicitud — no se puede generar todavía.
-                              isEnabled:
-                                  negociacion.accionSolicitud !=
-                                      SolicitudAccion.generar ||
-                                  negociacion.precio > 0,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: puedeEditar ? () => _irAEditar(context) : null,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.cardShadow,
+                  blurRadius: AppSizing.shadowBlurMd,
+                  offset: const Offset(0, AppSizing.shadowOffsetCardY),
                 ),
               ],
             ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      width: AppSizing.cardBorderEstadoAncho,
+                      color: colorEstado,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── Título + chip de estado + chevron ─────────────
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    negociacion.nombreOportunidad,
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      fontWeight: AppTextStyles.weightBold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                AppSocialUtils.chipEstado(
+                                  negociacion.idEstadoEfectivo,
+                                  label: negociacion.estadoEfectivo,
+                                  fontSize: AppTextStyles.sizeXs,
+                                ),
+                                const SizedBox(width: AppSpacing.xxs),
+                                const Icon(
+                                  AppIcons.forward,
+                                  size: AppSizing.iconXs,
+                                  color: AppColors.textDisabled,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+
+                            // ── Izquierda: fecha/canal — Derecha: montos ──────
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _IconLinea(
+                                        icon: const Icon(
+                                          AppIcons.calendar,
+                                          size: AppSizing.iconSm,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        texto: negociacion.fechaHoraInteraccion
+                                            .formatDate(
+                                              AppDateFormat.shortDate,
+                                            ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.xs),
+                                      _IconLinea(
+                                        icon: AppSocialUtils.widgetCanalById(
+                                          negociacion.idCanal,
+                                          size: AppSizing.iconSm,
+                                        ),
+                                        texto: negociacion.descripcionCanal,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      _FilaValor(
+                                        label: 'Cantidad',
+                                        valor: NumberFormatUtils.fmtInt(
+                                          negociacion.cantidad,
+                                        ),
+                                      ),
+                                      _FilaValor(
+                                        label: 'Precio base',
+                                        valor: NumberFormatUtils.formatMoneda(
+                                          simbolo,
+                                          negociacion.precioBase,
+                                        ),
+                                      ),
+                                      _FilaValor(
+                                        label: 'Descuento',
+                                        valor: negociacion.descuento > 0
+                                            ? '- ${NumberFormatUtils.formatMoneda(simbolo, negociacion.descuento)}'
+                                            : NumberFormatUtils.formatMoneda(
+                                                simbolo,
+                                                negociacion.descuento,
+                                              ),
+                                        valorColor: negociacion.descuento > 0
+                                            ? AppColors.warning
+                                            : null,
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: AppSpacing.xs,
+                                        ),
+                                        child: _DashedDivider(),
+                                      ),
+                                      _FilaValor(
+                                        label: 'Costo final',
+                                        valor: NumberFormatUtils.formatMoneda(
+                                          simbolo,
+                                          negociacion.precio,
+                                        ),
+                                        negrita: true,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            if (_esGanada || negociacion.tieneSolicitud) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              SizedBox(
+                                width: double.infinity,
+                                child: CustomPrimaryButton(
+                                  text: switch (negociacion.accionSolicitud) {
+                                    SolicitudAccion.generar =>
+                                      'Generar solicitud',
+                                    SolicitudAccion.editar =>
+                                      'Editar solicitud',
+                                    SolicitudAccion.ver => 'Ver solicitud',
+                                  },
+                                  icon: AppIcons.fileFactura,
+                                  backgroundColor: AppColors.success,
+                                  onPressed:
+                                      switch (negociacion.accionSolicitud) {
+                                        SolicitudAccion.generar =>
+                                          _generarSolicitud,
+                                        SolicitudAccion.editar =>
+                                          () => _editarSolicitud(context),
+                                        SolicitudAccion.ver =>
+                                          () => _verSolicitud(context),
+                                      },
+                                  // Sin precio total definido no hay
+                                  // cantidad/importe/moneda que bloquear en la
+                                  // solicitud — no se puede generar todavía.
+                                  isEnabled:
+                                      negociacion.accionSolicitud !=
+                                          SolicitudAccion.generar ||
+                                      negociacion.precio > 0,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-      ),
+        if (_generandoSolicitud)
+          const AppLoadingOverlay(message: 'Cargando negociación...'),
+      ],
     );
   }
 }
@@ -373,13 +431,14 @@ class _FilaValor extends StatelessWidget {
           ),
           Text(
             valor,
-            style: (negrita ? AppTextStyles.bodySmall : AppTextStyles.labelSmall)
-                .copyWith(
-                  fontWeight: negrita
-                      ? AppTextStyles.weightBold
-                      : AppTextStyles.weightMedium,
-                  color: valorColor ?? AppColors.textPrimary,
-                ),
+            style:
+                (negrita ? AppTextStyles.bodySmall : AppTextStyles.labelSmall)
+                    .copyWith(
+                      fontWeight: negrita
+                          ? AppTextStyles.weightBold
+                          : AppTextStyles.weightMedium,
+                      color: valorColor ?? AppColors.textPrimary,
+                    ),
           ),
         ],
       ),

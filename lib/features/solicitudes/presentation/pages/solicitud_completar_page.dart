@@ -15,6 +15,18 @@ class SolicitudCompletarPage extends StatelessWidget {
   final double? precioBaseNegociacion;
   final double? descuentoNegociacion;
   final String? idMonedaNegociacion;
+  // Datos "de referencia" de la negociación de origen — solo prellenan el
+  // paso 1, no bloquean nada (a diferencia de los 4 de arriba). Ver
+  // SolicitudFormCubit.sembrarDatosNegociacion.
+  final double? precioTotalNegociacion;
+  final String? nombresNegociacion;
+  final String? apellidoPaternoNegociacion;
+  final String? apellidoMaternoNegociacion;
+  final String? nombreEmpresaNegociacion;
+  final String? correoNegociacion;
+  final String? celularNegociacion;
+  final String? celularCodigoTelefonoNegociacion;
+  final String? rucNegociacion;
 
   const SolicitudCompletarPage({
     super.key,
@@ -24,6 +36,15 @@ class SolicitudCompletarPage extends StatelessWidget {
     this.precioBaseNegociacion,
     this.descuentoNegociacion,
     this.idMonedaNegociacion,
+    this.precioTotalNegociacion,
+    this.nombresNegociacion,
+    this.apellidoPaternoNegociacion,
+    this.apellidoMaternoNegociacion,
+    this.nombreEmpresaNegociacion,
+    this.correoNegociacion,
+    this.celularNegociacion,
+    this.celularCodigoTelefonoNegociacion,
+    this.rucNegociacion,
   });
 
   @override
@@ -43,6 +64,15 @@ class SolicitudCompletarPage extends StatelessWidget {
                 precioBase: precioBaseNegociacion ?? 0,
                 descuento: descuentoNegociacion ?? 0,
                 idMoneda: idMonedaNegociacion ?? '',
+                precioTotal: precioTotalNegociacion ?? 0,
+                nombres: nombresNegociacion ?? '',
+                apellidoPaterno: apellidoPaternoNegociacion ?? '',
+                apellidoMaterno: apellidoMaternoNegociacion ?? '',
+                nombreEmpresa: nombreEmpresaNegociacion ?? '',
+                correo: correoNegociacion ?? '',
+                celular: celularNegociacion ?? '',
+                celularCodigoTelefono: celularCodigoTelefonoNegociacion ?? '',
+                ruc: rucNegociacion ?? '',
               );
             }
             return cubit;

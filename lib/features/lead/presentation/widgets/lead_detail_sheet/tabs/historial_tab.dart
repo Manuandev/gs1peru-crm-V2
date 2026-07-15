@@ -72,20 +72,22 @@ class _HistorialTabState extends State<HistorialTab>
             message: mensaje,
             onRetry: _cargar,
           ),
-          HistorialLeadSuccess(:final eventos) => eventos.isEmpty
-              ? const _EstadoVacio()
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _ChipsFilter(
-                      filtroSeleccionado: _filtro,
-                      onFiltroChanged: (f) => setState(() => _filtro = f),
-                    ),
-                    Expanded(
-                      child: _ListaHistorial(eventos: _aplicarFiltro(eventos)),
-                    ),
-                  ],
-                ),
+          // Los chips de filtro siempre se muestran, incluso sin eventos —
+          // solo lo de abajo cambia entre lista y estado vacío.
+          HistorialLeadSuccess(:final eventos) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ChipsFilter(
+                filtroSeleccionado: _filtro,
+                onFiltroChanged: (f) => setState(() => _filtro = f),
+              ),
+              Expanded(
+                child: eventos.isEmpty
+                    ? const _EstadoVacio()
+                    : _ListaHistorial(eventos: _aplicarFiltro(eventos)),
+              ),
+            ],
+          ),
         };
       },
     );

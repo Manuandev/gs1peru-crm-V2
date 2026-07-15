@@ -62,34 +62,50 @@ class ContactoNegociacionesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (negociaciones.isEmpty) {
-      return _EstadoVacio(onCrear: () => _crearNegociacion(context));
-    }
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.xxl,
-      ),
+    // El resumen (3 tarjetas) siempre se muestra, incluso sin negociaciones
+    // (en 0) — solo lo de abajo cambia entre lista y estado vacío.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _ResumenNegociaciones(
-          total: negociaciones.length,
-          listasParaPropuesta: _listasParaPropuesta,
-          ganadas: _ganadas,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        ...negociaciones.map(
-          (n) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: ContactoNegociacionCard(negociacion: n),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
+          child: _ResumenNegociaciones(
+            total: negociaciones.length,
+            listasParaPropuesta: _listasParaPropuesta,
+            ganadas: _ganadas,
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        CustomOutlinedButton(
-          text: '+ Crear negociación',
-          onPressed: () => _crearNegociacion(context),
+        Expanded(
+          child: negociaciones.isEmpty
+              ? _EstadoVacio(onCrear: () => _crearNegociacion(context))
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.xxl,
+                  ),
+                  children: [
+                    ...negociaciones.map(
+                      (n) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.sm,
+                        ),
+                        child: ContactoNegociacionCard(negociacion: n),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    CustomOutlinedButton(
+                      text: '+ Crear negociación',
+                      onPressed: () => _crearNegociacion(context),
+                    ),
+                  ],
+                ),
         ),
       ],
     );

@@ -49,6 +49,8 @@ class NegociacionModel extends Negociacion {
     super.ruc,
     super.numSol,
     super.idEstadoSol,
+    super.idChatCab,
+    super.fechaPrimerMensajeCliente,
   });
 
   factory NegociacionModel.fromRawString(String raw) {
@@ -116,7 +118,8 @@ class NegociacionModel extends Negociacion {
   // 12  CO.CORREO             28 LD.IN_PARTICIPANTES (cantidad)
   // 13  LE.ID_ESTADO          29 LD.DC_DESCUENTO
   // 14  LE.DESCRIPCION        30 LD.FC_USUARIO_C (fecha creación)
-  // 15  EP.ID_ESTADO (padre)  31 CCU.ID_CONVERSACION_CAB
+  // 15  EP.ID_ESTADO (padre)  31 CCU.ID_CONVERSACION_CAB (→ idChatCab,
+  //                               2026-07-15)
   // 16  EP.DESCRIPCION (padre) 32 CT.ID_CARGO (id crudo, sin catálogo — no se
   //                               parsea acá todavía)
   //                            33 LD.ID_TIP_MONEDA
@@ -126,6 +129,15 @@ class NegociacionModel extends Negociacion {
   //                            37 LD.NOMBRE
   //                            38 LD.MODALIDAD
   //                            39 EM.RUC (2026-07-15, agregado al final)
+  //                            40 PM.FC_PRIMER_MSJ_CLI (2026-07-15) — primer
+  //                               mensaje del CLIENTE en la conversación de
+  //                               CCU.ID_CONVERSACION_CAB (OUTER APPLY sobre
+  //                               CRM.T_CONVERSACION_DET, DIRECCION='CLI'),
+  //                               mismo dato que trae 'LS' para
+  //                               Numero.fechaPrimerMensajeCliente — acá
+  //                               alimenta Negociacion.fechaPrimerMensajeCliente,
+  //                               que usa ContactoAccionesFooter para pintar
+  //                               el botón de WhatsApp verde/gris.
   factory NegociacionModel.fromDetalleRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -165,6 +177,8 @@ class NegociacionModel extends Negociacion {
       totalLeadsNumero: ParseUtils.toInt(fields, 34),
       numSol: ParseUtils.str(fields, 35),
       idEstadoSol: ParseUtils.toInt(fields, 36),
+      idChatCab: ParseUtils.toInt(fields, 31),
+      fechaPrimerMensajeCliente: ParseUtils.str(fields, 40),
     );
   }
 

@@ -68,6 +68,17 @@ class Negociacion extends Equatable {
   final String numSol;
   final int idEstadoSol;
 
+  // Id de la conversación (T_CONVERSACION_CAB) más reciente de este número —
+  // mismo dato que Numero.idChatCab en el listado. 0 si el número nunca
+  // conversó. Solo lo trae 'DT'/'DN' (columna 31, CCU.ID_CONVERSACION_CAB).
+  final int idChatCab;
+
+  // Fecha del primer mensaje del CLIENTE en la conversación de [idChatCab]
+  // — mismo dato que Numero.fechaPrimerMensajeCliente en el listado, ancla
+  // de la ventana de chat abierto (TDE). 'DT'/'DN' la traen desde
+  // 2026-07-15 (columna 40, PM.FC_PRIMER_MSJ_CLI).
+  final String fechaPrimerMensajeCliente;
+
   /// Id de estado a mostrar/agrupar: si hay un sub-estado (idEstadoPadre
   /// presente), se usa el padre — ej. "Con ficha" agrupa bajo "En desarrollo".
   String get idEstadoEfectivo =>
@@ -140,6 +151,8 @@ class Negociacion extends Equatable {
     this.ruc = '',
     this.numSol = '',
     this.idEstadoSol = 0,
+    this.idChatCab = 0,
+    this.fechaPrimerMensajeCliente = '',
   });
 
   @override
@@ -179,6 +192,8 @@ class Negociacion extends Equatable {
     ruc,
     numSol,
     idEstadoSol,
+    idChatCab,
+    fechaPrimerMensajeCliente,
   ];
 
   Negociacion copyWith({
@@ -217,6 +232,8 @@ class Negociacion extends Equatable {
     String? ruc,
     String? numSol,
     int? idEstadoSol,
+    int? idChatCab,
+    String? fechaPrimerMensajeCliente,
   }) {
     return Negociacion(
       idLead: idLead ?? this.idLead,
@@ -255,6 +272,9 @@ class Negociacion extends Equatable {
       ruc: ruc ?? this.ruc,
       numSol: numSol ?? this.numSol,
       idEstadoSol: idEstadoSol ?? this.idEstadoSol,
+      idChatCab: idChatCab ?? this.idChatCab,
+      fechaPrimerMensajeCliente:
+          fechaPrimerMensajeCliente ?? this.fechaPrimerMensajeCliente,
     );
   }
 }

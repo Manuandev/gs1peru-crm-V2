@@ -50,45 +50,6 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
     context.goToEditarLead(idLead: negociacion.idLead);
   }
 
-  // Solicitud "en blanco" con los datos disponibles en la negociación — para
-  // editar una ya creada (idSolicitud = NUMSOL) o verla de solo lectura.
-  Solicitud _solicitudDesdeNegociacion() => Solicitud(
-    idSolicitud: negociacion.numSol,
-    nombre: negociacion.nombres,
-    apellidoPaterno: negociacion.apellidoPaterno,
-    apellidoMaterno: negociacion.apellidoMaterno,
-    nombreEmpresa: negociacion.nombreEmpresa,
-    cargo: '',
-    correo: negociacion.correo,
-    telefono: negociacion.telefonoCompleto,
-    tipoPersona: '',
-    idCondicionPago: '',
-    condicionPago: '',
-    monto: negociacion.precio,
-    fechaCreacion: negociacion.fechaHoraCreacion,
-    idOportunidad: negociacion.idOportunidad,
-    oportunidad: negociacion.nombreOportunidad,
-    idCanal: negociacion.idCanal,
-    canal: negociacion.descripcionCanal,
-    idEstado: negociacion.idEstadoSol,
-    estado: '',
-    ibValidado: false,
-    asesor: '',
-    nombreAsesor: '',
-    idLead: negociacion.idLead.toString(),
-  );
-
-  void _editarSolicitud(BuildContext context) {
-    context.goToFichaCompletarSolicitud(
-      solicitud: _solicitudDesdeNegociacion(),
-      modoEdicion: true,
-    );
-  }
-
-  void _verSolicitud(BuildContext context) {
-    context.goToDetalleSolicitud(solicitud: _solicitudDesdeNegociacion());
-  }
-
   // Crea una solicitud NUEVA (NUMSOL vacío) para esta negociación ganada —
   // el wizard arranca en blanco (Solicitud.idSolicitud == '') y solo manda
   // idLead, que CSV_SOLICITUD_CUD_APP usa para vincular la solicitud al
@@ -318,36 +279,24 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
                               ],
                             ),
 
-                            if (_esGanada || negociacion.tieneSolicitud) ...[
+                            // Solo se ofrece generar solicitud cuando la
+                            // negociación está ganada y todavía no tiene una
+                            // — con solicitud ya generada este botón no se
+                            // muestra (se gestiona desde Solicitudes).
+                            if (!negociacion.tieneSolicitud &&
+                                _esGanada) ...[
                               const SizedBox(height: AppSpacing.sm),
                               SizedBox(
                                 width: double.infinity,
                                 child: CustomPrimaryButton(
-                                  text: switch (negociacion.accionSolicitud) {
-                                    SolicitudAccion.generar =>
-                                      'Generar solicitud',
-                                    SolicitudAccion.editar =>
-                                      'Editar solicitud',
-                                    SolicitudAccion.ver => 'Ver solicitud',
-                                  },
+                                  text: 'Generar solicitud',
                                   icon: AppIcons.fileFactura,
                                   backgroundColor: AppColors.success,
-                                  onPressed:
-                                      switch (negociacion.accionSolicitud) {
-                                        SolicitudAccion.generar =>
-                                          _generarSolicitud,
-                                        SolicitudAccion.editar =>
-                                          () => _editarSolicitud(context),
-                                        SolicitudAccion.ver =>
-                                          () => _verSolicitud(context),
-                                      },
+                                  onPressed: _generarSolicitud,
                                   // Sin precio total definido no hay
                                   // cantidad/importe/moneda que bloquear en la
                                   // solicitud — no se puede generar todavía.
-                                  isEnabled:
-                                      negociacion.accionSolicitud !=
-                                          SolicitudAccion.generar ||
-                                      negociacion.precio > 0,
+                                  isEnabled: negociacion.precio > 0,
                                 ),
                               ),
                             ],

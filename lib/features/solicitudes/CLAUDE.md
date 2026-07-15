@@ -572,11 +572,13 @@ decir "Generar solicitud" y pasa a reflejar el estado real de esa solicitud:
   `IB_VALIDADO` (0/false = pendiente de validar, 1/true = ya validado → listo para
   cobranza), no un estado de gestión. Ya no existe un filtro/contador "Por completar" — se
   consideraba lo mismo que "Sin validar" y se eliminó
-- Indicadores del dashboard (`_IndicadoresRow`, `solicitud_list_view.dart`): **3** tarjetas
-  — "Sin validar" (`cntSinValidar` = `!ibValidado`), "Con documentos" (`cntConDocumentos` =
-  `idEstado == 2`, sin cambios), "Listas para cobranza" (`cntListasCobranza` =
-  `ibValidado`). Antes había una 4ta tarjeta "Por completar" (`idEstado == 0`) — se quitó
-  por ser redundante con "Sin validar"
+- Indicadores del dashboard (`_IndicadoresRow`, `solicitud_list_view.dart`): **2** tarjetas
+  — "Sin validar" (`cntSinValidar` = `!ibValidado`) y "Validados" (`cntValidados` =
+  `ibValidado`). Ya no existe la tarjeta "Con documentos" (`idEstado == 2`) ni el campo
+  `cntConDocumentos` en `SolicitudListState`/`SolicitudListBloc` — se eliminaron por
+  completo, no solo se ocultaron (2026-07-14). El chip de filtro `enviarACobranza`
+  (`SolicitudFiltro`) se mantiene sin cambios de lógica, solo se le cambió el label a
+  "Validados" (antes "Enviar a cobranza") para que combine con el indicador.
 - ~~Ojo — mismatch pendiente con `SolicitudCard`~~ — resuelto, ver "Regla de negocio — edición
   de una solicitud ya existente" arriba: `_accion()` ahora combina `ibValidado` + `idEstado`
   (`colorEstado()` sigue mirando solo `idEstado`, para el color del chip — eso no cambió).

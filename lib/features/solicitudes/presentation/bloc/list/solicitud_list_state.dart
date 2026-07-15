@@ -30,13 +30,10 @@ class SolicitudListSuccess extends SolicitudListState {
   // CatalogsBloc, no de este mapa), no viene del backend
   final Map<String, int> conteosPorAsesor;
 
-  // Contadores para los indicadores del dashboard (calculados sobre el total).
-  // cntSinValidar / cntListasCobranza se basan en `ibValidado` (false/true) —
-  // no en `idEstado`. cntConDocumentos sigue basado en `idEstado == 2`
-  // (estado de gestión, dimensión aparte — ver CLAUDE.md del feature)
+  // Contadores para los indicadores del dashboard (calculados sobre el
+  // total). Ambos se basan en `ibValidado` (false/true), no en `idEstado`.
   final int cntSinValidar;
-  final int cntConDocumentos;
-  final int cntListasCobranza;
+  final int cntValidados;
 
   const SolicitudListSuccess({
     required this.solicitudes,
@@ -44,8 +41,7 @@ class SolicitudListSuccess extends SolicitudListState {
     this.asesorSeleccionado,
     this.conteosPorAsesor = const {},
     this.cntSinValidar = 0,
-    this.cntConDocumentos = 0,
-    this.cntListasCobranza = 0,
+    this.cntValidados = 0,
   });
 
   @override

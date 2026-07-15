@@ -21,7 +21,7 @@ class SolicitudFilterChips extends StatelessWidget {
     (filtro: SolicitudFiltro.todas, label: 'Todas'),
     (filtro: SolicitudFiltro.asesores, label: 'Asesores'),
     (filtro: SolicitudFiltro.sinValidar, label: 'Sin validar'),
-    (filtro: SolicitudFiltro.enviarACobranza, label: 'Enviar a cobranza'),
+    (filtro: SolicitudFiltro.enviarACobranza, label: 'Validados'),
   ];
 
   @override

@@ -42,7 +42,7 @@ class CobranzaDetalleAcciones extends StatelessWidget {
                 icono: AppIcons.whatsapp,
                 esFontAwesome: true,
                 color: AppSocialUtils.colorCanalById(5),
-                label: 'WhatsApp',
+                label: 'Conversación',
                 onTap: detalle.celular.isEmpty
                     ? () {}
                     : () => LauncherUtils.abrirWhatsApp(detalle.celular),
@@ -54,18 +54,6 @@ class CobranzaDetalleAcciones extends StatelessWidget {
                 onTap: detalle.celular.isEmpty
                     ? () {}
                     : () => LauncherUtils.abrirTelefono(detalle.celular),
-              ),
-              _AccionBtn(
-                icono: AppIcons.attach,
-                color: AppColors.primary,
-                label: 'Adjuntar\nvoucher',
-                onTap: () {},
-              ),
-              _AccionBtn(
-                icono: AppIcons.receipt,
-                color: AppColors.primary,
-                label: 'Facturar',
-                onTap: () {},
               ),
             ],
           ),
@@ -115,7 +103,11 @@ class _AccionBtn extends StatelessWidget {
             child: Center(
               child: esFontAwesome
                   ? FaIcon(icono, size: AppSizing.iconMd, color: color)
-                  : Icon(icono as IconData, size: AppSizing.iconMd, color: color),
+                  : Icon(
+                      icono as IconData,
+                      size: AppSizing.iconMd,
+                      color: color,
+                    ),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -133,4 +125,3 @@ class _AccionBtn extends StatelessWidget {
     );
   }
 }
-

@@ -37,7 +37,7 @@ class CobranzaCamposExtra extends StatelessWidget {
     } else {
       return state.esCredito
           ? const SizedBox.shrink(key: ValueKey('empty_abajo'))
-          : const _ExtraContado(key: ValueKey('contado'));
+          : const SizedBox.shrink(key: ValueKey('empty_abajo'));
     }
   }
 }
@@ -179,62 +179,6 @@ class _ExtraCreditoState extends State<_ExtraCredito> {
 
         const SizedBox(height: AppSpacing.sm),
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Extra para CONTADO (aparece debajo de los 3 campos)
-// ─────────────────────────────────────────────────────────────────────────────
-
-// PENDIENTE — adjuntar archivo (voucher) todavía no está implementado: no
-// hay picker ni endpoint de subida conectados. Queda a propósito como stub
-// visual (onTap vacío) hasta que se defina el flujo con backend.
-class _ExtraContado extends StatelessWidget {
-  const _ExtraContado({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.md),
-      child: GestureDetector(
-        onTap: () {}, // TODO: pendiente — adjuntar archivo (ver comentario arriba)
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            vertical: AppSpacing.md,
-            horizontal: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                AppIcons.attach,
-                size: AppSizing.iconLg,
-                color: AppColors.primary,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Adjuntar archivo',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: AppTextStyles.weightSemiBold,
-                ),
-              ),
-              Text(
-                'JPG, PNG o PDF',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -108,7 +108,10 @@ class _LeadCardState extends State<LeadCard> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(width: AppSizing.cardBorderEstadoAncho, color: colorBorde),
+                Container(
+                  width: AppSizing.cardBorderEstadoAncho,
+                  color: colorBorde,
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -258,6 +261,8 @@ class _LeadDateAndActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final vencido = _tiempoChatAbiertoVencido();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -266,19 +271,15 @@ class _LeadDateAndActions extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  lead.negociacion.fechaHoraInteraccion.formatConDia(),
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Icon(
+                  AppIcons.tap,
+                  size: AppSizing.iconInline,
+                  color: ElapsedTimeUtils.colorFromElapsed(elapsed),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
+                const SizedBox(width: AppSpacing.xxs),
                 Text(
                   'Hace ${ElapsedTimeUtils.formatHoMoS(elapsed)}',
                   style: AppTextStyles.labelSmall.copyWith(
@@ -301,9 +302,26 @@ class _LeadDateAndActions extends StatelessWidget {
         LeadCardActions(
           onWhatsAppTap: onWhatsAppTap,
           onVerDetalleTap: onVerDetalleTap,
+          mostrarWhatsApp: lead.numero.idChatCab > 0,
+          whatsAppVencido: vencido,
         ),
       ],
     );
+  }
+
+  // Ventana desde el primer mensaje del cliente (Numero.fechaPrimerMensajeCliente)
+  // durante la cual el botón de WhatsApp se muestra verde — mismo cálculo y
+  // misma config (TDE) que ChatInputBar._tiempoChatAbiertoVencido() en `chat/`,
+  // pero aquí sobre el número/lead de la lista, no sobre un chat abierto.
+  bool _tiempoChatAbiertoVencido() {
+    final fechaPrimerMensaje = DateFormatter.parseDate(
+      lead.numero.fechaPrimerMensajeCliente,
+    );
+    if (fechaPrimerMensaje == null) return false;
+
+    final transcurrido = DateTime.now().difference(fechaPrimerMensaje);
+    final limite = ConfiguracionService().tiempoChatAbierto;
+    return transcurrido.inMinutes >= limite * 60;
   }
 }
 

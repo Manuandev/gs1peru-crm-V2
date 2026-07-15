@@ -162,19 +162,10 @@ class _IndicadoresRow extends StatelessWidget {
             _VerticalDivider(),
             Expanded(
               child: _IndicadorItem(
-                icono: Icons.description_outlined,
-                label: 'Con\ndocumentos',
-                conteo: state.cntConDocumentos,
+                icono: Icons.check_circle_outline,
+                label: 'Validados',
+                conteo: state.cntValidados,
                 color: AppColors.success,
-              ),
-            ),
-            _VerticalDivider(),
-            Expanded(
-              child: _IndicadorItem(
-                icono: Icons.monetization_on_outlined,
-                label: 'Listas para\ncobranza',
-                conteo: state.cntListasCobranza,
-                color: AppColors.purple,
               ),
             ),
           ],

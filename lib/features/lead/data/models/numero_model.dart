@@ -18,6 +18,7 @@ class NumeroModel extends Numero {
     super.isFavorito,
     super.idChatCab,
     super.tieneConversacionAbierta,
+    super.fechaPrimerMensajeCliente,
   });
 
   factory NumeroModel.fromFields(List<String> fields) {
@@ -34,6 +35,9 @@ class NumeroModel extends Numero {
       tieneConversacionAbierta: ParseUtils.toBool(fields, 25),
       // 31 → CCU.ID_CONVERSACION_CAB (conversación más reciente del número)
       idChatCab: ParseUtils.toInt(fields, 31),
+      // 37 → PM.FC_PRIMER_MSJ_CLI, agregada al final del SP (task 'LS') sin
+      // correr los índices existentes — ver comentario en Numero.
+      fechaPrimerMensajeCliente: ParseUtils.str(fields, 37),
     );
   }
 }

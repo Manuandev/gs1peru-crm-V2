@@ -18,6 +18,12 @@ class Numero extends Equatable {
 
   final bool tieneConversacionAbierta;
 
+  /// Fecha del primer mensaje del CLIENTE en la conversación de [idChatCab]
+  /// (CD.FC_USUARIO_C, DIRECCION='CLI') — ancla de la ventana de chat abierto
+  /// (TDE), igual que [Chat.fcPrimerMensajeCliente] en `chat/`. Vacío si el
+  /// número nunca conversó o el SP todavía no la trae.
+  final String fechaPrimerMensajeCliente;
+
   const Numero({
     required this.idNumero,
     this.prefijo = '',
@@ -25,6 +31,7 @@ class Numero extends Equatable {
     this.isFavorito = false,
     this.idChatCab = 0,
     this.tieneConversacionAbierta = false,
+    this.fechaPrimerMensajeCliente = '',
   });
 
   @override
@@ -35,6 +42,7 @@ class Numero extends Equatable {
     isFavorito,
     idChatCab,
     tieneConversacionAbierta,
+    fechaPrimerMensajeCliente,
   ];
 
   Numero copyWith({
@@ -44,6 +52,7 @@ class Numero extends Equatable {
     bool? isFavorito,
     int? idChatCab,
     bool? tieneConversacionAbierta,
+    String? fechaPrimerMensajeCliente,
   }) {
     return Numero(
       idNumero: idNumero ?? this.idNumero,
@@ -53,6 +62,8 @@ class Numero extends Equatable {
       idChatCab: idChatCab ?? this.idChatCab,
       tieneConversacionAbierta:
           tieneConversacionAbierta ?? this.tieneConversacionAbierta,
+      fechaPrimerMensajeCliente:
+          fechaPrimerMensajeCliente ?? this.fechaPrimerMensajeCliente,
     );
   }
 }

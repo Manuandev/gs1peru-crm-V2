@@ -438,6 +438,10 @@ class AppIcons {
   /// Chevron arriba — colapsar sección (CollapsibleSection)
   static const IconData expandLess = Icons.expand_less;
 
+  /// Dedo tocando pantalla — junto a "Hace X" en LeadCard, insinúa que la
+  /// card completa es tappable (reemplaza la fecha/hora que se mostraba ahí)
+  static const IconData tap = Icons.touch_app_outlined;
+
   // ============================================================
   // INDICADORES
   // ============================================================

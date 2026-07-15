@@ -64,7 +64,7 @@ class SolicitudListPortrait extends StatelessWidget {
                     SolicitudFiltro.sinValidar =>
                       'No hay solicitudes pendientes de validación.',
                     SolicitudFiltro.enviarACobranza =>
-                      'No hay solicitudes listas para cobranza.',
+                      'No hay solicitudes validadas.',
                   },
                 )
               : ListView.builder(

@@ -313,6 +313,10 @@ class TipoParticipanteItem with Comboable {
 // Jerárquico (departamento > provincia > distrito): filtrar por [dpto] para el
 // combo de departamento, por [dpto]+[prov] para el de provincia; [codigo] (los
 // 3 juntos) identifica un distrito único para el combo final.
+// Patrón ubigeo estándar de Perú para distinguir el nivel de una fila:
+//   prov=='00' && dis=='00' → es un departamento
+//   prov!='00' && dis=='00' → es una provincia
+//   prov!='00' && dis!='00' → es un distrito
 class UbigeoItem with Comboable {
   final String dpto;
   final String prov;

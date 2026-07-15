@@ -876,7 +876,7 @@ usadas por `ListasGenericasModel.parse`) en `catalog_item_model.dart`. Ambos se 
 | `ValoresCRMItem` | idCanalWsp(int), idPais(String), idNacionalidad(String), idEstadoNuevo(String), idEstadoGanado(String), idTipoBoleta(String), idTipoFactura(String), idTipoDocRuc(String), idTipoDocSnd(String), idTipoDocDni(String), idTipoDocCde(String), idTipoDocPas(String) — parte [13] del SP, **fila única** (sin `@sepRegistro`, no es lista). No implementa `Comboable`. `ValoresCRMItemModel` solo tiene `fromRawString` (sin `parseList`) |
 | `SexoItem` | id(String), nombre(String) — parte [14] del SP, hardcodeado (`M`/`F`/`PD`) |
 | `TipoParticipanteItem` | id(String), nombre(String), esInvitado(bool) — parte [15] del SP, hardcodeado (`1` Pagante · `2` Invitado · `3` Invitado auspicio · `4` Online). `esInvitado` = `true` en `2`/`3` (no paga) |
-| `UbigeoItem` | dpto(String), prov(String), dis(String), nombre(String), `codigo` (getter = `dpto+prov+dis`) — parte [16] del SP, `DBO.SYSTABUBIGEO01`. Jerárquico: filtrar por `dpto` (departamento), `dpto`+`prov` (provincia), `codigo` completo identifica un distrito |
+| `UbigeoItem` | dpto(String), prov(String), dis(String), nombre(String), `codigo` (getter = `dpto+prov+dis`) — parte [16] del SP, `DBO.SYSTABUBIGEO01`. Jerárquico: filtrar por `dpto` (departamento), `dpto`+`prov` (provincia), `codigo` completo identifica un distrito. Patrón ubigeo estándar para saber el nivel de una fila: `prov=='00' && dis=='00'` → departamento; `prov!='00' && dis=='00'` → provincia; `prov!='00' && dis!='00'` → distrito |
 
 Todas implementan `Comboable` excepto `ValoresCRMItem` (fila única, no es un ítem de lista/dropdown).
 Parsear con `ListasGenericasModel.parse(rawResponse)`.

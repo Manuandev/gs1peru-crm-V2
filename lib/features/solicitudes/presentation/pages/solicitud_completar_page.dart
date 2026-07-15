@@ -50,7 +50,7 @@ class SolicitudCompletarPage extends StatelessWidget {
         ),
         BlocProvider(create: (_) => ParticipantesCubit()),
       ],
-      child: SolicitudCompletarView(
+      child: SolicitudWizardView(
         solicitud: solicitud,
         modoEdicion: modoEdicion,
       ),

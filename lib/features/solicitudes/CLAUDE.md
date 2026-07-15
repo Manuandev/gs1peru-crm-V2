@@ -1,5 +1,65 @@
 # Solicitudes Feature
 
+## Wizard de los 4 pasos fusionado en una sola page (2026-07-15)
+Los 4 pasos (Solicitante/Participantes/Facturación/Resumen) dejaron de ser 4 rutas empujadas por
+separado (`goToFichaCompletarSolicitud` → `goToFichaParticipantesSolicitud` →
+`goToFichaFacturacionSolicitud` → `goToFichaResumenSolicitud`) y ahora viven **dentro de una sola
+página** — motivado por dos problemas reales del diseño anterior: (1) cada "Continuar"/"Atrás"
+disparaba una transición completa de pantalla (AppBar, `SolicitudPasosIndicador` y footer se
+reconstruían/animaban en cada paso, aunque son casi idénticos entre pasos) y (2) los campos
+tipeados en un paso (ej. "Tipo de comprobante" en Facturación) se perdían si el usuario retrocedía
+sin haber presionado "Continuar"/"Guardar" primero, porque cada paso solo escribía su draft al
+cubit compartido en esos dos botones, nunca en vivo.
+
+- **`SolicitudWizardView`** (`presentation/widgets/completar/view/solicitud_wizard_view.dart`) es
+  el nuevo widget orquestador — mantiene `_pasoActual` (1-4) como estado local y arma **un solo**
+  `BasePage` (AppBar con `SolicitudBadgePaso(paso: _pasoActual)` + `SolicitudPasosIndicador`) que
+  nunca se reconstruye entre pasos; el body es un `IndexedStack` que muestra el paso activo.
+  `SolicitudCompletarPage` (la única page/ruta que queda del wizard, `fichaCompletarSolicitud`)
+  sigue creando `SolicitudFormCubit`/`ParticipantesCubit` igual que antes, pero ahora monta
+  `SolicitudWizardView` en vez de `SolicitudCompletarView` directo.
+- **`SolicitudParticipantesPage`/`SolicitudFacturacionPage`/`SolicitudResumenPage` y sus rutas
+  (`fichaParticipantesSolicitud`/`fichaFacturacionSolicitud`/`fichaResumenSolicitud`) se
+  eliminaron por completo** — ya no existen como pushes independientes. `SolicitudCompletarView`/
+  `SolicitudParticipantesView`/`SolicitudFacturacionView`/`SolicitudResumenView` (las 4 vistas de
+  `widgets/completar/view/`) dejaron de armar su propio `BasePage`/AppBar/`SolicitudPasosIndicador`
+  — ahora son solo body+footer, y reciben callbacks (`onContinuar`, `onAtras`, `onCancelar`,
+  `onEditarPaso`) en vez de llamar `context.goToFichaXxxSolicitud(...)`/`context.goBack()` para
+  moverse entre pasos. `SolicitudWizardView` les pasa esos callbacks, que solo hacen
+  `setState(() => _pasoActual = n)`. El botón "Editar" del Resumen (antes
+  `Navigator.popUntil(ModalRoute.withName(...))`) ahora es `onEditarPaso(1)`/`onEditarPaso(3)`.
+  El "Continuar" final del Resumen en modo solo-ver sigue siendo
+  `Navigator.of(context).popUntil(ModalRoute.withName(AppRoutes.detalleSolicitud))` **sin
+  cambios** — el wizard entero sigue siendo una sola ruta empujada sobre `SolicitudDetalleView`.
+- **Construcción perezosa dentro del `IndexedStack` — no usar `IndexedStack` a secas con los 4
+  hijos completos**: `SolicitudWizardView` mantiene `Set<int> _pasosConstruidos` (arranca con
+  `{1}`) y solo instancia el widget de un paso la primera vez que se navega a él (`_irAPaso`
+  agrega el número al set); antes de eso, ese slot del `IndexedStack` es un `SizedBox.shrink()`.
+  Esto importa porque `SolicitudFacturacionView` tiene un prellenado de una sola vez en
+  `didChangeDependencies` (`_prefillDone`) que depende de que el paso 1 ya haya guardado al
+  solicitante (autocompletar Facturación si se activó "Facturar al solicitante") — si
+  `IndexedStack` construyera los 4 pasos de una sola vez al abrir el wizard, ese
+  `didChangeDependencies` correría de inmediato con el solicitante todavía vacío y el
+  autocompletado se perdería para el resto de la sesión. Una vez construido, un paso **nunca** se
+  destruye al cambiar de índice (así es como `IndexedStack` preserva su estado) — es el mecanismo
+  real detrás de "ya no se pierden los datos tipeados al moverse entre pasos".
+- **Sincronización en vivo al cubit — ya no se escribe solo en "Continuar"/"Guardar"**: los pasos
+  1 y 3 (los que tienen campos de texto/combos propios; el paso 2 ya vivía 100% en
+  `ParticipantesCubit`) ahora llaman `SolicitudFormCubit.guardarSolicitante`/`guardarFacturacion`
+  en **cada cambio de campo** — cada listener de `TextEditingController` y cada `onChanged` de
+  combo llaman `_sincronizarCubit()` después del `setState` local. Esto persiste ids de combo +
+  texto de inputs (incluso vacíos) en el cubit compartido en todo momento, no solo cuando se
+  presiona "Continuar"/"Guardar" — es la razón principal por la que ahora es seguro moverse entre
+  pasos sin perder nada, incluso si en el futuro algún paso dejara de mantenerse vivo en el
+  `IndexedStack`. `_sincronizarCubit()` en el paso 1 se frena mientras `_cargando` es `true`
+  (evita pisar el draft con datos a medio poblar durante el fetch de `_cargarDetalle()`); en el
+  paso 3 se frena hasta que `_prefillDone` sea `true` (mismo motivo, durante el prellenado de
+  `didChangeDependencies`).
+- **"Carga masiva" (paso 2, Excel) sigue siendo una ruta aparte** (`SolicitudCargaMasivaPage`,
+  `AppRoutes.cargaMasivaParticipantes`) — no se tocó, es un sub-flujo con su propio selector de
+  archivo, no un paso del wizard. El botón que lo abre sigue comentado en
+  `solicitud_participantes_view.dart` (sin conectar, ver "Pendiente" más abajo).
+
 ## Bugs reportados por QA — Resumen sin modoEdicion, IGV invertido, nacionalidad huérfana (2026-07-14)
 Varios bugs reportados juntos en una sesión; se corrigieron los que eran puramente de Flutter y se
 dejaron señalados los que necesitan confirmación de backend/SP (no hay `.sql` versionado en el
@@ -275,11 +335,12 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
 - `SolicitudListPage` → lista de solicitudes con chips de filtro (Todas / Asesores /
   Sin validar / Enviar a cobranza)
 - `SolicitudDetallePage` → detalle de una solicitud (solo lectura)
-- `SolicitudCompletarPage` (paso 1/4) → datos del solicitante
-- `SolicitudParticipantesPage` (paso 2/4) → lista de participantes (agregar/editar/eliminar)
-- `SolicitudCargaMasivaPage` → carga de participantes vía Excel (abre desde paso 2)
-- `SolicitudFacturacionPage` (paso 3/4) → datos de facturación (quién paga)
-- `SolicitudResumenPage` (paso 4/4) → resumen final de los 3 pasos + adjuntos
+- `SolicitudCompletarPage` → única page/ruta del wizard (`fichaCompletarSolicitud`) — crea
+  `SolicitudFormCubit`/`ParticipantesCubit` y monta `SolicitudWizardView`, que internamente
+  muestra los 4 pasos (Solicitante/Participantes/Facturación/Resumen) como una sola page — ya no
+  son rutas separadas, ver "Wizard de una sola page" arriba
+- `SolicitudCargaMasivaPage` → carga de participantes vía Excel (abre desde paso 2, sigue siendo
+  ruta aparte — no forma parte del wizard fusionado)
 - `SolicitudGeneradaPage` → pantalla de confirmación tras "Generar solicitud"
 
 ## BLoCs / Cubits
@@ -304,17 +365,26 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   Resumen — mismo patrón que `formCubit`
 
 ## Patrón de navegación del wizard — IMPORTANTE
-Los 4 pasos comparten los mismos dos cubits durante todo el recorrido. Cada método
-`goToFichaXxxSolicitud` en `navigation_extensions.dart` recibe `formCubit` y
-`participantesCubit` como argumentos obligatorios y los reenvía; cada `Page` del wizard los
-recibe y los provee hacia abajo con `BlocProvider.value` (nunca `BlocProvider(create: ...)`,
-eso crearía una instancia nueva y se perderían los datos ya ingresados). Ver
-`lib/config/CLAUDE.md` → "Pasar un Cubit ya creado a una ruta" para el patrón base.
+Los 4 pasos comparten los mismos dos cubits durante todo el recorrido — `SolicitudFormCubit` y
+`ParticipantesCubit` se crean **una sola vez** en `SolicitudCompletarPage` y se proveen a los 4
+pasos vía `BlocProvider.value` en el árbol de `SolicitudWizardView` (nunca
+`BlocProvider(create: ...)` dentro de un paso, eso crearía una instancia nueva y se perderían los
+datos ya ingresados). Desde la fusión en una sola page (ver "Wizard de una sola page" arriba),
+moverse entre pasos **ya no navega por rutas** — cada paso recibe callbacks
+(`onContinuar`/`onAtras`/`onCancelar`/`onEditarPaso`) que `SolicitudWizardView` resuelve con
+`setState(() => _pasoActual = n)`.
 
 Al agregar un paso nuevo al wizard:
-1. Agregar el parámetro `formCubit`/`participantesCubit` al método de navegación correspondiente
-2. En el `Page` del paso, recibirlos y envolver con `MultiBlocProvider` + `BlocProvider.value`
-3. Nunca crear una instancia nueva de estos cubits fuera del paso 1
+1. Crear la vista del paso en `widgets/completar/view/` sin `BasePage`/AppBar propios — solo
+   body + footer, igual que las 4 actuales — recibiendo los callbacks de navegación que necesite
+   como parámetros del widget (no `context.goToXxx`)
+2. Agregarla a la lista de pasos de `SolicitudWizardView` (`_pasosConstruidos` + el `if` dentro
+   del `IndexedStack`) y sumar el número de paso correspondiente a `SolicitudPasosIndicador._pasos`
+3. Si el paso tiene campos propios que deban sobrevivir a moverse a otro paso, sincronizarlos al
+   cubit en cada cambio (`_sincronizarCubit()` en cada listener/`onChanged`), no solo en
+   "Continuar"/"Guardar" — mismo patrón que los pasos 1 y 3
+4. Nunca crear una instancia nueva de `SolicitudFormCubit`/`ParticipantesCubit` fuera de
+   `SolicitudCompletarPage`
 
 ## Validación de "Continuar" (pasos 1, 2 y 3)
 **Todo lo de esta sección aplica solo cuando `modoEdicion == true`.** Cuando
@@ -374,8 +444,12 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   (`AsesorResumen`, sin catálogo real) — se reemplazó porque para un asesor no-moderador el
   SP solo trae sus propias solicitudes, así que en la práctica solo se veía a sí mismo
 - `SolicitudDetalleView` (detail/) → detalle de solo lectura
-- `SolicitudPasosIndicador` / `SolicitudBadgePaso` (completar/) → indicador de paso 1-4
-  compartido por las 4 vistas del wizard
+- `SolicitudWizardView` (completar/view/) → orquestador del wizard de una sola page (ver "Wizard
+  de una sola page" arriba) — arma el único `BasePage`/AppBar/`SolicitudPasosIndicador` y un
+  `IndexedStack` con los 4 pasos; los 4 widgets de paso de abajo ya no arman su propio `BasePage`,
+  solo devuelven body+footer y reciben callbacks de navegación por parámetro
+- `SolicitudPasosIndicador` / `SolicitudBadgePaso` (completar/) → indicador de paso 1-4,
+  renderizados una sola vez por `SolicitudWizardView` (ya no uno por cada paso/ruta)
 - `SolicitudCompletarView` (completar/) → formulario paso 1 (datos del solicitante). Pie de
   3 botones: **Cancelar** (izquierda, raspberry, pide confirmación "¿Desea cancelar el
   proceso de solicitud?" antes de salir) / **Guardar** (medio) / **Continuar** (derecha) —

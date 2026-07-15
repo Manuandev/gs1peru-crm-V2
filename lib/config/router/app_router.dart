@@ -132,42 +132,6 @@ class AppRouter {
         );
       },
     ),
-    AppRoutes.fichaParticipantesSolicitud: RouteDefinition(
-      transition: TransitionType.slideRight,
-      builder: (context) {
-        final args = _requireArgs<Map<String, dynamic>>(context);
-        return SolicitudParticipantesPage(
-          solicitud: args['solicitud'] as Solicitud,
-          modoEdicion: args['modoEdicion'] as bool,
-          formCubit: args['formCubit'] as SolicitudFormCubit,
-          participantesCubit: args['participantesCubit'] as ParticipantesCubit,
-        );
-      },
-    ),
-    AppRoutes.fichaFacturacionSolicitud: RouteDefinition(
-      transition: TransitionType.slideRight,
-      builder: (context) {
-        final args = _requireArgs<Map<String, dynamic>>(context);
-        return SolicitudFacturacionPage(
-          solicitud: args['solicitud'] as Solicitud,
-          modoEdicion: args['modoEdicion'] as bool,
-          formCubit: args['formCubit'] as SolicitudFormCubit,
-          participantesCubit: args['participantesCubit'] as ParticipantesCubit,
-        );
-      },
-    ),
-    AppRoutes.fichaResumenSolicitud: RouteDefinition(
-      transition: TransitionType.slideRight,
-      builder: (context) {
-        final args = _requireArgs<Map<String, dynamic>>(context);
-        return SolicitudResumenPage(
-          solicitud: args['solicitud'] as Solicitud,
-          modoEdicion: args['modoEdicion'] as bool,
-          formCubit: args['formCubit'] as SolicitudFormCubit,
-          participantesCubit: args['participantesCubit'] as ParticipantesCubit,
-        );
-      },
-    ),
     AppRoutes.solicitudGenerada: RouteDefinition(
       transition: TransitionType.slideRight,
       builder: (context) {

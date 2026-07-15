@@ -10,11 +10,19 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 class SolicitudParticipantesView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
+  // Avanza al paso 3 (Facturación) o al 4 (Resumen, si se saltó Facturación
+  // por tener solo invitados) dentro del mismo SolicitudWizardView.
+  final ValueChanged<int> onContinuar;
+  // "Cancelar" de este paso solo retrocede al paso 1 (mismo comportamiento
+  // que tenía al ser una ruta aparte — un pop simple, sin confirmación).
+  final VoidCallback onCancelar;
 
   const SolicitudParticipantesView({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
+    required this.onContinuar,
+    required this.onCancelar,
   });
 
   @override
@@ -67,27 +75,13 @@ class _SolicitudParticipantesViewState
 
   // Si TODOS los participantes son invitados (sin costo), no hay a quién
   // facturar — se salta el paso 3 directo al resumen.
-  void _onContinuar(BuildContext context, ParticipantesState state) {
+  void _onContinuar(ParticipantesState state) {
     final soloInvitados = state.participantes.every(
       (p) =>
           p.tipoParticipante == '2' || // Invitado
           p.tipoParticipante == '3', // Invitado auspicio
     );
-    if (soloInvitados) {
-      context.goToFichaResumenSolicitud(
-        solicitud: widget.solicitud,
-        modoEdicion: widget.modoEdicion,
-        formCubit: context.read<SolicitudFormCubit>(),
-        participantesCubit: context.read<ParticipantesCubit>(),
-      );
-    } else {
-      context.goToFichaFacturacionSolicitud(
-        solicitud: widget.solicitud,
-        modoEdicion: widget.modoEdicion,
-        formCubit: context.read<SolicitudFormCubit>(),
-        participantesCubit: context.read<ParticipantesCubit>(),
-      );
-    }
+    widget.onContinuar(soloInvitados ? 4 : 3);
   }
 
   // Botón "Guardar" — borrador (IB_BORRADOR=1). Los participantes ya viven
@@ -118,193 +112,172 @@ class _SolicitudParticipantesViewState
 
     return BlocBuilder<ParticipantesCubit, ParticipantesState>(
       builder: (context, state) {
-        return BasePage(
-          onPop: () => context.goBack(),
-          drawerSide: DrawerSide.none,
-          bodyPadding: EdgeInsets.zero,
-          title: 'Solicitud de inscripción',
-          appBarLeadingButtons: [
-            IconButton(
-              onPressed: () => context.goBack(),
-              icon: Icon(
-                AppIcons.back,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-            ),
-          ],
-          appBarTrailingButtons: [const SolicitudBadgePaso(paso: 2)],
-          body: Column(
-            children: [
-              const SolicitudPasosIndicador(pasoActual: 2),
-              const SizedBox(height: 12),
+        return Column(
+          children: [
+            const SizedBox(height: 12),
 
-              // ── Encabezado sección participantes ───────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                AppIcons.users,
-                                color: AppColors.primary,
-                                size: AppSizing.iconMd,
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Text(
-                                'Participantes',
-                                style: AppTextStyles.titleSmall.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: AppTextStyles.weightBold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.xxs),
-                          Row(
-                            children: [
-                              const Icon(
-                                AppIcons.circuloRelleno,
-                                color: AppColors.success,
-                                size: 10,
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Text(
-                                '${state.participantes.length} participante/s',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Botones
-                    Row(
+            // ── Encabezado sección participantes ───────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _BotonSeccionSmall(
-                          icono: AppIcons.add,
-                          label: 'Nuevo',
-                          onTap: widget.modoEdicion
-                              ? () => _abrirFormularioNuevo(context)
-                              : () {},
+                        Row(
+                          children: [
+                            const Icon(
+                              AppIcons.users,
+                              color: AppColors.primary,
+                              size: AppSizing.iconMd,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              'Participantes',
+                              style: AppTextStyles.titleSmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: AppTextStyles.weightBold,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        // _BotonSeccionSmall(
-                        //   icono: AppIcons.downloadFile,
-                        //   label: 'Carga masiva',
-                        //   onTap: () => context.goToCargaMasivaParticipantes(
-                        //     cubit: context.read<ParticipantesCubit>(),
-                        //   ),
-                        // ),
-                        // const SizedBox(width: AppSpacing.xs),
-                        _BotonIconoSmall(
-                          icono: AppIcons.delete,
-                          color: AppColors.error,
-                          onTap: state.participantes.isEmpty
-                              ? () {}
-                              : () => _confirmarEliminarTodos(context),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Row(
+                          children: [
+                            const Icon(
+                              AppIcons.circuloRelleno,
+                              color: AppColors.success,
+                              size: 10,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              '${state.participantes.length} participante/s',
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Botones
+                  Row(
+                    children: [
+                      _BotonSeccionSmall(
+                        icono: AppIcons.add,
+                        label: 'Nuevo',
+                        onTap: widget.modoEdicion
+                            ? () => _abrirFormularioNuevo(context)
+                            : () {},
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      // _BotonSeccionSmall(
+                      //   icono: AppIcons.downloadFile,
+                      //   label: 'Carga masiva',
+                      //   onTap: () => context.goToCargaMasivaParticipantes(
+                      //     cubit: context.read<ParticipantesCubit>(),
+                      //   ),
+                      // ),
+                      // const SizedBox(width: AppSpacing.xs),
+                      _BotonIconoSmall(
+                        icono: AppIcons.delete,
+                        color: AppColors.error,
+                        onTap: state.participantes.isEmpty
+                            ? () {}
+                            : () => _confirmarEliminarTodos(context),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
 
-              // ── Lista de participantes ──────────────────────────────
-              Expanded(
-                child: state.participantes.isEmpty
-                    ? const AppEmptyView(
-                        message: 'Sin participantes registrados',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: AppSpacing.xs,
+            // ── Lista de participantes ──────────────────────────────
+            Expanded(
+              child: state.participantes.isEmpty
+                  ? const AppEmptyView(message: 'Sin participantes registrados')
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      itemCount: state.participantes.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        final p = state.participantes[index];
+                        return _ParticipanteCard(
+                          participante: p,
+                          habilitado: widget.modoEdicion,
+                          onEditar: () => _abrirFormularioEditar(context, p),
+                          onEliminar: () =>
+                              context.read<ParticipantesCubit>().eliminar(p.id),
+                        );
+                      },
+                    ),
+            ),
+
+            // ── Resumen inversión ───────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: _ResumenInversion(
+                total: state.totalInversion,
+                igvPorcentaje: igvPorcentaje,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+
+            // ── Botones pie ─────────────────────────────────────────
+            // En modo solo-ver (modoEdicion == false) solo se muestra
+            // "Continuar", sin exigir participantes — es un recorrido de
+            // lectura, no una captura de datos.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm,
+              ),
+              child: widget.modoEdicion
+                  ? Row(
+                      children: [
+                        Expanded(
+                          child: CustomSecondaryButton(
+                            text: 'Cancelar',
+                            backgroundColor: AppColors.brandRaspberryAccessible,
+                            onPressed: widget.onCancelar,
+                          ),
                         ),
-                        itemCount: state.participantes.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, index) {
-                          final p = state.participantes[index];
-                          return _ParticipanteCard(
-                            participante: p,
-                            habilitado: widget.modoEdicion,
-                            onEditar: () => _abrirFormularioEditar(context, p),
-                            onEliminar: () => context
-                                .read<ParticipantesCubit>()
-                                .eliminar(p.id),
-                          );
-                        },
-                      ),
-              ),
-
-              // ── Resumen inversión ───────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                child: _ResumenInversion(
-                  total: state.totalInversion,
-                  igvPorcentaje: igvPorcentaje,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-
-              // ── Botones pie ─────────────────────────────────────────
-              // En modo solo-ver (modoEdicion == false) solo se muestra
-              // "Continuar", sin exigir participantes — es un recorrido de
-              // lectura, no una captura de datos.
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.sm,
-                ),
-                child: widget.modoEdicion
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: CustomSecondaryButton(
-                              text: 'Cancelar',
-                              backgroundColor:
-                                  AppColors.brandRaspberryAccessible,
-                              onPressed: () => context.goBack(),
-                            ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: CustomSecondaryButton(
+                            text: 'Guardar',
+                            icon: AppIcons.save,
+                            isLoading: _guardando,
+                            onPressed: _onGuardar,
                           ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Expanded(
-                            child: CustomSecondaryButton(
-                              text: 'Guardar',
-                              icon: AppIcons.save,
-                              isLoading: _guardando,
-                              onPressed: _onGuardar,
-                            ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: CustomPrimaryButton(
+                            text: 'Continuar →',
+                            onPressed: state.participantes.isEmpty
+                                ? null
+                                : () => _onContinuar(state),
                           ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Expanded(
-                            child: CustomPrimaryButton(
-                              text: 'Continuar →',
-                              onPressed: state.participantes.isEmpty
-                                  ? null
-                                  : () => _onContinuar(context, state),
-                            ),
-                          ),
-                        ],
-                      )
-                    : CustomPrimaryButton(
-                        text: 'Continuar →',
-                        onPressed: () => _onContinuar(context, state),
-                      ),
-              ),
-            ],
-          ),
+                        ),
+                      ],
+                    )
+                  : CustomPrimaryButton(
+                      text: 'Continuar →',
+                      onPressed: () => _onContinuar(state),
+                    ),
+            ),
+          ],
         );
       },
     );

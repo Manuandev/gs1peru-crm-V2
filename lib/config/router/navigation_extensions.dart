@@ -1,17 +1,15 @@
 // lib/config/router/navigation_extensions.dart
 
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/auth/index_auth.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
-import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
-import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
-import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/cobranza/domain/entities/plan_credito_resultado.dart';
-import 'package:app_crm/features/cobranza/domain/entities/cobranza_plan.dart';
+
+import '../../features/cobranza/index_cobranza.dart';
 
 extension NavigationExtensions on BuildContext {
   // ── Primitivos (no usar directamente desde features) ───────
@@ -84,51 +82,6 @@ extension NavigationExtensions on BuildContext {
       'precioBaseNegociacion': precioBaseNegociacion,
       'descuentoNegociacion': descuentoNegociacion,
       'idMonedaNegociacion': idMonedaNegociacion,
-    },
-  );
-
-  Future<void> goToFichaParticipantesSolicitud({
-    required Solicitud solicitud,
-    required bool modoEdicion,
-    required SolicitudFormCubit formCubit,
-    required ParticipantesCubit participantesCubit,
-  }) => _push(
-    AppRoutes.fichaParticipantesSolicitud,
-    arguments: {
-      'solicitud': solicitud,
-      'modoEdicion': modoEdicion,
-      'formCubit': formCubit,
-      'participantesCubit': participantesCubit,
-    },
-  );
-
-  Future<void> goToFichaFacturacionSolicitud({
-    required Solicitud solicitud,
-    required bool modoEdicion,
-    required SolicitudFormCubit formCubit,
-    required ParticipantesCubit participantesCubit,
-  }) => _push(
-    AppRoutes.fichaFacturacionSolicitud,
-    arguments: {
-      'solicitud': solicitud,
-      'modoEdicion': modoEdicion,
-      'formCubit': formCubit,
-      'participantesCubit': participantesCubit,
-    },
-  );
-
-  Future<void> goToFichaResumenSolicitud({
-    required Solicitud solicitud,
-    required bool modoEdicion,
-    required SolicitudFormCubit formCubit,
-    required ParticipantesCubit participantesCubit,
-  }) => _push(
-    AppRoutes.fichaResumenSolicitud,
-    arguments: {
-      'solicitud': solicitud,
-      'modoEdicion': modoEdicion,
-      'formCubit': formCubit,
-      'participantesCubit': participantesCubit,
     },
   );
 

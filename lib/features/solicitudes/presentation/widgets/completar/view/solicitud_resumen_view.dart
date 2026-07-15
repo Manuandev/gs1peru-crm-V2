@@ -10,11 +10,19 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 class SolicitudResumenView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
+  // Salta a otro paso (1, 2 o 3) dentro del mismo SolicitudWizardView —
+  // reemplaza el viejo Navigator.popUntil por nombre de ruta, ya que los
+  // pasos dejaron de ser rutas separadas.
+  final ValueChanged<int> onEditarPaso;
+  // Sale del wizard por completo (footer "Cancelar").
+  final VoidCallback onCancelar;
 
   const SolicitudResumenView({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
+    required this.onEditarPaso,
+    required this.onCancelar,
   });
 
   @override
@@ -61,7 +69,9 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     setState(() => _generando = false);
 
     if (result is CrudOk) {
-      final comprobante = context.read<SolicitudFormCubit>().state.facturacion?.comprobante ?? '';
+      final comprobante =
+          context.read<SolicitudFormCubit>().state.facturacion?.comprobante ??
+          '';
       context.goToSolicitudGenerada(
         solicitud: widget.solicitud,
         comprobante: comprobante,
@@ -75,146 +85,114 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
   Widget build(BuildContext context) {
     final formState = context.watch<SolicitudFormCubit>().state;
 
-    return BasePage(
-      onPop: () => context.goBack(),
-      drawerSide: DrawerSide.none,
-      bodyPadding: EdgeInsets.zero,
-      title: 'Solicitud de inscripcion',
-      appBarLeadingButtons: [
-        IconButton(
-          onPressed: () => context.goBack(),
-          icon: Icon(
-            AppIcons.back,
-            color: Theme.of(context).colorScheme.onPrimary,
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SeccionSolicitante(
+                  datos: formState.solicitante,
+                  onEditar: () => widget.onEditarPaso(1),
+                ),
+                const _Separador(),
+                _SeccionParticipantes(onVerTodos: () => widget.onEditarPaso(2)),
+                // "Facturación" solo aplica si hubo a quién facturar —
+                // si todos los participantes son invitados, el paso 3 se
+                // saltó y formState.facturacion queda null.
+                if (formState.facturacion != null) ...[
+                  const _Separador(),
+                  _SeccionFacturacion(
+                    datos: formState.facturacion,
+                    tipoPersonaLabel: formState.tipoPersonaLabel,
+                    onEditar: () => widget.onEditarPaso(3),
+                  ),
+                ],
+                const _Separador(),
+                const _SeccionResumenComercial(),
+                const _Separador(),
+                _SeccionDocumentosAdjuntos(
+                  voucherNombre:
+                      formState.solicitante?.archivoVoucherNombre ?? '',
+                  ocNombre: formState.solicitante?.archivoOCNombre ?? '',
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+            ),
           ),
         ),
-      ],
-      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 4)],
-      body: Column(
-        children: [
-          const SolicitudPasosIndicador(pasoActual: 4),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _SeccionSolicitante(
-                    datos: formState.solicitante,
-                    onEditar: () => Navigator.of(context).popUntil(
-                      ModalRoute.withName(AppRoutes.fichaCompletarSolicitud),
+
+        // ── Botones fijos al pie ───────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: widget.modoEdicion
+                ? [
+                    // Guardar borrador
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomPrimaryButton(
+                        text: 'Guardar',
+                        icon: AppIcons.save,
+                        isLoading: _guardando,
+                        onPressed: _onGuardar,
+                      ),
                     ),
-                  ),
-                  const _Separador(),
-                  _SeccionParticipantes(
-                    onVerTodos: () => context.goToFichaParticipantesSolicitud(
-                      solicitud: widget.solicitud,
-                      modoEdicion: widget.modoEdicion,
-                      formCubit: context.read<SolicitudFormCubit>(),
-                      participantesCubit: context.read<ParticipantesCubit>(),
+                    const SizedBox(height: 5),
+
+                    // Generar solicitud
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomSecondaryButton(
+                        text: 'Generar solicitud',
+                        icon: AppIcons.fileFactura,
+                        isLoading: _generando,
+                        onPressed: _onGenerarSolicitud,
+                      ),
                     ),
-                  ),
-                  // "Facturación" solo aplica si hubo a quién facturar —
-                  // si todos los participantes son invitados, el paso 3 se
-                  // saltó y formState.facturacion queda null.
-                  if (formState.facturacion != null) ...[
-                    const _Separador(),
-                    _SeccionFacturacion(
-                      datos: formState.facturacion,
-                      tipoPersonaLabel: formState.tipoPersonaLabel,
-                      onEditar: () => Navigator.of(context).popUntil(
-                        ModalRoute.withName(
-                          AppRoutes.fichaFacturacionSolicitud,
+                    const SizedBox(height: 5),
+                    // Cancelar
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomSecondaryButton(
+                        text: 'Cancelar',
+                        icon: AppIcons.cancel,
+                        backgroundColor: AppColors.brandRaspberryAccessible,
+                        onPressed: widget.onCancelar,
+                      ),
+                    ),
+                  ]
+                // Modo solo-ver — solo "Continuar", vuelve al detalle de la
+                // solicitud (mismo patrón que pasos 1-3, ver CLAUDE.md).
+                : [
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomPrimaryButton(
+                        text: 'Continuar',
+                        onPressed: () => Navigator.of(context).popUntil(
+                          ModalRoute.withName(AppRoutes.detalleSolicitud),
                         ),
                       ),
                     ),
                   ],
-                  const _Separador(),
-                  const _SeccionResumenComercial(),
-                  const _Separador(),
-                  _SeccionDocumentosAdjuntos(
-                    voucherNombre:
-                        formState.solicitante?.archivoVoucherNombre ?? '',
-                    ocNombre: formState.solicitante?.archivoOCNombre ?? '',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-              ),
-            ),
           ),
-
-          // ── Botones fijos al pie ───────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.sm,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border(
-                top: BorderSide(color: AppColors.border, width: 1),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: widget.modoEdicion
-                  ? [
-                      // Guardar borrador
-                      SizedBox(
-                        width: double.infinity,
-                        child: CustomPrimaryButton(
-                          text: 'Guardar',
-                          icon: AppIcons.save,
-                          isLoading: _guardando,
-                          onPressed: _onGuardar,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-
-                      // Generar solicitud
-                      SizedBox(
-                        width: double.infinity,
-                        child: CustomSecondaryButton(
-                          text: 'Generar solicitud',
-                          icon: AppIcons.fileFactura,
-                          isLoading: _generando,
-                          onPressed: _onGenerarSolicitud,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      // Cancelar
-                      SizedBox(
-                        width: double.infinity,
-                        child: CustomSecondaryButton(
-                          text: 'Cancelar',
-                          icon: AppIcons.cancel,
-                          backgroundColor: AppColors.brandRaspberryAccessible,
-                          onPressed: () => context.goBack(),
-                        ),
-                      ),
-                    ]
-                  // Modo solo-ver — solo "Continuar", vuelve al detalle de la
-                  // solicitud (mismo patrón que pasos 1-3, ver CLAUDE.md).
-                  : [
-                      SizedBox(
-                        width: double.infinity,
-                        child: CustomPrimaryButton(
-                          text: 'Continuar',
-                          onPressed: () => Navigator.of(context).popUntil(
-                            ModalRoute.withName(AppRoutes.detalleSolicitud),
-                          ),
-                        ),
-                      ),
-                    ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

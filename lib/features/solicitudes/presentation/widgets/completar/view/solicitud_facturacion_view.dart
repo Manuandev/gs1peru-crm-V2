@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 // Ids reales de catálogo usados en las reglas de este paso (SYSTABEXTER02).
@@ -15,11 +14,17 @@ const _idTipoDocRuc = '6';
 class SolicitudFacturacionView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
+  // Avanza al paso 4 (Resumen) dentro del mismo SolicitudWizardView.
+  final VoidCallback onContinuar;
+  // Retrocede al paso 2 (Participantes) dentro del mismo SolicitudWizardView.
+  final VoidCallback onAtras;
 
   const SolicitudFacturacionView({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
+    required this.onContinuar,
+    required this.onAtras,
   });
 
   @override
@@ -80,7 +85,23 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _ctrlCorreo.text.emailValidator == null &&
       _ctrlDireccion.text.trim().isNotEmpty;
 
-  void _onCampoTexto() => setState(() {});
+  void _onCampoTexto() {
+    setState(() {});
+    _sincronizarCubit();
+  }
+
+  // Empuja el draft actual (ids de combos + texto de inputs, aunque estén
+  // vacíos) a SolicitudFormCubit en cada cambio — así el paso 3 nunca pierde
+  // datos al moverse a otro paso dentro del wizard, sin depender de que se
+  // presione "Continuar"/"Guardar". No sincroniza hasta que el prefill
+  // inicial (didChangeDependencies) haya terminado, para no pisarlo con un
+  // draft vacío a medio construir.
+  void _sincronizarCubit() {
+    if (!_prefillDone || !mounted) return;
+    context.read<SolicitudFormCubit>().guardarFacturacion(
+      _construirDatosFacturacion(_paisCelular),
+    );
+  }
 
   DatosFacturacion _construirDatosFacturacion(PaisItem? paisCelular) {
     return DatosFacturacion(
@@ -121,12 +142,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     context.read<SolicitudFormCubit>().guardarFacturacion(
       _construirDatosFacturacion(paisCelular),
     );
-    context.goToFichaResumenSolicitud(
-      solicitud: widget.solicitud,
-      modoEdicion: widget.modoEdicion,
-      formCubit: context.read<SolicitudFormCubit>(),
-      participantesCubit: context.read<ParticipantesCubit>(),
-    );
+    widget.onContinuar();
   }
 
   // Botón "Guardar" — borrador (IB_BORRADOR=1), sin navegar ni validar
@@ -158,9 +174,12 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _ctrlNumDoc,
       _ctrlNombresRazon,
       _ctrlApellidoPaterno,
+      _ctrlApellidoMaterno,
       _ctrlCelular,
       _ctrlCorreo,
       _ctrlDireccion,
+      _ctrlNit,
+      _ctrlObservaciones,
     ]) {
       ctrl.addListener(_onCampoTexto);
     }
@@ -215,7 +234,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _monedaId = idMonedaBloqueada;
       final catalogState = context.read<CatalogsBloc>().state;
       if (catalogState is CatalogsLoaded) {
-        _monedaLabel = catalogState.monedas
+        _monedaLabel =
+            catalogState.monedas
                 .where((m) => m.id == idMonedaBloqueada)
                 .firstOrNull
                 ?.nombre ??
@@ -264,7 +284,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   @override
   Widget build(BuildContext context) {
     final formState = context.watch<SolicitudFormCubit>().state;
-    final tipoPersona = formState.tipoPersona;
     final facturarAlSolicitante =
         formState.solicitante?.facturarAlSolicitante ?? false;
     final catalogState = context.watch<CatalogsBloc>().state;
@@ -306,108 +325,85 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
             : paises.where((p) => p.codigoTelefono == '51').firstOrNull ??
                   paises.first);
 
-    return BasePage(
-      onPop: () => context.goBack(),
-      drawerSide: DrawerSide.none,
-      bodyPadding: EdgeInsets.zero,
-      title: 'Solicitud de inscripción',
-      appBarLeadingButtons: [
-        IconButton(
-          onPressed: () => context.goBack(),
-          icon: Icon(
-            AppIcons.back,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
-      ],
-      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 3)],
-      body: Column(
-        children: [
-          const SolicitudPasosIndicador(pasoActual: 3),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Encabezado + Toggle ────────────────────────────
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        AppIcons.receipt,
-                        color: AppColors.primary,
-                        size: AppSizing.iconLg,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Datos de facturación',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: AppTextStyles.weightBold,
-                              ),
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Encabezado + Toggle ────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      AppIcons.receipt,
+                      color: AppColors.primary,
+                      size: AppSizing.iconLg,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Datos de facturación',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: AppTextStyles.weightBold,
                             ),
-                            Text(
-                              '¿Quién paga la inscripción?',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          ),
+                          Text(
+                            '¿Quién paga la inscripción?',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      SolicitudToggleTipoPersona(
-                        valor: tipoPersona,
-                        // Solo editable en el paso 1 (solicitante) — aquí
-                        // solo se refleja el valor ya elegido.
-                        habilitado: false,
-                        onChanged: (v) => context
-                            .read<SolicitudFormCubit>()
-                            .cambiarTipoPersona(v),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
 
-                  // ── Tooltip informativo ────────────────────────────
-                  const _TooltipFacturacion(),
-                  const SizedBox(height: AppSpacing.sm),
+                // ── Tooltip informativo ────────────────────────────
+                const _TooltipFacturacion(),
+                const SizedBox(height: AppSpacing.sm),
 
-                  // ── Formulario ─────────────────────────────────────
-                  _SeccionDatosFacturacion(
-                    habilitado: widget.modoEdicion,
-                    monedaBloqueada: formState.idMonedaBloqueada != null,
-                    esRuc: _esRuc,
-                    correoLabel: correoLabel,
-                    ctrlNumDoc: _ctrlNumDoc,
-                    ctrlNombresRazon: _ctrlNombresRazon,
-                    ctrlApellidoPaterno: _ctrlApellidoPaterno,
-                    ctrlApellidoMaterno: _ctrlApellidoMaterno,
-                    ctrlCelular: _ctrlCelular,
-                    ctrlCorreo: _ctrlCorreo,
-                    ctrlDireccion: _ctrlDireccion,
-                    monedas: monedas,
-                    tiposDocumento: tiposDocumento,
-                    nacionalidades: nacionalidades,
-                    paises: paises,
-                    comprobantes: comprobantes,
-                    paisCelular: paisCelular,
-                    onPaisCelularChanged: (p) =>
-                        setState(() => _paisCelular = p),
-                    comprobanteInicialId: _comprobanteId.isNotEmpty
-                        ? _comprobanteId
-                        : null,
-                    paisInicialId: _paisId.isNotEmpty ? _paisId : null,
-                    monedaInicialId: _monedaId.isNotEmpty ? _monedaId : null,
-                    onComprobanteChanged: (item) => setState(() {
+                // ── Formulario ─────────────────────────────────────
+                _SeccionDatosFacturacion(
+                  habilitado: widget.modoEdicion,
+                  monedaBloqueada: formState.idMonedaBloqueada != null,
+                  esRuc: _esRuc,
+                  correoLabel: correoLabel,
+                  ctrlNumDoc: _ctrlNumDoc,
+                  ctrlNombresRazon: _ctrlNombresRazon,
+                  ctrlApellidoPaterno: _ctrlApellidoPaterno,
+                  ctrlApellidoMaterno: _ctrlApellidoMaterno,
+                  ctrlCelular: _ctrlCelular,
+                  ctrlCorreo: _ctrlCorreo,
+                  ctrlDireccion: _ctrlDireccion,
+                  monedas: monedas,
+                  tiposDocumento: tiposDocumento,
+                  nacionalidades: nacionalidades,
+                  paises: paises,
+                  comprobantes: comprobantes,
+                  paisCelular: paisCelular,
+                  onPaisCelularChanged: (p) {
+                    setState(() => _paisCelular = p);
+                    _sincronizarCubit();
+                  },
+                  comprobanteInicialId: _comprobanteId.isNotEmpty
+                      ? _comprobanteId
+                      : null,
+                  paisInicialId: _paisId.isNotEmpty ? _paisId : null,
+                  monedaInicialId: _monedaId.isNotEmpty ? _monedaId : null,
+                  onComprobanteChanged: (item) {
+                    setState(() {
                       _comprobanteId = item?.id ?? '';
                       _comprobanteLabel = item?.nombre ?? '';
                       if (_comprobanteId == _idComprobanteFactura) {
@@ -419,132 +415,142 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                         _tipoDocLabel = ruc?.abreviatura ?? '';
                         _ctrlNumDoc.clear();
                       }
-                    }),
-                    onPaisChanged: (item) => setState(() {
+                    });
+                    _sincronizarCubit();
+                  },
+                  onPaisChanged: (item) {
+                    setState(() {
                       _paisId = item?.id ?? '';
                       _paisLabel = item?.nombre ?? '';
-                    }),
-                    onMonedaChanged: (item) => setState(() {
+                    });
+                    _sincronizarCubit();
+                  },
+                  onMonedaChanged: (item) {
+                    setState(() {
                       _monedaId = item?.id ?? '';
                       _monedaLabel = item?.nombre ?? '';
-                    }),
-                    tipoDocInicialId: _tipoDocId.isNotEmpty ? _tipoDocId : null,
-                    nacionalidadInicialId: _nacionalidadId.isNotEmpty
-                        ? _nacionalidadId
-                        : null,
-                    onTipoDocChanged: (item) => setState(() {
+                    });
+                    _sincronizarCubit();
+                  },
+                  tipoDocInicialId: _tipoDocId.isNotEmpty ? _tipoDocId : null,
+                  nacionalidadInicialId: _nacionalidadId.isNotEmpty
+                      ? _nacionalidadId
+                      : null,
+                  onTipoDocChanged: (item) {
+                    setState(() {
                       _tipoDocId = item?.id ?? '';
                       _tipoDocLabel = item?.abreviatura ?? '';
                       _ctrlNumDoc.clear();
-                    }),
-                    onNacionalidadChanged: (item) => setState(() {
+                    });
+                    _sincronizarCubit();
+                  },
+                  onNacionalidadChanged: (item) {
+                    setState(() {
                       _nacionalidadId = item?.id ?? '';
                       _nacionalidadLabel = item?.nombre ?? '';
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Resumen + Botones fijos al pie ───────────────────────────
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border(
-                top: BorderSide(color: AppColors.border, width: 1),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ── Info: Facturar al solicitante | Participantes ──
-                IntrinsicHeight(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _ItemResumen(
-                          icono: AppIcons.user,
-                          colorIcono: AppColors.brandForest,
-                          colorFondo: AppColors.brandForest.withOpacity(0.12),
-                          label: 'Facturar al solicitante',
-                          valor: facturarAlSolicitante ? 'Sí' : 'No',
-                        ),
-                      ),
-                      VerticalDivider(
-                        width: AppSpacing.md,
-                        thickness: 1,
-                        color: AppColors.border,
-                      ),
-                      Expanded(
-                        child:
-                            BlocBuilder<ParticipantesCubit, ParticipantesState>(
-                              builder: (context, state) => _ItemResumen(
-                                icono: AppIcons.users,
-                                colorIcono: AppColors.warning,
-                                colorFondo: AppColors.warning.withOpacity(0.12),
-                                label: 'Participantes pagantes',
-                                valor: state.participantes
-                                    .where(
-                                      (p) => p.tipoParticipante == '1', // Pagante
-                                    )
-                                    .length
-                                    .toString(),
-                              ),
-                            ),
-                      ),
-                    ],
-                  ),
+                    });
+                    _sincronizarCubit();
+                  },
                 ),
-                const SizedBox(height: AppSpacing.sm),
-
-                // ── Botones ────────────────────────────────────────
-                // En modo solo-ver (modoEdicion == false) solo se muestra
-                // "Continuar", sin validar campos — es un recorrido de
-                // lectura, no una captura de datos.
-                widget.modoEdicion
-                    ? Row(
-                        children: [
-                          Expanded(
-                            child: CustomSecondaryButton(
-                              text: 'Atrás',
-                              icon: AppIcons.back,
-                              backgroundColor:
-                                  AppColors.brandRaspberryAccessible,
-                              onPressed: () => context.goBack(),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Expanded(
-                            child: CustomSecondaryButton(
-                              text: 'Guardar',
-                              icon: AppIcons.save,
-                              isLoading: _guardando,
-                              onPressed: () => _onGuardar(paisCelular),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Expanded(
-                            child: CustomPrimaryButton(
-                              text: 'Continuar →',
-                              onPressed: () => _onContinuar(paisCelular),
-                            ),
-                          ),
-                        ],
-                      )
-                    : CustomPrimaryButton(
-                        text: 'Continuar →',
-                        onPressed: () => _onContinuar(paisCelular),
-                      ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+
+        // ── Resumen + Botones fijos al pie ───────────────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Info: Facturar al solicitante | Participantes ──
+              IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _ItemResumen(
+                        icono: AppIcons.user,
+                        colorIcono: AppColors.brandForest,
+                        colorFondo: AppColors.brandForest.withOpacity(0.12),
+                        label: 'Facturar al solicitante',
+                        valor: facturarAlSolicitante ? 'Sí' : 'No',
+                      ),
+                    ),
+                    VerticalDivider(
+                      width: AppSpacing.md,
+                      thickness: 1,
+                      color: AppColors.border,
+                    ),
+                    Expanded(
+                      child:
+                          BlocBuilder<ParticipantesCubit, ParticipantesState>(
+                            builder: (context, state) => _ItemResumen(
+                              icono: AppIcons.users,
+                              colorIcono: AppColors.warning,
+                              colorFondo: AppColors.warning.withOpacity(0.12),
+                              label: 'Participantes pagantes',
+                              valor: state.participantes
+                                  .where(
+                                    (p) => p.tipoParticipante == '1', // Pagante
+                                  )
+                                  .length
+                                  .toString(),
+                            ),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // ── Botones ────────────────────────────────────────
+              // En modo solo-ver (modoEdicion == false) solo se muestra
+              // "Continuar", sin validar campos — es un recorrido de
+              // lectura, no una captura de datos.
+              widget.modoEdicion
+                  ? Row(
+                      children: [
+                        Expanded(
+                          child: CustomSecondaryButton(
+                            text: 'Atrás',
+                            icon: AppIcons.back,
+                            backgroundColor: AppColors.brandRaspberryAccessible,
+                            onPressed: widget.onAtras,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: CustomSecondaryButton(
+                            text: 'Guardar',
+                            icon: AppIcons.save,
+                            isLoading: _guardando,
+                            onPressed: () => _onGuardar(paisCelular),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: CustomPrimaryButton(
+                            text: 'Continuar →',
+                            onPressed: () => _onContinuar(paisCelular),
+                          ),
+                        ),
+                      ],
+                    )
+                  : CustomPrimaryButton(
+                      text: 'Continuar →',
+                      onPressed: () => _onContinuar(paisCelular),
+                    ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

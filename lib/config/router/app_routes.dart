@@ -34,12 +34,12 @@ class AppRoutes {
 
   static const String detalleSeguimiento = '/seguimiento/detalle';
   static const String detalleSolicitud = '/solicitudes/detalle';
+  // Único paso pusheado del wizard — Participantes/Facturación/Resumen ya no
+  // son rutas propias, viven dentro de SolicitudWizardView (ver CLAUDE.md).
   static const String fichaCompletarSolicitud = '/solicitudes/completar';
-  static const String fichaParticipantesSolicitud = '/solicitudes/participantes';
-  static const String fichaFacturacionSolicitud = '/solicitudes/facturacion';
-  static const String fichaResumenSolicitud = '/solicitudes/resumen';
   static const String solicitudGenerada = '/solicitudes/generada';
-  static const String cargaMasivaParticipantes = '/solicitudes/participantes/carga-masiva';
+  static const String cargaMasivaParticipantes =
+      '/solicitudes/participantes/carga-masiva';
 
   static const String detalleCobranza = '/cobranza/detalle';
   static const String facturarCobranza = '/cobranza/facturar';

@@ -14,11 +14,19 @@ const _idTipoDocRucCompletar = '6';
 class SolicitudCompletarView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
+  // Avanza al paso 2 (Participantes) dentro del mismo SolicitudWizardView —
+  // ya no navega a una ruta aparte, ver CLAUDE.md "Wizard de una sola page".
+  final VoidCallback onContinuar;
+  // Sale del wizard por completo (Cancelar, con confirmación) — pop de la
+  // page raíz del wizard, no un paso interno.
+  final VoidCallback onCancelar;
 
   const SolicitudCompletarView({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
+    required this.onContinuar,
+    required this.onCancelar,
   });
 
   @override
@@ -77,7 +85,22 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlCelular.text.trim().isNotEmpty &&
       _ctrlCorreo.text.emailValidator == null;
 
-  void _onCampoTexto() => setState(() {});
+  void _onCampoTexto() {
+    setState(() {});
+    _sincronizarCubit();
+  }
+
+  // Empuja el draft actual (ids de combos + texto de inputs, aunque estén
+  // vacíos) a SolicitudFormCubit en cada cambio — así el paso 1 nunca pierde
+  // datos al moverse a otro paso dentro del wizard, sin depender de que se
+  // presione "Continuar"/"Guardar". No sincroniza mientras `_cargando` es
+  // true (evita pisar el draft con datos a medio poblar durante el fetch).
+  void _sincronizarCubit() {
+    if (_cargando || !mounted) return;
+    context.read<SolicitudFormCubit>().guardarSolicitante(
+      _construirDatosSolicitante(_paisCelular),
+    );
+  }
 
   @override
   void initState() {
@@ -86,9 +109,12 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlNumDoc,
       _ctrlNombres,
       _ctrlApellidoPaterno,
+      _ctrlApellidoMaterno,
       _ctrlCargo,
       _ctrlCelular,
       _ctrlCorreo,
+      _ctrlRuc,
+      _ctrlRazonSocial,
     ]) {
       ctrl.addListener(_onCampoTexto);
     }
@@ -322,7 +348,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       confirmText: 'Sí, cancelar',
       cancelText: 'No',
     );
-    if (confirmado && mounted) context.goBack();
+    if (confirmado && mounted) widget.onCancelar();
   }
 
   DatosSolicitante _construirDatosSolicitante(PaisItem? paisCelular) {
@@ -369,12 +395,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     // sube en segundo plano — no bloquea la navegación. En creación nueva
     // (NUMSOL aún vacío) no hace nada hasta que se presione "Guardar".
     subirArchivosPendientes(context);
-    context.goToFichaParticipantesSolicitud(
-      solicitud: widget.solicitud,
-      modoEdicion: widget.modoEdicion,
-      formCubit: context.read<SolicitudFormCubit>(),
-      participantesCubit: context.read<ParticipantesCubit>(),
-    );
+    widget.onContinuar();
   }
 
   // Botón "Guardar" — borrador (IB_BORRADOR=1), sin navegar ni validar
@@ -419,12 +440,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   @override
   Widget build(BuildContext context) {
     if (_cargando) {
-      return BasePage(
-        onPop: () => context.goBack(),
-        drawerSide: DrawerSide.none,
-        title: 'Solicitud de inscripción',
-        body: const AppLoadingView(),
-      );
+      return const AppLoadingView();
     }
 
     final formState = context.watch<SolicitudFormCubit>().state;
@@ -443,203 +459,200 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             : paises.where((p) => p.codigoTelefono == '51').firstOrNull ??
                   paises.first);
 
-    return BasePage(
-      onPop: () => context.goBack(),
-      drawerSide: DrawerSide.none,
-      bodyPadding: EdgeInsets.zero,
-      title: 'Solicitud de inscripción',
-      appBarLeadingButtons: [
-        IconButton(
-          onPressed: () => context.goBack(),
-          icon: Icon(
-            AppIcons.back,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
-      ],
-      appBarTrailingButtons: [const SolicitudBadgePaso(paso: 1)],
-      body: Column(
-        children: [
-          const SolicitudPasosIndicador(pasoActual: 1),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Toggle tipo persona ─────────────────────────────
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: SolicitudToggleTipoPersona(
-                      valor: tipoPersona,
-                      habilitado: widget.modoEdicion,
-                      onChanged: (v) => context
-                          .read<SolicitudFormCubit>()
-                          .cambiarTipoPersona(v),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── ¿Cómo se enteró del evento? ────────────────────
-                  Text(
-                    '¿Cómo se enteró del evento?',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: AppTextStyles.weightMedium,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  ChipsCanales(
-                    canales: canales,
-                    seleccionado: _canalSeleccionado,
-                    habilitado: widget.modoEdicion,
-                    onSeleccionar: (canal) {
-                      if (!widget.modoEdicion) return;
-                      setState(() {
-                        _canalSeleccionado = _canalSeleccionado?.id == canal.id
-                            ? null
-                            : canal;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-
-                  // ── Botones de adjuntos ────────────────────────────
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: BotonAdjuntar(
-                          label: 'Adjuntar voucher',
-                          archivo: formState.archivoVoucher,
-                          habilitado: widget.modoEdicion,
-                          onAdjuntar: () => _adjuntarArchivo(true),
-                          onQuitar: () => _quitarArchivo(true),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: BotonAdjuntar(
-                          label: 'Adjuntar O/C',
-                          archivo: formState.archivoOC,
-                          habilitado: widget.modoEdicion,
-                          onAdjuntar: () => _adjuntarArchivo(false),
-                          onQuitar: () => _quitarArchivo(false),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-
-                  // ── Tooltip informativo — 3 partes de la solicitud ─
-                  const TooltipPartesSolicitud(),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── Datos del solicitante ──────────────────────────
-                  SeccionDatosSolicitante(
-                    habilitado: widget.modoEdicion,
-                    ctrlNumDoc: _ctrlNumDoc,
-                    ctrlNombres: _ctrlNombres,
-                    ctrlApellidoPaterno: _ctrlApellidoPaterno,
-                    ctrlApellidoMaterno: _ctrlApellidoMaterno,
-                    ctrlCargo: _ctrlCargo,
-                    ctrlCelular: _ctrlCelular,
-                    ctrlCorreo: _ctrlCorreo,
-                    paises: paises,
-                    paisCelular: paisCelular,
-                    onPaisCelularChanged: (p) =>
-                        setState(() => _paisCelular = p),
-                    tipoDocInicialId: _tipoDocId.isNotEmpty
-                        ? _tipoDocId
-                        : null,
-                    nacionalidadInicialId: _nacionalidadId.isNotEmpty
-                        ? _nacionalidadId
-                        : null,
-                    sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
-                    onTipoDocChanged: (item) => setState(() {
-                      _tipoDocId = item?.id ?? '';
-                      _tipoDocLabel = item?.abreviatura ?? '';
-                    }),
-                    onNacionalidadChanged: (item) => setState(() {
-                      _nacionalidadId = item?.id ?? '';
-                      _nacionalidadLabel = item?.nombre ?? '';
-                    }),
-                    onSexoChanged: (v) => setState(() => _sexoId = v),
-                  ),
-                  if (tipoPersona == 'juridica') ...[
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // ── Información comercial (solo jurídica) ──────────
-                    SeccionInfoComercial(
-                      habilitado: widget.modoEdicion,
-                      ctrlRuc: _ctrlRuc,
-                      ctrlRazonSocial: _ctrlRazonSocial,
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── Switches ───────────────────────────────────────
-                  SeccionSwitches(
-                    solicitanteParticipante: _solicitanteParticipante,
-                    facturarAlSolicitante: _facturarAlSolicitante,
-                    onSolicitanteChanged: (v) =>
-                        setState(() => _solicitanteParticipante = v),
-                    onFacturarChanged: (v) =>
-                        setState(() => _facturarAlSolicitante = v),
-                    habilitado: widget.modoEdicion,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Botones de acción fijos al pie ──────────────────────────
-          // En modo solo-ver (modoEdicion == false) solo se muestra
-          // "Continuar", sin validar campos — es un recorrido de lectura,
-          // no una captura de datos.
-          Padding(
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            child: widget.modoEdicion
-                ? Row(
-                    children: [
-                      Expanded(
-                        child: CustomSecondaryButton(
-                          text: 'Cancelar',
-                          backgroundColor: AppColors.brandRaspberryAccessible,
-                          onPressed: _confirmarCancelar,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: CustomSecondaryButton(
-                          text: 'Guardar',
-                          icon: AppIcons.save,
-                          isLoading: _guardando,
-                          onPressed: () => _onGuardar(paisCelular),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: CustomPrimaryButton(
-                          text: 'Continuar →',
-                          onPressed: () => _onContinuar(paisCelular),
-                        ),
-                      ),
-                    ],
-                  )
-                : CustomPrimaryButton(
-                    text: 'Continuar →',
-                    onPressed: () => _onContinuar(paisCelular),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Toggle tipo persona ─────────────────────────────
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: SolicitudToggleTipoPersona(
+                    valor: tipoPersona,
+                    habilitado: widget.modoEdicion,
+                    onChanged: (v) => context
+                        .read<SolicitudFormCubit>()
+                        .cambiarTipoPersona(v),
                   ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // ── ¿Cómo se enteró del evento? ────────────────────
+                Text(
+                  '¿Cómo se enteró del evento?',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: AppTextStyles.weightMedium,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                ChipsCanales(
+                  canales: canales,
+                  seleccionado: _canalSeleccionado,
+                  habilitado: widget.modoEdicion,
+                  onSeleccionar: (canal) {
+                    if (!widget.modoEdicion) return;
+                    setState(() {
+                      _canalSeleccionado = _canalSeleccionado?.id == canal.id
+                          ? null
+                          : canal;
+                    });
+                    _sincronizarCubit();
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xs),
+
+                // ── Botones de adjuntos ────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: BotonAdjuntar(
+                        label: 'Adjuntar voucher',
+                        archivo: formState.archivoVoucher,
+                        habilitado: widget.modoEdicion,
+                        onAdjuntar: () => _adjuntarArchivo(true),
+                        onQuitar: () => _quitarArchivo(true),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: BotonAdjuntar(
+                        label: 'Adjuntar O/C',
+                        archivo: formState.archivoOC,
+                        habilitado: widget.modoEdicion,
+                        onAdjuntar: () => _adjuntarArchivo(false),
+                        onQuitar: () => _quitarArchivo(false),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+
+                // ── Tooltip informativo — 3 partes de la solicitud ─
+                const TooltipPartesSolicitud(),
+                const SizedBox(height: AppSpacing.sm),
+
+                // ── Datos del solicitante ──────────────────────────
+                SeccionDatosSolicitante(
+                  habilitado: widget.modoEdicion,
+                  ctrlNumDoc: _ctrlNumDoc,
+                  ctrlNombres: _ctrlNombres,
+                  ctrlApellidoPaterno: _ctrlApellidoPaterno,
+                  ctrlApellidoMaterno: _ctrlApellidoMaterno,
+                  ctrlCargo: _ctrlCargo,
+                  ctrlCelular: _ctrlCelular,
+                  ctrlCorreo: _ctrlCorreo,
+                  paises: paises,
+                  paisCelular: paisCelular,
+                  onPaisCelularChanged: (p) {
+                    setState(() => _paisCelular = p);
+                    _sincronizarCubit();
+                  },
+                  tipoDocInicialId: _tipoDocId.isNotEmpty ? _tipoDocId : null,
+                  nacionalidadInicialId: _nacionalidadId.isNotEmpty
+                      ? _nacionalidadId
+                      : null,
+                  sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
+                  onTipoDocChanged: (item) {
+                    setState(() {
+                      _tipoDocId = item?.id ?? '';
+                      _tipoDocLabel = item?.abreviatura ?? '';
+                    });
+                    _sincronizarCubit();
+                  },
+                  onNacionalidadChanged: (item) {
+                    setState(() {
+                      _nacionalidadId = item?.id ?? '';
+                      _nacionalidadLabel = item?.nombre ?? '';
+                    });
+                    _sincronizarCubit();
+                  },
+                  onSexoChanged: (v) {
+                    setState(() => _sexoId = v);
+                    _sincronizarCubit();
+                  },
+                ),
+                if (tipoPersona == 'juridica') ...[
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // ── Información comercial (solo jurídica) ──────────
+                  SeccionInfoComercial(
+                    habilitado: widget.modoEdicion,
+                    ctrlRuc: _ctrlRuc,
+                    ctrlRazonSocial: _ctrlRazonSocial,
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
+
+                // ── Switches ───────────────────────────────────────
+                SeccionSwitches(
+                  solicitanteParticipante: _solicitanteParticipante,
+                  facturarAlSolicitante: _facturarAlSolicitante,
+                  onSolicitanteChanged: (v) {
+                    setState(() => _solicitanteParticipante = v);
+                    _sincronizarCubit();
+                  },
+                  onFacturarChanged: (v) {
+                    setState(() => _facturarAlSolicitante = v);
+                    _sincronizarCubit();
+                  },
+                  habilitado: widget.modoEdicion,
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
+
+        // ── Botones de acción fijos al pie ──────────────────────────
+        // En modo solo-ver (modoEdicion == false) solo se muestra
+        // "Continuar", sin validar campos — es un recorrido de lectura,
+        // no una captura de datos.
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: widget.modoEdicion
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: CustomSecondaryButton(
+                        text: 'Cancelar',
+                        backgroundColor: AppColors.brandRaspberryAccessible,
+                        onPressed: _confirmarCancelar,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: CustomSecondaryButton(
+                        text: 'Guardar',
+                        icon: AppIcons.save,
+                        isLoading: _guardando,
+                        onPressed: () => _onGuardar(paisCelular),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: CustomPrimaryButton(
+                        text: 'Continuar →',
+                        onPressed: () => _onContinuar(paisCelular),
+                      ),
+                    ),
+                  ],
+                )
+              : CustomPrimaryButton(
+                  text: 'Continuar →',
+                  onPressed: () => _onContinuar(paisCelular),
+                ),
+        ),
+      ],
     );
   }
 }

@@ -42,6 +42,7 @@ export 'mixins/double_back_to_exit_mixin.dart';
 export 'models/combo_item.dart';
 export 'models/user_model.dart';
 export 'models/catalog_item.dart';
+export 'models/catalog_item_model.dart';
 export 'models/configuracion_item.dart';
 export 'models/documento_externo.dart';
 // #endregion models

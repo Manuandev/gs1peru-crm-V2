@@ -510,6 +510,24 @@ Vista de carga centrada (spinner). Usar en estados de carga de BLoC.
 const AppLoadingView()
 ```
 
+### AppLoadingOverlay
+Overlay de pantalla completa que bloquea toda interacción mientras se espera una operación
+asíncrona (ej. autocompletado por documento) — no reemplaza el contenido como `AppLoadingView`,
+se superpone. Usar dentro de un `Stack`, como último hijo, solo cuando corresponda mostrarlo.
+```dart
+Stack(
+  children: [
+    MiFormulario(),
+    if (_buscando)
+      const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+  ],
+)
+```
+El `Container` con color ya capta el hit-test por sí solo — no hace falta
+`AbsorbPointer`/`IgnorePointer` aparte. Usado en `solicitudes/` (Número documento del
+solicitante, RUC de Información comercial, N° documento del formulario de participante — ver
+`solicitudes/CLAUDE.md` → "Autocompletado por documento").
+
 ### AppEmptyView
 Vista de estado vacío con mensaje customizable.
 ```dart
@@ -1358,6 +1376,33 @@ null.emailValidator          // 'El email es requerido'
 'abc@'.emailValidator        // 'Ingresa un email válido'
 'abc@mail.com'.emailValidator // null (válido)
 ```
+
+### DocumentoValidationUtils — `utils/documento_validation_utils.dart`
+
+Regla de longitud/teclado/formatters de un campo de N° documento según el tipo de documento
+elegido (DNI=8 dígitos, Carnet ext.=12, RUC=11 dígitos, Pasaporte=12) — único lugar para esta
+regla, no reimplementarla por formulario. Compara contra los ids reales de
+`CatalogsBloc.valoresDefecto` (parte [13] del SP), nunca hardcodear `'1'`/`'4'`/`'6'`/`'7'`.
+
+```dart
+final valoresDefecto = context.watch<CatalogsBloc>().state is CatalogsLoaded
+    ? (context.watch<CatalogsBloc>().state as CatalogsLoaded).valoresDefecto
+    : const ValoresCRMItem();
+
+CustomTextField(
+  label: 'Número documento *',
+  controller: ctrlNumDoc,
+  keyboardType: DocumentoValidationUtils.keyboardType(tipoDocId, valoresDefecto),
+  maxLength: DocumentoValidationUtils.maxLength(tipoDocId, valoresDefecto),
+  inputFormatters: DocumentoValidationUtils.inputFormatters(tipoDocId, valoresDefecto),
+)
+```
+
+Usado en `solicitudes/` — Datos del solicitante (paso 1), Facturación (paso 3) y Nuevo
+participante, los 3 lugares con un campo de N° documento propio (ver `solicitudes/CLAUDE.md`).
+Al cambiar el combo Tipo documento en cualquiera de esos 3, limpiar el controller de N°
+documento (`ctrl.clear()`) — el texto ya tipeado puede no calzar con la nueva longitud/formato
+(ej. letras de Pasaporte al cambiar a DNI) y Flutter no lo trunca/filtra retroactivamente.
 
 ### LauncherUtils — `utils/launcher/launcher_utils.dart`
 

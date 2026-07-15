@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_facturacion_view.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -390,6 +391,19 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                   monedaBloqueada: formState.idMonedaBloqueada != null,
                   esRuc: _esRuc,
                   correoLabel: correoLabel,
+                  numDocMaxLength: DocumentoValidationUtils.maxLength(
+                    _tipoDocId,
+                    _valoresDefecto,
+                  ),
+                  numDocKeyboardType: DocumentoValidationUtils.keyboardType(
+                    _tipoDocId,
+                    _valoresDefecto,
+                  ),
+                  numDocInputFormatters:
+                      DocumentoValidationUtils.inputFormatters(
+                        _tipoDocId,
+                        _valoresDefecto,
+                      ),
                   ctrlNumDoc: _ctrlNumDoc,
                   ctrlNombresRazon: _ctrlNombresRazon,
                   ctrlApellidoPaterno: _ctrlApellidoPaterno,
@@ -671,6 +685,13 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final bool monedaBloqueada;
   final bool esRuc;
   final String correoLabel;
+  // Longitud/teclado/formatters de Número documento según el tipo elegido —
+  // calculados por el padre con DocumentoValidationUtils (ver
+  // core/CLAUDE.md), mismo utilitario que usan Datos del solicitante y
+  // Nuevo participante — no reimplementar el mapeo tipo→longitud acá.
+  final int? numDocMaxLength;
+  final TextInputType numDocKeyboardType;
+  final List<TextInputFormatter>? numDocInputFormatters;
   final TextEditingController ctrlNumDoc;
   final TextEditingController ctrlNombresRazon;
   final TextEditingController ctrlApellidoPaterno;
@@ -701,6 +722,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     this.monedaBloqueada = false,
     required this.esRuc,
     required this.correoLabel,
+    this.numDocMaxLength,
+    this.numDocKeyboardType = TextInputType.number,
+    this.numDocInputFormatters,
     required this.ctrlNumDoc,
     required this.ctrlNombresRazon,
     required this.ctrlApellidoPaterno,
@@ -786,7 +810,9 @@ class _SeccionDatosFacturacion extends StatelessWidget {
               child: CustomTextField(
                 label: esRuc ? 'RUC *' : 'Número documento *',
                 controller: ctrlNumDoc,
-                keyboardType: TextInputType.number,
+                keyboardType: numDocKeyboardType,
+                maxLength: numDocMaxLength,
+                inputFormatters: numDocInputFormatters,
                 enabled: habilitado,
               ),
             ),

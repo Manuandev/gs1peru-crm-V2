@@ -188,17 +188,48 @@ class ItemSwitch extends StatelessWidget {
 
 // ── Sección Información comercial ────────────────────────────────────────────
 
-class SeccionInfoComercial extends StatelessWidget {
+class SeccionInfoComercial extends StatefulWidget {
   final bool habilitado;
   final TextEditingController ctrlRuc;
   final TextEditingController ctrlRazonSocial;
+  // Autocompletado de Razón Social por RUC (Clientes/BuscarDocumento) — se
+  // dispara al perder foco o al presionar el check del teclado. El indicador
+  // de carga es un overlay de pantalla completa que arma el padre
+  // (SolicitudCompletarView), no algo local a este campo.
+  final VoidCallback? onBuscarRuc;
 
   const SeccionInfoComercial({
     super.key,
     required this.habilitado,
     required this.ctrlRuc,
     required this.ctrlRazonSocial,
+    this.onBuscarRuc,
   });
+
+  @override
+  State<SeccionInfoComercial> createState() => _SeccionInfoComercialState();
+}
+
+class _SeccionInfoComercialState extends State<SeccionInfoComercial> {
+  late final FocusNode _rucFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _rucFocus = FocusNode()..addListener(_onRucFocusChange);
+  }
+
+  void _onRucFocusChange() {
+    if (_rucFocus.hasFocus) return; // solo al perder el foco
+    widget.onBuscarRuc?.call();
+  }
+
+  @override
+  void dispose() {
+    _rucFocus.removeListener(_onRucFocusChange);
+    _rucFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -240,9 +271,12 @@ class SeccionInfoComercial extends StatelessWidget {
               child: CustomTextField(
                 label: 'RUC',
                 hint: 'Ingrese el RUC',
-                controller: ctrlRuc,
+                controller: widget.ctrlRuc,
+                focusNode: _rucFocus,
                 keyboardType: TextInputType.number,
-                enabled: habilitado,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => widget.onBuscarRuc?.call(),
+                enabled: widget.habilitado,
                 maxLength: 11,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
@@ -252,8 +286,8 @@ class SeccionInfoComercial extends StatelessWidget {
               child: CustomTextField(
                 label: 'Razón social',
                 hint: 'Ingrese la razón social',
-                controller: ctrlRazonSocial,
-                enabled: habilitado,
+                controller: widget.ctrlRazonSocial,
+                enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
               ),

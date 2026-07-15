@@ -1,5 +1,85 @@
 # Solicitudes Feature
 
+## Validación de N° documento centralizada — `DocumentoValidationUtils` (2026-07-15)
+Datos del solicitante (paso 1) ya calculaba longitud máxima + solo-dígitos según el tipo de
+documento elegido (`_maxLengthPorTipoDoc`/`_soloDigitosPorTipoDoc`, ambos privados de
+`SeccionDatosSolicitante`), pero Facturación (paso 3) y Nuevo participante no tenían esta regla
+— sus campos de documento aceptaban cualquier longitud/carácter sin restricción (Facturación
+además tenía el teclado hardcodeado a `TextInputType.number`, incorrecto para Carnet de
+extranjería/Pasaporte que llevan letras). Se extrajo la regla a
+`DocumentoValidationUtils` (`core/utils/documento_validation_utils.dart`, ver `core/CLAUDE.md`)
+— único lugar con el mapeo tipo→longitud/teclado, comparado contra los ids reales de
+`CatalogsBloc.valoresDefecto` (parte [13] del SP, nunca hardcodeados). Los 3 lugares con un
+campo de documento propio ahora lo usan:
+- **`SeccionDatosSolicitante`** (`solicitud_completar_datos_solicitante.dart`) — se eliminaron
+  los 2 métodos privados, ahora llama al utilitario directo en `build()`.
+- **`_SeccionDatosFacturacion`** (`solicitud_facturacion_view.dart`) — recibe
+  `numDocMaxLength`/`numDocKeyboardType`/`numDocInputFormatters` ya calculados por
+  `_SolicitudFacturacionViewState` (mismo patrón que `correoLabel`, calculado por el padre y
+  pasado como prop) — cuando el tipo de documento es RUC, el resultado natural del utilitario ya
+  da 11 dígitos solo-números, no hizo falta un caso especial además de `esRuc` (que solo decide
+  el label "RUC \*" vs "Número documento \*").
+- **`participante_form_sheet.dart`** — mismo cálculo en `build()`, usando `_tipoDocId` propio del
+  formulario. También se agregó `_numDocCtrl.clear()` al cambiar el combo Tipo doc. (mismo
+  patrón que ya tenían paso 1 y paso 3) — evita dejar texto que no calza con el nuevo tipo (ej.
+  letras de Pasaporte al cambiar a DNI).
+
+## Autocompletado por documento — Solicitante, RUC comercial y Participante (2026-07-15)
+Los 3 lugares del wizard con un campo de documento propio (Número documento del solicitante,
+RUC de Información comercial, N° documento del formulario de participante) buscan contra
+`DocumentoExternoService` (`Clientes/BuscarDocumento` — ver `core/CLAUDE.md` →
+`DocumentoExternoService`/`DocumentoExterno`) al perder foco o presionar el check del teclado
+(`TextInputAction.done` + `onSubmitted`, más un `FocusNode` local que dispara en la misma
+acción al perder foco — doble gatillo, mismo patrón en los 3):
+
+- **Número documento** (`SeccionDatosSolicitante`,
+  `solicitud_completar_datos_solicitante.dart`) — busca el documento (DNI 8 dígitos o RUC 11) y
+  autocompleta Nombres/Apellido paterno/Apellido materno/Correo del solicitante.
+- **RUC** (`SeccionInfoComercial`, `solicitud_completar_secciones.dart`, sección "Información
+  comercial", solo visible con tipo de persona Jurídica) — busca siempre como RUC (11 dígitos)
+  y solo llena **Razón Social** — no toca Nombres/Apellidos del solicitante, son dos campos y
+  dos búsquedas independientes.
+- **N° documento del formulario de participante** (`participante_form_sheet.dart`) — ya existía
+  desde antes (es el que se copió para los 2 puntos de arriba); autocompleta Nombres/Apellido
+  paterno/Apellido materno/Correo del participante. Si el resultado viene de SUNAT (RUC sin
+  persona natural — ya no debería pasar en la práctica porque el combo Tipo doc. excluye RUC,
+  ver "Tipo documento de participante" abajo, pero el fallback queda por si el usuario pega un
+  número de 11 dígitos con otro tipo de documento seleccionado), el nombre de empresa cae en el
+  campo Nombres.
+- La lógica de cada uno (llamar `DocumentoExternoService`, parsear `DocumentoExterno`, decidir
+  qué controller llenar) vive en el State dueño de esos `TextEditingController` —
+  `_SolicitudCompletarViewState._buscarDocumentoSolicitante()`/`_buscarRucComercial()`
+  (`solicitud_completar_view.dart`) y `_ParticipanteFormSheetState._buscarDocumento()`
+  (`participante_form_sheet.dart`) — no en los widgets de sección, que solo exponen
+  `onBuscar*: VoidCallback?` (el `FocusNode` vive dentro de cada sección/formulario, no en el
+  padre — solo dispara el callback). Cada uno guarda el último documento buscado
+  (`_ultimoDocSolicitanteBuscado`/`_ultimoRucBuscado`/`_ultimoDocBuscado`) para no repetir la
+  misma búsqueda dos veces seguidas (típico si se dispara tanto por `onSubmitted` como por
+  pérdida de foco en el mismo evento).
+- **El indicador de carga es `AppLoadingOverlay`** (`core/presentation/widgets/`, ver
+  `core/CLAUDE.md`) — overlay de pantalla completa reutilizable, no un spinner local al campo.
+  Los 3 lugares envuelven su `build()` en un `Stack` y agregan
+  `AppLoadingOverlay(message: 'Buscando datos del documento...')` como último hijo cuando su
+  flag de búsqueda está en `true` — bloquea toda interacción de esa pantalla/formulario mientras
+  se espera la respuesta, para que el asesor no siga tocando otros campos/botones a mitad de la
+  búsqueda. En `SolicitudCompletarView` es `_buscandoDocSolicitante || _buscandoRuc` (un solo
+  overlay para los 2 campos de esa página); en `participante_form_sheet.dart` es
+  `_buscandoDocumento` del propio bottom sheet.
+- Los controllers de `SolicitudCompletarView` ya tenían `addListener(_onCampoTexto)`
+  (sincroniza en vivo al cubit, ver "Wizard de una sola page" más abajo) — asignar `.text` desde
+  el resultado de la búsqueda ya dispara esa sincronización sola, no hace falta llamar
+  `_sincronizarCubit()` de nuevo ahí.
+
+## Tipo documento de participante — sin RUC (2026-07-15)
+El combo "Tipo doc." de `participante_form_sheet.dart` mostraba las 5 opciones completas del
+catálogo real (`CatalogsBloc.tiposDocumento`, incluyendo RUC) — un participante es siempre una
+persona natural (nunca una empresa), así que se filtró a solo **Sin documento, DNI, Carnet de
+extranjería y Pasaporte**, comparando contra los ids de `CatalogsBloc.valoresDefecto`
+(`idTipoDocSnd`/`idTipoDocDni`/`idTipoDocCde`/`idTipoDocPas` — parte [13] del SP, ver
+`core/CLAUDE.md` → `ValoresCRMItem`), nunca contra el id de RUC. RUC queda reservado para
+Datos del solicitante (paso 1) y Facturación (paso 3), los únicos 2 lugares del wizard donde
+puede haber una razón social en vez de una persona.
+
 ## Catálogo real reemplaza ids hardcodeados — Sexo, Tipo participante, RUC, Factura/Boleta (2026-07-15)
 Auditoría encontró varios ids de catálogo (SYSTABEXTER02) hardcodeados en 5+ archivos del wizard,
 algunos duplicados en 3-4 lugares independientes (riesgo de desincronización si el id real

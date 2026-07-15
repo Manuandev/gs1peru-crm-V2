@@ -124,6 +124,7 @@ export 'presentation/widgets/navigation/exit_on_back_wrapper.dart';
 
 export 'presentation/widgets/app_error_view.dart';
 export 'presentation/widgets/app_loading_view.dart';
+export 'presentation/widgets/app_loading_overlay.dart';
 export 'presentation/widgets/app_empty_view.dart';
 export 'presentation/widgets/app_snackbar.dart';
 
@@ -149,6 +150,7 @@ export 'theme/theme_cubit.dart';
 export 'utils/responsive_helper.dart';
 export 'utils/elapsed_time_utils.dart';
 export 'utils/lead_update_notifier.dart';
+export 'utils/documento_validation_utils.dart';
 
 export 'utils/date/date_extensions.dart';
 export 'utils/date/date_formats.dart';

@@ -4,7 +4,6 @@
 // nacionalidad, sexo, nombres, apellidos, cargo, celular y correo.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -28,6 +27,11 @@ class SeccionDatosSolicitante extends StatefulWidget {
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   final ValueChanged<SexoItem?>? onSexoChanged;
+  // Autocompletado por documento (Clientes/BuscarDocumento) — se dispara al
+  // perder foco o al presionar el check del teclado en Número documento. El
+  // indicador de carga es un overlay de pantalla completa que arma el padre
+  // (SolicitudCompletarView), no algo local a este campo.
+  final VoidCallback? onBuscarDocumento;
 
   const SeccionDatosSolicitante({
     super.key,
@@ -48,6 +52,7 @@ class SeccionDatosSolicitante extends StatefulWidget {
     this.onTipoDocChanged,
     this.onNacionalidadChanged,
     this.onSexoChanged,
+    this.onBuscarDocumento,
   });
 
   @override
@@ -57,27 +62,26 @@ class SeccionDatosSolicitante extends StatefulWidget {
 
 class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
   String? _tipoDocId;
+  late final FocusNode _numDocFocus;
 
   @override
   void initState() {
     super.initState();
     _tipoDocId = widget.tipoDocInicialId;
+    _numDocFocus = FocusNode()..addListener(_onNumDocFocusChange);
   }
 
-  // Límite de caracteres y tipo de teclado según tipo de documento — ids
-  // reales de SYSTABEXTER02 CODTABLA='F01', vienen de
-  // `CatalogsBloc.valoresDefecto` (parte [13] del SP), no hardcodeados.
-  int? _maxLengthPorTipoDoc(ValoresCRMItem v) {
-    if (_tipoDocId == null) return null;
-    if (_tipoDocId == v.idTipoDocDni) return 8;
-    if (_tipoDocId == v.idTipoDocCde) return 12;
-    if (_tipoDocId == v.idTipoDocRuc) return 11;
-    if (_tipoDocId == v.idTipoDocPas) return 12;
-    return null;
+  void _onNumDocFocusChange() {
+    if (_numDocFocus.hasFocus) return; // solo al perder el foco
+    widget.onBuscarDocumento?.call();
   }
 
-  bool _soloDigitosPorTipoDoc(ValoresCRMItem v) =>
-      _tipoDocId == v.idTipoDocDni || _tipoDocId == v.idTipoDocRuc;
+  @override
+  void dispose() {
+    _numDocFocus.removeListener(_onNumDocFocusChange);
+    _numDocFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,9 +99,18 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
         ? catalogState.valoresDefecto
         : const ValoresCRMItem();
 
-    final maxLenDoc = _maxLengthPorTipoDoc(valoresDefecto);
-    final soloDigitos = _soloDigitosPorTipoDoc(valoresDefecto);
-    final teclado = soloDigitos ? TextInputType.number : TextInputType.text;
+    final maxLenDoc = DocumentoValidationUtils.maxLength(
+      _tipoDocId,
+      valoresDefecto,
+    );
+    final teclado = DocumentoValidationUtils.keyboardType(
+      _tipoDocId,
+      valoresDefecto,
+    );
+    final inputFormatters = DocumentoValidationUtils.inputFormatters(
+      _tipoDocId,
+      valoresDefecto,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,12 +159,13 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
               child: CustomTextField(
                 label: 'Número documento *',
                 controller: widget.ctrlNumDoc,
+                focusNode: _numDocFocus,
                 keyboardType: teclado,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => widget.onBuscarDocumento?.call(),
                 enabled: widget.habilitado,
                 maxLength: maxLenDoc,
-                inputFormatters: soloDigitos
-                    ? [FilteringTextInputFormatter.digitsOnly]
-                    : null,
+                inputFormatters: inputFormatters,
               ),
             ),
           ],

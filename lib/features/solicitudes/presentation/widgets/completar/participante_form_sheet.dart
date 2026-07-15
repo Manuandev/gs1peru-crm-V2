@@ -94,8 +94,9 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
 
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
+      final valoresDefecto = catalogState.valoresDefecto;
       final paises = catalogState.paises;
-      final idPaisDefecto = catalogState.valoresDefecto.idPais;
+      final idPaisDefecto = valoresDefecto.idPais;
       _paisSeleccionado = (p != null && p.celularCodigoTelefono.isNotEmpty)
           ? paises
                 .where((x) => x.codigoTelefono == p.celularCodigoTelefono)
@@ -105,6 +106,28 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
           ? null
           : paises.where((x) => x.id == idPaisDefecto).firstOrNull ??
                 paises.first;
+
+      // Nuevo participante (no edición) — Tipo documento y Nacionalidad
+      // arrancan en DNI/Perú, mismos ids reales de valoresDefecto que usa
+      // Datos del solicitante (paso 1, ver solicitudes/CLAUDE.md).
+      if (p == null) {
+        final tipoDocDefecto = catalogState.tiposDocumento
+            .where((t) => t.id == valoresDefecto.idTipoDocDni)
+            .firstOrNull;
+        if (tipoDocDefecto != null) {
+          _tipoDocId = tipoDocDefecto.id;
+          _tipoDocLabel = tipoDocDefecto.abreviatura;
+          _tipoDocInicialId = tipoDocDefecto.id;
+        }
+        final nacionalidadDefecto = catalogState.nacionalidades
+            .where((n) => n.id == valoresDefecto.idNacionalidad)
+            .firstOrNull;
+        if (nacionalidadDefecto != null) {
+          _nacionalidadId = nacionalidadDefecto.id;
+          _nacionalidadLabel = nacionalidadDefecto.nombre;
+          _nacionalidadInicialId = nacionalidadDefecto.id;
+        }
+      }
 
       // Id real de "Pagante" (esInvitado == false) — nunca hardcodear '1'.
       _tipoParticipante =
@@ -236,8 +259,22 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final catalogState = context.watch<CatalogsBloc>().state;
+    final valoresDefecto = catalogState is CatalogsLoaded
+        ? catalogState.valoresDefecto
+        : const ValoresCRMItem();
+    // Un participante nunca es una empresa — solo se permite Sin documento,
+    // DNI, Carnet de extranjería y Pasaporte (nunca RUC, reservado para
+    // Datos del solicitante/Facturación en los pasos 1 y 3).
     final tiposDocumento = catalogState is CatalogsLoaded
         ? catalogState.tiposDocumento
+              .where(
+                (t) =>
+                    t.id == valoresDefecto.idTipoDocSnd ||
+                    t.id == valoresDefecto.idTipoDocDni ||
+                    t.id == valoresDefecto.idTipoDocCde ||
+                    t.id == valoresDefecto.idTipoDocPas,
+              )
+              .toList()
         : const <TipoDocumentoItem>[];
     final nacionalidades = catalogState is CatalogsLoaded
         ? catalogState.nacionalidades
@@ -248,291 +285,320 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     final tiposParticipante = catalogState is CatalogsLoaded
         ? catalogState.tiposParticipante
         : const <TipoParticipanteItem>[];
+    final maxLenDoc = DocumentoValidationUtils.maxLength(
+      _tipoDocId,
+      valoresDefecto,
+    );
+    final tecladoDoc = DocumentoValidationUtils.keyboardType(
+      _tipoDocId,
+      valoresDefecto,
+    );
+    final inputFormattersDoc = DocumentoValidationUtils.inputFormatters(
+      _tipoDocId,
+      valoresDefecto,
+    );
 
-    return SafeArea(
-      top: false,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppSizing.radiusXl),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Pill indicador ──────────────────────────────────────
-            const SizedBox(height: AppSpacing.sm),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+    return Stack(
+      children: [
+        SafeArea(
+          top: false,
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppSizing.radiusXl),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // ── Header ─────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryWithOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-                    ),
-                    child: const Icon(
-                      AppIcons.user,
-                      color: AppColors.primary,
-                      size: AppSizing.iconMd,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Pill indicador ──────────────────────────────────────
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(
+                      AppSizing.radiusCircular,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    _esEdicion ? 'Editar participante' : 'Nuevo participante',
-                    style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: AppTextStyles.weightBold,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(
-                      AppIcons.close,
-                      size: AppSizing.iconMd,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const Divider(height: 1),
-
-            // ── Formulario scrollable ───────────────────────────────
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  left: AppSpacing.md,
-                  right: AppSpacing.md,
-                  top: AppSpacing.md,
-                  bottom:
-                      MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
                 ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                const SizedBox(height: AppSpacing.sm),
+
+                // ── Header ─────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  child: Row(
                     children: [
-                      // Tipo doc + N° doc
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 130,
-                            child: CustomComboField<TipoDocumentoItem>(
-                              label: 'Tipo doc.',
-                              data: tiposDocumento,
-                              labelIndex: 2, // abreviatura (DNI/CE/RUC/...)
-                              initialValue: _tipoDocInicialId,
-                              onChanged: (item) => setState(() {
-                                _tipoDocId = item?.id ?? '';
-                                _tipoDocLabel = item?.abreviatura ?? '';
-                              }),
-                            ),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryWithOpacity(0.1),
+                          borderRadius: BorderRadius.circular(
+                            AppSizing.radiusSm,
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: CustomTextField(
-                              label: 'N° documento *',
-                              controller: _numDocCtrl,
-                              focusNode: _numDocFocus,
-                              isUpperCase: true,
-                              keyboardType: TextInputType.text,
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) => _buscarDocumento(),
-                              suffixIcon: _buscandoDocumento
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(AppSpacing.sm),
-                                      child: SizedBox(
-                                        width: AppSizing.iconSm,
-                                        height: AppSizing.iconSm,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth:
-                                              AppSizing.spinnerStrokeSmall,
-                                        ),
-                                      ),
-                                    )
-                                  : null,
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'Requerido'
-                                  : null,
-                            ),
-                          ),
-                        ],
+                        ),
+                        child: const Icon(
+                          AppIcons.user,
+                          color: AppColors.primary,
+                          size: AppSizing.iconMd,
+                        ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Nacionalidad + Tipo de participante
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: CustomComboField<NacionalidadItem>(
-                              label: 'Nacionalidad *',
-                              data: nacionalidades,
-                              initialValue: _nacionalidadInicialId,
-                              onChanged: (item) => setState(() {
-                                _nacionalidadId = item?.id ?? '';
-                                _nacionalidadLabel = item?.nombre ?? '';
-                              }),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: CustomComboField<TipoParticipanteItem>(
-                              label: 'Tipo *',
-                              data: tiposParticipante,
-                              initialValue: _tipoParticipante,
-                              onChanged: (item) {
-                                if (item != null) {
-                                  setState(() => _tipoParticipante = item.id);
-                                }
-                              },
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        _esEdicion
+                            ? 'Editar participante'
+                            : 'Nuevo participante',
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: AppTextStyles.weightBold,
+                        ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Nombres
-                      CustomTextField(
-                        label: 'Nombres *',
-                        controller: _nombresCtrl,
-                        isUpperCase: true,
-                        textCapitalization: TextCapitalization.characters,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Requerido' : null,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Apellido paterno + Apellido materno
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: CustomTextField(
-                              label: 'Apellido paterno *',
-                              controller: _apellidoPaternoCtrl,
-                              isUpperCase: true,
-                              textCapitalization: TextCapitalization.characters,
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'Requerido'
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: CustomTextField(
-                              label: 'Apellido materno',
-                              controller: _apellidoMaternoCtrl,
-                              isUpperCase: true,
-                              textCapitalization: TextCapitalization.characters,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Correo
-                      CustomTextField(
-                        label: 'Correo electrónico *',
-                        controller: _correoCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) => v.emailValidator,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Cargo
-                      CustomTextField(
-                        label: 'Cargo *',
-                        controller: _cargoCtrl,
-                        isUpperCase: true,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Requerido' : null,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Celular + Importe
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: SolicitudCampoCelular(
-                              controller: _celularCtrl,
-                              habilitado: true,
-                              paises: paises,
-                              paisSeleccionado: _paisSeleccionado,
-                              onPaisChanged: (p) =>
-                                  setState(() => _paisSeleccionado = p),
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'Requerido'
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: CustomTextField(
-                              label: 'Importe',
-                              controller: _importeCtrl,
-                              enabled: !_importeBloqueado,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              validator: (v) {
-                                if (v == null || v.trim().isEmpty) return null;
-                                if (double.tryParse(v.trim()) == null) {
-                                  return 'Número inválido';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // ── Botones ─────────────────────────────────────
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomOutlinedButton(
-                              text: 'Cancelar',
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: CustomPrimaryButton(
-                              text: _esEdicion ? 'Guardar' : 'Crear',
-                              onPressed: _guardar,
-                            ),
-                          ),
-                        ],
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(
+                          AppIcons.close,
+                          size: AppSizing.iconMd,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
+
+                const Divider(height: 1),
+
+                // ── Formulario scrollable ───────────────────────────────
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      left: AppSpacing.md,
+                      right: AppSpacing.md,
+                      top: AppSpacing.md,
+                      bottom:
+                          MediaQuery.viewInsetsOf(context).bottom +
+                          AppSpacing.md,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Tipo doc + N° doc
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: 130,
+                                child: CustomComboField<TipoDocumentoItem>(
+                                  label: 'Tipo doc.',
+                                  data: tiposDocumento,
+                                  labelIndex:
+                                      2, // abreviatura (Sin doc/DNI/CE/Pas.)
+                                  initialValue: _tipoDocInicialId,
+                                  onChanged: (item) => setState(() {
+                                    _tipoDocId = item?.id ?? '';
+                                    _tipoDocLabel = item?.abreviatura ?? '';
+                                    _numDocCtrl.clear();
+                                  }),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: CustomTextField(
+                                  label: 'N° documento *',
+                                  controller: _numDocCtrl,
+                                  focusNode: _numDocFocus,
+                                  isUpperCase: true,
+                                  keyboardType: tecladoDoc,
+                                  maxLength: maxLenDoc,
+                                  inputFormatters: inputFormattersDoc,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _buscarDocumento(),
+                                  validator: (v) =>
+                                      v == null || v.trim().isEmpty
+                                      ? 'Requerido'
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // Nacionalidad + Tipo de participante
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: CustomComboField<NacionalidadItem>(
+                                  label: 'Nacionalidad *',
+                                  data: nacionalidades,
+                                  initialValue: _nacionalidadInicialId,
+                                  onChanged: (item) => setState(() {
+                                    _nacionalidadId = item?.id ?? '';
+                                    _nacionalidadLabel = item?.nombre ?? '';
+                                  }),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: CustomComboField<TipoParticipanteItem>(
+                                  label: 'Tipo *',
+                                  data: tiposParticipante,
+                                  initialValue: _tipoParticipante,
+                                  onChanged: (item) {
+                                    if (item != null) {
+                                      setState(
+                                        () => _tipoParticipante = item.id,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // Nombres
+                          CustomTextField(
+                            label: 'Nombres *',
+                            controller: _nombresCtrl,
+                            isUpperCase: true,
+                            textCapitalization: TextCapitalization.characters,
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Requerido'
+                                : null,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // Apellido paterno + Apellido materno
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: CustomTextField(
+                                  label: 'Apellido paterno *',
+                                  controller: _apellidoPaternoCtrl,
+                                  isUpperCase: true,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  validator: (v) =>
+                                      v == null || v.trim().isEmpty
+                                      ? 'Requerido'
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: CustomTextField(
+                                  label: 'Apellido materno',
+                                  controller: _apellidoMaternoCtrl,
+                                  isUpperCase: true,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // Correo
+                          CustomTextField(
+                            label: 'Correo electrónico *',
+                            controller: _correoCtrl,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (v) => v.emailValidator,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // Cargo
+                          CustomTextField(
+                            label: 'Cargo *',
+                            controller: _cargoCtrl,
+                            isUpperCase: true,
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Requerido'
+                                : null,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // Celular + Importe
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: SolicitudCampoCelular(
+                                  controller: _celularCtrl,
+                                  habilitado: true,
+                                  paises: paises,
+                                  paisSeleccionado: _paisSeleccionado,
+                                  onPaisChanged: (p) =>
+                                      setState(() => _paisSeleccionado = p),
+                                  validator: (v) =>
+                                      v == null || v.trim().isEmpty
+                                      ? 'Requerido'
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: CustomTextField(
+                                  label: 'Importe',
+                                  controller: _importeCtrl,
+                                  enabled: !_importeBloqueado,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  validator: (v) {
+                                    if (v == null || v.trim().isEmpty) {
+                                      return null;
+                                    }
+                                    if (double.tryParse(v.trim()) == null) {
+                                      return 'Número inválido';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // ── Botones ─────────────────────────────────────
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CustomOutlinedButton(
+                                  text: 'Cancelar',
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: CustomPrimaryButton(
+                                  text: _esEdicion ? 'Guardar' : 'Crear',
+                                  onPressed: _guardar,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (_buscandoDocumento)
+          const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+      ],
     );
   }
 }

@@ -63,6 +63,12 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   final _ctrlNit = TextEditingController();
   final _ctrlObservaciones = TextEditingController();
 
+  // Autocompletado por documento (Clientes/BuscarDocumento) — mismo patrón
+  // que Datos del solicitante y Nuevo participante (ver solicitudes/CLAUDE.md).
+  final _documentoService = DocumentoExternoService();
+  bool _buscandoDocumento = false;
+  String _ultimoDocBuscado = '';
+
   // Ids reales de catálogo (SYSTABEXTER02) usados en las reglas de este
   // paso — vienen de `CatalogsBloc.valoresDefecto` (parte [13] del SP), no
   // hardcodeados. Si el catálogo aún no cargó, caen a '' (los combos de
@@ -112,6 +118,53 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     context.read<SolicitudFormCubit>().guardarFacturacion(
       _construirDatosFacturacion(_paisCelular),
     );
+  }
+
+  // Autocompleta Nombres/Apellidos/Correo (o solo Razón Social si el tipo de
+  // documento es RUC) por DNI (8 dígitos) o RUC (11) al salir del campo
+  // Número documento/RUC o presionar el check del teclado — mismo servicio y
+  // mismo patrón que Datos del solicitante y Nuevo participante.
+  Future<void> _buscarDocumento() async {
+    final numDoc = _ctrlNumDoc.text.trim();
+    final esBusqueda = numDoc.length == 8 || numDoc.length == 11;
+    if (!esBusqueda || numDoc == _ultimoDocBuscado) return;
+    _ultimoDocBuscado = numDoc;
+
+    setState(() => _buscandoDocumento = true);
+    try {
+      final resultado = await _documentoService.buscar(numDoc);
+      if (!mounted) return;
+      if (resultado == null || resultado.sinDatos) return;
+
+      if (_esRuc) {
+        if (resultado.nomEmpresa.isNotEmpty) {
+          _ctrlNombresRazon.text = resultado.nomEmpresa;
+        }
+      } else {
+        if (resultado.nombres.isNotEmpty) {
+          _ctrlNombresRazon.text = resultado.nombres;
+        } else if (resultado.nomEmpresa.isNotEmpty) {
+          _ctrlNombresRazon.text = resultado.nomEmpresa;
+        }
+        if (resultado.apePaterno.isNotEmpty) {
+          _ctrlApellidoPaterno.text = resultado.apePaterno;
+        }
+        if (resultado.apeMaterno.isNotEmpty) {
+          _ctrlApellidoMaterno.text = resultado.apeMaterno;
+        }
+      }
+      if (resultado.correo.isNotEmpty) {
+        _ctrlCorreo.text = resultado.correo;
+      }
+    } catch (_) {
+      if (!mounted) return;
+      AppSnackBar.error(
+        context,
+        'No se pudo autocompletar los datos del documento.',
+      );
+    } finally {
+      if (mounted) setState(() => _buscandoDocumento = false);
+    }
   }
 
   DatosFacturacion _construirDatosFacturacion(PaisItem? paisCelular) {
@@ -275,6 +328,29 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
             .where((p) => p.codigoTelefono == solicitante.celularCodigoTelefono)
             .firstOrNull;
       }
+      return;
+    }
+
+    // Ni datos guardados ni "Facturar al solicitante" — Tipo documento y
+    // Nacionalidad arrancan en DNI/Perú, mismo default que Datos del
+    // solicitante y Nuevo participante (ver solicitudes/CLAUDE.md).
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is CatalogsLoaded) {
+      final valoresDefecto = catalogState.valoresDefecto;
+      final tipoDocDefecto = catalogState.tiposDocumento
+          .where((t) => t.id == valoresDefecto.idTipoDocDni)
+          .firstOrNull;
+      if (tipoDocDefecto != null) {
+        _tipoDocId = tipoDocDefecto.id;
+        _tipoDocLabel = tipoDocDefecto.abreviatura;
+      }
+      final nacionalidadDefecto = catalogState.nacionalidades
+          .where((n) => n.id == valoresDefecto.idNacionalidad)
+          .firstOrNull;
+      if (nacionalidadDefecto != null) {
+        _nacionalidadId = nacionalidadDefecto.id;
+        _nacionalidadLabel = nacionalidadDefecto.nombre;
+      }
     }
   }
 
@@ -336,244 +412,263 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
             : paises.where((p) => p.id == _valoresDefecto.idPais).firstOrNull ??
                   paises.first);
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Encabezado + Toggle ────────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      AppIcons.receipt,
-                      color: AppColors.primary,
-                      size: AppSizing.iconLg,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Datos de facturación',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: AppTextStyles.weightBold,
-                            ),
-                          ),
-                          Text(
-                            '¿Quién paga la inscripción?',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Encabezado + Toggle ────────────────────────────
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          AppIcons.receipt,
+                          color: AppColors.primary,
+                          size: AppSizing.iconLg,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Datos de facturación',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: AppTextStyles.weightBold,
+                                ),
+                              ),
+                              Text(
+                                '¿Quién paga la inscripción?',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
 
-                // ── Tooltip informativo ────────────────────────────
-                const _TooltipFacturacion(),
-                const SizedBox(height: AppSpacing.sm),
+                    // ── Tooltip informativo ────────────────────────────
+                    const _TooltipFacturacion(),
+                    const SizedBox(height: AppSpacing.sm),
 
-                // ── Formulario ─────────────────────────────────────
-                _SeccionDatosFacturacion(
-                  habilitado: widget.modoEdicion,
-                  monedaBloqueada: formState.idMonedaBloqueada != null,
-                  esRuc: _esRuc,
-                  correoLabel: correoLabel,
-                  numDocMaxLength: DocumentoValidationUtils.maxLength(
-                    _tipoDocId,
-                    _valoresDefecto,
-                  ),
-                  numDocKeyboardType: DocumentoValidationUtils.keyboardType(
-                    _tipoDocId,
-                    _valoresDefecto,
-                  ),
-                  numDocInputFormatters:
-                      DocumentoValidationUtils.inputFormatters(
+                    // ── Formulario ─────────────────────────────────────
+                    _SeccionDatosFacturacion(
+                      habilitado: widget.modoEdicion,
+                      monedaBloqueada: true,
+                      esRuc: _esRuc,
+                      correoLabel: correoLabel,
+                      numDocMaxLength: DocumentoValidationUtils.maxLength(
                         _tipoDocId,
                         _valoresDefecto,
                       ),
-                  ctrlNumDoc: _ctrlNumDoc,
-                  ctrlNombresRazon: _ctrlNombresRazon,
-                  ctrlApellidoPaterno: _ctrlApellidoPaterno,
-                  ctrlApellidoMaterno: _ctrlApellidoMaterno,
-                  ctrlCelular: _ctrlCelular,
-                  ctrlCorreo: _ctrlCorreo,
-                  ctrlDireccion: _ctrlDireccion,
-                  monedas: monedas,
-                  tiposDocumento: tiposDocumento,
-                  nacionalidades: nacionalidades,
-                  paises: paises,
-                  comprobantes: comprobantes,
-                  paisCelular: paisCelular,
-                  onPaisCelularChanged: (p) {
-                    setState(() => _paisCelular = p);
-                    _sincronizarCubit();
-                  },
-                  comprobanteInicialId: _comprobanteId.isNotEmpty
-                      ? _comprobanteId
-                      : null,
-                  paisInicialId: _paisId.isNotEmpty ? _paisId : null,
-                  monedaInicialId: _monedaId.isNotEmpty ? _monedaId : null,
-                  onComprobanteChanged: (item) {
-                    setState(() {
-                      _comprobanteId = item?.id ?? '';
-                      _comprobanteLabel = item?.nombre ?? '';
-                      if (_comprobanteId == _idComprobanteFactura) {
-                        // Factura exige RUC — se fuerza el tipo documento.
-                        final ruc = tiposDocumentoTodos
-                            .where((t) => t.id == _idTipoDocRuc)
-                            .firstOrNull;
-                        _tipoDocId = ruc?.id ?? '';
-                        _tipoDocLabel = ruc?.abreviatura ?? '';
-                        _ctrlNumDoc.clear();
-                      }
-                    });
-                    _sincronizarCubit();
-                  },
-                  onPaisChanged: (item) {
-                    setState(() {
-                      _paisId = item?.id ?? '';
-                      _paisLabel = item?.nombre ?? '';
-                    });
-                    _sincronizarCubit();
-                  },
-                  onMonedaChanged: (item) {
-                    setState(() {
-                      _monedaId = item?.id ?? '';
-                      _monedaLabel = item?.nombre ?? '';
-                    });
-                    _sincronizarCubit();
-                  },
-                  tipoDocInicialId: _tipoDocId.isNotEmpty ? _tipoDocId : null,
-                  nacionalidadInicialId: _nacionalidadId.isNotEmpty
-                      ? _nacionalidadId
-                      : null,
-                  onTipoDocChanged: (item) {
-                    setState(() {
-                      _tipoDocId = item?.id ?? '';
-                      _tipoDocLabel = item?.abreviatura ?? '';
-                      _ctrlNumDoc.clear();
-                    });
-                    _sincronizarCubit();
-                  },
-                  onNacionalidadChanged: (item) {
-                    setState(() {
-                      _nacionalidadId = item?.id ?? '';
-                      _nacionalidadLabel = item?.nombre ?? '';
-                    });
-                    _sincronizarCubit();
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // ── Resumen + Botones fijos al pie ───────────────────────────
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border(top: BorderSide(color: AppColors.border, width: 1)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Info: Facturar al solicitante | Participantes ──
-              IntrinsicHeight(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _ItemResumen(
-                        icono: AppIcons.user,
-                        colorIcono: AppColors.brandForest,
-                        colorFondo: AppColors.brandForest.withOpacity(0.12),
-                        label: 'Facturar al solicitante',
-                        valor: facturarAlSolicitante ? 'Sí' : 'No',
+                      numDocKeyboardType: DocumentoValidationUtils.keyboardType(
+                        _tipoDocId,
+                        _valoresDefecto,
                       ),
-                    ),
-                    VerticalDivider(
-                      width: AppSpacing.md,
-                      thickness: 1,
-                      color: AppColors.border,
-                    ),
-                    Expanded(
-                      child:
-                          BlocBuilder<ParticipantesCubit, ParticipantesState>(
-                            builder: (context, state) => _ItemResumen(
-                              icono: AppIcons.users,
-                              colorIcono: AppColors.warning,
-                              colorFondo: AppColors.warning.withOpacity(0.12),
-                              label: 'Participantes pagantes',
-                              valor: state.participantes
-                                  .where(
-                                    (p) => p.tipoParticipante == '1', // Pagante
-                                  )
-                                  .length
-                                  .toString(),
-                            ),
+                      numDocInputFormatters:
+                          DocumentoValidationUtils.inputFormatters(
+                            _tipoDocId,
+                            _valoresDefecto,
                           ),
+                      ctrlNumDoc: _ctrlNumDoc,
+                      ctrlNombresRazon: _ctrlNombresRazon,
+                      ctrlApellidoPaterno: _ctrlApellidoPaterno,
+                      ctrlApellidoMaterno: _ctrlApellidoMaterno,
+                      ctrlCelular: _ctrlCelular,
+                      ctrlCorreo: _ctrlCorreo,
+                      ctrlDireccion: _ctrlDireccion,
+                      monedas: monedas,
+                      tiposDocumento: tiposDocumento,
+                      nacionalidades: nacionalidades,
+                      paises: paises,
+                      comprobantes: comprobantes,
+                      paisCelular: paisCelular,
+                      onPaisCelularChanged: (p) {
+                        setState(() => _paisCelular = p);
+                        _sincronizarCubit();
+                      },
+                      comprobanteInicialId: _comprobanteId.isNotEmpty
+                          ? _comprobanteId
+                          : null,
+                      paisInicialId: _paisId.isNotEmpty ? _paisId : null,
+                      monedaInicialId: _monedaId.isNotEmpty ? _monedaId : null,
+                      onComprobanteChanged: (item) {
+                        setState(() {
+                          _comprobanteId = item?.id ?? '';
+                          _comprobanteLabel = item?.nombre ?? '';
+                          if (_comprobanteId == _idComprobanteFactura) {
+                            // Factura exige RUC — se fuerza el tipo documento.
+                            final ruc = tiposDocumentoTodos
+                                .where((t) => t.id == _idTipoDocRuc)
+                                .firstOrNull;
+                            _tipoDocId = ruc?.id ?? '';
+                            _tipoDocLabel = ruc?.abreviatura ?? '';
+                            _ctrlNumDoc.clear();
+                          }
+                        });
+                        _sincronizarCubit();
+                      },
+                      onPaisChanged: (item) {
+                        setState(() {
+                          _paisId = item?.id ?? '';
+                          _paisLabel = item?.nombre ?? '';
+                        });
+                        _sincronizarCubit();
+                      },
+                      onMonedaChanged: (item) {
+                        setState(() {
+                          _monedaId = item?.id ?? '';
+                          _monedaLabel = item?.nombre ?? '';
+                        });
+                        _sincronizarCubit();
+                      },
+                      tipoDocInicialId: _tipoDocId.isNotEmpty
+                          ? _tipoDocId
+                          : null,
+                      nacionalidadInicialId: _nacionalidadId.isNotEmpty
+                          ? _nacionalidadId
+                          : null,
+                      onTipoDocChanged: (item) {
+                        setState(() {
+                          _tipoDocId = item?.id ?? '';
+                          _tipoDocLabel = item?.abreviatura ?? '';
+                          _ctrlNumDoc.clear();
+                        });
+                        _sincronizarCubit();
+                      },
+                      onNacionalidadChanged: (item) {
+                        setState(() {
+                          _nacionalidadId = item?.id ?? '';
+                          _nacionalidadLabel = item?.nombre ?? '';
+                        });
+                        _sincronizarCubit();
+                      },
+                      onBuscarDocumento: _buscarDocumento,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+            ),
 
-              // ── Botones ────────────────────────────────────────
-              // En modo solo-ver (modoEdicion == false) solo se muestra
-              // "Continuar", sin validar campos — es un recorrido de
-              // lectura, no una captura de datos.
-              widget.modoEdicion
-                  ? Row(
+            // ── Resumen + Botones fijos al pie ───────────────────────────
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                border: Border(
+                  top: BorderSide(color: AppColors.border, width: 1),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Info: Facturar al solicitante | Participantes ──
+                  IntrinsicHeight(
+                    child: Row(
                       children: [
                         Expanded(
-                          child: CustomSecondaryButton(
-                            text: 'Atrás',
-                            icon: AppIcons.back,
-                            backgroundColor: AppColors.brandRaspberryAccessible,
-                            onPressed: widget.onAtras,
+                          child: _ItemResumen(
+                            icono: AppIcons.user,
+                            colorIcono: AppColors.brandForest,
+                            colorFondo: AppColors.brandForest.withOpacity(0.12),
+                            label: 'Facturar al solicitante',
+                            valor: facturarAlSolicitante ? 'Sí' : 'No',
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: CustomSecondaryButton(
-                            text: 'Guardar',
-                            icon: AppIcons.save,
-                            isLoading: _guardando,
-                            onPressed: () => _onGuardar(paisCelular),
-                          ),
+                        VerticalDivider(
+                          width: AppSpacing.md,
+                          thickness: 1,
+                          color: AppColors.border,
                         ),
-                        const SizedBox(width: AppSpacing.xs),
                         Expanded(
-                          child: CustomPrimaryButton(
-                            text: 'Continuar →',
-                            onPressed: () => _onContinuar(paisCelular),
-                          ),
+                          child:
+                              BlocBuilder<
+                                ParticipantesCubit,
+                                ParticipantesState
+                              >(
+                                builder: (context, state) => _ItemResumen(
+                                  icono: AppIcons.users,
+                                  colorIcono: AppColors.warning,
+                                  colorFondo: AppColors.warning.withOpacity(
+                                    0.12,
+                                  ),
+                                  label: 'Participantes pagantes',
+                                  valor: state.participantes
+                                      .where(
+                                        (p) =>
+                                            p.tipoParticipante ==
+                                            '1', // Pagante
+                                      )
+                                      .length
+                                      .toString(),
+                                ),
+                              ),
                         ),
                       ],
-                    )
-                  : CustomPrimaryButton(
-                      text: 'Continuar →',
-                      onPressed: () => _onContinuar(paisCelular),
                     ),
-            ],
-          ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+
+                  // ── Botones ────────────────────────────────────────
+                  // En modo solo-ver (modoEdicion == false) solo se muestra
+                  // "Continuar", sin validar campos — es un recorrido de
+                  // lectura, no una captura de datos.
+                  widget.modoEdicion
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: CustomSecondaryButton(
+                                text: 'Atrás',
+                                icon: AppIcons.back,
+                                backgroundColor:
+                                    AppColors.brandRaspberryAccessible,
+                                onPressed: widget.onAtras,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: CustomSecondaryButton(
+                                text: 'Guardar',
+                                icon: AppIcons.save,
+                                isLoading: _guardando,
+                                onPressed: () => _onGuardar(paisCelular),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: CustomPrimaryButton(
+                                text: 'Continuar →',
+                                onPressed: () => _onContinuar(paisCelular),
+                              ),
+                            ),
+                          ],
+                        )
+                      : CustomPrimaryButton(
+                          text: 'Continuar →',
+                          onPressed: () => _onContinuar(paisCelular),
+                        ),
+                ],
+              ),
+            ),
+          ],
         ),
+        if (_buscandoDocumento)
+          const AppLoadingOverlay(message: 'Buscando datos del documento...'),
       ],
     );
   }
@@ -677,11 +772,10 @@ class _TooltipFacturacion extends StatelessWidget {
 // RUC -> RUC + Razón Social. Cualquier otro -> Número documento + Nombres +
 // Apellido paterno + Apellido materno (opcional).
 
-class _SeccionDatosFacturacion extends StatelessWidget {
+class _SeccionDatosFacturacion extends StatefulWidget {
   final bool habilitado;
-  // true si la solicitud viene de una negociación con precio ya definido —
-  // la moneda no se elige acá, queda fija (ver
-  // SolicitudFormState.idMonedaBloqueada).
+  // Moneda siempre bloqueada — el asesor nunca la edita acá, el valor real
+  // vendrá de otra parte del flujo (ver solicitudes/CLAUDE.md).
   final bool monedaBloqueada;
   final bool esRuc;
   final String correoLabel;
@@ -716,6 +810,11 @@ class _SeccionDatosFacturacion extends StatelessWidget {
   final ValueChanged<MonedaItem?>? onMonedaChanged;
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
+  // Autocompletado por documento (Clientes/BuscarDocumento) — se dispara al
+  // perder foco o al presionar el check del teclado en Número documento/RUC.
+  // El indicador de carga es un overlay de pantalla completa que arma el
+  // padre (SolicitudFacturacionView), no algo local a este campo.
+  final VoidCallback? onBuscarDocumento;
 
   const _SeccionDatosFacturacion({
     required this.habilitado,
@@ -749,7 +848,34 @@ class _SeccionDatosFacturacion extends StatelessWidget {
     this.onMonedaChanged,
     this.onTipoDocChanged,
     this.onNacionalidadChanged,
+    this.onBuscarDocumento,
   });
+
+  @override
+  State<_SeccionDatosFacturacion> createState() =>
+      _SeccionDatosFacturacionState();
+}
+
+class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
+  late final FocusNode _numDocFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _numDocFocus = FocusNode()..addListener(_onNumDocFocusChange);
+  }
+
+  void _onNumDocFocusChange() {
+    if (_numDocFocus.hasFocus) return; // solo al perder el foco
+    widget.onBuscarDocumento?.call();
+  }
+
+  @override
+  void dispose() {
+    _numDocFocus.removeListener(_onNumDocFocusChange);
+    _numDocFocus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -762,30 +888,30 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             Expanded(
               child: CustomComboField<ComprobanteItem>(
                 label: 'Comprobante *',
-                data: comprobantes,
-                enabled: habilitado,
-                initialValue: comprobanteInicialId,
-                onChanged: onComprobanteChanged,
+                data: widget.comprobantes,
+                enabled: widget.habilitado,
+                initialValue: widget.comprobanteInicialId,
+                onChanged: widget.onComprobanteChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomComboField<PaisItem>(
                 label: 'País *',
-                data: paises,
-                enabled: habilitado,
-                initialValue: paisInicialId,
-                onChanged: onPaisChanged,
+                data: widget.paises,
+                enabled: widget.habilitado,
+                initialValue: widget.paisInicialId,
+                onChanged: widget.onPaisChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomComboField<MonedaItem>(
                 label: 'Moneda *',
-                data: monedas,
-                enabled: habilitado && !monedaBloqueada,
-                initialValue: monedaInicialId,
-                onChanged: onMonedaChanged,
+                data: widget.monedas,
+                enabled: widget.habilitado && !widget.monedaBloqueada,
+                initialValue: widget.monedaInicialId,
+                onChanged: widget.onMonedaChanged,
               ),
             ),
           ],
@@ -798,22 +924,25 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             Expanded(
               child: CustomComboField<TipoDocumentoItem>(
                 label: 'Tipo documento *',
-                data: tiposDocumento,
+                data: widget.tiposDocumento,
                 labelIndex: 2, // abreviatura (DNI/CE/RUC/Pasaporte...)
-                enabled: habilitado,
-                initialValue: tipoDocInicialId,
-                onChanged: onTipoDocChanged,
+                enabled: widget.habilitado,
+                initialValue: widget.tipoDocInicialId,
+                onChanged: widget.onTipoDocChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: esRuc ? 'RUC *' : 'Número documento *',
-                controller: ctrlNumDoc,
-                keyboardType: numDocKeyboardType,
-                maxLength: numDocMaxLength,
-                inputFormatters: numDocInputFormatters,
-                enabled: habilitado,
+                label: widget.esRuc ? 'RUC *' : 'Número documento *',
+                controller: widget.ctrlNumDoc,
+                focusNode: _numDocFocus,
+                keyboardType: widget.numDocKeyboardType,
+                maxLength: widget.numDocMaxLength,
+                inputFormatters: widget.numDocInputFormatters,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => widget.onBuscarDocumento?.call(),
+                enabled: widget.habilitado,
               ),
             ),
           ],
@@ -826,18 +955,18 @@ class _SeccionDatosFacturacion extends StatelessWidget {
             Expanded(
               child: CustomComboField<NacionalidadItem>(
                 label: 'Nacionalidad *',
-                data: nacionalidades,
-                enabled: habilitado,
-                initialValue: nacionalidadInicialId,
-                onChanged: onNacionalidadChanged,
+                data: widget.nacionalidades,
+                enabled: widget.habilitado,
+                initialValue: widget.nacionalidadInicialId,
+                onChanged: widget.onNacionalidadChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: esRuc ? 'Razón Social *' : 'Nombres *',
-                controller: ctrlNombresRazon,
-                enabled: habilitado,
+                label: widget.esRuc ? 'Razón Social *' : 'Nombres *',
+                controller: widget.ctrlNombresRazon,
+                enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
               ),
@@ -847,14 +976,14 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
 
         // Fila 4: Apellido paterno + Apellido materno — solo persona natural
-        if (!esRuc) ...[
+        if (!widget.esRuc) ...[
           Row(
             children: [
               Expanded(
                 child: CustomTextField(
                   label: 'Apellido paterno *',
-                  controller: ctrlApellidoPaterno,
-                  enabled: habilitado,
+                  controller: widget.ctrlApellidoPaterno,
+                  enabled: widget.habilitado,
                   isUpperCase: true,
                   textCapitalization: TextCapitalization.words,
                 ),
@@ -864,8 +993,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
                 child: CustomTextField(
                   label: 'Apellido materno',
                   hint: 'Opcional',
-                  controller: ctrlApellidoMaterno,
-                  enabled: habilitado,
+                  controller: widget.ctrlApellidoMaterno,
+                  enabled: widget.habilitado,
                   isUpperCase: true,
                   textCapitalization: TextCapitalization.words,
                 ),
@@ -881,20 +1010,20 @@ class _SeccionDatosFacturacion extends StatelessWidget {
           children: [
             Expanded(
               child: SolicitudCampoCelular(
-                controller: ctrlCelular,
-                habilitado: habilitado,
-                paises: paises,
-                paisSeleccionado: paisCelular,
-                onPaisChanged: onPaisCelularChanged,
+                controller: widget.ctrlCelular,
+                habilitado: widget.habilitado,
+                paises: widget.paises,
+                paisSeleccionado: widget.paisCelular,
+                onPaisChanged: widget.onPaisCelularChanged,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: correoLabel,
-                controller: ctrlCorreo,
+                label: widget.correoLabel,
+                controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
-                enabled: habilitado,
+                enabled: widget.habilitado,
               ),
             ),
           ],
@@ -904,8 +1033,8 @@ class _SeccionDatosFacturacion extends StatelessWidget {
         // Dirección de domicilio (ancho completo)
         CustomTextField(
           label: 'Dirección de domicilio *',
-          controller: ctrlDireccion,
-          enabled: habilitado,
+          controller: widget.ctrlDireccion,
+          enabled: widget.habilitado,
           textCapitalization: TextCapitalization.sentences,
         ),
       ],

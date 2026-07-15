@@ -1,5 +1,24 @@
 # Solicitudes Feature
 
+## Defaults al crear — Tipo documento DNI + Nacionalidad Perú (2026-07-15)
+Al **crear** (nunca al editar/restaurar un registro ya guardado), 3 lugares del wizard
+preseleccionan Tipo documento = DNI y Nacionalidad = Perú (ids reales de
+`CatalogsBloc.valoresDefecto.idTipoDocDni`/`idNacionalidad`, parte [13] del SP — nunca
+hardcodear el id), para que el asesor no tenga que elegirlos a mano en el caso más común:
+- **Datos del solicitante** (paso 1) — `_SolicitudCompletarViewState._sembrarValoresPorDefecto()`
+  (`solicitud_completar_view.dart`), llamado desde `_cargarDetalle()` solo en la rama
+  `numSol.isEmpty` (creación nueva). **Sexo se deja sin seleccionar a propósito** — a
+  diferencia de documento/nacionalidad no hay un valor por defecto razonable, el asesor debe
+  elegirlo siempre.
+- **Nuevo participante** (`participante_form_sheet.dart`) — mismo cálculo en
+  `initState()`, dentro del `if (p == null)` (solo al crear, nunca al editar un participante
+  existente). Tipo de participante (Pagante) y prefijo de celular (Perú) ya tenían su propio
+  default de antes (`esInvitado == false` / `valoresDefecto.idPais`), sin cambios acá.
+- **Facturación** (paso 3, `solicitud_facturacion_view.dart`) — mismo cálculo al final de
+  `didChangeDependencies()`, en la rama donde ni hay `datos` guardados (venir de "Atrás") ni
+  `solicitante.facturarAlSolicitante` aplicó su propio prefill — o sea, solo cuando de verdad
+  no hay ningún dato previo que restaurar.
+
 ## Validación de N° documento centralizada — `DocumentoValidationUtils` (2026-07-15)
 Datos del solicitante (paso 1) ya calculaba longitud máxima + solo-dígitos según el tipo de
 documento elegido (`_maxLengthPorTipoDoc`/`_soloDigitosPorTipoDoc`, ambos privados de
@@ -24,13 +43,13 @@ campo de documento propio ahora lo usan:
   patrón que ya tenían paso 1 y paso 3) — evita dejar texto que no calza con el nuevo tipo (ej.
   letras de Pasaporte al cambiar a DNI).
 
-## Autocompletado por documento — Solicitante, RUC comercial y Participante (2026-07-15)
-Los 3 lugares del wizard con un campo de documento propio (Número documento del solicitante,
-RUC de Información comercial, N° documento del formulario de participante) buscan contra
-`DocumentoExternoService` (`Clientes/BuscarDocumento` — ver `core/CLAUDE.md` →
-`DocumentoExternoService`/`DocumentoExterno`) al perder foco o presionar el check del teclado
-(`TextInputAction.done` + `onSubmitted`, más un `FocusNode` local que dispara en la misma
-acción al perder foco — doble gatillo, mismo patrón en los 3):
+## Autocompletado por documento — Solicitante, RUC comercial, Facturación y Participante (2026-07-15)
+Los 4 lugares del wizard con un campo de documento propio (Número documento del solicitante,
+RUC de Información comercial, Número documento/RUC de Facturación, N° documento del formulario
+de participante) buscan contra `DocumentoExternoService` (`Clientes/BuscarDocumento` — ver
+`core/CLAUDE.md` → `DocumentoExternoService`/`DocumentoExterno`) al perder foco o presionar el
+check del teclado (`TextInputAction.done` + `onSubmitted`, más un `FocusNode` local que dispara
+en la misma acción al perder foco — doble gatillo, mismo patrón en los 4):
 
 - **Número documento** (`SeccionDatosSolicitante`,
   `solicitud_completar_datos_solicitante.dart`) — busca el documento (DNI 8 dígitos o RUC 11) y
@@ -39,8 +58,13 @@ acción al perder foco — doble gatillo, mismo patrón en los 3):
   comercial", solo visible con tipo de persona Jurídica) — busca siempre como RUC (11 dígitos)
   y solo llena **Razón Social** — no toca Nombres/Apellidos del solicitante, son dos campos y
   dos búsquedas independientes.
+- **Número documento/RUC de Facturación** (`_SeccionDatosFacturacion`,
+  `solicitud_facturacion_view.dart`, paso 3) — mismo mecanismo; si el tipo de documento elegido
+  es RUC (`_esRuc`) solo llena **Razón Social** (`ctrlNombresRazon`, campo compartido con
+  Nombres); si no, llena Nombres/Apellido paterno/Apellido materno igual que el solicitante.
+  Correo se llena en ambos casos si el resultado lo trae.
 - **N° documento del formulario de participante** (`participante_form_sheet.dart`) — ya existía
-  desde antes (es el que se copió para los 2 puntos de arriba); autocompleta Nombres/Apellido
+  desde antes (es el que se copió para los demás puntos); autocompleta Nombres/Apellido
   paterno/Apellido materno/Correo del participante. Si el resultado viene de SUNAT (RUC sin
   persona natural — ya no debería pasar en la práctica porque el combo Tipo doc. excluye RUC,
   ver "Tipo documento de participante" abajo, pero el fallback queda por si el usuario pega un
@@ -49,22 +73,24 @@ acción al perder foco — doble gatillo, mismo patrón en los 3):
 - La lógica de cada uno (llamar `DocumentoExternoService`, parsear `DocumentoExterno`, decidir
   qué controller llenar) vive en el State dueño de esos `TextEditingController` —
   `_SolicitudCompletarViewState._buscarDocumentoSolicitante()`/`_buscarRucComercial()`
-  (`solicitud_completar_view.dart`) y `_ParticipanteFormSheetState._buscarDocumento()`
+  (`solicitud_completar_view.dart`), `_SolicitudFacturacionViewState._buscarDocumento()`
+  (`solicitud_facturacion_view.dart`) y `_ParticipanteFormSheetState._buscarDocumento()`
   (`participante_form_sheet.dart`) — no en los widgets de sección, que solo exponen
-  `onBuscar*: VoidCallback?` (el `FocusNode` vive dentro de cada sección/formulario, no en el
-  padre — solo dispara el callback). Cada uno guarda el último documento buscado
-  (`_ultimoDocSolicitanteBuscado`/`_ultimoRucBuscado`/`_ultimoDocBuscado`) para no repetir la
-  misma búsqueda dos veces seguidas (típico si se dispara tanto por `onSubmitted` como por
-  pérdida de foco en el mismo evento).
+  `onBuscar*: VoidCallback?`/`onBuscarDocumento: VoidCallback?` (el `FocusNode` vive dentro de
+  cada sección/formulario, no en el padre — solo dispara el callback). Cada uno guarda el
+  último documento buscado (`_ultimoDocSolicitanteBuscado`/`_ultimoRucBuscado`/
+  `_ultimoDocBuscado`, uno por lugar) para no repetir la misma búsqueda dos veces seguidas
+  (típico si se dispara tanto por `onSubmitted` como por pérdida de foco en el mismo evento).
 - **El indicador de carga es `AppLoadingOverlay`** (`core/presentation/widgets/`, ver
   `core/CLAUDE.md`) — overlay de pantalla completa reutilizable, no un spinner local al campo.
-  Los 3 lugares envuelven su `build()` en un `Stack` y agregan
+  Los 4 lugares envuelven su `build()` en un `Stack` y agregan
   `AppLoadingOverlay(message: 'Buscando datos del documento...')` como último hijo cuando su
   flag de búsqueda está en `true` — bloquea toda interacción de esa pantalla/formulario mientras
   se espera la respuesta, para que el asesor no siga tocando otros campos/botones a mitad de la
   búsqueda. En `SolicitudCompletarView` es `_buscandoDocSolicitante || _buscandoRuc` (un solo
-  overlay para los 2 campos de esa página); en `participante_form_sheet.dart` es
-  `_buscandoDocumento` del propio bottom sheet.
+  overlay para los 2 campos de esa página); en `solicitud_facturacion_view.dart` es
+  `_buscandoDocumento`; en `participante_form_sheet.dart` también `_buscandoDocumento` (variable
+  propia de ese bottom sheet, mismo nombre pero cada State tiene la suya).
 - Los controllers de `SolicitudCompletarView` ya tenían `addListener(_onCampoTexto)`
   (sincroniza en vivo al cubit, ver "Wizard de una sola page" más abajo) — asignar `.text` desde
   el resultado de la búsqueda ya dispara esa sincronización sola, no hace falta llamar
@@ -278,8 +304,16 @@ guarda de qué lead vino una solicitud existente (ver nota de `Solicitud.idLead`
   != null`). Los 4 valores viajan por navegación desde `NegociacionCard`/`ContactoNegociacionCard`/
   `NegociacionesTab` → `goToFichaCompletarSolicitud(cantidadNegociacion:, precioBaseNegociacion:,
   descuentoNegociacion:, idMonedaNegociacion:)` → argumento de ruta → `SolicitudCompletarPage`.
-- **Importe de participante bloqueado** (`participante_form_sheet.dart`) — si viene con
-  `importeFijo` no nulo, el campo Importe queda deshabilitado y prellenado con `precioBaseLead`.
+- **Importe de participante SIEMPRE bloqueado** (`participante_form_sheet.dart`, cambiado
+  2026-07-15) — antes solo se deshabilitaba si `importeFijo` venía no nulo (desde negociación);
+  ahora `_importeBloqueado = true` sin condición, en cualquier escenario (creando o editando,
+  con o sin negociación de origen) — el asesor nunca lo edita a mano ahí. El valor que se
+  muestra sigue el mismo orden de prioridad de antes: `importeFijo` (si vino de negociación) →
+  importe ya guardado del participante (edición) → vacío (participante nuevo sin negociación).
+  **Pendiente real, avisado por el usuario**: el valor final (moneda, precio base, precio
+  total, descuento) vendrá de otra lógica que todavía no se definió — no inventar de dónde
+  sale el importe mientras esa lógica no llegue, este campo por ahora solo deja de ser
+  editable, no calcula nada nuevo.
   **Ojo — `importeFijo` se pasa por parámetro, no se lee `SolicitudFormCubit` dentro del
   modal**: `mostrarFormularioParticipante` abre un `showModalBottomSheet`, que empuja una ruta
   **hermana** sobre el mismo `Navigator` global — no un descendiente del `BlocProvider.value`
@@ -287,10 +321,12 @@ guarda de qué lead vino una solicitud existente (ver nota de `Solicitud.idLead`
   revienta en tiempo real. `solicitud_participantes_view.dart._importeFijo(context)` lee el
   cubit con el `context` correcto (el de la página, no el del modal) y lo pasa como parámetro.
   Mismo patrón que ya usaban los callbacks `onGuardar` (capturan el `context` del caller).
-- **Moneda bloqueada** (`solicitud_facturacion_view.dart`) — `_SeccionDatosFacturacion` recibe
-  `monedaBloqueada: formState.idMonedaBloqueada != null` y deshabilita solo el combo Moneda
-  (`enabled: habilitado && !monedaBloqueada`), independiente del resto de campos. Se siembra en
-  `didChangeDependencies()` (rama "primera vez", `datos == null`).
+- **Moneda SIEMPRE bloqueada** (`solicitud_facturacion_view.dart`, cambiado 2026-07-15) — antes
+  `monedaBloqueada: formState.idMonedaBloqueada != null` (solo si venía de negociación); ahora
+  `_SeccionDatosFacturacion` recibe `monedaBloqueada: true` sin condición — el combo Moneda
+  queda deshabilitado siempre (`enabled: habilitado && !monedaBloqueada`), independiente del
+  resto de campos, mismo pendiente que Importe (arriba): de dónde sale el valor real de Moneda
+  cuando no hay negociación de origen queda para una lógica futura, todavía no definida.
 - **Descuento respetado en el total** — `SolicitudRemoteDatasource.guardarSolicitud()` recibe
   `descuento` (default 0, threaded por `GuardarSolicitudUseCase`/`SolicitudRepository`/
   `guardarSolicitudDesdeWizard`, que lo lee de `formState.descuentoLead`) y lo resta del importe

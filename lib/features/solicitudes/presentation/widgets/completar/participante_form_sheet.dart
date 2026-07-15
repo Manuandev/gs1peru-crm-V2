@@ -154,12 +154,15 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     _cargoCtrl = TextEditingController(text: p?.cargo ?? '');
     _celularCtrl = TextEditingController(text: p?.celular ?? '');
 
-    // Si la solicitud viene de una negociación con precio ya definido, el
-    // importe de CADA participante es el precio base del lead — no se
-    // puede editar (ver SolicitudFormState.cantidadEsperada).
-    _importeBloqueado = widget.importeFijo != null;
+    // El importe por participante siempre queda fijo — el asesor nunca lo
+    // edita manualmente acá (el valor real vendrá de otra parte del flujo,
+    // ver solicitudes/CLAUDE.md). Se prellena con el precio de la
+    // negociación si vino de ahí (importeFijo); si no, con el importe ya
+    // guardado del participante (edición), o vacío si es nuevo sin
+    // negociación.
+    _importeBloqueado = true;
     _importeCtrl = TextEditingController(
-      text: _importeBloqueado
+      text: widget.importeFijo != null
           ? widget.importeFijo!.toStringAsFixed(2)
           : (p != null && p.importe > 0 ? p.importe.toStringAsFixed(2) : ''),
     );

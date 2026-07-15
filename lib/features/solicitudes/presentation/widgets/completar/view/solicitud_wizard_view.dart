@@ -98,7 +98,7 @@ class _SolicitudWizardViewState extends State<SolicitudWizardView> {
                     solicitud: widget.solicitud,
                     modoEdicion: widget.modoEdicion,
                     onContinuar: _irAPaso,
-                    onCancelar: () => _irAPaso(1),
+                    onAtras: () => _irAPaso(1),
                   )
                 else
                   const SizedBox.shrink(),
@@ -116,7 +116,7 @@ class _SolicitudWizardViewState extends State<SolicitudWizardView> {
                     solicitud: widget.solicitud,
                     modoEdicion: widget.modoEdicion,
                     onEditarPaso: _irAPaso,
-                    onCancelar: () => context.goBack(),
+                    onAtras: () => _irAPaso(3),
                   )
                 else
                   const SizedBox.shrink(),

@@ -34,31 +34,64 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
     emit(state.copyWith(participantes: actualizados));
   }
 
+  /// Elimina y **renumera** el resto de la lista para que los ids sigan
+  /// siendo un correlativo sin huecos (1, 2, 3...) — si se borra el
+  /// participante `1` y queda el `2`, ese pasa a ser `1`. Ver
+  /// solicitudes/CLAUDE.md ("Renumeración de ids al eliminar") por qué esto
+  /// es seguro: la solicitud completa se reenvía en cada guardado (mismo
+  /// patrón que ya usa el task 'AR' de archivos, que borra todo antes de
+  /// volver a insertar), así que no hay ids "reales" del backend que
+  /// preservar entre guardados.
   void eliminar(int id) {
-    emit(
-      state.copyWith(
-        participantes: state.participantes.where((p) => p.id != id).toList(),
-      ),
-    );
+    final restantes = state.participantes.where((p) => p.id != id).toList();
+    emit(state.copyWith(participantes: _renumerar(restantes)));
   }
 
   void eliminarTodos() {
+    _nextId = 1;
     emit(state.copyWith(participantes: const []));
+  }
+
+  /// Reasigna ids `1..N` según el orden actual de la lista y ajusta
+  /// `_nextId` para que el próximo [agregar] continúe el correlativo sin
+  /// chocar ni dejar huecos.
+  List<ParticipanteLocal> _renumerar(List<ParticipanteLocal> lista) {
+    final renumerados = [
+      for (var i = 0; i < lista.length; i++) lista[i].copyWith(id: i + 1),
+    ];
+    _nextId = renumerados.length + 1;
+    return renumerados;
   }
 
   /// Refleja el switch "El solicitante será participante" (paso 1) en la
   /// lista de participantes: agrega/actualiza un registro marcado como
   /// [ParticipanteLocal.esSolicitante] con los datos ya capturados del
   /// solicitante, o lo retira si el switch se desactiva. Se llama cada vez
-  /// que se presiona "Continuar" en el paso 1 — idempotente, nunca duplica.
+  /// que se presiona "Continuar"/"Guardar" en el paso 1 — idempotente, nunca
+  /// duplica.
   // [idTipoParticipantePagante] viene del catálogo real (CatalogsBloc.
   // tiposParticipante, el ítem con esInvitado == false) — el Cubit no tiene
   // BuildContext para leerlo solo, así que el caller (paso 1) lo resuelve y
   // lo pasa acá. Nunca hardcodear el id de "Pagante".
+  //
+  // [importeFijo] es el precio de la negociación de origen
+  // (SolicitudFormState.precioBaseLead), si la hay — mismo valor que ya usa
+  // "Nuevo participante" (ver participante_form_sheet.dart). Se resuelve UNA
+  // sola vez (la primera vez que se crea este registro): en re-sincronizaciones
+  // posteriores (volver al paso 1 y presionar "Continuar" de nuevo) se
+  // preserva el `id` Y el `importe` que ya tenía — antes este método
+  // regeneraba un `id` nuevo (`_nextId++`) y pisaba el importe a `0` en CADA
+  // llamada, perdiendo el precio fijado y arriesgando filas duplicadas en el
+  // backend (el `id` de `ParticipanteLocal` se manda tal cual como `ID` de
+  // la fila al SP — ver solicitudes/CLAUDE.md).
   void sincronizarSolicitante(
     DatosSolicitante datos, {
     required String idTipoParticipantePagante,
+    double? importeFijo,
   }) {
+    final anterior = state.participantes
+        .where((p) => p.esSolicitante)
+        .firstOrNull;
     final resto = state.participantes.where((p) => !p.esSolicitante).toList();
 
     if (!datos.solicitanteEsParticipante) {
@@ -67,7 +100,7 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
     }
 
     final solicitanteParticipante = ParticipanteLocal(
-      id: _nextId++,
+      id: anterior?.id ?? _nextId++,
       tipoDocId: datos.tipoDocId,
       tipoDoc: datos.tipoDocLabel,
       numDoc: datos.numDoc,
@@ -81,7 +114,7 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       celular: datos.celular,
       celularCodigoTelefono: datos.celularCodigoTelefono,
       tipoParticipante: idTipoParticipantePagante,
-      importe: 0,
+      importe: importeFijo ?? anterior?.importe ?? 0,
       esSolicitante: true,
     );
 

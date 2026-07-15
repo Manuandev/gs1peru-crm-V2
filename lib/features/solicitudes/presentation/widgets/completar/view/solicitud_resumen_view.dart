@@ -14,15 +14,17 @@ class SolicitudResumenView extends StatefulWidget {
   // reemplaza el viejo Navigator.popUntil por nombre de ruta, ya que los
   // pasos dejaron de ser rutas separadas.
   final ValueChanged<int> onEditarPaso;
-  // Sale del wizard por completo (footer "Cancelar").
-  final VoidCallback onCancelar;
+  // Retrocede al paso 3 (Facturación) dentro del mismo SolicitudWizardView.
+  // Solo el paso 1 tiene un botón "Cancelar" que sale del wizard entero —
+  // acá es "Atrás", un simple retroceso (ver solicitudes/CLAUDE.md).
+  final VoidCallback onAtras;
 
   const SolicitudResumenView({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
     required this.onEditarPaso,
-    required this.onCancelar,
+    required this.onAtras,
   });
 
   @override
@@ -35,6 +37,10 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
   // true mientras se genera la solicitud final (botón "Generar solicitud")
   bool _generando = false;
 
+  // Al guardar desde el Resumen (última pantalla del wizard) ya no hace
+  // falta quedarse acá — se sale del wizard directo al detalle de la
+  // solicitud recién guardada (nueva o editada), en vez de solo mostrar un
+  // snackbar y dejar al asesor parado en el mismo paso.
   Future<void> _onGuardar() async {
     if (_guardando || _generando) return;
     setState(() => _guardando = true);
@@ -48,7 +54,17 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
 
     if (!mounted) return;
     setState(() => _guardando = false);
-    mostrarResultadoGuardarSolicitud(context, result);
+
+    if (result is! CrudOk) {
+      mostrarResultadoGuardarSolicitud(context, result);
+      return;
+    }
+
+    final numSol = context.read<SolicitudFormCubit>().state.numSol;
+    Navigator.of(context).pop(); // sale del wizard
+    context.goToDetalleSolicitud(
+      solicitud: widget.solicitud.copyWith(idSolicitud: numSol),
+    );
   }
 
   // Guarda el CUD (IB_BORRADOR=0) y, solo si eso sale bien, sube voucher/OC
@@ -166,14 +182,14 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    // Cancelar
+                    // Atrás
                     SizedBox(
                       width: double.infinity,
                       child: CustomSecondaryButton(
-                        text: 'Cancelar',
-                        icon: AppIcons.cancel,
+                        text: 'Atrás',
+                        icon: AppIcons.back,
                         backgroundColor: AppColors.brandRaspberryAccessible,
-                        onPressed: widget.onCancelar,
+                        onPressed: widget.onAtras,
                       ),
                     ),
                   ]

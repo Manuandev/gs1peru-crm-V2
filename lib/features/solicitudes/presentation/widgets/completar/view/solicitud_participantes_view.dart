@@ -13,16 +13,18 @@ class SolicitudParticipantesView extends StatefulWidget {
   // Avanza al paso 3 (Facturación) o al 4 (Resumen, si se saltó Facturación
   // por tener solo invitados) dentro del mismo SolicitudWizardView.
   final ValueChanged<int> onContinuar;
-  // "Cancelar" de este paso solo retrocede al paso 1 (mismo comportamiento
-  // que tenía al ser una ruta aparte — un pop simple, sin confirmación).
-  final VoidCallback onCancelar;
+  // Retrocede al paso 1 (Solicitante) dentro del mismo SolicitudWizardView.
+  // Solo el paso 1 tiene un botón "Cancelar" que sale del wizard — acá y en
+  // los pasos 3/4 es "Atrás", un simple retroceso sin confirmación ni
+  // pérdida de datos (todo lo tipeado sigue vivo en los cubits compartidos).
+  final VoidCallback onAtras;
 
   const SolicitudParticipantesView({
     super.key,
     required this.solicitud,
     required this.modoEdicion,
     required this.onContinuar,
-    required this.onCancelar,
+    required this.onAtras,
   });
 
   @override
@@ -255,9 +257,10 @@ class _SolicitudParticipantesViewState
                       children: [
                         Expanded(
                           child: CustomSecondaryButton(
-                            text: 'Cancelar',
+                            text: 'Atrás',
+                            icon: AppIcons.back,
                             backgroundColor: AppColors.brandRaspberryAccessible,
-                            onPressed: widget.onCancelar,
+                            onPressed: widget.onAtras,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.xs),

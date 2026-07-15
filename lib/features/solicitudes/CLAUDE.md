@@ -1,5 +1,101 @@
 # Solicitudes Feature
 
+## Sincronización switch ↔ lista de participantes + renumeración de ids (2026-07-15)
+Dos ajustes sobre la relación entre el switch "El solicitante será participante" (paso 1) y la
+lista de participantes (paso 2), pedidos con ejemplos concretos por el usuario:
+
+- **Borrar el participante-solicitante apaga el switch solo** — antes, si el asesor activaba el
+  switch en paso 1 (crea un `ParticipanteLocal` con `esSolicitante: true` en paso 2) y luego
+  borraba ese participante a mano desde la lista, el switch en paso 1 se quedaba encendido sin
+  ningún participante real detrás — el próximo "Continuar"/"Guardar" en paso 1 lo recreaba de la
+  nada (`ParticipantesCubit.sincronizarSolicitante` solo mira `datos.solicitanteEsParticipante`,
+  no sabe que el usuario lo borró manualmente en otro paso). Corregido con un
+  `BlocListener<ParticipantesCubit, ParticipantesState>` envolviendo el `build()` de
+  `SolicitudCompletarView` (`solicitud_completar_view.dart`) — `listenWhen` solo dispara en la
+  transición exacta "había un participante `esSolicitante`" → "ya no hay ninguno" (no en la
+  carga inicial, que nunca tuvo uno). Si eso pasa y el switch seguía en `true`, lo apaga
+  (`setState` + `_sincronizarCubit()`) para que quede consistente con lo que el asesor hizo en
+  paso 2.
+- **Volver al paso 1 con el switch todavía activo no debe cambiar nada** — esto ya lo cubre el
+  fix de "Bug real" de abajo (`sincronizarSolicitante` preserva `id`/`importe` del registro
+  existente) — se deja explícito acá porque fue parte del mismo ejemplo que dio el usuario.
+
+## Renumeración de ids al eliminar un participante (2026-07-15)
+`ParticipantesCubit.eliminar(id)` ahora **renumera** el resto de la lista para que los ids
+sigan siendo un correlativo sin huecos (`1, 2, 3...`) — ejemplo real del usuario: participante
+`1` y `2` en la lista, se borra el `1` → el `2` pasa a ser `1`. `eliminarTodos()` también resetea
+`_nextId` a `1` (antes solo vaciaba la lista, dejando el contador de ids adelantado sin razón).
+Ambos casos recalculan `_nextId` al vuelo (`_renumerar()`, mismo archivo) para que el próximo
+`agregar()` continúe el correlativo justo después del último id vigente, nunca choque ni deje
+huecos.
+**Por qué esto es seguro con ids que ya vinieron del backend** (`cargarParticipantes()`, al
+editar una solicitud existente, preserva el id real de `T_TECMSOLINSCRIPCION02.ID` en vez de
+asignar uno nuevo — ver "Bug real" abajo): la solicitud completa se reenvía en **cada**
+guardado (`SolicitudRemoteDatasource.guardarSolicitud()`, `detalle` = la lista completa de
+participantes actual, con sus ids tal cual están en ese momento) — mismo patrón que ya usa el
+task `'AR'` de archivos, que borra todo lo existente para ese NUMSOL antes de volver a insertar
+lo nuevo. No hay una operación de "actualizar solo la fila que cambió" que dependa de que el id
+se mantenga estable entre guardados — cualquier id que se mande en el próximo guardado es, en
+los hechos, el id definitivo de esa fila desde ese momento. **Sin confirmar 100% con el SP real
+(no hay `.sql` versionado en el repo)** — si en el futuro se descubre que el backend sí hace
+upsert por id en vez de reemplazar todo, esta renumeración dejaría de ser segura para
+participantes ya guardados (podría duplicar filas) y habría que limitarla a participantes
+agregados en la sesión actual, no a los cargados desde el backend.
+
+## Bug real — importe/id del participante-solicitante se perdían al re-sincronizar (2026-07-15)
+`ParticipantesCubit.sincronizarSolicitante()` (llamado desde el paso 1 en cada "Continuar"/
+"Guardar" cuando el switch "El solicitante será participante" está activo — ver
+`solicitud_completar_view.dart`) **regeneraba un `ParticipanteLocal` completamente nuevo cada
+vez que se llamaba**, con `id: _nextId++` (un id nuevo, sin relación con el anterior) e
+`importe: 0` hardcodeado — sin importar que ya existiera un registro de ese mismo solicitante-
+participante de una llamada anterior. Efecto real: cada vez que el asesor volvía al paso 1
+(desde paso 2/3/4 con "Atrás") y presionaba "Continuar"/"Guardar" de nuevo, el importe fijado
+para ese participante se perdía (volvía a `0`) — el bug que reportó el usuario ("el importe de
+participantes no se guarda al retroceder"). Además, como `ParticipanteLocal.id` se manda tal
+cual como `ID` de fila al SP (`CSV_SOLICITUD_CUD_APP`, ver más abajo), regenerar el id en cada
+re-sync también arriesgaba filas duplicadas en el backend al editar una solicitud ya guardada
+(el id real que vino de `getSolicitudDetalle()` se perdía y se reemplazaba por uno inventado
+del lado del cliente).
+
+Corregido: `sincronizarSolicitante()` ahora busca el registro `esSolicitante` anterior antes de
+reemplazarlo — si existe, **preserva su `id`** (no llama `_nextId++` de nuevo) y su `importe`
+(salvo que se pase un `importeFijo` nuevo — ver abajo), en vez de recrearlo desde cero cada vez.
+También ahora acepta `importeFijo` (`double?`, mismo valor que ya calcula "Nuevo participante"
+vía `SolicitudFormState.precioBaseLead`/`cantidadEsperada`) — `solicitud_completar_view.dart`
+tiene su propio `_importeFijo()` (mismo cálculo duplicado a propósito, ya que
+`sincronizarSolicitante` genera su `ParticipanteLocal` sin pasar por el modal de participante) y
+lo pasa en ambas llamadas (`_onContinuar`/`_onGuardar`).
+
+## Botones "Atrás" vs "Cancelar" del wizard (2026-07-15)
+**Solo el paso 1 tiene un botón "Cancelar"** (`SolicitudCompletarView`, sale del wizard entero
+con confirmación — "¿Desea cancelar el proceso de solicitud?"). Los pasos 2, 3 y 4 **nunca**
+cancelan nada — solo retroceden un paso dentro del mismo wizard, sin perder datos (todo vive en
+los cubits compartidos, ver "Wizard de una sola page" más abajo) — por eso su botón dice
+**"Atrás"** (`AppIcons.back`, mismo `backgroundColor: AppColors.brandRaspberryAccessible` que
+antes tenía el botón mal llamado "Cancelar"), no "Cancelar". Antes los pasos 2 y 4 mostraban
+"Cancelar" aunque su `onPressed` solo hacía `_irAPaso(paso - 1)`/pop simple — nunca salían del
+wizard, la etiqueta del botón no coincidía con lo que realmente hacía. Se corrigió el texto Y se
+renombró el parámetro `onCancelar` → `onAtras` en `SolicitudParticipantesView` (paso 2) y
+`SolicitudResumenView` (paso 4) para que el nombre ya no sea engañoso — mismo patrón que
+`SolicitudFacturacionView.onAtras` (paso 3), que ya estaba bien desde el inicio.
+`solicitud_wizard_view.dart` wireaba el paso 4 con `onCancelar: () => context.goBack()` (salía
+del wizard entero) — ahora es `onAtras: () => _irAPaso(3)` (retrocede a Facturación, igual que
+los demás).
+
+## Guardar desde el Resumen navega al detalle de la solicitud (2026-07-15)
+El botón "Guardar" del paso 4 (`SolicitudResumenView._onGuardar()`) antes solo mostraba un
+snackbar de éxito/error y dejaba al asesor parado en el mismo paso — ahora, si el guardado sale
+`CrudOk`, sale del wizard (`Navigator.of(context).pop()`) y navega directo al detalle de esa
+misma solicitud (`context.goToDetalleSolicitud(solicitud: widget.solicitud.copyWith(idSolicitud:
+numSol))`, `numSol` leído de `SolicitudFormCubit.state.numSol` — ya actualizado por
+`guardarSolicitudDesdeWizard()` si esta fue la primera vez que se creó). El `Solicitud` que se
+pasa es solo un placeholder de navegación (mismo patrón que en toda la lista/negociaciones,
+ver "SolicitudDetalleView ya no confía en el Solicitud de navegación" más abajo) —
+`SolicitudDetalleBloc` trae los datos frescos por `NUMSOL` apenas se abre esa pantalla. En caso
+de error/alerta (`CrudAlert`/`CrudError`/etc.) sigue mostrando el snackbar de siempre y se queda
+en Resumen, sin navegar — **no** se tocó `_onGenerarSolicitud()` (Generar solicitud sigue yendo
+a `SolicitudGeneradaPage`, un flujo distinto y ya correcto).
+
 ## Defaults al crear — Tipo documento DNI + Nacionalidad Perú (2026-07-15)
 Al **crear** (nunca al editar/restaurar un registro ya guardado), 3 lugares del wizard
 preseleccionan Tipo documento = DNI y Nacionalidad = Perú (ids reales de

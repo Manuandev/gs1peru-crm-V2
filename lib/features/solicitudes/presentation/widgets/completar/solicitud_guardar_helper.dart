@@ -20,31 +20,33 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   final formState = formCubit.state;
   final solicitante = formState.solicitante;
   if (solicitante == null) {
-    return const CrudError('Completa los datos del solicitante antes de guardar.');
+    return const CrudError(
+      'Completa los datos del solicitante antes de guardar.',
+    );
   }
 
-  final participantes = context
-      .read<ParticipantesCubit>()
-      .state
-      .participantes;
+  final participantes = context.read<ParticipantesCubit>().state.participantes;
   final catalogState = context.read<CatalogsBloc>().state;
   final igvPorcentaje = catalogState is CatalogsLoaded
       ? catalogState.igvPorcentaje
       : 0.0;
+  final idTipoDocRuc = catalogState is CatalogsLoaded
+      ? catalogState.valoresDefecto.idTipoDocRuc
+      : '';
 
-  final result = await GuardarSolicitudUseCase(
-    context.read<SolicitudRepository>(),
-  ).call(
-    numSol: formState.numSol,
-    idLead: idLead,
-    tipoPersona: formState.tipoPersona,
-    solicitante: solicitante,
-    facturacion: formState.facturacion,
-    participantes: participantes,
-    igvPorcentaje: igvPorcentaje,
-    esBorrador: esBorrador,
-    descuento: formState.descuentoLead,
-  );
+  final result =
+      await GuardarSolicitudUseCase(context.read<SolicitudRepository>()).call(
+        numSol: formState.numSol,
+        idLead: idLead,
+        tipoPersona: formState.tipoPersona,
+        solicitante: solicitante,
+        facturacion: formState.facturacion,
+        participantes: participantes,
+        igvPorcentaje: igvPorcentaje,
+        esBorrador: esBorrador,
+        descuento: formState.descuentoLead,
+        idTipoDocRuc: idTipoDocRuc,
+      );
 
   // La primera vez que se crea (numSol venía vacío), el backend genera el
   // NUMSOL real y lo devuelve en CrudOk.data — hay que guardarlo para que
@@ -72,14 +74,15 @@ Future<bool> _subirArchivo(
       ? archivo.name.substring(0, archivo.name.length - sufijo.length)
       : archivo.name;
 
-  return GuardarArchivoSolicitudUseCase(context.read<SolicitudRepository>())
-      .call(
-        numSol: numSol,
-        tipo: tipo,
-        fileName: nombre,
-        fileExt: ext,
-        fileBytes: bytes,
-      );
+  return GuardarArchivoSolicitudUseCase(
+    context.read<SolicitudRepository>(),
+  ).call(
+    numSol: numSol,
+    tipo: tipo,
+    fileName: nombre,
+    fileExt: ext,
+    fileBytes: bytes,
+  );
 }
 
 /// Sube voucher/O.C. pendientes (`SolicitudFormCubit.state`) usando el
@@ -127,7 +130,10 @@ Future<CrudResult> generarSolicitudCompleta(
   // cantidad de participantes tiene que calzar exacto con la de la
   // negociación — pero SOLO acá, al generar. Cualquier "Guardar" (borrador)
   // de los 4 pasos deja pasar con menos participantes sin problema.
-  final cantidadEsperada = context.read<SolicitudFormCubit>().state.cantidadEsperada;
+  final cantidadEsperada = context
+      .read<SolicitudFormCubit>()
+      .state
+      .cantidadEsperada;
   if (cantidadEsperada != null) {
     final cantidadActual = context
         .read<ParticipantesCubit>()

@@ -898,11 +898,11 @@ boleta/factura, tipos de documento RUC/sin doc/DNI/CE/pasaporte) — mismos valo
 variables `@ID_*` del SP `CSV_LISTAS_LST_APP`. Si el SP aún no devuelve la parte [13],
 `valoresDefecto` llega con el `ValoresCRMItem()` const por defecto (todo en `0`/`''`).
 `SexoItem` y `TipoParticipanteItem` (partes [14]-[15]) cubren los dos combos que
-`solicitudes/CLAUDE.md` documenta como "los únicos que pueden seguir hardcodeados" (Sexo del
-paso 1, Tipo de participante del formulario de participante) — **el catálogo ya existe acá,
-pero el wizard de `solicitudes/` todavía no se cambió para consumirlo** (sigue usando sus
-listas fijas locales, `_tiposParticipante` en `participante_form_sheet.dart`). Si se conecta,
-usar `esInvitado` (no comparar `id == '2' || id == '3'`) para la regla "saltar Facturación".
+`solicitudes/CLAUDE.md` documentaba como "los únicos que pueden seguir hardcodeados" (Sexo del
+paso 1, Tipo de participante del formulario de participante) — **ya conectados** desde
+2026-07-15 (ver `solicitudes/CLAUDE.md` → "Catálogo real reemplaza ids hardcodeados"), las
+listas fijas locales que tenían se eliminaron. La regla "saltar Facturación" usa `esInvitado`
+(no compara `id == '2' || id == '3'`).
 `UbigeoItem` (parte [16]) no tiene todavía ningún selector de Ubigeo en la UI — `solicitudes/`
 manda `UBIGEO_FAC` vacío al CUD por esta razón (ver `solicitudes/CLAUDE.md`).
 
@@ -1209,8 +1209,19 @@ if (state is CatalogsLoaded) {
   final canales = state.canales;       // List<CanalItem>
   final intereses = state.intereses;   // List<InteresItem>
   final opors = state.oportunidades;   // List<OportunidadItem>
+  final valoresDefecto = state.valoresDefecto;     // ValoresCRMItem — ids por defecto, no lista
+  final sexos = state.sexos;                       // List<SexoItem>
+  final tiposParticipante = state.tiposParticipante; // List<TipoParticipanteItem>
+  final ubigeo = state.ubigeo;                     // List<UbigeoItem>
 }
 ```
+
+`CatalogsLoaded` expone un getter por cada campo de `ListasGenericas` (`catalog_item.dart`) —
+si se agrega un campo nuevo ahí (parte nueva del SP `lstListas`), agregar también su getter acá
+y sumarlo a `props` (usado por `Equatable`), si no el widget no podrá leerlo aunque el modelo
+ya lo traiga parseado (pasó con `valoresDefecto`/`sexos`/`tiposParticipante`/`ubigeo`: el parseo
+en `catalog_item_model.dart` ya existía, pero faltaban acá — nadie podía leerlos hasta el
+2026-07-15, ver `solicitudes/CLAUDE.md` → "Catálogo real reemplaza ids hardcodeados").
 
 ---
 

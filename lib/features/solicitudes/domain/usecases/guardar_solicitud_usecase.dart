@@ -19,6 +19,7 @@ class GuardarSolicitudUseCase {
     required double igvPorcentaje,
     required bool esBorrador,
     double descuento = 0,
+    required String idTipoDocRuc,
   }) => _repository.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -29,5 +30,6 @@ class GuardarSolicitudUseCase {
     igvPorcentaje: igvPorcentaje,
     esBorrador: esBorrador,
     descuento: descuento,
+    idTipoDocRuc: idTipoDocRuc,
   );
 }

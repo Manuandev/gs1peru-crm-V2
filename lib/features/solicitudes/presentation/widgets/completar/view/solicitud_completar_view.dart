@@ -7,10 +7,6 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
-// Id de catálogo de "RUC" en TipoDocumentoItem (SYSTABEXTER02 CODTABLA='F01') —
-// mismo valor que en solicitud_facturacion_view.dart y en el datasource.
-const _idTipoDocRucCompletar = '6';
-
 class SolicitudCompletarView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
@@ -163,6 +159,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       final paises = catalogState is CatalogsLoaded
           ? catalogState.paises
           : const <PaisItem>[];
+      final valoresDefecto = catalogState is CatalogsLoaded
+          ? catalogState.valoresDefecto
+          : const ValoresCRMItem();
 
       final tipoDoc = tiposDocumento
           .where((t) => t.id == detalle.tipoDocId)
@@ -231,7 +230,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       context.read<SolicitudFormCubit>().guardarSolicitante(datosSolicitante);
 
       if (!detalle.sinFacturacion) {
-        final esRuc = detalle.facTipoDocId == _idTipoDocRucCompletar;
+        final esRuc = detalle.facTipoDocId == valoresDefecto.idTipoDocRuc;
         final facTipoDoc = tiposDocumento
             .where((t) => t.id == detalle.facTipoDocId)
             .firstOrNull;
@@ -378,6 +377,21 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     );
   }
 
+  // Id real de "Pagante" (catálogo TipoParticipanteItem, esInvitado == false)
+  // — usado para el participante que se autogenera con el switch "El
+  // solicitante será participante". `firstOrNull` porque el orden del SP no
+  // está garantizado; si el catálogo aún no cargó, cae a '' (el CUD lo
+  // rechazaría, mismo comportamiento que antes si el campo llegaba vacío).
+  String _idTipoParticipantePagante() {
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return '';
+    return catalogState.tiposParticipante
+            .where((t) => !t.esInvitado)
+            .firstOrNull
+            ?.id ??
+        '';
+  }
+
   // En modo edición valida los campos obligatorios antes de continuar; en
   // modo solo-ver (modoEdicion == false) avanza directo, sin validar.
   void _onContinuar(PaisItem? paisCelular) {
@@ -390,7 +404,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     }
     final datos = _construirDatosSolicitante(paisCelular);
     context.read<SolicitudFormCubit>().guardarSolicitante(datos);
-    context.read<ParticipantesCubit>().sincronizarSolicitante(datos);
+    context.read<ParticipantesCubit>().sincronizarSolicitante(
+      datos,
+      idTipoParticipantePagante: _idTipoParticipantePagante(),
+    );
     // Si ya existe NUMSOL (edición) y hay un archivo recién adjuntado, se
     // sube en segundo plano — no bloquea la navegación. En creación nueva
     // (NUMSOL aún vacío) no hace nada hasta que se presione "Guardar".
@@ -406,7 +423,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
     final datos = _construirDatosSolicitante(paisCelular);
     context.read<SolicitudFormCubit>().guardarSolicitante(datos);
-    context.read<ParticipantesCubit>().sincronizarSolicitante(datos);
+    context.read<ParticipantesCubit>().sincronizarSolicitante(
+      datos,
+      idTipoParticipantePagante: _idTipoParticipantePagante(),
+    );
 
     final result = await guardarSolicitudDesdeWizard(
       context,
@@ -452,11 +472,14 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     final paises = catalogState is CatalogsLoaded
         ? catalogState.paises
         : const <PaisItem>[];
+    final idPaisDefecto = catalogState is CatalogsLoaded
+        ? catalogState.valoresDefecto.idPais
+        : '';
     final paisCelular =
         _paisCelular ??
         (paises.isEmpty
             ? null
-            : paises.where((p) => p.codigoTelefono == '51').firstOrNull ??
+            : paises.where((p) => p.id == idPaisDefecto).firstOrNull ??
                   paises.first);
 
     return Column(
@@ -574,8 +597,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     });
                     _sincronizarCubit();
                   },
-                  onSexoChanged: (v) {
-                    setState(() => _sexoId = v);
+                  onSexoChanged: (item) {
+                    setState(() => _sexoId = item?.id ?? '');
                     _sincronizarCubit();
                   },
                 ),

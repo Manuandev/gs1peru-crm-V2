@@ -25,6 +25,7 @@ abstract class SolicitudRepository {
     required double igvPorcentaje,
     required bool esBorrador,
     double descuento = 0,
+    required String idTipoDocRuc,
   });
 
   Future<bool> guardarArchivo({

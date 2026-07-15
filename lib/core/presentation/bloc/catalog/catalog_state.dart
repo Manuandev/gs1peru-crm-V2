@@ -23,19 +23,23 @@ class CatalogsLoaded extends CatalogsState {
 
   const CatalogsLoaded({required this.listas});
 
-  List<CampaniaItem>    get campanias    => listas.campanias;
+  List<CampaniaItem> get campanias => listas.campanias;
   List<OportunidadItem> get oportunidades => listas.oportunidades;
-  List<CanalItem>       get canales      => listas.canales;
-  List<InteresItem>     get intereses    => listas.intereses;
-  List<EstadoItem>      get estados      => listas.estados;
-  List<AsesorItem>      get asesores     => listas.asesores;
+  List<CanalItem> get canales => listas.canales;
+  List<InteresItem> get intereses => listas.intereses;
+  List<EstadoItem> get estados => listas.estados;
+  List<AsesorItem> get asesores => listas.asesores;
   List<EstadoGestionItem> get estadosGestion => listas.estadosGestion;
-  List<MonedaItem>       get monedas       => listas.monedas;
-  double                 get igvPorcentaje => listas.igvPorcentaje;
-  List<PaisItem>          get paises        => listas.paises;
+  List<MonedaItem> get monedas => listas.monedas;
+  double get igvPorcentaje => listas.igvPorcentaje;
+  List<PaisItem> get paises => listas.paises;
   List<TipoDocumentoItem> get tiposDocumento => listas.tiposDocumento;
-  List<ComprobanteItem>   get comprobantes   => listas.comprobantes;
-  List<NacionalidadItem>  get nacionalidades => listas.nacionalidades;
+  List<ComprobanteItem> get comprobantes => listas.comprobantes;
+  List<NacionalidadItem> get nacionalidades => listas.nacionalidades;
+  ValoresCRMItem get valoresDefecto => listas.valoresDefecto;
+  List<SexoItem> get sexos => listas.sexos;
+  List<TipoParticipanteItem> get tiposParticipante => listas.tiposParticipante;
+  List<UbigeoItem> get ubigeo => listas.ubigeo;
 
   @override
   List<Object?> get props => [
@@ -52,6 +56,10 @@ class CatalogsLoaded extends CatalogsState {
     tiposDocumento,
     comprobantes,
     nacionalidades,
+    valoresDefecto,
+    sexos,
+    tiposParticipante,
+    ubigeo,
   ];
 }
 

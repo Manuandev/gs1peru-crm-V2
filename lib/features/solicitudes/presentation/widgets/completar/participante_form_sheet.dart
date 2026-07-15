@@ -6,20 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
-// ── Constantes de opciones ────────────────────────────────────────────────────
-// "Tipo" de participante no tiene catálogo de backend — se mantiene hardcodeado.
-// El id (1-4) es lo que se manda como ID_TIP_PARTICIPANTE al CUD — antes se
-// mandaba el label completo ('Invitado auspicio', 18 chars) y truncaba la
-// columna en EVT.T_TECMSOLINSCRIPCION02.
-
-const _tiposParticipante = [
-  '1¦Pagante',
-  '2¦Invitado',
-  '3¦Invitado auspicio',
-  '4¦Online',
-];
-const _idTipoParticipantePagante = '1';
-
 // ── Función helper para abrir el sheet ───────────────────────────────────────
 
 Future<void> mostrarFormularioParticipante(
@@ -97,7 +83,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   void initState() {
     super.initState();
     final p = widget.participante;
-    _tipoParticipante = p?.tipoParticipante ?? _idTipoParticipantePagante;
     _tipoDocId = p?.tipoDocId ?? '';
     _tipoDocLabel = p?.tipoDoc ?? '';
     _tipoDocInicialId = _tipoDocId.isNotEmpty ? _tipoDocId : null;
@@ -110,6 +95,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
       final paises = catalogState.paises;
+      final idPaisDefecto = catalogState.valoresDefecto.idPais;
       _paisSeleccionado = (p != null && p.celularCodigoTelefono.isNotEmpty)
           ? paises
                 .where((x) => x.codigoTelefono == p.celularCodigoTelefono)
@@ -117,8 +103,19 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
           : null;
       _paisSeleccionado ??= paises.isEmpty
           ? null
-          : paises.where((x) => x.codigoTelefono == '51').firstOrNull ??
+          : paises.where((x) => x.id == idPaisDefecto).firstOrNull ??
                 paises.first;
+
+      // Id real de "Pagante" (esInvitado == false) — nunca hardcodear '1'.
+      _tipoParticipante =
+          p?.tipoParticipante ??
+          catalogState.tiposParticipante
+              .where((t) => !t.esInvitado)
+              .firstOrNull
+              ?.id ??
+          '';
+    } else {
+      _tipoParticipante = p?.tipoParticipante ?? '';
     }
 
     _numDocFocus = FocusNode()..addListener(_onNumDocFocusChange);
@@ -248,6 +245,9 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     final paises = catalogState is CatalogsLoaded
         ? catalogState.paises
         : const <PaisItem>[];
+    final tiposParticipante = catalogState is CatalogsLoaded
+        ? catalogState.tiposParticipante
+        : const <TipoParticipanteItem>[];
 
     return SafeArea(
       top: false,
@@ -394,10 +394,9 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
-                            child: CustomComboSearchField(
+                            child: CustomComboField<TipoParticipanteItem>(
                               label: 'Tipo *',
-                              data: _tiposParticipante,
-                              displayIndex: 1,
+                              data: tiposParticipante,
                               initialValue: _tipoParticipante,
                               onChanged: (item) {
                                 if (item != null) {

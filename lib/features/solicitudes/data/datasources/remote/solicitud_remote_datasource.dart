@@ -9,11 +9,6 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
-// Id de catálogo de "RUC" en TipoDocumentoItem (SYSTABEXTER02 CODTABLA='F01') —
-// mismo valor que _idTipoDocRuc en solicitud_facturacion_view.dart. Si cambia
-// allá, cambiar también aquí.
-const _idTipoDocRuc = '6';
-
 class SolicitudRemoteDatasource {
   final ApiClient _api = ApiClient();
   final _session = SessionService();
@@ -76,7 +71,8 @@ class SolicitudRemoteDatasource {
   // Cabecera: 41 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
   Future<CrudResult> guardarSolicitud({
     required String numSol,
-    required String idLead, // solo aplica al crear (numSol vacío) desde una negociación
+    required String
+    idLead, // solo aplica al crear (numSol vacío) desde una negociación
     required String tipoPersona, // 'juridica' | 'natural'
     required DatosSolicitante solicitante,
     DatosFacturacion? facturacion,
@@ -88,11 +84,16 @@ class SolicitudRemoteDatasource {
     // al backend, el SP no tiene una — se refleja directo en DC_IMPORTE/
     // DC_IGV/DC_IMPORTE_TOTAL (ver CLAUDE.md).
     double descuento = 0,
+    // Id real de "RUC" en TipoDocumentoItem (CatalogsBloc.valoresDefecto.
+    // idTipoDocRuc) — el datasource no tiene acceso a CatalogsBloc (capa de
+    // presentación), así que el caller lo resuelve y lo pasa acá. Nunca
+    // volver a hardcodear este id.
+    required String idTipoDocRuc,
   }) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
 
-    final esRuc = facturacion?.tipoDocId == _idTipoDocRuc;
+    final esRuc = facturacion?.tipoDocId == idTipoDocRuc;
 
     final idParticipanteSolicitante = participantes
         .where((p) => p.esSolicitante)
@@ -121,8 +122,12 @@ class SolicitudRemoteDatasource {
       solicitante.cargo, // 13 CARGO_SOL
       solicitante.celular, // 14 CELULAR_SOL
       solicitante.correo, // 15 CORREO_SOL
-      solicitante.solicitanteEsParticipante ? '1' : '0', // 16 IB_PARTICIPANTE_SOLICITANTE
-      solicitante.facturarAlSolicitante ? '1' : '0', // 17 IB_FACTURA_SOLICITANTE
+      solicitante.solicitanteEsParticipante
+          ? '1'
+          : '0', // 16 IB_PARTICIPANTE_SOLICITANTE
+      solicitante.facturarAlSolicitante
+          ? '1'
+          : '0', // 17 IB_FACTURA_SOLICITANTE
       idParticipanteSolicitante ?? '', // 18 ID_PARTICIPANTE_SOLICITANTE
       ParseUtils.orEmpty(solicitante.canalId), // 19 ID_CANAL
       solicitante.canalNombre, // 20 NOMBRE_CANAL
@@ -130,7 +135,8 @@ class SolicitudRemoteDatasource {
       facturacion?.numDoc ?? '', // 22 NUM_DOC_FAC
       esRuc ? (facturacion?.numDoc ?? '') : '', // 23 RUCEMPRE_FAC
       esRuc ? (facturacion?.nombresRazon ?? '') : '', // 24 NOMEMPRE_FAC
-      facturacion?.paisId ?? '', // 25 ID_NACION_FAC (el SP reusa esta misma variable para ID_PAIS)
+      facturacion?.paisId ??
+          '', // 25 ID_NACION_FAC (el SP reusa esta misma variable para ID_PAIS)
       esRuc ? '' : (facturacion?.nombresRazon ?? ''), // 26 NOMBRES_FAC
       esRuc ? '' : (facturacion?.apellidoPaterno ?? ''), // 27 APELLIDO_P_FAC
       esRuc ? '' : (facturacion?.apellidoMaterno ?? ''), // 28 APELLIDO_M_FAC
@@ -149,25 +155,27 @@ class SolicitudRemoteDatasource {
       coords, // 41 LL_USUARIO
     ].join(AppConstants.sepCampos);
 
-    final detalle = participantes.map((p) {
-      final igv = p.importe * igvPorcentaje / 100;
-      return [
-        p.id.toString(), // ID
-        p.tipoDocId, // ID_TIP_DOC
-        p.numDoc, // NUM_DOC
-        p.nacionalidadId, // ID_NACION
-        p.nombres, // NOMBRES
-        p.apellidoPaterno, // APELLIDO_P
-        p.apellidoMaterno, // APELLIDO_M
-        p.correo, // CORREO
-        p.celular, // CELULAR
-        p.cargo, // CARGO
-        p.importe.toStringAsFixed(2), // IMPORTE
-        igv.toStringAsFixed(2), // IGV
-        '1', // IB_IGV — siempre true, no hay switch en la UI para desactivarlo
-        p.tipoParticipante, // ID_TIP_PARTICIPANTE (sin catálogo real, ver CLAUDE.md)
-      ].join(AppConstants.sepCampos);
-    }).join(AppConstants.sepRegistros);
+    final detalle = participantes
+        .map((p) {
+          final igv = p.importe * igvPorcentaje / 100;
+          return [
+            p.id.toString(), // ID
+            p.tipoDocId, // ID_TIP_DOC
+            p.numDoc, // NUM_DOC
+            p.nacionalidadId, // ID_NACION
+            p.nombres, // NOMBRES
+            p.apellidoPaterno, // APELLIDO_P
+            p.apellidoMaterno, // APELLIDO_M
+            p.correo, // CORREO
+            p.celular, // CELULAR
+            p.cargo, // CARGO
+            p.importe.toStringAsFixed(2), // IMPORTE
+            igv.toStringAsFixed(2), // IGV
+            '1', // IB_IGV — siempre true, no hay switch en la UI para desactivarlo
+            p.tipoParticipante, // ID_TIP_PARTICIPANTE (sin catálogo real, ver CLAUDE.md)
+          ].join(AppConstants.sepCampos);
+        })
+        .join(AppConstants.sepRegistros);
 
     final body = [cabecera, detalle, 'U'].join(AppConstants.sepListas);
 
@@ -206,9 +214,12 @@ class SolicitudRemoteDatasource {
     final coords = await _deviceInfo.getCoordenadasString();
     final token = _session.token;
 
-    final cabecera = [numSol, _session.codUser, ip, coords].join(
-      AppConstants.sepCampos,
-    );
+    final cabecera = [
+      numSol,
+      _session.codUser,
+      ip,
+      coords,
+    ].join(AppConstants.sepCampos);
     final detalle = [
       tipo,
       fileNameSeguro,
@@ -222,7 +233,9 @@ class SolicitudRemoteDatasource {
 
     for (var i = 0; i < totalChunks; i++) {
       final start = i * chunkSize;
-      final end = (start + chunkSize > totalSize) ? totalSize : start + chunkSize;
+      final end = (start + chunkSize > totalSize)
+          ? totalSize
+          : start + chunkSize;
       final chunkBytes = fileBytes.sublist(start, end);
 
       final dataString = [
@@ -254,7 +267,10 @@ class SolicitudRemoteDatasource {
   // Quita separadores de ruta y ".." — el backend arma la ruta física del
   // archivo concatenando este valor directo, sin volver a validarlo.
   String _sanitizarNombreArchivo(String nombre) {
-    final sinRuta = nombre.replaceAll(RegExp(r'[\\/]'), '_').replaceAll('..', '_').trim();
+    final sinRuta = nombre
+        .replaceAll(RegExp(r'[\\/]'), '_')
+        .replaceAll('..', '_')
+        .trim();
     return sinRuta.isEmpty ? 'archivo' : sinRuta;
   }
 

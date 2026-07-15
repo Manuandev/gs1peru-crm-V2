@@ -24,9 +24,7 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
 
   void agregar(ParticipanteLocal participante) {
     final nuevo = participante.copyWith(id: _nextId++);
-    emit(state.copyWith(
-      participantes: [...state.participantes, nuevo],
-    ));
+    emit(state.copyWith(participantes: [...state.participantes, nuevo]));
   }
 
   void editar(ParticipanteLocal participante) {
@@ -37,9 +35,11 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
   }
 
   void eliminar(int id) {
-    emit(state.copyWith(
-      participantes: state.participantes.where((p) => p.id != id).toList(),
-    ));
+    emit(
+      state.copyWith(
+        participantes: state.participantes.where((p) => p.id != id).toList(),
+      ),
+    );
   }
 
   void eliminarTodos() {
@@ -51,7 +51,14 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
   /// [ParticipanteLocal.esSolicitante] con los datos ya capturados del
   /// solicitante, o lo retira si el switch se desactiva. Se llama cada vez
   /// que se presiona "Continuar" en el paso 1 — idempotente, nunca duplica.
-  void sincronizarSolicitante(DatosSolicitante datos) {
+  // [idTipoParticipantePagante] viene del catálogo real (CatalogsBloc.
+  // tiposParticipante, el ítem con esInvitado == false) — el Cubit no tiene
+  // BuildContext para leerlo solo, así que el caller (paso 1) lo resuelve y
+  // lo pasa acá. Nunca hardcodear el id de "Pagante".
+  void sincronizarSolicitante(
+    DatosSolicitante datos, {
+    required String idTipoParticipantePagante,
+  }) {
     final resto = state.participantes.where((p) => !p.esSolicitante).toList();
 
     if (!datos.solicitanteEsParticipante) {
@@ -73,13 +80,11 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       cargo: datos.cargo,
       celular: datos.celular,
       celularCodigoTelefono: datos.celularCodigoTelefono,
-      tipoParticipante: '1', // Pagante — ver ids en participante_form_sheet.dart
+      tipoParticipante: idTipoParticipantePagante,
       importe: 0,
       esSolicitante: true,
     );
 
-    emit(state.copyWith(
-      participantes: [solicitanteParticipante, ...resto],
-    ));
+    emit(state.copyWith(participantes: [solicitanteParticipante, ...resto]));
   }
 }

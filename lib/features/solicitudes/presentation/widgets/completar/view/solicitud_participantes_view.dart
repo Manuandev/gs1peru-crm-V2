@@ -74,13 +74,21 @@ class _SolicitudParticipantesViewState
   }
 
   // Si TODOS los participantes son invitados (sin costo), no hay a quién
-  // facturar — se salta el paso 3 directo al resumen.
-  void _onContinuar(ParticipantesState state) {
-    final soloInvitados = state.participantes.every(
-      (p) =>
-          p.tipoParticipante == '2' || // Invitado
-          p.tipoParticipante == '3', // Invitado auspicio
-    );
+  // facturar — se salta el paso 3 directo al resumen. `esInvitado` viene del
+  // catálogo real (CatalogsBloc.tiposParticipante) — nunca comparar ids
+  // hardcodeados ('2'/'3') acá.
+  void _onContinuar(BuildContext context, ParticipantesState state) {
+    final catalogState = context.read<CatalogsBloc>().state;
+    final tiposParticipante = catalogState is CatalogsLoaded
+        ? catalogState.tiposParticipante
+        : const <TipoParticipanteItem>[];
+
+    final soloInvitados = state.participantes.every((p) {
+      final tipo = tiposParticipante
+          .where((t) => t.id == p.tipoParticipante)
+          .firstOrNull;
+      return tipo?.esInvitado ?? false;
+    });
     widget.onContinuar(soloInvitados ? 4 : 3);
   }
 
@@ -267,14 +275,14 @@ class _SolicitudParticipantesViewState
                             text: 'Continuar →',
                             onPressed: state.participantes.isEmpty
                                 ? null
-                                : () => _onContinuar(state),
+                                : () => _onContinuar(context, state),
                           ),
                         ),
                       ],
                     )
                   : CustomPrimaryButton(
                       text: 'Continuar →',
-                      onPressed: () => _onContinuar(state),
+                      onPressed: () => _onContinuar(context, state),
                     ),
             ),
           ],

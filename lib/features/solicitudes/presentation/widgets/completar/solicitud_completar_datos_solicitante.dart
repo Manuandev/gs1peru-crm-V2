@@ -27,7 +27,7 @@ class SeccionDatosSolicitante extends StatefulWidget {
   final String? sexoInicialId;
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
-  final ValueChanged<String>? onSexoChanged;
+  final ValueChanged<SexoItem?>? onSexoChanged;
 
   const SeccionDatosSolicitante({
     super.key,
@@ -64,30 +64,23 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
     _tipoDocId = widget.tipoDocInicialId;
   }
 
-  // Límite de caracteres y tipo de teclado según tipo de documento —
-  // códigos reales de SYSTABEXTER02 CODTABLA='F01' (catálogo real).
-  static const _maxLengthPorTipo = {
-    '1': 8, // DNI
-    '4': 12, // Carnet de extranjería
-    '6': 11, // RUC
-    '7': 12, // Pasaporte
-  };
-  static const _soloDigitosPorTipo = {
-    '1': true,
-    '4': false,
-    '6': true,
-    '7': false,
-  };
+  // Límite de caracteres y tipo de teclado según tipo de documento — ids
+  // reales de SYSTABEXTER02 CODTABLA='F01', vienen de
+  // `CatalogsBloc.valoresDefecto` (parte [13] del SP), no hardcodeados.
+  int? _maxLengthPorTipoDoc(ValoresCRMItem v) {
+    if (_tipoDocId == null) return null;
+    if (_tipoDocId == v.idTipoDocDni) return 8;
+    if (_tipoDocId == v.idTipoDocCde) return 12;
+    if (_tipoDocId == v.idTipoDocRuc) return 11;
+    if (_tipoDocId == v.idTipoDocPas) return 12;
+    return null;
+  }
 
-  // Sexo no tiene catálogo de backend — se mantiene hardcodeado por ahora.
-  static const _sexos = ['M¦Masculino', 'F¦Femenino', 'PD¦Por definir'];
+  bool _soloDigitosPorTipoDoc(ValoresCRMItem v) =>
+      _tipoDocId == v.idTipoDocDni || _tipoDocId == v.idTipoDocRuc;
 
   @override
   Widget build(BuildContext context) {
-    final maxLenDoc = _tipoDocId != null ? _maxLengthPorTipo[_tipoDocId] : null;
-    final soloDigitos = _soloDigitosPorTipo[_tipoDocId] ?? false;
-    final teclado = soloDigitos ? TextInputType.number : TextInputType.text;
-
     final catalogState = context.watch<CatalogsBloc>().state;
     final tiposDocumento = catalogState is CatalogsLoaded
         ? catalogState.tiposDocumento
@@ -95,6 +88,16 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
     final nacionalidades = catalogState is CatalogsLoaded
         ? catalogState.nacionalidades
         : const <NacionalidadItem>[];
+    final sexos = catalogState is CatalogsLoaded
+        ? catalogState.sexos
+        : const <SexoItem>[];
+    final valoresDefecto = catalogState is CatalogsLoaded
+        ? catalogState.valoresDefecto
+        : const ValoresCRMItem();
+
+    final maxLenDoc = _maxLengthPorTipoDoc(valoresDefecto);
+    final soloDigitos = _soloDigitosPorTipoDoc(valoresDefecto);
+    final teclado = soloDigitos ? TextInputType.number : TextInputType.text;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,12 +172,12 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: CustomComboSearchField(
+              child: CustomComboField<SexoItem>(
                 label: 'Sexo *',
-                data: _sexos,
+                data: sexos,
                 enabled: widget.habilitado,
                 initialValue: widget.sexoInicialId,
-                onChanged: (item) => widget.onSexoChanged?.call(item?.id ?? ''),
+                onChanged: widget.onSexoChanged,
               ),
             ),
           ],

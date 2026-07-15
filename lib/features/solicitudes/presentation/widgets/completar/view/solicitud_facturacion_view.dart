@@ -6,11 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
-// Ids reales de catálogo usados en las reglas de este paso (SYSTABEXTER02).
-const _idComprobanteFactura = '01';
-const _idComprobanteBoleta = '03';
-const _idTipoDocRuc = '6';
-
 class SolicitudFacturacionView extends StatefulWidget {
   final Solicitud solicitud;
   final bool modoEdicion;
@@ -66,6 +61,21 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // Controladores — Información complementaria
   final _ctrlNit = TextEditingController();
   final _ctrlObservaciones = TextEditingController();
+
+  // Ids reales de catálogo (SYSTABEXTER02) usados en las reglas de este
+  // paso — vienen de `CatalogsBloc.valoresDefecto` (parte [13] del SP), no
+  // hardcodeados. Si el catálogo aún no cargó, caen a '' (los combos de
+  // arriba tampoco tendrían datos todavía en ese caso).
+  ValoresCRMItem get _valoresDefecto {
+    final catalogState = context.read<CatalogsBloc>().state;
+    return catalogState is CatalogsLoaded
+        ? catalogState.valoresDefecto
+        : const ValoresCRMItem();
+  }
+
+  String get _idComprobanteFactura => _valoresDefecto.idTipoFactura;
+  String get _idComprobanteBoleta => _valoresDefecto.idTipoBoleta;
+  String get _idTipoDocRuc => _valoresDefecto.idTipoDocRuc;
 
   bool get _esRuc => _tipoDocId == _idTipoDocRuc;
 
@@ -322,7 +332,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         _paisCelular ??
         (paises.isEmpty
             ? null
-            : paises.where((p) => p.codigoTelefono == '51').firstOrNull ??
+            : paises.where((p) => p.id == _valoresDefecto.idPais).firstOrNull ??
                   paises.first);
 
     return Column(

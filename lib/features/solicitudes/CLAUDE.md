@@ -1,5 +1,59 @@
 # Solicitudes Feature
 
+## Catálogo real reemplaza ids hardcodeados — Sexo, Tipo participante, RUC, Factura/Boleta (2026-07-15)
+Auditoría encontró varios ids de catálogo (SYSTABEXTER02) hardcodeados en 5+ archivos del wizard,
+algunos duplicados en 3-4 lugares independientes (riesgo de desincronización si el id real
+cambiara en el backend). Se conectaron todos a `CatalogsBloc`, que ya traía los datos parseados
+(`ListasGenericasModel.parse`, `core/models/catalog_item_model.dart`) pero **no los exponía** —
+`CatalogsState`/`CatalogsLoaded` (`core/presentation/bloc/catalog/catalog_state.dart`) no tenía
+getters para `valoresDefecto`/`sexos`/`tiposParticipante`/`ubigeo` hasta este fix; sin eso ningún
+widget podía leerlos aunque el parseo ya funcionara.
+
+- **Sexo (paso 1)** — `_sexos` (lista fija `['M¦Masculino', 'F¦Femenino', 'PD¦Por definir']` en
+  `solicitud_completar_datos_solicitante.dart`) se reemplazó por `CatalogsBloc.sexos`
+  (`SexoItem`, parte [14] del SP) vía `CustomComboField<SexoItem>` (antes
+  `CustomComboSearchField`). `SeccionDatosSolicitante.onSexoChanged` cambió de
+  `ValueChanged<String>?` a `ValueChanged<SexoItem?>?` — el caller extrae `item?.id ?? ''`.
+- **Tipo de participante** (formulario de participante) — `_tiposParticipante`/
+  `_idTipoParticipantePagante` (lista fija en `participante_form_sheet.dart`) se reemplazaron por
+  `CatalogsBloc.tiposParticipante` (`TipoParticipanteItem`, parte [15] del SP) vía
+  `CustomComboField<TipoParticipanteItem>`. El id de "Pagante" (default al crear un participante
+  nuevo, y el que usa el participante que autogenera el switch "El solicitante será
+  participante") ahora se resuelve como el primer ítem con `esInvitado == false` — nunca
+  hardcodear `'1'`. `ParticipantesCubit.sincronizarSolicitante()` ahora recibe
+  `idTipoParticipantePagante` como parámetro obligatorio (el Cubit no tiene `BuildContext` para
+  leer `CatalogsBloc` solo) — lo resuelve `solicitud_completar_view.dart` y se lo pasa.
+- **Regla "saltar Facturación"** (paso 2) — `solicitud_participantes_view.dart._onContinuar` ya
+  no compara `tipoParticipante == '2' || == '3'`; resuelve cada `TipoParticipanteItem` por id
+  contra `CatalogsBloc.tiposParticipante` y usa `.esInvitado` (default `false` si el catálogo
+  no tiene el id, para no saltarse Facturación por error).
+- **Id de RUC (`'6'`)** — vivía duplicado en 3 archivos independientes
+  (`solicitud_completar_view.dart._idTipoDocRucCompletar`,
+  `solicitud_facturacion_view.dart._idTipoDocRuc`,
+  `solicitud_remote_datasource.dart._idTipoDocRuc`, este último con un comentario que advertía
+  "si cambia allá, cambiar también aquí"). Los 3 ahora leen
+  `CatalogsBloc.valoresDefecto.idTipoDocRuc` (`ValoresCRMItem`, parte [13] del SP). Como el
+  datasource (capa data) no puede depender de `CatalogsBloc` (capa presentación), se agregó
+  `idTipoDocRuc` como parámetro `required` en toda la cadena
+  `SolicitudRemoteDatasource.guardarSolicitud()` → `SolicitudRepository`/`SolicitudRepositoryImpl`
+  → `GuardarSolicitudUseCase` — mismo patrón que ya existía para `igvPorcentaje`. El único caller
+  real, `guardarSolicitudDesdeWizard()` (`solicitud_guardar_helper.dart`), lo resuelve del
+  `CatalogsBloc` igual que ya hacía con `igvPorcentaje`.
+- **Ids de Comprobante Factura (`'01'`)/Boleta (`'03'`)** — en `solicitud_facturacion_view.dart`,
+  reemplazados por `valoresDefecto.idTipoFactura`/`idTipoBoleta`.
+- **País por defecto del celular/"País"** — los 3 lugares que hacían fallback a
+  `codigoTelefono == '51'` (paso 1, paso 3, formulario de participante) ahora buscan el
+  `PaisItem` cuyo `id` coincide con `valoresDefecto.idPais`.
+- **Pendiente/gap real, no resuelto**: el conteo "Participantes pagantes" del footer de
+  Facturación (`_ItemResumen` en `solicitud_facturacion_view.dart`) sigue comparando
+  `p.tipoParticipante == '1'` (Pagante específicamente, no Online) — el catálogo solo expone
+  `esInvitado` (booleano), no un id "es Pagante específicamente" ni un flag equivalente en
+  `ValoresCRMItem`. No se tocó por no tener claro si ese conteo debería incluir también a
+  "Online" — confirmar con negocio antes de decidir si se agrega un campo nuevo al catálogo o
+  si se deja como está.
+- `CatalogsState`/`CatalogsLoaded` ahora expone `valoresDefecto`/`sexos`/`tiposParticipante`/
+  `ubigeo` (antes solo hasta `nacionalidades`) — ver `core/CLAUDE.md` → `CatalogsBloc`.
+
 ## Wizard de los 4 pasos fusionado en una sola page (2026-07-15)
 Los 4 pasos (Solicitante/Participantes/Facturación/Resumen) dejaron de ser 4 rutas empujadas por
 separado (`goToFichaCompletarSolicitud` → `goToFichaParticipantesSolicitud` →
@@ -265,9 +319,12 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   `CustomComboField<PaisItem>` — el mismo catálogo `CatalogsBloc.paises` que alimenta el
   selector de código telefónico, ver abajo), **código telefónico del celular** (todos los
   campos de celular del wizard, `PaisItem.codigoTelefono` — ver `SolicitudCampoCelular`
-  abajo). Combos sin catálogo de backend (se mantienen como lista fija local porque no
-  existe otro origen — **son los únicos que pueden seguir hardcodeados**): Sexo (paso 1),
-  Tipo de participante (formulario de participante).
+  abajo). **Sexo** (paso 1, `SexoItem`) y **Tipo de participante** (formulario de
+  participante, `TipoParticipanteItem`) también están conectados a `CatalogsBloc` desde
+  2026-07-15 — ya no son listas fijas locales, ver "Catálogo real reemplaza ids
+  hardcodeados" más abajo. **País por defecto** del selector de código telefónico (los 3
+  campos de celular del wizard) y de "País" (paso 3) ya no cae a `codigoTelefono == '51'`
+  hardcodeado — usa `CatalogsBloc.valoresDefecto.idPais` (parte [13] del SP).
 - Los chips de Canal usan `AppSocialUtils.widgetCanalById(canal.id)` (no
   `widgetCanal(canal.iconoApp)`) — el string `iconoApp` que trae el SP no siempre calza
   con las keys internas de `AppSocialUtils` y termina mostrando un ícono de interrogación;
@@ -278,16 +335,21 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   que antes tenían cada uno su propia copia y se desincronizaban). Solo se puede cambiar
   en el paso 1; en el paso 3 el toggle se muestra pero con `habilitado: false` siempre.
 - **`tipoParticipante` es el id, no el label** — `'1'` Pagante · `'2'` Invitado ·
-  `'3'` Invitado auspicio · `'4'` Online (lista fija en `participante_form_sheet.dart`,
-  `_tiposParticipante`, formato `id¦desc` como cualquier combo). Antes se mandaba el label
-  completo como `ID_TIP_PARTICIPANTE` y truncaba esa columna en
-  `EVT.T_TECMSOLINSCRIPCION02` (`'Invitado auspicio'` no entraba) — se cambió a ids el
-  2026-07-10. Si agregas un tipo nuevo, el id lo define el backend (columna angosta), no
-  Flutter.
+  `'3'` Invitado auspicio · `'4'` Online son los valores reales que trae
+  `CatalogsBloc.tiposParticipante` (`TipoParticipanteItem`, parte [15] del SP) — ya no una
+  lista fija local (`_tiposParticipante` en `participante_form_sheet.dart` se eliminó el
+  2026-07-15). Antes se mandaba el label completo como `ID_TIP_PARTICIPANTE` y truncaba esa
+  columna en `EVT.T_TECMSOLINSCRIPCION02` (`'Invitado auspicio'` no entraba) — se cambió a
+  ids el 2026-07-10. El id de "Pagante" (usado como default al crear un participante nuevo,
+  y para el participante que autogenera el switch "El solicitante será participante") se
+  resuelve como el primer `TipoParticipanteItem` con `esInvitado == false` — nunca
+  hardcodear `'1'`.
 - **Regla de negocio — saltar Facturación**: si TODOS los participantes tienen
-  `tipoParticipante` en `{'2', '3'}` (Invitado / Invitado auspicio — nadie paga), el paso 2
-  navega directo a Resumen (`goToFichaResumenSolicitud`) sin pasar por Facturación. El
-  Resumen detecta esto porque `formState.facturacion` queda `null` y oculta la sección
+  `esInvitado == true` (resuelto contra `CatalogsBloc.tiposParticipante` por
+  `p.tipoParticipante`, no comparando ids `'2'`/`'3'` a mano), el paso 2 pasa directo al
+  paso 4 (Resumen) sin pasar por Facturación — dentro del wizard de una sola page, ver
+  "Wizard de una sola page" arriba (ya no es una navegación a otra ruta). El Resumen
+  detecta esto porque `formState.facturacion` queda `null` y oculta la sección
   "3. Facturación" (y su separador) — no renderizarla si `datos == null` en ese caso.
 - **Validación de email real** en los 3 lugares con campo Correo (paso 1, paso 3,
   formulario de participante) — usa la extensión `String?.emailValidator` (core,
@@ -498,7 +560,8 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   (`+51`), el nombre del país solo aparece en el selector (`_SelectorPaisTelefono`, bottom
   sheet con buscador) para poder ubicarlo. Se usa en las 3 pantallas con campo de celular:
   paso 1 (solicitante), paso 3 (facturación) y el formulario de participante — default
-  Perú (`codigoTelefono == '51'`) cuando el catálogo ya cargó
+  Perú resuelto contra `CatalogsBloc.valoresDefecto.idPais` (parte [13] del SP) cuando el
+  catálogo ya cargó, no un `codigoTelefono == '51'` hardcodeado
 
 ## Modelos relevantes
 - `Solicitud` (domain/entities) → entidad de la lista/detalle. `idSolicitud` es `String`

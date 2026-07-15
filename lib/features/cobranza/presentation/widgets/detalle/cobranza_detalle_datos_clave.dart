@@ -44,7 +44,7 @@ class CobranzaDetalleDatosClave extends StatelessWidget {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -62,11 +62,11 @@ class CobranzaDetalleDatosClave extends StatelessWidget {
         children: [
           Text(
             'Datos clave',
-            style: AppTextStyles.titleSmall.copyWith(
+            style: AppTextStyles.bodySmall.copyWith(
               fontWeight: AppTextStyles.weightSemiBold,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           if (detalle.sinFacturacion)
             const AppEmptyView(message: 'No tiene registros en facturación')
           else ...[
@@ -91,7 +91,7 @@ class _FilaDatoWidget extends StatelessWidget {
     return GestureDetector(
       onTap: fila.onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         child: Row(
           children: [
             Icon(
@@ -103,7 +103,7 @@ class _FilaDatoWidget extends StatelessWidget {
             Expanded(
               child: Text(
                 fila.label,
-                style: AppTextStyles.bodySmall.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -111,7 +111,7 @@ class _FilaDatoWidget extends StatelessWidget {
             Expanded(
               child: Text(
                 fila.valor,
-                style: AppTextStyles.bodySmall.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   color: fila.esTappable ? AppColors.info : AppColors.textPrimary,
                   fontWeight: fila.esTappable
                       ? AppTextStyles.weightMedium
@@ -150,7 +150,7 @@ class _FilaArchivo extends StatelessWidget {
           Expanded(
             child: Text(
               archivo.nombreCompleto,
-              style: AppTextStyles.bodySmall.copyWith(
+              style: AppTextStyles.labelSmall.copyWith(
                 color: AppColors.textPrimary,
               ),
               overflow: TextOverflow.ellipsis,

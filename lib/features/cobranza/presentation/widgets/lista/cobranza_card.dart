@@ -20,7 +20,7 @@ class CobranzaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -48,14 +48,14 @@ class CobranzaCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   _EstadoBadge(cobranza: cobranza),
-                  const SizedBox(height: AppSpacing.sm),
+                  const SizedBox(height: AppSpacing.xs),
                   _BotonWhatsApp(onTap: onWhatsAppTap),
                 ],
               ),
             ],
           ),
 
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
 
           // ── Fila de datos: monto / ejecutivo / condición ────────
           _CobranzaDatos(cobranza: cobranza),
@@ -81,11 +81,11 @@ class _CobranzaAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
-      radius: AppSizing.avatarRadiusMd,
+      radius: AppSizing.avatarRadiusSm,
       backgroundColor: AvatarUtils.color(cobranza.nombreCompleto),
       child: Text(
         AvatarUtils.initials(cobranza.nombreCompleto),
-        style: AppTextStyles.labelMedium.copyWith(
+        style: AppTextStyles.labelSmall.copyWith(
           color: AppColors.textOnDark,
           fontWeight: AppTextStyles.weightSemiBold,
         ),
@@ -109,7 +109,7 @@ class _CobranzaNombre extends StatelessWidget {
       children: [
         Text(
           cobranza.nombreCompleto,
-          style: AppTextStyles.bodyMedium.copyWith(
+          style: AppTextStyles.bodySmall.copyWith(
             fontWeight: AppTextStyles.weightSemiBold,
           ),
           overflow: TextOverflow.ellipsis,
@@ -118,7 +118,7 @@ class _CobranzaNombre extends StatelessWidget {
         const SizedBox(height: AppSpacing.xxs),
         Text(
           cobranza.evento,
-          style: AppTextStyles.bodySmall.copyWith(
+          style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.textSecondary,
           ),
           maxLines: 2,
@@ -194,8 +194,8 @@ class _BotonWhatsApp extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        width: AppSizing.buttonHeightSmall,
-        height: AppSizing.buttonHeightSmall,
+        width: AppSizing.buttonHeightCompact,
+        height: AppSizing.buttonHeightCompact,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: AppSocialUtils.colorCanalById(5).withValues(alpha: 0.1),
@@ -266,7 +266,7 @@ class _DatoItem extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxs),
           Text(
             valor,
-            style: AppTextStyles.bodySmall.copyWith(
+            style: AppTextStyles.labelSmall.copyWith(
               color: valorColor ?? AppColors.textPrimary,
               fontWeight: valorBold
                   ? AppTextStyles.weightSemiBold
@@ -313,14 +313,13 @@ class _CobranzaFechaVer extends StatelessWidget {
     final esUrgente = dias != null && dias <= 7;
 
     if (!tieneVencimiento) {
-      // cobranza.fecha viene crudo del backend (DATETIME sin CONVERT) — hay
-      // que formatearlo, no mostrarlo tal cual.
-      final fechaTexto =
-          '${cobranza.fecha.formatDate(AppDateFormat.longDate)} - '
-          '${cobranza.fecha.formatDate(AppDateFormat.hourMinute)}';
+      // cobranza.fecha viene crudo del backend (DATETIME sin CONVERT) — se
+      // usa el mismo formato compacto que el resto de la app ("Hoy 10:22" /
+      // "Ayer 10:22" / "miércoles 10:22" / "26/03/2025"), en vez del texto
+      // largo anterior ("27 de marzo 2025 - 01:07").
       return Text(
-        fechaTexto,
-        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+        cobranza.fecha.formatConDia(),
+        style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
       );
     }
 
@@ -328,13 +327,13 @@ class _CobranzaFechaVer extends StatelessWidget {
       children: [
         Text(
           'Vence: ${cobranza.fechaVencimiento}',
-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+          style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
         ),
         if (dias != null) ...[
           const SizedBox(width: AppSpacing.xs),
           Text(
             '($dias días)',
-            style: AppTextStyles.bodySmall.copyWith(
+            style: AppTextStyles.labelSmall.copyWith(
               color: esUrgente ? AppColors.warning : AppColors.textSecondary,
               fontWeight: esUrgente
                   ? AppTextStyles.weightSemiBold
@@ -357,8 +356,8 @@ class _BotonVer extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs,
         ),
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.border),
@@ -366,7 +365,7 @@ class _BotonVer extends StatelessWidget {
         ),
         child: Text(
           'Ver',
-          style: AppTextStyles.labelMedium.copyWith(
+          style: AppTextStyles.labelSmall.copyWith(
             fontWeight: AppTextStyles.weightSemiBold,
             color: AppColors.textPrimary,
           ),

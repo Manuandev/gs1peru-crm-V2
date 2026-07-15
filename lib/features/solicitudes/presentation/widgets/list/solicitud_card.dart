@@ -53,7 +53,7 @@ class SolicitudCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizing.radiusLg),
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
         border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
@@ -69,10 +69,10 @@ class SolicitudCard extends StatelessWidget {
           // ── Cuerpo ───────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
               AppSpacing.sm,
-              AppSpacing.md,
               AppSpacing.sm,
+              AppSpacing.sm,
+              AppSpacing.xs,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,22 +81,21 @@ class SolicitudCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Avatar
+                    // Avatar — solo ícono de persona sobre círculo de color,
+                    // mismo estilo compacto que LeadCard (sin iniciales)
                     CircleAvatar(
-                      radius: AppSizing.avatarRadiusMd,
+                      radius: AppSizing.avatarRadiusSm,
                       backgroundColor: AvatarUtils.color(
                         solicitud.nombreCompleto,
                       ),
-                      child: Text(
-                        AvatarUtils.initials(solicitud.nombreCompleto),
-                        style: AppTextStyles.titleSmall.copyWith(
-                          color: AppColors.textOnDark,
-                          fontWeight: AppTextStyles.weightBold,
-                        ),
+                      child: Icon(
+                        AppIcons.user,
+                        size: AppSizing.iconSm,
+                        color: AppColors.textOnDark,
                       ),
                     ),
 
-                    const SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.sm),
 
                     // Info del cliente
                     Expanded(
@@ -105,8 +104,8 @@ class SolicitudCard extends StatelessWidget {
                         children: [
                           Text(
                             solicitud.nombreCompleto,
-                            style: AppTextStyles.titleSmall.copyWith(
-                              fontWeight: AppTextStyles.weightBold,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              fontWeight: AppTextStyles.weightSemiBold,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -114,7 +113,7 @@ class SolicitudCard extends StatelessWidget {
                           const SizedBox(height: AppSpacing.xxs),
                           Text(
                             solicitud.nombreEmpresa,
-                            style: AppTextStyles.bodySmall.copyWith(
+                            style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
                             maxLines: 1,
@@ -132,7 +131,7 @@ class SolicitudCard extends StatelessWidget {
                       children: [
                         Text(
                           solicitud.fechaCreacion.formatWhatsApp(),
-                          style: AppTextStyles.bodySmall.copyWith(
+                          style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -146,7 +145,7 @@ class SolicitudCard extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
 
                 // ── Información en Grid (2 columnas) ───────────────
                 Row(
@@ -162,14 +161,14 @@ class SolicitudCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.menu_book_outlined,
-                                size: AppSizing.iconActionSm,
+                                size: AppSizing.iconSm,
                                 color: AppColors.info,
                               ),
                               const SizedBox(width: AppSpacing.xs),
                               Expanded(
                                 child: Text(
                                   solicitud.oportunidad,
-                                  style: AppTextStyles.bodySmall.copyWith(
+                                  style: AppTextStyles.labelSmall.copyWith(
                                     fontWeight: AppTextStyles.weightMedium,
                                     color: AppColors.textPrimary,
                                   ),
@@ -180,19 +179,20 @@ class SolicitudCard extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: AppSpacing.xs),
-                          // Canal de origen
+                          // Canal de origen — ícono real del canal (antes
+                          // quedó hardcodeado al ícono de WhatsApp sin
+                          // importar el canal real de la solicitud)
                           Row(
                             children: [
-                              Image.asset(
-                                'assets/icons/whatsapp_icon.png',
-                                width: 16,
-                                height: 16,
+                              CanalHelper.icon(
+                                solicitud.idCanal,
+                                size: AppSizing.iconSm,
                               ),
                               const SizedBox(width: AppSpacing.xs),
                               Expanded(
                                 child: Text(
-                                  'Origen: ${canalInfo.nombre}',
-                                  style: AppTextStyles.bodySmall.copyWith(
+                                  'Canal: ${canalInfo.nombre}',
+                                  style: AppTextStyles.labelSmall.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
                                   maxLines: 1,
@@ -221,14 +221,14 @@ class SolicitudCard extends StatelessWidget {
                             children: [
                               Icon(
                                 AppIcons.user,
-                                size: AppSizing.iconActionSm,
+                                size: AppSizing.iconSm,
                                 color: AppColors.primary,
                               ),
                               const SizedBox(width: AppSpacing.xs),
                               Expanded(
                                 child: Text(
                                   solicitud.nombreAsesor,
-                                  style: AppTextStyles.bodySmall.copyWith(
+                                  style: AppTextStyles.labelSmall.copyWith(
                                     fontWeight: AppTextStyles.weightMedium,
                                     color: AppColors.textPrimary,
                                   ),
@@ -251,9 +251,9 @@ class SolicitudCard extends StatelessWidget {
           if (mostrarBotones)
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
+                AppSpacing.sm,
                 0,
-                AppSpacing.md,
+                AppSpacing.sm,
                 AppSpacing.sm,
               ),
               child: Row(
@@ -263,19 +263,20 @@ class SolicitudCard extends StatelessWidget {
                       onPressed: onVer,
                       icon: Icon(
                         AppIcons.visibility,
-                        size: AppSizing.iconActionSm,
+                        size: AppSizing.iconSm,
                         color: AppColors.primary,
                       ),
                       label: Text(
                         'Ver',
-                        style: AppTextStyles.labelMedium.copyWith(
+                        style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.primary,
+                          fontWeight: AppTextStyles.weightSemiBold,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppColors.border),
                         minimumSize: const Size.fromHeight(
-                          AppSizing.buttonHeightSmall,
+                          AppSizing.buttonHeightCompact,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
@@ -286,21 +287,27 @@ class SolicitudCard extends StatelessWidget {
                     ),
                   ),
                   if (accion != SolicitudAccionTipo.ninguna) ...[
-                    const SizedBox(width: AppSpacing.md),
+                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: accion == SolicitudAccionTipo.cobranza
                           ? FilledButton.icon(
                               onPressed: onAccion,
                               icon: Icon(
                                 AppIcons.edit,
-                                size: AppSizing.iconActionSm,
+                                size: AppSizing.iconSm,
                               ),
-                              label: const Text('Completar'),
+                              label: Text(
+                                'Completar',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: AppTextStyles.weightSemiBold,
+                                ),
+                              ),
                               style: FilledButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 minimumSize: const Size.fromHeight(
-                                  AppSizing.buttonHeightSmall,
+                                  AppSizing.buttonHeightCompact,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(
@@ -313,14 +320,20 @@ class SolicitudCard extends StatelessWidget {
                               onPressed: onAccion ?? () {},
                               icon: Icon(
                                 AppIcons.checkCircle,
-                                size: AppSizing.iconActionSm,
+                                size: AppSizing.iconSm,
                               ),
-                              label: const Text('Validar'),
+                              label: Text(
+                                'Validar',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: AppTextStyles.weightSemiBold,
+                                ),
+                              ),
                               style: FilledButton.styleFrom(
                                 backgroundColor: AppColors.secondary,
                                 foregroundColor: Colors.white,
                                 minimumSize: const Size.fromHeight(
-                                  AppSizing.buttonHeightSmall,
+                                  AppSizing.buttonHeightCompact,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(

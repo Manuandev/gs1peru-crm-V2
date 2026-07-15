@@ -11,7 +11,7 @@ class CobranzaDetalleHistorial extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -29,11 +29,11 @@ class CobranzaDetalleHistorial extends StatelessWidget {
         children: [
           Text(
             'Historial',
-            style: AppTextStyles.titleSmall.copyWith(
+            style: AppTextStyles.bodySmall.copyWith(
               fontWeight: AppTextStyles.weightSemiBold,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           if (historial.isEmpty)
             const AppEmptyView(message: 'No tiene historial registrado')
           else
@@ -70,8 +70,8 @@ class _EntradaHistorial extends StatelessWidget {
           Column(
             children: [
               Container(
-                width: AppSizing.avatarSm,
-                height: AppSizing.avatarSm,
+                width: AppSizing.avatarXs,
+                height: AppSizing.avatarXs,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: color.withValues(alpha: 0.15),
@@ -106,7 +106,7 @@ class _EntradaHistorial extends StatelessWidget {
                       Expanded(
                         child: Text(
                           entrada.titulo,
-                          style: AppTextStyles.bodySmall.copyWith(
+                          style: AppTextStyles.labelSmall.copyWith(
                             fontWeight: AppTextStyles.weightSemiBold,
                           ),
                         ),
@@ -123,7 +123,7 @@ class _EntradaHistorial extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
                     entrada.descripcion,
-                    style: AppTextStyles.bodySmall.copyWith(
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),

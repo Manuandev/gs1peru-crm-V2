@@ -1,5 +1,41 @@
 # Cobranza Feature
 
+## `CobranzaCard` compactada (2026-07-14)
+`CobranzaCard` (`presentation/widgets/lista/cobranza_card.dart`) se redujo de escala — mismo
+criterio aplicado antes a `SolicitudCard` (`solicitudes/`): padding general `md` → `sm`, avatar
+`avatarRadiusMd` (24) → `avatarRadiusSm` (21, sigue con iniciales, no se tocó a ícono), nombre
+`bodyMedium` → `bodySmall`, el resto de textos (evento, datos de monto/ejecutivo/condición,
+fecha/vencimiento, botón "Ver") de `bodySmall`/`labelMedium` → `labelSmall`. Botón de WhatsApp
+de `buttonHeightSmall` (36) a `buttonHeightCompact` (32). El radio de la card (`radiusSm`) y el
+layout no cambiaron.
+
+**Fecha de la card — formato compacto en vez del texto largo.** `_CobranzaFechaVer._textoFecha()`
+mostraba `cobranza.fecha` con `longDate + hourMinute` concatenados a mano ("27 de marzo 2025 -
+01:07") — se cambió a `cobranza.fecha.formatConDia()` (core, `DateFormatter`), que da "Hoy 10:22"
+/ "Ayer 10:22" / "miércoles 10:22" / "26/03/2025" según qué tan reciente sea, mismo tipo de
+formato compacto que ya usan otras listas de la app (ej. `solicitud_card.dart` con
+`.formatWhatsApp()`). **La rama `'Vence: ${cobranza.fechaVencimiento}'` NO se tocó** — ese campo
+llega ya pre-formateado como `dd/MM/yyyy` desde el flujo de plan de crédito (`AppDateFormat.
+shortDate`, ver nota más abajo sobre `parseFechaCorta`), así que pasarlo por
+`.formatConDia()`/`.formatDate()` lo rompería (`DateFormatter.parseDate` no entiende `dd/MM/yyyy`,
+devolvería vacío). Hoy esa rama es código muerto en la lista de todos modos — el SP `'LS'` nunca
+trae `fechaVencimiento`/`diasVencimiento` (quedan `null`).
+
+## `CobranzaDetalleView` compactada + fecha con formato compacto (2026-07-14)
+Mismo criterio de achique aplicado a los widgets del detalle (`presentation/widgets/detalle/`):
+`CobranzaDetalleInfoCard` (avatar `avatarRadiusMd`→`avatarRadiusSm`, nombre/valor de
+`titleSmall`/`bodySmall`→`bodySmall`/`labelSmall`, monto `headlineSmall`→`titleMedium`),
+`CobranzaDetalleDatosClave`/`CobranzaDetalleHistorial`/`CobranzaDetalleAcciones` (título
+`titleSmall`→`bodySmall`, filas/textos a `labelSmall`, círculo del historial `avatarSm`→
+`avatarXs`, botones de acción `buttonHeight`(48)→`buttonHeightSmall`(36)),
+`CobranzaDetalleStepper` (círculo `avatarSm`→`avatarXs`). Padding general de las cards y del
+scroll del detalle bajó de `AppSpacing.md` a `AppSpacing.sm`.
+
+**"Fecha de solicitud" en `CobranzaDetalleInfoCard`** tenía el mismo problema que la card de
+lista — `longDate + hourMinute` concatenados a mano. Se cambió a
+`detalle.fechaSolicitud.formatConDia()`, igual que en `CobranzaCard`, para que lista y detalle
+se vean consistentes.
+
 ## Propósito
 Gestiona el flujo completo de facturación: lista de cobranzas, detalle, facturación al contado y plan de crédito.
 

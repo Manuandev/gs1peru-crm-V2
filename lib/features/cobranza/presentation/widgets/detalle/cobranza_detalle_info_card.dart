@@ -11,7 +11,7 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -35,12 +35,12 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                 Row(
                   children: [
                     CircleAvatar(
-                      radius: AppSizing.avatarRadiusMd,
+                      radius: AppSizing.avatarRadiusSm,
                       backgroundColor:
                           AvatarUtils.color(detalle.nombreCompleto),
                       child: Text(
                         AvatarUtils.initials(detalle.nombreCompleto),
-                        style: AppTextStyles.labelMedium.copyWith(
+                        style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.textOnDark,
                           fontWeight: AppTextStyles.weightSemiBold,
                         ),
@@ -50,20 +50,20 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         detalle.nombreCompleto.toUpperCase(),
-                        style: AppTextStyles.titleSmall.copyWith(
+                        style: AppTextStyles.bodySmall.copyWith(
                           fontWeight: AppTextStyles.weightBold,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _InfoFila(
                   icono: AppIcons.interes,
                   label: 'Oportunidad',
                   valor: detalle.oportunidad,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.xs),
                 _InfoFila(
                   icono: AppIcons.user,
                   label: 'Ejecutivo',
@@ -73,7 +73,7 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
 
           // ── Columna derecha: monto + estado + condición + fecha ──
           Column(
@@ -88,14 +88,14 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.xxs),
               Text(
                 'S/ ${detalle.montoTotal.toStringAsFixed(2)}',
-                style: AppTextStyles.headlineSmall.copyWith(
+                style: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: AppTextStyles.weightBold,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               _EstadoBadge(idEstado: detalle.idEstado, estado: detalle.estado),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 'Condición de pago',
                 style: AppTextStyles.labelSmall.copyWith(
@@ -104,7 +104,7 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
               ),
               Text(
                 detalle.condicion,
-                style: AppTextStyles.bodySmall.copyWith(
+                style: AppTextStyles.labelSmall.copyWith(
                   fontWeight: AppTextStyles.weightSemiBold,
                 ),
               ),
@@ -127,11 +127,11 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xxs),
                   Text(
                     // fechaSolicitud viene crudo del backend (DATETIME sin
-                    // CONVERT) — mismo formato que en CobranzaCard, para que
-                    // se vea igual en lista y detalle.
-                    '${detalle.fechaSolicitud.formatDate(AppDateFormat.longDate)} - '
-                    '${detalle.fechaSolicitud.formatDate(AppDateFormat.hourMinute)}',
-                    style: AppTextStyles.bodySmall.copyWith(
+                    // CONVERT) — mismo formato compacto que en CobranzaCard
+                    // ("Hoy 10:22"/"Ayer 10:22"/"miércoles 10:22"/"26/03/2025"),
+                    // en vez del texto largo anterior.
+                    detalle.fechaSolicitud.formatConDia(),
+                    style: AppTextStyles.labelSmall.copyWith(
                       fontWeight: AppTextStyles.weightMedium,
                     ),
                   ),
@@ -174,7 +174,7 @@ class _InfoFila extends StatelessWidget {
               ),
               Text(
                 valor,
-                style: AppTextStyles.bodySmall,
+                style: AppTextStyles.labelSmall,
               ),
             ],
           ),

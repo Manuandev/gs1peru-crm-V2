@@ -12,7 +12,7 @@ class CobranzaDetalleAcciones extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -30,11 +30,11 @@ class CobranzaDetalleAcciones extends StatelessWidget {
         children: [
           Text(
             'Acciones rápidas',
-            style: AppTextStyles.titleSmall.copyWith(
+            style: AppTextStyles.bodySmall.copyWith(
               fontWeight: AppTextStyles.weightSemiBold,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -86,8 +86,8 @@ class _AccionBtn extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: AppSizing.buttonHeight,
-            height: AppSizing.buttonHeight,
+            width: AppSizing.buttonHeightSmall,
+            height: AppSizing.buttonHeightSmall,
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(AppSizing.radiusMd),
@@ -102,10 +102,10 @@ class _AccionBtn extends StatelessWidget {
             ),
             child: Center(
               child: esFontAwesome
-                  ? FaIcon(icono, size: AppSizing.iconMd, color: color)
+                  ? FaIcon(icono, size: AppSizing.iconSm, color: color)
                   : Icon(
                       icono as IconData,
-                      size: AppSizing.iconMd,
+                      size: AppSizing.iconSm,
                       color: color,
                     ),
             ),

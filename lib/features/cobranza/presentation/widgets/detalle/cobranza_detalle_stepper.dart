@@ -25,8 +25,8 @@ class CobranzaDetalleStepper extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.md,
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -125,8 +125,8 @@ class _Circulo extends StatelessWidget {
             : AppColors.border;
 
     return Container(
-      width: AppSizing.avatarSm,
-      height: AppSizing.avatarSm,
+      width: AppSizing.avatarXs,
+      height: AppSizing.avatarXs,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: esActivo

@@ -1,5 +1,27 @@
 # Solicitudes Feature
 
+## `SolicitudCard` compactada + fix de ícono de Origen (2026-07-14)
+`SolicitudCard` (`presentation/widgets/list/solicitud_card.dart`) era demasiado grande frente al
+resto de listas de la app — se redujo de escala tomando como referencia `LeadCard` (`lead/`,
+lista de Seguimiento), sin cambiar el layout (sigue siendo header + grid 2 columnas + botones):
+- **Avatar** — ya no muestra iniciales; ahora es solo `Icon(AppIcons.user)` sobre el círculo de
+  color (`AvatarUtils.color`), mismo patrón que `_LeadAvatar` en `lead_card.dart`. Radio bajó de
+  `avatarRadiusMd` (24) a `avatarRadiusSm` (21) — no tan chico como Seguimiento
+  (`avatarRadiusXs` = 14), porque esta card sigue mostrando más información.
+- **Tipografía** — nombre bajó de `titleSmall` a `bodySmall` (semibold); empresa, fecha, textos
+  del grid (oportunidad/origen/ejecutivo) bajaron de `bodySmall`/`labelMedium` a `labelSmall` —
+  misma escala que usa `LeadCard`.
+- **Botones** — de `buttonHeightSmall` (36) a `buttonHeightCompact` (32); íconos de
+  `iconActionSm` (18) a `iconSm` (16); texto a `labelSmall` explícito en los 3 botones (antes el
+  `FilledButton` no fijaba estilo de texto).
+- **Card** — `radiusLg` → `radiusMd`, padding interno reducido (`AppSpacing.md/sm` → `sm/xs`).
+- **Bug de Origen corregido** — el ícono de la fila "Origen: X" estaba hardcodeado a
+  `Image.asset('assets/icons/whatsapp_icon.png')` sin importar el canal real (por eso se veía el
+  ícono de WhatsApp junto a "Origen: Facebook" u otro canal). Ahora usa
+  `CanalHelper.icon(solicitud.idCanal, size: AppSizing.iconSm)` — mismo `canalInfo` que ya se
+  usaba para el texto, ahora también maneja el ícono. `CanalHelper` (`core/helpers/canal_helper.dart`)
+  ya tenía el mapeo completo por `idCanal`, solo no se estaba usando para el ícono de esta card.
+
 ## Regla de negocio — cantidad/importe/moneda bloqueados desde la negociación (2026-07-14)
 Solo aplica al **crear** una solicitud nueva desde "Generar solicitud" (una negociación con
 `Negociacion.precio > 0` ya definido) — nunca al editar una ya guardada, porque el backend no

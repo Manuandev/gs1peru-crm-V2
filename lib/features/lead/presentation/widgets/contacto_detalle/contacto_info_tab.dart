@@ -62,21 +62,11 @@ class ContactoInfoTab extends StatelessWidget {
               ),
               _FilaCampos(
                 izquierda: _CampoInfo(
-                  icono: AppIcons.datosLead,
-                  etiqueta: 'Nombre de la negociación',
-                  valor: lead.nombre.isEmpty ? '—' : lead.nombre,
-                ),
-                derecha: _CampoInfo(
-                  icono: AppIcons.cursoEvento,
-                  etiqueta: 'Modalidad',
-                  valor: lead.modalidad.isEmpty ? '—' : lead.modalidad,
-                ),
-              ),
-              _FilaCampos(
-                izquierda: _CampoInfo(
                   icono: AppIcons.campaign,
                   etiqueta: 'Campaña',
-                  valor: lead.nombreCampania.isEmpty ? '—' : lead.nombreCampania,
+                  valor: lead.nombreCampania.isEmpty
+                      ? '—'
+                      : lead.nombreCampania,
                 ),
                 derecha: _CampoInfo(
                   icono: AppIcons.cursoEvento,
@@ -182,8 +172,7 @@ class _InfoCard extends StatelessWidget {
         children: [
           for (int i = 0; i < filas.length; i++) ...[
             filas[i],
-            if (i < filas.length - 1)
-              const Divider(height: AppSizing.hairline),
+            if (i < filas.length - 1) const Divider(height: AppSizing.hairline),
           ],
         ],
       ),
@@ -249,7 +238,11 @@ class _CampoInfo extends StatelessWidget {
           height: AppSizing.iconSm,
           child:
               iconoWidget ??
-              Icon(icono, size: AppSizing.iconSm, color: iconColor ?? AppColors.grey500),
+              Icon(
+                icono,
+                size: AppSizing.iconSm,
+                color: iconColor ?? AppColors.grey500,
+              ),
         ),
         const SizedBox(width: AppSpacing.xs),
         Expanded(

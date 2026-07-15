@@ -8,8 +8,13 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudGeneradaView extends StatelessWidget {
   final Solicitud solicitud;
+  final String comprobante;
 
-  const SolicitudGeneradaView({super.key, required this.solicitud});
+  const SolicitudGeneradaView({
+    super.key,
+    required this.solicitud,
+    this.comprobante = '',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +57,10 @@ class SolicitudGeneradaView extends StatelessWidget {
                     const SizedBox(height: AppSpacing.sm),
                     const _MensajeExito(),
                     const SizedBox(height: AppSpacing.sm),
-                    _CardInfoSolicitud(solicitud: solicitud),
+                    _CardInfoSolicitud(
+                      solicitud: solicitud,
+                      comprobante: comprobante,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     const _ListaVerificacion(),
                     const SizedBox(height: AppSpacing.sm),
@@ -382,8 +390,9 @@ class _Chispa extends StatelessWidget {
 
 class _CardInfoSolicitud extends StatelessWidget {
   final Solicitud solicitud;
+  final String comprobante;
 
-  const _CardInfoSolicitud({required this.solicitud});
+  const _CardInfoSolicitud({required this.solicitud, this.comprobante = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -515,7 +524,7 @@ class _CardInfoSolicitud extends StatelessWidget {
                           icono: AppIcons.fileFactura,
                           label: 'Tipo de comprobante',
                           child: Text(
-                            'Factura',
+                            comprobante.isEmpty ? '—' : comprobante,
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: AppTextStyles.weightBold,

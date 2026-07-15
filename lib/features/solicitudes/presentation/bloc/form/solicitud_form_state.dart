@@ -69,6 +69,8 @@ class DatosFacturacion {
   final String tipoDocId;
   final String tipoDocLabel;
   final String numDoc;
+  final String nacionalidadId;
+  final String nacionalidad;
   final String nombresRazon;
   final String apellidoPaterno;
   final String apellidoMaterno;
@@ -90,6 +92,8 @@ class DatosFacturacion {
     this.tipoDocId = '',
     required this.tipoDocLabel,
     required this.numDoc,
+    this.nacionalidadId = '',
+    this.nacionalidad = '',
     required this.nombresRazon,
     required this.apellidoPaterno,
     required this.apellidoMaterno,

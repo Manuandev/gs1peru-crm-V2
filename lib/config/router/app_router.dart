@@ -172,7 +172,10 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return SolicitudGeneradaPage(solicitud: args['solicitud'] as Solicitud);
+        return SolicitudGeneradaPage(
+          solicitud: args['solicitud'] as Solicitud,
+          comprobante: args['comprobante'] as String? ?? '',
+        );
       },
     ),
     AppRoutes.cargaMasivaParticipantes: RouteDefinition(

@@ -1,5 +1,52 @@
 # Solicitudes Feature
 
+## Bugs reportados por QA — Resumen sin modoEdicion, IGV invertido, nacionalidad huérfana (2026-07-14)
+Varios bugs reportados juntos en una sesión; se corrigieron los que eran puramente de Flutter y se
+dejaron señalados los que necesitan confirmación de backend/SP (no hay `.sql` versionado en el
+repo — los SPs solo viven en la BD, cualquier cambio ahí necesita que alguien pegue el texto real).
+
+- **`SolicitudResumenView` (paso 4) no miraba `modoEdicion`** — a diferencia de los pasos 1-3
+  (ver "Validación de 'Continuar'" abajo), el footer del Resumen siempre mostraba
+  Guardar/Generar solicitud/Cancelar, incluso en modo solo-ver (entrando por "Continuar" desde
+  `SolicitudDetalleView`, no por "Editar ficha"). Corregido: en modo solo-ver el footer ahora
+  muestra un único botón "Continuar" (ancho completo) que hace
+  `Navigator.of(context).popUntil(ModalRoute.withName(AppRoutes.detalleSolicitud))` — vuelve
+  directo al detalle, no reintenta guardar/generar nada.
+- **"Tipo de comprobante" hardcodeado a `'Factura'`** en `_CardInfoSolicitud`
+  (`widgets/generada/solicitud_generada_view.dart`) — mostraba siempre "Factura" sin importar si
+  el paso 3 eligió Boleta. Corregido pasando el comprobante real:
+  `goToSolicitudGenerada({solicitud, comprobante})` → `SolicitudGeneradaPage` →
+  `SolicitudGeneradaView` → `_CardInfoSolicitud` (muestra `'—'` si viene vacío, caso "todos
+  invitados" donde se saltó Facturación).
+- **IGV invertido en Resumen/Participantes — el importe de participante YA incluye IGV, no es
+  base**: cuando el precio viene de la negociación/lead (`precioBaseLead`), ese monto ya trae el
+  18% incluido — Inversión e IGV se **extraen** del total (`inversion = total / (1 +
+  igv%/100)`, `igv = total - inversion`), no se le suman encima. Antes `_SeccionResumenComercial`
+  (`solicitud_resumen_view.dart`) y `_ResumenInversion` (`solicitud_participantes_view.dart`)
+  hacían `igv = inversion * igv% / 100; total = inversion + igv` — inflaba el importe total por
+  encima de lo que realmente sumaban los participantes. Corregido en **ambas pantallas** —
+  ambas leen `ParticipantesCubit.state.totalInversion` como el total ya-con-IGV.
+  **OJO — pendiente, no tocado todavía**: `SolicitudRemoteDatasource.guardarSolicitud()` (task
+  `'U'`) sigue calculando `dcIgv`/`IGV` por participante de la misma forma vieja (sumando, no
+  extrayendo) — no se tocó porque no hay forma de confirmar sin ver el SP si las columnas
+  `IMPORTE`/`IGV`/`DC_IMPORTE`/`DC_IGV` esperan el monto base o el total. Si se decide extender
+  el fix al guardado, hay que cambiar `dcImporte`/`dcIgv`/`dcImporteTotal` y el `igv` por
+  participante en ese archivo para que también extraigan en vez de sumar — coordinar con
+  backend antes, un error acá corrompe montos reales que usa Cobranzas.
+- **`DatosFacturacion` no tenía campo de nacionalidad** — el combo Nacionalidad del paso 3 se
+  capturaba en el estado local del widget (`_nacionalidadId`) pero nunca se guardaba en el
+  modelo compartido, así que se perdía al volver con "Atrás" y reentrar al paso. Se agregó
+  `nacionalidadId`/`nacionalidad` a `DatosFacturacion` y se restaura junto con el resto de campos
+  en `didChangeDependencies()` — junto con `_paisCelular` (el código de teléfono tampoco se
+  restauraba, mismo bloque). **OJO — pendiente, no tocado todavía**: esto solo arregla la
+  persistencia *dentro de la sesión del wizard*. El SP nunca tuvo una columna para nacionalidad
+  de facturación — `guardarSolicitud()` manda `facturacion.paisId` como `ID_NACION_FAC` (columna
+  compartida con País, ver comentario en el datasource) y `SolicitudDetalleModel` (task `'DT'`)
+  no trae ningún `facNacionalidadId` de vuelta. O sea: la nacionalidad de facturación no
+  sobrevive a cerrar y reabrir la solicitud, ni queda guardada en la BD — para eso hace falta
+  una columna nueva en el SP (o decidir que ese campo no debería existir en el paso 3, ya que
+  "País" ya cubre algo parecido).
+
 ## `SolicitudCard` compactada + fix de ícono de Origen (2026-07-14)
 `SolicitudCard` (`presentation/widgets/list/solicitud_card.dart`) era demasiado grande frente al
 resto de listas de la app — se redujo de escala tomando como referencia `LeadCard` (`lead/`,

@@ -61,7 +61,11 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     setState(() => _generando = false);
 
     if (result is CrudOk) {
-      context.goToSolicitudGenerada(solicitud: widget.solicitud);
+      final comprobante = context.read<SolicitudFormCubit>().state.facturacion?.comprobante ?? '';
+      context.goToSolicitudGenerada(
+        solicitud: widget.solicitud,
+        comprobante: comprobante,
+      );
     } else {
       mostrarResultadoGuardarSolicitud(context, result);
     }
@@ -158,41 +162,55 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                // Guardar borrador
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomPrimaryButton(
-                    text: 'Guardar',
-                    icon: AppIcons.save,
-                    isLoading: _guardando,
-                    onPressed: _onGuardar,
-                  ),
-                ),
-                const SizedBox(height: 5),
+              children: widget.modoEdicion
+                  ? [
+                      // Guardar borrador
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomPrimaryButton(
+                          text: 'Guardar',
+                          icon: AppIcons.save,
+                          isLoading: _guardando,
+                          onPressed: _onGuardar,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
 
-                // Generar solicitud
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomSecondaryButton(
-                    text: 'Generar solicitud',
-                    icon: AppIcons.fileFactura,
-                    isLoading: _generando,
-                    onPressed: _onGenerarSolicitud,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                // Cancelar
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomSecondaryButton(
-                    text: 'Cancelar',
-                    icon: AppIcons.cancel,
-                    backgroundColor: AppColors.brandRaspberryAccessible,
-                    onPressed: () => context.goBack(),
-                  ),
-                ),
-              ],
+                      // Generar solicitud
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomSecondaryButton(
+                          text: 'Generar solicitud',
+                          icon: AppIcons.fileFactura,
+                          isLoading: _generando,
+                          onPressed: _onGenerarSolicitud,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      // Cancelar
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomSecondaryButton(
+                          text: 'Cancelar',
+                          icon: AppIcons.cancel,
+                          backgroundColor: AppColors.brandRaspberryAccessible,
+                          onPressed: () => context.goBack(),
+                        ),
+                      ),
+                    ]
+                  // Modo solo-ver — solo "Continuar", vuelve al detalle de la
+                  // solicitud (mismo patrón que pasos 1-3, ver CLAUDE.md).
+                  : [
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomPrimaryButton(
+                          text: 'Continuar',
+                          onPressed: () => Navigator.of(context).popUntil(
+                            ModalRoute.withName(AppRoutes.detalleSolicitud),
+                          ),
+                        ),
+                      ),
+                    ],
             ),
           ),
         ],
@@ -665,13 +683,16 @@ class _SeccionResumenComercial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inversion = context.watch<ParticipantesCubit>().state.totalInversion;
+    // El importe de cada participante ya incluye el IGV (viene de la
+    // negociación/lead con impuesto incluido) — Inversión e IGV se extraen
+    // del total, no se le suman encima (Inversión + IGV == total siempre).
+    final total = context.watch<ParticipantesCubit>().state.totalInversion;
     final catalogState = context.watch<CatalogsBloc>().state;
     final igvPorcentaje = catalogState is CatalogsLoaded
         ? catalogState.igvPorcentaje
         : 0.0;
-    final igv = inversion * igvPorcentaje / 100;
-    final total = inversion + igv;
+    final inversion = total / (1 + igvPorcentaje / 100);
+    final igv = total - inversion;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

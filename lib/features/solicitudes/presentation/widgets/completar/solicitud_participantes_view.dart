@@ -197,14 +197,14 @@ class _SolicitudParticipantesViewState
                               : () {},
                         ),
                         const SizedBox(width: AppSpacing.xs),
-                        _BotonSeccionSmall(
-                          icono: AppIcons.downloadFile,
-                          label: 'Carga masiva',
-                          onTap: () => context.goToCargaMasivaParticipantes(
-                            cubit: context.read<ParticipantesCubit>(),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
+                        // _BotonSeccionSmall(
+                        //   icono: AppIcons.downloadFile,
+                        //   label: 'Carga masiva',
+                        //   onTap: () => context.goToCargaMasivaParticipantes(
+                        //     cubit: context.read<ParticipantesCubit>(),
+                        //   ),
+                        // ),
+                        // const SizedBox(width: AppSpacing.xs),
                         _BotonIconoSmall(
                           icono: AppIcons.delete,
                           color: AppColors.error,
@@ -252,7 +252,7 @@ class _SolicitudParticipantesViewState
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: _ResumenInversion(
-                  inversion: state.totalInversion,
+                  total: state.totalInversion,
                   igvPorcentaje: igvPorcentaje,
                 ),
               ),
@@ -593,18 +593,18 @@ class _Campo extends StatelessWidget {
 // ── Resumen de inversión ──────────────────────────────────────────────────────
 
 class _ResumenInversion extends StatelessWidget {
-  final double inversion;
+  // Suma de los importes de participantes — ya incluye el IGV (viene de la
+  // negociación/lead con impuesto incluido). Inversión e IGV se extraen de
+  // este total, no se le suman encima.
+  final double total;
   final double igvPorcentaje;
 
-  const _ResumenInversion({
-    required this.inversion,
-    required this.igvPorcentaje,
-  });
+  const _ResumenInversion({required this.total, required this.igvPorcentaje});
 
   @override
   Widget build(BuildContext context) {
-    final igv = inversion * igvPorcentaje / 100;
-    final total = inversion + igv;
+    final inversion = total / (1 + igvPorcentaje / 100);
+    final igv = total - inversion;
     final igvLabel = igvPorcentaje % 1 == 0
         ? igvPorcentaje.toInt().toString()
         : igvPorcentaje.toStringAsFixed(1);

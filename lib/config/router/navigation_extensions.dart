@@ -132,8 +132,13 @@ extension NavigationExtensions on BuildContext {
     },
   );
 
-  Future<void> goToSolicitudGenerada({required Solicitud solicitud}) =>
-      _push(AppRoutes.solicitudGenerada, arguments: {'solicitud': solicitud});
+  Future<void> goToSolicitudGenerada({
+    required Solicitud solicitud,
+    String comprobante = '',
+  }) => _push(
+    AppRoutes.solicitudGenerada,
+    arguments: {'solicitud': solicitud, 'comprobante': comprobante},
+  );
 
   Future<void> goToCargaMasivaParticipantes({
     required ParticipantesCubit cubit,

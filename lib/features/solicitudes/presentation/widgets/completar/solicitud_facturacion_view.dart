@@ -38,6 +38,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   String _tipoDocId = '';
   String _tipoDocLabel = '';
   String _nacionalidadId = '';
+  String _nacionalidadLabel = '';
 
   // País del código telefónico del celular — catálogo real vía CatalogsBloc
   PaisItem? _paisCelular;
@@ -92,6 +93,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       tipoDocId: _tipoDocId,
       tipoDocLabel: _tipoDocLabel,
       numDoc: _ctrlNumDoc.text,
+      nacionalidadId: _nacionalidadId,
+      nacionalidad: _nacionalidadLabel,
       nombresRazon: _ctrlNombresRazon.text,
       apellidoPaterno: _ctrlApellidoPaterno.text,
       apellidoMaterno: _ctrlApellidoMaterno.text,
@@ -181,6 +184,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _paisLabel = datos.pais;
       _monedaId = datos.monedaId;
       _monedaLabel = datos.moneda;
+      _nacionalidadId = datos.nacionalidadId;
+      _nacionalidadLabel = datos.nacionalidad;
       _ctrlNumDoc.text = datos.numDoc;
       _ctrlNombresRazon.text = datos.nombresRazon;
       _ctrlApellidoPaterno.text = datos.apellidoPaterno;
@@ -190,6 +195,15 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _ctrlDireccion.text = datos.direccion;
       _ctrlNit.text = datos.nit;
       _ctrlObservaciones.text = datos.observaciones;
+
+      if (datos.celularCodigoTelefono.isNotEmpty) {
+        final catalogState = context.read<CatalogsBloc>().state;
+        if (catalogState is CatalogsLoaded) {
+          _paisCelular = catalogState.paises
+              .where((p) => p.codigoTelefono == datos.celularCodigoTelefono)
+              .firstOrNull;
+        }
+      }
       return;
     }
 
@@ -216,6 +230,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _tipoDocId = solicitante.tipoDocId;
       _tipoDocLabel = solicitante.tipoDocLabel;
       _nacionalidadId = solicitante.nacionalidadId;
+      _nacionalidadLabel = solicitante.nacionalidad;
       _ctrlNumDoc.text = solicitante.numDoc;
       _ctrlNombresRazon.text = solicitante.nombres;
       _ctrlApellidoPaterno.text = solicitante.apellidoPaterno;
@@ -422,8 +437,10 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                       _tipoDocLabel = item?.abreviatura ?? '';
                       _ctrlNumDoc.clear();
                     }),
-                    onNacionalidadChanged: (item) =>
-                        setState(() => _nacionalidadId = item?.id ?? ''),
+                    onNacionalidadChanged: (item) => setState(() {
+                      _nacionalidadId = item?.id ?? '';
+                      _nacionalidadLabel = item?.nombre ?? '';
+                    }),
                   ),
                 ],
               ),

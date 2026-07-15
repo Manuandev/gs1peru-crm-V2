@@ -48,12 +48,14 @@ class EditLeadPortrait extends StatefulWidget {
 // - Para crear una negociación son obligatorios: Estado, Campaña, Oportunidad,
 //   Canal, Moneda y Cantidad — el botón Guardar no se habilita hasta tenerlos
 //   completos. Subestado NUNCA es obligatorio.
+// - Estado/Subestado SIEMPRE fijos en "Nuevo" (id '00') al CREAR, sin
+//   importar el origen — el combo queda bloqueado (enabled: false), no solo
+//   con un valor por defecto. Al editar una negociación ya creada, sí se
+//   pueden mover de estado normalmente.
 //
 // Al entrar desde el chat de Conversaciones (desdeConversacion == true, crear
 // o editar negociación):
 // - Canal siempre bloqueado en WhatsApp, en crear y en editar.
-// - Estado/Subestado bloqueados en "Nuevo" (id '00') solo al CREAR — al
-//   editar una negociación ya creada, sí se pueden mover de estado.
 // - Interés siempre editable.
 class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // ── EditLeadContactoSection comentada — la página solo muestra lo que se
@@ -221,11 +223,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       }
     }
 
-    // Desde conversación, al CREAR (idLead == 0) el estado siempre arranca
-    // en "Nuevo" (id '00') y no se muestra editable — matchea SOLO por id,
-    // sin exigir esPadre (acá no se usa como opción de un combo con data
-    // filtrada, es el valor fijo que se manda tal cual al guardar).
-    if (widget.desdeConversacion && _esNuevo) {
+    // Al CREAR (idLead == 0), en CUALQUIER origen, el estado siempre queda
+    // fijo en "Nuevo" (id '00') — matchea SOLO por id, sin exigir esPadre
+    // (acá no se usa como opción de un combo con data filtrada, es el valor
+    // fijo que se manda tal cual al guardar). El combo se bloquea
+    // (enabled: false) en build() vía estadoBloqueado: _esNuevo — no depende
+    // de desdeConversacion, el usuario no puede cambiarlo en ningún origen.
+    if (_esNuevo) {
       _estado = state.estados.where((e) => e.id == '00').firstOrNull;
       _subEstado = null;
       _subEstadosFiltrados = [];
@@ -501,9 +505,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                     widget.negociacion.descripcionEstadoPadre,
                 idCanalFallback: widget.negociacion.idCanal,
                 isLoading: _bloqueado,
-                // Solo al crear desde conversación el estado queda fijo en
-                // "Nuevo"; al editar sí se puede mover de estado.
-                estadoBloqueado: widget.desdeConversacion && _esNuevo,
+                // Al crear, en cualquier origen, el estado queda fijo en
+                // "Nuevo" y no se puede cambiar; al editar sí se puede mover
+                // de estado normalmente.
+                estadoBloqueado: _esNuevo,
                 // El canal desde conversación siempre es WhatsApp fijo.
                 canalBloqueado: widget.desdeConversacion,
                 // Campaña/Oportunidad solo se activan al crear, en

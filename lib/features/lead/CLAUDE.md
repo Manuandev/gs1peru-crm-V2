@@ -182,6 +182,17 @@ ningún origen, edite o cree, venga o no de conversación.
   (`_puedeGuardar` / `_camposObligatoriosCompletos`, reemplaza a `_hayCambios` como gate del
   `FormSaveBar` cuando `_esNuevo`). Los labels llevan `(*)` en
   `EditLeadNegociacionSection`/`EditLeadFinancieraSection`.
+- **Estado/Subestado SIEMPRE fijos en "Nuevo" (id `'00'`) al crear** (`negociacion.idLead == 0`),
+  **en cualquier origen** — no solo desde conversación, y el combo queda **bloqueado**
+  (`enabled: false`), no editable. Decisión explícita de negocio: toda negociación nace en Nuevo
+  y el usuario no la puede mover de estado hasta guardarla (recién al editar se puede mover de
+  estado). Bug real detectado en vivo antes de este fix: la negociación en blanco
+  (`InfoLeadCubit.prepararNuevaNegociacion()`) trae `idEstado: ''`, y fuera de conversación
+  (`ContactoNegociacionesTab` de Seguimiento, que no manda `desdeConversacion`) el combo Estado
+  quedaba sin seleccionar y editable en vez de fijo en Nuevo. El valor vive en
+  `_inicializarCombos()` (`if (_esNuevo)`) y el bloqueo en `build()`
+  (`estadoBloqueado: _esNuevo`) — ninguno de los dos depende ya de `desdeConversacion` (ver flag
+  abajo, que ahora solo controla Canal).
 - **Redirect automático a "Generar solicitud"** — en `_guardar()`: si el guardado deja la
   negociación en sub-estado `'05'` bajo estado padre `'04'` (Ganada) **por primera vez** (no si ya
   estaba ahí antes de este guardado) y todavía no tiene solicitud (`negociacion.accionSolicitud ==
@@ -225,9 +236,12 @@ Viaja `context.goToEditarLead(desdeConversacion: true)` → `AppRoutes.detalleEd
 AppBar de `ChatDetailView` (Conversaciones). Restringe además:
 
 - **Canal** siempre bloqueado, fijo en WhatsApp — tanto al crear como al editar.
-- **Estado/Subestado** bloqueados fijos en "Nuevo" **solo al crear** (`negociacion.idLead == 0`);
-  al editar una negociación ya creada, se pueden mover de estado normalmente.
 - **Interés** siempre editable.
+
+**Ojo — Estado/Subestado fijos en "Nuevo" al crear ya NO depende de este flag** — es una regla
+universal (`estadoBloqueado: _esNuevo` en `build()`, ver "Reglas universales" arriba), se aplica
+en cualquier origen. `desdeConversacion` hoy solo controla Canal (siempre) e Interés (siempre
+editable, listado más por completitud que por restricción real).
 
 **Ojo — Estado/Canal bloqueados se renderizan con el MISMO `CustomComboField` que el resto de
 combos, solo con `enabled: false`** (`estadoBloqueado`/`canalBloqueado` en

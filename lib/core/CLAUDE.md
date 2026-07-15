@@ -851,11 +851,15 @@ item.field(n)     // acceso genérico por índice 0-based
 item.fieldCount   // total de campos
 ```
 
-### Catálogos — `models/catalog_item.dart`
+### Catálogos — `models/catalog_item.dart` + `models/catalog_item_model.dart`
+
+Clases base (sin parseo) en `catalog_item.dart`; clases `*Model` (`fromRawString`/`parseList`,
+usadas por `ListasGenericasModel.parse`) en `catalog_item_model.dart`. Ambos se exportan desde
+`index_core.dart` — importar siempre por ahí, nunca los archivos individuales.
 
 | Clase | Campos |
 |---|---|
-| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion, monedas, igvPorcentaje, paises, tiposDocumento, comprobantes, nacionalidades |
+| `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion, monedas, igvPorcentaje, paises, tiposDocumento, comprobantes, nacionalidades, valoresDefecto |
 | `CampaniaItem` | id(int), nombre |
 | `OportunidadItem` | idEvento(int), idCampania(int), nombre |
 | `CanalItem` | id(int), nombre |
@@ -869,8 +873,13 @@ item.fieldCount   // total de campos
 | `TipoDocumentoItem` | id(String=codargu), nombre(String=deslarga) — parte [10] del SP, `SYSTABEXTER02 CODTABLA='F01'`. `id` es **String**, no parsear con `toInt` |
 | `ComprobanteItem` | id(String=codargu), nombre(String=deslarga) — parte [11] del SP, `SYSTABEXTER02 CODTABLA='DFA'` filtrado a Factura(01)/Boleta de venta(03)/Nota de crédito(07)/Nota de débito(08) |
 | `NacionalidadItem` | id(String=codargu), nombre(String=deslarga), valor4(String) — parte [12] del SP, `SYSTABEXTER02 CODTABLA='NPA'`. Es el **gentilicio** ("PERUANO/A", "BRASILEÑO/A"...) — no confundir con `PaisItem` (nombre de lugar: "PERÚ", "BRASIL"...) |
+| `ValoresCRMItem` | idCanalWsp(int), idPais(String), idNacionalidad(String), idEstadoNuevo(String), idEstadoGanado(String), idTipoBoleta(String), idTipoFactura(String), idTipoDocRuc(String), idTipoDocSnd(String), idTipoDocDni(String), idTipoDocCde(String), idTipoDocPas(String) — parte [13] del SP, **fila única** (sin `@sepRegistro`, no es lista). No implementa `Comboable`. `ValoresCRMItemModel` solo tiene `fromRawString` (sin `parseList`) |
+| `SexoItem` | id(String), nombre(String) — parte [14] del SP, hardcodeado (`M`/`F`/`PD`) |
+| `TipoParticipanteItem` | id(String), nombre(String), esInvitado(bool) — parte [15] del SP, hardcodeado (`1` Pagante · `2` Invitado · `3` Invitado auspicio · `4` Online). `esInvitado` = `true` en `2`/`3` (no paga) |
+| `UbigeoItem` | dpto(String), prov(String), dis(String), nombre(String), `codigo` (getter = `dpto+prov+dis`) — parte [16] del SP, `DBO.SYSTABUBIGEO01`. Jerárquico: filtrar por `dpto` (departamento), `dpto`+`prov` (provincia), `codigo` completo identifica un distrito |
 
-Todas implementan `Comboable`. Parsear con `ListasGenericasModel.parse(rawResponse)`.
+Todas implementan `Comboable` excepto `ValoresCRMItem` (fila única, no es un ítem de lista/dropdown).
+Parsear con `ListasGenericasModel.parse(rawResponse)`.
 `AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) y en `CobranzaAsesorPickerModal` —
 el conteo por asesor NO viene del backend, se calcula en el cliente sobre los registros ya cargados.
 `EstadoGestionItem` es solo de referencia/etiqueta — `cobranza/` traduce el `ID_ESTADO_GES` crudo a
@@ -883,6 +892,19 @@ sin lista fija de respaldo; si el SP aún no devuelve la parte [7], el combo lle
 [8]-[12]) fueron agregados para reemplazar listas fijas hardcodeadas del wizard de
 `solicitudes/` (Tipo documento, País, Comprobante, Nacionalidad, % IGV) — mientras el SP
 real no las devuelva, llegan vacías/en 0 y hay que mantener un fallback local en la UI.
+`ValoresCRMItem` (parte [13]) trae los IDs por defecto para preseleccionar combos sin
+hardcodearlos en la UI (canal WhatsApp, país/nacionalidad Perú, estado nuevo/ganado, tipo de
+boleta/factura, tipos de documento RUC/sin doc/DNI/CE/pasaporte) — mismos valores que las
+variables `@ID_*` del SP `CSV_LISTAS_LST_APP`. Si el SP aún no devuelve la parte [13],
+`valoresDefecto` llega con el `ValoresCRMItem()` const por defecto (todo en `0`/`''`).
+`SexoItem` y `TipoParticipanteItem` (partes [14]-[15]) cubren los dos combos que
+`solicitudes/CLAUDE.md` documenta como "los únicos que pueden seguir hardcodeados" (Sexo del
+paso 1, Tipo de participante del formulario de participante) — **el catálogo ya existe acá,
+pero el wizard de `solicitudes/` todavía no se cambió para consumirlo** (sigue usando sus
+listas fijas locales, `_tiposParticipante` en `participante_form_sheet.dart`). Si se conecta,
+usar `esInvitado` (no comparar `id == '2' || id == '3'`) para la regla "saltar Facturación".
+`UbigeoItem` (parte [16]) no tiene todavía ningún selector de Ubigeo en la UI — `solicitudes/`
+manda `UBIGEO_FAC` vacío al CUD por esta razón (ver `solicitudes/CLAUDE.md`).
 
 ---
 

@@ -17,6 +17,10 @@ class ListasGenericasModel extends ListasGenericas {
     super.tiposDocumento,
     super.comprobantes,
     super.nacionalidades,
+    super.valoresDefecto,
+    super.sexos,
+    super.tiposParticipante,
+    super.ubigeo,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -34,6 +38,10 @@ class ListasGenericasModel extends ListasGenericas {
     final tiposDocumentoRaw = partes.length > 10 ? partes[10] : '';
     final comprobantesRaw = partes.length > 11 ? partes[11] : '';
     final nacionalidadesRaw = partes.length > 12 ? partes[12] : '';
+    final valoresDefectoRaw = partes.length > 13 ? partes[13] : '';
+    final sexosRaw = partes.length > 14 ? partes[14] : '';
+    final tiposParticipanteRaw = partes.length > 15 ? partes[15] : '';
+    final ubigeoRaw = partes.length > 16 ? partes[16] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -85,6 +93,22 @@ class ListasGenericasModel extends ListasGenericas {
         ? <NacionalidadItemModel>[]
         : NacionalidadItemModel.parseList(nacionalidadesRaw);
 
+    final valoresDefecto = valoresDefectoRaw.trim().isEmpty
+        ? const ValoresCRMItem()
+        : ValoresCRMItemModel.fromRawString(valoresDefectoRaw);
+
+    final sexos = sexosRaw.trim().isEmpty
+        ? <SexoItemModel>[]
+        : SexoItemModel.parseList(sexosRaw);
+
+    final tiposParticipante = tiposParticipanteRaw.trim().isEmpty
+        ? <TipoParticipanteItemModel>[]
+        : TipoParticipanteItemModel.parseList(tiposParticipanteRaw);
+
+    final ubigeo = ubigeoRaw.trim().isEmpty
+        ? <UbigeoItemModel>[]
+        : UbigeoItemModel.parseList(ubigeoRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -99,6 +123,10 @@ class ListasGenericasModel extends ListasGenericas {
       tiposDocumento: tiposDocumento,
       comprobantes: comprobantes,
       nacionalidades: nacionalidades,
+      valoresDefecto: valoresDefecto,
+      sexos: sexos,
+      tiposParticipante: tiposParticipante,
+      ubigeo: ubigeo,
     );
   }
 }
@@ -391,6 +419,8 @@ class NacionalidadItemModel extends NacionalidadItem {
   }
 }
 
+// SP lstListas parte [13]: fila única, orden fijo — ver comentario en
+// ValoresCRMItem (catalog_item.dart). Sin fromRawString.parseList: no es lista.
 class ValoresCRMItemModel extends ValoresCRMItem {
   const ValoresCRMItemModel({
     required super.idCanalWsp,
@@ -424,12 +454,76 @@ class ValoresCRMItemModel extends ValoresCRMItem {
       idTipoDocPas: ParseUtils.str(c, 11),
     );
   }
+}
 
-  static List<ValoresCRMItemModel> parseList(String rawResponse) {
+class SexoItemModel extends SexoItem {
+  const SexoItemModel({required super.id, required super.nombre});
+
+  factory SexoItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return SexoItemModel(
+      id: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+    );
+  }
+
+  static List<SexoItemModel> parseList(String rawResponse) {
     return rawResponse
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
-        .map((r) => ValoresCRMItemModel.fromRawString(r))
+        .map((r) => SexoItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class TipoParticipanteItemModel extends TipoParticipanteItem {
+  const TipoParticipanteItemModel({
+    required super.id,
+    required super.nombre,
+    required super.esInvitado,
+  });
+
+  factory TipoParticipanteItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return TipoParticipanteItemModel(
+      id: ParseUtils.str(c, 0),
+      nombre: ParseUtils.str(c, 1),
+      esInvitado: ParseUtils.toBool(c, 2),
+    );
+  }
+
+  static List<TipoParticipanteItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => TipoParticipanteItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class UbigeoItemModel extends UbigeoItem {
+  const UbigeoItemModel({
+    required super.dpto,
+    required super.prov,
+    required super.dis,
+    required super.nombre,
+  });
+
+  factory UbigeoItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return UbigeoItemModel(
+      dpto: ParseUtils.str(c, 0),
+      prov: ParseUtils.str(c, 1),
+      dis: ParseUtils.str(c, 2),
+      nombre: ParseUtils.str(c, 3),
+    );
+  }
+
+  static List<UbigeoItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => UbigeoItemModel.fromRawString(r))
         .toList();
   }
 }

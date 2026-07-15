@@ -25,6 +25,15 @@ class ListasGenericas {
   final List<ComprobanteItem> comprobantes;
   // Parte [12] del SP lstListas — SYSTABEXTER02 CODTABLA='NPA', nacionalidades (gentilicio, distinto de País)
   final List<NacionalidadItem> nacionalidades;
+  // Parte [13] del SP lstListas — fila única con IDs por defecto (canal, país,
+  // nacionalidad, estados, tipo de boleta/factura, tipos de documento)
+  final ValoresCRMItem valoresDefecto;
+  // Parte [14] del SP lstListas — hardcodeado (M/F/PD), tipos de sexo
+  final List<SexoItem> sexos;
+  // Parte [15] del SP lstListas — hardcodeado, tipos de participante de solicitudes
+  final List<TipoParticipanteItem> tiposParticipante;
+  // Parte [16] del SP lstListas — DBO.SYSTABUBIGEO01, departamento/provincia/distrito
+  final List<UbigeoItem> ubigeo;
 
   const ListasGenericas({
     required this.campanias,
@@ -40,6 +49,10 @@ class ListasGenericas {
     this.tiposDocumento = const [],
     this.comprobantes = const [],
     this.nacionalidades = const [],
+    this.valoresDefecto = const ValoresCRMItem(),
+    this.sexos = const [],
+    this.tiposParticipante = const [],
+    this.ubigeo = const [],
   });
 }
 
@@ -230,9 +243,13 @@ class NacionalidadItem with Comboable {
   List<dynamic> get fields => [id, nombre];
 }
 
-// SP lstListas parte [13]: id
-// Valores por defecto en CRM: pais, moneda, nacionalidad, etc.
-class ValoresCRMItem with Comboable {
+// SP lstListas parte [13]: fila única (sin @sepRegistro) con los IDs por
+// defecto que usa el CRM para preseleccionar combos — idCanalWsp ¦ idPais ¦
+// idNacionalidad ¦ idEstadoNuevo ¦ idEstadoGanado ¦ idTipoBoleta ¦
+// idTipoFactura ¦ idTipoDocRuc ¦ idTipoDocSnd ¦ idTipoDocDni ¦ idTipoDocCde ¦
+// idTipoDocPas. No implementa Comboable: no es un ítem de lista/dropdown,
+// es un solo bloque de valores fijos.
+class ValoresCRMItem {
   final int idCanalWsp;
   final String idPais;
   final String idNacionalidad;
@@ -260,20 +277,57 @@ class ValoresCRMItem with Comboable {
     this.idTipoDocCde = '',
     this.idTipoDocPas = '',
   });
+}
+
+// SP lstListas parte [14]: id ¦ nombre — hardcodeado en el SP (M/F/PD).
+class SexoItem with Comboable {
+  final String id;
+  final String nombre;
+
+  const SexoItem({required this.id, required this.nombre});
 
   @override
-  List<dynamic> get fields => [
-    idCanalWsp,
-    idPais,
-    idNacionalidad,
-    idEstadoNuevo,
-    idEstadoGanado,
-    idTipoBoleta,
-    idTipoFactura,
-    idTipoDocRuc,
-    idTipoDocSnd,
-    idTipoDocDni,
-    idTipoDocCde,
-    idTipoDocPas,
-  ];
+  List<dynamic> get fields => [id, nombre];
+}
+
+// SP lstListas parte [15]: id ¦ nombre ¦ esInvitado(0/1) — hardcodeado en el SP.
+// esInvitado=true → '2' Invitado / '3' Invitado auspicio (no paga); false → '1'
+// Pagante / '4' Online. Reemplaza el chequeo `id == '2' || id == '3'` que hace
+// `solicitudes/` para la regla "saltar Facturación si nadie paga".
+class TipoParticipanteItem with Comboable {
+  final String id;
+  final String nombre;
+  final bool esInvitado;
+
+  const TipoParticipanteItem({
+    required this.id,
+    required this.nombre,
+    required this.esInvitado,
+  });
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+// SP lstListas parte [16]: dpto ¦ prov ¦ dis ¦ nombre — DBO.SYSTABUBIGEO01.
+// Jerárquico (departamento > provincia > distrito): filtrar por [dpto] para el
+// combo de departamento, por [dpto]+[prov] para el de provincia; [codigo] (los
+// 3 juntos) identifica un distrito único para el combo final.
+class UbigeoItem with Comboable {
+  final String dpto;
+  final String prov;
+  final String dis;
+  final String nombre;
+
+  const UbigeoItem({
+    required this.dpto,
+    required this.prov,
+    required this.dis,
+    required this.nombre,
+  });
+
+  String get codigo => '$dpto$prov$dis';
+
+  @override
+  List<dynamic> get fields => [codigo, nombre];
 }

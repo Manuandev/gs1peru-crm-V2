@@ -28,11 +28,12 @@ class _EditLeadViewState extends State<EditLeadView> {
   void initState() {
     super.initState();
     final cubit = context.read<InfoLeadCubit>();
+    // Éxito ya no se muestra acá con un snackbar — EditLeadPortrait._guardar()
+    // muestra su propio check verde grande y retrocede solo (ver
+    // _ExitoOverlay), un snackbar duplicado se vería encima justo cuando la
+    // pantalla ya está por cerrarse. Los errores sí se quedan acá — no
+    // navegan a ningún lado, el usuario se queda en el form para corregir.
     _subs.addAll([
-      cubit.successes.listen(
-        // ignore: use_build_context_synchronously
-        (msg) => AppSnackBar.success(context, msg, position: SnackPosition.top),
-      ),
       // ignore: use_build_context_synchronously
       cubit.errores.listen((msg) => AppSnackBar.error(context, msg)),
     ]);

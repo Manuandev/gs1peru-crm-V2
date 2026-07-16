@@ -26,6 +26,19 @@ class ElapsedTimeUtils {
     return '${hours}h';
   }
 
+  /// "15s" o "45m" o "1h" o "2d"
+  static String formatDoHoMoS(Duration elapsed) {
+    final seconds = elapsed.inSeconds;
+    if (seconds < 60) return '${seconds}s';
+    final minutes = elapsed.inMinutes;
+    if (minutes < 60) return '${minutes}m';
+    final hours = elapsed.inHours;
+    if (hours < 24) return '${hours}h';
+    final days = elapsed.inDays;
+    if (days == 1) return '${days}d';
+    return '${days}d';
+  }
+
   /// Color según urgencia
   static Color colorFromElapsed(Duration elapsed) {
     final minutes = elapsed.inMinutes;

@@ -229,16 +229,18 @@ class NegociacionCard extends StatelessWidget {
                           height: 26,
                           child: CustomOutlinedButton(
                             text: switch (negociacion.accionSolicitud) {
-                              SolicitudAccion.generar => 'Generar solicitud',
-                              SolicitudAccion.editar => 'Editar solicitud',
-                              SolicitudAccion.ver => 'Ver solicitud',
+                              SolicitudAccion.generar => 'Generar',
+                              SolicitudAccion.editar => 'Editar',
+                              SolicitudAccion.ver => 'Ver',
                             },
                             onPressed: switch (negociacion.accionSolicitud) {
                               SolicitudAccion.generar => onGenerarSolicitud,
-                              SolicitudAccion.editar => () =>
-                                  _editarSolicitud(context),
-                              SolicitudAccion.ver => () =>
-                                  _verSolicitud(context),
+                              SolicitudAccion.editar => () => _editarSolicitud(
+                                context,
+                              ),
+                              SolicitudAccion.ver => () => _verSolicitud(
+                                context,
+                              ),
                             },
                             // Sin precio total definido en la negociación no
                             // hay cantidad/importe/moneda que bloquear en la
@@ -262,9 +264,7 @@ class NegociacionCard extends StatelessWidget {
                           width: 80,
                           height: 26,
                           child: CustomPrimaryButton(
-                            text: negociacion.tieneSolicitud
-                                ? 'Ver negociación'
-                                : 'Editar negociación',
+                            text: negociacion.tieneSolicitud ? 'Ver' : 'Editar',
                             onPressed: negociacion.tieneSolicitud
                                 ? () => _verNegociacion(context)
                                 : () => _irAEditar(),

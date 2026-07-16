@@ -86,6 +86,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   bool _isLoading = false;
   bool _combosInicializados = false;
+  // true mientras se muestra el check verde de "guardado correctamente" —
+  // ver _ExitoOverlay y _guardar().
+  bool _mostrandoExito = false;
 
   // ── Ciclo de vida ─────────────────────────────────────────────────────────
 
@@ -451,6 +454,20 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         celularCodigoTelefonoNegociacion: n.prefijoPais,
         rucNegociacion: n.ruc,
       );
+      return;
+    }
+
+    // Guardado normal (sin redirect a "Generar solicitud"): muestra el check
+    // verde un momento y vuelve sola — el llamador (NegociacionesTab/
+    // NegociacionCard en Conversaciones, ContactoNegociacionCard/
+    // ContactoDetalleView en Seguimiento) ya refresca sus datos al recibir
+    // LeadUpdateNotifier (emitido dentro de InfoLeadCubit.updateLead) o al
+    // compartir el mismo InfoLeadCubit, así que acá solo hace falta
+    // retroceder — no un refresh explícito.
+    if (guardadoOk && mounted) {
+      setState(() => _mostrandoExito = true);
+      await Future.delayed(const Duration(milliseconds: 1500));
+      if (mounted) context.goBack();
     }
   }
 
@@ -481,73 +498,146 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             ),
           );
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            children: [
-              // 1. Negociación — Información adicional (nombre/modalidad) ya
-              // no se muestra en ningún origen, ver nota de reglas arriba.
-              EditLeadNegociacionSection(
-                catalogState: catalogState,
-                campania: _campania,
-                oportunidad: _oportunidad,
-                oportunidadesFiltradas: _oportunidadesFiltradas,
-                canal: _canal,
-                interes: _interes,
-                estado: _estado,
-                subEstado: _subEstado,
-                subEstadosFiltrados: _subEstadosFiltrados,
-                idEstadoFallback: widget.negociacion.idEstado,
-                estadoFallback: widget.negociacion.descripcionEstado,
-                descripcionEstadoPadreFallback:
-                    widget.negociacion.descripcionEstadoPadre,
-                idCanalFallback: widget.negociacion.idCanal,
-                isLoading: _bloqueado,
-                // Al crear, en cualquier origen, el estado queda fijo en
-                // "Nuevo" y no se puede cambiar; al editar sí se puede mover
-                // de estado normalmente.
-                estadoBloqueado: _esNuevo,
-                // El canal desde conversación siempre es WhatsApp fijo.
-                canalBloqueado: widget.desdeConversacion,
-                // Campaña/Oportunidad solo se activan al crear, en
-                // cualquier origen — al editar quedan fijas siempre.
-                campaniaOportunidadBloqueada: !_esNuevo,
-                onCampaniaChanged: _onCampaniaChanged,
-                onOportunidadChanged: _onOportunidadChanged,
-                onCanalChanged: (item) => setState(() => _canal = item),
-                onInteresChanged: (item) => setState(() => _interes = item),
-                onEstadoChanged: _onEstadoChanged,
-                onSubEstadoChanged: (item) => setState(() => _subEstado = item),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+        Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                children: [
+                  // 1. Negociación — Información adicional (nombre/modalidad)
+                  // ya no se muestra en ningún origen, ver nota de reglas
+                  // arriba.
+                  EditLeadNegociacionSection(
+                    catalogState: catalogState,
+                    campania: _campania,
+                    oportunidad: _oportunidad,
+                    oportunidadesFiltradas: _oportunidadesFiltradas,
+                    canal: _canal,
+                    interes: _interes,
+                    estado: _estado,
+                    subEstado: _subEstado,
+                    subEstadosFiltrados: _subEstadosFiltrados,
+                    idEstadoFallback: widget.negociacion.idEstado,
+                    estadoFallback: widget.negociacion.descripcionEstado,
+                    descripcionEstadoPadreFallback:
+                        widget.negociacion.descripcionEstadoPadre,
+                    idCanalFallback: widget.negociacion.idCanal,
+                    isLoading: _bloqueado,
+                    // Al crear, en cualquier origen, el estado queda fijo en
+                    // "Nuevo" y no se puede cambiar; al editar sí se puede
+                    // mover de estado normalmente.
+                    estadoBloqueado: _esNuevo,
+                    // El canal desde conversación siempre es WhatsApp fijo.
+                    canalBloqueado: widget.desdeConversacion,
+                    // Campaña/Oportunidad solo se activan al crear, en
+                    // cualquier origen — al editar quedan fijas siempre.
+                    campaniaOportunidadBloqueada: !_esNuevo,
+                    onCampaniaChanged: _onCampaniaChanged,
+                    onOportunidadChanged: _onOportunidadChanged,
+                    onCanalChanged: (item) => setState(() => _canal = item),
+                    onInteresChanged: (item) =>
+                        setState(() => _interes = item),
+                    onEstadoChanged: _onEstadoChanged,
+                    onSubEstadoChanged: (item) =>
+                        setState(() => _subEstado = item),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
 
-              // 2. Financiera
-              ListenableBuilder(
-                listenable: Listenable.merge([
-                  _cantidadCtrl,
-                  _precioBaseCtrl,
-                  _costoFinalCtrl,
-                ]),
-                builder: (context, _) => EditLeadFinancieraSection(
-                  cantidadCtrl: _cantidadCtrl,
-                  precioBaseCtrl: _precioBaseCtrl,
-                  costoFinalCtrl: _costoFinalCtrl,
-                  monedas: catalogState.monedas,
-                  monedaItem: _monedaItem,
-                  isLoading: _bloqueado,
-                  subtotal: _subtotal,
-                  descuento: _descuento,
-                  costoFinal: _costoFinal,
-                ),
+                  // 2. Financiera
+                  ListenableBuilder(
+                    listenable: Listenable.merge([
+                      _cantidadCtrl,
+                      _precioBaseCtrl,
+                      _costoFinalCtrl,
+                    ]),
+                    builder: (context, _) => EditLeadFinancieraSection(
+                      cantidadCtrl: _cantidadCtrl,
+                      precioBaseCtrl: _precioBaseCtrl,
+                      costoFinalCtrl: _costoFinalCtrl,
+                      monedas: catalogState.monedas,
+                      monedaItem: _monedaItem,
+                      isLoading: _bloqueado,
+                      subtotal: _subtotal,
+                      descuento: _descuento,
+                      costoFinal: _costoFinal,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                ],
               ),
-              const SizedBox(height: AppSpacing.xl),
-            ],
+            ),
+            formSaveBar,
+          ],
+        ),
+        // Recuadro centrado "Creando/Editando negociación..." mientras se
+        // guarda — reusa AppLoadingOverlay (core), mismo patrón que el resto
+        // de la app.
+        if (_isLoading)
+          AppLoadingOverlay(
+            message: _esNuevo
+                ? 'Creando negociación...'
+                : 'Editando negociación...',
+          ),
+        // Check verde tras guardar con éxito (ver _guardar) — se muestra un
+        // momento y el propio _guardar() retrocede solo después.
+        if (_mostrandoExito)
+          _ExitoOverlay(
+            mensaje: _esNuevo
+                ? 'La negociación se creó correctamente'
+                : 'La negociación se editó correctamente',
+          ),
+      ],
+    );
+  }
+}
+
+// ── Overlay de éxito ─────────────────────────────────────────────────────────
+// Check verde grande + mensaje, mismo patrón visual que AppLoadingOverlay
+// (core) pero para el estado de éxito — solo se usa acá, tras guardar.
+class _ExitoOverlay extends StatelessWidget {
+  final String mensaje;
+
+  const _ExitoOverlay({required this.mensaje});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Container(
+        color: AppColors.black(0.4),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl,
+              vertical: AppSpacing.lg,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(AppSizing.radiusLg),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  AppIcons.checkCircle,
+                  color: AppColors.success,
+                  size: AppSizing.iconXl,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  mensaje,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.titleSmall.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: AppTextStyles.weightSemiBold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        formSaveBar,
-      ],
+      ),
     );
   }
 }

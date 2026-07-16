@@ -281,7 +281,7 @@ class _LeadDateAndActions extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.xxs),
                 Text(
-                  'Hace ${ElapsedTimeUtils.formatHoMoS(elapsed)}',
+                  'Hace ${ElapsedTimeUtils.formatDoHoMoS(elapsed)}',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: ElapsedTimeUtils.colorFromElapsed(elapsed),
                     fontWeight: AppTextStyles.weightMedium,

@@ -86,22 +86,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   bool get _esRuc => _tipoDocId == _idTipoDocRuc;
 
-  /// Campos obligatorios (marcados con *) del paso 3. Apellido materno,
-  /// actividad económica, NIT y observaciones son opcionales. Apellido
-  /// paterno solo aplica cuando el tipo de documento NO es RUC.
-  bool get _formCompleto =>
-      _comprobanteId.isNotEmpty &&
-      _paisId.isNotEmpty &&
-      _monedaId.isNotEmpty &&
-      _tipoDocId.isNotEmpty &&
-      _ctrlNumDoc.text.trim().isNotEmpty &&
-      _nacionalidadId.isNotEmpty &&
-      _ctrlNombresRazon.text.trim().isNotEmpty &&
-      (_esRuc || _ctrlApellidoPaterno.text.trim().isNotEmpty) &&
-      _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.emailValidator == null &&
-      _ctrlDireccion.text.trim().isNotEmpty;
-
   void _onCampoTexto() {
     setState(() {});
     _sincronizarCubit();
@@ -198,16 +182,10 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     );
   }
 
-  // En modo edición valida los campos obligatorios antes de continuar; en
-  // modo solo-ver (modoEdicion == false) avanza directo, sin validar.
+  // Continuar ya no valida campos obligatorios — el paso 3 siempre avanza;
+  // toda la validación se centralizó en "Generar solicitud" (ver
+  // solicitud_guardar_helper.dart, validarSolicitudParaGenerar).
   void _onContinuar(PaisItem? paisCelular) {
-    if (widget.modoEdicion && !_formCompleto) {
-      AppSnackBar.error(
-        context,
-        'Completa todos los campos obligatorios (*) para continuar',
-      );
-      return;
-    }
     context.read<SolicitudFormCubit>().guardarFacturacion(
       _construirDatosFacturacion(paisCelular),
     );

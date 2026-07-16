@@ -113,6 +113,11 @@ class SolicitudDetalleModel {
   final String facDireccion;
   final String facMonedaId;
   final String facComprobanteId;
+  // Nacionalidad de facturación — campo agregado el 2026-07-16 al final del
+  // SP (campos[38]), separado de facPaisId (el SP antes reusaba la misma
+  // columna ID_NACION_FAC para ID_NACIONALIDAD e ID_PAIS, así que este dato
+  // nunca sobrevivía a reabrir la solicitud). Ver CLAUDE.md.
+  final String facNacionalidadId;
 
   // ── Generales ──
   final double dcImporte;
@@ -157,6 +162,7 @@ class SolicitudDetalleModel {
     required this.facDireccion,
     required this.facMonedaId,
     required this.facComprobanteId,
+    required this.facNacionalidadId,
     required this.dcImporte,
     required this.dcIgv,
     required this.dcImporteTotal,
@@ -237,6 +243,7 @@ class SolicitudDetalleModel {
       ibValidado: campos[35] == '1',
       idEstadoGes: campos[36],
       cantParticipantes: int.tryParse(campos[37]) ?? 0,
+      facNacionalidadId: campos.length > 38 ? campos[38] : '',
       participantes: participantes,
       archivos: archivos,
     );

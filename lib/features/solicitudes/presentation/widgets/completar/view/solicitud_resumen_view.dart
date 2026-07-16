@@ -72,8 +72,21 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
   // generada y navega a SolicitudGeneradaPage. Si el CUD falla o un archivo
   // no se pudo subir, se queda en Resumen mostrando el error (ver
   // generarSolicitudCompleta en solicitud_guardar_helper.dart).
+  //
+  // Toda la validación de campos obligatorios se hace acá, antes de llamar
+  // al backend — "Continuar" de los pasos 1-3 ya no valida nada (ver
+  // solicitudes/CLAUDE.md, 2026-07-16). Si algo falta, navega directo al
+  // primer paso incompleto en vez de solo mostrar el error en Resumen.
   Future<void> _onGenerarSolicitud() async {
     if (_guardando || _generando) return;
+
+    final validacion = validarSolicitudParaGenerar(context);
+    if (validacion != null) {
+      widget.onEditarPaso(validacion.paso);
+      AppSnackBar.error(context, validacion.mensaje);
+      return;
+    }
+
     setState(() => _generando = true);
 
     final result = await generarSolicitudCompleta(

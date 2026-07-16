@@ -68,7 +68,12 @@ class SolicitudRemoteDatasource {
   // solicitud, en una sola llamada. Los archivos van aparte (task 'AR',
   // pendiente — necesita el NUMSOL que devuelve esta llamada).
   //
-  // Cabecera: 41 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
+  // Cabecera: 43 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
+  // field42 (comprobanteId) y field43 (nacionalidadId de facturación) se
+  // agregaron el 2026-07-16 — antes el datasource solo mandaba 41 campos y
+  // el SP nunca recibía @ID_TIPO_COMPROBANTE_FAC/@ID_NACIONALIDAD_FAC (bug
+  // real: comprobante y nacionalidad de facturación no sobrevivían a
+  // reabrir la solicitud). Ver CLAUDE.md del feature.
   Future<CrudResult> guardarSolicitud({
     required String numSol,
     required String
@@ -153,6 +158,8 @@ class SolicitudRemoteDatasource {
       _session.codUser, // 39 ID_USUARIO
       ip, // 40 IP_USUARIO
       coords, // 41 LL_USUARIO
+      facturacion?.comprobanteId ?? '', // 42 ID_TIPO_COMPROBANTE_FAC
+      facturacion?.nacionalidadId ?? '', // 43 ID_NACIONALIDAD_FAC
     ].join(AppConstants.sepCampos);
 
     final detalle = participantes

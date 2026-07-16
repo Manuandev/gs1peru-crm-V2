@@ -11,10 +11,13 @@ import 'package:app_crm/index_dependencies.dart'; // context.read, PlatformFile
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
+import 'solicitud_progreso_guardado.dart';
+
 Future<CrudResult> guardarSolicitudDesdeWizard(
   BuildContext context, {
   String idLead = '',
   required bool esBorrador,
+  SolicitudProgreso? progreso,
 }) async {
   final formCubit = context.read<SolicitudFormCubit>();
   final formState = formCubit.state;
@@ -24,6 +27,10 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
       'Completa los datos del solicitante antes de guardar.',
     );
   }
+
+  progreso?.iniciarPaso(
+    esBorrador ? 'Guardando solicitud...' : 'Generando solicitud...',
+  );
 
   final participantes = context.read<ParticipantesCubit>().state.participantes;
   final catalogState = context.read<CatalogsBloc>().state;
@@ -47,6 +54,8 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         descuento: formState.descuentoLead,
         idTipoDocRuc: idTipoDocRuc,
       );
+
+  if (result is CrudOk) progreso?.completarPasoActual();
 
   // La primera vez que se crea (numSol venía vacío), el backend genera el
   // NUMSOL real y lo devuelve en CrudOk.data — hay que guardarlo para que
@@ -88,31 +97,147 @@ Future<bool> _subirArchivo(
 /// Sube voucher/O.C. pendientes (`SolicitudFormCubit.state`) usando el
 /// NUMSOL ya confirmado — no hace nada (retorna `true`) si todavía no hay
 /// NUMSOL o no hay archivos adjuntados. Usado por el paso 1
-/// (Guardar/Continuar) y por [generarSolicitudCompleta] (Resumen).
+/// (Guardar/Continuar) y por [generarSolicitudCompleta]/[guardarBorradorCompleto]
+/// (los 5 botones Guardar/Generar).
 ///
-/// OJO — riesgo real en el SP: el task `'AR'` de `CSV_SOLICITUD_CUD_APP`
-/// borra TODOS los archivos de ese NUMSOL antes de insertar el nuevo (no
-/// solo el tipo que se sube) — si hay voucher y O.C. juntos, la segunda
-/// llamada pisa a la primera. Sin confirmar con backend si conviene mandar
-/// ambos juntos en un solo `'AR'`.
-Future<bool> subirArchivosPendientes(BuildContext context) async {
+/// El SP `CSV_SOLICITUD_CUD_APP` (task `'AR'`) filtra el `DELETE` por
+/// NUMSOL + tipo de archivo (corregido 2026-07-16) — voucher y O.C. ya no
+/// se pisan entre sí al subirse en la misma sesión.
+Future<bool> subirArchivosPendientes(
+  BuildContext context, {
+  SolicitudProgreso? progreso,
+}) async {
   final formState = context.read<SolicitudFormCubit>().state;
   final numSol = formState.numSol;
   if (numSol.isEmpty) return true;
 
   final voucher = formState.archivoVoucher;
   if (voucher != null) {
+    progreso?.iniciarPaso('Subiendo voucher...');
     final ok = await _subirArchivo(context, numSol, 'voucher', voucher);
     if (!ok) return false;
+    progreso?.completarPasoActual();
   }
 
   final oc = formState.archivoOC;
   if (oc != null) {
+    progreso?.iniciarPaso('Subiendo O.C....');
     final ok = await _subirArchivo(context, numSol, 'oc', oc);
     if (!ok) return false;
+    progreso?.completarPasoActual();
   }
 
   return true;
+}
+
+/// Resultado de [validarSolicitudParaGenerar] cuando algo falta — `paso` es
+/// el primer paso incompleto (1 Solicitante, 2 Participantes, 3
+/// Facturación), usado para navegar ahí automáticamente antes de mostrar el
+/// mensaje.
+class SolicitudValidacion {
+  final int paso;
+  final String mensaje;
+
+  const SolicitudValidacion(this.paso, this.mensaje);
+}
+
+/// Valida que la solicitud esté completa para "Generar solicitud" — a
+/// diferencia de "Guardar" (borrador), que nunca valida nada y deja pasar
+/// cualquier estado a medio llenar. Antes esta validación vivía repartida en
+/// el gate de "Continuar" de cada paso (bloqueaba avanzar si faltaba algo);
+/// se centralizó acá el 2026-07-16 para que el asesor pueda moverse
+/// libremente entre los 4 pasos sin llenar todo de inmediato, y solo se le
+/// exija al momento de generar. Retorna `null` si todo está completo.
+SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
+  final formState = context.read<SolicitudFormCubit>().state;
+  final solicitante = formState.solicitante;
+
+  // Mismos campos obligatorios (*) que tenía el viejo gate de "Continuar"
+  // del paso 1 — ver SeccionDatosSolicitante en solicitudes/CLAUDE.md.
+  final solicitanteCompleto =
+      solicitante != null &&
+      solicitante.tipoDocLabel.isNotEmpty &&
+      solicitante.numDoc.trim().isNotEmpty &&
+      solicitante.nacionalidadId.isNotEmpty &&
+      solicitante.sexoId.isNotEmpty &&
+      solicitante.nombres.trim().isNotEmpty &&
+      solicitante.apellidoPaterno.trim().isNotEmpty &&
+      solicitante.cargo.trim().isNotEmpty &&
+      solicitante.celular.trim().isNotEmpty &&
+      solicitante.correo.emailValidator == null;
+  if (!solicitanteCompleto) {
+    return const SolicitudValidacion(
+      1,
+      'Completa todos los campos obligatorios (*) del solicitante para generar la solicitud.',
+    );
+  }
+
+  final participantes = context.read<ParticipantesCubit>().state.participantes;
+  if (participantes.isEmpty) {
+    return const SolicitudValidacion(
+      2,
+      'Agrega al menos un participante para generar la solicitud.',
+    );
+  }
+
+  // Si la solicitud viene de una negociación con precio ya definido, la
+  // cantidad de participantes tiene que calzar exacto con la de la
+  // negociación — pero SOLO acá, al generar. "Guardar" (borrador) deja
+  // pasar con menos participantes sin problema.
+  final cantidadEsperada = formState.cantidadEsperada;
+  if (cantidadEsperada != null && participantes.length != cantidadEsperada) {
+    return SolicitudValidacion(
+      2,
+      'Esta negociación tiene $cantidadEsperada participante(s) — '
+      'registraste ${participantes.length}. Ajusta la lista antes de generar.',
+    );
+  }
+
+  // Facturación solo es obligatoria si algún participante no es invitado —
+  // mismo criterio que "saltar Facturación" en solicitud_participantes_view.dart.
+  final catalogState = context.read<CatalogsBloc>().state;
+  final tiposParticipante = catalogState is CatalogsLoaded
+      ? catalogState.tiposParticipante
+      : const <TipoParticipanteItem>[];
+  final soloInvitados = participantes.every((p) {
+    final tipo = tiposParticipante
+        .where((t) => t.id == p.tipoParticipante)
+        .firstOrNull;
+    return tipo?.esInvitado ?? false;
+  });
+
+  if (!soloInvitados) {
+    final facturacion = formState.facturacion;
+    final idTipoDocRuc = catalogState is CatalogsLoaded
+        ? catalogState.valoresDefecto.idTipoDocRuc
+        : '';
+    final esRuc = facturacion?.tipoDocId == idTipoDocRuc;
+
+    // Mismos campos obligatorios (*) que tenía el viejo gate de "Continuar"
+    // del paso 3 — ver _SeccionDatosFacturacion en solicitudes/CLAUDE.md.
+    final facturacionCompleta =
+        facturacion != null &&
+        facturacion.comprobanteId.isNotEmpty &&
+        facturacion.paisId.isNotEmpty &&
+        facturacion.monedaId.isNotEmpty &&
+        facturacion.tipoDocId.isNotEmpty &&
+        facturacion.numDoc.trim().isNotEmpty &&
+        facturacion.nacionalidadId.isNotEmpty &&
+        facturacion.nombresRazon.trim().isNotEmpty &&
+        (esRuc || facturacion.apellidoPaterno.trim().isNotEmpty) &&
+        facturacion.celular.trim().isNotEmpty &&
+        facturacion.correo.emailValidator == null &&
+        facturacion.direccion.trim().isNotEmpty;
+
+    if (!facturacionCompleta) {
+      return const SolicitudValidacion(
+        3,
+        'Completa todos los campos obligatorios (*) de Facturación para generar la solicitud.',
+      );
+    }
+  }
+
+  return null;
 }
 
 /// Flujo completo de "Generar solicitud": guarda el CUD (`esBorrador:
@@ -122,40 +247,25 @@ Future<bool> subirArchivosPendientes(BuildContext context) async {
 /// bien pero un archivo falla, informa el error sin perder el NUMSOL (la
 /// solicitud ya quedó creada/actualizada) — el usuario puede volver a
 /// presionar "Generar solicitud" para reintentar solo la subida.
+///
+/// Asume que [validarSolicitudParaGenerar] ya se llamó y retornó `null` —
+/// este helper ya no repite esa validación. Si se pasa [progreso], al
+/// terminar TODO con éxito se deja el último check visible ~500ms antes de
+/// retornar, para que el asesor lo alcance a ver antes de navegar.
 Future<CrudResult> generarSolicitudCompleta(
   BuildContext context, {
   required String idLead,
+  SolicitudProgreso? progreso,
 }) async {
-  // Si la solicitud viene de una negociación con precio ya definido, la
-  // cantidad de participantes tiene que calzar exacto con la de la
-  // negociación — pero SOLO acá, al generar. Cualquier "Guardar" (borrador)
-  // de los 4 pasos deja pasar con menos participantes sin problema.
-  final cantidadEsperada = context
-      .read<SolicitudFormCubit>()
-      .state
-      .cantidadEsperada;
-  if (cantidadEsperada != null) {
-    final cantidadActual = context
-        .read<ParticipantesCubit>()
-        .state
-        .participantes
-        .length;
-    if (cantidadActual != cantidadEsperada) {
-      return CrudError(
-        'Esta negociación tiene $cantidadEsperada participante(s) — '
-        'registraste $cantidadActual. Ajusta la lista antes de generar.',
-      );
-    }
-  }
-
   final result = await guardarSolicitudDesdeWizard(
     context,
     idLead: idLead,
     esBorrador: false,
+    progreso: progreso,
   );
   if (result is! CrudOk) return result;
 
-  final archivosOk = await subirArchivosPendientes(context);
+  final archivosOk = await subirArchivosPendientes(context, progreso: progreso);
   if (!archivosOk) {
     return const CrudAlert(
       'La solicitud se generó, pero un archivo adjunto no se pudo subir. '
@@ -163,6 +273,40 @@ Future<CrudResult> generarSolicitudCompleta(
     );
   }
 
+  if (progreso != null) {
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+  return result;
+}
+
+/// Flujo completo de "Guardar" (borrador, `IB_BORRADOR=1`): guarda el CUD y,
+/// si sale bien, sube voucher/O.C. pendientes — mismo patrón que
+/// [generarSolicitudCompleta], sin ninguna validación previa ("Guardar"
+/// nunca valida campos obligatorios, a diferencia de "Generar solicitud").
+Future<CrudResult> guardarBorradorCompleto(
+  BuildContext context, {
+  required String idLead,
+  SolicitudProgreso? progreso,
+}) async {
+  final result = await guardarSolicitudDesdeWizard(
+    context,
+    idLead: idLead,
+    esBorrador: true,
+    progreso: progreso,
+  );
+  if (result is! CrudOk) return result;
+
+  final archivosOk = await subirArchivosPendientes(context, progreso: progreso);
+  if (!archivosOk) {
+    return const CrudAlert(
+      'La solicitud se guardó, pero un archivo adjunto no se pudo subir. '
+      'Presiona "Guardar" de nuevo para reintentar la subida.',
+    );
+  }
+
+  if (progreso != null) {
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
   return result;
 }
 

@@ -38,6 +38,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // true mientras se guarda el borrador (botón "Guardar")
   bool _guardando = false;
 
+  // Pasos del guardado (Guardar solicitud → Subiendo voucher/O.C.) para
+  // el overlay de progreso — ver solicitud_progreso_guardado.dart.
+  final SolicitudProgreso _progreso = SolicitudProgreso();
+
   // Canal seleccionado (single-select) — catálogo real vía CatalogsBloc
   CanalItem? _canalSeleccionado;
 
@@ -77,19 +81,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   String _ultimoDocSolicitanteBuscado = '';
   bool _buscandoRuc = false;
   String _ultimoRucBuscado = '';
-
-  /// Campos obligatorios (marcados con *) del paso 1. Los opcionales
-  /// (apellido materno, RUC/razón social, canales) no se exigen.
-  bool get _formCompleto =>
-      _tipoDocLabel.isNotEmpty &&
-      _ctrlNumDoc.text.trim().isNotEmpty &&
-      _nacionalidadId.isNotEmpty &&
-      _sexoId.isNotEmpty &&
-      _ctrlNombres.text.trim().isNotEmpty &&
-      _ctrlApellidoPaterno.text.trim().isNotEmpty &&
-      _ctrlCargo.text.trim().isNotEmpty &&
-      _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.emailValidator == null;
 
   void _onCampoTexto() {
     setState(() {});
@@ -421,6 +412,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         final facPais = paises
             .where((p) => p.id == detalle.facPaisId)
             .firstOrNull;
+        final facNacionalidad = nacionalidades
+            .where((n) => n.id == detalle.facNacionalidadId)
+            .firstOrNull;
 
         context.read<SolicitudFormCubit>().guardarFacturacion(
           DatosFacturacion(
@@ -432,6 +426,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             moneda: facMoneda?.nombre ?? '',
             tipoDocId: detalle.facTipoDocId,
             tipoDocLabel: facTipoDoc?.abreviatura ?? '',
+            nacionalidadId: detalle.facNacionalidadId,
+            nacionalidad: facNacionalidad?.nombre ?? '',
             numDoc: detalle.facNumDoc,
             nombresRazon: esRuc ? detalle.facNomEmpre : detalle.facNombres,
             apellidoPaterno: esRuc ? '' : detalle.facApellidoPaterno,
@@ -580,16 +576,11 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     return formState.cantidadEsperada != null ? formState.precioBaseLead : null;
   }
 
-  // En modo edición valida los campos obligatorios antes de continuar; en
-  // modo solo-ver (modoEdicion == false) avanza directo, sin validar.
+  // Continuar ya no valida campos obligatorios — el paso 1 siempre avanza;
+  // toda la validación se centralizó en "Generar solicitud" (ver
+  // solicitud_guardar_helper.dart, validarSolicitudParaGenerar). "Guardar"
+  // (borrador) tampoco valida nada, sin cambios.
   void _onContinuar(PaisItem? paisCelular) {
-    if (widget.modoEdicion && !_formCompleto) {
-      AppSnackBar.error(
-        context,
-        'Completa todos los campos obligatorios (*) para continuar',
-      );
-      return;
-    }
     final datos = _construirDatosSolicitante(paisCelular);
     context.read<SolicitudFormCubit>().guardarSolicitante(datos);
     context.read<ParticipantesCubit>().sincronizarSolicitante(
@@ -888,13 +879,4 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         text: 'Continuar →',
                         onPressed: () => _onContinuar(paisCelular),
                       ),
-              ),
-            ],
-          ),
-          if (_buscandoDocSolicitante || _buscandoRuc)
-            const AppLoadingOverlay(message: 'Buscando datos del documento...'),
-        ],
-      ),
-    );
-  }
-}
+              )

@@ -43,6 +43,7 @@ export 'presentation/widgets/detail/solicitud_detalle_view.dart';
 export 'presentation/widgets/completar/view/solicitud_wizard_view.dart';
 export 'presentation/widgets/completar/view/solicitud_completar_view.dart';
 export 'presentation/widgets/completar/solicitud_guardar_helper.dart';
+export 'presentation/widgets/completar/solicitud_progreso_guardado.dart';
 export 'presentation/widgets/completar/solicitud_pasos_indicador.dart';
 export 'presentation/widgets/completar/solicitud_chips_canales.dart';
 export 'presentation/widgets/completar/solicitud_completar_adjuntos.dart';

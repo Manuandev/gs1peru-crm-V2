@@ -1,5 +1,48 @@
 # Solicitudes Feature
 
+## Bugs reales — Comprobante y Nacionalidad de facturación no sobrevivían a reabrir la solicitud (2026-07-16)
+Reportados por el usuario ("el tipo de comprobante no sé por qué al volver a entrar no carga, y
+lo de nacionalidad de facturación tampoco") y confirmados contra el `.sql` real de los 2 SPs que
+usa el wizard (`D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`, repo aparte del
+CRM — hasta ahora nunca se habían podido cruzar los cambios de Flutter contra el SP real, todo
+lo pendiente de abajo se basaba en suposiciones). Dos bugs distintos, corregidos en Flutter +
+ambos SPs:
+
+- **Comprobante — campo faltante en el POST, no un problema del SP.**
+  `CSV_SOLICITUD_CUD_APP` (task `'U'`) siempre esperó **42 campos** de cabecera —
+  `@ID_TIPO_COMPROBANTE_FAC = field42` — pero `SolicitudRemoteDatasource.guardarSolicitud()`
+  solo armaba 41 (terminaba en `LL_USUARIO`). `facturacion.comprobanteId` se capturaba bien en
+  la UI y se leía bien de vuelta (`facComprobanteId`, task `'DT'`) — el dato se perdía justo en
+  el guardado, por eso el SP siempre grababa `TIPO_COMPROBANTE = NULL` sin importar lo elegido.
+  Corregido agregando `facturacion?.comprobanteId ?? ''` como field42 — no requirió tocar el SP,
+  ya estaba listo para recibirlo.
+- **Nacionalidad de facturación — bug de 3 partes, sí requirió tocar ambos SPs.** El combo
+  Nacionalidad del paso 3 (`DatosFacturacion.nacionalidadId`, gentilicio — distinto de País) se
+  capturaba bien en la UI pero: (1) el datasource nunca lo mandaba — el único dato de
+  país/nacionalidad que viajaba era `facturacion.paisId` (field25, `ID_NACION_FAC`); (2) el SP
+  reusaba esa misma variable para **dos columnas** de `T_TECMSOLINSCRIPCION01_FACTURACION`
+  (`ID_NACIONALIDAD` **y** `ID_PAIS`, mismo valor en ambas) — no había forma de guardar un valor
+  de nacionalidad distinto del de país aunque Flutter lo mandara; (3) el `'DT'` de lectura nunca
+  traía `TC.ID_NACIONALIDAD` de vuelta, solo `TC.ID_PAIS` (→ `facPaisId`). Corregido:
+  - **`CSV_SOLICITUD_CUD_APP`**: nueva variable `@ID_NACIONALIDAD_FAC` (field43, declarada junto
+    a `@ID_TIPO_COMPROBANTE_FAC`), usada para la columna `ID_NACIONALIDAD` en el `INSERT`/
+    `UPDATE` de `T_TECMSOLINSCRIPCION01_FACTURACION` — `ID_PAIS` sigue usando `@ID_NACION_FAC`
+    (paisId), ya no comparten variable.
+  - **`CSV_SOLICITUD_LST_APP`**, task `'DT'`: se agregó `ISNULL(TC.ID_NACIONALIDAD, '')` como
+    campo nuevo al final del `SELECT` (`campos[38]`, después de `CANT_PARTICIPANTES`) — mismo
+    patrón que el resto de campos agregados al final para no correr los índices existentes.
+  - **Flutter**: `guardarSolicitud()` manda `facturacion?.nacionalidadId ?? ''` como field43;
+    `SolicitudDetalleModel` agrega `facNacionalidadId` (`campos.length > 38 ? campos[38] : ''`
+    — guard defensivo porque este campo es nuevo y el SP/Flutter podrían desplegarse en
+    momentos distintos); `solicitud_completar_view.dart._cargarDetalle()` resuelve
+    `facNacionalidad` contra el catálogo `nacionalidades` (mismo que ya usaba para el
+    solicitante) y lo pasa al reconstruir `DatosFacturacion`.
+- **Los `.sql` de ambos SPs viven en `NC.SQLChangeLock` (repo aparte, con su propio git)** — se
+  editaron directo ahí (están en UTF-16LE con BOM, no UTF-8 — cualquier edición futura debe
+  preservar esa codificación o SSMS los mostrará corruptos) y quedan pendientes de que alguien
+  los despliegue a la base de datos real; los cambios de Flutter de este feature ya asumen que
+  el SP desplegado tiene los 43 campos / el campo `ID_NACIONALIDAD` nuevo.
+
 ## Bug real — Dirección no se autocompletaba al buscar RUC en Facturación (2026-07-15)
 `DocumentoExterno.direccion` (`core/models/documento_externo.dart`, campo [3] de
 `Clientes/BuscarDocumento`) **sí trae dirección cuando el resultado viene de SUNAT/RUC**
@@ -563,15 +606,14 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   `[CRM].[CSV_SOLICITUD_LST_APP]` (task `'LS'`, body `codUser¦isModerador`) — mismo patrón
   que `CobranzaRemoteDatasource`. Ver mapeo posicional completo en el comentario de
   `SolicitudModel.fromRawString` y en "SPs que consume" abajo.
-- **Bug pendiente en el SP — campo Canal**: la sección comentada `-- CANAL` del SP repite las
-  mismas columnas que `-- ESTADO SOLICITUD` (`EG.ID_ESTADO_GES`/`EG.DESCRIPCION` dos veces) en
-  vez de seleccionar `CN.ID_CANAL`/`CN.DESCRIPCION` (la tabla `CN` = `CRM.T_CANAL` se une con
-  `LEFT JOIN` pero sus columnas nunca se seleccionan). El parser en Flutter (`SolicitudModel`)
-  ya está escrito asumiendo la posición **corregida** (`idCanal`/`canal` en los índices 16/17
-  del raw, antes del bloque de estado en 18/19) — no hace falta tocar Flutter de nuevo cuando
-  se corrija el SP, solo hay que cambiar esas dos columnas en el `SELECT` para que apunten a
-  `CN` en vez de repetir `EG`. Hasta entonces, `idCanal`/`canal` en la lista llegan con el
-  mismo valor que `idEstado`/`estado` (dato incorrecto, no usar para nada crítico).
+- ~~Bug pendiente en el SP — campo Canal~~ — **resuelto, confirmado el 2026-07-16 contra el
+  `.sql` real** (`CSV_SOLICITUD_LST_APP` en `NC.SQLChangeLock`). El SP ya selecciona
+  `CN.ID_CANAL`/`CN.NOMBRE` (posiciones 16/17 del raw, antes del bloque de estado
+  `EG.ID_ESTADO_GES`/`EG.DESCRIPCION` en 18/19) — exactamente lo que
+  `SolicitudModel.fromRawString` ya esperaba. No hizo falta ningún cambio, ni en el SP ni en
+  Flutter — la nota anterior de este archivo (que describía el bug como pendiente, basada en
+  una sección comentada de una versión vieja del SP que nunca se pudo confirmar) quedó
+  desactualizada.
 - El wizard (`SolicitudFormCubit` + `ParticipantesCubit`) ya está conectado al CUD real de
   punta a punta. Al entrar (por "Editar ficha"/"Continuar" o por "Generar solicitud" desde
   una negociación) el paso 1 llama `getSolicitudDetalle()` (task `'DT'`, ver abajo) y
@@ -947,8 +989,10 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 - `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'U'`, body `cabecera¦...¯detalle¦...¬detalle¦...¯U`)
   → `SolicitudRemoteDatasource.guardarSolicitud()`. Crea (si `numSol` viene vacío) o
   actualiza (si ya existe) cabecera + facturación + participantes de una solicitud, todo en
-  una transacción — ver el mapeo posicional completo comentado en el método (41 campos de
+  una transacción — ver el mapeo posicional completo comentado en el método (43 campos de
   cabecera, `ID_LEAD` es field1 — el SP ya no recibe `ID_CONTACTO`; 14 por participante).
+  `field42`/`field43` (comprobanteId/nacionalidadId de facturación) se agregaron el 2026-07-16,
+  ver "Bugs reales — Comprobante y Nacionalidad de facturación" arriba.
   Devuelve `OK¯mensaje¯NUMSOL` (el `NUMSOL` es obligatorio
   leerlo de la respuesta en el flujo de creación — hace falta para la llamada de archivos
   después). Llamado desde los 5 botones "Guardar"/"Generar solicitud" vía

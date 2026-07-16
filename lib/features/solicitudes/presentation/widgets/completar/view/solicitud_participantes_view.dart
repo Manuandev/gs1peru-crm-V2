@@ -244,9 +244,10 @@ class _SolicitudParticipantesViewState
             const SizedBox(height: AppSpacing.xs),
 
             // ── Botones pie ─────────────────────────────────────────
-            // En modo solo-ver (modoEdicion == false) solo se muestra
-            // "Continuar", sin exigir participantes — es un recorrido de
-            // lectura, no una captura de datos.
+            // "Continuar" ya no exige participantes — toda la validación se
+            // centralizó en "Generar solicitud" (ver solicitud_guardar_helper.dart,
+            // validarSolicitudParaGenerar). En modo solo-ver (modoEdicion ==
+            // false) solo se muestra "Continuar", es un recorrido de lectura.
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm,
@@ -276,9 +277,7 @@ class _SolicitudParticipantesViewState
                         Expanded(
                           child: CustomPrimaryButton(
                             text: 'Continuar →',
-                            onPressed: state.participantes.isEmpty
-                                ? null
-                                : () => _onContinuar(context, state),
+                            onPressed: () => _onContinuar(context, state),
                           ),
                         ),
                       ],

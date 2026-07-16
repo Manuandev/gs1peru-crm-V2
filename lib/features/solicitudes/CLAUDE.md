@@ -1,5 +1,37 @@
 # Solicitudes Feature
 
+## Reconciliación de centavos + bug de importe editado que se perdía al reabrir (2026-07-16)
+Seguimiento del punto de abajo — el usuario probó con números reales (negociación: precio total
+425.00, precio base 225.50, 2 participantes) y encontró que "Importe total" en el footer daba
+**424.99**, no 425.00. Dos causas, ambas corregidas:
+
+- **Redondeo acumulado al repartir el total entre participantes.** 425 / 2 / 1.18 = 180.0847...
+  — al redondear cada participante a 2 decimales por separado (180.08 c/u), la suma real
+  (360.16) queda por debajo de la suma exacta sin redondear (360.1695...), y ese faltante se
+  arrastra hasta el total final. Es un problema clásico de repartir un monto con decimales entre
+  varias partes — cada parte necesita un valor exacto de 2 decimales (moneda), pero la suma de
+  esos valores redondeados no siempre calza con el total original.
+  **Fix**: `_importeFijo()` (duplicado en `solicitud_participantes_view.dart` y
+  `solicitud_completar_view.dart`, mismo patrón de siempre) ahora distingue si el participante que
+  se está por crear es el **último** de los `cantidadEsperada` esperados
+  (`context.read<ParticipantesCubit>().state.participantes.length == cantidadEsperada - 1`) — si
+  lo es, en vez de la división simple recibe **lo que falta** para que la suma calce exacto:
+  `totalSinIgv - sum(importes ya guardados)`. Con el ejemplo real: participante 1 → 180.08
+  (división simple), participante 2 (último) → 360.1695... − 180.08 = 180.09 → suma 360.17 → +18%
+  = 64.83 → total **425.00** exacto. El resto de participantes (no el último) sigue usando la
+  división simple sin reconciliar — solo el último absorbe el centavo de diferencia, patrón
+  estándar de reparto de montos en sistemas de facturación.
+- **Bug real encontrado de paso, en el mismo archivo (`participante_form_sheet.dart`) — editar un
+  participante ya guardado mostraba el importe SUGERIDO recalculado, no el que el asesor
+  realmente había guardado.** El prellenado del campo Importe hacía
+  `widget.importeFijo != null ? importeFijo : p?.importe` — `importeFijo` (no nulo siempre que
+  `cantidadEsperada` esté seteado, o sea cualquier solicitud con negociación de origen) tenía
+  prioridad sobre el importe real del participante, incluso al **editar** uno ya guardado. Si el
+  asesor bajaba el importe de "Norma" 10 soles a mano y volvía a abrir su ficha, veía el sugerido
+  recalculado, no los 10 soles menos que había puesto — y si volvía a presionar "Guardar" ahí sin
+  darse cuenta, se perdía el ajuste manual. Corregido: la prioridad ahora es importe ya guardado
+  del participante (edición) → importe sugerido (`importeFijo`, solo al crear uno nuevo) → vacío.
+
 ## Importe de participante ya no bloqueado + nueva fórmula sin IGV + recuperar negociación al editar (2026-07-16)
 Pedido de negocio (jefe del usuario) sobre cómo debería comportarse el importe por participante —
 cambio grande, toca desde el SP hasta la UI:

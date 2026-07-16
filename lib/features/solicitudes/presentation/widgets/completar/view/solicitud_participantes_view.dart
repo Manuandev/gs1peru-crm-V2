@@ -57,6 +57,15 @@ class _SolicitudParticipantesViewState
   // sigue existiendo, pero solo para _avisarSiPrecioTotalNoCalza — ya no
   // para esto. El importe sigue siendo editable siempre (ver
   // participante_form_sheet.dart), esto es solo una sugerencia inicial.
+  //
+  // Al último participante esperado se le sugiere lo que FALTA para que la
+  // suma calce exacto con el total de la negociación, en vez de la misma
+  // división simple que los demás — repartir un total con decimales entre
+  // varios participantes y redondear cada uno por separado a 2 decimales
+  // puede dejar la suma un par de centavos por debajo (o encima) del total
+  // real (ej. 425 / 2 / 1.18 = 180.0847... → 180.08 c/u → suma 360.16, no
+  // 360.1695... → el importe total del footer terminaba en 424.99, no
+  // 425.00). Bug real detectado en vivo por el usuario.
   double? _importeFijo(BuildContext context) {
     final formState = context.read<SolicitudFormCubit>().state;
     final cantidadEsperada = formState.cantidadEsperada;
@@ -67,8 +76,15 @@ class _SolicitudParticipantesViewState
         ? catalogState.igvPorcentaje
         : 0.0;
 
-    final importeConIgv = formState.precioTotalLead / cantidadEsperada;
-    return importeConIgv / (1 + igvPorcentaje / 100);
+    final totalSinIgv = formState.precioTotalLead / (1 + igvPorcentaje / 100);
+
+    final actuales = context.read<ParticipantesCubit>().state.participantes;
+    if (actuales.length == cantidadEsperada - 1) {
+      final sumaOtros = actuales.fold(0.0, (sum, p) => sum + p.importe);
+      return double.parse((totalSinIgv - sumaOtros).toStringAsFixed(2));
+    }
+
+    return totalSinIgv / cantidadEsperada;
   }
 
   void _abrirFormularioNuevo(BuildContext context) {

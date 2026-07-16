@@ -643,8 +643,15 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         ? catalogState.igvPorcentaje
         : 0.0;
 
-    final importeConIgv = formState.precioTotalLead / cantidadEsperada;
-    return importeConIgv / (1 + igvPorcentaje / 100);
+    final totalSinIgv = formState.precioTotalLead / (1 + igvPorcentaje / 100);
+
+    final actuales = context.read<ParticipantesCubit>().state.participantes;
+    if (actuales.length == cantidadEsperada - 1) {
+      final sumaOtros = actuales.fold(0.0, (sum, p) => sum + p.importe);
+      return double.parse((totalSinIgv - sumaOtros).toStringAsFixed(2));
+    }
+
+    return totalSinIgv / cantidadEsperada;
   }
 
   // Continuar ya no valida campos obligatorios — el paso 1 siempre avanza;

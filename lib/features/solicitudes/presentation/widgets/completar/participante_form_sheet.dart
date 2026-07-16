@@ -156,13 +156,19 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     // El importe siempre es editable — el asesor puede ajustarlo libremente
     // aunque venga sugerido de la negociación (decisión explícita de
     // negocio, 2026-07-16: no se valida contra el precio de la negociación,
-    // ver solicitudes/CLAUDE.md). Se prellena con el precio sugerido si vino
-    // de una negociación (importeFijo); si no, con el importe ya guardado
-    // del participante (edición), o vacío si es nuevo sin negociación.
+    // ver solicitudes/CLAUDE.md). Prioridad: importe YA guardado del
+    // participante (edición) → importe sugerido de la negociación
+    // (importeFijo, solo al crear) → vacío. Antes `importeFijo` tenía
+    // prioridad sobre el importe real incluso al EDITAR un participante ya
+    // guardado — bug real: si el asesor había ajustado el importe a mano y
+    // volvía a abrir ese participante, veía el sugerido recalculado, no lo
+    // que realmente tenía guardado.
     _importeCtrl = TextEditingController(
-      text: widget.importeFijo != null
-          ? widget.importeFijo!.toStringAsFixed(2)
-          : (p != null && p.importe > 0 ? p.importe.toStringAsFixed(2) : ''),
+      text: p != null && p.importe > 0
+          ? p.importe.toStringAsFixed(2)
+          : (widget.importeFijo != null
+                ? widget.importeFijo!.toStringAsFixed(2)
+                : ''),
     );
   }
 

@@ -20,13 +20,8 @@ class SolicitudCard extends StatelessWidget {
   });
 
   // ── Color por estado ─────────────────────────────────────────────
-  static Color colorEstado(int idEstado) => switch (idEstado) {
-    0 => AppColors.info,
-    1 => AppColors.warning,
-    2 => AppColors.success,
-    3 => AppColors.purple,
-    _ => AppColors.textDisabled,
-  };
+  static Color colorEstado(bool validado) =>
+      validado ? AppColors.success : AppColors.warning;
 
   // ── Acción según validación + estado ──────────────────────────────
   // 1. Sin validar y aún "Por Completar" (ibValidado == false && idEstado
@@ -48,7 +43,7 @@ class SolicitudCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accion = _accion(solicitud.ibValidado, solicitud.idEstado);
-    final canalInfo = CanalHelper.get(solicitud.idCanal);
+    // final canalInfo = CanalHelper.get(solicitud.idCanal);
 
     return Container(
       decoration: BoxDecoration(
@@ -136,10 +131,7 @@ class SolicitudCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        _EstadoChip(
-                          idEstado: solicitud.idEstado,
-                          label: solicitud.estado,
-                        ),
+                        _EstadoChip(validado: solicitud.ibValidado),
                       ],
                     ),
                   ],
@@ -179,28 +171,36 @@ class SolicitudCard extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'Num. Solicitud: ${solicitud.idSolicitud}',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           // Canal de origen — ícono real del canal (antes
                           // quedó hardcodeado al ícono de WhatsApp sin
                           // importar el canal real de la solicitud)
-                          Row(
-                            children: [
-                              CanalHelper.icon(
-                                solicitud.idCanal,
-                                size: AppSizing.iconSm,
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Expanded(
-                                child: Text(
-                                  'Canal: ${canalInfo.nombre}',
-                                  style: AppTextStyles.labelSmall.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
+                          // Row(
+                          //   children: [
+                          //     CanalHelper.icon(
+                          //       solicitud.idCanal,
+                          //       size: AppSizing.iconSm,
+                          //     ),
+                          //     const SizedBox(width: AppSpacing.xs),
+                          //     Expanded(
+                          //       child: Text(
+                          //         'Canal: ${canalInfo.nombre}',
+                          //         style: AppTextStyles.labelSmall.copyWith(
+                          //           color: AppColors.textSecondary,
+                          //         ),
+                          //         maxLines: 1,
+                          //         overflow: TextOverflow.ellipsis,
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
                         ],
                       ),
                     ),
@@ -292,10 +292,7 @@ class SolicitudCard extends StatelessWidget {
                       child: accion == SolicitudAccionTipo.cobranza
                           ? FilledButton.icon(
                               onPressed: onAccion,
-                              icon: Icon(
-                                AppIcons.edit,
-                                size: AppSizing.iconSm,
-                              ),
+                              icon: Icon(AppIcons.edit, size: AppSizing.iconSm),
                               label: Text(
                                 'Completar',
                                 style: AppTextStyles.labelSmall.copyWith(
@@ -356,14 +353,13 @@ class SolicitudCard extends StatelessWidget {
 // ─── Chip de estado coloreado ─────────────────────────────────────────────────
 
 class _EstadoChip extends StatelessWidget {
-  final int idEstado;
-  final String label;
+  final bool validado;
 
-  const _EstadoChip({required this.idEstado, required this.label});
+  const _EstadoChip({required this.validado});
 
   @override
   Widget build(BuildContext context) {
-    final color = SolicitudCard.colorEstado(idEstado);
+    final color = SolicitudCard.colorEstado(validado);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -375,7 +371,7 @@ class _EstadoChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
       ),
       child: Text(
-        label,
+        validado ? 'Validado' : 'Sin validar',
         style: AppTextStyles.labelSmall.copyWith(
           color: color,
           fontWeight: AppTextStyles.weightSemiBold,

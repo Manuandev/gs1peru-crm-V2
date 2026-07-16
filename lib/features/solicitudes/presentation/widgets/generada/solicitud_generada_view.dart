@@ -397,7 +397,7 @@ class _CardInfoSolicitud extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canalInfo = CanalHelper.get(solicitud.idCanal);
-    final colorEstado = SolicitudCard.colorEstado(solicitud.idEstado);
+    final colorEstado = SolicitudCard.colorEstado(solicitud.ibValidado);
 
     return Container(
       decoration: BoxDecoration(

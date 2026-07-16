@@ -136,12 +136,12 @@ class _ChipsFilter extends StatelessWidget {
             seleccionado: filtroSeleccionado == TipoActor.asesor,
             onTap: () => onFiltroChanged(TipoActor.asesor),
           ),
-          _Chip(
-            label: 'Sistema',
-            color: AppColors.textSecondary,
-            seleccionado: filtroSeleccionado == TipoActor.sistema,
-            onTap: () => onFiltroChanged(TipoActor.sistema),
-          ),
+          // _Chip(
+          //   label: 'Sistema',
+          //   color: AppColors.textSecondary,
+          //   seleccionado: filtroSeleccionado == TipoActor.sistema,
+          //   onTap: () => onFiltroChanged(TipoActor.sistema),
+          // ),
         ],
       ),
     );
@@ -236,14 +236,14 @@ class _HistorialItem extends StatelessWidget {
   const _HistorialItem({required this.item});
 
   static IconData _iconActor(TipoActor tipo) => switch (tipo) {
-    TipoActor.sistema => AppIcons.settings,
+    // TipoActor.sistema => AppIcons.settings,
     TipoActor.botIA => AppIcons.ia,
     TipoActor.cliente => AppIcons.user,
     TipoActor.asesor => AppIcons.user,
   };
 
   static Color _colorActor(TipoActor tipo) => switch (tipo) {
-    TipoActor.sistema => AppColors.textSecondary,
+    // TipoActor.sistema => AppColors.textSecondary,
     TipoActor.botIA => AppColors.success,
     TipoActor.cliente => AppColors.info,
     TipoActor.asesor => AppColors.info,

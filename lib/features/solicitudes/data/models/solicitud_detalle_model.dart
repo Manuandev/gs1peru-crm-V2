@@ -126,6 +126,14 @@ class SolicitudDetalleModel {
   final bool ibValidado;
   final String idEstadoGes;
   final int cantParticipantes;
+  // Id del lead/negociación de origen — campo agregado el 2026-07-16
+  // (campos[39], JOIN nuevo a CRM.T_LEAD_TECMSOLINSCRIPCION01 en el SP).
+  // Permite recuperar la negociación (GetLeadDetalleUseCase) al editar una
+  // solicitud ya guardada, para recalcular el importe sugerido de
+  // participantes nuevos — antes esto se perdía apenas se guardaba la
+  // solicitud por primera vez. Vacío si no hay negociación de origen (no
+  // debería pasar en la práctica, todas las solicitudes se crean desde una).
+  final String idLeadOrigen;
 
   final List<SolicitudParticipanteRaw> participantes;
   final List<SolicitudArchivoRaw> archivos;
@@ -169,6 +177,7 @@ class SolicitudDetalleModel {
     required this.ibValidado,
     required this.idEstadoGes,
     required this.cantParticipantes,
+    required this.idLeadOrigen,
     required this.participantes,
     required this.archivos,
   });
@@ -244,6 +253,7 @@ class SolicitudDetalleModel {
       idEstadoGes: campos[36],
       cantParticipantes: int.tryParse(campos[37]) ?? 0,
       facNacionalidadId: campos.length > 38 ? campos[38] : '',
+      idLeadOrigen: campos.length > 39 ? campos[39] : '',
       participantes: participantes,
       archivos: archivos,
     );

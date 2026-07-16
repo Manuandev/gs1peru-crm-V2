@@ -38,7 +38,7 @@ class ChatIaBanner extends StatelessWidget {
             ),
             child: const Icon(
               AppIcons.sparkle,
-              size: AppSizing.iconMd,
+              size: AppSizing.iconActionSm,
               color: AppColors.iaBannerFg,
             ),
           ),
@@ -59,8 +59,7 @@ class ChatIaBanner extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   'El bot atendió ${chat.cantidadMensajesIA} '
-                  '${chat.cantidadMensajesIA == 1 ? 'mensaje' : 'mensajes'} '
-                  'y transfirió esta conversación a ti para que puedas dar seguimiento personalizado.',
+                  '${chat.cantidadMensajesIA == 1 ? 'mensaje' : 'mensajes'}.',
                   style: AppTextStyles.labelVerySmall9.copyWith(
                     color: AppColors.textSecondary,
                     height: 1.4,

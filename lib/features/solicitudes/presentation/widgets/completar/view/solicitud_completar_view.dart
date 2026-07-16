@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudCompletarView extends StatefulWidget {
@@ -41,6 +42,16 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // Pasos del guardado (Guardar solicitud → Subiendo voucher/O.C.) para
   // el overlay de progreso — ver solicitud_progreso_guardado.dart.
   final SolicitudProgreso _progreso = SolicitudProgreso();
+
+  // Nombre del voucher/O.C. ya guardado en el backend (viene de
+  // getSolicitudDetalle() al reabrir la solicitud) — vive acá, no en
+  // SolicitudFormCubit, porque _construirDatosSolicitante() se llama en
+  // cada sync y necesita un valor estable que sobreviva a que el usuario
+  // edite otros campos. "Quitar" en un archivo existente limpia esto (sin
+  // llamar al backend — no hay una operación de borrado sin reemplazo, solo
+  // reemplazo subiendo uno nuevo del mismo tipo, ver CLAUDE.md).
+  String _archivoVoucherExistente = '';
+  String _archivoOCExistente = '';
 
   // Canal seleccionado (single-select) — catálogo real vía CatalogsBloc
   CanalItem? _canalSeleccionado;
@@ -348,6 +359,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
           .where((a) => a.tipo == 'voucher')
           .firstOrNull;
       final oc = detalle.archivos.where((a) => a.tipo == 'oc').firstOrNull;
+      _archivoVoucherExistente = voucher == null
+          ? ''
+          : '${voucher.nombre}${voucher.extension}';
+      _archivoOCExistente = oc == null ? '' : '${oc.nombre}${oc.extension}';
 
       _tipoDocId = detalle.tipoDocId;
       _tipoDocLabel = tipoDoc?.abreviatura ?? '';
@@ -386,10 +401,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         razonSocial: detalle.razonSocial,
         solicitanteEsParticipante: detalle.solicitanteEsParticipante,
         facturarAlSolicitante: detalle.facturarAlSolicitante,
-        archivoVoucherNombre: voucher == null
-            ? ''
-            : '${voucher.nombre}${voucher.extension}',
-        archivoOCNombre: oc == null ? '' : '${oc.nombre}${oc.extension}',
+        archivoVoucherNombre: _archivoVoucherExistente,
+        archivoOCNombre: _archivoOCExistente,
       );
 
       if (!mounted) return;
@@ -471,6 +484,33 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       if (!mounted) return;
       context.read<ParticipantesCubit>().cargarParticipantes(participantes);
 
+      // Recupera la negociación de origen (si existe) para que "Nuevo
+      // participante" pueda seguir sugiriendo el importe correcto aunque se
+      // esté editando una solicitud ya guardada — antes esto se perdía
+      // apenas se guardaba la solicitud por primera vez, porque
+      // cantidadEsperada/precioTotalLead solo se sembraban al crear (ver
+      // solicitudes/CLAUDE.md).
+      final idLeadOrigen = int.tryParse(detalle.idLeadOrigen);
+      if (idLeadOrigen != null && idLeadOrigen > 0) {
+        try {
+          final negociacion = await GetLeadDetalleUseCase(
+            context.read<LeadRepository>(),
+          ).call(idLeadOrigen);
+          if (!mounted) return;
+          context.read<SolicitudFormCubit>().sembrarDatosNegociacion(
+            cantidad: negociacion.cantidad,
+            precioBase: negociacion.precioBase,
+            descuento: negociacion.descuento,
+            idMoneda: negociacion.idMoneda,
+            precioTotal: negociacion.precio,
+          );
+        } catch (_) {
+          // Sin negociación recuperable — el importe de "Nuevo
+          // participante" queda sin sugerencia, el asesor lo escribe a
+          // mano (ya es editable, no bloquea nada).
+        }
+      }
+
       setState(() => _cargando = false);
     } catch (e) {
       if (!mounted) return;
@@ -505,13 +545,28 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     }
   }
 
+  // Si hay un archivo de esta sesión (recién adjuntado), lo quita. Si no —
+  // pero sí hay uno ya guardado en el backend — solo limpia la referencia
+  // local (no hay operación de borrado sin reemplazo en el backend, ver
+  // CLAUDE.md); "Adjuntar" vuelve a habilitarse para elegir uno nuevo, que
+  // al guardar reemplaza al anterior (el SP borra por NUMSOL+TIPO antes de
+  // insertar).
   void _quitarArchivo(bool esVoucher) {
     final formCubit = context.read<SolicitudFormCubit>();
     if (esVoucher) {
-      formCubit.quitarArchivoVoucher();
+      if (formCubit.state.archivoVoucher != null) {
+        formCubit.quitarArchivoVoucher();
+      } else {
+        setState(() => _archivoVoucherExistente = '');
+      }
     } else {
-      formCubit.quitarArchivoOC();
+      if (formCubit.state.archivoOC != null) {
+        formCubit.quitarArchivoOC();
+      } else {
+        setState(() => _archivoOCExistente = '');
+      }
     }
+    _sincronizarCubit();
   }
 
   Future<void> _confirmarCancelar() async {
@@ -546,8 +601,14 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       razonSocial: _ctrlRazonSocial.text,
       solicitanteEsParticipante: _solicitanteParticipante,
       facturarAlSolicitante: _facturarAlSolicitante,
-      archivoVoucherNombre: archivos.archivoVoucher?.name ?? '',
-      archivoOCNombre: archivos.archivoOC?.name ?? '',
+      // Prioridad: archivo recién adjuntado en esta sesión → archivo ya
+      // guardado en el backend (si no se quitó) → nada. Antes esto solo
+      // miraba el archivo de la sesión, así que cualquier edición de campo
+      // (dispara este método) borraba el nombre del archivo ya subido — ver
+      // CLAUDE.md, "Bug real — nombre de archivo ya subido se perdía...".
+      archivoVoucherNombre:
+          archivos.archivoVoucher?.name ?? _archivoVoucherExistente,
+      archivoOCNombre: archivos.archivoOC?.name ?? _archivoOCExistente,
     );
   }
 
@@ -568,12 +629,22 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
   // null si esta solicitud no viene de una negociación con precio ya
   // definido — mismo cálculo que usa "Nuevo participante"
-  // (solicitud_participantes_view.dart._importeFijo), necesario acá también
-  // porque el switch "El solicitante será participante" genera su propio
-  // ParticipanteLocal sin pasar por ese formulario.
+  // (solicitud_participantes_view.dart._importeFijo, ver el comentario ahí
+  // para el detalle de la fórmula), necesario acá también porque el switch
+  // "El solicitante será participante" genera su propio ParticipanteLocal
+  // sin pasar por ese formulario.
   double? _importeFijo() {
     final formState = context.read<SolicitudFormCubit>().state;
-    return formState.cantidadEsperada != null ? formState.precioBaseLead : null;
+    final cantidadEsperada = formState.cantidadEsperada;
+    if (cantidadEsperada == null || cantidadEsperada == 0) return null;
+
+    final catalogState = context.read<CatalogsBloc>().state;
+    final igvPorcentaje = catalogState is CatalogsLoaded
+        ? catalogState.igvPorcentaje
+        : 0.0;
+
+    final importeConIgv = formState.precioTotalLead / cantidadEsperada;
+    return importeConIgv / (1 + igvPorcentaje / 100);
   }
 
   // Continuar ya no valida campos obligatorios — el paso 1 siempre avanza;
@@ -609,17 +680,14 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       importeFijo: _importeFijo(),
     );
 
-    final result = await guardarSolicitudDesdeWizard(
+    final result = await guardarBorradorCompleto(
       context,
       idLead: widget.solicitud.idLead,
-      esBorrador: true,
+      progreso: _progreso,
     );
 
-    // Recién acá hay NUMSOL confirmado (si era creación nueva, lo generó
-    // este mismo guardado) — es el punto correcto para subir voucher/OC.
-    if (result is CrudOk && mounted) await subirArchivosPendientes(context);
-
     if (!mounted) return;
+    _progreso.reset();
     setState(() => _guardando = false);
     mostrarResultadoGuardarSolicitud(context, result);
   }
@@ -635,6 +703,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     _ctrlCorreo.dispose();
     _ctrlRuc.dispose();
     _ctrlRazonSocial.dispose();
+    _progreso.dispose();
     super.dispose();
   }
 
@@ -739,6 +808,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                             child: BotonAdjuntar(
                               label: 'Adjuntar voucher',
                               archivo: formState.archivoVoucher,
+                              nombreExistente: _archivoVoucherExistente,
                               habilitado: widget.modoEdicion,
                               onAdjuntar: () => _adjuntarArchivo(true),
                               onQuitar: () => _quitarArchivo(true),
@@ -749,6 +819,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                             child: BotonAdjuntar(
                               label: 'Adjuntar O/C',
                               archivo: formState.archivoOC,
+                              nombreExistente: _archivoOCExistente,
                               habilitado: widget.modoEdicion,
                               onAdjuntar: () => _adjuntarArchivo(false),
                               onQuitar: () => _quitarArchivo(false),
@@ -879,4 +950,14 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         text: 'Continuar →',
                         onPressed: () => _onContinuar(paisCelular),
                       ),
-              )
+              ),
+            ],
+          ),
+          if (_buscandoDocSolicitante || _buscandoRuc)
+            const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+          SolicitudProgresoOverlay(progreso: _progreso),
+        ],
+      ),
+    );
+  }
+}

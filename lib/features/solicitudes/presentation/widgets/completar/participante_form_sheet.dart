@@ -75,7 +75,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   late final TextEditingController _cargoCtrl;
   late final TextEditingController _celularCtrl;
   late final TextEditingController _importeCtrl;
-  late final bool _importeBloqueado;
 
   bool get _esEdicion => widget.participante != null;
 
@@ -154,13 +153,12 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     _cargoCtrl = TextEditingController(text: p?.cargo ?? '');
     _celularCtrl = TextEditingController(text: p?.celular ?? '');
 
-    // El importe por participante siempre queda fijo — el asesor nunca lo
-    // edita manualmente acá (el valor real vendrá de otra parte del flujo,
-    // ver solicitudes/CLAUDE.md). Se prellena con el precio de la
-    // negociación si vino de ahí (importeFijo); si no, con el importe ya
-    // guardado del participante (edición), o vacío si es nuevo sin
-    // negociación.
-    _importeBloqueado = true;
+    // El importe siempre es editable — el asesor puede ajustarlo libremente
+    // aunque venga sugerido de la negociación (decisión explícita de
+    // negocio, 2026-07-16: no se valida contra el precio de la negociación,
+    // ver solicitudes/CLAUDE.md). Se prellena con el precio sugerido si vino
+    // de una negociación (importeFijo); si no, con el importe ya guardado
+    // del participante (edición), o vacío si es nuevo sin negociación.
     _importeCtrl = TextEditingController(
       text: widget.importeFijo != null
           ? widget.importeFijo!.toStringAsFixed(2)
@@ -552,7 +550,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                                 child: CustomTextField(
                                   label: 'Importe',
                                   controller: _importeCtrl,
-                                  enabled: !_importeBloqueado,
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
                                         decimal: true,

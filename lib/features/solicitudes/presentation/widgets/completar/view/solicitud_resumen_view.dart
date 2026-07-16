@@ -37,6 +37,17 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
   // true mientras se genera la solicitud final (botón "Generar solicitud")
   bool _generando = false;
 
+  // Pasos del guardado (Guardando/Generando solicitud → Subiendo
+  // voucher/O.C.) para el overlay de progreso — ver
+  // solicitud_progreso_guardado.dart.
+  final SolicitudProgreso _progreso = SolicitudProgreso();
+
+  @override
+  void dispose() {
+    _progreso.dispose();
+    super.dispose();
+  }
+
   // Al guardar desde el Resumen (última pantalla del wizard) ya no hace
   // falta quedarse acá — se sale del wizard directo al detalle de la
   // solicitud recién guardada (nueva o editada), en vez de solo mostrar un
@@ -45,14 +56,14 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     if (_guardando || _generando) return;
     setState(() => _guardando = true);
 
-    final result = await guardarSolicitudDesdeWizard(
+    final result = await guardarBorradorCompleto(
       context,
       idLead: widget.solicitud.idLead,
-      esBorrador: true,
+      progreso: _progreso,
     );
-    if (result is CrudOk && mounted) await subirArchivosPendientes(context);
 
     if (!mounted) return;
+    _progreso.reset();
     setState(() => _guardando = false);
 
     if (result is! CrudOk) {
@@ -92,9 +103,11 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     final result = await generarSolicitudCompleta(
       context,
       idLead: widget.solicitud.idLead,
+      progreso: _progreso,
     );
 
     if (!mounted) return;
+    _progreso.reset();
     setState(() => _generando = false);
 
     if (result is CrudOk) {
@@ -114,113 +127,122 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
   Widget build(BuildContext context) {
     final formState = context.watch<SolicitudFormCubit>().state;
 
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SeccionSolicitante(
-                  datos: formState.solicitante,
-                  onEditar: () => widget.onEditarPaso(1),
+        Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
                 ),
-                const _Separador(),
-                _SeccionParticipantes(onVerTodos: () => widget.onEditarPaso(2)),
-                // "Facturación" solo aplica si hubo a quién facturar —
-                // si todos los participantes son invitados, el paso 3 se
-                // saltó y formState.facturacion queda null.
-                if (formState.facturacion != null) ...[
-                  const _Separador(),
-                  _SeccionFacturacion(
-                    datos: formState.facturacion,
-                    tipoPersonaLabel: formState.tipoPersonaLabel,
-                    onEditar: () => widget.onEditarPaso(3),
-                  ),
-                ],
-                const _Separador(),
-                const _SeccionResumenComercial(),
-                const _Separador(),
-                _SeccionDocumentosAdjuntos(
-                  voucherNombre:
-                      formState.solicitante?.archivoVoucherNombre ?? '',
-                  ocNombre: formState.solicitante?.archivoOCNombre ?? '',
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-            ),
-          ),
-        ),
-
-        // ── Botones fijos al pie ───────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border(top: BorderSide(color: AppColors.border, width: 1)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: widget.modoEdicion
-                ? [
-                    // Guardar borrador
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomPrimaryButton(
-                        text: 'Guardar',
-                        icon: AppIcons.save,
-                        isLoading: _guardando,
-                        onPressed: _onGuardar,
-                      ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SeccionSolicitante(
+                      datos: formState.solicitante,
+                      onEditar: () => widget.onEditarPaso(1),
                     ),
-                    const SizedBox(height: 5),
-
-                    // Generar solicitud
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomSecondaryButton(
-                        text: 'Generar solicitud',
-                        icon: AppIcons.fileFactura,
-                        isLoading: _generando,
-                        onPressed: _onGenerarSolicitud,
-                      ),
+                    const _Separador(),
+                    _SeccionParticipantes(
+                      onVerTodos: () => widget.onEditarPaso(2),
                     ),
-                    const SizedBox(height: 5),
-                    // Atrás
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomSecondaryButton(
-                        text: 'Atrás',
-                        icon: AppIcons.back,
-                        backgroundColor: AppColors.brandRaspberryAccessible,
-                        onPressed: widget.onAtras,
+                    // "Facturación" solo aplica si hubo a quién facturar —
+                    // si todos los participantes son invitados, el paso 3 se
+                    // saltó y formState.facturacion queda null.
+                    if (formState.facturacion != null) ...[
+                      const _Separador(),
+                      _SeccionFacturacion(
+                        datos: formState.facturacion,
+                        tipoPersonaLabel: formState.tipoPersonaLabel,
+                        onEditar: () => widget.onEditarPaso(3),
                       ),
+                    ],
+                    const _Separador(),
+                    const _SeccionResumenComercial(),
+                    const _Separador(),
+                    _SeccionDocumentosAdjuntos(
+                      voucherNombre:
+                          formState.solicitante?.archivoVoucherNombre ?? '',
+                      ocNombre: formState.solicitante?.archivoOCNombre ?? '',
                     ),
-                  ]
-                // Modo solo-ver — solo "Continuar", vuelve al detalle de la
-                // solicitud (mismo patrón que pasos 1-3, ver CLAUDE.md).
-                : [
-                    SizedBox(
-                      width: double.infinity,
-                      child: CustomPrimaryButton(
-                        text: 'Continuar',
-                        onPressed: () => Navigator.of(context).popUntil(
-                          ModalRoute.withName(AppRoutes.detalleSolicitud),
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: AppSpacing.md),
                   ],
-          ),
+                ),
+              ),
+            ),
+
+            // ── Botones fijos al pie ───────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                border: Border(
+                  top: BorderSide(color: AppColors.border, width: 1),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: widget.modoEdicion
+                    ? [
+                        // Guardar borrador
+                        SizedBox(
+                          width: double.infinity,
+                          child: CustomPrimaryButton(
+                            text: 'Guardar',
+                            icon: AppIcons.save,
+                            isLoading: _guardando,
+                            onPressed: _onGuardar,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+
+                        // Generar solicitud
+                        SizedBox(
+                          width: double.infinity,
+                          child: CustomSecondaryButton(
+                            text: 'Generar solicitud',
+                            icon: AppIcons.fileFactura,
+                            isLoading: _generando,
+                            onPressed: _onGenerarSolicitud,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        // Atrás
+                        SizedBox(
+                          width: double.infinity,
+                          child: CustomSecondaryButton(
+                            text: 'Atrás',
+                            icon: AppIcons.back,
+                            backgroundColor: AppColors.brandRaspberryAccessible,
+                            onPressed: widget.onAtras,
+                          ),
+                        ),
+                      ]
+                    // Modo solo-ver — solo "Continuar", vuelve al detalle de la
+                    // solicitud (mismo patrón que pasos 1-3, ver CLAUDE.md).
+                    : [
+                        SizedBox(
+                          width: double.infinity,
+                          child: CustomPrimaryButton(
+                            text: 'Continuar',
+                            onPressed: () => Navigator.of(context).popUntil(
+                              ModalRoute.withName(AppRoutes.detalleSolicitud),
+                            ),
+                          ),
+                        ),
+                      ],
+              ),
+            ),
+          ],
         ),
+        SolicitudProgresoOverlay(progreso: _progreso),
       ],
     );
   }
@@ -690,16 +712,18 @@ class _SeccionResumenComercial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // El importe de cada participante ya incluye el IGV (viene de la
-    // negociación/lead con impuesto incluido) — Inversión e IGV se extraen
-    // del total, no se le suman encima (Inversión + IGV == total siempre).
-    final total = context.watch<ParticipantesCubit>().state.totalInversion;
+    // Desde el 2026-07-16 cada importe de participante ya es la BASE sin
+    // IGV (ver _importeFijo en solicitud_participantes_view.dart), así que
+    // la suma de importes ES la inversión directamente — el IGV se SUMA
+    // encima para el importe total (revierte el fix del 2026-07-14, donde
+    // el importe venía con IGV incluido y había que extraerlo).
+    final inversion = context.watch<ParticipantesCubit>().state.totalInversion;
     final catalogState = context.watch<CatalogsBloc>().state;
     final igvPorcentaje = catalogState is CatalogsLoaded
         ? catalogState.igvPorcentaje
         : 0.0;
-    final inversion = total / (1 + igvPorcentaje / 100);
-    final igv = total - inversion;
+    final igv = inversion * igvPorcentaje / 100;
+    final importeTotal = inversion + igv;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -789,7 +813,7 @@ class _SeccionResumenComercial extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      total.toStringAsFixed(2),
+                      importeTotal.toStringAsFixed(2),
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: AppTextStyles.weightBold,

@@ -11,8 +11,6 @@ import 'package:app_crm/index_dependencies.dart'; // context.read, PlatformFile
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
-import 'solicitud_progreso_guardado.dart';
-
 Future<CrudResult> guardarSolicitudDesdeWizard(
   BuildContext context, {
   String idLead = '',
@@ -51,7 +49,6 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         participantes: participantes,
         igvPorcentaje: igvPorcentaje,
         esBorrador: esBorrador,
-        descuento: formState.descuentoLead,
         idTipoDocRuc: idTipoDocRuc,
       );
 

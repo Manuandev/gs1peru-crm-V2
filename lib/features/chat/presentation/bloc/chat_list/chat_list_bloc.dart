@@ -23,6 +23,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   String _filtroNumero = '';
   String _filtroOportunidadId = '';
 
+    final catalogState = context.read<CatalogsBloc>().state;
   ChatListBloc(this._getChats, this._getChatByIdChatCab)
     : super(const ChatListInitial()) {
     on<ChatListStarted>(_onStarted);

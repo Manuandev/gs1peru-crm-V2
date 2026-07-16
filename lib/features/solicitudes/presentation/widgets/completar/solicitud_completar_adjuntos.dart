@@ -11,6 +11,14 @@ import 'package:app_crm/core/index_core.dart';
 class BotonAdjuntar extends StatelessWidget {
   final String label;
   final PlatformFile? archivo;
+  // Nombre de un archivo de este tipo ya guardado en el backend (viene de
+  // getSolicitudDetalle() al reabrir la solicitud) — no hay bytes locales,
+  // solo el nombre. Se ignora si `archivo` ya tiene algo (el adjunto de
+  // esta sesión manda sobre el ya guardado). "Quitar" en este caso no
+  // borra nada del backend — solo limpia la referencia para poder elegir
+  // uno nuevo, que al guardar reemplaza al anterior (ver
+  // solicitud_completar_view.dart._quitarArchivo).
+  final String nombreExistente;
   final bool habilitado;
   final VoidCallback onAdjuntar;
   final VoidCallback onQuitar;
@@ -19,6 +27,7 @@ class BotonAdjuntar extends StatelessWidget {
     super.key,
     required this.label,
     required this.archivo,
+    this.nombreExistente = '',
     required this.habilitado,
     required this.onAdjuntar,
     required this.onQuitar,
@@ -26,7 +35,8 @@ class BotonAdjuntar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tieneArchivo = archivo != null;
+    final nombreMostrado = archivo?.name ?? nombreExistente;
+    final tieneArchivo = nombreMostrado.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -53,7 +63,7 @@ class BotonAdjuntar extends StatelessWidget {
         if (tieneArchivo) ...[
           const SizedBox(height: AppSpacing.xs),
           TarjetaArchivoAdjunto(
-            nombre: archivo!.name,
+            nombre: nombreMostrado,
             onQuitar: habilitado ? onQuitar : null,
           ),
         ],

@@ -6,7 +6,8 @@ import 'package:app_crm/index_dependencies.dart';
 ///
 /// Código esperado en el SP (columna TIPO_ACTOR, campo 9 de LCG) — mismo
 /// criterio que ChatMessage.direccionMensaje: 'ASE' | 'CLI' | 'AIA' + 'SIS'.
-enum TipoActor { sistema, botIA, cliente, asesor }
+// enum TipoActor { sistema, botIA, cliente, asesor }
+enum TipoActor { botIA, cliente, asesor }
 
 /// Evento del historial general de un lead (comentarios, cambios de estado,
 /// mensajes enviados, etc). Viene de CRM.T_LEAD_COMENTARIO vía el SP 'LCG',
@@ -42,7 +43,7 @@ class HistorialComentario extends Equatable {
     if (nombreUsuario.isNotEmpty) return nombreUsuario;
     return switch (tipoActor) {
       TipoActor.botIA => 'Bot IA',
-      TipoActor.sistema => 'Sistema',
+      // TipoActor.sistema => 'Sistema',
       TipoActor.cliente => 'Cliente',
       TipoActor.asesor => 'Asesor',
     };

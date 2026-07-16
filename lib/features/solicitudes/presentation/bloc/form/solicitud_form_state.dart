@@ -131,17 +131,20 @@ class SolicitudFormState {
   final PlatformFile? archivoVoucher;
   final PlatformFile? archivoOC;
 
-  /// Datos "de paso" de la negociación de origen — solo presentes cuando la
-  /// solicitud se generó desde una negociación con precio ya definido (ver
-  /// `SolicitudFormCubit.sembrarDatosNegociacion`). `cantidadEsperada` no
-  /// nulo es la señal de que este wizard viene "bloqueado": cada
-  /// participante debe usar `precioBaseLead` como importe (no editable, ver
-  /// `participante_form_sheet.dart`), la moneda del paso 3 queda fija en
-  /// `idMonedaBloqueada`, y `descuentoLead` se resta del total antes del
-  /// IGV al guardar (ver `guardarSolicitudDesdeWizard`). Al editar una
-  /// solicitud ya existente (numSol no vacío) esto siempre queda `null` —
-  /// no hay forma de recuperar la negociación de origen de una solicitud ya
-  /// guardada (ver CLAUDE.md).
+  /// Datos "de paso" de la negociación de origen — presentes tanto al crear
+  /// una solicitud nueva desde una negociación con precio ya definido (ver
+  /// `SolicitudFormCubit.sembrarDatosNegociacion`) como al reabrir una ya
+  /// guardada que tenga una (recuperada por `idLeadOrigen`, ver
+  /// `solicitud_completar_view.dart._cargarDetalle()` y CLAUDE.md — desde el
+  /// 2026-07-16 esto ya NO queda `null` al editar). `cantidadEsperada` no
+  /// nulo activa: la moneda del paso 3 queda fija en `idMonedaBloqueada`, la
+  /// cantidad de participantes debe calzar exacto al generar (ver
+  /// `validarSolicitudParaGenerar`), y el importe sugerido de un participante
+  /// nuevo se calcula desde `precioTotalLead`/`cantidadEsperada` (ver
+  /// `_importeFijo` en `solicitud_participantes_view.dart`) — el importe
+  /// sigue siendo siempre editable, esto es solo la sugerencia inicial.
+  /// `precioBaseLead`/`descuentoLead` ya no se usan para el importe del
+  /// participante — solo quedan para `_avisarSiPrecioTotalNoCalza`.
   final int? cantidadEsperada;
   final double precioBaseLead;
   final double descuentoLead;

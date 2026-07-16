@@ -24,7 +24,6 @@ abstract class SolicitudRepository {
     required List<ParticipanteLocal> participantes,
     required double igvPorcentaje,
     required bool esBorrador,
-    double descuento = 0,
     required String idTipoDocRuc,
   });
 

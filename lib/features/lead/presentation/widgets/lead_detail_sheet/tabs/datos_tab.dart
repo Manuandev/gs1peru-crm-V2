@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
@@ -192,22 +191,22 @@ class DatosTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           CustomOutlinedButton(
-            text: negociacion.idLead == 0 ? 'Crear lead' : 'Editar lead',
-            icon: negociacion.idLead == 0 ? AppIcons.add : AppIcons.edit,
+            text: chat.idContacto == 0 ? 'Crear contacto' : 'Editar contacto',
+            icon: chat.idContacto == 0 ? AppIcons.add : AppIcons.edit,
             onPressed: () {
-              if (onCerrar != null) {
-                onCerrar!();
-              } else {
-                NavigationService.goBack();
-              }
-              NavigationService.navigateTo(
-                AppRoutes.detalleEditarLead,
-                arguments: {
-                  'idLead': negociacion.idLead,
-                  'cubit': cubit,
-                  'desdeConversacion': true,
-                },
-              );
+              // if (onCerrar != null) {
+              //   onCerrar!();
+              // } else {
+              //   NavigationService.goBack();
+              // }
+              // NavigationService.navigateTo(
+              //   AppRoutes.detalleEditarLead,
+              //   arguments: {
+              //     'idLead': negociacion.idLead,
+              //     'cubit': cubit,
+              //     'desdeConversacion': true,
+              //   },
+              // );
             },
           ),
           const SizedBox(height: AppSpacing.md),

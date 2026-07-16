@@ -24,8 +24,8 @@ class HistorialComentarioModel extends HistorialComentario {
         return TipoActor.asesor;
       case 'CLI':
         return TipoActor.cliente;
-      case 'SIS':
-        return TipoActor.sistema;
+      // case 'SIS':
+      //   return TipoActor.sistema;
       case 'AIA':
       default:
         return TipoActor.botIA;
@@ -63,8 +63,8 @@ class HistorialComentarioModel extends HistorialComentario {
     switch (ParseUtils.str(campos, 6).toUpperCase()) {
       case 'ASE':
         return TipoActor.asesor;
-      case 'SIS':
-        return TipoActor.sistema;
+      // case 'SIS':
+      //   return TipoActor.sistema;
       case 'AIA':
       default:
         return TipoActor.botIA;

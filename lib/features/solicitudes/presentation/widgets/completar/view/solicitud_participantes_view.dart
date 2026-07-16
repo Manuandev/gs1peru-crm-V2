@@ -37,11 +37,38 @@ class _SolicitudParticipantesViewState
   // true mientras se guarda el borrador (botón "Guardar")
   bool _guardando = false;
 
+  // Pasos del guardado (Guardar solicitud → Subiendo voucher/O.C.) para
+  // el overlay de progreso — ver solicitud_progreso_guardado.dart.
+  final SolicitudProgreso _progreso = SolicitudProgreso();
+
+  @override
+  void dispose() {
+    _progreso.dispose();
+    super.dispose();
+  }
+
   // null si esta solicitud no viene de una negociación con precio ya
-  // definido — en ese caso el importe del participante sí se puede editar.
+  // definido. Cuando sí viene, el importe sugerido ya no es
+  // `precioBaseLead` (precio por unidad ANTES del descuento) — es el precio
+  // total de la negociación (ya con el descuento aplicado) repartido entre
+  // la cantidad esperada de participantes, sin IGV (el IGV se vuelve a
+  // sumar en el total del footer, ver _ResumenInversion). Ej.: precio total
+  // 280, cantidad 2 → 140 c/u con IGV → 118.64 sin IGV. `precioBaseLead`
+  // sigue existiendo, pero solo para _avisarSiPrecioTotalNoCalza — ya no
+  // para esto. El importe sigue siendo editable siempre (ver
+  // participante_form_sheet.dart), esto es solo una sugerencia inicial.
   double? _importeFijo(BuildContext context) {
     final formState = context.read<SolicitudFormCubit>().state;
-    return formState.cantidadEsperada != null ? formState.precioBaseLead : null;
+    final cantidadEsperada = formState.cantidadEsperada;
+    if (cantidadEsperada == null || cantidadEsperada == 0) return null;
+
+    final catalogState = context.read<CatalogsBloc>().state;
+    final igvPorcentaje = catalogState is CatalogsLoaded
+        ? catalogState.igvPorcentaje
+        : 0.0;
+
+    final importeConIgv = formState.precioTotalLead / cantidadEsperada;
+    return importeConIgv / (1 + igvPorcentaje / 100);
   }
 
   void _abrirFormularioNuevo(BuildContext context) {
@@ -101,14 +128,14 @@ class _SolicitudParticipantesViewState
     if (_guardando) return;
     setState(() => _guardando = true);
 
-    final result = await guardarSolicitudDesdeWizard(
+    final result = await guardarBorradorCompleto(
       context,
       idLead: widget.solicitud.idLead,
-      esBorrador: true,
+      progreso: _progreso,
     );
-    if (result is CrudOk && mounted) await subirArchivosPendientes(context);
 
     if (!mounted) return;
+    _progreso.reset();
     setState(() => _guardando = false);
     mostrarResultadoGuardarSolicitud(context, result);
   }
@@ -119,174 +146,200 @@ class _SolicitudParticipantesViewState
     final igvPorcentaje = catalogState is CatalogsLoaded
         ? catalogState.igvPorcentaje
         : 0.0;
+    // Cantidad exacta que exige la negociación de origen (null si esta
+    // solicitud no viene de una) — se muestra junto al conteo actual para
+    // que el asesor sepa cuánto le falta/sobra antes de generar. Solo
+    // "Generar solicitud" exige que calcen exacto (ver
+    // validarSolicitudParaGenerar en solicitud_guardar_helper.dart);
+    // "Guardar" (borrador) deja pasar cualquier cantidad.
+    final cantidadEsperada = context
+        .watch<SolicitudFormCubit>()
+        .state
+        .cantidadEsperada;
 
     return BlocBuilder<ParticipantesCubit, ParticipantesState>(
       builder: (context, state) {
-        return Column(
+        return Stack(
           children: [
-            const SizedBox(height: 12),
+            Column(
+              children: [
+                const SizedBox(height: 12),
 
-            // ── Encabezado sección participantes ───────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              AppIcons.users,
-                              color: AppColors.primary,
-                              size: AppSizing.iconMd,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              'Participantes',
-                              style: AppTextStyles.titleSmall.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: AppTextStyles.weightBold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Row(
-                          children: [
-                            const Icon(
-                              AppIcons.circuloRelleno,
-                              color: AppColors.success,
-                              size: 10,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              '${state.participantes.length} participante/s',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                // ── Encabezado sección participantes ───────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
                   ),
-
-                  // Botones
-                  Row(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      _BotonSeccionSmall(
-                        icono: AppIcons.add,
-                        label: 'Nuevo',
-                        onTap: widget.modoEdicion
-                            ? () => _abrirFormularioNuevo(context)
-                            : () {},
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  AppIcons.users,
+                                  color: AppColors.primary,
+                                  size: AppSizing.iconMd,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Text(
+                                  'Participantes',
+                                  style: AppTextStyles.titleSmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: AppTextStyles.weightBold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.xxs),
+                            Row(
+                              children: [
+                                const Icon(
+                                  AppIcons.circuloRelleno,
+                                  color: AppColors.success,
+                                  size: 10,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Text(
+                                  cantidadEsperada != null
+                                      ? '${state.participantes.length} participante/s · Máximo: $cantidadEsperada'
+                                      : '${state.participantes.length} participante/s',
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: AppSpacing.xs),
-                      // _BotonSeccionSmall(
-                      //   icono: AppIcons.downloadFile,
-                      //   label: 'Carga masiva',
-                      //   onTap: () => context.goToCargaMasivaParticipantes(
-                      //     cubit: context.read<ParticipantesCubit>(),
-                      //   ),
-                      // ),
-                      // const SizedBox(width: AppSpacing.xs),
-                      _BotonIconoSmall(
-                        icono: AppIcons.delete,
-                        color: AppColors.error,
-                        onTap: state.participantes.isEmpty
-                            ? () {}
-                            : () => _confirmarEliminarTodos(context),
+
+                      // Botones
+                      Row(
+                        children: [
+                          _BotonSeccionSmall(
+                            icono: AppIcons.add,
+                            label: 'Nuevo',
+                            onTap: widget.modoEdicion
+                                ? () => _abrirFormularioNuevo(context)
+                                : () {},
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          // _BotonSeccionSmall(
+                          //   icono: AppIcons.downloadFile,
+                          //   label: 'Carga masiva',
+                          //   onTap: () => context.goToCargaMasivaParticipantes(
+                          //     cubit: context.read<ParticipantesCubit>(),
+                          //   ),
+                          // ),
+                          // const SizedBox(width: AppSpacing.xs),
+                          _BotonIconoSmall(
+                            icono: AppIcons.delete,
+                            color: AppColors.error,
+                            onTap: state.participantes.isEmpty
+                                ? () {}
+                                : () => _confirmarEliminarTodos(context),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
 
-            // ── Lista de participantes ──────────────────────────────
-            Expanded(
-              child: state.participantes.isEmpty
-                  ? const AppEmptyView(message: 'Sin participantes registrados')
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.xs,
-                      ),
-                      itemCount: state.participantes.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) {
-                        final p = state.participantes[index];
-                        return _ParticipanteCard(
-                          participante: p,
-                          habilitado: widget.modoEdicion,
-                          onEditar: () => _abrirFormularioEditar(context, p),
-                          onEliminar: () =>
-                              context.read<ParticipantesCubit>().eliminar(p.id),
-                        );
-                      },
-                    ),
-            ),
-
-            // ── Resumen inversión ───────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: _ResumenInversion(
-                total: state.totalInversion,
-                igvPorcentaje: igvPorcentaje,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-
-            // ── Botones pie ─────────────────────────────────────────
-            // "Continuar" ya no exige participantes — toda la validación se
-            // centralizó en "Generar solicitud" (ver solicitud_guardar_helper.dart,
-            // validarSolicitudParaGenerar). En modo solo-ver (modoEdicion ==
-            // false) solo se muestra "Continuar", es un recorrido de lectura.
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.sm,
-              ),
-              child: widget.modoEdicion
-                  ? Row(
-                      children: [
-                        Expanded(
-                          child: CustomSecondaryButton(
-                            text: 'Atrás',
-                            icon: AppIcons.back,
-                            backgroundColor: AppColors.brandRaspberryAccessible,
-                            onPressed: widget.onAtras,
+                // ── Lista de participantes ──────────────────────────────
+                Expanded(
+                  child: state.participantes.isEmpty
+                      ? const AppEmptyView(
+                          message: 'Sin participantes registrados',
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.xs,
                           ),
+                          itemCount: state.participantes.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: AppSpacing.sm),
+                          itemBuilder: (context, index) {
+                            final p = state.participantes[index];
+                            return _ParticipanteCard(
+                              participante: p,
+                              habilitado: widget.modoEdicion,
+                              onEditar: () =>
+                                  _abrirFormularioEditar(context, p),
+                              onEliminar: () => context
+                                  .read<ParticipantesCubit>()
+                                  .eliminar(p.id),
+                            );
+                          },
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: CustomSecondaryButton(
-                            text: 'Guardar',
-                            icon: AppIcons.save,
-                            isLoading: _guardando,
-                            onPressed: _onGuardar,
-                          ),
+                ),
+
+                // ── Resumen inversión ───────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
+                  child: _ResumenInversion(
+                    total: state.totalInversion,
+                    igvPorcentaje: igvPorcentaje,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+
+                // ── Botones pie ─────────────────────────────────────────
+                // "Continuar" ya no exige participantes — toda la validación se
+                // centralizó en "Generar solicitud" (ver solicitud_guardar_helper.dart,
+                // validarSolicitudParaGenerar). En modo solo-ver (modoEdicion ==
+                // false) solo se muestra "Continuar", es un recorrido de lectura.
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: widget.modoEdicion
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: CustomSecondaryButton(
+                                text: 'Atrás',
+                                icon: AppIcons.back,
+                                backgroundColor:
+                                    AppColors.brandRaspberryAccessible,
+                                onPressed: widget.onAtras,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: CustomSecondaryButton(
+                                text: 'Guardar',
+                                icon: AppIcons.save,
+                                isLoading: _guardando,
+                                onPressed: _onGuardar,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: CustomPrimaryButton(
+                                text: 'Continuar →',
+                                onPressed: () => _onContinuar(context, state),
+                              ),
+                            ),
+                          ],
+                        )
+                      : CustomPrimaryButton(
+                          text: 'Continuar →',
+                          onPressed: () => _onContinuar(context, state),
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: CustomPrimaryButton(
-                            text: 'Continuar →',
-                            onPressed: () => _onContinuar(context, state),
-                          ),
-                        ),
-                      ],
-                    )
-                  : CustomPrimaryButton(
-                      text: 'Continuar →',
-                      onPressed: () => _onContinuar(context, state),
-                    ),
+                ),
+              ],
             ),
+            SolicitudProgresoOverlay(progreso: _progreso),
           ],
         );
       },
@@ -576,9 +629,12 @@ class _Campo extends StatelessWidget {
 // ── Resumen de inversión ──────────────────────────────────────────────────────
 
 class _ResumenInversion extends StatelessWidget {
-  // Suma de los importes de participantes — ya incluye el IGV (viene de la
-  // negociación/lead con impuesto incluido). Inversión e IGV se extraen de
-  // este total, no se le suman encima.
+  // Suma de los importes de participantes — desde el 2026-07-16 cada
+  // importe ya es la BASE sin IGV (ver _importeFijo), así que `total` acá
+  // ES la inversión directamente. El IGV se SUMA encima para el importe
+  // total — revierte el fix del 2026-07-14 (donde el importe venía con IGV
+  // incluido y había que extraerlo); con la nueva definición del importe,
+  // sumar es lo correcto.
   final double total;
   final double igvPorcentaje;
 
@@ -586,8 +642,9 @@ class _ResumenInversion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inversion = total / (1 + igvPorcentaje / 100);
-    final igv = total - inversion;
+    final inversion = total;
+    final igv = inversion * igvPorcentaje / 100;
+    final importeTotal = inversion + igv;
     final igvLabel = igvPorcentaje % 1 == 0
         ? igvPorcentaje.toInt().toString()
         : igvPorcentaje.toStringAsFixed(1);
@@ -632,7 +689,11 @@ class _ResumenInversion extends StatelessWidget {
                   negrita: false,
                 ),
                 const Divider(height: 1, thickness: 0.5),
-                _FilaMonto(label: 'Importe total', monto: total, negrita: true),
+                _FilaMonto(
+                  label: 'Importe total',
+                  monto: importeTotal,
+                  negrita: true,
+                ),
               ],
             ),
           ),

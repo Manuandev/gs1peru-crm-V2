@@ -50,6 +50,10 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // true mientras se guarda el borrador (botón "Guardar")
   bool _guardando = false;
 
+  // Pasos del guardado (Guardar solicitud → Subiendo voucher/O.C.) para
+  // el overlay de progreso — ver solicitud_progreso_guardado.dart.
+  final SolicitudProgreso _progreso = SolicitudProgreso();
+
   // Controladores — Datos de facturación
   final _ctrlNumDoc = TextEditingController();
   final _ctrlNombresRazon = TextEditingController();
@@ -202,14 +206,14 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _construirDatosFacturacion(paisCelular),
     );
 
-    final result = await guardarSolicitudDesdeWizard(
+    final result = await guardarBorradorCompleto(
       context,
       idLead: widget.solicitud.idLead,
-      esBorrador: true,
+      progreso: _progreso,
     );
-    if (result is CrudOk && mounted) await subirArchivosPendientes(context);
 
     if (!mounted) return;
+    _progreso.reset();
     setState(() => _guardando = false);
     mostrarResultadoGuardarSolicitud(context, result);
   }
@@ -348,6 +352,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     _ctrlDireccion.dispose();
     _ctrlNit.dispose();
     _ctrlObservaciones.dispose();
+    _progreso.dispose();
     super.dispose();
   }
 
@@ -652,6 +657,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         ),
         if (_buscandoDocumento)
           const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+        SolicitudProgresoOverlay(progreso: _progreso),
       ],
     );
   }

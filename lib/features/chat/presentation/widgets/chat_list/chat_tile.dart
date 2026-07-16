@@ -95,10 +95,10 @@ class ChatTile extends StatelessWidget {
                       runSpacing: AppSpacing.xxs,
                       children: [
                         _ChipInfo(
-                          icon: AppIcons.lightning,
-                          label: 'Derivado por IA',
+                          icon: AppIcons.sparkle,
                           bgColor: AppColors.datoSubestadobg,
                           fgColor: AppColors.datoSubestadoFg,
+                          label: null,
                         ),
                         _ChipInfo(
                           icon: AppIcons.ia,
@@ -367,7 +367,7 @@ class _InfoDerechaState extends State<_InfoDerecha> {
 
 class _ChipInfo extends StatelessWidget {
   final IconData icon;
-  final String label;
+  final String? label;
   final Color bgColor;
   final Color fgColor;
 
@@ -393,14 +393,16 @@ class _ChipInfo extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: AppSizing.iconSm, color: fgColor),
-          const SizedBox(width: AppSpacing.xxs),
-          Text(
-            label,
-            style: AppTextStyles.labelVerySmall8.copyWith(
-              color: fgColor,
-              height: 1,
+          if (label != null) ...[
+            const SizedBox(width: AppSpacing.xxs),
+            Text(
+              label!,
+              style: AppTextStyles.labelVerySmall8.copyWith(
+                color: fgColor,
+                height: 1,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

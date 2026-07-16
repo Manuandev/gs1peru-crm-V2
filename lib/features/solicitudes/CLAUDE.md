@@ -1,5 +1,184 @@
 # Solicitudes Feature
 
+## Importe de participante ya no bloqueado + nueva fórmula sin IGV + recuperar negociación al editar (2026-07-16)
+Pedido de negocio (jefe del usuario) sobre cómo debería comportarse el importe por participante —
+cambio grande, toca desde el SP hasta la UI:
+
+- **Importe siempre editable** — `participante_form_sheet.dart` ya no tiene `_importeBloqueado`
+  (se eliminó el campo por completo, antes siempre `true`). El asesor puede ajustar el importe de
+  cualquier participante libremente, venga o no de una negociación — decisión explícita: **no** se
+  valida el importe de la solicitud contra el precio de la negociación, son cosas distintas.
+- **Nueva fórmula del importe sugerido** (`_importeFijo()`, duplicado a propósito en
+  `solicitud_participantes_view.dart` y `solicitud_completar_view.dart`, mismo patrón que ya
+  documentaba este archivo): ya no es `precioBaseLead` (precio por unidad ANTES del descuento,
+  autocompletado al elegir Oportunidad en `lead/`) — ahora es
+  `(precioTotalLead / cantidadEsperada) / (1 + igvPorcentaje/100)`. `precioTotalLead`
+  (`Negociacion.precio`, "Costo final") ya viene neto del descuento
+  (`precioBase × cantidad − descuento = precio`, confirmado con números reales del usuario:
+  150.55 × 2 − 21.10 = 280.00), así que el descuento **no** se vuelve a restar acá — ya está
+  repartido implícitamente al dividir entre `cantidadEsperada`. Ejemplo real: precio total 280,
+  cantidad 2 → 140 c/u con IGV → 118.64 sin IGV, ese es el valor que se sugiere (el asesor lo
+  puede cambiar). `precioBaseLead`/`descuentoLead` siguen existiendo en `SolicitudFormState` pero
+  **solo** para `_avisarSiPrecioTotalNoCalza` (el aviso de consistencia) — ya no para el importe.
+  El divisor es siempre `cantidadEsperada` (la cantidad fija de la negociación), nunca la cantidad
+  actual de participantes ya agregados — así el sugerido no cambia según cuántos lleves metidos.
+- **El footer de totales vuelve a SUMAR el IGV, no a extraerlo** — revierte el fix del
+  2026-07-14 ("IGV invertido en Resumen/Participantes"), que asumía que el importe YA incluía
+  IGV. Con la nueva definición (importe = base sin IGV, por diseño), sumar es lo correcto:
+  `_ResumenInversion` (`solicitud_participantes_view.dart`) y `_SeccionResumenComercial`
+  (`solicitud_resumen_view.dart`) ahora hacen `inversion = sum(importes)`,
+  `igv = inversion × igv%`, `importeTotal = inversion + igv` — antes hacían la división inversa
+  (`inversion = total / (1+igv%)`). Si todo calza (cantidad de participantes = cantidadEsperada,
+  nadie editó el importe sugerido), `importeTotal` debería coincidir con `precioTotalLead` (el
+  costo final de la negociación) — esa es justo la validación que pidió el usuario.
+- **Bug real encontrado al verificar la cuenta — el descuento se restaba dos veces en el
+  guardado.** `SolicitudRemoteDatasource.guardarSolicitud()` hacía
+  `dcImporte = sum(participantes.importe) - descuento` — correcto con la fórmula VIEJA (donde el
+  importe de cada participante era el precio base completo, sin descuento repartido), pero con la
+  fórmula nueva el descuento YA está repartido dentro de cada `importe` (via `precioTotalLead`,
+  que ya es neto). Restarlo de nuevo a nivel agregado inflaba el descuento al doble y el
+  `DC_IMPORTE_TOTAL` final ya NO coincidía con el precio total de la negociación (con los números
+  del ejemplo: 216.19 en vez de 280.00). Se quitó el parámetro `descuento` de toda la cadena
+  (`SolicitudRemoteDatasource.guardarSolicitud()` → `SolicitudRepository`/`SolicitudRepositoryImpl`
+  → `GuardarSolicitudUseCase` → `guardarSolicitudDesdeWizard`) — ya no se usa para nada, el
+  descuento ya viene aplicado en cada `importe`. `dcImporte` ahora es directo
+  `sum(participantes.importe)`, sin resta ni `.clamp()` (la suma de importes no-negativos nunca
+  puede ser negativa).
+- **El cálculo de IGV por participante en el guardado (`igv = p.importe * igvPorcentaje / 100`,
+  mismo archivo, sección de participantes/detalle) ya estaba escrito asumiendo `importe` como
+  base** — con la fórmula nueva esto queda correcto tal cual, sin tocarlo; de hecho resuelve un
+  pendiente viejo que este mismo archivo tenía anotado ("IGV invertido... pendiente, no tocado")
+  en vez de crear uno nuevo.
+- **Recuperar la negociación de origen al EDITAR una solicitud ya guardada** — antes esto era
+  imposible: `Solicitud.idLead` solo viajaba como parámetro de navegación al crear, nunca se podía
+  recuperar después (el SP no lo traía de vuelta), así que `cantidadEsperada`/`precioTotalLead`
+  siempre quedaban `null` al editar, y agregar un participante nuevo ahí no sugería nada. Motivo
+  real por el que esto importa (dado por el usuario): "Guardar" (borrador) permite guardar
+  incomplete — incluso sin participantes — así que no basta con que el dato viva solo en memoria
+  durante la sesión de creación.
+  - **`CSV_SOLICITUD_LST_APP.sql`, task `'DT'`**: se agregó un `LEFT JOIN` nuevo a
+    `CRM.T_LEAD_TECMSOLINSCRIPCION01` (tabla que ya existía, ya vincula `NUMSOL`↔`ID_LEAD` — el
+    `INSERT` a esa tabla ya pasaba en la rama de creación del task `'U'`, desde siempre, en
+    CUALQUIER primer guardado sea borrador o no) y se seleccionó `LI.ID_LEAD` como campo nuevo al
+    final (`campos[39]`).
+  - **Flutter**: `SolicitudDetalleModel.idLeadOrigen` (nuevo campo, parseado con guard
+    `campos.length > 39` por si el SP no está desplegado todavía). En
+    `solicitud_completar_view.dart._cargarDetalle()`, después de cargar participantes, si
+    `detalle.idLeadOrigen` es un id válido se llama `GetLeadDetalleUseCase` (mismo patrón que ya
+    usan `ContactoNegociacionCard`/`NegociacionesTab` en `lead/`) para traer la negociación
+    **fresca** (no un snapshot congelado — usa el precio/cantidad/descuento ACTUALES de la
+    negociación, que pueden haber cambiado desde que se creó la solicitud, decisión explícita del
+    usuario) y llama `SolicitudFormCubit.sembrarDatosNegociacion(...)` con
+    `cantidad`/`precioBase`/`descuento`/`idMoneda`/`precioTotal` (sin los campos de
+    contacto/prellenado — esos solo aplican en la rama de creación, `_prellenarDesdeNegociacion()`,
+    que nunca se llama en el flujo de edición). Envuelto en su propio `try/catch` silencioso — si
+    falla (ej. lead borrado, sin conexión), la solicitud igual carga normal, solo sin sugerencia de
+    importe para participantes nuevos.
+
+## Reemplazar voucher/O.C. ya subidos + "Máximo" de participantes (2026-07-16)
+Seguimiento del punto anterior — el usuario probó el flujo completo (crear con voucher, guardar
+borrador, reabrir días después para generar, querer reemplazar el voucher viejo por uno actual y
+agregar el O.C.) y encontró 2 gaps más:
+
+- **Bug real — el nombre del archivo ya subido se perdía apenas se editaba cualquier otro
+  campo.** `_construirDatosSolicitante()` (`solicitud_completar_view.dart`, llamado en **cada**
+  sync — cualquier tecla en cualquier campo del paso 1) armaba
+  `archivoVoucherNombre: archivos.archivoVoucher?.name ?? ''` — `archivos` es
+  `SolicitudFormCubit.state`, o sea el `PlatformFile?` de **esta sesión**, nunca el nombre que
+  trajo el backend. El fix de la sesión anterior (mostrar `nombreExistente` en `BotonAdjuntar`)
+  solo se veía bien hasta el primer campo editado — después `DatosSolicitante.archivoVoucherNombre`
+  quedaba en `''` de nuevo (el `nombreExistente` que se le pasaba al widget venía de ahí). Se
+  corrigió sacando el nombre "ya guardado" de `DatosSolicitante`/`SolicitudFormCubit` por
+  completo para este propósito — ahora vive en 2 campos propios del `State`
+  (`_archivoVoucherExistente`/`_archivoOCExistente`, `String`), poblados una sola vez en
+  `_cargarDetalle()` desde `detalle.archivos` (antes se armaban inline solo para el constructor
+  de `DatosSolicitante`). `_construirDatosSolicitante()` ahora hace
+  `archivos.archivoVoucher?.name ?? _archivoVoucherExistente` (sesión actual primero, si no hay
+  cae al ya guardado) — con esto `DatosSolicitante.archivoVoucherNombre` (usado en el "Documentos
+  adjuntos" del Resumen) ya no se pierde con cada tecla.
+- **"Quitar" ahora funciona también sobre un archivo ya guardado — no borra nada del backend,
+  solo habilita elegir uno nuevo.** No existe una operación de borrado-sin-reemplazo en el SP
+  (`CSV_SOLICITUD_CUD_APP`, task `'AR'`) — lo único que hay es "subir un archivo de ese tipo",
+  que por el fix del `DELETE FROM ... WHERE NUMSOL=@NUMSOL AND TIPO=@TIPO_ARCHIVO` (ver sección de
+  arriba) reemplaza limpiamente al anterior del mismo tipo. Entonces `_quitarArchivo(esVoucher)`
+  (`solicitud_completar_view.dart`) ahora revisa cuál de los 2 casos aplica: si hay un
+  `PlatformFile` de esta sesión, lo quita del cubit (comportamiento de siempre); si no, pero sí
+  hay un `_archivoVoucherExistente`/`_archivoOCExistente` no vacío, solo lo limpia con `setState`
+  (sin llamar al backend) — eso re-habilita el botón "Adjuntar" para elegir el archivo nuevo, que
+  al presionar "Guardar"/"Generar solicitud" sube y reemplaza al anterior en la misma llamada
+  `'AR'`. `BotonAdjuntar` (`solicitud_completar_adjuntos.dart`) se simplificó — ya no distingue
+  "archivo de sesión" vs "archivo existente" con 2 ramas de render, solo calcula
+  `nombreMostrado = archivo?.name ?? nombreExistente` y muestra "quitar" siempre que haya un
+  nombre que mostrar (ambos casos llaman el mismo callback `onQuitar`, que del lado del padre ya
+  sabe cuál de los 2 escenarios resolver).
+- **Confirmado sin cambios — "Guardar" sin restricción de cantidad, "Generar solicitud" exige
+  cantidad exacta.** Ya estaba implementado (ver sección de abajo, "Validación movida a..." —
+  `validarSolicitudParaGenerar` compara `participantes.length != cantidadEsperada`); el usuario lo
+  pidió de nuevo como confirmación, no había nada que corregir acá.
+- **"Máximo: N" junto al conteo de participantes** — el encabezado de la sección Participantes
+  (paso 2, `solicitud_participantes_view.dart`) ahora muestra
+  `"$cantidad participante/s · Máximo: $cantidadEsperada"` cuando la solicitud viene de una
+  negociación con cantidad ya definida (`SolicitudFormCubit.state.cantidadEsperada != null`) — si
+  no viene de una negociación, se queda solo con `"$cantidad participante/s"` como antes.
+
+## Validación movida a "Generar solicitud" + stepper de progreso + fix de archivos ya subidos (2026-07-16)
+Pedido por el usuario en la misma sesión que los bugs de Comprobante/Nacionalidad (ver sección de
+abajo) — cuatro cambios relacionados con guardar/generar y subir archivos:
+
+- **"Continuar" (pasos 1, 2, 3) ya no valida ni bloquea** — se eliminaron los getters
+  `_formCompleto` (pasos 1 y 3, en `solicitud_completar_view.dart`/`solicitud_facturacion_view.dart`)
+  y el gate `participantes.isEmpty ? null : ...` (paso 2, `solicitud_participantes_view.dart`). El
+  botón siempre avanza, sin snackbar de error. Motivo (decisión explícita del usuario): antes cada
+  paso exigía estar completo para poder seguir, lo cual no tenía sentido para "Guardar" (borrador,
+  nunca debería exigir nada) y tampoco dejaba moverse libremente por el wizard. La lógica de
+  "saltar Facturación" (todos invitados) del paso 2 **no se tocó** — es routing entre pasos, no
+  validación bloqueante.
+- **Toda la validación de campos obligatorios se centralizó en "Generar solicitud"** —
+  `validarSolicitudParaGenerar(BuildContext)` (`solicitud_guardar_helper.dart`) revisa, en este
+  orden: solicitante completo (mismos campos que el viejo `_formCompleto` del paso 1), al menos 1
+  participante, cantidad exacta de participantes si viene de una negociación con
+  `cantidadEsperada` (ya existía, se movió acá), y facturación completa (mismos campos que el
+  viejo `_formCompleto` del paso 3) **solo si algún participante no es invitado** (mismo criterio
+  `esInvitado` que ya usaba el paso 2 para saltar Facturación). Retorna `null` si todo está
+  completo, o un `SolicitudValidacion(paso, mensaje)` — `solicitud_resumen_view.dart._onGenerarSolicitud()`
+  usa ese `paso` para navegar directo ahí (`widget.onEditarPaso(paso)`) antes de mostrar el
+  mensaje, en vez de solo fallar en Resumen sin decir dónde falta algo. **"Guardar" (borrador)
+  nunca llama esta función — sigue sin validar nada, deja pasar cualquier estado a medio llenar.**
+- **Stepper de progreso paso a paso en los 5 botones Guardar/Generar** — nuevo
+  `SolicitudProgreso` (`ValueNotifier<List<PasoProgresoItem>>`) + `SolicitudProgresoOverlay`
+  (`solicitud_progreso_guardado.dart`, mismo patrón visual que `AppLoadingOverlay` de core pero
+  con una lista de pasos en vez de un mensaje único). Cada paso aparece con spinner al iniciar
+  (`progreso.iniciarPaso(texto)`) y pasa a check al completarse (`progreso.completarPasoActual()`)
+  — los pasos que no aplican (sin archivo adjunto) ni se agregan a la lista. Textos: "Guardando
+  solicitud..."/"Generando solicitud..." (según `esBorrador`), "Subiendo voucher...", "Subiendo
+  O.C....". `generarSolicitudCompleta()`/`guardarBorradorCompleto()` (esta última nueva, espejo de
+  `generarSolicitudCompleta` pero con `esBorrador: true` y sin validación previa — reemplaza el
+  chaining manual `guardarSolicitudDesdeWizard` + `subirArchivosPendientes` que tenían los 4
+  botones "Guardar") reciben un `progreso` opcional y, si viene, dejan el último check visible
+  ~500ms antes de retornar (para que se alcance a ver antes de navegar/cerrar). Cada uno de los 5
+  `State` (`solicitud_completar_view.dart`, `solicitud_participantes_view.dart`,
+  `solicitud_facturacion_view.dart`, `solicitud_resumen_view.dart` ×2) tiene su propio
+  `SolicitudProgreso` (`dispose()` lo libera) y lo resetea (`_progreso.reset()`) apenas termina el
+  flujo, antes de mostrar el snackbar o navegar.
+- **Bug real corregido — paso 1 no mostraba un voucher/O.C. ya subido al reabrir la solicitud.**
+  `BotonAdjuntar` (`solicitud_completar_adjuntos.dart`) solo miraba `archivo` (`PlatformFile?`, el
+  adjuntado *en esta sesión*) — el nombre que sí trae bien el backend
+  (`DatosSolicitante.archivoVoucherNombre`/`archivoOCNombre`, parseado desde `detalle.archivos`
+  en `_cargarDetalle()`) nunca se conectaba a este widget, solo se usaba en el Resumen (paso 4).
+  Se agregó el parámetro `nombreExistente` (default `''`) — si `archivo` es `null` pero
+  `nombreExistente` no está vacío, se muestra la misma `TarjetaArchivoAdjunto` (sin botón
+  "quitar" — no hay una operación de borrado de archivo ya subido, solo reemplazo subiendo uno
+  nuevo del mismo tipo) y el botón "Adjuntar" se deshabilita — un archivo por tipo, igual que con
+  `archivo`. `solicitud_completar_view.dart` pasa
+  `formState.solicitante?.archivoVoucherNombre/archivoOCNombre` a los 2 `BotonAdjuntar` del
+  paso 1.
+- **Confirmado (sin cambios) — `subirArchivosPendientes()` nunca llama el task `'AR'` si no hay
+  nada que subir.** Los `if (voucher != null)`/`if (oc != null)` ya evitaban esto — si el asesor
+  no adjunta nada en la sesión (o reabre una solicitud que ya tiene un archivo y no lo toca, caso
+  en que el `PlatformFile` local sigue `null` porque no hay bytes que reconstruir desde el
+  backend), ninguno de los 2 se llama. Esto también evita re-subir un archivo ya guardado sin que
+  el usuario haya hecho nada.
+
 ## Bugs reales — Comprobante y Nacionalidad de facturación no sobrevivían a reabrir la solicitud (2026-07-16)
 Reportados por el usuario ("el tipo de comprobante no sé por qué al volver a entrar no carga, y
 lo de nacionalidad de facturación tampoco") y confirmados contra el `.sql` real de los 2 SPs que
@@ -985,7 +1164,9 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   `solicitud_completar_view.dart._cargarDetalle()` resuelve los labels contra `CatalogsBloc`.
   Se llama una sola vez, al entrar al paso 1 (`modoEdicion` true o false); si `numSol` viene
   vacío (creación nueva desde una negociación) se salta el fetch y el wizard arranca en
-  blanco.
+  blanco. Desde el 2026-07-16 también trae `idLeadOrigen` (campos[39], `LEFT JOIN` nuevo a
+  `CRM.T_LEAD_TECMSOLINSCRIPCION01`) — usado para recuperar la negociación de origen al editar
+  una solicitud ya guardada (ver "Importe de participante ya no bloqueado..." arriba).
 - `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'U'`, body `cabecera¦...¯detalle¦...¬detalle¦...¯U`)
   → `SolicitudRemoteDatasource.guardarSolicitud()`. Crea (si `numSol` viene vacío) o
   actualiza (si ya existe) cabecera + facturación + participantes de una solicitud, todo en

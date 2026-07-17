@@ -31,6 +31,11 @@ class SolicitudCompletarView extends StatefulWidget {
 }
 
 class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
+  // Valida los campos obligatorios (*) del paso in situ — cada CustomTextField/
+  // CustomComboField con `validator` se pone en rojo con su propio mensaje al
+  // fallar `_formKey.currentState.validate()`, en vez de un snackbar genérico.
+  final _formKey = GlobalKey<FormState>();
+
   // true mientras se trae la solicitud del backend (task 'DT') — bloquea el
   // formulario para que los combos (que solo leen su valor inicial una vez,
   // en su propio initState) no se construyan antes de tener los datos.
@@ -280,30 +285,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             .firstOrNull;
       }
     }
-
-    _avisarSiPrecioTotalNoCalza(formState);
-  }
-
-  // Aviso de consistencia (no bloquea nada) — si precioBase × cantidad −
-  // descuento no calza con el precio total que tenía la negociación
-  // (`precioTotalLead`), es señal de que la negociación se editó/desfasó
-  // después de fijar esos valores. Se muestra una sola vez, al entrar.
-  void _avisarSiPrecioTotalNoCalza(SolicitudFormState formState) {
-    if (formState.precioTotalLead <= 0) return;
-    final cantidad = formState.cantidadEsperada ?? 0;
-    final calculado =
-        (formState.precioBaseLead * cantidad) - formState.descuentoLead;
-    if ((calculado - formState.precioTotalLead).abs() <= 0.01) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      AppSnackBar.warning(
-        context,
-        'El precio base × cantidad − descuento no coincide con el precio '
-        'total de la negociación. Verifica los montos antes de generar la '
-        'solicitud.',
-      );
-    });
   }
 
   // Trae solicitante + facturación + participantes + archivos ya guardados
@@ -670,23 +651,15 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     return totalSinIgv / cantidadEsperada;
   }
 
-  /// Campos obligatorios (marcados con *) del paso 1. Los opcionales
-  /// (apellido materno, RUC/razón social, canales) no se exigen — salvo el
-  /// detalle del canal, que sí es obligatorio cuando el canal elegido tiene
-  /// esDetallado == true (si no, se mandaría un NOMBRE_CANAL vacío).
-  bool get _formCompleto =>
-      _tipoDocLabel.isNotEmpty &&
-      _ctrlNumDoc.text.trim().isNotEmpty &&
-      _nacionalidadId.isNotEmpty &&
-      _sexoId.isNotEmpty &&
-      _ctrlNombres.text.trim().isNotEmpty &&
-      _ctrlApellidoPaterno.text.trim().isNotEmpty &&
-      _ctrlCargo.text.trim().isNotEmpty &&
-      _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.emailValidator == null &&
-      (_canalSeleccionado?.esDetallado != true ||
-          _ctrlCanalDetalle.text.trim().isNotEmpty);
-
+  // Campos obligatorios (marcados con *) del paso 1. Los opcionales
+  // (apellido materno, RUC/razón social con Natural, canal) no se exigen —
+  // salvo con tipo de persona Jurídica, donde RUC/razón social sí son
+  // obligatorios (SeccionInfoComercial, solo se muestra en ese caso), y
+  // salvo el detalle del canal, obligatorio cuando el canal elegido tiene
+  // esDetallado == true (si no, se mandaría un NOMBRE_CANAL vacío). Cada
+  // campo valida su propio CustomTextField/CustomComboField (ver
+  // _formKey) — ya no hay un getter de "todo completo" acá.
+  //
   // "Siguiente" (2026-07-17, pedido de negocio — revierte el "ya no valida"
   // de la sesión anterior): valida los campos obligatorios y GUARDA de
   // verdad (borrador, IB_BORRADOR=1, incluye subir voucher/O.C.
@@ -708,13 +681,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
     if (_guardando) return;
 
-    if (!_formCompleto) {
-      AppSnackBar.error(
-        context,
-        'Completa todos los campos obligatorios (*) para continuar',
-      );
-      return;
-    }
+    // Marca en rojo cada campo/combo obligatorio que falte, con su propio
+    // mensaje "Requerido" — reemplaza el snackbar genérico de antes.
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _guardando = true);
 
@@ -729,6 +698,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     final result = await guardarBorradorCompleto(
       context,
       idLead: widget.solicitud.idLead,
+      pasoOrigen: '1',
       progreso: _progreso,
     );
 
@@ -814,9 +784,15 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  child: Form(
+                    key: _formKey,
+                    // Una vez que "Siguiente" marca los campos en rojo, se
+                    // limpian solos al corregirlos (sin esperar a un nuevo
+                    // intento de "Siguiente").
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       // ── Toggle tipo persona ─────────────────────────────
                       Align(
                         alignment: Alignment.centerRight,
@@ -862,6 +838,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                           controller: _ctrlCanalDetalle,
                           enabled: widget.modoEdicion,
                           textCapitalization: TextCapitalization.sentences,
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? 'Requerido'
+                              : null,
                         ),
                       ],
                       const SizedBox(height: AppSpacing.xs),
@@ -969,7 +948,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         },
                         habilitado: widget.modoEdicion,
                       ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

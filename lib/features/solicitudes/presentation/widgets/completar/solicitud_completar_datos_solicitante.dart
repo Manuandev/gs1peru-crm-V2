@@ -152,6 +152,8 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                   });
                   widget.onTipoDocChanged?.call(item);
                 },
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -166,6 +168,9 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 enabled: widget.habilitado,
                 maxLength: maxLenDoc,
                 inputFormatters: inputFormatters,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
           ],
@@ -182,6 +187,8 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 enabled: widget.habilitado,
                 initialValue: widget.nacionalidadInicialId,
                 onChanged: (item) => widget.onNacionalidadChanged?.call(item),
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -192,6 +199,8 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 enabled: widget.habilitado,
                 initialValue: widget.sexoInicialId,
                 onChanged: widget.onSexoChanged,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
           ],
@@ -205,6 +214,8 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
           enabled: widget.habilitado,
           isUpperCase: true,
           textCapitalization: TextCapitalization.words,
+          validator: (v) =>
+              v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: AppSpacing.xs),
 
@@ -218,6 +229,9 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -241,6 +255,8 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
           enabled: widget.habilitado,
           isUpperCase: true,
           textCapitalization: TextCapitalization.sentences,
+          validator: (v) =>
+              v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: AppSpacing.xs),
 
@@ -255,6 +271,9 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 paises: widget.paises,
                 paisSeleccionado: widget.paisCelular,
                 onPaisChanged: widget.onPaisCelularChanged,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -264,6 +283,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
                 enabled: widget.habilitado,
+                validator: (v) => v.emailValidator,
               ),
             ),
           ],

@@ -54,8 +54,9 @@ class _SolicitudParticipantesViewState
   // la cantidad esperada de participantes, sin IGV (el IGV se vuelve a
   // sumar en el total del footer, ver _ResumenInversion). Ej.: precio total
   // 280, cantidad 2 → 140 c/u con IGV → 118.64 sin IGV. `precioBaseLead`
-  // sigue existiendo, pero solo para _avisarSiPrecioTotalNoCalza — ya no
-  // para esto. El importe sigue siendo editable siempre (ver
+  // sigue existiendo, pero solo para avisoPrecioTotalNoCalza (ver
+  // solicitud_guardar_helper.dart) — ya no para esto. El importe sigue
+  // siendo editable siempre (ver
   // participante_form_sheet.dart), esto es solo una sugerencia inicial.
   //
   // Al último participante esperado se le sugiere lo que FALTA para que la
@@ -150,6 +151,7 @@ class _SolicitudParticipantesViewState
       final result = await guardarBorradorCompleto(
         context,
         idLead: widget.solicitud.idLead,
+        pasoOrigen: '2',
         progreso: _progreso,
       );
 

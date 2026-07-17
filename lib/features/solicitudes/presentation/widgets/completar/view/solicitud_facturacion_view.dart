@@ -234,6 +234,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final result = await guardarBorradorCompleto(
       context,
       idLead: widget.solicitud.idLead,
+      pasoOrigen: '3',
       progreso: _progreso,
     );
 

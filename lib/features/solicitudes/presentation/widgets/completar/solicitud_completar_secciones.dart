@@ -252,24 +252,18 @@ class _SeccionInfoComercialState extends State<SeccionInfoComercial> {
                 fontWeight: AppTextStyles.weightSemiBold,
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              '(opcional)',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: AppTextStyles.weightRegular,
-              ),
-            ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // RUC + Razón social
+        // RUC + Razón social — obligatorios: esta sección solo se muestra
+        // con tipo de persona Jurídica (ver solicitud_completar_view.dart),
+        // con Natural no se renderiza y no aplica ninguna validación.
         Row(
           children: [
             Expanded(
               child: CustomTextField(
-                label: 'RUC',
+                label: 'RUC *',
                 hint: 'Ingrese el RUC',
                 controller: widget.ctrlRuc,
                 focusNode: _rucFocus,
@@ -279,17 +273,23 @@ class _SeccionInfoComercialState extends State<SeccionInfoComercial> {
                 enabled: widget.habilitado,
                 maxLength: 11,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: 'Razón social',
+                label: 'Razón social *',
                 hint: 'Ingrese la razón social',
                 controller: widget.ctrlRazonSocial,
                 enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
           ],

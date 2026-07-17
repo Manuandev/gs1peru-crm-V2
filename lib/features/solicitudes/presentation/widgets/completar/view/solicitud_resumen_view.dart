@@ -59,6 +59,7 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     final result = await guardarBorradorCompleto(
       context,
       idLead: widget.solicitud.idLead,
+      pasoOrigen: '4',
       progreso: _progreso,
     );
 
@@ -96,6 +97,13 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
       widget.onEditarPaso(validacion.paso);
       AppSnackBar.error(context, validacion.mensaje);
       return;
+    }
+
+    final avisoPrecio = avisoPrecioTotalNoCalza(
+      context.read<SolicitudFormCubit>().state,
+    );
+    if (avisoPrecio != null) {
+      AppSnackBar.warning(context, avisoPrecio);
     }
 
     setState(() => _generando = true);

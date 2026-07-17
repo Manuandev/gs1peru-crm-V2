@@ -15,6 +15,11 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   BuildContext context, {
   String idLead = '',
   required bool esBorrador,
+  // Paso del wizard que disparó el guardado ('1' Solicitante, '2'
+  // Participantes, '3' Facturación, '4' Resumen/Generar) — el SP usa esto
+  // para registrar un seguimiento con un texto distinto por paso, ver
+  // CSV_SOLICITUD_CUD_APP.sql.
+  required String pasoOrigen,
   SolicitudProgreso? progreso,
 }) async {
   final formCubit = context.read<SolicitudFormCubit>();
@@ -50,6 +55,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         igvPorcentaje: igvPorcentaje,
         esBorrador: esBorrador,
         idTipoDocRuc: idTipoDocRuc,
+        pasoOrigen: pasoOrigen,
       );
 
   if (result is CrudOk) progreso?.completarPasoActual();
@@ -149,8 +155,10 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
   final formState = context.read<SolicitudFormCubit>().state;
   final solicitante = formState.solicitante;
 
-  // Mismos campos obligatorios (*) que tenía el viejo gate de "Continuar"
-  // del paso 1 — ver SeccionDatosSolicitante en solicitudes/CLAUDE.md.
+  // Mismos campos obligatorios (*) que exige el Form del paso 1 (ver
+  // SeccionDatosSolicitante/SeccionInfoComercial en solicitudes/CLAUDE.md) —
+  // RUC/razón social solo son obligatorios con tipo de persona Jurídica, con
+  // Natural no aplican.
   final solicitanteCompleto =
       solicitante != null &&
       solicitante.tipoDocLabel.isNotEmpty &&
@@ -161,7 +169,10 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
       solicitante.apellidoPaterno.trim().isNotEmpty &&
       solicitante.cargo.trim().isNotEmpty &&
       solicitante.celular.trim().isNotEmpty &&
-      solicitante.correo.emailValidator == null;
+      solicitante.correo.emailValidator == null &&
+      (formState.tipoPersona != 'juridica' ||
+          (solicitante.ruc.trim().isNotEmpty &&
+              solicitante.razonSocial.trim().isNotEmpty));
   if (!solicitanteCompleto) {
     return const SolicitudValidacion(
       1,
@@ -237,6 +248,29 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
   return null;
 }
 
+/// Aviso de consistencia (no bloquea nada) — si precioBase × cantidad −
+/// descuento no calza con el precio total que tenía la negociación de
+/// origen (`SolicitudFormState.precioTotalLead`), es señal de que la
+/// negociación se editó/desfasó después de fijar esos valores. Retorna
+/// `null` si no aplica (no vino de negociación) o si calza.
+///
+/// Se evalúa **solo** al presionar "Generar solicitud" — nunca al entrar a
+/// la página ni al presionar "Guardar" (borrador, se puede editar después
+/// sin que nada bloquee ni avise) — decisión de negocio, 2026-07-17. Antes
+/// vivía en `solicitud_completar_view.dart._avisarSiPrecioTotalNoCalza()` y
+/// se disparaba automáticamente al prellenar el paso 1 desde la negociación.
+String? avisoPrecioTotalNoCalza(SolicitudFormState formState) {
+  if (formState.precioTotalLead <= 0) return null;
+  final cantidad = formState.cantidadEsperada ?? 0;
+  final calculado =
+      (formState.precioBaseLead * cantidad) - formState.descuentoLead;
+  if ((calculado - formState.precioTotalLead).abs() <= 0.01) return null;
+
+  return 'El precio base × cantidad − descuento no coincide con el precio '
+      'total de la negociación. Verifica los montos antes de generar la '
+      'solicitud.';
+}
+
 /// Flujo completo de "Generar solicitud": guarda el CUD (`esBorrador:
 /// false`) y, si sale bien, sube voucher/O.C. pendientes con el NUMSOL
 /// recién confirmado. Solo se considera generada si TODO sale bien — si el
@@ -258,6 +292,7 @@ Future<CrudResult> generarSolicitudCompleta(
     context,
     idLead: idLead,
     esBorrador: false,
+    pasoOrigen: '4',
     progreso: progreso,
   );
   if (result is! CrudOk) return result;
@@ -283,12 +318,17 @@ Future<CrudResult> generarSolicitudCompleta(
 Future<CrudResult> guardarBorradorCompleto(
   BuildContext context, {
   required String idLead,
+  // Paso del wizard que disparó el "Guardar" ('1' Solicitante, '2'
+  // Participantes, '3' Facturación, '4' Resumen) — ver
+  // guardarSolicitudDesdeWizard.
+  required String pasoOrigen,
   SolicitudProgreso? progreso,
 }) async {
   final result = await guardarSolicitudDesdeWizard(
     context,
     idLead: idLead,
     esBorrador: true,
+    pasoOrigen: pasoOrigen,
     progreso: progreso,
   );
   if (result is! CrudOk) return result;

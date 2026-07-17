@@ -1,5 +1,100 @@
 # Solicitudes Feature
 
+## Validación del paso 1 — de snackbar genérico a campos en rojo (2026-07-17)
+Pedido de negocio (jefe del usuario) — al presionar "Siguiente" en el paso 1 con campos
+obligatorios vacíos, ya no se muestra `AppSnackBar.error('Completa todos los campos
+obligatorios...')`; cada campo/combo que falta se marca en rojo con su propio "Requerido"
+debajo, como ya hacía `participante_form_sheet.dart` (mismo patrón `Form` + `GlobalKey<FormState>`
++ `validator` en cada `CustomTextField`/`CustomComboField`, reusado acá).
+
+- **`solicitud_completar_view.dart`** — nuevo `_formKey = GlobalKey<FormState>()`; el `Column`
+  que arma "Datos del solicitante" + "Información comercial" + canal + switches ahora vive
+  dentro de un `Form(key: _formKey, autovalidateMode: AutovalidateMode.onUserInteraction)` —
+  el `autovalidateMode` hace que un campo marcado en rojo se limpie solo al corregirlo, sin
+  esperar a un nuevo "Siguiente". `_onContinuar()` cambió `if (!_formCompleto) { snackbar;
+  return; }` por `if (!(_formKey.currentState?.validate() ?? false)) return;` — el getter
+  `_formCompleto` se eliminó por completo, ya no hace falta.
+- **`SeccionDatosSolicitante`** (`solicitud_completar_datos_solicitante.dart`) — se agregó
+  `validator` a Tipo documento, N° documento, Nacionalidad, Sexo, Nombres, Apellido paterno,
+  Cargo, Celular (`SolicitudCampoCelular` ya soportaba `validator`, mismo widget que usa
+  `participante_form_sheet.dart`) y Correo (`.emailValidator`). Apellido materno sigue sin
+  validator — es el único campo opcional de esta sección.
+- **Bug real corregido de paso — RUC/Razón social nunca fueron obligatorios, ni siquiera con
+  Jurídica.** `SeccionInfoComercial` (RUC + Razón social, solo se renderiza `if (tipoPersona ==
+  'juridica')`) tenía el header con la etiqueta `"(opcional)"` y ningún `validator` — el usuario
+  confirmó que con Jurídica **sí** son obligatorios (con Natural, ni se muestran ni aplican). Se
+  quitó `"(opcional)"`, se agregó `*` a ambos labels y `validator: 'Requerido'` a los dos
+  campos — como el widget entero solo existe cuando `tipoPersona == 'juridica'`, no hizo falta
+  threadear el tipo de persona hacia adentro, basta con que esté montado.
+- **`validarSolicitudParaGenerar()`** (`solicitud_guardar_helper.dart`, gate de "Generar
+  solicitud" en Resumen) se actualizó con la misma regla —
+  `(formState.tipoPersona != 'juridica' || (ruc/razonSocial no vacíos))` — para que una
+  solicitud editada sin volver a pasar por el paso 1 en la sesión actual (ej. entrar directo a
+  Resumen con `onEditarPaso`) tampoco pueda generarse sin RUC/razón social si es Jurídica.
+- **Canal (chips) y archivos (voucher/O.C.) siguen 100% opcionales** — confirmado explícitamente
+  por el usuario, sin cambios ahí. La única sub-regla que sigue aplicando dentro de "Canal
+  opcional" es el detalle libre cuando se elige un canal con `esDetallado == true` (hoy,
+  "Otros") — ese input también se pasó a `validator` (mismo patrón, "Requerido" si está vacío).
+
+## Aviso de precio total desfasado — movido de "al entrar" a "solo al Generar" (2026-07-17)
+Pedido de negocio (jefe del usuario) — `_avisarSiPrecioTotalNoCalza()` (paso 1,
+`solicitud_completar_view.dart`) se disparaba automáticamente al prellenar el formulario desde
+una negociación (`_prellenarDesdeNegociacion()`, vía `WidgetsBinding.addPostFrameCallback`) —
+o sea, el snackbar de advertencia "El precio base × cantidad − descuento no coincide..." podía
+aparecer con solo **entrar** a la página, y no había forma de evitarlo tampoco presionando
+"Guardar" (borrador). El usuario pidió que este aviso deje de aparecer en ambos casos — "Guardar"
+es un borrador que se termina de completar después, no debería frenar ni avisar nada — y que la
+**única** validación de este tipo viva en "Generar solicitud".
+
+- El método se eliminó de `solicitud_completar_view.dart` (junto con la llamada en
+  `_prellenarDesdeNegociacion()`) y se reemplazó por `avisoPrecioTotalNoCalza(SolicitudFormState)`
+  en `solicitud_guardar_helper.dart` — misma cuenta exacta (`precioBaseLead × cantidadEsperada −
+  descuentoLead` vs `precioTotalLead`, tolerancia `0.01`), pero ahora es una función pura que
+  retorna `String?` (mensaje o `null`) en vez de mostrar el snackbar ella misma.
+- Se llama **solo** desde `solicitud_resumen_view.dart._onGenerarSolicitud()`, después de
+  `validarSolicitudParaGenerar()` (que si falla, ya cortó con `return` antes de llegar acá) y
+  antes de arrancar `generarSolicitudCompleta()` — sigue siendo **no bloqueante** (a diferencia
+  de `validarSolicitudParaGenerar`, que si retorna una `SolicitudValidacion` sí impide generar):
+  si hay mensaje se muestra con `AppSnackBar.warning` pero la generación continúa igual, mismo
+  comportamiento no-bloqueante que tenía antes, solo que ahora el único momento en que puede
+  aparecer es al presionar "Generar solicitud".
+
+## Seguimiento con texto distinto por paso del wizard (2026-07-17)
+Pedido de negocio (jefe del usuario) — como cada "Siguiente"/"Guardar"/"Generar solicitud" ya
+guarda de verdad (ver sección de abajo), el registro que queda en `CRM.T_LEAD_SEGUIMIENTO`
+(historial del lead, tab Historial de `ChatLeadPanel`/`ContactoDetalleView`) debería reflejar
+qué paso se completó, no un mensaje genérico "se modificó" para cualquier guardado.
+
+- **`CSV_SOLICITUD_CUD_APP.sql`** (`C:\DEV\BDNatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`,
+  repo aparte — UTF-16LE con BOM, cualquier edición futura debe preservar esa codificación o
+  SSMS lo muestra corrupto) — nuevo campo `field44` (`@PASO_ORIGEN CHAR(1)`, valores
+  `'1'`-`'4'`) en el task `'U'`. En la rama `UPDATE` (NUMSOL ya existe), el único `INSERT` a
+  `T_LEAD_SEGUIMIENTO` que antes siempre decía "Se ha modificado una ficha de inscripción..."
+  ahora arma `@DESC_SEGUIMIENTO` con un `CASE`: `@IB_BORRADOR = 0` (Generar solicitud, sin
+  importar el paso) → "Se generó la solicitud de inscripción..."; si no, según `@PASO_ORIGEN`:
+  `'1'` "Se registraron los datos del solicitante...", `'2'` "...los participantes de la
+  solicitud...", `'3'` "...los datos de facturación...", `'4'` "Se guardó un avance de la
+  solicitud..." (Resumen, "Guardar" sin generar); cualquier otro valor (apps viejas sin
+  `field44`, llega `NULL`) cae al mensaje genérico de siempre como fallback. La rama `CREATE`
+  (NUMSOL vacío, primer guardado) no se tocó — sigue con su mensaje fijo "Se ha generado una
+  ficha de inscripción...".
+- **Flutter** — nuevo parámetro `pasoOrigen` (`String`, `'1'`-`'4'`) threaded de punta a punta:
+  `SolicitudRemoteDatasource.guardarSolicitud()` (lo manda como field44) →
+  `SolicitudRepository`/`SolicitudRepositoryImpl` → `GuardarSolicitudUseCase` →
+  `guardarSolicitudDesdeWizard()`/`guardarBorradorCompleto()` (`solicitud_guardar_helper.dart`).
+  `generarSolicitudCompleta()` siempre manda `'4'` hardcodeado (solo se llama desde Resumen);
+  `guardarBorradorCompleto()` lo recibe como parámetro obligatorio porque lo llaman los 4
+  pasos — cada `_onContinuar`/`_onGuardar` manda su propio número (`solicitud_completar_view.dart`
+  → `'1'`, `solicitud_participantes_view.dart` → `'2'`, `solicitud_facturacion_view.dart` →
+  `'3'`, `solicitud_resumen_view.dart` → `'4'` en su botón "Guardar").
+- **⚠️ Hallazgo aparte al revisar el CUD para esto, sin tocar todavía** — `guardarSolicitud()`
+  parece mandar **paisId y nacionalidadId de facturación invertidos**: field25
+  (`facturacion?.nacionalidadId`) llega a `@ID_NACION_FAC`, que el SP usa para la columna
+  `ID_PAIS`; field43 (`facturacion?.paisId`) llega a `@ID_NACIONALIDAD_FAC`, que puebla la
+  columna `ID_NACIONALIDAD`. O sea el país que elige el asesor terminaría guardado en la
+  columna de nacionalidad y viceversa. No confirmado con datos reales todavía, solo leyendo el
+  `.sql` — revisar con el usuario antes de tocarlo, es un fix de datos sensible.
+
 ## Cada "Siguiente" ahora valida Y guarda de verdad — se quitó el botón "Guardar" del medio (2026-07-17)
 Pedido de negocio (jefe/coordinadora del usuario) — **revierte** la sección "Validación movida a
 'Generar solicitud'" de más abajo (2026-07-16): ya no basta con validar solo al generar, cada

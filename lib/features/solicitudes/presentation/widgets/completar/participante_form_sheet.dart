@@ -436,37 +436,17 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
 
-                          // Nacionalidad + Tipo de participante
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: CustomComboField<NacionalidadItem>(
-                                  label: 'Nacionalidad *',
-                                  data: nacionalidades,
-                                  initialValue: _nacionalidadInicialId,
-                                  onChanged: (item) => setState(() {
-                                    _nacionalidadId = item?.id ?? '';
-                                    _nacionalidadLabel = item?.nombre ?? '';
-                                  }),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: CustomComboField<TipoParticipanteItem>(
-                                  label: 'Tipo *',
-                                  data: tiposParticipante,
-                                  initialValue: _tipoParticipante,
-                                  onChanged: (item) {
-                                    if (item != null) {
-                                      setState(
-                                        () => _tipoParticipante = item.id,
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
+                          // Nacionalidad
+                          CustomComboField<NacionalidadItem>(
+                            label: 'Nacionalidad *',
+                            data: nacionalidades,
+                            initialValue: _nacionalidadInicialId,
+                            onChanged: (item) => setState(() {
+                              _nacionalidadId = item?.id ?? '';
+                              _nacionalidadLabel = item?.nombre ?? '';
+                            }),
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Requerido' : null,
                           ),
                           const SizedBox(height: AppSpacing.sm),
 
@@ -522,6 +502,24 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
 
+                          // Tipo de participante — muestra la descripción real
+                          // del catálogo (Pagante/Invitado/Invitado auspicio/
+                          // Online), con ícono de persona.
+                          CustomComboField<TipoParticipanteItem>(
+                            label: 'Tipo de participante *',
+                            data: tiposParticipante,
+                            initialValue: _tipoParticipante,
+                            prefixIcon: const Icon(AppIcons.user),
+                            onChanged: (item) {
+                              if (item != null) {
+                                setState(() => _tipoParticipante = item.id);
+                              }
+                            },
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Requerido' : null,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+
                           // Cargo
                           CustomTextField(
                             label: 'Cargo *',
@@ -554,7 +552,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: CustomTextField(
-                                  label: 'Importe',
+                                  label: 'Importe *',
                                   controller: _importeCtrl,
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
@@ -562,10 +560,14 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                                       ),
                                   validator: (v) {
                                     if (v == null || v.trim().isEmpty) {
-                                      return null;
+                                      return 'Requerido';
                                     }
-                                    if (double.tryParse(v.trim()) == null) {
+                                    final importe = double.tryParse(v.trim());
+                                    if (importe == null) {
                                       return 'Número inválido';
+                                    }
+                                    if (importe <= 0) {
+                                      return 'Debe ser mayor a 0';
                                     }
                                     return null;
                                   },

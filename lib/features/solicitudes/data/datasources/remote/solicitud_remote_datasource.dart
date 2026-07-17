@@ -68,12 +68,14 @@ class SolicitudRemoteDatasource {
   // solicitud, en una sola llamada. Los archivos van aparte (task 'AR',
   // pendiente — necesita el NUMSOL que devuelve esta llamada).
   //
-  // Cabecera: 43 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
+  // Cabecera: 44 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
   // field42 (comprobanteId) y field43 (nacionalidadId de facturación) se
   // agregaron el 2026-07-16 — antes el datasource solo mandaba 41 campos y
   // el SP nunca recibía @ID_TIPO_COMPROBANTE_FAC/@ID_NACIONALIDAD_FAC (bug
   // real: comprobante y nacionalidad de facturación no sobrevivían a
-  // reabrir la solicitud). Ver CLAUDE.md del feature.
+  // reabrir la solicitud). field44 (pasoOrigen) se agregó el 2026-07-17
+  // para que el SP registre un seguimiento distinto por paso del wizard.
+  // Ver CLAUDE.md del feature.
   Future<CrudResult> guardarSolicitud({
     required String numSol,
     required String
@@ -89,6 +91,11 @@ class SolicitudRemoteDatasource {
     // presentación), así que el caller lo resuelve y lo pasa acá. Nunca
     // volver a hardcodear este id.
     required String idTipoDocRuc,
+    // Paso del wizard que disparó este guardado ('1' Solicitante, '2'
+    // Participantes, '3' Facturación, '4' Resumen/Generar) — el SP lo usa
+    // para elegir el texto del seguimiento que registra en
+    // CRM.T_LEAD_SEGUIMIENTO (ver CSV_SOLICITUD_CUD_APP.sql, 2026-07-17).
+    required String pasoOrigen,
   }) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
@@ -159,6 +166,7 @@ class SolicitudRemoteDatasource {
       coords, // 41 LL_USUARIO
       facturacion?.comprobanteId ?? '', // 42 ID_TIPO_COMPROBANTE_FAC
       facturacion?.paisId ?? '', // 43 ID_PAIS_FAC
+      pasoOrigen, // 44 PASO_ORIGEN
     ].join(AppConstants.sepCampos);
 
     final detalle = participantes

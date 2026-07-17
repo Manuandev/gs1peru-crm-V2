@@ -36,6 +36,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     required double igvPorcentaje,
     required bool esBorrador,
     required String idTipoDocRuc,
+    required String pasoOrigen,
   }) => _remote.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -46,6 +47,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     igvPorcentaje: igvPorcentaje,
     esBorrador: esBorrador,
     idTipoDocRuc: idTipoDocRuc,
+    pasoOrigen: pasoOrigen,
   );
 
   @override

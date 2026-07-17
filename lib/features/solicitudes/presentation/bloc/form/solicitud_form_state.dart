@@ -144,7 +144,8 @@ class SolicitudFormState {
   /// `_importeFijo` en `solicitud_participantes_view.dart`) — el importe
   /// sigue siendo siempre editable, esto es solo la sugerencia inicial.
   /// `precioBaseLead`/`descuentoLead` ya no se usan para el importe del
-  /// participante — solo quedan para `_avisarSiPrecioTotalNoCalza`.
+  /// participante — solo quedan para `avisoPrecioTotalNoCalza`
+  /// (`solicitud_guardar_helper.dart`).
   final int? cantidadEsperada;
   final double precioBaseLead;
   final double descuentoLead;

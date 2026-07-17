@@ -153,8 +153,8 @@ class _IndicadoresRow extends StatelessWidget {
           children: [
             Expanded(
               child: _IndicadorItem(
-                icono: Icons.access_time_outlined,
-                label: 'Sin\nvalidar',
+                icono: AppIcons.time,
+                label: 'Sin validar',
                 conteo: state.cntSinValidar,
                 color: AppColors.warning,
               ),
@@ -162,7 +162,7 @@ class _IndicadoresRow extends StatelessWidget {
             _VerticalDivider(),
             Expanded(
               child: _IndicadorItem(
-                icono: Icons.check_circle_outline,
+                icono: AppIcons.checkCircle,
                 label: 'Validados',
                 conteo: state.cntValidados,
                 color: AppColors.success,
@@ -195,39 +195,48 @@ class _IndicadorItem extends StatelessWidget {
         horizontal: AppSpacing.xxs,
         vertical: AppSpacing.sm,
       ),
-      child: Column(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Ícono con fondo suave — contenedor cuadrado redondeado
+          // Ícono con fondo suave — contenedor circular
           Container(
-            width: 32,
-            height: 32,
+            width: AppSizing.iconLg,
+            height: AppSizing.iconLg,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
+              color: color.withValues(alpha: AppColors.opacityActiveItem),
               borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
             ),
-            child: Icon(icono, size: 20, color: color),
+            child: Icon(icono, size: AppSizing.iconMd, color: color),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.sm),
 
-          // Label — máx 2 líneas, texto pequeño centrado
-          Text(
-            label,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: AppSpacing.xs),
+          // Label + conteo — apilados a la derecha del ícono
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Label — máx 2 líneas
+                Text(
+                  label,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.xxs),
 
-          // Conteo resaltado
-          Text(
-            '$conteo',
-            style: AppTextStyles.headlineSmall.copyWith(
-              color: color,
-              fontWeight: AppTextStyles.weightBold,
+                // Conteo resaltado
+                Text(
+                  '$conteo',
+                  style: AppTextStyles.headlineSmall.copyWith(
+                    color: color,
+                    fontWeight: AppTextStyles.weightBold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

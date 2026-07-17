@@ -139,7 +139,7 @@ class SolicitudRemoteDatasource {
       facturacion?.numDoc ?? '', // 22 NUM_DOC_FAC
       esRuc ? (facturacion?.numDoc ?? '') : '', // 23 RUCEMPRE_FAC
       esRuc ? (facturacion?.nombresRazon ?? '') : '', // 24 NOMEMPRE_FAC
-      facturacion?.paisId ??
+      facturacion?.nacionalidadId ??
           '', // 25 ID_NACION_FAC (el SP reusa esta misma variable para ID_PAIS)
       esRuc ? '' : (facturacion?.nombresRazon ?? ''), // 26 NOMBRES_FAC
       esRuc ? '' : (facturacion?.apellidoPaterno ?? ''), // 27 APELLIDO_P_FAC
@@ -158,7 +158,7 @@ class SolicitudRemoteDatasource {
       ip, // 40 IP_USUARIO
       coords, // 41 LL_USUARIO
       facturacion?.comprobanteId ?? '', // 42 ID_TIPO_COMPROBANTE_FAC
-      facturacion?.nacionalidadId ?? '', // 43 ID_NACIONALIDAD_FAC
+      facturacion?.paisId ?? '', // 43 ID_PAIS_FAC
     ].join(AppConstants.sepCampos);
 
     final detalle = participantes

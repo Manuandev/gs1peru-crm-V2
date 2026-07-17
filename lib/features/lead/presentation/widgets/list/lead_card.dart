@@ -281,7 +281,7 @@ class _LeadDateAndActions extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.xxs),
                 Text(
-                  'Hace ${ElapsedTimeUtils.formatDoHoMoS(elapsed)}',
+                  ElapsedTimeUtils.formatDoHoMoS(elapsed),
                   style: AppTextStyles.labelSmall.copyWith(
                     color: ElapsedTimeUtils.colorFromElapsed(elapsed),
                     fontWeight: AppTextStyles.weightMedium,
@@ -344,8 +344,8 @@ class _CasosBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
       ),
       child: Text(
-        count == 1 ? '1 caso' : '$count casos',
-        style: AppTextStyles.labelSmall.copyWith(
+        count == 1 ? '1 negociación' : '$count negociaciones',
+        style: AppTextStyles.labelVerySmall8.copyWith(
           color: AppColors.textSecondary,
           fontWeight: AppTextStyles.weightSemiBold,
         ),

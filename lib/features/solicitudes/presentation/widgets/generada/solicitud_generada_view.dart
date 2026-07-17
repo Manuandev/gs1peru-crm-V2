@@ -19,19 +19,15 @@ class SolicitudGeneradaView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasePage(
-      onPop: () => context.goBack(),
+      // Sin botón de retroceso — esta pantalla es un punto final del flujo
+      // de generar solicitud, no tiene sentido volver al wizard. El back
+      // del celular (gesto/botón físico) sigue intentando hacer pop, pero
+      // onPop lo intercepta y manda a la lista de solicitudes en vez de
+      // dejarlo hacer pop normal.
+      onPop: () => context.goToSolicitudes(),
       drawerSide: DrawerSide.none,
       bodyPadding: EdgeInsets.zero,
-      title: 'CRM Perú',
-      appBarLeadingButtons: [
-        IconButton(
-          onPressed: () => context.goBack(),
-          icon: Icon(
-            AppIcons.back,
-            color: Theme.of(context).colorScheme.onPrimary,
-          ),
-        ),
-      ],
+      title: 'Solicitud lista',
       body: Column(
         children: [
           // ── Header azul con bordes redondeados ────────────────
@@ -396,7 +392,6 @@ class _CardInfoSolicitud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canalInfo = CanalHelper.get(solicitud.idCanal);
     final colorEstado = SolicitudCard.colorEstado(solicitud.ibValidado);
 
     return Container(
@@ -548,7 +543,7 @@ class _CardInfoSolicitud extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Ejecutivo responsable',
+                          'Ejecutivo',
                           style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.textSecondary,
                             fontSize: 10,
@@ -585,46 +580,6 @@ class _CardInfoSolicitud extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          'Origen',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
-                            fontSize: 10,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: canalInfo.color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(
-                              AppSizing.radiusCircular,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                canalInfo.icon,
-                                size: 12,
-                                color: canalInfo.color,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                canalInfo.nombre,
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: canalInfo.color,
-                                  fontWeight: AppTextStyles.weightSemiBold,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),

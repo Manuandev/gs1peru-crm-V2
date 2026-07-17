@@ -314,6 +314,16 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         _paisCelular = catalogState.paises
             .where((p) => p.codigoTelefono == solicitante.celularCodigoTelefono)
             .firstOrNull;
+        // DatosSolicitante no tiene "País" (solo Nacionalidad) — mismo
+        // default que la rama sin datos previos, ver más abajo. Sin esto
+        // "País" se quedaba vacío también en este camino (mismo bug real).
+        final paisDefecto = catalogState.paises
+            .where((p) => p.id == catalogState.valoresDefecto.idPais)
+            .firstOrNull;
+        if (paisDefecto != null) {
+          _paisId = paisDefecto.id;
+          _paisLabel = paisDefecto.nombre;
+        }
       }
       return;
     }
@@ -337,6 +347,17 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       if (nacionalidadDefecto != null) {
         _nacionalidadId = nacionalidadDefecto.id;
         _nacionalidadLabel = nacionalidadDefecto.nombre;
+      }
+      // Bug real detectado en vivo: a diferencia de Tipo documento/
+      // Nacionalidad, "País" nunca tenía un default — se quedaba vacío
+      // hasta que el asesor lo tocara a mano, y si no lo hacía, se guardaba
+      // vacío (ID_PAIS nunca llegaba al backend).
+      final paisDefecto = catalogState.paises
+          .where((p) => p.id == valoresDefecto.idPais)
+          .firstOrNull;
+      if (paisDefecto != null) {
+        _paisId = paisDefecto.id;
+        _paisLabel = paisDefecto.nombre;
       }
     }
   }

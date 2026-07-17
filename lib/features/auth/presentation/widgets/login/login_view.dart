@@ -135,20 +135,28 @@ class _CuerpoLogin extends StatelessWidget {
         Expanded(
           child: Container(
             color: AppColors.surface,
-            child: SingleChildScrollView(
-              clipBehavior: Clip.none,
-              physics: const ClampingScrollPhysics(),
-              child: Transform.translate(
-                offset: const Offset(0, -AppSpacing.xl),
-                child: _CartillaBlanca(
-                  formController: formController,
-                  esCargando: esCargando,
-                  tipoLogin: tipoLogin,
-                  onLogin: onLogin,
-                  onGoogleLogin: onGoogleLogin,
-                  onForgotPassword: onForgotPassword,
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    clipBehavior: Clip.none,
+                    physics: const ClampingScrollPhysics(),
+                    child: Transform.translate(
+                      offset: const Offset(0, -AppSpacing.xl),
+                      child: _CartillaBlanca(
+                        formController: formController,
+                        esCargando: esCargando,
+                        tipoLogin: tipoLogin,
+                        onLogin: onLogin,
+                        onGoogleLogin: onGoogleLogin,
+                        onForgotPassword: onForgotPassword,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                // ── Versión de la app, siempre visible al pie ──────────
+                const _VersionFooter(),
+              ],
             ),
           ),
         ),
@@ -239,6 +247,17 @@ class _ZonaAzul extends StatelessWidget {
   }
 }
 
+/// Subtítulo de la cartilla — depende de qué método(s) de login están activos.
+String _subtituloLogin(TipoLoginApp tipoLogin) {
+  if (tipoLogin == TipoLoginApp.google) {
+    return 'Ingresa con tu cuenta corporativa';
+  }
+  if (tipoLogin == TipoLoginApp.credenciales) {
+    return 'Inicia sesión con tus credenciales';
+  }
+  return 'Elige el método que prefieras para ingresar';
+}
+
 // ============================================================
 // CARTILLA BLANCA FLOTANTE
 // ============================================================
@@ -264,19 +283,14 @@ class _CartillaBlanca extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
+      // Sin boxShadow: el blur se difuminaba también hacia abajo del borde
+      // de la cartilla y se veía como una banda gris sobre el fondo blanco.
+      decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(AppSizing.authCardRadius),
           topRight: Radius.circular(AppSizing.authCardRadius),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black(0.10),
-            blurRadius: AppSizing.shadowBlurLg,
-            offset: const Offset(0, -4),
-          ),
-        ],
       ),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -296,7 +310,7 @@ class _CartillaBlanca extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Elige el método que prefieras para ingresar',
+            _subtituloLogin(tipoLogin),
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -327,6 +341,28 @@ class _CartillaBlanca extends StatelessWidget {
               onForgotPassword: onForgotPassword,
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// VERSIÓN DE LA APP (pie de pantalla)
+// ============================================================
+
+class _VersionFooter extends StatelessWidget {
+  const _VersionFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Text(
+        'v${AppConstants.version}',
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.textDisabled,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }

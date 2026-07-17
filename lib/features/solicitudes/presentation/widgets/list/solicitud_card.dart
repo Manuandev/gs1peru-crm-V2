@@ -211,7 +211,7 @@ class SolicitudCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Ejecutivo responsable',
+                            'Ejecutivo',
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textSecondary,
                             ),

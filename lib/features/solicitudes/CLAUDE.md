@@ -1,5 +1,114 @@
 # Solicitudes Feature
 
+## Auditoría completa de anchos de columna del CUD (2026-07-16)
+El usuario corrió `INFORMATION_SCHEMA.COLUMNS` sobre las 8 tablas reales que toca
+`CSV_SOLICITUD_CUD_APP` (identificadas leyendo el SP completo:
+`EVT.T_TECMSOLINSCRIPCION01`/`_FACTURACION`/`_ARCHIVOS`, `EVT.T_TECMSOLINSCRIPCION02`/
+`_ASISTENCIA`, `CRM.T_LEAD_TECMSOLINSCRIPCION01`, `CRM.T_LEAD_SEGUIMIENTO`, `CRM.T_LEAD`) y se
+cruzó contra los anchos de variable ya conocidos del SP. Hallazgos, de mayor a menor gravedad:
+
+- **Columnas que SÍ necesitan `ALTER TABLE` — no se pueden arreglar solo en el SP:**
+  - `EVT.T_TECMSOLINSCRIPCION01.ID_NACIONALIDAD` `VARCHAR(2)` — mismo problema que `ID_PAIS`
+    (país=165 truncado a 16, ver sección de abajo). Ya se amplió la variable del SP
+    (`@ID_NACION_SOL` → `VARCHAR(10)`), pero si la nacionalidad real también usa códigos de 3
+    dígitos, la **columna** lo sigue truncando.
+  - `EVT.T_TECMSOLINSCRIPCION02.ID_NACIONALIDAD` `VARCHAR(2)` — mismo riesgo, y sin variable
+    intermedia en el SP que se pueda ensanchar (el dato de cada participante pasa directo de
+    Flutter a la columna vía la tabla de split) — 100% depende de la columna.
+  - `EVT.T_TECMSOLINSCRIPCION01.NRO_DOCUMENTO` `VARCHAR(11)` — Carnet de extranjería y Pasaporte
+    pueden ser de 12 caracteres (`DocumentoValidationUtils`, ver `core/CLAUDE.md`) — un
+    solicitante con ese tipo de documento se trunca 1 carácter.
+  - `EVT.T_TECMSOLINSCRIPCION01.SEXO` `CHAR(1)` — confirmado (no solo sospecha): el catálogo
+    real de Sexo usa `'PD'` (Por Definir, 2 caracteres — hardcodeado en el SP de catálogos,
+    documentado en `core/CLAUDE.md` → `SexoItem`). Se trunca a `'P'`, que no matchea ningún id
+    real del catálogo al releer — el combo Sexo queda vacío al reabrir una solicitud donde se
+    eligió "Por definir".
+  - `ALTER TABLE` sugeridos (el usuario los corre, tiene el acceso):
+    ```sql
+    ALTER TABLE EVT.T_TECMSOLINSCRIPCION01 ALTER COLUMN ID_NACIONALIDAD VARCHAR(10);
+    ALTER TABLE EVT.T_TECMSOLINSCRIPCION02 ALTER COLUMN ID_NACIONALIDAD VARCHAR(10);
+    ALTER TABLE EVT.T_TECMSOLINSCRIPCION01 ALTER COLUMN NRO_DOCUMENTO VARCHAR(20);
+    ALTER TABLE EVT.T_TECMSOLINSCRIPCION01 ALTER COLUMN SEXO VARCHAR(2);
+    ```
+- **Arreglado en el SP (la variable era el cuello de botella, la columna ya estaba bien):**
+  - `@NUM_DOC_FAC VARCHAR(11)` → `VARCHAR(15)` — la columna
+    `T_TECMSOLINSCRIPCION01_FACTURACION.NRO_DOCUMENTO` ya era `VARCHAR(15)`, la variable era la
+    que truncaba antes de llegar ahí.
+  - `@NUM_DOC_SOL VARCHAR(11)` → `VARCHAR(20)` — ojo, esto **no** arregla del todo el problema de
+    NRO_DOCUMENTO en `T_TECMSOLINSCRIPCION01` (la columna sigue en `VARCHAR(11)`, ver arriba),
+    solo quita uno de los 2 puntos de truncamiento.
+  - `@ID_SEXO_SOL CHAR(1)` → `VARCHAR(2)` — mismo caso, la columna `SEXO` también necesita el
+    `ALTER TABLE` de arriba para que el fix sea completo de punta a punta.
+- **Menor prioridad, no tocado — confirmar con negocio si vale la pena:**
+  - `EVT.T_TECMSOLINSCRIPCION01_FACTURACION.CELULAR` es `VARCHAR(12)`, pero en Solicitante/
+    Participante es `VARCHAR(15)` — inconsistente entre tablas para el mismo tipo de dato. Solo
+    importa si algún número internacional supera 12 dígitos.
+- **Confirmado sin problema — anchos ya coinciden bien entre columna/variable/dato real**:
+  `NUMSOL` (8), `RUCEMPRE`/`RUC` (11), `NOMEMPRE`/razón social (250), `NOMBRES` (100),
+  `APE_PATERNO`/`APE_MATERNO` (50), `CORREO`/`CORREO_ENVIO` (150), `DIRECCION` (100),
+  `UBIGEO` (6), `ID_PAIS` en Facturación (`VARCHAR(8)` — este SÍ alcanzaba para "165", el
+  problema ahí era 100% la variable del SP, ya arreglada), `MONEDA`/`ID_MONEDA` (8),
+  `TIPO_COMPROBANTE` (2, calza exacto con ids '01'/'03'/'07'/'08'), `NRO_DOCUMENTO` en
+  Participante (`VARCHAR(20)`, generoso).
+
+## Bug real de fondo — ID_PAIS se truncaba (VARCHAR(2) en el SP, id real de 3 dígitos) (2026-07-16)
+El bug de "país no se guarda" de la sección de abajo tenía una causa más profunda que la falta
+de default: el usuario confirmó que el id de Perú en el catálogo real es `165` (3 dígitos), pero
+`CSV_SOLICITUD_CUD_APP` declaraba `@ID_NACION_FAC VARCHAR(2)` — SQL Server trunca en silencio al
+asignar un valor más largo que el ancho declarado de una variable (sin error, sin warning), así
+que `165` quedaba guardado como `16`. Mismo problema, mismo patrón de declaración, en 2 variables
+más de la misma familia (nacionalidad/país, ids de `SYSTABEXTER02`):
+`@ID_NACION_SOL` (nacionalidad del solicitante, paso 1) y `@ID_NACIONALIDAD_FAC` (nacionalidad de
+facturación, agregada en el fix de arriba del 2026-07-16 — se declaró igual de angosta por
+seguir el patrón ya existente, sin darme cuenta del riesgo hasta que apareció el síntoma real).
+Las 3 se ampliaron a `VARCHAR(10)` — margen amplio y sin costo real (son variables locales del
+SP, no columnas de tabla).
+**Ojo — pendiente de verificar, no lo pude confirmar yo**: esto arregla el truncamiento del lado
+de la variable del SP, pero si la **columna real** (`ID_PAIS`/`ID_NACIONALIDAD` en
+`EVT.T_TECMSOLINSCRIPCION01_FACTURACION`, `ID_NACIONALIDAD` en `EVT.T_TECMSOLINSCRIPCION01`) es
+también más angosta que el id más largo del catálogo, el truncamiento seguiría pasando ahí en
+vez de en la variable — no tengo acceso a `sp_help`/diseño de tabla para confirmarlo. El usuario
+tiene acceso a la base y puede verificarlo/ampliarlo si hace falta.
+
+## País de facturación sin default + SUNAT pisaba Dirección/Razón social + pantalla "Solicitud generada" (2026-07-16)
+Tres cambios más de la misma sesión — el usuario reportó "el id país y la dirección no se están
+guardando" y aprovechó para pedir ajustes de UI en la pantalla post-generar:
+
+- **Bug real — "País" (paso 3, Facturación) nunca tenía un valor por defecto.** A diferencia de
+  Tipo documento/Nacionalidad (que arrancan en DNI/Perú, ver "Defaults al crear" más abajo),
+  `_paisId` se quedaba en `''` en las 2 ramas de `didChangeDependencies()` que no restauran datos
+  ya guardados: la rama "sin datos previos" (ahora sí default a `valoresDefecto.idPais`, igual que
+  Tipo doc/Nacionalidad) y la rama "Facturar al solicitante" (`DatosSolicitante` no tiene campo
+  País, solo Nacionalidad — antes simplemente no se seteaba nada, ahora también cae al mismo
+  default). Sin esto, si el asesor nunca tocaba el combo País a mano, `ID_PAIS`/`ID_NACION_FAC`
+  llegaba vacío al SP y punto.
+- **Bug real del SP — datos de SUNAT pisaban lo que el asesor tipeaba a mano.**
+  `CSV_SOLICITUD_CUD_APP` (task `'U'`) tenía (desde antes, no introducido en esta sesión) un
+  bloque `IF(@COD_TIP_REGISTRO = 'J') BEGIN SELECT @UBIGEO_FAC = UBIGEO, @DIRECCION_FAC = TIP_VIA
+  + NOM_VIA, @NOMEMPRE_FAC = RAZON_SOCIAL FROM DBSUNAT.dbo.Contribuyente WHERE RUC =
+  @RUCEMPRE_FAC END` — para persona Jurídica, si el RUC coincidía con esa tabla externa de SUNAT,
+  **sobrescribía Dirección/Razón social sin importar lo que el asesor ya había tipeado en el
+  formulario**. Confirmado con el usuario: SUNAT solo debe rellenar si el campo llega vacío,
+  nunca pisar un valor ya ingresado a mano. Corregido con `CASE WHEN ISNULL(@CAMPO,'') = '' THEN
+  <valor de SUNAT> ELSE @CAMPO END` en los 3 campos (`UBIGEO_FAC`/`DIRECCION_FAC`/`NOMEMPRE_FAC`)
+  — mismo patrón "no pisar lo ya tipeado" que ya usan los 4 autocompletados por documento del
+  wizard (ver "Autocompletado por documento" más abajo).
+- **`SolicitudGeneradaView` (pantalla post-"Generar solicitud")** — 4 ajustes de UI pedidos:
+  - Título del `BasePage` (AppBar): `'CRM Perú'` → `'Solicitud lista'` (el header azul interno
+    de la pantalla, `_HeaderGenerada`, ya decía "Solicitud lista" seguido de "Tu solicitud ha
+    sido generada..." — eso no se tocó, solo el título de la barra superior).
+  - Se quitó `appBarLeadingButtons` (el ícono de volver) por completo — esta pantalla es un
+    punto final del flujo, no tiene sentido un botón manual de retroceso. Como
+    `drawerSide: DrawerSide.none` + sin `leadingButtons`, `CustomAppBar` no agrega un back button
+    automático (`automaticallyImplyLeading` solo es `true` con `DrawerSide.left`, ver
+    `custom_app_bar.dart`) — no hizo falta `automaticallyImplyLeading: false` explícito.
+  - `onPop` (intercepta el botón/gesto de retroceso físico del celular, ver `BasePage` en
+    `core/CLAUDE.md`) cambió de `context.goBack()` a `context.goToSolicitudes()` — si el usuario
+    igual intenta volver con el back nativo, lo manda a la lista de solicitudes en vez de hacer
+    pop normal (que ya no tiene a dónde volver útilmente, dado que no hay botón visible).
+  - Se quitó la fila "Origen" (canal) de `_CardInfoSolicitud` — junto con la variable `canalInfo`
+    (`CanalHelper.get(...)`), que quedó sin otro uso en el archivo.
+
 ## Reconciliación de centavos + bug de importe editado que se perdía al reabrir (2026-07-16)
 Seguimiento del punto de abajo — el usuario probó con números reales (negociación: precio total
 425.00, precio base 225.50, 2 participantes) y encontró que "Importe total" en el footer daba

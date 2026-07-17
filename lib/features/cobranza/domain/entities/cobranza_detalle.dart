@@ -25,6 +25,7 @@ class CobranzaDetalle {
   final String moneda;
   final String correo;
   final String celular;
+  final int idChatCab;
   final List<ArchivoCobranza> archivos;
   final List<HistorialCobranza> historial;
 
@@ -58,6 +59,7 @@ class CobranzaDetalle {
     this.moneda = '',
     this.correo = '',
     this.celular = '',
+    this.idChatCab = 0,
     this.archivos = const [],
     required this.historial,
   });

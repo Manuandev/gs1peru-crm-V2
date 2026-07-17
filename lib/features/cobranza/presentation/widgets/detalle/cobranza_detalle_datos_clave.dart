@@ -21,7 +21,8 @@ class CobranzaDetalleDatosClave extends StatelessWidget {
         _FilaDato(
           icono: AppIcons.moneda,
           label: 'Moneda',
-          valor: resolverSimboloMoneda(context, detalle.moneda),
+          valor:
+              detalle.moneda, //resolverSimboloMoneda(context, detalle.moneda),
         ),
       if (detalle.correo.isNotEmpty)
         _FilaDato(
@@ -61,7 +62,7 @@ class CobranzaDetalleDatosClave extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Datos clave',
+            'Documentos de facturación',
             style: AppTextStyles.bodySmall.copyWith(
               fontWeight: AppTextStyles.weightSemiBold,
             ),
@@ -112,7 +113,9 @@ class _FilaDatoWidget extends StatelessWidget {
               child: Text(
                 fila.valor,
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: fila.esTappable ? AppColors.info : AppColors.textPrimary,
+                  color: fila.esTappable
+                      ? AppColors.info
+                      : AppColors.textPrimary,
                   fontWeight: fila.esTappable
                       ? AppTextStyles.weightMedium
                       : AppTextStyles.weightRegular,

@@ -22,6 +22,7 @@ class CobranzaDetalleModel extends CobranzaDetalle {
     super.moneda,
     super.correo,
     super.celular,
+    super.idChatCab,
     super.archivos,
     required super.historial,
   });
@@ -64,6 +65,7 @@ class CobranzaDetalleModel extends CobranzaDetalle {
       idOportunidad: ParseUtils.toInt(c, 14),
       oportunidad: ParseUtils.str(c, 15),
       fechaSolicitud: ParseUtils.str(c, 16),
+      idChatCab: ParseUtils.toInt(c, 17),
       archivos: archivos,
       historial: historial,
     );

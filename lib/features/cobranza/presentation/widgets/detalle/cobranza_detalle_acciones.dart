@@ -1,5 +1,6 @@
 ﻿// lib/features/cobranza/presentation/widgets/detalle/cobranza_detalle_acciones.dart
 
+import 'package:app_crm/config/router/navigation_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -41,11 +42,16 @@ class CobranzaDetalleAcciones extends StatelessWidget {
               _AccionBtn(
                 icono: AppIcons.whatsapp,
                 esFontAwesome: true,
-                color: AppSocialUtils.colorCanalById(5),
-                label: 'Conversación',
-                onTap: detalle.celular.isEmpty
+                color: detalle.idChatCab == 0
+                    ? AppColors.disabled
+                    : AppSocialUtils.colorCanalById(5),
+                label: detalle.idChatCab == 0
+                    ? 'Conversación'
+                    : 'Ver conversación',
+                onTap: detalle.idChatCab == 0
                     ? () {}
-                    : () => LauncherUtils.abrirWhatsApp(detalle.celular),
+                    : () =>
+                          context.goToDetalleChat(idChatCab: detalle.idChatCab),
               ),
               _AccionBtn(
                 icono: AppIcons.phone,

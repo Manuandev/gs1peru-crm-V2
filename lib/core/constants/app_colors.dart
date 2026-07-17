@@ -220,6 +220,8 @@ class AppColors {
   // COLORES DE TEXTO
   // ============================================================
 
+  static const Color disabled = Color(0xFF9E9E9E);
+
   /// Texto principal — alias de ui8
   static const Color textPrimary = Color(0xFF262626); // Casi negro
 

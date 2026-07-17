@@ -62,4 +62,8 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     fileExt: fileExt,
     fileBytes: fileBytes,
   );
+
+  @override
+  Future<CrudResult> eliminarSolicitud(String numSol) =>
+      _remote.eliminarSolicitud(numSol);
 }

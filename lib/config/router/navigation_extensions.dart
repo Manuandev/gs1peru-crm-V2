@@ -61,8 +61,17 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToEquipo() => clearAndPush(AppRoutes.equipo);
   Future<void> goToChats() => clearAndPush(AppRoutes.chats);
   Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
-  Future<void> goToDetalleSolicitud({required Solicitud solicitud}) =>
-      _push(AppRoutes.detalleSolicitud, arguments: {'solicitud': solicitud});
+  // origenValidar: true cuando se navega desde el botón "Validar" de la
+  // card (SolicitudAccionTipo.sinValidar) — el detalle muestra "Validar" en
+  // vez de "Editar ficha" en ese caso (mismo mecanismo, otro texto). Ver
+  // solicitudes/CLAUDE.md.
+  Future<void> goToDetalleSolicitud({
+    required Solicitud solicitud,
+    bool origenValidar = false,
+  }) => _push(
+    AppRoutes.detalleSolicitud,
+    arguments: {'solicitud': solicitud, 'origenValidar': origenValidar},
+  );
 
   Future<void> goToFichaCompletarSolicitud({
     required Solicitud solicitud,

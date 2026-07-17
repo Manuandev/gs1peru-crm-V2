@@ -1,5 +1,49 @@
 # Solicitudes Feature
 
+## Card simplificada + Validar vs Ver + eliminar solicitud (2026-07-16)
+Rediseño pedido por el usuario de la lista y el detalle:
+
+- **`SolicitudCard` — regla de acción simplificada, ya no mira `idEstado`.** `_accion()` ahora
+  es solo `ibValidado ? ninguna : sinValidar` — validada → solo "Ver"; sin validar → "Ver" +
+  "Validar". Se eliminó `SolicitudAccionTipo.cobranza` y el botón "Completar" (ya no existen).
+  Qué se puede hacer dentro del detalle (editar vs. solo continuar) sigue siendo responsabilidad
+  exclusiva de `Solicitud.puedeEditar` (`idEstado == 0`), no de la card.
+- **El detalle ahora distingue si se entró por "Ver" o por "Validar"** — nuevo parámetro
+  `origenValidar` (`goToDetalleSolicitud(solicitud, origenValidar: true)` desde el botón
+  "Validar"; `false`/default desde "Ver"), threaded hasta `_BotonesDetalle` vía
+  `SolicitudDetallePage`/`SolicitudDetalleView`. Con esto, `_BotonesDetalle` calcula
+  `mostrarEditar = origenValidar || solicitud.puedeEditar`:
+  - Entrada por **Ver**: "Continuar" siempre; "Editar ficha" solo si `puedeEditar` — sin cambios
+    respecto al comportamiento de siempre.
+  - Entrada por **Validar**: "Continuar" + el botón de editar **siempre**, con el texto
+    "Validar" en vez de "Editar ficha" — mecánicamente es exactamente lo mismo (mismo
+    `onPressed`, abre el wizard con `modoEdicion: true`), solo cambia el label.
+- **Título del detalle** — el subtítulo "Revisa la información y continúa con el proceso" se
+  movió al `titleWidget` del `BasePage` (bajo el título "Detalle de Solicitud", dentro del mismo
+  AppBar) — se eliminó el banner azul separado `_DetalleHeader` que existía antes.
+- **Eliminar solicitud** — tacho de basura en `appBarTrailingButtons`, visible **solo si
+  `!ibValidado`** (mismo criterio que el botón "Validar" de la card — una vez validada, no se
+  puede eliminar). Flujo: confirmar (`context.showConfirmDialog`) → `SolicitudProgreso`/
+  `SolicitudProgresoOverlay` (el mismo widget que ya usa el wizard para Guardar/Generar, ver
+  sección de arriba — reusado tal cual, un solo paso "Eliminando solicitud..." → check → pausa
+  500ms) → `context.goToSolicitudes()` (`clearAndPush`, recarga la lista fresca sola, no hace
+  falta lógica extra para "refrescar").
+  - **Nuevo task `'DEL'` en `CSV_SOLICITUD_CUD_APP`** (no existía ningún mecanismo de borrado de
+    solicitud completa antes de esto) — borra en cascada, en este orden (por FKs):
+    `T_TECMSOLINSCRIPCION02_ASISTENCIA` → `T_TECMSOLINSCRIPCION02` (participantes) →
+    `T_TECMSOLINSCRIPCION01_ARCHIVOS` → `T_TECMSOLINSCRIPCION01_FACTURACION` →
+    `T_LEAD_TECMSOLINSCRIPCION01` (link al lead de origen) → `T_TECMSOLINSCRIPCION01` (cabecera).
+    El SP mismo rechaza el borrado si `IB_VALIDADO != 0` (última línea de defensa, redundante con
+    que el botón ya no se muestra en ese caso en la UI). Mismo endpoint que `guardarSolicitud()`
+    (`urlSolicitudesCud`, texto plano) — el controller (`SPSolicitudCUDApp`) es un passthrough
+    genérico al SP, no necesitó cambios.
+  - **Pendiente, no tocado**: el/los archivo(s) físicos en disco
+    (`ARCHIVOS_FACTURACION\<NUMSOL>\...`) no se borran — solo el registro en
+    `T_TECMSOLINSCRIPCION01_ARCHIVOS`. Si hace falta limpiar disco también, es un cambio aparte
+    en el controller/backend de archivos.
+  - Nuevos: `SolicitudRemoteDatasource.eliminarSolicitud()`, `SolicitudRepository.eliminarSolicitud()`/
+    `SolicitudRepositoryImpl`, `EliminarSolicitudUseCase` (exportado en `index_solicitudes.dart`).
+
 ## Auditoría completa de anchos de columna del CUD (2026-07-16)
 El usuario corrió `INFORMATION_SCHEMA.COLUMNS` sobre las 8 tablas reales que toca
 `CSV_SOLICITUD_CUD_APP` (identificadas leyendo el SP completo:

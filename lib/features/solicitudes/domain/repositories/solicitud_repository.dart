@@ -34,4 +34,6 @@ abstract class SolicitudRepository {
     required String fileExt,
     required List<int> fileBytes,
   });
+
+  Future<CrudResult> eliminarSolicitud(String numSol);
 }

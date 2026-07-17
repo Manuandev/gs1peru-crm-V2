@@ -16,6 +16,9 @@ class SolicitudGeneradaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SolicitudGeneradaView(solicitud: solicitud, comprobante: comprobante);
+    return SolicitudGeneradaView(
+      solicitud: solicitud,
+      comprobante: comprobante,
+    );
   }
 }

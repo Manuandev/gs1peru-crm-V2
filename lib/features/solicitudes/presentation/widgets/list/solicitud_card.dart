@@ -23,26 +23,16 @@ class SolicitudCard extends StatelessWidget {
   static Color colorEstado(bool validado) =>
       validado ? AppColors.success : AppColors.warning;
 
-  // ── Acción según validación + estado ──────────────────────────────
-  // 1. Sin validar y aún "Por Completar" (ibValidado == false && idEstado
-  //    == 0) → "Validar".
-  // 2. Validada y con estado > 0 (ya avanzó más allá de "Por Completar")
-  //    → ninguna acción, solo "Ver": ya no hay nada que completar.
-  // 3. Validada y con estado == 0 (aún "Por Completar") → "Completar":
-  //    en el detalle podrá elegir "Editar ficha" o "Continuar" (ver
-  //    Solicitud.puedeEditar, que solo mira idEstado == 0).
-  // El caso restante (sin validar y estado > 0) no está definido por
-  // negocio todavía — cae a "ninguna" (solo "Ver"), el default más
-  // conservador, igual que antes de esta regla.
-  static SolicitudAccionTipo _accion(bool ibValidado, int idEstado) {
-    if (!ibValidado && idEstado == 0) return SolicitudAccionTipo.sinValidar;
-    if (ibValidado && idEstado == 0) return SolicitudAccionTipo.cobranza;
-    return SolicitudAccionTipo.ninguna;
-  }
+  // ── Acción según validación (2026-07-16, ya no mira idEstado) ──────
+  // Validada → solo "Ver". Sin validar → "Ver" + "Validar". Qué se puede
+  // hacer dentro del detalle (editar ficha vs. solo continuar) se decide
+  // ahí con Solicitud.puedeEditar (idEstado), no acá.
+  static SolicitudAccionTipo _accion(bool ibValidado) =>
+      ibValidado ? SolicitudAccionTipo.ninguna : SolicitudAccionTipo.sinValidar;
 
   @override
   Widget build(BuildContext context) {
-    final accion = _accion(solicitud.ibValidado, solicitud.idEstado);
+    final accion = _accion(solicitud.ibValidado);
     // final canalInfo = CanalHelper.get(solicitud.idCanal);
 
     return Container(
@@ -286,59 +276,35 @@ class SolicitudCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (accion != SolicitudAccionTipo.ninguna) ...[
+                  if (accion == SolicitudAccionTipo.sinValidar) ...[
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: accion == SolicitudAccionTipo.cobranza
-                          ? FilledButton.icon(
-                              onPressed: onAccion,
-                              icon: Icon(AppIcons.edit, size: AppSizing.iconSm),
-                              label: Text(
-                                'Completar',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: AppTextStyles.weightSemiBold,
-                                ),
-                              ),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size.fromHeight(
-                                  AppSizing.buttonHeightCompact,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppSizing.radiusMd,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : FilledButton.icon(
-                              onPressed: onAccion ?? () {},
-                              icon: Icon(
-                                AppIcons.checkCircle,
-                                size: AppSizing.iconSm,
-                              ),
-                              label: Text(
-                                'Validar',
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: AppTextStyles.weightSemiBold,
-                                ),
-                              ),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.secondary,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size.fromHeight(
-                                  AppSizing.buttonHeightCompact,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppSizing.radiusMd,
-                                  ),
-                                ),
-                              ),
+                      child: FilledButton.icon(
+                        onPressed: onAccion,
+                        icon: Icon(
+                          AppIcons.checkCircle,
+                          size: AppSizing.iconSm,
+                        ),
+                        label: Text(
+                          'Validar',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: AppTextStyles.weightSemiBold,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.secondary,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(
+                            AppSizing.buttonHeightCompact,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSizing.radiusMd,
                             ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ],

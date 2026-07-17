@@ -42,9 +42,11 @@ class ParticipanteLocal {
     this.esSolicitante = false,
   });
 
-  String get nombreCompleto => [nombres, apellidoPaterno, apellidoMaterno]
-      .where((s) => s.isNotEmpty)
-      .join(' ');
+  String get nombreCompleto => [
+    nombres,
+    apellidoPaterno,
+    apellidoMaterno,
+  ].where((s) => s.isNotEmpty).join(' ');
 
   String get importeFormateado => importe.toStringAsFixed(2);
 
@@ -79,7 +81,8 @@ class ParticipanteLocal {
       correo: correo ?? this.correo,
       cargo: cargo ?? this.cargo,
       celular: celular ?? this.celular,
-      celularCodigoTelefono: celularCodigoTelefono ?? this.celularCodigoTelefono,
+      celularCodigoTelefono:
+          celularCodigoTelefono ?? this.celularCodigoTelefono,
       tipoParticipante: tipoParticipante ?? this.tipoParticipante,
       importe: importe ?? this.importe,
       esSolicitante: esSolicitante ?? this.esSolicitante,

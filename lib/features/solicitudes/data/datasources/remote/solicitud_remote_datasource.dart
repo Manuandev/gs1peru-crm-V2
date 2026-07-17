@@ -195,6 +195,36 @@ class SolicitudRemoteDatasource {
     };
   }
 
+  // Task 'DEL' — [CRM].[CSV_SOLICITUD_CUD_APP]. Borra en cascada la
+  // solicitud completa (participantes, archivos, facturación, el link a su
+  // lead de origen y la cabecera) — el SP mismo rechaza el borrado si ya
+  // está validada (IB_VALIDADO != 0), como última línea de defensa; el
+  // botón de eliminar en la UI ya se oculta en ese caso. Mismo endpoint que
+  // guardarSolicitud() (urlSolicitudesCud, texto plano) — el controller es
+  // un passthrough genérico al SP, no necesita un endpoint aparte.
+  Future<CrudResult> eliminarSolicitud(String numSol) async {
+    final ip = await _deviceInfo.getLocalIp();
+    final coords = await _deviceInfo.getCoordenadasString();
+
+    final cabecera = [
+      numSol,
+      _session.codUser,
+      ip,
+      coords,
+    ].join(AppConstants.sepCampos);
+
+    final body = [cabecera, '', 'DEL'].join(AppConstants.sepListas);
+
+    final result = await _api.postSafe(ApiConstants.urlSolicitudesCud, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
+    };
+  }
+
   // Task 'AR' — [CRM].[CSV_SOLICITUD_CUD_APP] vía SPSolicitudCUDAppArchivos.
   // Sube un archivo (voucher/OC) ya con el NUMSOL confirmado (viene de la
   // respuesta de guardarSolicitud). Chunks de 2MB, mismo patrón que

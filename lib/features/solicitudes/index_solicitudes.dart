@@ -21,6 +21,7 @@ export 'domain/usecases/get_solicitud_detalle_usecase.dart';
 export 'domain/usecases/get_detalle_solicitud_usecase.dart';
 export 'domain/usecases/guardar_solicitud_usecase.dart';
 export 'domain/usecases/guardar_archivo_solicitud_usecase.dart';
+export 'domain/usecases/eliminar_solicitud_usecase.dart';
 
 export 'presentation/bloc/list/solicitud_list_bloc.dart';
 export 'presentation/bloc/list/solicitud_list_event.dart';

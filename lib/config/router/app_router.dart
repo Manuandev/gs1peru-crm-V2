@@ -115,7 +115,10 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return SolicitudDetallePage(solicitud: args['solicitud'] as Solicitud);
+        return SolicitudDetallePage(
+          solicitud: args['solicitud'] as Solicitud,
+          origenValidar: args['origenValidar'] as bool? ?? false,
+        );
       },
     ),
     AppRoutes.fichaCompletarSolicitud: RouteDefinition(

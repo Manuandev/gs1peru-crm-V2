@@ -12,7 +12,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
   String? _asesorSeleccionado;
 
   SolicitudListBloc(this._getSolicitudesUseCase)
-      : super(const SolicitudListInitial()) {
+    : super(const SolicitudListInitial()) {
     on<SolicitudListStarted>(_onStarted);
     on<SolicitudListRefresh>(_onRefresh);
     on<SolicitudListFiltered>(_onFiltered);
@@ -76,15 +76,12 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
   void _emitFiltered(Emitter<SolicitudListState> emit) {
     var resultado = switch (_filtroActivo) {
       SolicitudFiltro.todas => List<Solicitud>.from(_allSolicitudes),
-      SolicitudFiltro.asesores => _allSolicitudes
-          .where((s) => s.asesor == _asesorSeleccionado)
-          .toList(),
-      SolicitudFiltro.sinValidar => _allSolicitudes
-          .where((s) => !s.ibValidado)
-          .toList(),
-      SolicitudFiltro.enviarACobranza => _allSolicitudes
-          .where((s) => s.ibValidado)
-          .toList(),
+      SolicitudFiltro.asesores =>
+        _allSolicitudes.where((s) => s.asesor == _asesorSeleccionado).toList(),
+      SolicitudFiltro.sinValidar =>
+        _allSolicitudes.where((s) => !s.ibValidado).toList(),
+      SolicitudFiltro.enviarACobranza =>
+        _allSolicitudes.where((s) => s.ibValidado).toList(),
     };
 
     final q = _lastSearchQuery.toLowerCase().trim();
@@ -101,14 +98,16 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
           .toList();
     }
 
-    emit(SolicitudListSuccess(
-      solicitudes: resultado,
-      filtro: _filtroActivo,
-      asesorSeleccionado: _asesorSeleccionado,
-      conteosPorAsesor: _buildConteosPorAsesor(),
-      cntSinValidar: _allSolicitudes.where((s) => !s.ibValidado).length,
-      cntValidados: _allSolicitudes.where((s) => s.ibValidado).length,
-    ));
+    emit(
+      SolicitudListSuccess(
+        solicitudes: resultado,
+        filtro: _filtroActivo,
+        asesorSeleccionado: _asesorSeleccionado,
+        conteosPorAsesor: _buildConteosPorAsesor(),
+        cntSinValidar: _allSolicitudes.where((s) => !s.ibValidado).length,
+        cntValidados: _allSolicitudes.where((s) => s.ibValidado).length,
+      ),
+    );
   }
 
   // Conteo de solicitudes por asesor (codUser) sobre el total cargado —

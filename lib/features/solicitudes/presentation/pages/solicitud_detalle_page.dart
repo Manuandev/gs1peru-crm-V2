@@ -7,8 +7,13 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudDetallePage extends StatelessWidget {
   final Solicitud solicitud;
+  final bool origenValidar;
 
-  const SolicitudDetallePage({super.key, required this.solicitud});
+  const SolicitudDetallePage({
+    super.key,
+    required this.solicitud,
+    this.origenValidar = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +22,10 @@ class SolicitudDetallePage extends StatelessWidget {
         GetDetalleSolicitudUseCase(context.read<SolicitudRepository>()),
         GetSolicitudesUseCase(context.read<SolicitudRepository>()),
       )..add(SolicitudDetalleStarted(solicitud.idSolicitud)),
-      child: SolicitudDetalleView(solicitud: solicitud),
+      child: SolicitudDetalleView(
+        solicitud: solicitud,
+        origenValidar: origenValidar,
+      ),
     );
   }
 }

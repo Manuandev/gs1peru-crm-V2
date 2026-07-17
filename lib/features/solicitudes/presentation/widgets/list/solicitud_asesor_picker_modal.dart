@@ -91,9 +91,7 @@ class _SolicitudAsesorPickerModalState
                 height: AppSizing.sheetHandleHeight,
                 decoration: BoxDecoration(
                   color: colorScheme.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(
-                    AppSizing.radiusCircular,
-                  ),
+                  borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
                 ),
               ),
             ),
@@ -171,7 +169,9 @@ class _SolicitudAsesorPickerModalState
                   );
                 }
                 if (filtrados.isEmpty) {
-                  return const AppEmptyView(message: 'No se encontraron asesores.');
+                  return const AppEmptyView(
+                    message: 'No se encontraron asesores.',
+                  );
                 }
 
                 return ListView.separated(
@@ -228,13 +228,15 @@ class _AsesorTile extends StatelessWidget {
           vertical: AppSpacing.sm2,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primaryContainer : colorScheme.surface,
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.surface,
           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
           border: Border.all(
-            color: isSelected ? colorScheme.primary : colorScheme.outlineVariant,
-            width: isSelected
-                ? AppSizing.borderFocusWidth
-                : AppSizing.hairline,
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.outlineVariant,
+            width: isSelected ? AppSizing.borderFocusWidth : AppSizing.hairline,
           ),
         ),
         child: Row(

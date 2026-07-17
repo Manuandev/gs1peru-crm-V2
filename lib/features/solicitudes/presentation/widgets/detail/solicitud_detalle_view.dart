@@ -7,10 +7,77 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
-class SolicitudDetalleView extends StatelessWidget {
+class SolicitudDetalleView extends StatefulWidget {
   final Solicitud solicitud;
+  // true cuando se navegó acá desde el botón "Validar" de la card
+  // (SolicitudAccionTipo.sinValidar) — cambia el footer de botones, ver
+  // _BotonesDetalle y solicitudes/CLAUDE.md.
+  final bool origenValidar;
 
-  const SolicitudDetalleView({super.key, required this.solicitud});
+  const SolicitudDetalleView({
+    super.key,
+    required this.solicitud,
+    this.origenValidar = false,
+  });
+
+  @override
+  State<SolicitudDetalleView> createState() => _SolicitudDetalleViewState();
+}
+
+class _SolicitudDetalleViewState extends State<SolicitudDetalleView> {
+  // Progreso del borrado (spinner → check) — mismo widget que ya usa el
+  // wizard para Guardar/Generar, ver
+  // completar/solicitud_progreso_guardado.dart.
+  final SolicitudProgreso _progreso = SolicitudProgreso();
+
+  @override
+  void dispose() {
+    _progreso.dispose();
+    super.dispose();
+  }
+
+  Future<void> _eliminarSolicitud(Solicitud solicitud) async {
+    final confirmado = await context.showConfirmDialog(
+      title: 'Eliminar solicitud',
+      message:
+          '¿Deseas eliminar esta solicitud? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+    );
+    if (!confirmado || !mounted) return;
+
+    _progreso.iniciarPaso('Eliminando solicitud...');
+    final result = await EliminarSolicitudUseCase(
+      context.read<SolicitudRepository>(),
+    ).call(solicitud.idSolicitud);
+
+    if (!mounted) return;
+
+    if (result is CrudOk) {
+      _progreso.completarPasoActual();
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      _progreso.reset();
+      // clearAndPush — igual que entrar de nuevo a la pantalla, la lista
+      // se recarga fresca (no queda la solicitud eliminada en memoria).
+      context.goToSolicitudes();
+      return;
+    }
+
+    _progreso.reset();
+    switch (result) {
+      case CrudError(:final message):
+        AppSnackBar.error(context, message);
+      case CrudAlert(:final message):
+        AppSnackBar.warning(context, message);
+      case CrudNoInternet():
+        AppSnackBar.error(context, 'Sin conexión a Internet.');
+      case CrudEmpty():
+        AppSnackBar.error(context, 'Respuesta inesperada del servidor.');
+      case CrudOk():
+        break; // ya se maneja arriba
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +89,30 @@ class SolicitudDetalleView extends StatelessWidget {
         // usa como último respaldo si la solicitud ya no aparece en la
         // lista recién traída (caso raro).
         final solicitudActual = state is SolicitudDetalleSuccess
-            ? (state.solicitud ?? solicitud)
-            : solicitud;
+            ? (state.solicitud ?? widget.solicitud)
+            : widget.solicitud;
 
         return BasePage(
           onPop: () => context.goBack(),
           drawerSide: DrawerSide.none,
           bodyPadding: EdgeInsets.zero,
-          title: 'Detalle de Solicitud',
+          titleWidget: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Detalle de Solicitud'),
+              Text(
+                'Revisa la información y continúa con el proceso',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onPrimary.withValues(alpha: 0.85),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
           appBarLeadingButtons: [
             IconButton(
               onPressed: () => context.goBack(),
@@ -39,116 +122,97 @@ class SolicitudDetalleView extends StatelessWidget {
               ),
             ),
           ],
-          body: Column(
-            children: [
-              // ── Header azul — conectado con el AppBar ─────────────
-              const _DetalleHeader(),
-
-              // ── Indicador de pasos — superpuesto al header ─────────
-              Transform.translate(
-                offset: const Offset(0, -AppSpacing.md),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
+          // Solo se puede eliminar mientras siga sin validar — una vez
+          // validada, no se muestra el tacho (mismo criterio que la card).
+          appBarTrailingButtons: solicitudActual.ibValidado
+              ? null
+              : [
+                  IconButton(
+                    onPressed: () => _eliminarSolicitud(solicitudActual),
+                    icon: Icon(
+                      AppIcons.delete,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
-                  child: const _PasosIndicador(pasoActual: 1),
-                ),
-              ),
-
-              // ── Contenido scrollable ───────────────────────────────
-              Expanded(
-                child: Transform.translate(
-                  offset: const Offset(0, -AppSpacing.md),
-                  child: SingleChildScrollView(
+                ],
+          body: Stack(
+            children: [
+              Column(
+                children: [
+                  // ── Indicador de pasos ─────────────────────────────
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.md,
+                      AppSpacing.sm,
                       AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.lg,
+                      0,
                     ),
-                    child: Column(
-                      children: [
-                        SolicitudCard(
-                          solicitud: solicitudActual,
-                          mostrarBotones: false,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        switch (state) {
-                          SolicitudDetalleLoading() ||
-                          SolicitudDetalleInitial() => const Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: AppSpacing.xl,
-                            ),
-                            child: AppLoadingView(),
+                    child: const _PasosIndicador(pasoActual: 1),
+                  ),
+
+                  // ── Contenido scrollable ───────────────────────────
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                      ),
+                      child: Column(
+                        children: [
+                          SolicitudCard(
+                            solicitud: solicitudActual,
+                            mostrarBotones: false,
                           ),
-                          SolicitudDetalleError(:final mensaje) =>
-                            AppErrorView(
-                              message: mensaje,
-                              onRetry: () => context
-                                  .read<SolicitudDetalleBloc>()
-                                  .add(
-                                    SolicitudDetalleStarted(
-                                      solicitud.idSolicitud,
+                          const SizedBox(height: AppSpacing.sm),
+                          switch (state) {
+                            SolicitudDetalleLoading() ||
+                            SolicitudDetalleInitial() => const Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: AppSpacing.xl,
+                              ),
+                              child: AppLoadingView(),
+                            ),
+                            SolicitudDetalleError(:final mensaje) =>
+                              AppErrorView(
+                                message: mensaje,
+                                onRetry: () =>
+                                    context.read<SolicitudDetalleBloc>().add(
+                                      SolicitudDetalleStarted(
+                                        widget.solicitud.idSolicitud,
+                                      ),
                                     ),
-                                  ),
+                              ),
+                            SolicitudDetalleSuccess(:final detalle) => Column(
+                              children: [
+                                _SeccionDatosParticipante(detalle: detalle),
+                                const SizedBox(height: AppSpacing.sm),
+                                _SeccionDatosFacturacion(detalle: detalle),
+                                const SizedBox(height: AppSpacing.sm),
+                                _SeccionHistorial(historial: detalle.historial),
+                              ],
                             ),
-                          SolicitudDetalleSuccess(:final detalle) => Column(
-                            children: [
-                              _SeccionDatosParticipante(detalle: detalle),
-                              const SizedBox(height: AppSpacing.sm),
-                              _SeccionDatosFacturacion(detalle: detalle),
-                              const SizedBox(height: AppSpacing.sm),
-                              _SeccionHistorial(historial: detalle.historial),
-                            ],
-                          ),
-                          _ => const SizedBox.shrink(),
-                        },
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
+                            _ => const SizedBox.shrink(),
+                          },
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
 
-              // ── Botones de acción fijos al pie ─────────────────────
-              _BotonesDetalle(solicitud: solicitudActual),
+                  // ── Botones de acción fijos al pie ─────────────────
+                  _BotonesDetalle(
+                    solicitud: solicitudActual,
+                    origenValidar: widget.origenValidar,
+                  ),
+                ],
+              ),
+              SolicitudProgresoOverlay(progreso: _progreso),
             ],
           ),
         );
       },
-    );
-  }
-}
-
-// ── Header azul bajo el AppBar ────────────────────────────────────────────────
-
-class _DetalleHeader extends StatelessWidget {
-  const _DetalleHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(AppSizing.homeHeaderBottomRadius),
-          bottomRight: Radius.circular(AppSizing.homeHeaderBottomRadius),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xs,
-        AppSpacing.md,
-        AppSpacing.lg,
-      ),
-      child: Text(
-        'Revisa la información y continúa con el proceso',
-        style: AppTextStyles.bodySmall.copyWith(
-          color: AppColors.textOnDark,
-          fontSize: 14,
-        ),
-      ),
     );
   }
 }
@@ -615,11 +679,19 @@ class _EntradaHistorial extends StatelessWidget {
 
 class _BotonesDetalle extends StatelessWidget {
   final Solicitud solicitud;
+  // true si se entró desde el botón "Validar" de la card — en ese caso el
+  // botón de editar SIEMPRE se muestra (con el texto "Validar" en vez de
+  // "Editar ficha", mismo mecanismo — abre el wizard en modoEdicion:true),
+  // sin importar Solicitud.puedeEditar. Si se entró por "Ver", se sigue
+  // usando puedeEditar (idEstado == 0) como antes.
+  final bool origenValidar;
 
-  const _BotonesDetalle({required this.solicitud});
+  const _BotonesDetalle({required this.solicitud, this.origenValidar = false});
 
   @override
   Widget build(BuildContext context) {
+    final mostrarEditar = origenValidar || solicitud.puedeEditar;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -633,7 +705,7 @@ class _BotonesDetalle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (solicitud.puedeEditar) ...[
+          if (mostrarEditar) ...[
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => context.goToFichaCompletarSolicitud(
@@ -641,7 +713,7 @@ class _BotonesDetalle extends StatelessWidget {
                   modoEdicion: true,
                 ),
                 icon: const Icon(AppIcons.edit, size: AppSizing.iconActionSm),
-                label: const Text('Editar ficha'),
+                label: Text(origenValidar ? 'Validar' : 'Editar ficha'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: const BorderSide(color: AppColors.border),

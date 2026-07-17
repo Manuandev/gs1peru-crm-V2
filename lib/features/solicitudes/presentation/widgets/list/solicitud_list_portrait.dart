@@ -82,10 +82,11 @@ class SolicitudListPortrait extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: SolicitudCard(
                         solicitud: s,
-                        onVer: () =>
-                            context.goToDetalleSolicitud(solicitud: s),
-                        onAccion: () =>
-                            context.goToDetalleSolicitud(solicitud: s),
+                        onVer: () => context.goToDetalleSolicitud(solicitud: s),
+                        onAccion: () => context.goToDetalleSolicitud(
+                          solicitud: s,
+                          origenValidar: true,
+                        ),
                       ),
                     );
                   },

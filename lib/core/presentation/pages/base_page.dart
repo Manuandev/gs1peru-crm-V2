@@ -75,11 +75,6 @@ class BasePage extends StatelessWidget {
   /// Color de fondo del AppBar
   final Color? appBarBackgroundColor;
 
-  /// Altura del AppBar. Default [AppSizing.appBarHeight] (56px). Usar
-  /// [AppSizing.appBarHeightSubtitle] cuando [titleWidget] tiene 2 líneas
-  /// (título + subtítulo) para que el texto no quede pegado a los bordes.
-  final double appBarHeight;
-
   // ── DRAWER ───────────────────────────────────────────────────
 
   /// Ítems del drawer. Si es null o vacío, solo se ven configuración y logout.
@@ -146,7 +141,6 @@ class BasePage extends StatelessWidget {
     this.onPopupSelected,
     this.showAppBarElevation = false,
     this.appBarBackgroundColor,
-    this.appBarHeight = AppSizing.appBarHeight,
     // Drawer
     this.drawerItems,
     this.drawerHeader,
@@ -198,7 +192,6 @@ class BasePage extends StatelessWidget {
         showElevation: showAppBarElevation,
         backgroundColor: appBarBackgroundColor,
         onSearch: onSearch,
-        toolbarHeight: appBarHeight,
       ),
 
       // ── DRAWER ─────────────────────────────────────────────
@@ -273,4 +266,3 @@ class BasePage extends StatelessWidget {
 ///   subtitle: 'juan@empresa.com',
 ///   avatarUrl: 'https://...',   // o null para ícono por defecto
 /// )
-

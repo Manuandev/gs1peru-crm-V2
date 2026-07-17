@@ -45,11 +45,6 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Color? backgroundColor;
   final void Function(String query)? onSearch;
 
-  /// Altura del AppBar. Default [AppSizing.appBarHeight] (56px). Usar
-  /// [AppSizing.appBarHeightSubtitle] cuando [titleWidget] tiene 2 líneas
-  /// (título + subtítulo) para que el texto no quede pegado a los bordes.
-  final double toolbarHeight;
-
   /// Número de notificaciones pendientes.
   /// null = sin ícono | 0 = ícono sin badge | >0 = badge con número y pulso
   final int? notificationCount;
@@ -76,14 +71,13 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.notificationCount,
     this.onNotification,
     this.onTapTitle,
-    this.toolbarHeight = AppSizing.appBarHeight,
   }) : assert(
          title != null || titleWidget != null,
          'CustomAppBar necesita title o titleWidget',
        );
 
   @override
-  Size get preferredSize => Size.fromHeight(toolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -180,6 +174,9 @@ class _CustomAppBarState extends State<CustomAppBar>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final leadingWidget = _isSearching
+        ? _buildBackButton()
+        : _buildLeading(context);
 
     return AppBar(
       backgroundColor: widget.backgroundColor ?? colorScheme.primary,
@@ -187,11 +184,13 @@ class _CustomAppBarState extends State<CustomAppBar>
       elevation: widget.showElevation
           ? AppSizing.elevationMedium
           : AppSizing.elevationNone,
-      toolbarHeight: widget.toolbarHeight,
       centerTitle: false,
       automaticallyImplyLeading: widget.drawerSide == DrawerSide.left,
-      leading: _isSearching ? _buildBackButton() : _buildLeading(context),
-      titleSpacing: 0,
+      leading: leadingWidget,
+      // Sin leading (drawerSide: none, sin leadingButtons) el título quedaba
+      // pegado al borde izquierdo — titleSpacing en 0 solo tiene sentido
+      // cuando hay un ícono de leading que ya aporta esa separación visual.
+      titleSpacing: leadingWidget == null ? AppSpacing.md : 0,
 
       title: _isSearching
           ? Container(

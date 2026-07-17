@@ -126,35 +126,41 @@ class _SolicitudParticipantesViewState
   // directo al resumen. `esInvitado` viene del catálogo real
   // (CatalogsBloc.tiposParticipante) — nunca comparar ids hardcodeados
   // ('2'/'3') acá.
+  //
+  // OJO — en modo solo-ver (modoEdicion == false) no se valida ni se
+  // guarda, es un recorrido de solo lectura — pero SÍ se sigue calculando
+  // "soloInvitados" para decidir a qué paso saltar, incluso solo revisando.
   Future<void> _onContinuar(
     BuildContext context,
     ParticipantesState state,
   ) async {
-    if (_guardando) return;
+    if (widget.modoEdicion) {
+      if (_guardando) return;
 
-    if (state.participantes.isEmpty) {
-      AppSnackBar.error(
+      if (state.participantes.isEmpty) {
+        AppSnackBar.error(
+          context,
+          'Agrega al menos un participante para continuar',
+        );
+        return;
+      }
+
+      setState(() => _guardando = true);
+
+      final result = await guardarBorradorCompleto(
         context,
-        'Agrega al menos un participante para continuar',
+        idLead: widget.solicitud.idLead,
+        progreso: _progreso,
       );
-      return;
-    }
 
-    setState(() => _guardando = true);
+      if (!mounted) return;
+      _progreso.reset();
+      setState(() => _guardando = false);
 
-    final result = await guardarBorradorCompleto(
-      context,
-      idLead: widget.solicitud.idLead,
-      progreso: _progreso,
-    );
-
-    if (!mounted) return;
-    _progreso.reset();
-    setState(() => _guardando = false);
-
-    if (result is! CrudOk) {
-      mostrarResultadoGuardarSolicitud(context, result);
-      return;
+      if (result is! CrudOk) {
+        mostrarResultadoGuardarSolicitud(context, result);
+        return;
+      }
     }
 
     final catalogState = context.read<CatalogsBloc>().state;
@@ -357,7 +363,7 @@ class _SolicitudParticipantesViewState
                           ],
                         )
                       : CustomPrimaryButton(
-                          text: 'Siguiente →',
+                          text: 'Continuar →',
                           onPressed: () => _onContinuar(context, state),
                         ),
                 ),

@@ -29,6 +29,18 @@ paso tiene que quedar guardado en el backend apenas se avanza.
 - **Volver "Atrás" y cambiar algo (ej. quitar un archivo adjunto) y presionar "Siguiente" de
   nuevo vuelve a guardar/re-subir todo** — comportamiento esperado, confirmado explícitamente por
   el usuario ("cambio un documento... pongo continuar, otra vez se tiene que volver a guardar").
+- **Bug real detectado en vivo el mismo día — el primer intento de este cambio no distinguía
+  `modoEdicion`, así que también validaba y guardaba en el recorrido de solo lectura ("Revisar
+  solicitud" desde el detalle, `modoEdicion: false`).** Corregido: los 3 `_onContinuar` ahora
+  arrancan revisando `widget.modoEdicion` — si es `false`, avanzan directo sin validar ni guardar
+  nada (en el paso 2 igual se calcula `soloInvitados` para decidir a qué paso saltar, aunque no
+  se guarde). El botón, en ese modo, sigue diciendo **"Continuar →"** (no "Siguiente →" — esa
+  palabra queda reservada para cuando sí valida y guarda, en modo edición).
+- **El botón del detalle que entra en modo solo-ver se renombró** — en `_BotonesDetalle`
+  (`solicitud_detalle_view.dart`), el botón que llamaba `goToFichaCompletarSolicitud(modoEdicion:
+  false)` decía "Continuar" con ícono de flecha; ahora dice **"Revisar solicitud"** con el mismo
+  ícono de ojo (`AppIcons.visibility`) que ya usa "Ver" en la card — para que se note a simple
+  vista que es un recorrido de solo lectura, distinto de "Editar ficha"/"Validar" (que si guardan).
 
 ## Bug real — "RUC ya existe" bloqueaba Guardar/Generar casi siempre (2026-07-16)
 Reportado por la coordinadora del usuario ("el botón guardar no funciona, muestra alerta 'RUC YA

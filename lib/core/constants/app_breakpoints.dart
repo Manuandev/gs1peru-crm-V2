@@ -215,11 +215,6 @@ class AppSizing {
   /// Altura de AppBar: 56px (kToolbarHeight)
   static const double appBarHeight = 56.0;
 
-  /// Altura de AppBar con subtítulo: 72px — cuando el titleWidget tiene 2 líneas
-  /// (título + subtítulo, ej. "Solicitud lista"), 56px deja el texto pegado a
-  /// los bordes del AppBar. Usar con BasePage.appBarHeight/CustomAppBar.toolbarHeight.
-  static const double appBarHeightSubtitle = 72.0;
-
   // ============================================================
   // ANCHOS MÁXIMOS (para centrar contenido)
   // ============================================================

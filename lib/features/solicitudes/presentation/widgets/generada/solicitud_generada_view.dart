@@ -27,7 +27,6 @@ class SolicitudGeneradaView extends StatelessWidget {
       onPop: () => context.goToSolicitudes(),
       drawerSide: DrawerSide.none,
       bodyPadding: EdgeInsets.zero,
-      appBarHeight: AppSizing.appBarHeightSubtitle,
       titleWidget: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

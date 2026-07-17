@@ -732,8 +732,11 @@ class _BotonesDetalle extends StatelessWidget {
                 solicitud: solicitud,
                 modoEdicion: false,
               ),
-              icon: const Icon(AppIcons.forward, size: AppSizing.iconActionSm),
-              label: const Text('Continuar'),
+              icon: const Icon(
+                AppIcons.visibility,
+                size: AppSizing.iconActionSm,
+              ),
+              label: const Text('Revisar solicitud'),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.textOnDark,

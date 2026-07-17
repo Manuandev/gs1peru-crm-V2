@@ -206,7 +206,15 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // obligatorios y GUARDA de verdad (borrador) antes de avanzar a Resumen —
   // mismo patrón que los pasos 1 y 2. El botón "Guardar" del medio se
   // eliminó, "Siguiente" ya cumple esa función.
+  //
+  // OJO — en modo solo-ver (modoEdicion == false) no se valida ni se
+  // guarda, es un recorrido de solo lectura, solo avanza.
   Future<void> _onContinuar(PaisItem? paisCelular) async {
+    if (!widget.modoEdicion) {
+      widget.onContinuar();
+      return;
+    }
+
     if (_guardando) return;
 
     if (!_formCompleto) {
@@ -685,7 +693,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                           ],
                         )
                       : CustomPrimaryButton(
-                          text: 'Siguiente →',
+                          text: 'Continuar →',
                           onPressed: () => _onContinuar(paisCelular),
                         ),
                 ],

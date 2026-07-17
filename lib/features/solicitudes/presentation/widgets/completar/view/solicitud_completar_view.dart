@@ -673,7 +673,19 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // pendientes con el overlay de progreso) antes de avanzar al paso 2. El
   // botón "Guardar" del medio se eliminó de este paso (y de los pasos 2 y
   // 3) — ya no hace falta, "Siguiente" cumple esa función.
+  //
+  // OJO — en modo solo-ver (modoEdicion == false, se entró por "Continuar"/
+  // "Revisar solicitud" desde el detalle, no por "Editar ficha") esto NO
+  // aplica — es un recorrido de solo lectura, nunca debe validar ni guardar
+  // nada, solo avanzar (bug real detectado en vivo: el primer intento de
+  // este cambio no distinguía modoEdicion y guardaba también al solo
+  // revisar).
   Future<void> _onContinuar(PaisItem? paisCelular) async {
+    if (!widget.modoEdicion) {
+      widget.onContinuar();
+      return;
+    }
+
     if (_guardando) return;
 
     if (!_formCompleto) {
@@ -961,7 +973,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         ],
                       )
                     : CustomPrimaryButton(
-                        text: 'Siguiente →',
+                        text: 'Continuar →',
                         onPressed: () => _onContinuar(paisCelular),
                       ),
               ),

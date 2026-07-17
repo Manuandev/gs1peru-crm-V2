@@ -316,7 +316,13 @@ class _CartillaBlanca extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSpacing.lg),
+          // Con solo Google el botón se separa más del subtítulo para
+          // no verse pegado al texto — con ambos métodos se mantiene lg.
+          SizedBox(
+            height: tipoLogin == TipoLoginApp.google
+                ? AppSpacing.xxxl
+                : AppSpacing.lg,
+          ),
 
           // ── Botón Google ─────────────────────────────────────────
           if (tipoLogin.mostrarGoogle)
@@ -359,9 +365,7 @@ class _VersionFooter extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Text(
         'v${AppConstants.version}',
-        style: AppTextStyles.labelSmall.copyWith(
-          color: AppColors.textDisabled,
-        ),
+        style: AppTextStyles.labelSmall.copyWith(color: AppColors.textDisabled),
         textAlign: TextAlign.center,
       ),
     );

@@ -1,5 +1,6 @@
 // lib/features/lead/presentation/widgets/list/lead_list_stats_row.dart
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -13,6 +14,16 @@ class LeadListStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return BlocBuilder<CatalogsBloc, CatalogsState>(
+      builder: (context, catalogState) {
+        if (catalogState is! CatalogsLoaded) return const SizedBox.shrink();
+
+        return _buildStat(context, catalogState);
+      },
+    );
+  }
+
+  Widget _buildStat(BuildContext context, CatalogsLoaded catalogState) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: IntrinsicHeight(
@@ -22,7 +33,9 @@ class LeadListStatsRow extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 icon: AppIcons.message,
-                color: AppColors.info,
+                color: AppSocialUtils.colorEstado(
+                  catalogState.valoresDefecto.idEstadoNuevo,
+                ),
                 cantidad: conteos[LeadListFiltro.nuevos] ?? 0,
                 label: 'Nuevos',
               ),
@@ -31,7 +44,9 @@ class LeadListStatsRow extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 icon: AppIcons.checkCircle,
-                color: AppColors.success,
+                color: AppSocialUtils.colorEstado(
+                  catalogState.valoresDefecto.idEstadoEnDesarrollo,
+                ),
                 cantidad: conteos[LeadListFiltro.enDesarrollo] ?? 0,
                 label: 'En desarrollo',
               ),
@@ -40,7 +55,9 @@ class LeadListStatsRow extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 icon: AppIcons.flag,
-                color: AppColors.purple,
+                color: AppSocialUtils.colorEstado(
+                  catalogState.valoresDefecto.idEstadoConPropuesta,
+                ),
                 cantidad: conteos[LeadListFiltro.propuesta] ?? 0,
                 label: 'Listos para propuesta',
               ),

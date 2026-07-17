@@ -19,18 +19,25 @@ class NotificacionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final (iconoColor, icono) = _resolverIcono();
+    // Mensaje/derivación necesitan idChatCab para navegar — si el dato no
+    // llegó (notificación vieja o sin chat asociado), no se muestra el botón.
+    // Actividad todavía no tiene su propio id de destino, así que por ahora
+    // siempre se muestra (igual que en el mockup).
+    final mostrarBoton =
+        notificacion.tipo == TipoNotificacion.actividad ||
+        notificacion.idChatCab != null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+        vertical: AppSpacing.xs,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Indicador de no leído ────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs, right: AppSpacing.xs),
+            padding: const EdgeInsets.only(top: AppSpacing.xs, right: AppSpacing.xxs),
             child: Container(
               width: AppSizing.dotIndicatorSize,
               height: AppSizing.dotIndicatorSize,
@@ -45,15 +52,15 @@ class NotificacionTile extends StatelessWidget {
 
           // ── Ícono con fondo coloreado ────────────────────────────────────
           Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.xs),
             decoration: BoxDecoration(
               color: iconoColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              borderRadius: BorderRadius.circular(AppSizing.radiusSm2),
             ),
-            child: Icon(icono, size: AppSizing.iconMd, color: iconoColor),
+            child: Icon(icono, size: AppSizing.iconActionSm, color: iconoColor),
           ),
 
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.xs),
 
           // ── Contenido ───────────────────────────────────────────────────
           Expanded(
@@ -66,14 +73,14 @@ class NotificacionTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         notificacion.titulo,
-                        style: AppTextStyles.bodyMedium.copyWith(
+                        style: AppTextStyles.bodySmall.copyWith(
                           fontWeight: AppTextStyles.weightBold,
                         ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      notificacion.fechaHora.formatSinHoy(),
+                      notificacion.fechaHora.formatHora12(),
                       style: AppTextStyles.labelSmall.copyWith(
                         color: colorScheme.onSurface.withValues(
                           alpha: AppColors.opacityHint,
@@ -85,7 +92,7 @@ class NotificacionTile extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   notificacion.descripcion,
-                  style: AppTextStyles.bodySmall.copyWith(
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: colorScheme.onSurface.withValues(
                       alpha: AppColors.opacityTextMuted,
                     ),
@@ -93,7 +100,7 @@ class NotificacionTile extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                const SizedBox(height: AppSpacing.xxs),
                 Wrap(
                   spacing: AppSpacing.xs,
                   children: [
@@ -112,35 +119,37 @@ class NotificacionTile extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: AppSpacing.sm),
+          if (mostrarBoton) ...[
+            const SizedBox(width: AppSpacing.xs),
 
-          // ── Botón de acción ─────────────────────────────────────────────
-          SizedBox(
-            width: 90,
-            child: OutlinedButton(
-              onPressed: onAccion,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: colorScheme.primary),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xs,
-                  vertical: AppSpacing.xs,
+            // ── Botón de acción ───────────────────────────────────────────
+            SizedBox(
+              width: 96,
+              child: OutlinedButton(
+                onPressed: onAccion,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: colorScheme.primary),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                    vertical: AppSpacing.xs,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                child: Text(
+                  notificacion.labelAccion,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: AppTextStyles.weightMedium,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                notificacion.labelAccion,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: AppTextStyles.weightMedium,
-                ),
-                textAlign: TextAlign.center,
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -148,13 +157,13 @@ class NotificacionTile extends StatelessWidget {
 
   // Por el momento un ícono único por tipo — sin distinción de subtipo
   (Color, IconData) _resolverIcono() => switch (notificacion.tipo) {
-    TipoNotificacion.actividad  => (AppColors.warning,                 AppIcons.actividadNotificacion),
+    TipoNotificacion.actividad  => (AppColors.secondary,               AppIcons.actividadNotificacion),
     TipoNotificacion.derivacion => (AppColors.brandLavenderAccessible, AppIcons.ia),
     TipoNotificacion.mensaje    => (AppColors.brandSlateAccessible,    AppIcons.chatDots),
   };
 
   Color _colorTipo() => switch (notificacion.tipo) {
-    TipoNotificacion.actividad  => AppColors.warning,
+    TipoNotificacion.actividad  => AppColors.secondary,
     TipoNotificacion.derivacion => AppColors.brandLavenderAccessible,
     TipoNotificacion.mensaje    => AppColors.brandSlateAccessible,
   };

@@ -1,20 +1,19 @@
 ﻿// lib/features/cobranza/presentation/widgets/lista/cobranza_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaCard extends StatelessWidget {
   final Cobranza cobranza;
   final VoidCallback? onVerTap;
-  final VoidCallback? onWhatsAppTap;
+  // final VoidCallback? onWhatsAppTap;
 
   const CobranzaCard({
     super.key,
     required this.cobranza,
     this.onVerTap,
-    this.onWhatsAppTap,
+    // this.onWhatsAppTap,
   });
 
   @override
@@ -49,7 +48,7 @@ class CobranzaCard extends StatelessWidget {
                 children: [
                   _EstadoBadge(cobranza: cobranza),
                   const SizedBox(height: AppSpacing.xs),
-                  _BotonWhatsApp(onTap: onWhatsAppTap),
+                  // _BotonWhatsApp(onTap: onWhatsAppTap),
                 ],
               ),
             ],
@@ -183,33 +182,31 @@ class _EstadoBadge extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Botón de WhatsApp
 // ─────────────────────────────────────────────────────────────────────────────
-
-class _BotonWhatsApp extends StatelessWidget {
-  final VoidCallback? onTap;
-  const _BotonWhatsApp({this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: AppSizing.buttonHeightCompact,
-        height: AppSizing.buttonHeightCompact,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppSocialUtils.colorCanalById(5).withValues(alpha: 0.1),
-        ),
-        alignment: Alignment.center,
-        child: FaIcon(
-          AppIcons.whatsapp,
-          size: AppSizing.iconSm,
-          color: AppSocialUtils.colorCanalById(5),
-        ),
-      ),
-    );
-  }
-}
+// class _BotonWhatsApp extends StatelessWidget {
+//   final VoidCallback? onTap;
+//   const _BotonWhatsApp({this.onTap});
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       behavior: HitTestBehavior.opaque,
+//       child: Container(
+//         width: AppSizing.buttonHeightCompact,
+//         height: AppSizing.buttonHeightCompact,
+//         decoration: BoxDecoration(
+//           shape: BoxShape.circle,
+//           color: AppSocialUtils.colorCanalById(5).withValues(alpha: 0.1),
+//         ),
+//         alignment: Alignment.center,
+//         child: FaIcon(
+//           AppIcons.whatsapp,
+//           size: AppSizing.iconSm,
+//           color: AppSocialUtils.colorCanalById(5),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fila de datos: Monto total / Ejecutivo / Condición
@@ -319,7 +316,9 @@ class _CobranzaFechaVer extends StatelessWidget {
       // largo anterior ("27 de marzo 2025 - 01:07").
       return Text(
         cobranza.fecha.formatConDia(),
-        style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.textSecondary,
+        ),
       );
     }
 
@@ -327,7 +326,9 @@ class _CobranzaFechaVer extends StatelessWidget {
       children: [
         Text(
           'Vence: ${cobranza.fechaVencimiento}',
-          style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
         ),
         if (dias != null) ...[
           const SizedBox(width: AppSpacing.xs),
@@ -374,4 +375,3 @@ class _BotonVer extends StatelessWidget {
     );
   }
 }
-

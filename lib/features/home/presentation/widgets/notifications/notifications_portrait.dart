@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 enum _Filtro { todas, actividades, derivaciones, mensajes }
@@ -73,28 +74,43 @@ class _NotificationsPortraitState extends State<NotificationsPortrait> {
 
         // ── Contenido scrolleable ──────────────────────────────────────────
         Expanded(
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppSpacing.xs),
-                _TarjetaContadores(state: state),
-                const SizedBox(height: AppSpacing.sm),
-                _buildLista(),
-              ],
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final lista = _notificacionesFiltradas;
+
+              // Con minHeight = alto del viewport + IntrinsicHeight, el Expanded
+              // interno reparte el espacio sobrante y centra el estado vacío
+              // aunque el contenido esté dentro de un scroll (pull-to-refresh).
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: AppSpacing.xs),
+                        _TarjetaContadores(state: state),
+                        const SizedBox(height: AppSpacing.sm),
+                        if (lista.isEmpty)
+                          const Expanded(
+                            child: Center(child: _EmptyNotifications()),
+                          )
+                        else
+                          _buildLista(lista),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildLista() {
-    final lista = _notificacionesFiltradas;
-
-    if (lista.isEmpty) return const _EmptyNotifications();
-
+  Widget _buildLista(List<Notificacion> lista) {
     final grupos = _agruparPorFecha(lista);
     final widgets = <Widget>[];
 
@@ -103,7 +119,12 @@ class _NotificationsPortraitState extends State<NotificationsPortrait> {
         _EncabezadoFecha(fecha: entry.key, count: entry.value.length),
       );
       for (int i = 0; i < entry.value.length; i++) {
-        widgets.add(NotificacionTile(notificacion: entry.value[i]));
+        widgets.add(
+          NotificacionTile(
+            notificacion: entry.value[i],
+            onAccion: () => _onAccion(entry.value[i]),
+          ),
+        );
         if (i < entry.value.length - 1) {
           widgets.add(
             const Divider(
@@ -120,6 +141,13 @@ class _NotificationsPortraitState extends State<NotificationsPortrait> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: widgets,
     );
+  }
+
+  // Mensaje/derivación → chat de la conversación. Actividad → pendiente
+  // (falta idNumero/idLead desde el SP para saber a qué negociación ir).
+  void _onAccion(Notificacion notificacion) {
+    if (notificacion.idChatCab == null) return;
+    context.goToDetalleChatDesdeHome(idChatCab: notificacion.idChatCab!);
   }
 }
 
@@ -164,7 +192,7 @@ class _BarraFiltros extends StatelessWidget {
             label: 'Actividades',
             count: totActividades,
             seleccionado: filtro == _Filtro.actividades,
-            colorBadge: AppColors.warning,
+            colorBadge: AppColors.secondary,
             onTap: () => onCambio(_Filtro.actividades),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -288,7 +316,7 @@ class _TarjetaContadores extends StatelessWidget {
             Expanded(
               child: _ContadorItem(
                 icono: AppIcons.calendar,
-                colorIcono: AppColors.warning,
+                colorIcono: AppColors.secondary,
                 titulo: 'Pendientes hoy',
                 valor: state.actividades.length,
               ),
@@ -403,7 +431,7 @@ class _EncabezadoFecha extends StatelessWidget {
         children: [
           Text(
             fecha,
-            style: AppTextStyles.titleLarge.copyWith(
+            style: AppTextStyles.titleSmall.copyWith(
               fontWeight: AppTextStyles.weightBold,
             ),
           ),
@@ -430,29 +458,26 @@ class _EmptyNotifications extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.emptyStateTop),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            AppIcons.notificationOff,
-            size: AppSizing.iconXl,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          AppIcons.notificationOff,
+          size: AppSizing.iconXl,
+          color: colorScheme.onSurface.withValues(
+            alpha: AppColors.opacityDivider,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm2),
+        Text(
+          'No tienes notificaciones',
+          style: AppTextStyles.bodyMedium.copyWith(
             color: colorScheme.onSurface.withValues(
-              alpha: AppColors.opacityDivider,
+              alpha: AppColors.opacityEmptyText,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm2),
-          Text(
-            'No tienes notificaciones',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: colorScheme.onSurface.withValues(
-                alpha: AppColors.opacityEmptyText,
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

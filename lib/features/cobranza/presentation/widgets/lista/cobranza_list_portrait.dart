@@ -78,7 +78,7 @@ class CobranzaListPortrait extends StatelessWidget {
                         onVerTap: () => context.goToDetalleCobranza(
                           numSol: cobranza.numSol,
                         ),
-                        onWhatsAppTap: () {},
+                        // onWhatsAppTap: () {},
                       ),
                     );
                   },

@@ -232,10 +232,23 @@ class DateFormatter {
     return format(date: fecha, format: AppDateFormat.shortDate, locale: locale);
   }
 
+  /// Solo la hora en formato 12h con a. m./p. m. — usar cuando el día ya
+  /// se muestra aparte (ej. encabezado "Hoy"/"Ayer" en NotificacionTile).
+  static String formatHora12(String dateString, {String locale = 'es'}) {
+    if (dateString.isEmpty) return '';
+    final fecha = parseDate(dateString.trim());
+    if (fecha == null) return '';
+
+    return format(date: fecha, format: AppDateFormat.hourMinute12, locale: locale);
+  }
+
   static String _resolvePattern(AppDateFormat format) {
     switch (format) {
       case AppDateFormat.hourMinute:
         return 'HH:mm';
+
+      case AppDateFormat.hourMinute12:
+        return 'hh:mm a';
 
       case AppDateFormat.hourMinuteSecond:
         return 'HH:mm:ss';

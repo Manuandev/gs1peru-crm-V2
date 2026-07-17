@@ -10,6 +10,8 @@ class Notificacion {
   final String descripcion;
   final String fechaHora;
   final bool leido;
+  // Solo presente en derivación/mensaje (viene dentro de DATOS) — null en actividad.
+  final int? idChatCab;
 
   const Notificacion({
     required this.id,
@@ -19,6 +21,7 @@ class Notificacion {
     required this.descripcion,
     required this.fechaHora,
     required this.leido,
+    this.idChatCab,
   });
 
   Notificacion copyWith({
@@ -29,6 +32,7 @@ class Notificacion {
     String? descripcion,
     String? fechaHora,
     bool? leido,
+    int? idChatCab,
   }) => Notificacion(
     id: id ?? this.id,
     idLead: idLead ?? this.idLead,
@@ -37,6 +41,7 @@ class Notificacion {
     descripcion: descripcion ?? this.descripcion,
     fechaHora: fechaHora ?? this.fechaHora,
     leido: leido ?? this.leido,
+    idChatCab: idChatCab ?? this.idChatCab,
   );
 
   // Etiqueta principal del chip según tipo

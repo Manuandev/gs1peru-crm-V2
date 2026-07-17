@@ -24,6 +24,11 @@ class ApiConstants {
   static const String lstHome = 'Home/SPHomeLSTApp';
   static const String cudHome = 'Home/SPHomeCUDApp';
 
+
+  // ========== NOTIFICACIONES ==========
+  static const String lstNotificaciones = 'Notificaciones/SPNotificacionesLSTApp';
+  static const String cudNotificaciones = 'Notificaciones/SPNotificacionesCUDApp';
+
   // ========== LEADS ==========
   static const String lstleads = 'Lead/SPLeadLSTApp';
   static const String cudleads = 'Lead/SPLeadCUDApp';
@@ -73,6 +78,10 @@ class ApiConstants {
   // ========== HOME ==========
   static String get urlHomeLst => '$baseUrl$lstHome';
   static String get urlHomeCud => '$baseUrl$cudHome';
+
+  // ========== NOTIFICACIONES ==========
+  static String get urlNotificacionesLst => '$baseUrl$lstNotificaciones';
+  static String get urlNotificacionesCud => '$baseUrl$cudNotificaciones';
 
   // ========== LEADS ==========
   static String get urlLeadsLst => '$baseUrl$lstleads';

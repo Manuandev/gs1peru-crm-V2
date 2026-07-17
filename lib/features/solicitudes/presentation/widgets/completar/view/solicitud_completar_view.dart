@@ -654,29 +654,36 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     return totalSinIgv / cantidadEsperada;
   }
 
-  // Continuar ya no valida campos obligatorios — el paso 1 siempre avanza;
-  // toda la validación se centralizó en "Generar solicitud" (ver
-  // solicitud_guardar_helper.dart, validarSolicitudParaGenerar). "Guardar"
-  // (borrador) tampoco valida nada, sin cambios.
-  void _onContinuar(PaisItem? paisCelular) {
-    final datos = _construirDatosSolicitante(paisCelular);
-    context.read<SolicitudFormCubit>().guardarSolicitante(datos);
-    context.read<ParticipantesCubit>().sincronizarSolicitante(
-      datos,
-      idTipoParticipantePagante: _idTipoParticipantePagante(),
-      importeFijo: _importeFijo(),
-    );
-    // Si ya existe NUMSOL (edición) y hay un archivo recién adjuntado, se
-    // sube en segundo plano — no bloquea la navegación. En creación nueva
-    // (NUMSOL aún vacío) no hace nada hasta que se presione "Guardar".
-    subirArchivosPendientes(context);
-    widget.onContinuar();
-  }
+  /// Campos obligatorios (marcados con *) del paso 1. Los opcionales
+  /// (apellido materno, RUC/razón social, canales) no se exigen.
+  bool get _formCompleto =>
+      _tipoDocLabel.isNotEmpty &&
+      _ctrlNumDoc.text.trim().isNotEmpty &&
+      _nacionalidadId.isNotEmpty &&
+      _sexoId.isNotEmpty &&
+      _ctrlNombres.text.trim().isNotEmpty &&
+      _ctrlApellidoPaterno.text.trim().isNotEmpty &&
+      _ctrlCargo.text.trim().isNotEmpty &&
+      _ctrlCelular.text.trim().isNotEmpty &&
+      _ctrlCorreo.text.emailValidator == null;
 
-  // Botón "Guardar" — borrador (IB_BORRADOR=1), sin navegar ni validar
-  // campos obligatorios. Guarda lo que haya en los controllers tal cual.
-  Future<void> _onGuardar(PaisItem? paisCelular) async {
+  // "Siguiente" (2026-07-17, pedido de negocio — revierte el "ya no valida"
+  // de la sesión anterior): valida los campos obligatorios y GUARDA de
+  // verdad (borrador, IB_BORRADOR=1, incluye subir voucher/O.C.
+  // pendientes con el overlay de progreso) antes de avanzar al paso 2. El
+  // botón "Guardar" del medio se eliminó de este paso (y de los pasos 2 y
+  // 3) — ya no hace falta, "Siguiente" cumple esa función.
+  Future<void> _onContinuar(PaisItem? paisCelular) async {
     if (_guardando) return;
+
+    if (!_formCompleto) {
+      AppSnackBar.error(
+        context,
+        'Completa todos los campos obligatorios (*) para continuar',
+      );
+      return;
+    }
+
     setState(() => _guardando = true);
 
     final datos = _construirDatosSolicitante(paisCelular);
@@ -696,7 +703,13 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     if (!mounted) return;
     _progreso.reset();
     setState(() => _guardando = false);
-    mostrarResultadoGuardarSolicitud(context, result);
+
+    if (result is! CrudOk) {
+      mostrarResultadoGuardarSolicitud(context, result);
+      return;
+    }
+
+    widget.onContinuar();
   }
 
   @override
@@ -917,8 +930,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
               // ── Botones de acción fijos al pie ──────────────────────────
               // En modo solo-ver (modoEdicion == false) solo se muestra
-              // "Continuar", sin validar campos — es un recorrido de lectura,
-              // no una captura de datos.
+              // "Siguiente", sin validar ni guardar — es un recorrido de
+              // lectura, no una captura de datos. En modo edición ya no hay
+              // botón "Guardar" aparte — "Siguiente" valida y guarda
+              // (borrador) antes de avanzar, ver _onContinuar.
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
@@ -937,24 +952,16 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Expanded(
-                            child: CustomSecondaryButton(
-                              text: 'Guardar',
-                              icon: AppIcons.save,
-                              isLoading: _guardando,
-                              onPressed: () => _onGuardar(paisCelular),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Expanded(
                             child: CustomPrimaryButton(
-                              text: 'Continuar →',
+                              text: 'Siguiente →',
+                              isLoading: _guardando,
                               onPressed: () => _onContinuar(paisCelular),
                             ),
                           ),
                         ],
                       )
                     : CustomPrimaryButton(
-                        text: 'Continuar →',
+                        text: 'Siguiente →',
                         onPressed: () => _onContinuar(paisCelular),
                       ),
               ),

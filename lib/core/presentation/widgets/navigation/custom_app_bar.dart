@@ -45,6 +45,11 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Color? backgroundColor;
   final void Function(String query)? onSearch;
 
+  /// Altura del AppBar. Default [AppSizing.appBarHeight] (56px). Usar
+  /// [AppSizing.appBarHeightSubtitle] cuando [titleWidget] tiene 2 líneas
+  /// (título + subtítulo) para que el texto no quede pegado a los bordes.
+  final double toolbarHeight;
+
   /// Número de notificaciones pendientes.
   /// null = sin ícono | 0 = ícono sin badge | >0 = badge con número y pulso
   final int? notificationCount;
@@ -71,13 +76,14 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.notificationCount,
     this.onNotification,
     this.onTapTitle,
+    this.toolbarHeight = AppSizing.appBarHeight,
   }) : assert(
          title != null || titleWidget != null,
          'CustomAppBar necesita title o titleWidget',
        );
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(toolbarHeight);
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -181,6 +187,7 @@ class _CustomAppBarState extends State<CustomAppBar>
       elevation: widget.showElevation
           ? AppSizing.elevationMedium
           : AppSizing.elevationNone,
+      toolbarHeight: widget.toolbarHeight,
       centerTitle: false,
       automaticallyImplyLeading: widget.drawerSide == DrawerSide.left,
       leading: _isSearching ? _buildBackButton() : _buildLeading(context),

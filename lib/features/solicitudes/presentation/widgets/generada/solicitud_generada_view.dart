@@ -27,97 +27,64 @@ class SolicitudGeneradaView extends StatelessWidget {
       onPop: () => context.goToSolicitudes(),
       drawerSide: DrawerSide.none,
       bodyPadding: EdgeInsets.zero,
-      title: 'Solicitud lista',
-      body: Column(
+      appBarHeight: AppSizing.appBarHeightSubtitle,
+      titleWidget: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Header azul con bordes redondeados ────────────────
-          const _HeaderGenerada(),
-
-          // ── Indicador de pasos fijo bajo el header ────────────
-          Transform.translate(
-            offset: const Offset(0, -AppSpacing.md),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: _PasosGeneradaIndicador(pasoActual: 4),
+          Text(
+            'Solicitud lista',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.textOnDark,
+              fontWeight: AppTextStyles.weightSemiBold,
             ),
           ),
+          Text(
+            'Tu solicitud ha sido generada y está en proceso de validación',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.white(0.75),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // ── Indicador de pasos bajo el header ─────────────────
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              0,
+            ),
+            child: _PasosGeneradaIndicador(pasoActual: 4),
+          ),
 
-          // ── Contenido scrollable desplazado sobre el header ───
+          // ── Contenido scrollable ───────────────────────────────
           Expanded(
-            child: Transform.translate(
-              offset: const Offset(0, -AppSpacing.md),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Column(
-                  children: [
-                    const SizedBox(height: AppSpacing.sm),
-                    const _MensajeExito(),
-                    const SizedBox(height: AppSpacing.sm),
-                    _CardInfoSolicitud(
-                      solicitud: solicitud,
-                      comprobante: comprobante,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    const _ListaVerificacion(),
-                    const SizedBox(height: AppSpacing.sm),
-                    const _TipProximoPaso(),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
-                ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Column(
+                children: [
+                  const SizedBox(height: AppSpacing.sm),
+                  const _MensajeExito(),
+                  const SizedBox(height: AppSpacing.sm),
+                  _CardInfoSolicitud(
+                    solicitud: solicitud,
+                    comprobante: comprobante,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const _ListaVerificacion(),
+                  const SizedBox(height: AppSpacing.sm),
+                  const _TipProximoPaso(),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
               ),
             ),
           ),
 
           // ── Botones fijos al pie ───────────────────────────────
           _BotonesFooter(solicitud: solicitud),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Header azul con bordes redondeados abajo ──────────────────────────────────
-
-class _HeaderGenerada extends StatelessWidget {
-  const _HeaderGenerada();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(AppSizing.homeHeaderBottomRadius),
-          bottomRight: Radius.circular(AppSizing.homeHeaderBottomRadius),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xxs,
-        AppSpacing.md,
-        AppSpacing.lg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Solicitud lista',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textOnDark,
-              fontWeight: AppTextStyles.weightBold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            'Tu solicitud ha sido generada y está en proceso de validación',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textOnDark.withValues(alpha: 0.85),
-              fontWeight: AppTextStyles.weightRegular,
-              fontSize: 11,
-            ),
-          ),
         ],
       ),
     );

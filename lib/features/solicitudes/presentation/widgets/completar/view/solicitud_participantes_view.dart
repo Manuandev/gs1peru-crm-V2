@@ -118,11 +118,45 @@ class _SolicitudParticipantesViewState
     if (confirmado) cubit.eliminarTodos();
   }
 
-  // Si TODOS los participantes son invitados (sin costo), no hay a quién
-  // facturar — se salta el paso 3 directo al resumen. `esInvitado` viene del
-  // catálogo real (CatalogsBloc.tiposParticipante) — nunca comparar ids
-  // hardcodeados ('2'/'3') acá.
-  void _onContinuar(BuildContext context, ParticipantesState state) {
+  // "Siguiente" (2026-07-17, pedido de negocio): valida que haya al menos 1
+  // participante y GUARDA de verdad (borrador) antes de avanzar — mismo
+  // patrón que el paso 1, ver ese archivo. El botón "Guardar" del medio se
+  // eliminó, "Siguiente" ya cumple esa función. Si TODOS los participantes
+  // son invitados (sin costo), no hay a quién facturar — se salta el paso 3
+  // directo al resumen. `esInvitado` viene del catálogo real
+  // (CatalogsBloc.tiposParticipante) — nunca comparar ids hardcodeados
+  // ('2'/'3') acá.
+  Future<void> _onContinuar(
+    BuildContext context,
+    ParticipantesState state,
+  ) async {
+    if (_guardando) return;
+
+    if (state.participantes.isEmpty) {
+      AppSnackBar.error(
+        context,
+        'Agrega al menos un participante para continuar',
+      );
+      return;
+    }
+
+    setState(() => _guardando = true);
+
+    final result = await guardarBorradorCompleto(
+      context,
+      idLead: widget.solicitud.idLead,
+      progreso: _progreso,
+    );
+
+    if (!mounted) return;
+    _progreso.reset();
+    setState(() => _guardando = false);
+
+    if (result is! CrudOk) {
+      mostrarResultadoGuardarSolicitud(context, result);
+      return;
+    }
+
     final catalogState = context.read<CatalogsBloc>().state;
     final tiposParticipante = catalogState is CatalogsLoaded
         ? catalogState.tiposParticipante
@@ -135,25 +169,6 @@ class _SolicitudParticipantesViewState
       return tipo?.esInvitado ?? false;
     });
     widget.onContinuar(soloInvitados ? 4 : 3);
-  }
-
-  // Botón "Guardar" — borrador (IB_BORRADOR=1). Los participantes ya viven
-  // en ParticipantesCubit (cada alta/edición pasa por el modal), así que
-  // solo hace falta llamar al usecase con el estado actual de los cubits.
-  Future<void> _onGuardar() async {
-    if (_guardando) return;
-    setState(() => _guardando = true);
-
-    final result = await guardarBorradorCompleto(
-      context,
-      idLead: widget.solicitud.idLead,
-      progreso: _progreso,
-    );
-
-    if (!mounted) return;
-    _progreso.reset();
-    setState(() => _guardando = false);
-    mostrarResultadoGuardarSolicitud(context, result);
   }
 
   @override
@@ -309,10 +324,11 @@ class _SolicitudParticipantesViewState
                 const SizedBox(height: AppSpacing.xs),
 
                 // ── Botones pie ─────────────────────────────────────────
-                // "Continuar" ya no exige participantes — toda la validación se
-                // centralizó en "Generar solicitud" (ver solicitud_guardar_helper.dart,
-                // validarSolicitudParaGenerar). En modo solo-ver (modoEdicion ==
-                // false) solo se muestra "Continuar", es un recorrido de lectura.
+                // "Siguiente" valida (al menos 1 participante) y guarda
+                // (borrador) antes de avanzar — ya no hay botón "Guardar"
+                // aparte. En modo solo-ver (modoEdicion == false) solo se
+                // muestra "Siguiente", sin validar ni guardar — recorrido
+                // de lectura.
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
@@ -332,24 +348,16 @@ class _SolicitudParticipantesViewState
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
-                              child: CustomSecondaryButton(
-                                text: 'Guardar',
-                                icon: AppIcons.save,
-                                isLoading: _guardando,
-                                onPressed: _onGuardar,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Expanded(
                               child: CustomPrimaryButton(
-                                text: 'Continuar →',
+                                text: 'Siguiente →',
+                                isLoading: _guardando,
                                 onPressed: () => _onContinuar(context, state),
                               ),
                             ),
                           ],
                         )
                       : CustomPrimaryButton(
-                          text: 'Continuar →',
+                          text: 'Siguiente →',
                           onPressed: () => _onContinuar(context, state),
                         ),
                 ),

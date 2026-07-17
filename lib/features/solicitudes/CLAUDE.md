@@ -1,5 +1,69 @@
 # Solicitudes Feature
 
+## Cada "Siguiente" ahora valida Y guarda de verdad — se quitó el botón "Guardar" del medio (2026-07-17)
+Pedido de negocio (jefe/coordinadora del usuario) — **revierte** la sección "Validación movida a
+'Generar solicitud'" de más abajo (2026-07-16): ya no basta con validar solo al generar, cada
+paso tiene que quedar guardado en el backend apenas se avanza.
+
+- **Pasos 1, 2 y 3 — "Continuar" se renombró a "Siguiente" y ahora, en cada uno**: (1) valida los
+  campos obligatorios del paso (`_formCompleto`, restaurado tal cual estaba antes de quitarlo —
+  mismos campos documentados en "Validación de 'Continuar'" más abajo — más, en el paso 2, al
+  menos 1 participante); si falta algo, `AppSnackBar.error` y no avanza. (2) Si está completo,
+  llama `guardarBorradorCompleto()` (el mismo helper que ya usaban los botones "Guardar" —
+  `IB_BORRADOR=1` siempre, nunca `0`, eso solo lo pone "Generar solicitud") con el mismo
+  `SolicitudProgreso`/`SolicitudProgresoOverlay` de siempre (spinner→check, "Guardando
+  solicitud...", y en el paso 1 también "Subiendo voucher..."/"Subiendo O.C...." si hay archivos
+  pendientes — el usuario pidió explícitamente que los archivos se suban desde el paso 1, no que
+  esperen a Resumen). (3) Solo si el guardado sale `CrudOk` avanza al siguiente paso — si falla,
+  se queda ahí mostrando el error, igual que antes.
+- **El botón "Guardar" del medio (entre Cancelar/Atrás y Continuar) se eliminó de los pasos 1, 2
+  y 3** — ya no hace falta, "Siguiente" cumple esa función en cada uno. `_onGuardar()` se
+  eliminó de los 3 archivos (su lógica se fusionó dentro de `_onContinuar`). El Resumen (paso 4)
+  **no cambió** — sigue con sus 2 botones "Guardar"/"Generar solicitud" tal cual, porque ahí no
+  hay un paso siguiente al cual "avanzar" fusionando el guardado.
+- **El NUMSOL de la primera llamada ya se reutilizaba correctamente** — no hizo falta construir
+  nada nuevo para esto: `guardarSolicitudDesdeWizard()` ya capturaba el NUMSOL de la respuesta
+  del backend en el primer guardado exitoso (`formCubit.actualizarNumSol(data)`) desde antes de
+  este cambio — con "Siguiente" guardando en cada paso, este mecanismo simplemente se ejerce más
+  seguido (potencialmente 3 veces antes de llegar a Resumen), pero es el mismo de siempre.
+- **Volver "Atrás" y cambiar algo (ej. quitar un archivo adjunto) y presionar "Siguiente" de
+  nuevo vuelve a guardar/re-subir todo** — comportamiento esperado, confirmado explícitamente por
+  el usuario ("cambio un documento... pongo continuar, otra vez se tiene que volver a guardar").
+
+## Bug real — "RUC ya existe" bloqueaba Guardar/Generar casi siempre (2026-07-16)
+Reportado por la coordinadora del usuario ("el botón guardar no funciona, muestra alerta 'RUC YA
+EXISTE'"). Confirmado en el SP (`CSV_SOLICITUD_CUD_APP`, task `'U'`), bug preexistente, no
+introducido en esta sesión — la validación contra `dbo.CTAMEXTER01` (tabla de referencia
+RUC↔razón social) tenía la comparación al revés:
+
+```sql
+-- ANTES (bug):
+IF EXISTS(SELECT 0 FROM dbo.CTAMEXTER01 WHERE UPPER(RAZON) = UPPER(@RUCEMPRE_FAC))
+```
+Esto busca en la columna `RAZON` (razón social, texto) un valor igual a `@RUCEMPRE_FAC` (un RUC,
+11 dígitos) — casi nunca matchea de verdad, **salvo que exista alguna fila con `RAZON` vacía/en
+blanco** en `CTAMEXTER01`, en cuyo caso **cualquier solicitud de persona Natural** (que siempre
+manda `RUCEMPRE_FAC = ''`, ver `esRuc` en `guardarSolicitud()`) matchea esa fila por accidente —
+dispara el error casi siempre para ese caso. Corregido:
+```sql
+-- AHORA:
+IF (@RUCEMPRE_FAC <> '' AND EXISTS(SELECT 0 FROM dbo.CTAMEXTER01 WHERE RUC = @RUCEMPRE_FAC))
+BEGIN
+    SELECT @RAZON_EXTER = RAZON FROM dbo.CTAMEXTER01 WHERE RUC = @RUCEMPRE_FAC
+    IF(UPPER(@NOMEMPRE_FAC) <> UPPER(@RAZON_EXTER))
+    BEGIN
+        SELECT 'ERROR' + @sepListas + 'El RUC ya existe con otra razón social.'
+        ROLLBACK; RETURN;
+    END
+END
+```
+Ahora: (1) se salta el chequeo entero si no hay RUC (persona Natural — nada que validar), (2)
+busca por `RUC` (columna correcta) en vez de por `RAZON`, (3) compara la razón social que se
+está mandando (`NOMEMPRE_FAC`) contra la que ya existe para ese RUC (`RAZON`, recién
+encontrada) — antes comparaba `@RUCEMPRE_FAC` contra sí mismo vía un lookup que nunca tenía
+sentido. Nueva variable `@RAZON_EXTER VARCHAR(250)` (antes solo existía `@RUC_EXTER`, que ya no
+se usa para esto).
+
 ## Card simplificada + Validar vs Ver + eliminar solicitud (2026-07-16)
 Rediseño pedido por el usuario de la lista y el detalle:
 
@@ -307,6 +371,12 @@ agregar el O.C.) y encontró 2 gaps más:
   no viene de una negociación, se queda solo con `"$cantidad participante/s"` como antes.
 
 ## Validación movida a "Generar solicitud" + stepper de progreso + fix de archivos ya subidos (2026-07-16)
+**⚠️ Revertido el 2026-07-17** — ver "Cada 'Siguiente' ahora valida Y guarda de verdad" arriba:
+"Continuar" (ahora "Siguiente") volvió a validar y además guarda de verdad en cada paso, por
+pedido de negocio. El stepper de progreso y el fix de archivos ya subidos de esta sección siguen
+vigentes tal cual — solo el punto "'Continuar' ya no valida ni bloquea" de acá abajo quedó
+obsoleto.
+
 Pedido por el usuario en la misma sesión que los bugs de Comprobante/Nacionalidad (ver sección de
 abajo) — cuatro cambios relacionados con guardar/generar y subir archivos:
 

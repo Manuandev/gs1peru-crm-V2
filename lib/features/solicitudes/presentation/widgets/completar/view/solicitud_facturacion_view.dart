@@ -186,20 +186,37 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     );
   }
 
-  // Continuar ya no valida campos obligatorios — el paso 3 siempre avanza;
-  // toda la validación se centralizó en "Generar solicitud" (ver
-  // solicitud_guardar_helper.dart, validarSolicitudParaGenerar).
-  void _onContinuar(PaisItem? paisCelular) {
-    context.read<SolicitudFormCubit>().guardarFacturacion(
-      _construirDatosFacturacion(paisCelular),
-    );
-    widget.onContinuar();
-  }
+  /// Campos obligatorios (marcados con *) del paso 3. Apellido materno,
+  /// actividad económica, NIT y observaciones son opcionales. Apellido
+  /// paterno solo aplica cuando el tipo de documento NO es RUC.
+  bool get _formCompleto =>
+      _comprobanteId.isNotEmpty &&
+      _paisId.isNotEmpty &&
+      _monedaId.isNotEmpty &&
+      _tipoDocId.isNotEmpty &&
+      _ctrlNumDoc.text.trim().isNotEmpty &&
+      _nacionalidadId.isNotEmpty &&
+      _ctrlNombresRazon.text.trim().isNotEmpty &&
+      (_esRuc || _ctrlApellidoPaterno.text.trim().isNotEmpty) &&
+      _ctrlCelular.text.trim().isNotEmpty &&
+      _ctrlCorreo.text.emailValidator == null &&
+      _ctrlDireccion.text.trim().isNotEmpty;
 
-  // Botón "Guardar" — borrador (IB_BORRADOR=1), sin navegar ni validar
-  // campos obligatorios. Guarda lo que haya en los controllers tal cual.
-  Future<void> _onGuardar(PaisItem? paisCelular) async {
+  // "Siguiente" (2026-07-17, pedido de negocio): valida los campos
+  // obligatorios y GUARDA de verdad (borrador) antes de avanzar a Resumen —
+  // mismo patrón que los pasos 1 y 2. El botón "Guardar" del medio se
+  // eliminó, "Siguiente" ya cumple esa función.
+  Future<void> _onContinuar(PaisItem? paisCelular) async {
     if (_guardando) return;
+
+    if (!_formCompleto) {
+      AppSnackBar.error(
+        context,
+        'Completa todos los campos obligatorios (*) para continuar',
+      );
+      return;
+    }
+
     setState(() => _guardando = true);
 
     context.read<SolicitudFormCubit>().guardarFacturacion(
@@ -215,7 +232,13 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     if (!mounted) return;
     _progreso.reset();
     setState(() => _guardando = false);
-    mostrarResultadoGuardarSolicitud(context, result);
+
+    if (result is! CrudOk) {
+      mostrarResultadoGuardarSolicitud(context, result);
+      return;
+    }
+
+    widget.onContinuar();
   }
 
   @override
@@ -634,9 +657,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                   const SizedBox(height: AppSpacing.sm),
 
                   // ── Botones ────────────────────────────────────────
-                  // En modo solo-ver (modoEdicion == false) solo se muestra
-                  // "Continuar", sin validar campos — es un recorrido de
-                  // lectura, no una captura de datos.
+                  // "Siguiente" valida y guarda (borrador) antes de
+                  // avanzar — ya no hay botón "Guardar" aparte. En modo
+                  // solo-ver (modoEdicion == false) solo se muestra
+                  // "Siguiente", sin validar ni guardar — recorrido de
+                  // lectura.
                   widget.modoEdicion
                       ? Row(
                           children: [
@@ -651,24 +676,16 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
-                              child: CustomSecondaryButton(
-                                text: 'Guardar',
-                                icon: AppIcons.save,
-                                isLoading: _guardando,
-                                onPressed: () => _onGuardar(paisCelular),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Expanded(
                               child: CustomPrimaryButton(
-                                text: 'Continuar →',
+                                text: 'Siguiente →',
+                                isLoading: _guardando,
                                 onPressed: () => _onContinuar(paisCelular),
                               ),
                             ),
                           ],
                         )
                       : CustomPrimaryButton(
-                          text: 'Continuar →',
+                          text: 'Siguiente →',
                           onPressed: () => _onContinuar(paisCelular),
                         ),
                 ],

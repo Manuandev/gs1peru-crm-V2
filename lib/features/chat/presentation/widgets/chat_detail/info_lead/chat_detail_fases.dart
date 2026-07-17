@@ -1,14 +1,14 @@
 // lib/features/chat/presentation/widgets/chat_detail/info_lead/chat_detail_fases.dart
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/chat/index_chat.dart';
 
 class ChatDetailFases extends StatelessWidget {
   final String idEstadoActual;
 
   /// ID del estado padre cuando hay subestado (ej: '04' Cerrado cuando
-  /// idEstadoActual es '05' Cerrado Ganado). Vacío si no hay padre.
+  /// idEstadoActual es un subestado suyo como '05' Cobranza). Vacío si no hay padre.
   final String idEstadoPadre;
 
   const ChatDetailFases({
@@ -20,7 +20,14 @@ class ChatDetailFases extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final estados = LeadEstado.values;
+    final catalogState = context.watch<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return const SizedBox.shrink();
+
+    // Fases del stepper = estados padre del catálogo (SP lstListas parte [4]),
+    // en el orden que ya vienen ordenados por id.
+    final estados = catalogState.estados.where((e) => e.esPadre).toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    if (estados.isEmpty) return const SizedBox.shrink();
 
     // Usar el padre para determinar el paso activo; si no hay padre, usar el estado crudo.
     final idEfectivo = idEstadoPadre.isNotEmpty
@@ -29,11 +36,14 @@ class ChatDetailFases extends StatelessWidget {
     final indexActivo = estados.indexWhere((e) => e.id == idEfectivo);
     final activoEfectivo = indexActivo < 0 ? 0 : indexActivo;
 
-    // Cuando el último paso está activo (Cerrado/Cobranza = '04'):
-    //   '05' Cerrado Ganado → verde; cualquier otro subestado → rojo.
+    // Cuando el último paso (fase final, ej. Cerrado) está activo:
+    //   estado Ganado (catálogo, ValoresCRMItem.idEstadoGanado) → verde;
+    //   cualquier otro subestado → rojo.
     final bool ultimoPasoActivo = activoEfectivo == estados.length - 1;
     final Color? colorUltimoPaso = ultimoPasoActivo
-        ? (idEstadoActual == '05' ? AppColors.success : AppColors.error)
+        ? (idEstadoActual == catalogState.valoresDefecto.idEstadoGanado
+              ? AppColors.success
+              : AppColors.error)
         : null;
 
     return Container(
@@ -66,7 +76,7 @@ class ChatDetailFases extends StatelessWidget {
 
           return _PasoStepper(
             numero: index + 1,
-            label: estado.label,
+            label: estado.nombre,
             isActivo: isActivo,
             isPasado: isPasado,
             colorActivo: colorScheme.primary,

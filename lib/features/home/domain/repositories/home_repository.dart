@@ -8,5 +8,7 @@ abstract class HomeRepository {
 
   Future<List<Notificacion>> getNotifications();
 
+  Future<CrudResult> marcarNotificacionesLeidas();
+
   Future<CrudResult> gestionarPrioridad(int idNumero);
 }

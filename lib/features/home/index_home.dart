@@ -23,6 +23,7 @@ export 'domain/repositories/home_repository.dart';
 
 export 'domain/usecases/get_home_usecase.dart';
 export 'domain/usecases/get_notifications_usecase.dart';
+export 'domain/usecases/mark_notifications_read_usecase.dart';
 
 export 'presentation/bloc/home/home_bloc.dart';
 export 'presentation/bloc/home/home_event.dart';

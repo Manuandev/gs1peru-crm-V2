@@ -1,5 +1,7 @@
 // lib/features/home/presentation/bloc/notifications/notifications_bloc.dart
 
+import 'dart:async';
+
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -7,10 +9,14 @@ import 'package:app_crm/features/home/index_home.dart';
 
 class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   final GetNotificationsUseCase _getData;
+  final MarkNotificationsReadUseCase _markRead;
 
-  NotificationsBloc({required GetNotificationsUseCase getData})
-    : _getData = getData,
-      super(const NotificationsInitial()) {
+  NotificationsBloc({
+    required GetNotificationsUseCase getData,
+    required MarkNotificationsReadUseCase markRead,
+  }) : _getData = getData,
+       _markRead = markRead,
+       super(const NotificationsInitial()) {
     on<NotificationsStarted>(_onStarted);
     on<NotificationsRefresh>(_onRefresh);
   }
@@ -21,6 +27,18 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   ) async {
     emit(const NotificationsLoading());
     await _loadData(emit);
+    // Al entrar a la pantalla se marcan todas como leídas — el estado ya
+    // emitido conserva el "leido" previo, así el puntito azul se ve en esta
+    // visita y desaparece recién en la siguiente.
+    unawaited(_marcarLeidas());
+  }
+
+  Future<void> _marcarLeidas() async {
+    try {
+      await _markRead.call();
+    } catch (e, stackTrace) {
+      addError(e, stackTrace);
+    }
   }
 
   Future<void> _onRefresh(

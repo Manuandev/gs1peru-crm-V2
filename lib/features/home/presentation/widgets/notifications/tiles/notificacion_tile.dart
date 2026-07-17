@@ -146,16 +146,11 @@ class NotificacionTile extends StatelessWidget {
     );
   }
 
-  (Color, IconData) _resolverIcono() => switch (notificacion.subtipo) {
-    SubtipoNotificacion.llamada            => (AppColors.warning,                  AppIcons.phone),
-    SubtipoNotificacion.correo             => (AppColors.warning,                  AppIcons.email),
-    SubtipoNotificacion.whatsappActividad  => (AppColors.warning,                  AppIcons.chat),
-    SubtipoNotificacion.actividadGenerica  => (AppColors.warning,                  AppIcons.notificationActive),
-    SubtipoNotificacion.leadBot            => (AppColors.brandLavenderAccessible,  AppIcons.ia),
-    SubtipoNotificacion.prospectoDerivado  => (AppColors.brandLavenderAccessible,  AppIcons.leadNuevo),
-    SubtipoNotificacion.derivacionGenerica => (AppColors.brandLavenderAccessible,  AppIcons.reasignar),
-    SubtipoNotificacion.mensajeWhatsapp    => (AppColors.brandForest,              AppIcons.chat),
-    SubtipoNotificacion.mensajeChat        => (AppColors.brandSlateAccessible,     AppIcons.chatDots),
+  // Por el momento un ícono único por tipo — sin distinción de subtipo
+  (Color, IconData) _resolverIcono() => switch (notificacion.tipo) {
+    TipoNotificacion.actividad  => (AppColors.warning,                 AppIcons.actividadNotificacion),
+    TipoNotificacion.derivacion => (AppColors.brandLavenderAccessible, AppIcons.ia),
+    TipoNotificacion.mensaje    => (AppColors.brandSlateAccessible,    AppIcons.chatDots),
   };
 
   Color _colorTipo() => switch (notificacion.tipo) {

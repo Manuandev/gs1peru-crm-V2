@@ -526,6 +526,10 @@ class AppIcons {
   /// Negociación / acuerdo — tab Negociaciones en LeadDetailSheet y popup del chat
   static const IconData negociacion = Icons.handshake_outlined;
 
+  /// Actividad genérica — ícono único para todas las notificaciones de tipo
+  /// "Actividad" en NotificacionTile (independiente del trámite: código, pago, inscripción)
+  static const IconData actividadNotificacion = Icons.assignment_outlined;
+
   /// Historial de actividades — tab Historial en LeadDetailSheet y popup del chat
   static const IconData historial = Icons.history_rounded;
 

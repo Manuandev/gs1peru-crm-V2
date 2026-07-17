@@ -2,26 +2,10 @@
 
 enum TipoNotificacion { actividad, derivacion, mensaje }
 
-enum SubtipoNotificacion {
-  // Actividades
-  llamada,
-  correo,
-  whatsappActividad,
-  actividadGenerica,
-  // Derivaciones bot
-  leadBot,
-  prospectoDerivado,
-  derivacionGenerica,
-  // Mensajes
-  mensajeWhatsapp,
-  mensajeChat,
-}
-
 class Notificacion {
   final int id;
   final int idLead;
   final TipoNotificacion tipo;
-  final SubtipoNotificacion subtipo;
   final String titulo;
   final String descripcion;
   final String fechaHora;
@@ -31,7 +15,6 @@ class Notificacion {
     required this.id,
     required this.idLead,
     required this.tipo,
-    required this.subtipo,
     required this.titulo,
     required this.descripcion,
     required this.fechaHora,
@@ -42,7 +25,6 @@ class Notificacion {
     int? id,
     int? idLead,
     TipoNotificacion? tipo,
-    SubtipoNotificacion? subtipo,
     String? titulo,
     String? descripcion,
     String? fechaHora,
@@ -51,7 +33,6 @@ class Notificacion {
     id: id ?? this.id,
     idLead: idLead ?? this.idLead,
     tipo: tipo ?? this.tipo,
-    subtipo: subtipo ?? this.subtipo,
     titulo: titulo ?? this.titulo,
     descripcion: descripcion ?? this.descripcion,
     fechaHora: fechaHora ?? this.fechaHora,
@@ -65,16 +46,13 @@ class Notificacion {
     TipoNotificacion.mensaje => 'Mensaje',
   };
 
-  // Botón de acción: Actividad → Ver seguimiento | Derivacion/Mensaje → Ir al chat
+  // Botón de acción: Actividad → Ver seguimiento | Derivación/Mensaje → Ver conversación
   String get labelAccion => switch (tipo) {
     TipoNotificacion.actividad => 'Ver seguimiento',
-    TipoNotificacion.derivacion => 'Ir al chat',
-    TipoNotificacion.mensaje => 'Ir al chat',
+    TipoNotificacion.derivacion => 'Ver conversación',
+    TipoNotificacion.mensaje => 'Ver conversación',
   };
 
-  // Las derivaciones del bot también muestran chip "Nuevo"
-  bool get mostrarChipNuevo =>
-      tipo == TipoNotificacion.derivacion &&
-      (subtipo == SubtipoNotificacion.leadBot ||
-          subtipo == SubtipoNotificacion.prospectoDerivado);
+  // Las derivaciones del bot muestran chip "Nuevo"
+  bool get mostrarChipNuevo => tipo == TipoNotificacion.derivacion;
 }

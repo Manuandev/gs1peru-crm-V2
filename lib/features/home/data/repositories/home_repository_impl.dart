@@ -15,6 +15,10 @@ class HomeRepositoryImpl implements HomeRepository {
   Future<List<Notificacion>> getNotifications() => _remote.getNotifications();
 
   @override
+  Future<CrudResult> marcarNotificacionesLeidas() =>
+      _remote.marcarNotificacionesLeidas();
+
+  @override
   Future<CrudResult> gestionarPrioridad(int idNumero) =>
       _remote.gestionarPrioridad(idNumero);
 }

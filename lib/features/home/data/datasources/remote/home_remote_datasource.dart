@@ -41,15 +41,36 @@ class HomeRemoteDatasource {
 
   Future<List<NotificacionModel>> getNotifications() async {
     final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LN';
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LS';
 
-    final result = await _api.postSafe(ApiConstants.urlHomeLst, body);
+    final result = await _api.postSafe(ApiConstants.urlNotificacionesLst, body);
 
     return switch (result) {
       ApiSuccess(:final data) => NotificacionModel.parseList(data),
       ApiEmpty() => const <NotificacionModel>[],
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  // Se llama al entrar a la pantalla de notificaciones — marca como leídas
+  // TODAS las notificaciones del usuario (CSV_NOTIFICACIONES_CUD_APP, tarea 'LE').
+  Future<CrudResult> marcarNotificacionesLeidas() async {
+    final ip = await _deviceInfo.getLocalIp();
+    final coords = await _deviceInfo.getCoordenadasString();
+
+    final String body = [_session.codUser, ip, coords].join(camp);
+
+    final result = await _api.postSafe(
+      ApiConstants.urlNotificacionesCud,
+      '$body${sep}LE',
+    );
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
     };
   }
 

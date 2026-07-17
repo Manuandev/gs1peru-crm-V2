@@ -10,7 +10,7 @@ import 'package:app_crm/core/index_core.dart';
 /// Esta trama se recibe cuando un mensaje cambia de estado:
 ///   wait → sent → delivered → read
 class UpdateMensajeWhatsAppPayload {
-  final int idChatCab;           // [0] ID del número del contacto
+  final int idChatCab;          // [0] ID del número del contacto
   final String idMensaje;       // [1] ID del mensaje a actualizar
   final String codAsesor;       // [2] Código del asesor
   final String estado;          // [3] Nuevo estado: sent, delivered, read, failed

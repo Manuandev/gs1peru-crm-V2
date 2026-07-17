@@ -14,8 +14,8 @@ class UpdatePantallaWhatsAppPayload {
   final String codAsesor;       // [1] Código del asesor que envió
   final int idNumero;           // [2] ID del número del contacto
   final String tipoMensaje;     // [3] text, image, video, audio, document
-  final int idChatCab;       // [4] ID cabecera del chat
-  final String idTokenMeta;       // [5] ID único del mensaje (WhatsApp msg ID)
+  final int idChatCab;          // [4] ID cabecera del chat
+  final String idTokenMeta;     // [5] ID único del mensaje (WhatsApp msg ID)
   final String hora;            // [6] Hora del envío
   final String nomArchivo;      // [7] Nombre del archivo adjunto
   final String telefono;        // [8] Número de teléfono

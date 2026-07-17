@@ -173,13 +173,23 @@ class LocalNotificationService {
   /// [mensaje] y persiste la lista completa de vuelta. Persistido (no en
   /// memoria) porque el handler de FCM en background corre en un isolate
   /// nuevo por cada push con la app cerrada.
+  ///
+  /// Si el usuario descartó (swipe) la notificación anterior, Android ya no
+  /// la tiene activa aunque el historial siga en SQLite — sin este chequeo
+  /// el contador quedaba "pegado" (ej. seguía en "11 mensajes" después de
+  /// descartarla). Se arranca de cero cuando no hay una notificación activa
+  /// con ese id.
   Future<List<String>> _agregarMensajePersistido({
     required int idNumero,
     required String mensaje,
   }) async {
     final db = LocalDatabase();
     final key = '$_settingsKeyPrefix$idNumero';
-    final raw = await db.getSetting(key);
+
+    final activas = await flutterLocalNotificationsPlugin.getActiveNotifications();
+    final sigueActiva = activas.any((n) => n.id == idNumero);
+
+    final raw = sigueActiva ? await db.getSetting(key) : null;
 
     final mensajes = raw != null && raw.isNotEmpty
         ? raw.split(AppConstants.sepRegistros)
@@ -270,12 +280,10 @@ class LocalNotificationService {
           priority: Priority.high,
           playSound: true,
           actions: const [
-            // 'Ver lead' → irá a AppRoutes.detalleContacto con idNumero.
-            // Pendiente: el backend aún no manda idNumero en esta trama,
-            // solo el numero de teléfono — falta mapearlo a idNumero.
+            // 'Ver lead' → AppRoutes.detalleContacto con idNumero.
             AndroidNotificationAction(
               'ver_negociacion_bot',
-              'Ver lead',
+              'Ver negociación',
               showsUserInterface: true,
             ),
             AndroidNotificationAction(
@@ -295,6 +303,7 @@ class LocalNotificationService {
           'nombreCliente': payload.nombreCliente,
           'numero': payload.numero,
           'idChatCab': payload.idChatCab.toString(),
+          'idNumero': payload.idNumero.toString(),
         },
       ).toPayloadString(),
     );

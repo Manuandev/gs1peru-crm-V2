@@ -473,6 +473,10 @@ class SignalRService implements ISignalRService {
     try {
       final token = await FirebaseNotificationService.instance.obtenerToken();
       if (token == null || token.isEmpty) return;
+      // TEMPORAL — quitar después de probar FCM. Imprime el token de ESTE
+      // dispositivo/instalación para pegarlo en Firebase Console → Messaging
+      // → "Probar en el dispositivo".
+      if (kDebugMode) debugPrint('[FCM] Token de este dispositivo: $token');
       await _hubConnection?.invoke('RegistrarTokenFCM', args: <Object>[token]);
     } catch (_) {}
   }

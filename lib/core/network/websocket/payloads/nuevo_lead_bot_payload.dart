@@ -5,7 +5,7 @@ import 'package:app_crm/core/index_core.dart';
 /// Payload parseado de la trama NUEVO_LEAD_BOT.
 ///
 /// Formato del servidor:
-/// NUEVO_LEAD_BOT±{idLead}¦{codAsesor}¦{nombreCliente}¦{numero}¦{idChatCab}
+/// NUEVO_LEAD_BOT±{idLead}¦{codAsesor}¦{nombreCliente}¦{numero}¦{idChatCab}¦{idNumero}
 ///
 /// Esta trama se recibe cuando el bot crea un lead nuevo — la conversación
 /// puede no existir todavía en la lista del asesor.
@@ -15,6 +15,7 @@ class NuevoLeadBotPayload {
   final String nombreCliente;   // [2] Nombre del cliente
   final String numero;          // [3] Número de teléfono del contacto
   final int idChatCab;          // [4] ID cabecera del chat
+  final int idNumero;           // [5] ID numero
 
   const NuevoLeadBotPayload({
     required this.idLead,
@@ -22,6 +23,7 @@ class NuevoLeadBotPayload {
     required this.nombreCliente,
     required this.numero,
     required this.idChatCab,
+    required this.idNumero,
   });
 
   /// Parsea el primer record de un WebSocketMessage tipo NUEVO_LEAD_BOT
@@ -29,8 +31,8 @@ class NuevoLeadBotPayload {
     if (message.records.isEmpty) return null;
     final f = message.records.first;
 
-    // Requerimos al menos hasta el índice 4 (idChatCab)
-    if (f.length < 5) return null;
+    // Requerimos al menos hasta el índice 5 (idNumero)
+    if (f.length < 6) return null;
 
     return NuevoLeadBotPayload(
       idLead: int.tryParse(f[0].trim()) ?? 0,
@@ -38,6 +40,7 @@ class NuevoLeadBotPayload {
       nombreCliente: f[2].trim(),
       numero: f[3].trim(),
       idChatCab: int.tryParse(f[4].trim()) ?? 0,
+      idNumero: int.tryParse(f[5].trim()) ?? 0,
     );
   }
 }

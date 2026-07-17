@@ -144,6 +144,7 @@ class AppRouter {
           celularCodigoTelefonoNegociacion:
               args['celularCodigoTelefonoNegociacion'] as String?,
           rucNegociacion: args['rucNegociacion'] as String?,
+          cargoNegociacion: args['cargoNegociacion'] as String?,
         );
       },
     ),

@@ -47,6 +47,7 @@ class NegociacionModel extends Negociacion {
     super.nombreEmpresa,
     super.correo,
     super.ruc,
+    super.cargo,
     super.numSol,
     super.idEstadoSol,
     super.idChatCab,
@@ -120,8 +121,9 @@ class NegociacionModel extends Negociacion {
   // 14  LE.DESCRIPCION        30 LD.FC_USUARIO_C (fecha creación)
   // 15  EP.ID_ESTADO (padre)  31 CCU.ID_CONVERSACION_CAB (→ idChatCab,
   //                               2026-07-15)
-  // 16  EP.DESCRIPCION (padre) 32 CT.ID_CARGO (id crudo, sin catálogo — no se
-  //                               parsea acá todavía)
+  // 16  EP.DESCRIPCION (padre) 32 CT.ID_CARGO (pese al nombre, ya es texto
+  //                               libre — mismo campo que ConversationModel
+  //                               ya parsea como String en chat/, 2026-07-17)
   //                            33 LD.ID_TIP_MONEDA
   //                            34 CL.CT_LEADS (total de leads del número)
   //                            35 LI.NUMSOL
@@ -173,6 +175,7 @@ class NegociacionModel extends Negociacion {
       nombreEmpresa: ParseUtils.str(fields, 5),
       correo: ParseUtils.str(fields, 12),
       ruc: ParseUtils.str(fields, 39),
+      cargo: ParseUtils.str(fields, 32),
       idMoneda: ParseUtils.str(fields, 33),
       totalLeadsNumero: ParseUtils.toInt(fields, 34),
       numSol: ParseUtils.str(fields, 35),

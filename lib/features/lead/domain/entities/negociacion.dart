@@ -65,6 +65,12 @@ class Negociacion extends Equatable {
   // de arriba: solo lo trae 'DT'/'DN', 'LN' lo deja vacío.
   final String ruc;
 
+  // Cargo del contacto (CT.ID_CARGO) — pese al nombre de la columna, el SP
+  // ya lo trae como texto libre (no un id de catálogo, ver mismo campo ya
+  // parseado como texto en ConversationModel/chat) — mismo candado que
+  // ruc/nombres/apellidos: solo lo trae 'DT'/'DN', 'LN' lo deja vacío.
+  final String cargo;
+
   final String numSol;
   final int idEstadoSol;
 
@@ -149,6 +155,7 @@ class Negociacion extends Equatable {
     this.nombreEmpresa = '',
     this.correo = '',
     this.ruc = '',
+    this.cargo = '',
     this.numSol = '',
     this.idEstadoSol = 0,
     this.idChatCab = 0,
@@ -190,6 +197,7 @@ class Negociacion extends Equatable {
     nombreEmpresa,
     correo,
     ruc,
+    cargo,
     numSol,
     idEstadoSol,
     idChatCab,
@@ -230,6 +238,7 @@ class Negociacion extends Equatable {
     String? nombreEmpresa,
     String? correo,
     String? ruc,
+    String? cargo,
     String? numSol,
     int? idEstadoSol,
     int? idChatCab,
@@ -270,6 +279,7 @@ class Negociacion extends Equatable {
       nombreEmpresa: nombreEmpresa ?? this.nombreEmpresa,
       correo: correo ?? this.correo,
       ruc: ruc ?? this.ruc,
+      cargo: cargo ?? this.cargo,
       numSol: numSol ?? this.numSol,
       idEstadoSol: idEstadoSol ?? this.idEstadoSol,
       idChatCab: idChatCab ?? this.idChatCab,

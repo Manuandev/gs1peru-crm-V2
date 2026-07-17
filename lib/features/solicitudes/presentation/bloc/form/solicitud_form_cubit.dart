@@ -31,7 +31,7 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
   /// existente). Ver `SolicitudFormState.cantidadEsperada`.
   ///
   /// Los datos de contacto (`nombres`/`apellidoPaterno`/`apellidoMaterno`/
-  /// `nombreEmpresa`/`correo`/`celular`/`celularCodigoTelefono`) y
+  /// `nombreEmpresa`/`correo`/`celular`/`celularCodigoTelefono`/`cargo`) y
   /// `precioTotal` son solo de **prellenado/referencia** — a diferencia de
   /// cantidad/precioBase/descuento/moneda, no bloquean nada; el asesor puede
   /// editarlos en el paso 1 como cualquier otro dato. Ver
@@ -50,6 +50,7 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
     String celular = '',
     String celularCodigoTelefono = '',
     String ruc = '',
+    String cargo = '',
   }) => emit(
     state.copyWith(
       cantidadEsperada: cantidad,
@@ -65,6 +66,7 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
       celularLead: celular,
       celularCodigoTelefonoLead: celularCodigoTelefono,
       rucLead: ruc,
+      cargoLead: cargo,
     ),
   );
 

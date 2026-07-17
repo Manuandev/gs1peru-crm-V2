@@ -233,7 +233,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
   // Al crear desde "Generar solicitud" (negociación con precio ya definido,
   // `cantidadEsperada != null`) — prellena Nombres/Apellidos/Correo/Celular/
-  // Razón social con los datos ya capturados en la negociación
+  // Cargo/Razón social con los datos ya capturados en la negociación
   // (`SolicitudFormCubit.sembrarDatosNegociacion`, ver solicitudes/CLAUDE.md).
   // A diferencia de precioBase/descuento/moneda, estos campos NO quedan
   // bloqueados — es solo un prellenado, el asesor los puede corregir si algo
@@ -256,6 +256,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     }
     if (formState.celularLead.isNotEmpty) {
       _ctrlCelular.text = formState.celularLead;
+    }
+    if (formState.cargoLead.isNotEmpty) {
+      _ctrlCargo.text = formState.cargoLead;
     }
     // Nombre de empresa / RUC de la negociación → Razón social / RUC
     // (Información comercial, solo visible con tipo de persona Jurídica —

@@ -177,6 +177,11 @@ class SolicitudFormState {
   /// contacto de arriba.
   final String rucLead;
 
+  /// Cargo del contacto de la negociación (`Negociacion.cargo`,
+  /// `CT.ID_CARGO`, ya viene como texto libre) — mismo candado/mismo trato
+  /// de solo-prellenado que el resto de datos de contacto de arriba.
+  final String cargoLead;
+
   const SolicitudFormState({
     this.tipoPersona = 'juridica',
     this.numSol = '',
@@ -197,6 +202,7 @@ class SolicitudFormState {
     this.celularLead = '',
     this.celularCodigoTelefonoLead = '',
     this.rucLead = '',
+    this.cargoLead = '',
   });
 
   String get tipoPersonaLabel =>
@@ -224,6 +230,7 @@ class SolicitudFormState {
     String? celularLead,
     String? celularCodigoTelefonoLead,
     String? rucLead,
+    String? cargoLead,
   }) => SolicitudFormState(
     tipoPersona: tipoPersona ?? this.tipoPersona,
     numSol: numSol ?? this.numSol,
@@ -247,5 +254,6 @@ class SolicitudFormState {
     celularCodigoTelefonoLead:
         celularCodigoTelefonoLead ?? this.celularCodigoTelefonoLead,
     rucLead: rucLead ?? this.rucLead,
+    cargoLead: cargoLead ?? this.cargoLead,
   );
 }

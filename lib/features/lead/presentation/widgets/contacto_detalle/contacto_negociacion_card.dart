@@ -119,6 +119,7 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
       celularNegociacion: detalle.numero,
       celularCodigoTelefonoNegociacion: detalle.prefijoPais,
       rucNegociacion: detalle.ruc,
+      cargoNegociacion: detalle.cargo,
     );
   }
 

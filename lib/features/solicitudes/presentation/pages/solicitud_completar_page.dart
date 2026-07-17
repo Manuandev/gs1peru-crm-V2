@@ -27,6 +27,7 @@ class SolicitudCompletarPage extends StatelessWidget {
   final String? celularNegociacion;
   final String? celularCodigoTelefonoNegociacion;
   final String? rucNegociacion;
+  final String? cargoNegociacion;
 
   const SolicitudCompletarPage({
     super.key,
@@ -45,6 +46,7 @@ class SolicitudCompletarPage extends StatelessWidget {
     this.celularNegociacion,
     this.celularCodigoTelefonoNegociacion,
     this.rucNegociacion,
+    this.cargoNegociacion,
   });
 
   @override
@@ -73,6 +75,7 @@ class SolicitudCompletarPage extends StatelessWidget {
                 celular: celularNegociacion ?? '',
                 celularCodigoTelefono: celularCodigoTelefonoNegociacion ?? '',
                 ruc: rucNegociacion ?? '',
+                cargo: cargoNegociacion ?? '',
               );
             }
             return cubit;

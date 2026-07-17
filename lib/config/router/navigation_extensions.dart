@@ -93,6 +93,7 @@ extension NavigationExtensions on BuildContext {
     String? celularNegociacion,
     String? celularCodigoTelefonoNegociacion,
     String? rucNegociacion,
+    String? cargoNegociacion,
   }) => _push(
     AppRoutes.fichaCompletarSolicitud,
     arguments: {
@@ -111,6 +112,7 @@ extension NavigationExtensions on BuildContext {
       'celularNegociacion': celularNegociacion,
       'celularCodigoTelefonoNegociacion': celularCodigoTelefonoNegociacion,
       'rucNegociacion': rucNegociacion,
+      'cargoNegociacion': cargoNegociacion,
     },
   );
 

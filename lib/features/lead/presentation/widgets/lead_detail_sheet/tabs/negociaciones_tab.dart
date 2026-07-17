@@ -214,6 +214,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
       celularNegociacion: detalle.numero,
       celularCodigoTelefonoNegociacion: detalle.prefijoPais,
       rucNegociacion: detalle.ruc,
+      cargoNegociacion: detalle.cargo,
     );
   }
 

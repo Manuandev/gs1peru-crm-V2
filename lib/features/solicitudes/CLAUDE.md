@@ -1148,6 +1148,15 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   canal expo es LinkedIn) ni `widgetCanal(canal.iconoApp)` (el string crudo del SP no
   siempre calza con las keys internas de `AppSocialUtils`). Ver `core/CLAUDE.md` →
   `AppSocialUtils` para el mapa completo id→canal expo.
+- **`CanalExpoItem.esDetallado` (2026-07-17)** — si el canal elegido en los chips tiene
+  `esDetallado == true` (hoy, "Otros"), aparece un `CustomTextField` chico debajo de los
+  chips ("¿Desde dónde se enteró? \*", `_ctrlCanalDetalle` en
+  `solicitud_completar_view.dart`) — obligatorio en ese caso, sumado a `_formCompleto`. El
+  texto libre que tipea el asesor ahí se manda como `NOMBRE_CANAL` **en vez de**
+  `canal.descripcion` (`_construirDatosSolicitante()` — `ID_CANAL` sigue viajando normal,
+  solo cambia el nombre). Al reabrir una solicitud ya guardada con un canal `esDetallado`,
+  `_cargarDetalle()` prellena `_ctrlCanalDetalle` con `detalle.canalNombre` (que en ese caso
+  es el texto libre guardado, no una descripción de catálogo).
 - **"Tipo de persona" (Jurídica/Natural) es un solo valor compartido** — vive en
   `SolicitudFormCubit.state.tipoPersona` (no en `DatosSolicitante`/`DatosFacturacion`,
   que antes tenían cada uno su propia copia y se desincronizaban). Solo se puede cambiar

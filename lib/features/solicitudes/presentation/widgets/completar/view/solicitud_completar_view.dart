@@ -56,6 +56,13 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // Canal seleccionado (single-select) — catálogo real vía CatalogsBloc
   CanalExpoItem? _canalSeleccionado;
 
+  // Detalle libre del canal — solo se pide/muestra cuando el canal
+  // seleccionado tiene esDetallado == true (ej. "Otros"). Se manda como
+  // NOMBRE_CANAL en vez de la descripción del canal (ver
+  // _construirDatosSolicitante) — el id del canal (ID_CANAL) sigue viajando
+  // normal.
+  final _ctrlCanalDetalle = TextEditingController();
+
   // País del código telefónico del celular — catálogo real vía CatalogsBloc
   PaisItem? _paisCelular;
 
@@ -187,6 +194,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlCorreo,
       _ctrlRuc,
       _ctrlRazonSocial,
+      _ctrlCanalDetalle,
     ]) {
       ctrl.addListener(_onCampoTexto);
     }
@@ -370,6 +378,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _nacionalidadLabel = nacionalidad?.nombre ?? '';
       _sexoId = detalle.sexoId;
       _canalSeleccionado = canal;
+      _ctrlCanalDetalle.text = canal?.esDetallado == true
+          ? detalle.canalNombre
+          : '';
       _solicitanteParticipante = detalle.solicitanteEsParticipante;
       _facturarAlSolicitante = detalle.facturarAlSolicitante;
       _ctrlNumDoc.text = detalle.numDoc;
@@ -596,7 +607,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
       correo: _ctrlCorreo.text,
       canalId: _canalSeleccionado?.id,
-      canalNombre: _canalSeleccionado?.descripcion ?? '',
+      canalNombre: _canalSeleccionado?.esDetallado == true
+          ? _ctrlCanalDetalle.text.trim()
+          : (_canalSeleccionado?.descripcion ?? ''),
       ruc: _ctrlRuc.text,
       razonSocial: _ctrlRazonSocial.text,
       solicitanteEsParticipante: _solicitanteParticipante,
@@ -655,7 +668,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   }
 
   /// Campos obligatorios (marcados con *) del paso 1. Los opcionales
-  /// (apellido materno, RUC/razón social, canales) no se exigen.
+  /// (apellido materno, RUC/razón social, canales) no se exigen — salvo el
+  /// detalle del canal, que sí es obligatorio cuando el canal elegido tiene
+  /// esDetallado == true (si no, se mandaría un NOMBRE_CANAL vacío).
   bool get _formCompleto =>
       _tipoDocLabel.isNotEmpty &&
       _ctrlNumDoc.text.trim().isNotEmpty &&
@@ -665,7 +680,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlApellidoPaterno.text.trim().isNotEmpty &&
       _ctrlCargo.text.trim().isNotEmpty &&
       _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.emailValidator == null;
+      _ctrlCorreo.text.emailValidator == null &&
+      (_canalSeleccionado?.esDetallado != true ||
+          _ctrlCanalDetalle.text.trim().isNotEmpty);
 
   // "Siguiente" (2026-07-17, pedido de negocio — revierte el "ya no valida"
   // de la sesión anterior): valida los campos obligatorios y GUARDA de
@@ -735,6 +752,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     _ctrlCorreo.dispose();
     _ctrlRuc.dispose();
     _ctrlRazonSocial.dispose();
+    _ctrlCanalDetalle.dispose();
     _progreso.dispose();
     super.dispose();
   }
@@ -833,6 +851,16 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                           _sincronizarCubit();
                         },
                       ),
+                      if (_canalSeleccionado?.esDetallado == true) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        CustomTextField(
+                          label: '¿Desde dónde se enteró? *',
+                          hint: 'Ej: Feria, recomendación, etc.',
+                          controller: _ctrlCanalDetalle,
+                          enabled: widget.modoEdicion,
+                          textCapitalization: TextCapitalization.sentences,
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.xs),
 
                       // ── Botones de adjuntos ────────────────────────────

@@ -185,6 +185,9 @@ class _SolicitudParticipantesViewState
     final igvPorcentaje = catalogState is CatalogsLoaded
         ? catalogState.igvPorcentaje
         : 0.0;
+    final tiposParticipante = catalogState is CatalogsLoaded
+        ? catalogState.tiposParticipante
+        : const <TipoParticipanteItem>[];
     // Cantidad exacta que exige la negociación de origen (null si esta
     // solicitud no viene de una) — se muestra junto al conteo actual para
     // que el asesor sepa cuánto le falta/sobra antes de generar. Solo
@@ -262,9 +265,12 @@ class _SolicitudParticipantesViewState
                           _BotonSeccionSmall(
                             icono: AppIcons.add,
                             label: 'Nuevo',
-                            onTap: widget.modoEdicion
-                                ? () => _abrirFormularioNuevo(context)
-                                : () {},
+                            enabled:
+                                widget.modoEdicion &&
+                                !(cantidadEsperada != null &&
+                                    state.participantes.length >=
+                                        cantidadEsperada),
+                            onTap: () => _abrirFormularioNuevo(context),
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           // _BotonSeccionSmall(
@@ -306,8 +312,15 @@ class _SolicitudParticipantesViewState
                               const SizedBox(height: AppSpacing.sm),
                           itemBuilder: (context, index) {
                             final p = state.participantes[index];
+                            final tipoLabel =
+                                tiposParticipante
+                                    .where((t) => t.id == p.tipoParticipante)
+                                    .firstOrNull
+                                    ?.nombre ??
+                                '—';
                             return _ParticipanteCard(
                               participante: p,
+                              tipoParticipanteLabel: tipoLabel,
                               habilitado: widget.modoEdicion,
                               onEditar: () =>
                                   _abrirFormularioEditar(context, p),
@@ -325,7 +338,7 @@ class _SolicitudParticipantesViewState
                     horizontal: AppSpacing.sm,
                   ),
                   child: _ResumenInversion(
-                    total: state.totalInversion,
+                    total: state.totalPagantes(tiposParticipante),
                     igvPorcentaje: igvPorcentaje,
                   ),
                 ),
@@ -383,12 +396,20 @@ class _SolicitudParticipantesViewState
 
 class _ParticipanteCard extends StatelessWidget {
   final ParticipanteLocal participante;
+  // Descripción real del catálogo (Pagante/Invitado/Invitado auspicio/
+  // Online) — resuelta por el padre contra CatalogsBloc.tiposParticipante,
+  // esta card no tiene acceso directo al catálogo. Se muestra para que el
+  // asesor pueda verificar de un vistazo si los cálculos de la inversión
+  // (que excluyen a los Invitados, ver ParticipantesState.totalPagantes)
+  // están tomando el tipo correcto de cada participante.
+  final String tipoParticipanteLabel;
   final bool habilitado;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
 
   const _ParticipanteCard({
     required this.participante,
+    required this.tipoParticipanteLabel,
     required this.habilitado,
     required this.onEditar,
     required this.onEliminar,
@@ -456,27 +477,33 @@ class _ParticipanteCard extends StatelessWidget {
                   valor2: participante.correo,
                 ),
                 const SizedBox(height: AppSpacing.xxs),
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 10),
-                    children: [
-                      TextSpan(
-                        text: 'Cargo: ',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontWeight: AppTextStyles.weightMedium,
-                        ),
-                      ),
-                      TextSpan(
-                        text: participante.cargo,
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: AppTextStyles.weightRegular,
-                        ),
-                      ),
-                    ],
-                  ),
+                _FilaInfo(
+                  label1: 'Cargo:',
+                  valor1: participante.cargo,
+                  icono2: AppIcons.user,
+                  valor2: tipoParticipanteLabel,
                 ),
+                // RichText(
+                //   text: TextSpan(
+                //     style: const TextStyle(fontSize: 10),
+                //     children: [
+                //       TextSpan(
+                //         text: 'Cargo: ',
+                //         style: TextStyle(
+                //           color: AppColors.textSecondary,
+                //           fontWeight: AppTextStyles.weightMedium,
+                //         ),
+                //       ),
+                //       TextSpan(
+                //         text: participante.cargo,
+                //         style: TextStyle(
+                //           color: AppColors.textPrimary,
+                //           fontWeight: AppTextStyles.weightRegular,
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -661,7 +688,9 @@ class _Campo extends StatelessWidget {
 // ── Resumen de inversión ──────────────────────────────────────────────────────
 
 class _ResumenInversion extends StatelessWidget {
-  // Suma de los importes de participantes — desde el 2026-07-16 cada
+  // Suma de los importes de participantes PAGANTES únicamente (ver
+  // ParticipantesState.totalPagantes — los Invitados no se cuentan, aunque
+  // tengan su propio importe puesto, 2026-07-17). Desde el 2026-07-16 cada
   // importe ya es la BASE sin IGV (ver _importeFijo), así que `total` acá
   // ES la inversión directamente. El IGV se SUMA encima para el importe
   // total — revierte el fix del 2026-07-14 (donde el importe venía con IGV
@@ -778,22 +807,25 @@ class _BotonSeccionSmall extends StatelessWidget {
   final IconData icono;
   final String label;
   final VoidCallback onTap;
+  final bool enabled;
 
   const _BotonSeccionSmall({
     required this.icono,
     required this.label,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = enabled ? AppColors.primary : AppColors.textDisabled;
     return OutlinedButton.icon(
-      onPressed: onTap,
+      onPressed: enabled ? onTap : null,
       icon: Icon(icono, size: 14),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
-        side: const BorderSide(color: AppColors.primary),
+        foregroundColor: color,
+        side: BorderSide(color: color),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
           vertical: AppSpacing.sm,

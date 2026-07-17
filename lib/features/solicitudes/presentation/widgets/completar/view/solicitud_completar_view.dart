@@ -793,161 +793,161 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                      // ── Toggle tipo persona ─────────────────────────────
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: SolicitudToggleTipoPersona(
-                          valor: tipoPersona,
-                          habilitado: widget.modoEdicion,
-                          onChanged: (v) => context
-                              .read<SolicitudFormCubit>()
-                              .cambiarTipoPersona(v),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // ── ¿Cómo se enteró del evento? ────────────────────
-                      Text(
-                        '¿Cómo se enteró del evento?',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: AppTextStyles.weightMedium,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      ChipsCanales(
-                        canales: canales,
-                        seleccionado: _canalSeleccionado,
-                        habilitado: widget.modoEdicion,
-                        onSeleccionar: (canal) {
-                          if (!widget.modoEdicion) return;
-                          setState(() {
-                            _canalSeleccionado =
-                                _canalSeleccionado?.id == canal.id
-                                ? null
-                                : canal;
-                          });
-                          _sincronizarCubit();
-                        },
-                      ),
-                      if (_canalSeleccionado?.esDetallado == true) ...[
-                        const SizedBox(height: AppSpacing.xs),
-                        CustomTextField(
-                          label: '¿Desde dónde se enteró? *',
-                          hint: 'Ej: Feria, recomendación, etc.',
-                          controller: _ctrlCanalDetalle,
-                          enabled: widget.modoEdicion,
-                          textCapitalization: TextCapitalization.sentences,
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? 'Requerido'
-                              : null,
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.xs),
-
-                      // ── Botones de adjuntos ────────────────────────────
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: BotonAdjuntar(
-                              label: 'Adjuntar voucher',
-                              archivo: formState.archivoVoucher,
-                              nombreExistente: _archivoVoucherExistente,
-                              habilitado: widget.modoEdicion,
-                              onAdjuntar: () => _adjuntarArchivo(true),
-                              onQuitar: () => _quitarArchivo(true),
-                            ),
+                        // ── Toggle tipo persona ─────────────────────────────
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: SolicitudToggleTipoPersona(
+                            valor: tipoPersona,
+                            habilitado: widget.modoEdicion,
+                            onChanged: (v) => context
+                                .read<SolicitudFormCubit>()
+                                .cambiarTipoPersona(v),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: BotonAdjuntar(
-                              label: 'Adjuntar O/C',
-                              archivo: formState.archivoOC,
-                              nombreExistente: _archivoOCExistente,
-                              habilitado: widget.modoEdicion,
-                              onAdjuntar: () => _adjuntarArchivo(false),
-                              onQuitar: () => _quitarArchivo(false),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-
-                      // ── Tooltip informativo — 3 partes de la solicitud ─
-                      const TooltipPartesSolicitud(),
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // ── Datos del solicitante ──────────────────────────
-                      SeccionDatosSolicitante(
-                        habilitado: widget.modoEdicion,
-                        ctrlNumDoc: _ctrlNumDoc,
-                        ctrlNombres: _ctrlNombres,
-                        ctrlApellidoPaterno: _ctrlApellidoPaterno,
-                        ctrlApellidoMaterno: _ctrlApellidoMaterno,
-                        ctrlCargo: _ctrlCargo,
-                        ctrlCelular: _ctrlCelular,
-                        ctrlCorreo: _ctrlCorreo,
-                        paises: paises,
-                        paisCelular: paisCelular,
-                        onPaisCelularChanged: (p) {
-                          setState(() => _paisCelular = p);
-                          _sincronizarCubit();
-                        },
-                        tipoDocInicialId: _tipoDocId.isNotEmpty
-                            ? _tipoDocId
-                            : null,
-                        nacionalidadInicialId: _nacionalidadId.isNotEmpty
-                            ? _nacionalidadId
-                            : null,
-                        sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
-                        onTipoDocChanged: (item) {
-                          setState(() {
-                            _tipoDocId = item?.id ?? '';
-                            _tipoDocLabel = item?.abreviatura ?? '';
-                          });
-                          _sincronizarCubit();
-                        },
-                        onNacionalidadChanged: (item) {
-                          setState(() {
-                            _nacionalidadId = item?.id ?? '';
-                            _nacionalidadLabel = item?.nombre ?? '';
-                          });
-                          _sincronizarCubit();
-                        },
-                        onSexoChanged: (item) {
-                          setState(() => _sexoId = item?.id ?? '');
-                          _sincronizarCubit();
-                        },
-                        onBuscarDocumento: _buscarDocumentoSolicitante,
-                      ),
-                      if (tipoPersona == 'juridica') ...[
+                        ),
                         const SizedBox(height: AppSpacing.sm),
 
-                        // ── Información comercial (solo jurídica) ──────────
-                        SeccionInfoComercial(
-                          habilitado: widget.modoEdicion,
-                          ctrlRuc: _ctrlRuc,
-                          ctrlRazonSocial: _ctrlRazonSocial,
-                          onBuscarRuc: _buscarRucComercial,
+                        // ── ¿Cómo se enteró del evento? ────────────────────
+                        Text(
+                          '¿Cómo se enteró del evento?',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: AppTextStyles.weightMedium,
+                          ),
                         ),
-                      ],
-                      const SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.xs),
+                        ChipsCanales(
+                          canales: canales,
+                          seleccionado: _canalSeleccionado,
+                          habilitado: widget.modoEdicion,
+                          onSeleccionar: (canal) {
+                            if (!widget.modoEdicion) return;
+                            setState(() {
+                              _canalSeleccionado =
+                                  _canalSeleccionado?.id == canal.id
+                                  ? null
+                                  : canal;
+                            });
+                            _sincronizarCubit();
+                          },
+                        ),
+                        if (_canalSeleccionado?.esDetallado == true) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          CustomTextField(
+                            label: '¿Desde dónde se enteró? *',
+                            hint: 'Ej: Feria, recomendación, etc.',
+                            controller: _ctrlCanalDetalle,
+                            enabled: widget.modoEdicion,
+                            textCapitalization: TextCapitalization.sentences,
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Requerido'
+                                : null,
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.xs),
 
-                      // ── Switches ───────────────────────────────────────
-                      SeccionSwitches(
-                        solicitanteParticipante: _solicitanteParticipante,
-                        facturarAlSolicitante: _facturarAlSolicitante,
-                        onSolicitanteChanged: (v) {
-                          setState(() => _solicitanteParticipante = v);
-                          _sincronizarCubit();
-                        },
-                        onFacturarChanged: (v) {
-                          setState(() => _facturarAlSolicitante = v);
-                          _sincronizarCubit();
-                        },
-                        habilitado: widget.modoEdicion,
-                      ),
+                        // ── Botones de adjuntos ────────────────────────────
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: BotonAdjuntar(
+                                label: 'Adjuntar voucher',
+                                archivo: formState.archivoVoucher,
+                                nombreExistente: _archivoVoucherExistente,
+                                habilitado: widget.modoEdicion,
+                                onAdjuntar: () => _adjuntarArchivo(true),
+                                onQuitar: () => _quitarArchivo(true),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: BotonAdjuntar(
+                                label: 'Adjuntar O/C',
+                                archivo: formState.archivoOC,
+                                nombreExistente: _archivoOCExistente,
+                                habilitado: widget.modoEdicion,
+                                onAdjuntar: () => _adjuntarArchivo(false),
+                                onQuitar: () => _quitarArchivo(false),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+
+                        // ── Tooltip informativo — 3 partes de la solicitud ─
+                        const TooltipPartesSolicitud(),
+                        const SizedBox(height: AppSpacing.sm),
+
+                        // ── Datos del solicitante ──────────────────────────
+                        SeccionDatosSolicitante(
+                          habilitado: widget.modoEdicion,
+                          ctrlNumDoc: _ctrlNumDoc,
+                          ctrlNombres: _ctrlNombres,
+                          ctrlApellidoPaterno: _ctrlApellidoPaterno,
+                          ctrlApellidoMaterno: _ctrlApellidoMaterno,
+                          ctrlCargo: _ctrlCargo,
+                          ctrlCelular: _ctrlCelular,
+                          ctrlCorreo: _ctrlCorreo,
+                          paises: paises,
+                          paisCelular: paisCelular,
+                          onPaisCelularChanged: (p) {
+                            setState(() => _paisCelular = p);
+                            _sincronizarCubit();
+                          },
+                          tipoDocInicialId: _tipoDocId.isNotEmpty
+                              ? _tipoDocId
+                              : null,
+                          nacionalidadInicialId: _nacionalidadId.isNotEmpty
+                              ? _nacionalidadId
+                              : null,
+                          sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
+                          onTipoDocChanged: (item) {
+                            setState(() {
+                              _tipoDocId = item?.id ?? '';
+                              _tipoDocLabel = item?.abreviatura ?? '';
+                            });
+                            _sincronizarCubit();
+                          },
+                          onNacionalidadChanged: (item) {
+                            setState(() {
+                              _nacionalidadId = item?.id ?? '';
+                              _nacionalidadLabel = item?.nombre ?? '';
+                            });
+                            _sincronizarCubit();
+                          },
+                          onSexoChanged: (item) {
+                            setState(() => _sexoId = item?.id ?? '');
+                            _sincronizarCubit();
+                          },
+                          onBuscarDocumento: _buscarDocumentoSolicitante,
+                        ),
+                        if (tipoPersona == 'juridica') ...[
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // ── Información comercial (solo jurídica) ──────────
+                          SeccionInfoComercial(
+                            habilitado: widget.modoEdicion,
+                            ctrlRuc: _ctrlRuc,
+                            ctrlRazonSocial: _ctrlRazonSocial,
+                            onBuscarRuc: _buscarRucComercial,
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+
+                        // ── Switches ───────────────────────────────────────
+                        SeccionSwitches(
+                          solicitanteParticipante: _solicitanteParticipante,
+                          facturarAlSolicitante: _facturarAlSolicitante,
+                          onSolicitanteChanged: (v) {
+                            setState(() => _solicitanteParticipante = v);
+                            _sincronizarCubit();
+                          },
+                          onFacturarChanged: (v) {
+                            setState(() => _facturarAlSolicitante = v);
+                            _sincronizarCubit();
+                          },
+                          habilitado: widget.modoEdicion,
+                        ),
                       ],
                     ),
                   ),

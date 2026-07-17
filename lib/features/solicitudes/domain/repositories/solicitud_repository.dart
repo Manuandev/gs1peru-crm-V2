@@ -26,6 +26,7 @@ abstract class SolicitudRepository {
     required bool esBorrador,
     required String idTipoDocRuc,
     required String pasoOrigen,
+    required List<TipoParticipanteItem> tiposParticipante,
   });
 
   Future<bool> guardarArchivo({

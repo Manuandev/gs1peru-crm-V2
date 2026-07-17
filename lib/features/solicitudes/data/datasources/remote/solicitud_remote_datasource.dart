@@ -96,6 +96,10 @@ class SolicitudRemoteDatasource {
     // para elegir el texto del seguimiento que registra en
     // CRM.T_LEAD_SEGUIMIENTO (ver CSV_SOLICITUD_CUD_APP.sql, 2026-07-17).
     required String pasoOrigen,
+    // Catálogo real de tipos de participante — usado solo para resolver
+    // esInvitado y excluir a los Invitados de DC_IMPORTE (no pagan, ver
+    // ParticipantesState.totalPagantes). Nunca comparar ids hardcodeados.
+    required List<TipoParticipanteItem> tiposParticipante,
   }) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
@@ -112,8 +116,19 @@ class SolicitudRemoteDatasource {
     // descuento de la negociación de origen ya repartido entre
     // participantes (ver _importeFijo en solicitud_participantes_view.dart)
     // — ya no se resta un descuento aparte acá, restarlo de nuevo lo
-    // contaría dos veces.
-    final dcImporte = participantes.fold(0.0, (sum, p) => sum + p.importe);
+    // contaría dos veces. Desde el 2026-07-17 solo suma Pagantes — un
+    // Invitado no paga, aunque tenga su propio importe puesto (obligatorio
+    // > 0 en el formulario, pero no se factura).
+    bool esInvitado(ParticipanteLocal p) {
+      final tipo = tiposParticipante
+          .where((t) => t.id == p.tipoParticipante)
+          .firstOrNull;
+      return tipo?.esInvitado ?? false;
+    }
+
+    final dcImporte = participantes
+        .where((p) => !esInvitado(p))
+        .fold(0.0, (sum, p) => sum + p.importe);
     final dcIgv = dcImporte * igvPorcentaje / 100;
     final dcImporteTotal = dcImporte + dcIgv;
 

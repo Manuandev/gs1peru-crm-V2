@@ -37,6 +37,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     required bool esBorrador,
     required String idTipoDocRuc,
     required String pasoOrigen,
+    required List<TipoParticipanteItem> tiposParticipante,
   }) => _remote.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -48,6 +49,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     esBorrador: esBorrador,
     idTipoDocRuc: idTipoDocRuc,
     pasoOrigen: pasoOrigen,
+    tiposParticipante: tiposParticipante,
   );
 
   @override

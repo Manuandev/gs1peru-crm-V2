@@ -20,6 +20,7 @@ class GuardarSolicitudUseCase {
     required bool esBorrador,
     required String idTipoDocRuc,
     required String pasoOrigen,
+    required List<TipoParticipanteItem> tiposParticipante,
   }) => _repository.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -31,5 +32,6 @@ class GuardarSolicitudUseCase {
     esBorrador: esBorrador,
     idTipoDocRuc: idTipoDocRuc,
     pasoOrigen: pasoOrigen,
+    tiposParticipante: tiposParticipante,
   );
 }

@@ -98,6 +98,20 @@ class ParticipantesState {
   ParticipantesState copyWith({List<ParticipanteLocal>? participantes}) =>
       ParticipantesState(participantes: participantes ?? this.participantes);
 
-  double get totalInversion =>
-      participantes.fold(0.0, (sum, p) => sum + p.importe);
+  /// Suma solo el importe de los participantes **Pagantes** — un Invitado
+  /// no paga, así que su importe (el que se le haya puesto/sugerido, el
+  /// campo sigue siendo obligatorio > 0 en el formulario) no debe contarse
+  /// para el total que se muestra en el Resumen ni para lo que se factura
+  /// (`DC_IMPORTE` en el CUD). Necesita el catálogo real
+  /// (`CatalogsBloc.tiposParticipante`) para resolver `esInvitado` por
+  /// `tipoParticipante` (id crudo, sin bool propio en `ParticipanteLocal`)
+  /// — nunca comparar contra ids hardcodeados. Pedido de negocio, 2026-07-17.
+  double totalPagantes(List<TipoParticipanteItem> tiposParticipante) {
+    return participantes.where((p) {
+      final tipo = tiposParticipante
+          .where((t) => t.id == p.tipoParticipante)
+          .firstOrNull;
+      return !(tipo?.esInvitado ?? false);
+    }).fold(0.0, (sum, p) => sum + p.importe);
+  }
 }

@@ -69,7 +69,10 @@ class CobranzaFacturaPage extends StatelessWidget {
               );
               if (resultadoPlan != null && context.mounted) {
                 context.read<CobranzaFacturaBloc>().add(
-                  PlanGuardado(resultadoPlan.fechaVencimiento, resultadoPlan.cuotas),
+                  PlanGuardado(
+                    resultadoPlan.fechaVencimiento,
+                    resultadoPlan.cuotas,
+                  ),
                 );
                 AppSnackBar.success(
                   context,

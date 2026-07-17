@@ -43,6 +43,9 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   final idTipoDocRuc = catalogState is CatalogsLoaded
       ? catalogState.valoresDefecto.idTipoDocRuc
       : '';
+  final tiposParticipante = catalogState is CatalogsLoaded
+      ? catalogState.tiposParticipante
+      : const <TipoParticipanteItem>[];
 
   final result =
       await GuardarSolicitudUseCase(context.read<SolicitudRepository>()).call(
@@ -56,6 +59,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         esBorrador: esBorrador,
         idTipoDocRuc: idTipoDocRuc,
         pasoOrigen: pasoOrigen,
+        tiposParticipante: tiposParticipante,
       );
 
   if (result is CrudOk) progreso?.completarPasoActual();

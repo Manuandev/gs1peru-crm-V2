@@ -724,9 +724,17 @@ class _SeccionResumenComercial extends StatelessWidget {
     // IGV (ver _importeFijo en solicitud_participantes_view.dart), así que
     // la suma de importes ES la inversión directamente — el IGV se SUMA
     // encima para el importe total (revierte el fix del 2026-07-14, donde
-    // el importe venía con IGV incluido y había que extraerlo).
-    final inversion = context.watch<ParticipantesCubit>().state.totalInversion;
+    // el importe venía con IGV incluido y había que extraerlo). Desde el
+    // 2026-07-17 la suma es solo de participantes Pagantes — un Invitado no
+    // paga, ver ParticipantesState.totalPagantes.
     final catalogState = context.watch<CatalogsBloc>().state;
+    final tiposParticipante = catalogState is CatalogsLoaded
+        ? catalogState.tiposParticipante
+        : const <TipoParticipanteItem>[];
+    final inversion = context
+        .watch<ParticipantesCubit>()
+        .state
+        .totalPagantes(tiposParticipante);
     final igvPorcentaje = catalogState is CatalogsLoaded
         ? catalogState.igvPorcentaje
         : 0.0;

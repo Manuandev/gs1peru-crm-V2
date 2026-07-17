@@ -1,5 +1,82 @@
 # Solicitudes Feature
 
+## Botón "Nuevo" (participantes) se deshabilita al llegar al máximo (2026-07-17)
+Pedido de negocio (jefe del usuario) — con una solicitud que viene de una negociación con
+cantidad ya definida (`SolicitudFormCubit.state.cantidadEsperada != null`), el botón "Nuevo"
+del paso 2 ahora se deshabilita de verdad (`OutlinedButton.icon(onPressed: null, ...)`, se ve
+gris — no solo un callback vacío que lo deja con pinta de habilitado) apenas
+`participantes.length >= cantidadEsperada`. `_BotonSeccionSmall` ganó un parámetro `enabled`
+(default `true`) que además cambia el color del ícono/texto/borde a `AppColors.textDisabled`
+cuando está apagado — antes solo el botón "Eliminar todos" (cuando la lista está vacía) usaba
+el patrón de callback vacío sin feedback visual; ese no se tocó, este caso pidió explícitamente
+"no debe permitirme apretar el botón". Sin `cantidadEsperada` (solicitud no viene de negociación)
+el botón nunca se deshabilita por este motivo — no hay máximo que respetar.
+
+## Invitados no cuentan en el total facturado (2026-07-17)
+Pregunta de negocio del usuario: con 3 participantes (2 Invitados + 1 Pagante), la división
+sugerida por `_importeFijo()` sigue siendo pareja entre los 3 (sin cambios, ver más abajo por
+qué), pero el total que se muestra y se factura no debe incluir el importe de los Invitados —
+solo pagan los Pagantes.
+
+- **Confirmado con el usuario y NO se tocó**: el importe que tenga puesto CUALQUIER participante
+  (Pagante o Invitado) se queda tal cual se ingresó — sigue siendo obligatorio > 0 para los dos
+  tipos (ver sección de abajo, "Importe obligatorio"). `_importeFijo()` (`solicitud_participantes_
+  view.dart`) tampoco cambió — reparte `totalSinIgv / cantidadEsperada` entre TODOS los
+  participantes esperados sin mirar el tipo, y ya usaba (confirmado, sin cambios) los importes
+  REALES/editados de los participantes ya guardados (`actuales.fold`, no los sugeridos
+  originales) para calcular lo que le toca al último — si editas el importe del participante 1 y
+  luego agregas el 2, el sugerido del 2 ya se recalculaba con el valor real del 1.
+- **Lo que sí cambió — de dónde sale el total mostrado/facturado**:
+  `ParticipantesState.totalInversion` (sumaba TODOS los participantes sin filtrar) se reemplazó
+  por `totalPagantes(List<TipoParticipanteItem>)` — filtra `esInvitado` contra el catálogo real
+  (`CatalogsBloc.tiposParticipante`, nunca ids hardcodeados) y solo suma a los que NO son
+  invitados. Esto alimenta 3 lugares que antes sumaban parejo:
+  1. `_ResumenInversion` (footer del paso 2, "Inversión/IGV/Total")
+  2. `_SeccionResumenComercial` (Resumen, paso 4)
+  3. `SolicitudRemoteDatasource.guardarSolicitud()` — `dcImporte` (antes `participantes.fold(...)`
+     sin filtro) ahora excluye invitados antes de calcular `dcIgv`/`dcImporteTotal`, que es lo
+     que realmente se manda como `DC_IMPORTE`/`DC_IGV`/`DC_IMPORTE_TOTAL` al SP. Nuevo parámetro
+     `tiposParticipante` threaded igual que `igvPorcentaje`/`pasoOrigen`:
+     `guardarSolicitudDesdeWizard()` → `GuardarSolicitudUseCase` → `SolicitudRepository`/`Impl` →
+     datasource.
+  - **Ojo — el registro individual de cada participante (`EVT.T_TECMSOLINSCRIPCION02.IMPORTE`/
+    `IGV`) no se tocó** — cada fila sigue mandando su propio importe/igv tal cual está en
+    `ParticipanteLocal`, invitado o no. Solo el agregado de la cabecera (lo que se factura de
+    verdad) excluye invitados.
+
+## Formulario de participante — Importe obligatorio (>0) + tipo visible en la cartilla de la lista (2026-07-17)
+Pedido de negocio (jefe del usuario), mismo espíritu que la validación del paso 1 de más abajo
+pero aplicado a `participante_form_sheet.dart` (modal "Nuevo/Editar participante") y a la
+cartilla de cada participante en la lista del paso 2 (`_ParticipanteCard`,
+`solicitud_participantes_view.dart`).
+
+- **Importe ahora es obligatorio y debe ser mayor a 0** — antes `validator` solo revisaba que,
+  *si* se escribía algo, fuera un número válido; vacío pasaba silenciosamente (`ParticipanteLocal.
+  importe` quedaba en `0.0`). Ahora: vacío → `'Requerido'`; no numérico → `'Número inválido'`;
+  `<= 0` → `'Debe ser mayor a 0'`. Con esto ya no se puede guardar (`_formKey.currentState!.
+  validate()` en `_guardar()`) un participante con importe en 0, con o sin `importeFijo`
+  sugerido de la negociación.
+- **`CustomComboField<TipoParticipanteItem>` (modal) se quedó en su posición original** — fila
+  junto a Nacionalidad, antes de Nombres. **Ojo, intento fallido en esta misma sesión**: primero
+  se movió a una fila propia debajo de Correo con ícono de persona — el pedido real no era mover
+  el combo del formulario, era mostrar el tipo en la **cartilla de la lista** (ver abajo) para
+  poder verificar los cálculos de un vistazo sin abrir el modal. Se revirtió la posición del
+  combo; solo quedó el `validator` nuevo (antes no tenía, aunque siempre tuvo un valor por
+  defecto así que nunca se notó la falta). Nacionalidad también ganó `validator` de paso (antes
+  tampoco lo tenía, pese al `*` en su label).
+- **`_ParticipanteCard` ahora muestra el tipo de participante** — nueva fila **debajo de
+  Correo** (entre la fila Nac./Correo y Cargo, no al final — ajustado tras feedback del usuario),
+  ícono `AppIcons.user` + descripción real del catálogo ("Pagante"/"Invitado"/"Invitado
+  auspicio"/"Online", resuelta contra `CatalogsBloc.tiposParticipante` por el padre — la card es
+  `StatelessWidget` sin acceso directo al catálogo, recibe `tipoParticipanteLabel` ya resuelto
+  como parámetro nuevo). Objetivo explícito del usuario: poder confirmar a simple vista, en la
+  lista, si el cálculo de la inversión (que desde el punto de arriba excluye a los Invitados,
+  ver `ParticipantesState.totalPagantes`) está tomando el tipo correcto de cada uno.
+- **Tipo doc.** (combo, misma fila que N° documento) sigue **sin** `validator` a propósito —
+  siempre trae un valor por defecto (DNI al crear, o el que ya tenía el participante al editar,
+  ver "Defaults al crear" más abajo), nunca queda vacío, y el catálogo filtrado incluye "Sin
+  documento" como opción legítima — no confundir con un campo realmente opcional.
+
 ## Validación del paso 1 — de snackbar genérico a campos en rojo (2026-07-17)
 Pedido de negocio (jefe del usuario) — al presionar "Siguiente" en el paso 1 con campos
 obligatorios vacíos, ya no se muestra `AppSnackBar.error('Completa todos los campos

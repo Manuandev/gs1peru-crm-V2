@@ -436,17 +436,43 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
 
-                          // Nacionalidad
-                          CustomComboField<NacionalidadItem>(
-                            label: 'Nacionalidad *',
-                            data: nacionalidades,
-                            initialValue: _nacionalidadInicialId,
-                            onChanged: (item) => setState(() {
-                              _nacionalidadId = item?.id ?? '';
-                              _nacionalidadLabel = item?.nombre ?? '';
-                            }),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Requerido' : null,
+                          // Nacionalidad + Tipo de participante
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: CustomComboField<NacionalidadItem>(
+                                  label: 'Nacionalidad *',
+                                  data: nacionalidades,
+                                  initialValue: _nacionalidadInicialId,
+                                  onChanged: (item) => setState(() {
+                                    _nacionalidadId = item?.id ?? '';
+                                    _nacionalidadLabel = item?.nombre ?? '';
+                                  }),
+                                  validator: (v) => v == null || v.isEmpty
+                                      ? 'Requerido'
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: CustomComboField<TipoParticipanteItem>(
+                                  label: 'Tipo *',
+                                  data: tiposParticipante,
+                                  initialValue: _tipoParticipante,
+                                  onChanged: (item) {
+                                    if (item != null) {
+                                      setState(
+                                        () => _tipoParticipante = item.id,
+                                      );
+                                    }
+                                  },
+                                  validator: (v) => v == null || v.isEmpty
+                                      ? 'Requerido'
+                                      : null,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: AppSpacing.sm),
 
@@ -499,24 +525,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             controller: _correoCtrl,
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) => v.emailValidator,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-
-                          // Tipo de participante — muestra la descripción real
-                          // del catálogo (Pagante/Invitado/Invitado auspicio/
-                          // Online), con ícono de persona.
-                          CustomComboField<TipoParticipanteItem>(
-                            label: 'Tipo de participante *',
-                            data: tiposParticipante,
-                            initialValue: _tipoParticipante,
-                            prefixIcon: const Icon(AppIcons.user),
-                            onChanged: (item) {
-                              if (item != null) {
-                                setState(() => _tipoParticipante = item.id);
-                              }
-                            },
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Requerido' : null,
                           ),
                           const SizedBox(height: AppSpacing.sm),
 

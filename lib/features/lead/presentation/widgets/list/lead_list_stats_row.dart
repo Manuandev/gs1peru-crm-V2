@@ -33,7 +33,7 @@ class LeadListStatsRow extends StatelessWidget {
                 icon: AppIcons.checkCircle,
                 color: AppColors.success,
                 cantidad: conteos[LeadListFiltro.enDesarrollo] ?? 0,
-                label: 'En gestión',
+                label: 'En desarrollo',
               ),
             ),
             const SizedBox(width: AppSpacing.sm),

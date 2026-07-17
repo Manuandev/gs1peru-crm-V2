@@ -62,6 +62,9 @@ class ChatModel extends Chat {
 
     super.cargo,
     super.correo,
+
+    // Fecha del último mensaje del cliente
+    required super.fcUltimoMensajeCliente,
   });
 
   // Índices del SP de lista de chats (tasks 'LS' y 'LU' — misma forma, 'LU'
@@ -148,6 +151,8 @@ class ChatModel extends Chat {
 
       cargo: ParseUtils.strNullable(fields, 35),
       correo: ParseUtils.strNullable(fields, 36),
+
+      fcUltimoMensajeCliente: ParseUtils.str(fields, 37),
     );
   }
 

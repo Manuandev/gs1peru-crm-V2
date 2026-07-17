@@ -50,7 +50,7 @@ class LeadListPortrait extends StatelessWidget {
                     LeadListFiltro.todos => 'No hay seguimientos.',
                     LeadListFiltro.nuevos => 'No hay seguimientos nuevos.',
                     LeadListFiltro.enDesarrollo =>
-                      'No hay seguimientos en gestión.',
+                      'No hay seguimientos en desarrollo.',
                     LeadListFiltro.propuesta =>
                       'No hay seguimientos listos para propuesta.',
                   },

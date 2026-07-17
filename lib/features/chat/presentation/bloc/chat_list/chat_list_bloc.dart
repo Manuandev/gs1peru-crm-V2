@@ -370,6 +370,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       contenidoCliente: contenidoCliente,
       archivoNombreCliente: archivoNombreCliente,
       archivoTipoCliente: archivoTipoCliente,
+      fcUltimoMensajeCliente: fechaHora,
     );
 
     chats.removeAt(idx);

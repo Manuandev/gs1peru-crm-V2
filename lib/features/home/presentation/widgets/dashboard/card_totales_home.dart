@@ -1,6 +1,7 @@
 ﻿// lib/features/home/presentation/widgets/dashboard/card_totales_home.dart
 
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/index_dependencies.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -17,6 +18,20 @@ class CardTotalesHome extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    return BlocBuilder<CatalogsBloc, CatalogsState>(
+      builder: (context, catalogState) {
+        if (catalogState is! CatalogsLoaded) return const SizedBox.shrink();
+
+        return _buildCard(context, colorScheme, catalogState);
+      },
+    );
+  }
+
+  Widget _buildCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+    CatalogsLoaded catalogState,
+  ) {
     return Card.filled(
       margin: EdgeInsets.zero,
       child: Column(
@@ -74,7 +89,7 @@ class CardTotalesHome extends StatelessWidget {
                 children: [
                   _CardTotalItem(
                     icon: AppIcons.leadNuevo,
-                    iconColor: AppSocialUtils.colorEstado('00'),
+                    iconColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoNuevo),
                     cantidad: state.totLeadsNuevos,
                     titulo: 'Nuevos',
                     onTap: () => context.goToSeguimiento(
@@ -84,9 +99,9 @@ class CardTotalesHome extends StatelessWidget {
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
                     icon: AppIcons.accessTime,
-                    iconColor: AppSocialUtils.colorEstado('01'),
+                    iconColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoEnDesarrollo),
                     cantidad: state.totLeadsDesarrollo,
-                    titulo: 'En gestión',
+                    titulo: 'En desarrollo',
                     onTap: () => context.goToSeguimiento(
                       filtroInicial: LeadListFiltro.enDesarrollo,
                     ),
@@ -94,7 +109,7 @@ class CardTotalesHome extends StatelessWidget {
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
                     icon: AppIcons.datosLead,
-                    iconColor: AppSocialUtils.colorEstado('02'),
+                    iconColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoConPropuesta),
                     cantidad: state.totPropuestas,
                     titulo: 'Propuestas',
                     onTap: () => context.goToSeguimiento(
@@ -104,7 +119,7 @@ class CardTotalesHome extends StatelessWidget {
                   _VerticalDivider(color: colorScheme.outlineVariant),
                   _CardTotalItem(
                     icon: AppIcons.moneda,
-                    iconColor: AppSocialUtils.colorEstado('04'),
+                    iconColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoGanado),
                     cantidad: state.totCobranza,
                     titulo: 'Cobranza',
                     onTap: () => context.goToCobranza(),

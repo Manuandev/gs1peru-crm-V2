@@ -1,5 +1,6 @@
 // lib/features/lead/presentation/widgets/list/lead_list_filter_chips.dart
 
+import 'package:app_crm/index_dependencies.dart';
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -21,6 +22,20 @@ class LeadListFilterChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    return BlocBuilder<CatalogsBloc, CatalogsState>(
+      builder: (context, catalogState) {
+        if (catalogState is! CatalogsLoaded) return const SizedBox.shrink();
+
+        return _buildChips(context, colorScheme, catalogState);
+      },
+    );
+  }
+
+  Widget _buildChips(
+    BuildContext context,
+    ColorScheme colorScheme,
+    CatalogsLoaded catalogState,
+  ) {
     final chips = [
       (
         filtro: LeadListFiltro.todos,
@@ -32,19 +47,19 @@ class LeadListFilterChips extends StatelessWidget {
         filtro: LeadListFiltro.nuevos,
         label: 'Nuevos',
         icon: null,
-        dotColor: AppColors.info,
+        dotColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoNuevo),
       ),
       (
         filtro: LeadListFiltro.enDesarrollo,
-        label: 'En gestión',
+        label: 'En desarrollo',
         icon: null,
-        dotColor: AppColors.success,
+        dotColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoEnDesarrollo),
       ),
       (
         filtro: LeadListFiltro.propuesta,
         label: 'Propuesta',
         icon: null,
-        dotColor: AppColors.purple,
+        dotColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoConPropuesta),
       ),
     ];
 
@@ -58,8 +73,9 @@ class LeadListFilterChips extends StatelessWidget {
         children: chips.map((chip) {
           final isSelected = filtroActual == chip.filtro;
           final count = conteos[chip.filtro] ?? 0;
-          final labelColor =
-              isSelected ? colorScheme.onPrimary : colorScheme.onSurface;
+          final labelColor = isSelected
+              ? colorScheme.onPrimary
+              : colorScheme.onSurface;
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),

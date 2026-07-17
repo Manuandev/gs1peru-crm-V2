@@ -69,6 +69,8 @@ class Chat extends Equatable {
   final String? cargo;
   final String? correo;
 
+  final String fcUltimoMensajeCliente;
+
   /// Retorna el id del estado a mostrar en UI: padre si existe, directo si no.
   String get idEstadoEfectivo =>
       idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
@@ -150,6 +152,8 @@ class Chat extends Equatable {
 
     this.cargo,
     this.correo,
+
+    this.fcUltimoMensajeCliente = '',
   });
 
   @override
@@ -203,6 +207,7 @@ class Chat extends Equatable {
 
     cargo,
     correo,
+    fcUltimoMensajeCliente,
   ];
 
   Chat copyWith({
@@ -264,6 +269,7 @@ class Chat extends Equatable {
 
     String? cargo,
     String? correo,
+    String? fcUltimoMensajeCliente,
   }) {
     return Chat(
       // Contacto
@@ -328,6 +334,8 @@ class Chat extends Equatable {
 
       cargo: cargo ?? this.cargo,
       correo: correo ?? this.correo,
+
+      fcUltimoMensajeCliente: fcUltimoMensajeCliente ?? this.fcUltimoMensajeCliente,
     );
   }
 }

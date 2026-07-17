@@ -3,11 +3,10 @@
 // Utilidades de colores y widgets para canales de origen y etapas CRM.
 // Los íconos viven en AppIcons — aquí solo colores, mapas y helpers visuales.
 
-import 'package:app_crm/core/index_core.dart';
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/core/constants/app_icons.dart';
-import 'package:app_crm/core/models/catalog_item.dart';
+
+import 'package:app_crm/core/index_core.dart';
 
 class AppSocialUtils {
   AppSocialUtils._();
@@ -18,15 +17,15 @@ class AppSocialUtils {
   // Solo actualizar aquí si se agregan canales nuevos en BD.
   // ============================================================
   static const Map<int, String> _idAIconoApp = {
-    1:  'facebook',
-    2:  'instagram',
-    3:  'tiktok',
-    4:  'web',
-    5:  'whatsapp',
-    6:  'mailing',
-    7:  'sms',
-    8:  'recomendacion',
-    9:  'llamada',
+    1: 'facebook',
+    2: 'instagram',
+    3: 'tiktok',
+    4: 'web',
+    5: 'whatsapp',
+    6: 'mailing',
+    7: 'sms',
+    8: 'recomendacion',
+    9: 'llamada',
     10: 'visita',
     11: 'telegram',
     12: 'manual',
@@ -38,18 +37,18 @@ class AppSocialUtils {
   // COLORES — canales (keyed por ICONO_APP de la BD)
   // ============================================================
   static const Map<String, Color> _coloresCanal = {
-    'facebook':      Color(0xFF1877F2),
-    'instagram':     Color(0xFFE1306C),
-    'tiktok':        Color(0xFF010101),
-    'web':           Color(0xFF607D8B),
-    'whatsapp':      Color(0xFF25D366),
-    'mailing':       Color(0xFF0A66C2),
-    'sms':           Color(0xFF455A64),
+    'facebook': Color(0xFF1877F2),
+    'instagram': Color(0xFFE1306C),
+    'tiktok': Color(0xFF010101),
+    'web': Color(0xFF607D8B),
+    'whatsapp': Color(0xFF25D366),
+    'mailing': Color(0xFF0A66C2),
+    'sms': Color(0xFF455A64),
     'recomendacion': Color(0xFF9C27B0),
-    'llamada':       Color(0xFF00897B),
-    'visita':        Color(0xFF6D4C41),
-    'telegram':      Color(0xFF2CA5E0),
-    'manual':        Color(0xFF6D4C41),
+    'llamada': Color(0xFF00897B),
+    'visita': Color(0xFF6D4C41),
+    'telegram': Color(0xFF2CA5E0),
+    'manual': Color(0xFF6D4C41),
   };
 
   // ============================================================
@@ -95,18 +94,18 @@ class AppSocialUtils {
   // MAPAS — ícono por canal/estado
   // ============================================================
   static const Map<String, FaIconData> _iconosCanal = {
-    'facebook':      AppIcons.facebook,
-    'instagram':     AppIcons.instagram,
-    'tiktok':        AppIcons.tiktok,
-    'web':           AppIcons.web,
-    'whatsapp':      AppIcons.whatsapp,
-    'mailing':       AppIcons.linkedin,   // TODO: agregar AppIcons.mailing
-    'sms':           AppIcons.manual,     // TODO: agregar AppIcons.sms
+    'facebook': AppIcons.facebook,
+    'instagram': AppIcons.instagram,
+    'tiktok': AppIcons.tiktok,
+    'web': AppIcons.web,
+    'whatsapp': AppIcons.whatsapp,
+    'mailing': AppIcons.linkedin, // Todo: agregar AppIcons.mailing
+    'sms': AppIcons.manual, // Todo: agregar AppIcons.sms
     'recomendacion': AppIcons.bocaBoca,
-    'llamada':       AppIcons.manual,     // TODO: agregar AppIcons.llamada
-    'visita':        AppIcons.migracion,  // TODO: agregar AppIcons.visita
-    'telegram':      AppIcons.referido,   // TODO: agregar AppIcons.telegram
-    'manual':        AppIcons.manual,
+    'llamada': AppIcons.manual, // Todo: agregar AppIcons.llamada
+    'visita': AppIcons.migracion, // Todo: agregar AppIcons.visita
+    'telegram': AppIcons.referido, // Todo: agregar AppIcons.telegram
+    'manual': AppIcons.manual,
   };
 
   static const Map<String, FaIconData> _iconosEstado = {
@@ -152,8 +151,7 @@ class AppSocialUtils {
   static Color colorEstado(String id) =>
       _coloresEstado[id] ?? const Color(0xFF9E9E9E);
 
-  static Color bgEstado(String id) =>
-      _bgEstado[id] ?? const Color(0xFFF5F5F5);
+  static Color bgEstado(String id) => _bgEstado[id] ?? const Color(0xFFF5F5F5);
 
   // ============================================================
   // WIDGETS LISTOS

@@ -319,7 +319,9 @@ class _InfoDerechaState extends State<_InfoDerecha> {
 
     // "Sin respuesta" — solo visible si el cliente mandó el último mensaje
     final clienteEsUltimo = chat.direccionMensaje == 'CLI';
-    final fechaUltimoMensaje = DateFormatter.parseDate(chat.fechaHora);
+    final fechaUltimoMensaje = DateFormatter.parseDate(
+      chat.fcUltimoMensajeCliente,
+    );
     final elapsedSinRespuesta = fechaUltimoMensaje != null
         ? ahora.difference(fechaUltimoMensaje)
         : null;
@@ -336,25 +338,25 @@ class _InfoDerechaState extends State<_InfoDerecha> {
             ),
             textAlign: TextAlign.center,
           ),
-        if (clienteEsUltimo && elapsedSinRespuesta != null) ...[
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            'sin respuesta',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.start,
+        // if (clienteEsUltimo && elapsedSinRespuesta != null) ...[
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          ElapsedTimeUtils.formatHoMoS(elapsedSinRespuesta!),
+          style: AppTextStyles.labelMedium.copyWith(
+            color: ElapsedTimeUtils.colorFromElapsed(elapsedSinRespuesta),
+            fontWeight: AppTextStyles.weightBold,
           ),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            ElapsedTimeUtils.formatHoMoS(elapsedSinRespuesta),
-            style: AppTextStyles.labelMedium.copyWith(
-              color: ElapsedTimeUtils.colorFromElapsed(elapsedSinRespuesta),
-              fontWeight: AppTextStyles.weightBold,
-            ),
-            textAlign: TextAlign.center,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          clienteEsUltimo ? 'sin respuesta' : 'Esperando respuesta',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
           ),
-        ],
+          textAlign: TextAlign.start,
+        ),
+        // ],
       ],
     );
   }

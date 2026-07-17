@@ -154,6 +154,89 @@ class AppSocialUtils {
   static Color bgEstado(String id) => _bgEstado[id] ?? const Color(0xFFF5F5F5);
 
   // ============================================================
+  // MAPA DE PUENTE — canal expo (CanalExpoItem, dbo.EDU_CANAL_EXPO)
+  // "¿Cómo se enteró del evento?" — catálogo aparte del canal de origen
+  // del lead (T_CANAL de arriba), con sus propios ids.
+  // El id 4 (LOGÍSTICA) ya no lo devuelve el SP como opción activa, pero
+  // se deja mapeado para solicitudes viejas que ya lo tengan guardado.
+  // ============================================================
+  static const Map<int, String> _idAIconoAppCanalExpo = {
+    1: 'facebook',
+    2: 'linkedin',
+    3: 'instagram',
+    4: 'logistica',
+    5: 'logistica360',
+    6: 'otros',
+  };
+
+  static String? iconoAppCanalExpoById(int id) => _idAIconoAppCanalExpo[id];
+
+  static const Map<String, Color> _coloresCanalExpo = {
+    'facebook': Color(0xFF1877F2),
+    'linkedin': Color(0xFF0A66C2),
+    'instagram': Color(0xFFE1306C),
+    'logistica': Color(0xFF6D4C41),
+    'logistica360': Color(0xFF6D4C41),
+    'otros': Color(0xFF9E9E9E),
+  };
+
+  static const Map<String, FaIconData> _iconosCanalExpo = {
+    'facebook': AppIcons.facebook,
+    'linkedin': AppIcons.linkedin,
+    'instagram': AppIcons.instagram,
+    'logistica': AppIcons.canalExpoLogistica,
+    'logistica360': AppIcons.canalExpoLogistica,
+    'otros': AppIcons.canalExpoOtros,
+  };
+
+  static Color colorCanalExpo(String? iconoApp) =>
+      _coloresCanalExpo[iconoApp ?? ''] ?? const Color(0xFF9E9E9E);
+
+  static Color colorCanalExpoById(int id) =>
+      colorCanalExpo(iconoAppCanalExpoById(id));
+
+  static Widget widgetCanalExpoById(int id, {double size = 14}) =>
+      widgetCanalExpo(iconoAppCanalExpoById(id), size: size);
+
+  /// FaIcon del canal expo con color propio. Instagram lleva gradiente,
+  /// igual que [widgetCanal].
+  static Widget widgetCanalExpo(String? iconoApp, {double size = 14}) {
+    final faSize = AppSizing.faSize(size);
+    final esInstagram = iconoApp == 'instagram';
+
+    final icono = FaIcon(
+      _iconosCanalExpo[iconoApp ?? ''] ?? FontAwesomeIcons.question,
+      color: esInstagram ? Colors.white : colorCanalExpo(iconoApp),
+      size: faSize,
+    );
+
+    Widget resultado = icono;
+    if (esInstagram) {
+      resultado = ShaderMask(
+        blendMode: BlendMode.srcIn,
+        shaderCallback: (Rect bounds) => const LinearGradient(
+          colors: [
+            Color(0xFFfeda75),
+            Color(0xFFfa7e1e),
+            Color(0xFFd62976),
+            Color(0xFF962fbf),
+            Color(0xFF4f5bd5),
+          ],
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
+        ).createShader(bounds),
+        child: icono,
+      );
+    }
+
+    return SizedBox(
+      width: faSize,
+      height: faSize,
+      child: Center(child: resultado),
+    );
+  }
+
+  // ============================================================
   // WIDGETS LISTOS
   // ============================================================
 

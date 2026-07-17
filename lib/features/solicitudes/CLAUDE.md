@@ -1139,11 +1139,15 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   hardcodeados" más abajo. **País por defecto** del selector de código telefónico (los 3
   campos de celular del wizard) y de "País" (paso 3) ya no cae a `codigoTelefono == '51'`
   hardcodeado — usa `CatalogsBloc.valoresDefecto.idPais` (parte [13] del SP).
-- Los chips de Canal usan `AppSocialUtils.widgetCanalById(canal.id)` (no
-  `widgetCanal(canal.iconoApp)`) — el string `iconoApp` que trae el SP no siempre calza
-  con las keys internas de `AppSocialUtils` y termina mostrando un ícono de interrogación;
-  `widgetCanalById` usa el mapa id→iconoApp mantenido en la app (mismo que usa el combo de
-  canal de `lead/edit_lead_negociacion_section.dart`), más confiable que el dato crudo.
+- Los chips de Canal (`ChipsCanales`, paso 1, "¿Cómo se enteró del evento?") ya no usan el
+  catálogo de canal del lead (`CanalItem`/`T_CANAL`) — desde que se agregó `canalesExpo`
+  (`CanalExpoItem`/`dbo.EDU_CANAL_EXPO`, parte [17] del SP `lstListas`, ver `core/CLAUDE.md`
+  → "Catálogos") usan ese catálogo aparte. `ChipsCanales` llama
+  `AppSocialUtils.widgetCanalExpoById(canal.id)` — **nunca** `widgetCanalById` (mapa de
+  canal de lead, con ids que significan otra cosa: id `2` en canal de lead es Instagram, en
+  canal expo es LinkedIn) ni `widgetCanal(canal.iconoApp)` (el string crudo del SP no
+  siempre calza con las keys internas de `AppSocialUtils`). Ver `core/CLAUDE.md` →
+  `AppSocialUtils` para el mapa completo id→canal expo.
 - **"Tipo de persona" (Jurídica/Natural) es un solo valor compartido** — vive en
   `SolicitudFormCubit.state.tipoPersona` (no en `DatosSolicitante`/`DatosFacturacion`,
   que antes tenían cada uno su propia copia y se desincronizaban). Solo se puede cambiar

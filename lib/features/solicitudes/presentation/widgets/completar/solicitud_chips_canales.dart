@@ -54,7 +54,7 @@ class ChipsCanales extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AppSocialUtils.widgetCanalById(
+                AppSocialUtils.widgetCanalExpoById(
                   canal.id,
                   size: AppSizing.iconActionSm,
                 ),

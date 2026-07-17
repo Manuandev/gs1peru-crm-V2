@@ -550,6 +550,13 @@ class AppIcons {
   static const FaIconData manual = FontAwesomeIcons.penToSquare;
 
   // ============================================================
+  // CANAL EXPO — FontAwesome (EDU_CANAL_EXPO, "¿Cómo se enteró del evento?")
+  // facebook/linkedin/instagram reusan los tokens de CANALES de arriba.
+  // ============================================================
+  static const FaIconData canalExpoLogistica = FontAwesomeIcons.truck;
+  static const FaIconData canalExpoOtros = FontAwesomeIcons.ellipsis;
+
+  // ============================================================
   // ETAPAS — FontAwesome (estados del pipeline CRM)
   // ============================================================
   static const FaIconData etapaNuevo = FontAwesomeIcons.bell;

@@ -301,16 +301,32 @@ AppSocialUtils.chipEstado(id, label: '...')  // Chip bg + color de etapa
 AppSocialUtils.colorCanal(id)               // Color del canal
 AppSocialUtils.colorEstado(id)              // Color del estado
 AppSocialUtils.bgEstado(id)                 // Color de fondo del estado
+
+AppSocialUtils.widgetCanalExpoById(id, size: 14) // FaIcon del canal expo (EDU_CANAL_EXPO)
+AppSocialUtils.colorCanalExpoById(id)            // Color del canal expo
 ```
 
 **Canales (id int):** 1=WhatsApp 3=TikTok 4=Instagram 5=Facebook 6=LinkedIn 7=Web 8=Instapage 9=BocaBoca 10=Migración 11=Referido 12=Manual
 
 **Etapas (id string):** "00"=Nuevo "01"=EnDesarrollo "02"=Propuesta "03"=Ficha "04"=Cerrado "05"=Evaluando "07"=Prueba "08"=Pendiente "09"=SinRespuesta "10"=Desiste "11"=Ganado "12"=Perdido "13"=ProximoPeriodo "14"=SinWhatsApp "15"=FichaInscripcion
 
+**Canal expo (id int, `CanalExpoItem`/`dbo.EDU_CANAL_EXPO` — catálogo aparte del canal de
+origen del lead de arriba, "¿Cómo se enteró del evento?" en `solicitudes/`):**
+1=Facebook 2=LinkedIn 3=Instagram 4=Logística ⚠️ ya no lo devuelve el SP como opción activa,
+solo queda mapeado para solicitudes viejas que ya lo tengan guardado 5=Logística 360 6=Otros —
+usar `widgetCanalExpoById`, nunca `widgetCanalById` (mapa de canal de lead, ids distintos —
+mismo id puede significar otro canal).
+
 **Agregar canal nuevo:**
 1. Ícono `FaIconData` en `AppIcons`
 2. Color en `AppSocialUtils._coloresCanal`
 3. Ícono en `AppSocialUtils._iconosCanal`
+
+**Agregar canal expo nuevo:**
+1. Ícono `FaIconData` en `AppIcons` (sección "CANAL EXPO")
+2. Id → key en `AppSocialUtils._idAIconoAppCanalExpo`
+3. Color en `AppSocialUtils._coloresCanalExpo`
+4. Ícono en `AppSocialUtils._iconosCanalExpo`
 
 **Agregar etapa nueva:**
 1. Ícono `FaIconData` en `AppIcons`

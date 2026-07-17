@@ -748,8 +748,11 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     final formState = context.watch<SolicitudFormCubit>().state;
     final tipoPersona = formState.tipoPersona;
     final catalogState = context.watch<CatalogsBloc>().state;
+    // Solo se muestran los 2 primeros canales del catálogo — pedido del
+    // usuario, el resto no se ofrece como opción en "¿Cómo se enteró del
+    // evento?".
     final canales = catalogState is CatalogsLoaded
-        ? catalogState.canales
+        ? catalogState.canales.take(2).toList()
         : const <CanalItem>[];
     final paises = catalogState is CatalogsLoaded
         ? catalogState.paises

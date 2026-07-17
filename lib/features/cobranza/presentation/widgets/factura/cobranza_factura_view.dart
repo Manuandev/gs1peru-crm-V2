@@ -103,13 +103,10 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
 
                             // O/C — siempre obligatorio
                             _CampoCompartido(
-                              label: 'O/C *',
+                              label: 'O/C',
                               hint: 'Ingresa el número de orden de compra',
                               controller: _ocCtrl,
                               maxChars: _maxChars,
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? 'El O/C es obligatorio'
-                                  : null,
                               onChanged: (v) => context
                                   .read<CobranzaFacturaBloc>()
                                   .add(OcChanged(v)),
@@ -206,7 +203,6 @@ class _CampoCompartido extends StatelessWidget {
   final TextEditingController controller;
   final int maxChars;
   final void Function(String) onChanged;
-  final String? Function(String?)? validator;
 
   const _CampoCompartido({
     required this.label,
@@ -214,7 +210,6 @@ class _CampoCompartido extends StatelessWidget {
     required this.controller,
     required this.maxChars,
     required this.onChanged,
-    this.validator,
   });
 
   @override
@@ -239,7 +234,6 @@ class _CampoCompartido extends StatelessWidget {
           textInputAction: TextInputAction.done,
           onChanged: onChanged,
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
-          validator: validator,
         ),
       ],
     );

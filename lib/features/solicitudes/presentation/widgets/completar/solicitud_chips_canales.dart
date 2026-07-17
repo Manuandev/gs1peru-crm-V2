@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 
 class ChipsCanales extends StatelessWidget {
-  final List<CanalItem> canales;
-  final CanalItem? seleccionado;
+  final List<CanalExpoItem> canales;
+  final CanalExpoItem? seleccionado;
   final bool habilitado;
-  final ValueChanged<CanalItem> onSeleccionar;
+  final ValueChanged<CanalExpoItem> onSeleccionar;
 
   const ChipsCanales({
     super.key,
@@ -60,7 +60,7 @@ class ChipsCanales extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm2),
                 Text(
-                  canal.nombre,
+                  canal.descripcion,
                   style: AppTextStyles.labelMedium.copyWith(
                     color: colorTexto,
                     fontWeight: activo

@@ -319,9 +319,7 @@ class _InfoDerechaState extends State<_InfoDerecha> {
 
     // "Sin respuesta" — solo visible si el cliente mandó el último mensaje
     final clienteEsUltimo = chat.direccionMensaje == 'CLI';
-    final fechaUltimoMensaje = DateFormatter.parseDate(
-      chat.fcUltimoMensajeCliente,
-    );
+    final fechaUltimoMensaje = DateFormatter.parseDate(chat.fechaHora);
     final elapsedSinRespuesta = fechaUltimoMensaje != null
         ? ahora.difference(fechaUltimoMensaje)
         : null;

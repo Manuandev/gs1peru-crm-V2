@@ -54,7 +54,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   String _archivoOCExistente = '';
 
   // Canal seleccionado (single-select) — catálogo real vía CatalogsBloc
-  CanalItem? _canalSeleccionado;
+  CanalExpoItem? _canalSeleccionado;
 
   // País del código telefónico del celular — catálogo real vía CatalogsBloc
   PaisItem? _paisCelular;
@@ -328,8 +328,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
           ? catalogState.nacionalidades
           : const <NacionalidadItem>[];
       final canales = catalogState is CatalogsLoaded
-          ? catalogState.canales
-          : const <CanalItem>[];
+          ? catalogState.canalesExpo
+          : const <CanalExpoItem>[];
       final comprobantes = catalogState is CatalogsLoaded
           ? catalogState.comprobantes
           : const <ComprobanteItem>[];
@@ -596,7 +596,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
       correo: _ctrlCorreo.text,
       canalId: _canalSeleccionado?.id,
-      canalNombre: _canalSeleccionado?.nombre ?? '',
+      canalNombre: _canalSeleccionado?.descripcion ?? '',
       ruc: _ctrlRuc.text,
       razonSocial: _ctrlRazonSocial.text,
       solicitanteEsParticipante: _solicitanteParticipante,
@@ -752,8 +752,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     // usuario, el resto no se ofrece como opción en "¿Cómo se enteró del
     // evento?".
     final canales = catalogState is CatalogsLoaded
-        ? catalogState.canales.take(2).toList()
-        : const <CanalItem>[];
+        ? catalogState.canalesExpo
+        : const <CanalExpoItem>[];
     final paises = catalogState is CatalogsLoaded
         ? catalogState.paises
         : const <PaisItem>[];

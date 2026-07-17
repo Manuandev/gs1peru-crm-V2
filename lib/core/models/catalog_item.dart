@@ -34,6 +34,8 @@ class ListasGenericas {
   final List<TipoParticipanteItem> tiposParticipante;
   // Parte [16] del SP lstListas — DBO.SYSTABUBIGEO01, departamento/provincia/distrito
   final List<UbigeoItem> ubigeo;
+  // Parte [17] del SP lstListas — DBO.EDU_CANAL_EXPO, canales de expo
+  final List<CanalExpoItem> canalesExpo;
 
   const ListasGenericas({
     required this.campanias,
@@ -53,6 +55,7 @@ class ListasGenericas {
     this.sexos = const [],
     this.tiposParticipante = const [],
     this.ubigeo = const [],
+    this.canalesExpo = const [],
   });
 }
 
@@ -338,4 +341,20 @@ class UbigeoItem with Comboable {
 
   @override
   List<dynamic> get fields => [codigo, nombre];
+}
+
+// SP lstListas parte [17]: idCanal ¦ descripcion ¦ esDetallado — dbo.EDU_CANAL_EXPO.
+class CanalExpoItem with Comboable {
+  final int id;
+  final String descripcion;
+  final bool esDetallado;
+
+  const CanalExpoItem({
+    required this.id,
+    required this.descripcion,
+    required this.esDetallado,
+  });
+
+  @override
+  List<dynamic> get fields => [id, descripcion];
 }

@@ -77,11 +77,52 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     Emitter<ChatListState> emit,
   ) async {
     try {
-      _allChats = await _getChats();
+      final chatsFrescos = await _getChats();
+      _allChats = _mergeConservandoMasReciente(chatsFrescos);
       _emitFiltered(emit);
     } catch (_) {
       // Falla silenciosa — mantiene el estado actual sin mostrar error
     }
+  }
+
+  /// Combina el listado fresco del servidor con el que ya está en memoria,
+  /// conservando el lado con [Chat.fechaHora] más reciente por cada chat.
+  ///
+  /// Este refresh silencioso corre en paralelo (sin orden garantizado) con
+  /// las confirmaciones que llegan por WebSocket (`UPDATE_PANTALLA_WHATSAPP`).
+  /// Si el fetch tarda más y el SP de listado todavía no propagó el último
+  /// mensaje, sobreescribir sin comparar revierte el "tiempo sin respuesta"
+  /// a un valor viejo pese a que ya teníamos el dato correcto en memoria.
+  List<Chat> _mergeConservandoMasReciente(List<Chat> chatsFrescos) {
+    return chatsFrescos.map((fresco) {
+      final actual = _buscarPorIdChatCab(fresco.idChatCab);
+      if (actual == null) return fresco;
+
+      final fechaActual = DateFormatter.parseDate(actual.fechaHora);
+      final fechaFresca = DateFormatter.parseDate(fresco.fechaHora);
+      final actualEsMasReciente =
+          fechaActual != null &&
+          (fechaFresca == null || fechaActual.isAfter(fechaFresca));
+
+      if (!actualEsMasReciente) return fresco;
+
+      return fresco.copyWith(
+        fechaHora: actual.fechaHora,
+        direccionMensaje: actual.direccionMensaje,
+        tipoCliente: actual.tipoCliente,
+        contenidoCliente: actual.contenidoCliente,
+        archivoNombreCliente: actual.archivoNombreCliente,
+        archivoTipoCliente: actual.archivoTipoCliente,
+        fcUltimoMensajeCliente: actual.fcUltimoMensajeCliente,
+      );
+    }).toList();
+  }
+
+  Chat? _buscarPorIdChatCab(int idChatCab) {
+    for (final c in _allChats) {
+      if (c.idChatCab == idChatCab) return c;
+    }
+    return null;
   }
 
   Future<void> _loadData(Emitter<ChatListState> emit) async {

@@ -40,6 +40,7 @@ class CatalogsLoaded extends CatalogsState {
   List<SexoItem> get sexos => listas.sexos;
   List<TipoParticipanteItem> get tiposParticipante => listas.tiposParticipante;
   List<UbigeoItem> get ubigeo => listas.ubigeo;
+  List<CanalExpoItem> get canalesExpo => listas.canalesExpo;
 
   @override
   List<Object?> get props => [
@@ -60,6 +61,7 @@ class CatalogsLoaded extends CatalogsState {
     sexos,
     tiposParticipante,
     ubigeo,
+    canalesExpo,
   ];
 }
 

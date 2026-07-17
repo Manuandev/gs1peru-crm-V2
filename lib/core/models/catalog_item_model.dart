@@ -21,6 +21,7 @@ class ListasGenericasModel extends ListasGenericas {
     super.sexos,
     super.tiposParticipante,
     super.ubigeo,
+    super.canalesExpo,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -42,6 +43,7 @@ class ListasGenericasModel extends ListasGenericas {
     final sexosRaw = partes.length > 14 ? partes[14] : '';
     final tiposParticipanteRaw = partes.length > 15 ? partes[15] : '';
     final ubigeoRaw = partes.length > 16 ? partes[16] : '';
+    final canalesExpoRaw = partes.length > 17 ? partes[17] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -109,6 +111,10 @@ class ListasGenericasModel extends ListasGenericas {
         ? <UbigeoItemModel>[]
         : UbigeoItemModel.parseList(ubigeoRaw);
 
+    final canalesExpo = canalesExpoRaw.trim().isEmpty
+        ? <CanalExpoItemModel>[]
+        : CanalExpoItemModel.parseList(canalesExpoRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -127,6 +133,7 @@ class ListasGenericasModel extends ListasGenericas {
       sexos: sexos,
       tiposParticipante: tiposParticipante,
       ubigeo: ubigeo,
+      canalesExpo: canalesExpo,
     );
   }
 }
@@ -528,6 +535,31 @@ class UbigeoItemModel extends UbigeoItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => UbigeoItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class CanalExpoItemModel extends CanalExpoItem {
+  const CanalExpoItemModel({
+    required super.id,
+    required super.descripcion,
+    required super.esDetallado,
+  });
+
+  factory CanalExpoItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return CanalExpoItemModel(
+      id: ParseUtils.toInt(c, 0),
+      descripcion: ParseUtils.str(c, 1),
+      esDetallado: ParseUtils.toBool(c, 2),
+    );
+  }
+
+  static List<CanalExpoItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => CanalExpoItemModel.fromRawString(r))
         .toList();
   }
 }

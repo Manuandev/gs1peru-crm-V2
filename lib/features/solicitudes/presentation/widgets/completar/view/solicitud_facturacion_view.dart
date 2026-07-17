@@ -29,6 +29,10 @@ class SolicitudFacturacionView extends StatefulWidget {
 }
 
 class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
+  // Valida los campos obligatorios (*) del paso in situ — mismo patrón que
+  // el paso 1 (ver solicitud_completar_view.dart._formKey).
+  final _formKey = GlobalKey<FormState>();
+
   // IDs y labels de combos (id para pre-selección, label para guardar en cubit)
   String _comprobanteId = '';
   String _comprobanteLabel = '';
@@ -186,22 +190,12 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     );
   }
 
-  /// Campos obligatorios (marcados con *) del paso 3. Apellido materno,
-  /// actividad económica, NIT y observaciones son opcionales. Apellido
-  /// paterno solo aplica cuando el tipo de documento NO es RUC.
-  bool get _formCompleto =>
-      _comprobanteId.isNotEmpty &&
-      _paisId.isNotEmpty &&
-      _monedaId.isNotEmpty &&
-      _tipoDocId.isNotEmpty &&
-      _ctrlNumDoc.text.trim().isNotEmpty &&
-      _nacionalidadId.isNotEmpty &&
-      _ctrlNombresRazon.text.trim().isNotEmpty &&
-      (_esRuc || _ctrlApellidoPaterno.text.trim().isNotEmpty) &&
-      _ctrlCelular.text.trim().isNotEmpty &&
-      _ctrlCorreo.text.emailValidator == null &&
-      _ctrlDireccion.text.trim().isNotEmpty;
-
+  // Campos obligatorios (marcados con *) del paso 3 — todos, menos apellido
+  // materno, actividad económica, NIT y observaciones. Apellido paterno solo
+  // aplica cuando el tipo de documento NO es RUC. Cada campo valida su
+  // propio CustomTextField/CustomComboField (ver _formKey en
+  // _SeccionDatosFacturacion) — ya no hay un getter de "todo completo" acá.
+  //
   // "Siguiente" (2026-07-17, pedido de negocio): valida los campos
   // obligatorios y GUARDA de verdad (borrador) antes de avanzar a Resumen —
   // mismo patrón que los pasos 1 y 2. El botón "Guardar" del medio se
@@ -217,13 +211,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
     if (_guardando) return;
 
-    if (!_formCompleto) {
-      AppSnackBar.error(
-        context,
-        'Completa todos los campos obligatorios (*) para continuar',
-      );
-      return;
-    }
+    // Marca en rojo cada campo/combo obligatorio que falte, con su propio
+    // mensaje "Requerido" — reemplaza el snackbar genérico de antes.
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _guardando = true);
 
@@ -327,21 +317,62 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     }
 
     // Primera vez en este paso — si el solicitante marcó "Facturar al
-    // solicitante", autocompletar con sus mismos datos.
+    // solicitante", autocompletar con sus mismos datos. Jurídica pinta
+    // RUC + Razón Social (capturados en "Información comercial", paso 1 —
+    // DatosSolicitante.ruc/razonSocial, NO los datos personales); Natural
+    // pinta el documento personal + nombres/apellidos tal cual los tiene el
+    // solicitante. Pedido de negocio, 2026-07-17.
     final solicitante = formState.solicitante;
     if (solicitante != null && solicitante.facturarAlSolicitante) {
-      _tipoDocId = solicitante.tipoDocId;
-      _tipoDocLabel = solicitante.tipoDocLabel;
+      final esJuridica = formState.tipoPersona == 'juridica';
+      final catalogState = context.read<CatalogsBloc>().state;
+
+      if (esJuridica) {
+        if (catalogState is CatalogsLoaded) {
+          final valoresDefecto = catalogState.valoresDefecto;
+          final factura = catalogState.comprobantes
+              .where((c) => c.id == valoresDefecto.idTipoFactura)
+              .firstOrNull;
+          if (factura != null) {
+            _comprobanteId = factura.id;
+            _comprobanteLabel = factura.nombre;
+          }
+          // Jurídica solo puede facturar con RUC — se fuerza el tipo
+          // documento para que la UI muestre RUC/Razón Social en vez de
+          // Número documento/Nombres/Apellidos (ver esRuc).
+          final ruc = catalogState.tiposDocumento
+              .where((t) => t.id == valoresDefecto.idTipoDocRuc)
+              .firstOrNull;
+          if (ruc != null) {
+            _tipoDocId = ruc.id;
+            _tipoDocLabel = ruc.abreviatura;
+          }
+        }
+        _ctrlNumDoc.text = solicitante.ruc;
+        _ctrlNombresRazon.text = solicitante.razonSocial;
+      } else {
+        if (catalogState is CatalogsLoaded) {
+          final boleta = catalogState.comprobantes
+              .where((c) => c.id == catalogState.valoresDefecto.idTipoBoleta)
+              .firstOrNull;
+          if (boleta != null) {
+            _comprobanteId = boleta.id;
+            _comprobanteLabel = boleta.nombre;
+          }
+        }
+        _tipoDocId = solicitante.tipoDocId;
+        _tipoDocLabel = solicitante.tipoDocLabel;
+        _ctrlNumDoc.text = solicitante.numDoc;
+        _ctrlNombresRazon.text = solicitante.nombres;
+        _ctrlApellidoPaterno.text = solicitante.apellidoPaterno;
+        _ctrlApellidoMaterno.text = solicitante.apellidoMaterno;
+      }
+
       _nacionalidadId = solicitante.nacionalidadId;
       _nacionalidadLabel = solicitante.nacionalidad;
-      _ctrlNumDoc.text = solicitante.numDoc;
-      _ctrlNombresRazon.text = solicitante.nombres;
-      _ctrlApellidoPaterno.text = solicitante.apellidoPaterno;
-      _ctrlApellidoMaterno.text = solicitante.apellidoMaterno;
       _ctrlCelular.text = solicitante.celular;
       _ctrlCorreo.text = solicitante.correo;
 
-      final catalogState = context.read<CatalogsBloc>().state;
       if (catalogState is CatalogsLoaded) {
         _paisCelular = catalogState.paises
             .where((p) => p.codigoTelefono == solicitante.celularCodigoTelefono)
@@ -360,19 +391,40 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       return;
     }
 
-    // Ni datos guardados ni "Facturar al solicitante" — Tipo documento y
-    // Nacionalidad arrancan en DNI/Perú, mismo default que Datos del
-    // solicitante y Nuevo participante (ver solicitudes/CLAUDE.md).
+    // Ni datos guardados ni "Facturar al solicitante" — Comprobante y Tipo
+    // documento arrancan según el tipo de persona del paso 1: Jurídica →
+    // Factura/RUC, Natural → Boleta/DNI (antes Tipo documento siempre caía
+    // en DNI sin importar el tipo de persona, y Comprobante no tenía
+    // ningún default). Nacionalidad/País mantienen su propio default fijo
+    // (Perú), igual que Datos del solicitante y Nuevo participante (ver
+    // solicitudes/CLAUDE.md). Pedido de negocio, 2026-07-17.
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
       final valoresDefecto = catalogState.valoresDefecto;
+      final esJuridica = formState.tipoPersona == 'juridica';
+
+      final idComprobanteDefecto = esJuridica
+          ? valoresDefecto.idTipoFactura
+          : valoresDefecto.idTipoBoleta;
+      final comprobanteDefecto = catalogState.comprobantes
+          .where((c) => c.id == idComprobanteDefecto)
+          .firstOrNull;
+      if (comprobanteDefecto != null) {
+        _comprobanteId = comprobanteDefecto.id;
+        _comprobanteLabel = comprobanteDefecto.nombre;
+      }
+
+      final idTipoDocDefecto = esJuridica
+          ? valoresDefecto.idTipoDocRuc
+          : valoresDefecto.idTipoDocDni;
       final tipoDocDefecto = catalogState.tiposDocumento
-          .where((t) => t.id == valoresDefecto.idTipoDocDni)
+          .where((t) => t.id == idTipoDocDefecto)
           .firstOrNull;
       if (tipoDocDefecto != null) {
         _tipoDocId = tipoDocDefecto.id;
         _tipoDocLabel = tipoDocDefecto.abreviatura;
       }
+
       final nacionalidadDefecto = catalogState.nacionalidades
           .where((n) => n.id == valoresDefecto.idNacionalidad)
           .firstOrNull;
@@ -463,7 +515,10 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
                 ),
-                child: Column(
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Encabezado + Toggle ────────────────────────────
@@ -599,6 +654,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                       onBuscarDocumento: _buscarDocumento,
                     ),
                   ],
+                  ),
                 ),
               ),
             ),
@@ -928,6 +984,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.comprobanteInicialId,
                 onChanged: widget.onComprobanteChanged,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -938,6 +996,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.paisInicialId,
                 onChanged: widget.onPaisChanged,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -948,6 +1008,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado && !widget.monedaBloqueada,
                 initialValue: widget.monedaInicialId,
                 onChanged: widget.onMonedaChanged,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
           ],
@@ -965,6 +1027,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.tipoDocInicialId,
                 onChanged: widget.onTipoDocChanged,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -979,6 +1043,9 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => widget.onBuscarDocumento?.call(),
                 enabled: widget.habilitado,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
           ],
@@ -995,6 +1062,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.nacionalidadInicialId,
                 onChanged: widget.onNacionalidadChanged,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1005,6 +1074,9 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
           ],
@@ -1022,6 +1094,9 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                   enabled: widget.habilitado,
                   isUpperCase: true,
                   textCapitalization: TextCapitalization.words,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Requerido'
+                      : null,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -1051,6 +1126,9 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 paises: widget.paises,
                 paisSeleccionado: widget.paisCelular,
                 onPaisChanged: widget.onPaisCelularChanged,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Requerido'
+                    : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1060,6 +1138,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
                 enabled: widget.habilitado,
+                validator: (v) => v.emailValidator,
               ),
             ),
           ],
@@ -1072,6 +1151,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
           controller: widget.ctrlDireccion,
           enabled: widget.habilitado,
           textCapitalization: TextCapitalization.sentences,
+          validator: (v) =>
+              v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
       ],
     );

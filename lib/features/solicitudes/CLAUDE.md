@@ -1,5 +1,36 @@
 # Solicitudes Feature
 
+## Paso 3 (Facturación) — validación en línea + defaults por tipo de persona (2026-07-17)
+Mismo pedido de negocio que el paso 1 (ver más abajo), aplicado a
+`solicitud_facturacion_view.dart`: sin snackbar genérico, y Comprobante/Tipo documento con
+default según Jurídica/Natural.
+
+- **Validación en línea** — mismo patrón que el paso 1: nuevo `_formKey = GlobalKey<FormState>()`
+  envolviendo el `Column` de `_SeccionDatosFacturacion` en un `Form` con
+  `autovalidateMode: AutovalidateMode.onUserInteraction`; se eliminó el getter `_formCompleto` y
+  el snackbar de `_onContinuar`, reemplazado por `_formKey.currentState?.validate()`. Todos los
+  campos son obligatorios menos Apellido materno, Actividad económica, NIT y Observaciones —
+  Apellido paterno solo aplica cuando el tipo de documento NO es RUC (la fila entera se oculta
+  con RUC, ver `esRuc`, así que no hace falta que su validator lo sepa). `SolicitudCampoCelular`
+  y `.emailValidator` reusan el mismo patrón que paso 1/formulario de participante.
+- **Comprobante y Tipo documento arrancan según el tipo de persona del paso 1** (nunca antes
+  tenían este default — Tipo documento siempre cayó en DNI sin mirar el tipo de persona, y
+  Comprobante no tenía ningún default): **Jurídica → Factura + RUC**, **Natural → Boleta + DNI**.
+  Aplica tanto si "Facturar al solicitante" está marcado como si no — es el default base en los
+  dos casos, resuelto en `didChangeDependencies()` contra `CatalogsBloc.valoresDefecto.
+  idTipoFactura/idTipoBoleta/idTipoDocRuc/idTipoDocDni`, nunca ids hardcodeados.
+- **"Facturar al solicitante" ahora pinta los campos correctos según el tipo de persona** — bug
+  real de la rama Jurídica: antes copiaba siempre `solicitante.tipoDocId`/`numDoc`/`nombres`
+  (los datos **personales** del solicitante, paso 1 "Datos del solicitante"), sin importar que
+  con Jurídica el dato que corresponde es el de la empresa (`DatosSolicitante.ruc`/`razonSocial`,
+  paso 1 "Información comercial") — con Jurídica, el checkbox terminaba pintando el DNI/nombres
+  del contacto en vez del RUC/razón social de la empresa. Corregido: la rama Jurídica ahora
+  fuerza Tipo documento = RUC y pinta `_ctrlNumDoc`/`_ctrlNombresRazon` con
+  `solicitante.ruc`/`solicitante.razonSocial`; la rama Natural sigue igual que antes (copia el
+  documento/nombres/apellidos personales tal cual el solicitante los tiene, sin forzar DNI —
+  a diferencia del default "sin datos", acá si el solicitante ya eligió otro tipo de documento
+  en el paso 1 se respeta, no se pisa).
+
 ## Botón "Nuevo" (participantes) se deshabilita al llegar al máximo (2026-07-17)
 Pedido de negocio (jefe del usuario) — con una solicitud que viene de una negociación con
 cantidad ya definida (`SolicitudFormCubit.state.cantidadEsperada != null`), el botón "Nuevo"

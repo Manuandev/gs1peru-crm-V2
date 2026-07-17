@@ -51,6 +51,7 @@ class NotificationHandler {
     return switch (message.process) {
       'MENSAJE_WHATSAPP' => _parseWhatsApp(message),
       'NUEVO_LEAD' => _parseLead(message),
+      'NUEVO_LEAD_BOT' => _parseLeadBot(message),
       _ => null,
     };
   }
@@ -60,7 +61,9 @@ class NotificationHandler {
     if (p == null) return null;
 
     LocalNotificationService.instance.showWhatsApp(
-      leadId: p.idNumero,
+      idNumero: p.idNumero,
+      idChatCab: p.idChatCab,
+      numero: p.telefono,
       mensaje: _bodyPorTipo(p.tipoMensaje, p.mensaje),
     );
 
@@ -72,6 +75,14 @@ class NotificationHandler {
     if (message.records.isEmpty) return null;
     // fire-and-forget: showLeadNuevoNotification es async pero no necesitamos await aquí
     LocalNotificationService.instance.showLeadNuevoNotification(message);
+    return null;
+  }
+
+  // ignore: unused_element — se dispara como side-effect; retorna null intencionalmente
+  AppNotification? _parseLeadBot(WebSocketMessage message) {
+    if (message.records.isEmpty) return null;
+    // fire-and-forget: showLeadNuevoBotNotification es async pero no necesitamos await aquí
+    LocalNotificationService.instance.showLeadNuevoBotNotification(message);
     return null;
   }
 

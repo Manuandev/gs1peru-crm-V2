@@ -7,6 +7,12 @@ class NotificationNavigator {
   NotificationNavigator._();
   static final NotificationNavigator instance = NotificationNavigator._();
 
+  // getNotificationAppLaunchDetails() sigue devolviendo la misma trama por
+  // toda la vida del proceso — sin este guard, un segundo AuthAuthenticated
+  // en la misma sesión de app (ej. logout y volver a loguear sin cerrar la
+  // app) reprocesaría el mismo cold-start launch y navegaría de nuevo.
+  bool _launchProcesado = false;
+
   void navigate(AppNotification notif) {
     final route = notif.route;
     if (route == null) return;
@@ -25,14 +31,31 @@ class NotificationNavigator {
         _goLead(notif);
       case 'abrir_conversacion':
         _goChat(notif);
+      case 'ver_negociacion_bot':
+        // TODO: ir a AppRoutes.detalleContacto con idNumero — pendiente
+        // hasta que el backend mande idNumero en la trama NUEVO_LEAD_BOT.
+        break;
+      case 'abrir_conversacion_bot':
+        _goChat(notif);
       default:
         navigate(notif);
     }
   }
 
-  /// Detecta si la app fue abierta desde una notificación local en estado killed.
-  /// Llamar después de que el navigator key esté inicializado (ej: desde Splash).
+  /// Detecta si la app fue abierta (cold start) desde el tap de una
+  /// notificación local — sea que el tap fue en el cuerpo o en un botón de
+  /// acción, ninguno de los dos pasa por `onDidReceiveNotificationResponse`
+  /// cuando la app estaba totalmente cerrada (limitación documentada del
+  /// plugin), así que este es el único lugar donde ese tap se puede leer.
+  ///
+  /// Llamar solo después de que la sesión ya se resolvió (`AuthAuthenticated`)
+  /// — necesita `SessionService().hasSession` poblado para que la guardia de
+  /// `_goChat`/`_goLead` decida bien, y necesita que Home ya esté en la base
+  /// del stack para poder apilar el detalle encima.
   Future<void> handleLocalNotificationLaunch() async {
+    if (_launchProcesado) return;
+    _launchProcesado = true;
+
     final details =
         await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
     if (details?.didNotificationLaunchApp != true) return;
@@ -43,15 +66,19 @@ class NotificationNavigator {
   }
 
   void _goChat(AppNotification notif) {
-    final idNumero = notif.payload?['idNumero'] ?? '';
+    if (!SessionService().hasSession) return _go(AppRoutes.login);
+
+    final idChatCab = int.tryParse(notif.payload?['idChatCab'] ?? '') ?? 0;
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return;
 
     state.pushNamedAndRemoveUntil(AppRoutes.chats, (r) => false);
-    state.pushNamed(AppRoutes.detalleChat, arguments: {'idNumero': idNumero});
+    state.pushNamed(AppRoutes.detalleChat, arguments: {'idChatCab': idChatCab});
   }
 
   void _goLead(AppNotification notif) {
+    if (!SessionService().hasSession) return _go(AppRoutes.login);
+
     final idLead = int.tryParse(notif.payload?['idLead'] ?? '') ?? 0;
     final state = NavigationService.navigatorKey.currentState;
     if (state == null) return;

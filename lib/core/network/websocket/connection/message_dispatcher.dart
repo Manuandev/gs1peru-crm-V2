@@ -85,6 +85,8 @@ class MessageDispatcher {
   void _dispatchLeadBot(WebSocketMessage message, String? route) {
     // Al stream — ChatListBloc trae el chat de la BD si aún no lo tiene
     _toStream(message);
+
+    NotificationHandler.instance.show(message);
   }
 
   // ── helpers ──────────────────────────────────────────────────

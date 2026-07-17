@@ -12,14 +12,17 @@ Backend → SignalR hub
         └─ WebSocketMessageParser.parse(raw)
             └─ MessageDispatcher.dispatch(wsMessage)
                 ├─ MENSAJE_WHATSAPP → _dispatchWhatsApp → NotificationHandler.show
-                │       └─ LocalNotificationService.showWhatsApp(leadId, mensaje)
-                └─ NUEVO_LEAD      → _dispatchLead     → NotificationHandler.show
-                        └─ LocalNotificationService.showLeadNuevoNotification(wsMessage)
+                │       └─ LocalNotificationService.showWhatsApp(idNumero, idChatCab, numero, mensaje)
+                ├─ NUEVO_LEAD      → _dispatchLead     → NotificationHandler.show
+                │       └─ LocalNotificationService.showLeadNuevoNotification(wsMessage)
+                └─ NUEVO_LEAD_BOT  → _dispatchLeadBot  → NotificationHandler.show
+                        └─ LocalNotificationService.showLeadNuevoBotNotification(wsMessage)
 ```
 
 **Supresión foreground:**
-- `MENSAJE_WHATSAPP` se suprime si el usuario está en `AppRoutes.chats` o en el chat específico (`activeLeadId == leadId`).
+- `MENSAJE_WHATSAPP` se suprime si el usuario está en `AppRoutes.chats` o en el chat específico (`activeLeadId == leadId`, sigue siendo id de lead — no confundir con el `idNumero` que agrupa la notificación).
 - `NUEVO_LEAD` se suprime si el usuario está en `AppRoutes.seguimiento`.
+- `NUEVO_LEAD_BOT` nunca se suprime — siempre se muestra.
 
 ---
 
@@ -33,14 +36,26 @@ Backend (C# FcmService.EnviarAsync)
 App killed → firebaseMessagingBackgroundHandler (isolate separado)
     ├─ Firebase.initializeApp()
     ├─ LocalNotificationService.instance.initBackground()
+    ├─ LocalDatabase().init()
+    ├─ _haySesionRestaurable() → si es false, corta acá — no muestra nada
     ├─ WebSocketMessageParser.parse(data["cuerpo"])
     │       └─ WebSocketMessage(process, records, receivedAt)
     ├─ NUEVO_LEAD      → LocalNotificationService.showLeadNuevoNotification(parsed)
+    ├─ NUEVO_LEAD_BOT   → LocalNotificationService.showLeadNuevoBotNotification(parsed)
     └─ MENSAJE_WHATSAPP → LocalNotificationService.showChatNotification(parsed)
-                              └─ delega a showWhatsApp(leadId, mensaje)
+                              └─ delega a showWhatsApp(idNumero, idChatCab, numero, mensaje)
 ```
 
 **Key importante:** el backend manda el body en `data["cuerpo"]`, no en `data["body"]`.
+
+**Gate de sesión restaurable (`_haySesionRestaurable`, en `firebase_notification_service.dart`):**
+con la app cerrada no hay sesión en memoria — si el Splash no va a poder restaurar sola la sesión
+guardada (lee la tabla `session`: necesita `remember_me = 1` o `login_type = 'google'`, misma regla
+que `AuthRepositoryImpl.tryRestoreSession`), no se muestra ninguna notificación. Evita que el
+usuario toque una notificación y caiga en un chat/lead sin token válido. **Solo aplica a este
+handler** — SignalR y el listener foreground de FCM (`_procesarMensaje`) nunca necesitan este gate,
+porque si están corriendo es porque `AuthBloc` ya está en `AuthAuthenticated` (sesión viva en
+memoria, independiente de si `remember_me` está marcado).
 
 ---
 
@@ -50,19 +65,38 @@ App killed → firebaseMessagingBackgroundHandler (isolate separado)
 `onDidReceiveNotificationResponse` → `NotificationNavigator.navigateWithAction(notif, actionId: response.actionId)`
 
 ### App killed (cold start desde notificación)
-Llamar desde Splash (cuando el navigator key ya está activo):
 ```dart
 await NotificationNavigator.instance.handleLocalNotificationLaunch();
 ```
-Internamente usa `getNotificationAppLaunchDetails()` y llama `navigateWithAction`.
+Internamente usa `getNotificationAppLaunchDetails()` y llama `navigateWithAction`. Ni el tap en el
+cuerpo ni el tap en un botón (aunque tenga `showsUserInterface: true`) pasan por
+`onDidReceiveNotificationResponse` cuando la app estaba totalmente cerrada — es una limitación
+documentada del plugin ("This callback cannot be used to handle when a notification launched an
+app"). Este método es el único lugar donde ese tap inicial se puede leer, para los dos casos
+(cuerpo y botón).
+
+**Conectado en `app_widget.dart`**, dentro del `BlocListener<AuthBloc, AuthState>`, justo después
+de `context.goToHome()` en la rama `AuthAuthenticated` — no antes, porque necesita
+`SessionService().hasSession` ya poblado (para la guardia de `_goChat`/`_goLead`) y Home ya en la
+base del stack para poder apilar el detalle encima. Trae un guard interno (`_launchProcesado`) para
+no reprocesar el mismo cold-start launch si `AuthAuthenticated` se repite en el mismo proceso (ej.
+logout y volver a loguear sin cerrar la app).
 
 ### Resolución de actionId
 
 | actionId | Destino |
 |---|---|
 | `'ver_lead'` | `AppRoutes.seguimiento` → push `AppRoutes.detalleSeguimiento` con `{idLead: int}` |
-| `'abrir_conversacion'` | `AppRoutes.chats` → push `AppRoutes.detalleChat` con `{idLead: String}` |
+| `'abrir_conversacion'` | `AppRoutes.chats` → push `AppRoutes.detalleChat` con `{idChatCab: int}` (mismo helper `_goChat` que `'abrir_conversacion_bot'`) |
+| `'ver_negociacion_bot'` | **Pendiente** — irá a `AppRoutes.detalleContacto` con `idNumero`; el backend aún no manda `idNumero` en `NUEVO_LEAD_BOT`, solo el número de teléfono crudo |
+| `'abrir_conversacion_bot'` | `AppRoutes.chats` → push `AppRoutes.detalleChat` con `{idChatCab: int}` |
 | `null` (tap en body) | `navigate(notif)` — ruta según `notif.route` |
+
+**Todos los `AndroidNotificationAction` llevan `showsUserInterface: true`.** Sin ese flag,
+Android despacha el tap del botón a `onDidReceiveBackgroundNotificationResponse` (isolate en
+background) en vez de `onDidReceiveNotificationResponse` — y ese callback de background está
+vacío (`_onBackgroundTap` en `local_notification_service.dart`), así que el botón parecía "no
+hacer nada". Con el flag, el tap siempre pasa por el callback de foreground y sí navega.
 
 ---
 
@@ -74,11 +108,12 @@ Internamente usa `getNotificationAppLaunchDetails()` y llama `navigateWithAction
 | `initBackground()` | Igual que `init()` pero sin pedir permisos. Llamar en el handler FCM. |
 | `requestPermissions()` | Pide permiso de notificaciones. Llamar desde Splash con UI visible. |
 | `show(AppNotification)` | Notificación genérica con ID timestamp (no agrupa). |
-| `showWhatsApp({leadId, mensaje})` | Notificación agrupada por `leadId` con InboxStyle. ID = leadId. |
+| `showWhatsApp({idNumero, idChatCab, numero, mensaje, nombreCliente?})` | Notificación agrupada por `idNumero` (no por lead — un número puede pasar por varios leads) con InboxStyle. Título "Nombre - numero" si hay `nombreCliente`, si no solo `numero`, con "(N mensajes)" si hay más de uno. `MENSAJE_WHATSAPP` hoy no trae nombre del cliente en la trama, así que siempre cae en el título solo-número hasta que se agregue esa fuente de datos. El desplegable muestra como máximo `_maxMensajesVisibles` (3) mensajes más recientes — el contador del summary sí refleja el total real acumulado. Toda la notificación (colapsada o expandida) es un único tap target → abre `AppRoutes.detalleChat` de ese `idChatCab`, igual para cualquier mensaje visible ya que todos pertenecen a la misma conversación. ID = idNumero. Los mensajes acumulados se persisten en SQLite (`settings`, clave `notif_msgs_{idNumero}`, valor = mensajes unidos con `AppConstants.sepRegistros`) — no en memoria, porque el handler de FCM en background corre en un isolate nuevo por cada push con la app cerrada y un `Map` en memoria perdería el conteo entre uno y otro. |
 | `showLeadNuevoNotification(WebSocketMessage)` | Notificación con BigText + botones "Ver lead" y "Abrir conversación". ID = leadId (reemplaza). |
+| `showLeadNuevoBotNotification(WebSocketMessage)` | Parsea con `NuevoLeadBotPayload`. Notificación con título fijo "Nuevo lead derivado por el bot" y body fijo (no usa datos del cliente) + botones "Ver lead" (`ver_negociacion_bot`, pendiente) y "Abrir conversación" (`abrir_conversacion_bot`, ya navega). ID = idLead (reemplaza). |
 | `showChatNotification(WebSocketMessage)` | Parsea con `WhatsAppMessagePayload` y delega a `showWhatsApp`. |
-| `clearLead(int leadId)` | Cancela notificación y limpia historial de mensajes del lead. |
-| `cancelAll()` | Cancela todas las notificaciones. Llamar al logout. |
+| `clearLead(int idNumero)` | Async. Cancela la notificación y borra la clave `notif_msgs_{idNumero}` de `settings`. Llamar al entrar al detalle de ese chat (`ChatDetailBloc._onStarted`). |
+| `cancelAll()` | Cancela todas las notificaciones. Se llama desde `AuthBloc._onLogoutRequested` (`auth_bloc.dart`) — evita que una notificación que quedó en la bandeja se toque después del logout y navegue sin sesión. |
 
 ---
 
@@ -88,6 +123,7 @@ Internamente usa `getNotificationAppLaunchDetails()` y llama `navigateWithAction
 |---|---|
 | `navigate(AppNotification)` | Navega según `notif.route`. |
 | `navigateWithAction(notif, {actionId})` | Navega considerando `actionId` del botón de acción. |
+| `_goChat` / `_goLead` (privados) | Antes de navegar, verifican `SessionService().hasSession` — si no hay sesión activa, redirigen a `AppRoutes.login` en vez de abrir el chat/lead. Respaldo por si una notificación vieja sobrevive a un logout o el gate de FCM background no aplica (ej. tap con la app todavía viva). |
 | `handleLocalNotificationLaunch()` | Async. Detecta cold start desde notificación local y navega. |
 
 ---
@@ -105,6 +141,7 @@ Internamente usa `getNotificationAppLaunchDetails()` y llama `navigateWithAction
 | Proceso SignalR | Foreground | Background/Killed |
 |---|---|---|
 | `NUEVO_LEAD` | ✅ via MessageDispatcher → NotificationHandler | ✅ via FCM background handler |
+| `NUEVO_LEAD_BOT` | ✅ via MessageDispatcher → NotificationHandler | ✅ via FCM background handler |
 | `MENSAJE_WHATSAPP` | ✅ via MessageDispatcher → NotificationHandler | ✅ via FCM background handler |
 
 ---

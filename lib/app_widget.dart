@@ -22,6 +22,8 @@
 // ============================================================
 
 // DEPENDENCIAS
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
@@ -130,6 +132,10 @@ class AppWidget extends StatelessWidget {
               context.read<DrawerBloc>().add(DrawerStarted());
               context.goToHome();
               context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
+              // Cold start desde notificación (app estaba totalmente cerrada):
+              // recién acá hay sesión resuelta y Home en la base del stack,
+              // así que es seguro apilar el chat/lead encima si corresponde.
+              unawaited(NotificationNavigator.instance.handleLocalNotificationLaunch());
             } else if (state is AuthUnauthenticated) {
               context.goToLogin();
             }

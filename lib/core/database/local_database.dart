@@ -178,4 +178,9 @@ class LocalDatabase implements ILocalDatabase {
     if (results.isEmpty) return null;
     return results.first['value'] as String?;
   }
+
+  /// Elimina una preferencia por clave.
+  Future<void> deleteSetting(String key) async {
+    await _db.delete('settings', where: 'key = ?', whereArgs: [key]);
+  }
 }

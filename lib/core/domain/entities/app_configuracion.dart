@@ -38,7 +38,7 @@ class AppConfiguracion extends Equatable {
     final activa = _opciones(ConfiguracionKeys.tipoLogin)
         .where((c) => c.valor5 == '1')
         .firstOrNull;
-    return TipoLoginApp.fromId(activa?.id ?? ConfiguracionKeys.idLoginCredenciales);
+    return TipoLoginApp.fromId(activa?.id ?? ConfiguracionKeys.idLoginAmbos);
   }
 
   @override

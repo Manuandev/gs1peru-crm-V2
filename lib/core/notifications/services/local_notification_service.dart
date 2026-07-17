@@ -19,7 +19,16 @@ class LocalNotificationService {
   LocalNotificationService._();
   static final LocalNotificationService instance = LocalNotificationService._();
 
-  final Map<int, List<String>> _mensajesPorLead = {};
+  // Máximo de mensajes visibles en el desplegable — evita saturar la
+  // notificación cuando llegan muchos; el contador del summary sí es el real.
+  static const int _maxMensajesVisibles = 3;
+
+  // Prefijo de la clave en `settings` donde se acumulan los mensajes no
+  // leídos por número. Persistido en SQLite (no en memoria) porque el
+  // handler de FCM en background corre en un isolate nuevo por cada push
+  // con la app cerrada — un Map en memoria perdería el conteo entre uno
+  // y otro.
+  static const String _settingsKeyPrefix = 'notif_msgs_';
 
   bool _initialized = false;
 
@@ -107,19 +116,35 @@ class LocalNotificationService {
     );
   }
 
+  /// Notificación de mensaje entrante — agrupada por [idNumero], igual que
+  /// WhatsApp agrupa por contacto (no por lead: un mismo número puede pasar
+  /// por varios leads sin que la conversación cambie).
+  /// Título: "Nombre - numero" si hay nombre, si no solo "numero".
   Future<void> showWhatsApp({
-    required int leadId,
+    required int idNumero,
+    required int idChatCab,
+    required String numero,
     required String mensaje,
+    String? nombreCliente,
   }) async {
-    _mensajesPorLead[leadId] ??= [];
-    _mensajesPorLead[leadId]!.add(mensaje);
+    final mensajes = await _agregarMensajePersistido(
+      idNumero: idNumero,
+      mensaje: mensaje,
+    );
 
-    final mensajes = _mensajesPorLead[leadId]!;
     final total = mensajes.length;
+    final mensajesVisibles = total > _maxMensajesVisibles
+        ? mensajes.sublist(total - _maxMensajesVisibles)
+        : mensajes;
+
+    final contacto = (nombreCliente != null && nombreCliente.isNotEmpty)
+        ? '$nombreCliente - $numero'
+        : numero;
+    final titulo = total > 1 ? '$contacto ($total mensajes)' : contacto;
 
     await flutterLocalNotificationsPlugin.show(
-      id: leadId,
-      title: 'Lead $leadId${total > 1 ? ' ($total mensajes)' : ''}',
+      id: idNumero,
+      title: titulo,
       body: mensajes.last,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
@@ -130,18 +155,39 @@ class LocalNotificationService {
           priority: Priority.high,
           playSound: true,
           styleInformation: InboxStyleInformation(
-            mensajes,
+            mensajesVisibles,
             summaryText: '$total mensajes',
           ),
         ),
       ),
       payload: AppNotification(
-        title: 'Lead $leadId',
+        title: contacto,
         body: mensajes.last,
         route: AppRoutes.detalleChat,
-        payload: {'idNumero': leadId.toString()},
+        payload: {'idChatCab': idChatCab.toString()},
       ).toPayloadString(),
     );
+  }
+
+  /// Lee de `settings` los mensajes acumulados de [idNumero], agrega
+  /// [mensaje] y persiste la lista completa de vuelta. Persistido (no en
+  /// memoria) porque el handler de FCM en background corre en un isolate
+  /// nuevo por cada push con la app cerrada.
+  Future<List<String>> _agregarMensajePersistido({
+    required int idNumero,
+    required String mensaje,
+  }) async {
+    final db = LocalDatabase();
+    final key = '$_settingsKeyPrefix$idNumero';
+    final raw = await db.getSetting(key);
+
+    final mensajes = raw != null && raw.isNotEmpty
+        ? raw.split(AppConstants.sepRegistros)
+        : <String>[];
+    mensajes.add(mensaje);
+
+    await db.setSetting(key, mensajes.join(AppConstants.sepRegistros));
+    return mensajes;
   }
 
   Future<void> showLeadNuevoNotification(WebSocketMessage parsed) async {
@@ -179,8 +225,16 @@ class LocalNotificationService {
             summaryText: canal.isNotEmpty ? canal : null,
           ),
           actions: const [
-            AndroidNotificationAction('ver_lead', 'Ver lead'),
-            AndroidNotificationAction('abrir_conversacion', 'Abrir conversación'),
+            AndroidNotificationAction(
+              'ver_lead',
+              'Ver lead',
+              showsUserInterface: true,
+            ),
+            AndroidNotificationAction(
+              'abrir_conversacion',
+              'Abrir conversación',
+              showsUserInterface: true,
+            ),
           ],
         ),
       ),
@@ -193,18 +247,73 @@ class LocalNotificationService {
     );
   }
 
+  /// Notificación cuando el bot deriva una conversación nueva a un asesor.
+  /// Body fijo — no usa datos del cliente, solo avisa que hay algo pendiente.
+  Future<void> showLeadNuevoBotNotification(WebSocketMessage parsed) async {
+    final payload = NuevoLeadBotPayload.fromMessage(parsed);
+    if (payload == null) return;
+
+    const titulo = 'Nuevo lead derivado por el bot';
+    const cuerpo =
+        'Una conversación te ha sido derivada, atiéndela lo más pronto posible.';
+
+    await flutterLocalNotificationsPlugin.show(
+      id: payload.idLead,
+      title: titulo,
+      body: cuerpo,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channel.id,
+          _channel.name,
+          channelDescription: _channel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          actions: const [
+            // 'Ver lead' → irá a AppRoutes.detalleContacto con idNumero.
+            // Pendiente: el backend aún no manda idNumero en esta trama,
+            // solo el numero de teléfono — falta mapearlo a idNumero.
+            AndroidNotificationAction(
+              'ver_negociacion_bot',
+              'Ver lead',
+              showsUserInterface: true,
+            ),
+            AndroidNotificationAction(
+              'abrir_conversacion_bot',
+              'Abrir conversación',
+              showsUserInterface: true,
+            ),
+          ],
+        ),
+      ),
+      payload: AppNotification(
+        title: titulo,
+        body: cuerpo,
+        payload: {
+          'idLead': payload.idLead.toString(),
+          'codAsesor': payload.codAsesor,
+          'nombreCliente': payload.nombreCliente,
+          'numero': payload.numero,
+          'idChatCab': payload.idChatCab.toString(),
+        },
+      ).toPayloadString(),
+    );
+  }
+
   Future<void> showChatNotification(WebSocketMessage parsed) async {
     final p = WhatsAppMessagePayload.fromMessage(parsed);
     if (p == null) return;
     await showWhatsApp(
-      leadId: p.idNumero,
+      idNumero: p.idNumero,
+      idChatCab: p.idChatCab,
+      numero: p.telefono,
       mensaje: _textoMensaje(p.tipoMensaje, p.mensaje),
     );
   }
 
-  void clearLead(int leadId) {
-    _mensajesPorLead.remove(leadId);
-    flutterLocalNotificationsPlugin.cancel(id: leadId);
+  Future<void> clearLead(int idNumero) async {
+    await LocalDatabase().deleteSetting('$_settingsKeyPrefix$idNumero');
+    await flutterLocalNotificationsPlugin.cancel(id: idNumero);
   }
 
   Future<void> cancelAll() => flutterLocalNotificationsPlugin.cancelAll();

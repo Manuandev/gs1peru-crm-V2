@@ -80,6 +80,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // → AuthRemoteDatasource.logout()       (invalida token en API, si aplica)
     await SignalRService.instance.limpiarTokenFCM();
     await SignalRService.instance.close();
+    // Notificaciones pendientes en la bandeja quedan huérfanas sin sesión —
+    // si se tocan después del logout, no debe llevar a un chat/lead sin token.
+    await LocalNotificationService.instance.cancelAll();
     await _logoutUsecase();
 
     emit(const AuthUnauthenticated());

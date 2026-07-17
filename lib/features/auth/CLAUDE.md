@@ -129,7 +129,10 @@ LoginPage
 
 Logout (desde cualquier pantalla)
   └── context.logoutWithConfirmation(context)
-        └── AuthLogoutRequested → clearSession() → AuthUnauthenticated → LoginPage
+        └── AuthLogoutRequested
+              → limpiarTokenFCM() + SignalR.close()
+              → LocalNotificationService.cancelAll()  (ver notifications/CLAUDE.md)
+              → clearSession() → AuthUnauthenticated → LoginPage
 ```
 
 ---

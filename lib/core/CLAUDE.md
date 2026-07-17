@@ -757,7 +757,13 @@ await db.rawQuery('SELECT ...', args)
 // Settings clave-valor
 await db.setSetting('theme', 'dark')
 await db.getSetting('theme')           // String? — null si no existe
+await db.deleteSetting('theme')        // elimina la clave
 ```
+
+Uso real de settings más allá de preferencias: `notifications/` persiste ahí los mensajes de
+WhatsApp no leídos por número (`notif_msgs_{idNumero}`, ver `notifications/CLAUDE.md`) — necesario
+porque el handler de FCM en background corre en un isolate nuevo por cada push con la app
+cerrada, y un `Map` en memoria perdería el conteo entre uno y otro.
 
 **Tablas actuales:**
 

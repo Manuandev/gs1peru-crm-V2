@@ -114,6 +114,15 @@ class FirebaseNotificationService {
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   await LocalNotificationService.instance.initBackground();
+  // Isolate nuevo por cada push con la app cerrada — la BD local no está
+  // abierta todavía acá, hace falta inicializarla para persistir mensajes.
+  await LocalDatabase().init();
+
+  // Con la app cerrada no hay sesión viva en memoria. Si el Splash no va a
+  // poder restaurar sola la sesión guardada (sin "recordar sesión" y sin
+  // Google), tocar la notificación llevaría a una pantalla de chat/lead sin
+  // token válido — mejor no mostrarla.
+  if (!await _haySesionRestaurable()) return;
 
   final body = message.data['cuerpo'] ?? message.notification?.body;
   if (body == null) return;
@@ -124,7 +133,26 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   switch (parsed.process) {
     case 'NUEVO_LEAD':
       await LocalNotificationService.instance.showLeadNuevoNotification(parsed);
+    case 'NUEVO_LEAD_BOT':
+      await LocalNotificationService.instance.showLeadNuevoBotNotification(parsed);
     case 'MENSAJE_WHATSAPP':
       await LocalNotificationService.instance.showChatNotification(parsed);
   }
+}
+
+/// true si el Splash va a poder restaurar la sesión guardada sola (tabla
+/// `session` de SQLite): con "recordar sesión" marcado, o login con Google
+/// (que siempre debe poder restaurarse — ver `AuthRepositoryImpl.tryRestoreSession`,
+/// misma regla: `!rememberMe && !isGoogle` → no se restaura).
+/// 'google' es el literal que persiste `SessionModel.toMap()` en
+/// `features/auth/data/models/session_model.dart` — no se importa el enum
+/// `LoginType` acá para no acoplar `core/notifications` a `features/auth`.
+Future<bool> _haySesionRestaurable() async {
+  final rows = await LocalDatabase().getAll('session');
+  if (rows.isEmpty) return false;
+
+  final row = rows.first;
+  final rememberMe = (row['remember_me'] as int?) == 1;
+  final isGoogle = row['login_type'] == 'google';
+  return rememberMe || isGoogle;
 }

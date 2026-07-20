@@ -296,3 +296,73 @@ siga mandando el flag:
 Todas estas clases (`DatosTab`, `NegociacionesTab`, `NegociacionCard`) solo se instancian dentro de
 `ChatLeadPanel` — no comparten código con `ContactoNegociacionesTab`/`ContactoNegociacionCard`
 (Seguimiento), que a propósito **no** mandan el flag porque ese origen no es conversación.
+
+### Back del AppBar bloqueado mientras se guarda — `guardandoNotifier`
+
+Bug real detectado en vivo (2026-07-20): al crear/editar una negociación, `_guardar()`
+(`edit_lead_portrait.dart`) hace `context.goBack()` automático 1.5s después de mostrar el check
+verde (`_ExitoOverlay`), pero el botón back del AppBar (`edit_lead_view.dart`, State distinto,
+sin acceso a `_isLoading`/`_mostrandoExito`) seguía tocable durante todo ese tiempo — incluso
+mientras el guardado seguía en vuelo. Si el usuario, al ver que "no pasa nada" (el título ya
+cambió a "Editar negociación" apenas el backend confirma el `idLead`, antes del check verde),
+tocaba el back manualmente, ese pop manual competía con el automático: la pantalla se cerraba a
+mitad del flujo de `_guardar()`, el caller (`NegociacionesTab`/`ContactoNegociacionesTab`)
+refrescaba la lista antes de tiempo, y entrando desde Conversación el `ChatLeadPanel` (contenedor
+con tabs Datos/Negociaciones/Historial) quedaba cerrado de encima al volver.
+
+Fix: `EditLeadPortrait` recibe `guardandoNotifier` (`ValueNotifier<bool>?`), creado y poseído por
+`EditLeadView`. `_setGuardando()` (reemplaza los `setState` sueltos de `_isLoading`/
+`_mostrandoExito`) actualiza ese notifier cada vez que cambia cualquiera de los dos flags;
+`EditLeadView` envuelve el `IconButton` de back en un `ValueListenableBuilder` y deshabilita
+`onPressed` mientras `guardando == true`. `FormSaveBar.isLoading` también pasó de `_isLoading` a
+`_isLoading || _mostrandoExito`, para que "Cancelar" quede igual de bloqueado. Si se agrega otro
+punto de salida manual a esta pantalla (otro botón, gesto, etc.), debe leer el mismo notifier —
+no inventar un guard paralelo.
+
+### Causa real (Seguimiento) — InfoLeadCubit compartido se auto-interrumpía al crear
+
+El guard de arriba (`guardandoNotifier`) evita el pop manual prematuro, pero en Seguimiento
+(`ContactoDetalleView`) había una causa más profunda para el mismo síntoma, más otro bug
+("me manda a Información/Contacto en vez de quedarme en Negociaciones"), los dos en
+`contacto_detalle_view.dart` (2026-07-20):
+
+`ContactoDetallePage` crea UN solo `InfoLeadCubit` compartido entre `ContactoDetalleView` y
+`ContactoNegociacionesTab._crearNegociacion()` (a propósito — ver comentario ahí, necesita el
+mismo cubit para `prepararNuevaNegociacion()`/restaurar si el usuario cancela). Al guardar,
+`InfoLeadCubit.updateLead()` ya se auto-actualiza (`emit(InfoLeadSuccess(leadFinal))`) y avisa por
+`LeadUpdateNotifier` — pero `_ContactoDetalleViewState._updateSub` escuchaba TODOS los avisos que
+matcheaban `idNumero`, sin filtrar por `source`, así que su propio guardado volvía a entrar por
+ahí y disparaba `_refrescar()` → `cargarPorIdNumero()` → `InfoLeadLoading()` sobre el MISMO cubit
+compartido. Eso producía dos daños en cadena:
+1. `EditLeadView.build()` (que también escucha ese cubit) reemplazaba `EditLeadPortrait` por
+   `AppLoadingView()` a mitad del check verde de éxito, disponiendo el `State` que tenía pendiente
+   el `Future.delayed` del pop automático — el `if (mounted) context.goBack()` quedaba sin efecto
+   y la pantalla se quedaba varada en "Editar negociación".
+2. `_ContactoDetalleViewState.build()` reemplazaba `_ContactoScaffold` completo (con su
+   `DefaultTabController`) por `ContactoDetalleSkeleton()` mientras duraba el `InfoLeadLoading`;
+   al volver a `InfoLeadSuccess` se reconstruía un `DefaultTabController` nuevo, con índice
+   siempre en 0 ("Información") — perdiendo la pestaña "Negociaciones" en la que estaba el
+   usuario.
+
+Fix, ambos en `_ContactoDetalleViewState`:
+- `_updateSub` ahora ignora el aviso si `identical(update.source, _cubit)` (mismo guard que ya
+  usa `InfoLeadCubit` internamente contra sí mismo) — su propio guardado nunca vuelve a
+  recargarse solo, porque el cubit compartido ya quedó con el dato fresco.
+- Se guarda `_ultimoLead` (la última `Negociacion` de un `InfoLeadSuccess`) y el `builder` lo
+  sigue mostrando (`_ContactoScaffold` con datos "viejos" mientras llega el nuevo) durante
+  cualquier `InfoLeadLoading` posterior al primer load — solo el load inicial (sin datos previos)
+  muestra `ContactoDetalleSkeleton()`. Esto también arregla el pull-to-refresh
+  (`RefreshIndicator.onRefresh: _refrescar`), que antes tenía el mismo problema de tumbar toda la
+  pantalla en vez de solo mostrar el spinner nativo del gesto.
+
+Editar una negociación YA EXISTENTE desde Seguimiento (`ContactoNegociacionCard._irAEditar`) usa
+un `InfoLeadCubit` aislado (no el compartido), así que su aviso SÍ tiene un `source` distinto y
+`_refrescar()` sigue corriendo ahí — correcto, es el único punto donde `ContactoDetalleView`
+necesita enterarse desde afuera. El segundo fix (`_ultimoLead`) cubre igual ese caso, para que
+tampoco pierda la pestaña activa.
+
+En Conversación (`ChatDetailView`/`ChatLeadPanel`) no aplica ninguno de los dos bugs: nadie ahí
+escucha `LeadUpdateNotifier` directo (solo el propio `InfoLeadCubit.updateLead()` se auto-emite,
+sin loop), y `_panelTabController` vive en `_ChatDetailViewState` (creado una sola vez en
+`initState`, no dentro del árbol que se reconstruye con el estado del cubit) — la pestaña activa
+del panel sobrevive sola a cualquier rebuild.

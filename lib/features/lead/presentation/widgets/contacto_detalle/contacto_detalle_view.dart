@@ -19,11 +19,19 @@ class ContactoDetalleView extends StatefulWidget {
 
 class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   StreamSubscription<LeadUpdate>? _updateSub;
+  late final InfoLeadCubit _cubit;
+  // Última negociación cargada con éxito — se sigue mostrando mientras el
+  // cubit pasa por InfoLeadLoading en un refresh (ver builder más abajo), en
+  // vez de tumbar todo _ContactoScaffold (y su DefaultTabController, que
+  // resetea la pestaña activa a "Información") por cada recarga en segundo
+  // plano. Solo el primer load real (sin datos previos) muestra el skeleton.
+  Negociacion? _ultimoLead;
 
   @override
   void initState() {
     super.initState();
-    context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero);
+    _cubit = context.read<InfoLeadCubit>();
+    _cubit.cargarPorIdNumero(widget.idNumero);
 
     // ContactoNegociacionesTab edita leads históricos con SU PROPIO
     // InfoLeadCubit (ver contacto_negociacion_card.dart) — esta pantalla no
@@ -31,7 +39,20 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
     // LeadListBloc, filtrando por idNumero (no por idLead: cualquier lead
     // de este número que cambie puede alterar cuál es "el más reciente" que
     // muestra Información, o afectar el historial de Negociaciones).
+    //
+    // Ojo — "Crear negociación" (ContactoNegociacionesTab._crearNegociacion)
+    // SÍ usa este mismo InfoLeadCubit compartido (a diferencia de editar una
+    // card existente), porque necesita prepararNuevaNegociacion()/restaurar
+    // sobre el mismo estado. Bug real detectado en vivo: sin el filtro de
+    // abajo, el aviso que ese mismo guardado dispara (updateLead ya hizo su
+    // propio emit con el idLead real) volvía a entrar acá y llamaba
+    // _refrescar(), que reemite InfoLeadLoading sobre el cubit compartido —
+    // eso tumbaba _ContactoScaffold completo (cayendo en "Información" en
+    // vez de quedarse en "Negociaciones") y, si EditLeadPortrait todavía
+    // estaba mostrando el check verde, EditLeadView lo reemplazaba por
+    // AppLoadingView a mitad de camino, cancelando su pop automático.
     _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
+      if (identical(update.source, _cubit)) return;
       final negociacion = update.updatedLead;
       if (negociacion is Negociacion &&
           negociacion.idNumero == widget.idNumero) {
@@ -47,7 +68,7 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   }
 
   Future<void> _refrescar() => Future.wait([
-    context.read<InfoLeadCubit>().cargarPorIdNumero(widget.idNumero),
+    _cubit.cargarPorIdNumero(widget.idNumero),
     context.read<NegociacionesCubit>().cargarNegociaciones(widget.idNumero),
   ]);
 
@@ -59,15 +80,13 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
       // dispara acá y no en initState (ahí solo se tiene idLead).
       listener: (context, state) {
         if (state is InfoLeadSuccess) {
+          _ultimoLead = state.negociacion;
           context.read<NegociacionesCubit>().cargarNegociaciones(
             state.negociacion.idNumero,
           );
         }
       },
       builder: (context, state) {
-        if (state is InfoLeadInitial || state is InfoLeadLoading) {
-          return const ContactoDetalleSkeleton();
-        }
         if (state is InfoLeadFailure) {
           return BasePage(
             title: 'Detalle de contacto',
@@ -80,13 +99,19 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
             ],
             body: AppErrorView(
               message: state.message,
-              onRetry: () => context.read<InfoLeadCubit>().cargarPorIdNumero(
-                widget.idNumero,
-              ),
+              onRetry: () => _cubit.cargarPorIdNumero(widget.idNumero),
             ),
           );
         }
-        final lead = (state as InfoLeadSuccess).negociacion;
+        // InfoLeadLoading de un refresh (state no es Success) con datos
+        // previos ya cargados: se sigue mostrando _ultimoLead en vez del
+        // skeleton — ver comentario del campo.
+        final lead = state is InfoLeadSuccess
+            ? state.negociacion
+            : _ultimoLead;
+        if (lead == null) {
+          return const ContactoDetalleSkeleton();
+        }
         return _ContactoScaffold(lead: lead, onRefresh: _refrescar);
       },
     );

@@ -20,12 +20,16 @@ class EditLeadPortrait extends StatefulWidget {
   // true cuando se entra desde el chat de Conversaciones — ver reglas de
   // negocio en el comentario de _EditLeadPortraitState.
   final bool desdeConversacion;
+  // Espejo de _isLoading/_mostrandoExito para que EditLeadView bloquee el
+  // back del AppBar mientras se guarda — ver nota en _setGuardando().
+  final ValueNotifier<bool>? guardandoNotifier;
 
   const EditLeadPortrait({
     super.key,
     required this.negociacion,
     this.soloLectura = false,
     this.desdeConversacion = false,
+    this.guardandoNotifier,
   });
 
   @override
@@ -154,6 +158,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _precioBaseCtrl.dispose();
     _costoFinalCtrl.dispose();
     // _seccionCambio.dispose();
+    widget.guardandoNotifier?.value = false;
     super.dispose();
   }
 
@@ -237,6 +242,21 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       _subEstado = null;
       _subEstadosFiltrados = [];
     }
+  }
+
+  // Centraliza los cambios de _isLoading/_mostrandoExito y avisa al
+  // ValueNotifier compartido con EditLeadView — sin esto, el botón back del
+  // AppBar (fuera de este State) queda tocable durante el guardado y durante
+  // los 1.5s del check verde, y una salida manual ahí compite con el pop
+  // automático de _guardar() (bug real detectado en vivo: el pop manual
+  // dejaba _guardar() varado a mitad de guardar/refrescar, y en Conversación
+  // el ChatLeadPanel se cerraba de encima al volver antes de tiempo).
+  void _setGuardando({bool? isLoading, bool? mostrandoExito}) {
+    setState(() {
+      if (isLoading != null) _isLoading = isLoading;
+      if (mostrandoExito != null) _mostrandoExito = mostrandoExito;
+    });
+    widget.guardandoNotifier?.value = _isLoading || _mostrandoExito;
   }
 
   // ── Getters financieros ───────────────────────────────────────────────────
@@ -356,7 +376,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     );
     if (!confirmar) return;
 
-    setState(() => _isLoading = true);
+    _setGuardando(isLoading: true);
 
     // Siempre se manda lo que quedó matcheado en _estado/_subEstado contra
     // el catálogo (por id) — al crear desde conversación eso ya es "Nuevo"
@@ -405,7 +425,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       );
     }
 
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) _setGuardando(isLoading: false);
 
     if (guardadoOk && debeGenerarSolicitud && mounted) {
       final estadoInfoLead = context.read<InfoLeadCubit>().state;
@@ -466,7 +486,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     // compartir el mismo InfoLeadCubit, así que acá solo hace falta
     // retroceder — no un refresh explícito.
     if (guardadoOk && mounted) {
-      setState(() => _mostrandoExito = true);
+      _setGuardando(mostrandoExito: true);
       await Future.delayed(const Duration(milliseconds: 1500));
       if (mounted) context.goBack();
     }
@@ -492,7 +512,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             builder: (context, _) => FormSaveBar(
               onCancelar: () => context.goBack(),
               onGuardar: _guardar,
-              isLoading: _isLoading,
+              // Incluye _mostrandoExito — sin esto "Cancelar" queda tocable
+              // durante los 1.5s del check verde, compitiendo con el pop
+              // automático de _guardar() (ver _setGuardando()).
+              isLoading: _isLoading || _mostrandoExito,
               isEnabled: _puedeGuardar,
               iconoGuardar: AppIcons.save,
               textoGuardar: 'Guardar cambios',

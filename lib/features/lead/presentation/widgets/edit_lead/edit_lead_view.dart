@@ -1,4 +1,4 @@
-// lib/features/chat/presentation/widgets/edit_lead/edit_lead_view.dart
+// lib/features/lead/presentation/widgets/edit_lead/edit_lead_view.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -23,6 +23,13 @@ class EditLeadView extends StatefulWidget {
 
 class _EditLeadViewState extends State<EditLeadView> {
   final List<StreamSubscription<String>> _subs = [];
+  // Espejo de _isLoading/_mostrandoExito de EditLeadPortrait — bloquea el
+  // back del AppBar mientras se guarda/muestra el check de éxito, para que
+  // el usuario no dispare un pop manual que compita con el pop automático
+  // de _guardar() (bug real: eso dejaba la pantalla varada en "Editar
+  // negociación" y, entrando desde Conversación, cerraba de encima el
+  // ChatLeadPanel al volver antes de tiempo).
+  final ValueNotifier<bool> _guardando = ValueNotifier(false);
 
   @override
   void initState() {
@@ -44,6 +51,7 @@ class _EditLeadViewState extends State<EditLeadView> {
     for (final sub in _subs) {
       sub.cancel();
     }
+    _guardando.dispose();
     super.dispose();
   }
 
@@ -69,9 +77,12 @@ class _EditLeadViewState extends State<EditLeadView> {
       bodyPadding: EdgeInsets.zero,
       drawerSide: DrawerSide.none,
       appBarLeadingButtons: [
-        IconButton(
-          icon: const Icon(AppIcons.backIos),
-          onPressed: () => context.goBack(),
+        ValueListenableBuilder<bool>(
+          valueListenable: _guardando,
+          builder: (context, guardando, _) => IconButton(
+            icon: const Icon(AppIcons.backIos),
+            onPressed: guardando ? null : () => context.goBack(),
+          ),
         ),
       ],
       body: BlocBuilder<InfoLeadCubit, InfoLeadState>(
@@ -104,6 +115,7 @@ class _EditLeadViewState extends State<EditLeadView> {
                   negociacion: infoState.negociacion, // ← del cubit
                   soloLectura: widget.soloLectura,
                   desdeConversacion: widget.desdeConversacion,
+                  guardandoNotifier: _guardando,
                 );
               }
               return const SizedBox.shrink();

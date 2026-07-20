@@ -39,6 +39,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetHomeUseCase _getData;
   final _session = SessionService();
   late final StreamSubscription<FiltroState> _filtroSub;
+  late final StreamSubscription<WebSocketMessage> _messageSubscription;
 
   HomeBloc({required GetHomeUseCase getData})
     : _getData = getData,
@@ -48,11 +49,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomePrioridadGestionada>(_onPrioridadGestionada);
     // Recarga automática cuando el moderador cambia entre "Mis casos" / "Equipo"
     _filtroSub = FiltroCubit.instance.stream.listen((_) => add(HomeRefresh()));
+    // Recarga "Prioridad ahora" cuando llega un mensaje nuevo de WhatsApp o
+    // el bot crea un lead nuevo — ambos pueden entrar directo a "sin respuesta".
+    _messageSubscription = MessageDispatcher.instance.stream.listen((message) {
+      if (isClosed) return;
+      switch (message.process) {
+        case 'MENSAJE_WHATSAPP':
+        case 'NUEVO_LEAD_BOT':
+          add(HomeRefresh());
+      }
+    });
   }
 
   @override
   Future<void> close() {
     _filtroSub.cancel();
+    _messageSubscription.cancel();
     return super.close();
   }
 

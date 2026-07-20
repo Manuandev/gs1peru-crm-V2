@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "948850885270-85qsfmjmgfr8th6lsbvb8mf0m3vmjein.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gs1peru.crm",
+            "certificate_hash": "df6c990fda65f472b5aa6d0a5063bce5ac521af8"
+          }
+        },
+        {
           "client_id": "948850885270-jt6du92fqiujcmiig73uqpbv5o3vg0u6.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

@@ -142,3 +142,18 @@ context.goToDetalleChatDesdeHome(idChatCab: prioridad.idChatCab)
 |---|---|
 | Transición | slideRight |
 | Badge | `home.totNotificaciones` |
+
+---
+
+## Recarga en tiempo real — "Prioridad ahora"
+
+`HomeBloc` se suscribe a `MessageDispatcher.instance.stream` (igual patrón que
+`FiltroCubit.instance.stream`, ver constructor) y dispara `HomeRefresh()` cuando llega:
+
+- `MENSAJE_WHATSAPP` — mensaje nuevo del cliente
+- `NUEVO_LEAD_BOT` — lead nuevo creado por el bot
+
+Ambos pueden calificar directo como "sin respuesta" en la sección de prioridades. No reacciona a
+`UPDATE_PANTALLA_WHATSAPP` (confirmación de mensajes que envía el propio asesor) — eso no debe
+disparar recarga. `HomeRefresh()` vuelve a pedir el dashboard completo (no hay parche en memoria
+como en `ChatListBloc`), consistente con cómo ya reaccionaba al cambio de filtro del moderador.

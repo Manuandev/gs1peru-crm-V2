@@ -1,6 +1,13 @@
 // lib/features/home/domain/entities/notifications/notificacion.dart
 
-enum TipoNotificacion { actividad, derivacion, mensaje }
+enum TipoNotificacion {
+  actividad,
+  derivacion,
+  mensaje,
+  recordatorio,
+  leadPorContactar,
+  leadReasignado,
+}
 
 class Notificacion {
   final int id;
@@ -49,13 +56,19 @@ class Notificacion {
     TipoNotificacion.actividad => 'Actividad',
     TipoNotificacion.derivacion => 'Derivación',
     TipoNotificacion.mensaje => 'Mensaje',
+    TipoNotificacion.recordatorio => 'Recordatorio',
+    TipoNotificacion.leadPorContactar => 'Por contactar',
+    TipoNotificacion.leadReasignado => 'Reasignado',
   };
 
-  // Botón de acción: Actividad → Ver seguimiento | Derivación/Mensaje → Ver conversación
+  // Botón de acción: Derivación/Mensaje → Ver conversación | el resto → Ver seguimiento
   String get labelAccion => switch (tipo) {
-    TipoNotificacion.actividad => 'Ver seguimiento',
     TipoNotificacion.derivacion => 'Ver conversación',
     TipoNotificacion.mensaje => 'Ver conversación',
+    TipoNotificacion.actividad ||
+    TipoNotificacion.recordatorio ||
+    TipoNotificacion.leadPorContactar ||
+    TipoNotificacion.leadReasignado => 'Ver seguimiento',
   };
 
   // Las derivaciones del bot muestran chip "Nuevo"

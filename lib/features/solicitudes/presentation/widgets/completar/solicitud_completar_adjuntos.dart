@@ -51,7 +51,7 @@ class BotonAdjuntar extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.primary,
             side: const BorderSide(color: AppColors.primary),
-            minimumSize: const Size.fromHeight(AppSizing.buttonHeightSmall),
+            minimumSize: const Size.fromHeight(AppSizing.buttonHeightCompact),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizing.radiusSm),
             ),

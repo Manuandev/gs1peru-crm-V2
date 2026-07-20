@@ -1,5 +1,44 @@
 # Solicitudes Feature
 
+## Bugs reales — switch "El solicitante será participante" sin tope + "Facturar al solicitante" no se re-sincronizaba (2026-07-20)
+Reportados por el usuario en la misma sesión, ambos en `solicitud_completar_view.dart`/
+`solicitud_facturacion_view.dart` (paso 1 y 3 del wizard):
+
+- **"El solicitante será participante" no validaba el máximo de participantes.** Con una
+  solicitud que viene de una negociación con `cantidadEsperada` ya definida y el máximo ya
+  alcanzado (ej. máximo 1, ya hay 1 participante), activar el switch agregaba al solicitante
+  como un participante más SIN ningún aviso — recién se enteraba al presionar "Generar
+  solicitud" en Resumen (`validarSolicitudParaGenerar` sí compara `participantes.length !=
+  cantidadEsperada`, pero ahí ya es tarde, no en el momento de la acción). Mismo criterio que
+  ya usa el botón "Nuevo" del paso 2 (`_BotonSeccionSmall` deshabilitado al llegar al máximo,
+  ver sección de abajo "Botón 'Nuevo'"): ahora `_onSolicitanteParticipanteChanged` (nuevo método,
+  reemplaza el `onChanged` inline del switch) bloquea la activación con
+  `AppSnackBar.error` si `ParticipantesCubit.state.participantes.length >= cantidadEsperada` —
+  **solo** bloquea encenderlo, apagarlo (quitar al solicitante) siempre está permitido.
+- **Bug real — "Facturar al solicitante" (paso 1) dejaba de reflejarse en el paso 3 si el
+  asesor ya había visitado ese paso antes de activar el switch.** El wizard mantiene los 4
+  pasos vivos dentro de un `IndexedStack` (nunca se destruyen, ver "Wizard de una sola page"
+  más abajo) — el prefill de RUC/razón social/celular/correo desde el solicitante vivía
+  **solo** en `didChangeDependencies()` de `SolicitudFacturacionView`, guardado detrás de
+  `_prefillDone` (una bandera que solo deja correr esa lógica la PRIMERA vez que el paso se
+  construye). Secuencia real del bug: paso 1 sin activar el switch → paso 2 → paso 3 (se
+  construye por primera vez, `_prefillDone` pasa a `true`, cae a la rama "sin datos" con
+  defaults genéricos) → "Atrás" al paso 1 → activa "Facturar al solicitante" → vuelve al paso
+  3 → como el `State` nunca se recreó, `didChangeDependencies` no se vuelve a ejecutar, así
+  que el prefill nunca corre — el paso 3 se queda con los defaults genéricos de la visita
+  anterior, sin RUC/razón social/celular/correo del solicitante.
+  Corregido: se extrajo la lógica de prefill a un método reusable
+  `_aplicarDatosSolicitante(DatosSolicitante, String tipoPersona)` (mismo contenido de antes,
+  sin cambios de comportamiento) y se agregó un `BlocListener<SolicitudFormCubit,
+  SolicitudFormState>` envolviendo el `build()` de `SolicitudFacturacionView`, con
+  `listenWhen: current.solicitante?.facturarAlSolicitante == true && previous...!= true` — se
+  dispara cada vez que el switch pasa de apagado a encendido mientras el paso 3 ya está vivo,
+  y llama al mismo método. `didChangeDependencies()` sigue cubriendo el caso "el switch ya
+  estaba activo la primera vez que se construye este paso" — los dos caminos ahora comparten
+  la misma lógica, no hay dos copias. Apagar el switch **no** limpia los campos ya prellenados
+  del paso 3 — decisión consistente con el resto del wizard, los switches solo agregan/
+  prellenan, nunca borran destructivamente lo que el asesor ya tiene tipeado.
+
 ## Paso 3 (Facturación) — validación en línea + defaults por tipo de persona (2026-07-17)
 Mismo pedido de negocio que el paso 1 (ver más abajo), aplicado a
 `solicitud_facturacion_view.dart`: sin snackbar genérico, y Comprobante/Tipo documento con

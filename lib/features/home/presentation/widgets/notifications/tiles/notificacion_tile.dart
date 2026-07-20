@@ -21,10 +21,14 @@ class NotificacionTile extends StatelessWidget {
     final (iconoColor, icono) = _resolverIcono();
     // Mensaje/derivación necesitan idChatCab para navegar — si el dato no
     // llegó (notificación vieja o sin chat asociado), no se muestra el botón.
-    // Actividad todavía no tiene su propio id de destino, así que por ahora
-    // siempre se muestra (igual que en el mockup).
+    // Actividad/Recordatorio/Por contactar/Reasignado todavía no tienen su
+    // propio id de destino, así que por ahora siempre se muestran (igual que
+    // en el mockup).
     final mostrarBoton =
         notificacion.tipo == TipoNotificacion.actividad ||
+        notificacion.tipo == TipoNotificacion.recordatorio ||
+        notificacion.tipo == TipoNotificacion.leadPorContactar ||
+        notificacion.tipo == TipoNotificacion.leadReasignado ||
         notificacion.idChatCab != null;
 
     return Padding(
@@ -37,14 +41,15 @@ class NotificacionTile extends StatelessWidget {
         children: [
           // ── Indicador de no leído ────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs, right: AppSpacing.xxs),
+            padding: const EdgeInsets.only(
+              top: AppSpacing.xs,
+              right: AppSpacing.xxs,
+            ),
             child: Container(
               width: AppSizing.dotIndicatorSize,
               height: AppSizing.dotIndicatorSize,
               decoration: BoxDecoration(
-                color: notificacion.leido
-                    ? Colors.transparent
-                    : AppColors.info,
+                color: notificacion.leido ? Colors.transparent : AppColors.info,
                 shape: BoxShape.circle,
               ),
             ),
@@ -109,10 +114,7 @@ class NotificacionTile extends StatelessWidget {
                       color: _colorTipo(),
                     ),
                     if (notificacion.mostrarChipNuevo)
-                      const _ChipTipo(
-                        label: 'Nuevo',
-                        color: AppColors.success,
-                      ),
+                      const _ChipTipo(label: 'Nuevo', color: AppColors.success),
                   ],
                 ),
               ],
@@ -157,15 +159,33 @@ class NotificacionTile extends StatelessWidget {
 
   // Por el momento un ícono único por tipo — sin distinción de subtipo
   (Color, IconData) _resolverIcono() => switch (notificacion.tipo) {
-    TipoNotificacion.actividad  => (AppColors.secondary,               AppIcons.actividadNotificacion),
-    TipoNotificacion.derivacion => (AppColors.brandLavenderAccessible, AppIcons.ia),
-    TipoNotificacion.mensaje    => (AppColors.brandSlateAccessible,    AppIcons.chatDots),
+    TipoNotificacion.actividad => (
+      AppColors.secondary,
+      AppIcons.actividadNotificacion,
+    ),
+    TipoNotificacion.derivacion => (
+      AppColors.brandLavenderAccessible,
+      AppIcons.ia,
+    ),
+    TipoNotificacion.mensaje => (
+      AppColors.brandSlateAccessible,
+      AppIcons.chatDots,
+    ),
+    TipoNotificacion.recordatorio => (AppColors.warning, AppIcons.time),
+    TipoNotificacion.leadPorContactar => (AppColors.info, AppIcons.phone),
+    TipoNotificacion.leadReasignado => (
+      AppColors.brandRaspberryAccessible,
+      AppIcons.reasignar,
+    ),
   };
 
   Color _colorTipo() => switch (notificacion.tipo) {
-    TipoNotificacion.actividad  => AppColors.secondary,
+    TipoNotificacion.actividad => AppColors.secondary,
     TipoNotificacion.derivacion => AppColors.brandLavenderAccessible,
-    TipoNotificacion.mensaje    => AppColors.brandSlateAccessible,
+    TipoNotificacion.mensaje => AppColors.brandSlateAccessible,
+    TipoNotificacion.recordatorio => AppColors.warning,
+    TipoNotificacion.leadPorContactar => AppColors.info,
+    TipoNotificacion.leadReasignado => AppColors.brandRaspberryAccessible,
   };
 }
 

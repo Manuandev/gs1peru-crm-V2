@@ -325,77 +325,13 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     }
 
     // Primera vez en este paso — si el solicitante marcó "Facturar al
-    // solicitante", autocompletar con sus mismos datos. Jurídica pinta
-    // RUC + Razón Social (capturados en "Información comercial", paso 1 —
-    // DatosSolicitante.ruc/razonSocial, NO los datos personales); Natural
-    // pinta el documento personal + nombres/apellidos tal cual los tiene el
-    // solicitante. Pedido de negocio, 2026-07-17.
+    // solicitante", autocompletar con sus mismos datos. Pedido de negocio,
+    // 2026-07-17. El caso "activó el switch después de haber entrado una vez
+    // a este paso" lo cubre el BlocListener del build() de más abajo — ver
+    // comentario en _aplicarDatosSolicitante.
     final solicitante = formState.solicitante;
     if (solicitante != null && solicitante.facturarAlSolicitante) {
-      final esJuridica = formState.tipoPersona == 'juridica';
-      final catalogState = context.read<CatalogsBloc>().state;
-
-      if (esJuridica) {
-        if (catalogState is CatalogsLoaded) {
-          final valoresDefecto = catalogState.valoresDefecto;
-          final factura = catalogState.comprobantes
-              .where((c) => c.id == valoresDefecto.idTipoFactura)
-              .firstOrNull;
-          if (factura != null) {
-            _comprobanteId = factura.id;
-            _comprobanteLabel = factura.nombre;
-          }
-          // Jurídica solo puede facturar con RUC — se fuerza el tipo
-          // documento para que la UI muestre RUC/Razón Social en vez de
-          // Número documento/Nombres/Apellidos (ver esRuc).
-          final ruc = catalogState.tiposDocumento
-              .where((t) => t.id == valoresDefecto.idTipoDocRuc)
-              .firstOrNull;
-          if (ruc != null) {
-            _tipoDocId = ruc.id;
-            _tipoDocLabel = ruc.abreviatura;
-          }
-        }
-        _ctrlNumDoc.text = solicitante.ruc;
-        _ctrlNombresRazon.text = solicitante.razonSocial;
-      } else {
-        if (catalogState is CatalogsLoaded) {
-          final boleta = catalogState.comprobantes
-              .where((c) => c.id == catalogState.valoresDefecto.idTipoBoleta)
-              .firstOrNull;
-          if (boleta != null) {
-            _comprobanteId = boleta.id;
-            _comprobanteLabel = boleta.nombre;
-          }
-        }
-        _tipoDocId = solicitante.tipoDocId;
-        _tipoDocLabel = solicitante.tipoDocLabel;
-        _ctrlNumDoc.text = solicitante.numDoc;
-        _ctrlNombresRazon.text = solicitante.nombres;
-        _ctrlApellidoPaterno.text = solicitante.apellidoPaterno;
-        _ctrlApellidoMaterno.text = solicitante.apellidoMaterno;
-      }
-
-      _nacionalidadId = solicitante.nacionalidadId;
-      _nacionalidadLabel = solicitante.nacionalidad;
-      _ctrlCelular.text = solicitante.celular;
-      _ctrlCorreo.text = solicitante.correo;
-
-      if (catalogState is CatalogsLoaded) {
-        _paisCelular = catalogState.paises
-            .where((p) => p.codigoTelefono == solicitante.celularCodigoTelefono)
-            .firstOrNull;
-        // DatosSolicitante no tiene "País" (solo Nacionalidad) — mismo
-        // default que la rama sin datos previos, ver más abajo. Sin esto
-        // "País" se quedaba vacío también en este camino (mismo bug real).
-        final paisDefecto = catalogState.paises
-            .where((p) => p.id == catalogState.valoresDefecto.idPais)
-            .firstOrNull;
-        if (paisDefecto != null) {
-          _paisId = paisDefecto.id;
-          _paisLabel = paisDefecto.nombre;
-        }
-      }
+      _aplicarDatosSolicitante(solicitante, formState.tipoPersona);
       return;
     }
 
@@ -446,6 +382,93 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       // vacío (ID_PAIS nunca llegaba al backend).
       final paisDefecto = catalogState.paises
           .where((p) => p.id == valoresDefecto.idPais)
+          .firstOrNull;
+      if (paisDefecto != null) {
+        _paisId = paisDefecto.id;
+        _paisLabel = paisDefecto.nombre;
+      }
+    }
+  }
+
+  // Aplica los datos del solicitante (paso 1) a los campos de este paso —
+  // Jurídica pinta RUC + Razón Social (capturados en "Información
+  // comercial", paso 1 — DatosSolicitante.ruc/razonSocial, NO los datos
+  // personales); Natural pinta el documento personal + nombres/apellidos tal
+  // cual los tiene el solicitante.
+  //
+  // Se llama en 2 momentos: (1) didChangeDependencies, la primera vez que
+  // este paso se construye con el switch ya activo, y (2) el BlocListener de
+  // build() de más abajo, cada vez que el switch pasa de apagado a encendido
+  // mientras este paso ya está vivo en el IndexedStack. Bug real detectado
+  // en vivo: antes esto solo corría en (1) — como el paso nunca se destruye
+  // dentro del wizard (IndexedStack), activar el switch DESPUÉS de haber
+  // visitado este paso una vez (aunque sea sin haber tocado nada) no
+  // reflejaba nada al volver, porque `didChangeDependencies` ya se había
+  // marcado como hecho (`_prefillDone`) y `formState.facturacion` ya existía
+  // (con los defaults de la rama "sin datos"), así que la rama de acá nunca
+  // se volvía a evaluar.
+  void _aplicarDatosSolicitante(
+    DatosSolicitante solicitante,
+    String tipoPersona,
+  ) {
+    final esJuridica = tipoPersona == 'juridica';
+    final catalogState = context.read<CatalogsBloc>().state;
+
+    if (esJuridica) {
+      if (catalogState is CatalogsLoaded) {
+        final valoresDefecto = catalogState.valoresDefecto;
+        final factura = catalogState.comprobantes
+            .where((c) => c.id == valoresDefecto.idTipoFactura)
+            .firstOrNull;
+        if (factura != null) {
+          _comprobanteId = factura.id;
+          _comprobanteLabel = factura.nombre;
+        }
+        // Jurídica solo puede facturar con RUC — se fuerza el tipo
+        // documento para que la UI muestre RUC/Razón Social en vez de
+        // Número documento/Nombres/Apellidos (ver esRuc).
+        final ruc = catalogState.tiposDocumento
+            .where((t) => t.id == valoresDefecto.idTipoDocRuc)
+            .firstOrNull;
+        if (ruc != null) {
+          _tipoDocId = ruc.id;
+          _tipoDocLabel = ruc.abreviatura;
+        }
+      }
+      _ctrlNumDoc.text = solicitante.ruc;
+      _ctrlNombresRazon.text = solicitante.razonSocial;
+    } else {
+      if (catalogState is CatalogsLoaded) {
+        final boleta = catalogState.comprobantes
+            .where((c) => c.id == catalogState.valoresDefecto.idTipoBoleta)
+            .firstOrNull;
+        if (boleta != null) {
+          _comprobanteId = boleta.id;
+          _comprobanteLabel = boleta.nombre;
+        }
+      }
+      _tipoDocId = solicitante.tipoDocId;
+      _tipoDocLabel = solicitante.tipoDocLabel;
+      _ctrlNumDoc.text = solicitante.numDoc;
+      _ctrlNombresRazon.text = solicitante.nombres;
+      _ctrlApellidoPaterno.text = solicitante.apellidoPaterno;
+      _ctrlApellidoMaterno.text = solicitante.apellidoMaterno;
+    }
+
+    _nacionalidadId = solicitante.nacionalidadId;
+    _nacionalidadLabel = solicitante.nacionalidad;
+    _ctrlCelular.text = solicitante.celular;
+    _ctrlCorreo.text = solicitante.correo;
+
+    if (catalogState is CatalogsLoaded) {
+      _paisCelular = catalogState.paises
+          .where((p) => p.codigoTelefono == solicitante.celularCodigoTelefono)
+          .firstOrNull;
+      // DatosSolicitante no tiene "País" (solo Nacionalidad) — mismo default
+      // que la rama sin datos previos. Sin esto "País" se quedaba vacío
+      // también en este camino (mismo bug real).
+      final paisDefecto = catalogState.paises
+          .where((p) => p.id == catalogState.valoresDefecto.idPais)
           .firstOrNull;
       if (paisDefecto != null) {
         _paisId = paisDefecto.id;
@@ -513,267 +536,289 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
             : paises.where((p) => p.id == _valoresDefecto.idPais).firstOrNull ??
                   paises.first);
 
-    return Stack(
-      children: [
-        Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                child: Form(
-                  key: _formKey,
-                  // Desactivada hasta el primer "Siguiente" — ver
-                  // _autovalidar / solicitud_completar_view.dart.
-                  autovalidateMode: _autovalidar
-                      ? AutovalidateMode.onUserInteraction
-                      : AutovalidateMode.disabled,
-                  child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Encabezado + Toggle ────────────────────────────
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          AppIcons.receipt,
-                          color: AppColors.primary,
-                          size: AppSizing.iconLg,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Datos de facturación',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: AppTextStyles.weightBold,
-                                ),
-                              ),
-                              Text(
-                                '¿Quién paga la inscripción?',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // ── Tooltip informativo ────────────────────────────
-                    const _TooltipFacturacion(),
-                    const SizedBox(height: AppSpacing.sm),
-
-                    // ── Formulario ─────────────────────────────────────
-                    _SeccionDatosFacturacion(
-                      habilitado: widget.modoEdicion,
-                      monedaBloqueada: true,
-                      esRuc: _esRuc,
-                      correoLabel: correoLabel,
-                      numDocMaxLength: DocumentoValidationUtils.maxLength(
-                        _tipoDocId,
-                        _valoresDefecto,
-                      ),
-                      numDocKeyboardType: DocumentoValidationUtils.keyboardType(
-                        _tipoDocId,
-                        _valoresDefecto,
-                      ),
-                      numDocInputFormatters:
-                          DocumentoValidationUtils.inputFormatters(
-                            _tipoDocId,
-                            _valoresDefecto,
-                          ),
-                      ctrlNumDoc: _ctrlNumDoc,
-                      ctrlNombresRazon: _ctrlNombresRazon,
-                      ctrlApellidoPaterno: _ctrlApellidoPaterno,
-                      ctrlApellidoMaterno: _ctrlApellidoMaterno,
-                      ctrlCelular: _ctrlCelular,
-                      ctrlCorreo: _ctrlCorreo,
-                      ctrlDireccion: _ctrlDireccion,
-                      monedas: monedas,
-                      tiposDocumento: tiposDocumento,
-                      nacionalidades: nacionalidades,
-                      paises: paises,
-                      comprobantes: comprobantes,
-                      paisCelular: paisCelular,
-                      onPaisCelularChanged: (p) {
-                        setState(() => _paisCelular = p);
-                        _sincronizarCubit();
-                      },
-                      comprobanteInicialId: _comprobanteId.isNotEmpty
-                          ? _comprobanteId
-                          : null,
-                      paisInicialId: _paisId.isNotEmpty ? _paisId : null,
-                      monedaInicialId: _monedaId.isNotEmpty ? _monedaId : null,
-                      onComprobanteChanged: (item) {
-                        setState(() {
-                          _comprobanteId = item?.id ?? '';
-                          _comprobanteLabel = item?.nombre ?? '';
-                          if (_comprobanteId == _idComprobanteFactura) {
-                            // Factura exige RUC — se fuerza el tipo documento.
-                            final ruc = tiposDocumentoTodos
-                                .where((t) => t.id == _idTipoDocRuc)
-                                .firstOrNull;
-                            _tipoDocId = ruc?.id ?? '';
-                            _tipoDocLabel = ruc?.abreviatura ?? '';
-                            _ctrlNumDoc.clear();
-                          }
-                        });
-                        _sincronizarCubit();
-                      },
-                      onPaisChanged: (item) {
-                        setState(() {
-                          _paisId = item?.id ?? '';
-                          _paisLabel = item?.nombre ?? '';
-                        });
-                        _sincronizarCubit();
-                      },
-                      onMonedaChanged: (item) {
-                        setState(() {
-                          _monedaId = item?.id ?? '';
-                          _monedaLabel = item?.nombre ?? '';
-                        });
-                        _sincronizarCubit();
-                      },
-                      tipoDocInicialId: _tipoDocId.isNotEmpty
-                          ? _tipoDocId
-                          : null,
-                      nacionalidadInicialId: _nacionalidadId.isNotEmpty
-                          ? _nacionalidadId
-                          : null,
-                      onTipoDocChanged: (item) {
-                        setState(() {
-                          _tipoDocId = item?.id ?? '';
-                          _tipoDocLabel = item?.abreviatura ?? '';
-                          _ctrlNumDoc.clear();
-                        });
-                        _sincronizarCubit();
-                      },
-                      onNacionalidadChanged: (item) {
-                        setState(() {
-                          _nacionalidadId = item?.id ?? '';
-                          _nacionalidadLabel = item?.nombre ?? '';
-                        });
-                        _sincronizarCubit();
-                      },
-                      onBuscarDocumento: _buscarDocumento,
-                    ),
-                  ],
+    // Re-sincroniza este paso con el solicitante cuando "Facturar al
+    // solicitante" pasa de apagado a encendido MIENTRAS este paso ya está
+    // vivo en el IndexedStack (volver al paso 1, activar el switch, volver
+    // acá) — ver comentario completo en _aplicarDatosSolicitante.
+    return BlocListener<SolicitudFormCubit, SolicitudFormState>(
+      listenWhen: (previous, current) =>
+          current.solicitante?.facturarAlSolicitante == true &&
+          previous.solicitante?.facturarAlSolicitante != true,
+      listener: (context, state) {
+        final solicitante = state.solicitante;
+        if (solicitante == null) return;
+        setState(
+          () => _aplicarDatosSolicitante(solicitante, state.tipoPersona),
+        );
+        _sincronizarCubit();
+      },
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
-                ),
-              ),
-            ),
-
-            // ── Resumen + Botones fijos al pie ───────────────────────────
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border(
-                  top: BorderSide(color: AppColors.border, width: 1),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ── Info: Facturar al solicitante | Participantes ──
-                  IntrinsicHeight(
-                    child: Row(
+                  child: Form(
+                    key: _formKey,
+                    // Desactivada hasta el primer "Siguiente" — ver
+                    // _autovalidar / solicitud_completar_view.dart.
+                    autovalidateMode: _autovalidar
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: _ItemResumen(
-                            icono: AppIcons.user,
-                            colorIcono: AppColors.brandForest,
-                            colorFondo: AppColors.brandForest.withOpacity(0.12),
-                            label: 'Facturar al solicitante',
-                            valor: facturarAlSolicitante ? 'Sí' : 'No',
-                          ),
-                        ),
-                        VerticalDivider(
-                          width: AppSpacing.md,
-                          thickness: 1,
-                          color: AppColors.border,
-                        ),
-                        Expanded(
-                          child:
-                              BlocBuilder<
-                                ParticipantesCubit,
-                                ParticipantesState
-                              >(
-                                builder: (context, state) => _ItemResumen(
-                                  icono: AppIcons.users,
-                                  colorIcono: AppColors.warning,
-                                  colorFondo: AppColors.warning.withOpacity(
-                                    0.12,
-                                  ),
-                                  label: 'Participantes pagantes',
-                                  valor: state.participantes
-                                      .where(
-                                        (p) =>
-                                            p.tipoParticipante ==
-                                            '1', // Pagante
-                                      )
-                                      .length
-                                      .toString(),
-                                ),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // ── Botones ────────────────────────────────────────
-                  // "Siguiente" valida y guarda (borrador) antes de
-                  // avanzar — ya no hay botón "Guardar" aparte. En modo
-                  // solo-ver (modoEdicion == false) solo se muestra
-                  // "Siguiente", sin validar ni guardar — recorrido de
-                  // lectura.
-                  widget.modoEdicion
-                      ? Row(
+                        // ── Encabezado + Toggle ────────────────────────────
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Expanded(
-                              child: CustomSecondaryButton(
-                                text: 'Atrás',
-                                icon: AppIcons.back,
-                                backgroundColor:
-                                    AppColors.brandRaspberryAccessible,
-                                onPressed: widget.onAtras,
-                              ),
+                            const Icon(
+                              AppIcons.receipt,
+                              color: AppColors.primary,
+                              size: AppSizing.iconLg,
                             ),
-                            const SizedBox(width: AppSpacing.xs),
+                            const SizedBox(width: AppSpacing.sm),
                             Expanded(
-                              child: CustomPrimaryButton(
-                                text: 'Siguiente →',
-                                isLoading: _guardando,
-                                onPressed: () => _onContinuar(paisCelular),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Datos de facturación',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: AppTextStyles.weightBold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '¿Quién paga la inscripción?',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        )
-                      : CustomPrimaryButton(
-                          text: 'Continuar →',
-                          onPressed: () => _onContinuar(paisCelular),
                         ),
-                ],
+                        const SizedBox(height: AppSpacing.sm),
+
+                        // ── Tooltip informativo ────────────────────────────
+                        const _TooltipFacturacion(),
+                        const SizedBox(height: AppSpacing.sm),
+
+                        // ── Formulario ─────────────────────────────────────
+                        _SeccionDatosFacturacion(
+                          habilitado: widget.modoEdicion,
+                          monedaBloqueada: true,
+                          esRuc: _esRuc,
+                          correoLabel: correoLabel,
+                          numDocMaxLength: DocumentoValidationUtils.maxLength(
+                            _tipoDocId,
+                            _valoresDefecto,
+                          ),
+                          numDocKeyboardType:
+                              DocumentoValidationUtils.keyboardType(
+                                _tipoDocId,
+                                _valoresDefecto,
+                              ),
+                          numDocInputFormatters:
+                              DocumentoValidationUtils.inputFormatters(
+                                _tipoDocId,
+                                _valoresDefecto,
+                              ),
+                          ctrlNumDoc: _ctrlNumDoc,
+                          ctrlNombresRazon: _ctrlNombresRazon,
+                          ctrlApellidoPaterno: _ctrlApellidoPaterno,
+                          ctrlApellidoMaterno: _ctrlApellidoMaterno,
+                          ctrlCelular: _ctrlCelular,
+                          ctrlCorreo: _ctrlCorreo,
+                          ctrlDireccion: _ctrlDireccion,
+                          monedas: monedas,
+                          tiposDocumento: tiposDocumento,
+                          nacionalidades: nacionalidades,
+                          paises: paises,
+                          comprobantes: comprobantes,
+                          paisCelular: paisCelular,
+                          onPaisCelularChanged: (p) {
+                            setState(() => _paisCelular = p);
+                            _sincronizarCubit();
+                          },
+                          comprobanteInicialId: _comprobanteId.isNotEmpty
+                              ? _comprobanteId
+                              : null,
+                          paisInicialId: _paisId.isNotEmpty ? _paisId : null,
+                          monedaInicialId: _monedaId.isNotEmpty
+                              ? _monedaId
+                              : null,
+                          onComprobanteChanged: (item) {
+                            setState(() {
+                              _comprobanteId = item?.id ?? '';
+                              _comprobanteLabel = item?.nombre ?? '';
+                              if (_comprobanteId == _idComprobanteFactura) {
+                                // Factura exige RUC — se fuerza el tipo documento.
+                                final ruc = tiposDocumentoTodos
+                                    .where((t) => t.id == _idTipoDocRuc)
+                                    .firstOrNull;
+                                _tipoDocId = ruc?.id ?? '';
+                                _tipoDocLabel = ruc?.abreviatura ?? '';
+                                _ctrlNumDoc.clear();
+                              }
+                            });
+                            _sincronizarCubit();
+                          },
+                          onPaisChanged: (item) {
+                            setState(() {
+                              _paisId = item?.id ?? '';
+                              _paisLabel = item?.nombre ?? '';
+                            });
+                            _sincronizarCubit();
+                          },
+                          onMonedaChanged: (item) {
+                            setState(() {
+                              _monedaId = item?.id ?? '';
+                              _monedaLabel = item?.nombre ?? '';
+                            });
+                            _sincronizarCubit();
+                          },
+                          tipoDocInicialId: _tipoDocId.isNotEmpty
+                              ? _tipoDocId
+                              : null,
+                          nacionalidadInicialId: _nacionalidadId.isNotEmpty
+                              ? _nacionalidadId
+                              : null,
+                          onTipoDocChanged: (item) {
+                            setState(() {
+                              _tipoDocId = item?.id ?? '';
+                              _tipoDocLabel = item?.abreviatura ?? '';
+                              _ctrlNumDoc.clear();
+                            });
+                            _sincronizarCubit();
+                          },
+                          onNacionalidadChanged: (item) {
+                            setState(() {
+                              _nacionalidadId = item?.id ?? '';
+                              _nacionalidadLabel = item?.nombre ?? '';
+                            });
+                            _sincronizarCubit();
+                          },
+                          onBuscarDocumento: _buscarDocumento,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        if (_buscandoDocumento)
-          const AppLoadingOverlay(message: 'Buscando datos del documento...'),
-        SolicitudProgresoOverlay(progreso: _progreso),
-      ],
+
+              // ── Resumen + Botones fijos al pie ───────────────────────────
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(
+                    top: BorderSide(color: AppColors.border, width: 1),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ── Info: Facturar al solicitante | Participantes ──
+                    IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _ItemResumen(
+                              icono: AppIcons.user,
+                              colorIcono: AppColors.brandForest,
+                              colorFondo: AppColors.brandForest.withOpacity(
+                                0.12,
+                              ),
+                              label: 'Facturar al solicitante',
+                              valor: facturarAlSolicitante ? 'Sí' : 'No',
+                            ),
+                          ),
+                          VerticalDivider(
+                            width: AppSpacing.md,
+                            thickness: 1,
+                            color: AppColors.border,
+                          ),
+                          Expanded(
+                            child:
+                                BlocBuilder<
+                                  ParticipantesCubit,
+                                  ParticipantesState
+                                >(
+                                  builder: (context, state) => _ItemResumen(
+                                    icono: AppIcons.users,
+                                    colorIcono: AppColors.warning,
+                                    colorFondo: AppColors.warning.withOpacity(
+                                      0.12,
+                                    ),
+                                    label: 'Participantes pagantes',
+                                    valor: state.participantes
+                                        .where(
+                                          (p) =>
+                                              p.tipoParticipante ==
+                                              '1', // Pagante
+                                        )
+                                        .length
+                                        .toString(),
+                                  ),
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+
+                    // ── Botones ────────────────────────────────────────
+                    // "Siguiente" valida y guarda (borrador) antes de
+                    // avanzar — ya no hay botón "Guardar" aparte. En modo
+                    // solo-ver (modoEdicion == false) solo se muestra
+                    // "Siguiente", sin validar ni guardar — recorrido de
+                    // lectura.
+                    widget.modoEdicion
+                        ? Row(
+                            children: [
+                              Expanded(
+                                child: CustomSecondaryButton(
+                                  text: 'Atrás',
+                                  icon: AppIcons.back,
+                                  backgroundColor:
+                                      AppColors.brandRaspberryAccessible,
+                                  onPressed: widget.onAtras,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Expanded(
+                                child: CustomPrimaryButton(
+                                  text: 'Siguiente →',
+                                  isLoading: _guardando,
+                                  onPressed: () => _onContinuar(paisCelular),
+                                ),
+                              ),
+                            ],
+                          )
+                        : CustomPrimaryButton(
+                            text: 'Continuar →',
+                            onPressed: () => _onContinuar(paisCelular),
+                          ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (_buscandoDocumento)
+            const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+          SolicitudProgresoOverlay(progreso: _progreso),
+        ],
+      ),
     );
   }
 }
@@ -996,8 +1041,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.comprobanteInicialId,
                 onChanged: widget.onComprobanteChanged,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1008,8 +1052,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.paisInicialId,
                 onChanged: widget.onPaisChanged,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1020,8 +1063,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado && !widget.monedaBloqueada,
                 initialValue: widget.monedaInicialId,
                 onChanged: widget.onMonedaChanged,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
           ],
@@ -1039,8 +1081,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.tipoDocInicialId,
                 onChanged: widget.onTipoDocChanged,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1055,9 +1096,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => widget.onBuscarDocumento?.call(),
                 enabled: widget.habilitado,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Requerido'
-                    : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Requerido' : null,
               ),
             ),
           ],
@@ -1074,8 +1114,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.nacionalidadInicialId,
                 onChanged: widget.onNacionalidadChanged,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1086,9 +1125,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Requerido'
-                    : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Requerido' : null,
               ),
             ),
           ],
@@ -1106,9 +1144,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                   enabled: widget.habilitado,
                   isUpperCase: true,
                   textCapitalization: TextCapitalization.words,
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Requerido'
-                      : null,
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Requerido' : null,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -1138,9 +1175,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 paises: widget.paises,
                 paisSeleccionado: widget.paisCelular,
                 onPaisChanged: widget.onPaisCelularChanged,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Requerido'
-                    : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Requerido' : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1163,8 +1199,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
           controller: widget.ctrlDireccion,
           enabled: widget.habilitado,
           textCapitalization: TextCapitalization.sentences,
-          validator: (v) =>
-              v == null || v.trim().isEmpty ? 'Requerido' : null,
+          validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
       ],
     );

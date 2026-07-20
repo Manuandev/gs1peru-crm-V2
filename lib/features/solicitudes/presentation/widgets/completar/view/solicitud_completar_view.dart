@@ -632,6 +632,36 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         '';
   }
 
+  // Activar el switch agrega un participante más (el propio solicitante) —
+  // mismo candado que ya usa el botón "Nuevo" del paso 2
+  // (solicitud_participantes_view.dart, `_BotonSeccionSmall` deshabilitado
+  // al llegar al máximo): si la solicitud viene de una negociación con
+  // cantidad ya definida (`cantidadEsperada`) y ya se alcanzó ese máximo, no
+  // se deja activar el switch — se avisa por qué en vez de dejar que se
+  // entere recién al presionar "Generar solicitud" en Resumen. Apagarlo
+  // (quitar al solicitante de la lista) siempre está permitido, nunca se
+  // bloquea esa dirección.
+  void _onSolicitanteParticipanteChanged(bool v) {
+    if (v) {
+      final cantidadEsperada = context
+          .read<SolicitudFormCubit>()
+          .state
+          .cantidadEsperada;
+      final actuales = context.read<ParticipantesCubit>().state.participantes;
+      if (cantidadEsperada != null && actuales.length >= cantidadEsperada) {
+        AppSnackBar.error(
+          context,
+          'Ya se alcanzó el máximo de $cantidadEsperada participante(s) — '
+          'quita uno en el paso 2 antes de marcar al solicitante como '
+          'participante.',
+        );
+        return;
+      }
+    }
+    setState(() => _solicitanteParticipante = v);
+    _sincronizarCubit();
+  }
+
   // null si esta solicitud no viene de una negociación con precio ya
   // definido — mismo cálculo que usa "Nuevo participante"
   // (solicitud_participantes_view.dart._importeFijo, ver el comentario ahí
@@ -868,7 +898,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                           children: [
                             Expanded(
                               child: BotonAdjuntar(
-                                label: 'Adjuntar voucher',
+                                label: 'Voucher',
                                 archivo: formState.archivoVoucher,
                                 nombreExistente: _archivoVoucherExistente,
                                 habilitado: widget.modoEdicion,
@@ -879,7 +909,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: BotonAdjuntar(
-                                label: 'Adjuntar O/C',
+                                label: 'OC',
                                 archivo: formState.archivoOC,
                                 nombreExistente: _archivoOCExistente,
                                 habilitado: widget.modoEdicion,
@@ -955,10 +985,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                         SeccionSwitches(
                           solicitanteParticipante: _solicitanteParticipante,
                           facturarAlSolicitante: _facturarAlSolicitante,
-                          onSolicitanteChanged: (v) {
-                            setState(() => _solicitanteParticipante = v);
-                            _sincronizarCubit();
-                          },
+                          onSolicitanteChanged:
+                              _onSolicitanteParticipanteChanged,
                           onFacturarChanged: (v) {
                             setState(() => _facturarAlSolicitante = v);
                             _sincronizarCubit();

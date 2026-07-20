@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class NegociacionCard extends StatelessWidget {
   final Negociacion negociacion;
@@ -20,55 +19,6 @@ class NegociacionCard extends StatelessWidget {
     required this.onGenerarSolicitud,
     this.onEdited,
   });
-
-  // Solicitud "en blanco" con los datos disponibles en la negociación —
-  // mismo patrón que ContactoNegociacionCard._generarSolicitud, usado tanto
-  // para editar una solicitud ya creada (idSolicitud = NUMSOL) como para
-  // verla de solo lectura.
-  Solicitud _solicitudDesdeNegociacion() => Solicitud(
-    idSolicitud: negociacion.numSol,
-    nombre: negociacion.nombres,
-    apellidoPaterno: negociacion.apellidoPaterno,
-    apellidoMaterno: negociacion.apellidoMaterno,
-    nombreEmpresa: negociacion.nombreEmpresa,
-    cargo: '',
-    correo: negociacion.correo,
-    telefono: negociacion.telefonoCompleto,
-    tipoPersona: '',
-    idCondicionPago: '',
-    condicionPago: '',
-    monto: negociacion.precio,
-    fechaCreacion: negociacion.fechaHoraCreacion,
-    idOportunidad: negociacion.idOportunidad,
-    oportunidad: negociacion.nombreOportunidad,
-    idCanal: negociacion.idCanal,
-    canal: negociacion.descripcionCanal,
-    idEstado: negociacion.idEstadoSol,
-    estado: '',
-    ibValidado: false,
-    asesor: '',
-    nombreAsesor: '',
-    idLead: negociacion.idLead.toString(),
-  );
-
-  void _editarSolicitud(BuildContext context) {
-    context.goToFichaCompletarSolicitud(
-      solicitud: _solicitudDesdeNegociacion(),
-      modoEdicion: true,
-    );
-  }
-
-  void _verSolicitud(BuildContext context) {
-    context.goToDetalleSolicitud(solicitud: _solicitudDesdeNegociacion());
-  }
-
-  // Ya existe una solicitud para esta negociación — ya no se puede editar,
-  // pero se reusa la misma pantalla de Editar negociación en modo solo
-  // lectura (campos deshabilitados, sin barra de Guardar/Cancelar) en vez
-  // de mandar a otra pantalla distinta.
-  void _verNegociacion(BuildContext context) {
-    context.goToEditarLead(idLead: negociacion.idLead, soloLectura: true);
-  }
 
   static const TextStyle _estiloMicro = TextStyle(
     fontSize: 9,
@@ -93,11 +43,30 @@ class NegociacionCard extends StatelessWidget {
     onEdited?.call();
   }
 
+  // Cerrada = estado o estado padre '04' — ya no se puede editar la
+  // negociación en ningún caso (mismo criterio que ContactoNegociacionCard,
+  // Seguimiento).
+  bool get _cerrada =>
+      negociacion.idEstado == '04' || negociacion.idEstadoPadre == '04';
+
+  // "Ganada" = negociación cerrada en el sub-estado '05' — mismo código de
+  // negocio que NegociacionesTab/ContactoNegociacionCard.
+  bool get _esGanada =>
+      negociacion.idEstado == '05' && negociacion.idEstadoPadre == '04';
+
+  // Mutuamente excluyentes: editar solo si no está cerrada; generar
+  // solicitud solo si está Ganada y aún no tiene una. Cerrada-pero-no-Ganada
+  // (perdida/desistió) y Ganada-con-solicitud no muestran ningún botón acá
+  // — esta última se gestiona desde Solicitudes.
+  bool get _puedeEditar => negociacion.idLead != 0 && !_cerrada;
+  bool get _puedeGenerarSolicitud => _esGanada && !negociacion.tieneSolicitud;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final esSeleccionado = negociacion.idLead == leadId;
-    final mostrarBotones = negociacion.idEstadoPadre != '04';
+    final puedeEditar = _puedeEditar;
+    final puedeGenerarSolicitud = _puedeGenerarSolicitud;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.xs),
@@ -218,65 +187,44 @@ class NegociacionCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Sub-columna derecha: botones apilados
-                  if (mostrarBotones) ...[
+                  // Sub-columna derecha: un solo botón (o ninguno) — editar
+                  // y generar solicitud son mutuamente excluyentes.
+                  if (puedeEditar || puedeGenerarSolicitud) ...[
                     const SizedBox(width: AppSpacing.xxs),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          height: 26,
-                          child: CustomOutlinedButton(
-                            text: switch (negociacion.accionSolicitud) {
-                              SolicitudAccion.generar => 'Generar',
-                              SolicitudAccion.editar => 'Editar',
-                              SolicitudAccion.ver => 'Ver',
-                            },
-                            onPressed: switch (negociacion.accionSolicitud) {
-                              SolicitudAccion.generar => onGenerarSolicitud,
-                              SolicitudAccion.editar => () => _editarSolicitud(
-                                context,
+                    SizedBox(
+                      width: 80,
+                      height: 26,
+                      child: puedeGenerarSolicitud
+                          ? CustomOutlinedButton(
+                              text: 'Generar',
+                              onPressed: onGenerarSolicitud,
+                              // Sin precio total definido en la negociación
+                              // no hay cantidad/importe/moneda que bloquear
+                              // en la solicitud — no se puede generar todavía.
+                              isEnabled: negociacion.precio > 0,
+                              height: 26,
+                              textStyle: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
                               ),
-                              SolicitudAccion.ver => () => _verSolicitud(
-                                context,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
                               ),
-                            },
-                            // Sin precio total definido en la negociación no
-                            // hay cantidad/importe/moneda que bloquear en la
-                            // solicitud — no se puede generar todavía.
-                            isEnabled:
-                                negociacion.accionSolicitud !=
-                                    SolicitudAccion.generar ||
-                                negociacion.precio > 0,
-                            height: 26,
-                            textStyle: const TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
+                              borderColor: AppColors.border,
+                              borderWidth: AppSizing.hairline,
+                            )
+                          : CustomPrimaryButton(
+                              text: 'Editar',
+                              onPressed: () => _irAEditar(),
+                              height: 26,
+                              textStyle: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            borderColor: AppColors.border,
-                            borderWidth: AppSizing.hairline,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        SizedBox(
-                          width: 80,
-                          height: 26,
-                          child: CustomPrimaryButton(
-                            text: negociacion.tieneSolicitud ? 'Ver' : 'Editar',
-                            onPressed: negociacion.tieneSolicitud
-                                ? () => _verNegociacion(context)
-                                : () => _irAEditar(),
-                            height: 26,
-                            textStyle: const TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ],

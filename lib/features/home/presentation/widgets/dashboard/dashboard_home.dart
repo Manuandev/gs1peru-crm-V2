@@ -21,6 +21,7 @@ class DashboardCard extends StatelessWidget {
   final String? descripcion;
   final int? badge;
   final VoidCallback? onTap;
+  final Color? color;
 
   const DashboardCard({
     super.key,
@@ -29,11 +30,12 @@ class DashboardCard extends StatelessWidget {
     this.descripcion,
     this.badge,
     this.onTap,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = ColorUtils.fromName(label);
+    final color = this.color ?? ColorUtils.fromName(label);
     final textColor = ColorUtils.textColorOn(color);
 
     return GestureDetector(

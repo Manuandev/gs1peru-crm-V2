@@ -1,5 +1,7 @@
 // lib/core/constants/app_menu_items.dart
 
+import 'package:flutter/material.dart';
+
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
 
@@ -74,6 +76,7 @@ class AppMenuItems {
     int? conversacionesBadge,
     int? seguimientosBadge,
     int? cobranzaBadge,
+    Color? cobranzaColor,
   }) {
     return [
       home,
@@ -114,6 +117,7 @@ class AppMenuItems {
         route: AppRoutes.cobranza,
         badge: cobranzaBadge,
         descripcion: 'Controla pagos y da seguimiento',
+        color: cobranzaColor,
       ),
     ];
   }

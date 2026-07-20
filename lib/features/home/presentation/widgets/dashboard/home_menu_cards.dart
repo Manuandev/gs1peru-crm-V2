@@ -1,6 +1,7 @@
 // lib/features/home/presentation/widgets/dashboard/home_menu_cards.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -33,10 +34,16 @@ class _FlexCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final catalogState = context.watch<CatalogsBloc>().state;
+    final cobranzaColor = catalogState is CatalogsLoaded
+        ? AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoGanado)
+        : null;
+
     final items = AppMenuItems.withBadges(
       conversacionesBadge: state.totConversaciones,
       seguimientosBadge: state.totSeguimientos,
       cobranzaBadge: state.totCobranza,
+      cobranzaColor: cobranzaColor,
     );
 
     // Excluir Inicio y Contactos — el dashboard muestra solo los 4 módulos operativos
@@ -66,6 +73,7 @@ class _FlexCards extends StatelessWidget {
                     icon: rows[r][c].icon,
                     descripcion: rows[r][c].descripcion,
                     badge: rows[r][c].badge,
+                    color: rows[r][c].color,
                     onTap: () {
                       final route = rows[r][c].route;
                       if (route != null) context.clearAndPush(route);

@@ -28,6 +28,13 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
   bool get _esGanada =>
       negociacion.idEstado == '05' && negociacion.idEstadoPadre == '04';
 
+  // Cerrada = estado o estado padre '04' — ya no se puede editar la
+  // negociación en ningún caso (Ganada incluida: de ahí en más se gestiona
+  // con el botón "Generar solicitud", no editando). Mismo criterio que
+  // NegociacionCard (Conversaciones).
+  bool get _cerrada =>
+      negociacion.idEstado == '04' || negociacion.idEstadoPadre == '04';
+
   String _simbolo(BuildContext context) {
     final state = context.watch<CatalogsBloc>().state;
     if (state is! CatalogsLoaded) return 'S/';
@@ -130,10 +137,11 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
     );
     final simbolo = _simbolo(context);
 
-    // Con solicitud ya generada, la negociación deja de ser editable — el
-    // tap ya no navega a ningún lado (la info del lead ya se ve en la
-    // pestaña Información de esta misma pantalla).
-    final puedeEditar = negociacion.idLead != 0 && !negociacion.tieneSolicitud;
+    // Cerrada (Ganada incluida) ya no se puede editar — el tap ya no navega
+    // a ningún lado. Ganada sin solicitud ofrece "Generar solicitud" más
+    // abajo en su lugar; Ganada con solicitud ya no ofrece ningún botón acá
+    // (se gestiona desde Solicitudes).
+    final puedeEditar = negociacion.idLead != 0 && !_cerrada;
 
     return Stack(
       children: [
@@ -245,7 +253,8 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
                                         label: 'Precio base',
                                         valor: NumberFormatUtils.formatMoneda(
                                           simbolo,
-                                          negociacion.precioBase,
+                                          negociacion.precioBase *
+                                              negociacion.cantidad,
                                         ),
                                       ),
                                       _FilaValor(

@@ -4,20 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/lead/presentation/cubit/historial/historial_lead_cubit.dart';
-import 'package:app_crm/features/lead/presentation/cubit/historial/historial_lead_state.dart';
 
 class HistorialTab extends StatefulWidget {
-  // Comentarios de todos los leads del número (SP 'LCG') — usado en Contacto.
-  final int? idNumero;
-  // Seguimiento de un lead puntual (SP 'LH') — usado en el chat.
-  final int? idLead;
+  // Seguimiento de todos los leads activos del número (SP 'LHN') — mismo
+  // llamado en Seguimiento (ContactoDetalleView) y Conversaciones
+  // (ChatLeadPanel).
+  final int idNumero;
 
-  const HistorialTab({super.key, this.idNumero, this.idLead})
-    : assert(
-        idNumero != null || idLead != null,
-        'HistorialTab requiere idNumero o idLead',
-      );
+  const HistorialTab({super.key, required this.idNumero});
 
   @override
   State<HistorialTab> createState() => _HistorialTabState();
@@ -38,13 +32,9 @@ class _HistorialTabState extends State<HistorialTab>
   }
 
   void _cargar() {
-    final cubit = context.read<HistorialLeadCubit>();
-    final idLead = widget.idLead;
-    if (idLead != null) {
-      cubit.cargarHistorialSeguimiento(idLead);
-    } else {
-      cubit.cargarHistorial(widget.idNumero!);
-    }
+    context.read<HistorialLeadCubit>().cargarHistorialPorNumero(
+      widget.idNumero,
+    );
   }
 
   List<HistorialComentario> _aplicarFiltro(List<HistorialComentario> eventos) {

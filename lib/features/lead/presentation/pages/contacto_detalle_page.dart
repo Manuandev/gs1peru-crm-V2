@@ -35,8 +35,8 @@ class ContactoDetallePage extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => HistorialLeadCubit(
-            obtenerHistorialUseCase:
-                GetHistorialComentarios(context.read<LeadRepository>()),
+            obtenerHistorialPorNumeroUseCase:
+                GetHistorialSeguimientoPorNumero(context.read<LeadRepository>()),
           ),
         ),
       ],

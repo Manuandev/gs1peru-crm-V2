@@ -112,27 +112,14 @@ class LeadRemoteDatasource {
     };
   }
 
-  Future<List<HistorialComentarioModel>> obtenerHistorialComentarios(
+  // Task 'LHN' — historial de seguimiento de todos los leads activos del
+  // mismo número. Usado por el tab Historial en Seguimiento
+  // (ContactoDetalleView) y en Conversaciones (ChatLeadPanel) — mismo
+  // llamado en los dos.
+  Future<List<HistorialComentarioModel>> obtenerHistorialSeguimientoPorNumero(
     int idNumero,
   ) async {
-    final String body = '$idNumero${sep}LCG';
-
-    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
-
-    return switch (result) {
-      ApiSuccess(:final data) => HistorialComentarioModel.parseList(data),
-      ApiEmpty() => [],
-      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
-      ApiError(:final message) => throw AppException(message),
-    };
-  }
-
-  // Task 'LH' — historial de seguimiento de un lead puntual (no de todos los
-  // leads del número, como 'LCG'). Usado por el tab Historial del chat.
-  Future<List<HistorialComentarioModel>> obtenerHistorialSeguimiento(
-    int idLead,
-  ) async {
-    final String body = '$idLead${sep}LH';
+    final String body = '$idNumero${sep}LHN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 

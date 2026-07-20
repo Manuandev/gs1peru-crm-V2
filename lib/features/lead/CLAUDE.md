@@ -44,8 +44,20 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 
 ## SPs que consume
 - `[CRM].[SP_LeadsLst]` → lista de leads por tipo ('PO' o 'PA') y agente/moderador
-- Task `'LCG'` (`obtenerHistorialComentarios(idNumero)`) → comentarios de **todos los leads** del mismo número. Usado por `HistorialTab` en `ContactoDetalleView` (`HistorialTab(idNumero: ...)`)
-- Task `'LH'` (`obtenerHistorialSeguimiento(idLead)`) → seguimiento de **un lead puntual** (no agrupa por número). Usado por `HistorialTab` en `ChatLeadPanel` (`HistorialTab(idLead: ...)`). Trae menos columnas que 'LCG' (sin ícono/color de actividad ni usuario nominal) y no distingue `TipoActor.cliente` — ambos SPs comparten la entidad `HistorialComentario` y el cubit `HistorialLeadCubit`, que expone `cargarHistorial(idNumero)` y `cargarHistorialSeguimiento(idLead)` por separado
+- Task `'LHN'` (`obtenerHistorialSeguimientoPorNumero(idNumero)`) → seguimiento de **todos los leads
+  activos del mismo número** (`T_NUMERO_LEAD`/`T_LEAD` con `IB_ACTIVO=1`). Es el único llamado que usa
+  `HistorialTab` (`presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart`, único parámetro
+  `idNumero`, requerido) — mismo call en `ContactoDetalleView` (`HistorialTab(idNumero:
+  lead.idNumero)`, Seguimiento) y en `ChatLeadPanel` (`HistorialTab(idNumero: widget.idNumero)`,
+  Conversaciones). Unificado 2026-07-20 a pedido explícito de negocio: "ambos son lo mismo" — antes
+  Conversaciones usaba `'LH'` (por lead puntual) y Seguimiento pasó primero por `'LCG'` y luego por
+  `'LH'` también, hasta terminar acá los dos. `'LH'` (por lead) y `'LCG'` (por número, agrupando
+  `T_LEAD_COMENTARIO` con ícono/color de actividad y usuario nominal) se eliminaron por completo del
+  cliente — sin caller, no había motivo para mantenerlos. El SP real conserva ambos tasks (`'LH'` y
+  `'LCG'`) por si se vuelven a necesitar del lado del backend, pero el cliente Flutter ya no los
+  invoca.
+- `HistorialComentarioModel.parseListSeguimiento`/`fromRawStringSeguimiento` parsean la respuesta de
+  `'LHN'` (7 campos posicionales — ver comentario en el modelo).
 
 ## Dependencias externas
 - `LeadRepository` (RepositoryProvider global)

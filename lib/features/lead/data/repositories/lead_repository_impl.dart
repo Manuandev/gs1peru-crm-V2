@@ -28,12 +28,7 @@ class LeadRepositoryImpl implements LeadRepository {
       _remote.obtenerNegociaciones(idNumero);
 
   @override
-  Future<List<HistorialComentarioModel>> obtenerHistorialComentarios(
+  Future<List<HistorialComentarioModel>> obtenerHistorialSeguimientoPorNumero(
     int idNumero,
-  ) => _remote.obtenerHistorialComentarios(idNumero);
-
-  @override
-  Future<List<HistorialComentarioModel>> obtenerHistorialSeguimiento(
-    int idLead,
-  ) => _remote.obtenerHistorialSeguimiento(idLead);
+  ) => _remote.obtenerHistorialSeguimientoPorNumero(idNumero);
 }

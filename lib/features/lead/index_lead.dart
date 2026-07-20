@@ -27,8 +27,7 @@ export 'domain/usecases/get_leads_usecase.dart';
 export 'domain/usecases/get_lead_detalle_usecase.dart';
 export 'domain/usecases/get_lead_detalle_por_numero_usecase.dart';
 export 'domain/usecases/get_negociaciones_lead.dart';
-export 'domain/usecases/get_historial_comentarios.dart';
-export 'domain/usecases/get_historial_seguimiento.dart';
+export 'domain/usecases/get_historial_seguimiento_por_numero.dart';
 
 export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';

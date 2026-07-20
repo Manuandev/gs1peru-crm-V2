@@ -78,8 +78,18 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
       // NegociacionesCubit.cargarNegociaciones necesita idNumero, que solo se
       // conoce una vez que InfoLeadCubit resuelve el lead — por eso se
       // dispara acá y no en initState (ahí solo se tiene idLead).
+      //
+      // idLead == 0 es el placeholder en blanco que deja
+      // prepararNuevaNegociacion() (ContactoNegociacionesTab._crearNegociacion)
+      // para sembrar el form de "Crear negociación" en el mismo cubit
+      // compartido — no es un lead real cargado. Sin este filtro, cada tap en
+      // "+ Crear negociación" pisaba _ultimoLead con datos en blanco y
+      // disparaba una recarga innecesaria de NegociacionesCubit (misma
+      // idNumero, ya correcta), que de puro async pasaba por
+      // NegociacionesLoading y hacía parpadear la lista a "Sin negociaciones"
+      // un instante antes de navegar a Editar.
       listener: (context, state) {
-        if (state is InfoLeadSuccess) {
+        if (state is InfoLeadSuccess && state.negociacion.idLead != 0) {
           _ultimoLead = state.negociacion;
           context.read<NegociacionesCubit>().cargarNegociaciones(
             state.negociacion.idNumero,
@@ -103,10 +113,12 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
             ),
           );
         }
-        // InfoLeadLoading de un refresh (state no es Success) con datos
-        // previos ya cargados: se sigue mostrando _ultimoLead en vez del
-        // skeleton — ver comentario del campo.
-        final lead = state is InfoLeadSuccess
+        // InfoLeadLoading de un refresh (state no es Success), o el
+        // placeholder en blanco de prepararNuevaNegociacion() (idLead == 0):
+        // en ambos casos se sigue mostrando _ultimoLead en vez del skeleton
+        // o de datos en blanco — ver comentario del listener de arriba.
+        final lead =
+            (state is InfoLeadSuccess && state.negociacion.idLead != 0)
             ? state.negociacion
             : _ultimoLead;
         if (lead == null) {

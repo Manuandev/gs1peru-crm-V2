@@ -47,6 +47,10 @@ class DrawerItemModel {
   /// Descripción corta del módulo (usada en las tarjetas del dashboard)
   final String? descripcion;
 
+  /// Color custom del ítem (usado en las tarjetas del dashboard).
+  /// Si es null, `DashboardCard` usa `ColorUtils.fromName(label)`.
+  final Color? color;
+
   const DrawerItemModel({
     required this.id,
     required this.icon,
@@ -56,6 +60,7 @@ class DrawerItemModel {
     this.showDividerAfter = false,
     this.badge,
     this.descripcion,
+    this.color,
   }) : assert(
           route != null || onTap != null,
           'DrawerItemModel necesita route o onTap',

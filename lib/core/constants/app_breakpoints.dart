@@ -154,6 +154,10 @@ class AppSizing {
 
   static const double iconNav2 = 26.0;
 
+  static const double iconNav3 = 28.0;
+
+  static const double iconNav4 = 30.0;
+
   /// Ícono grande: 32px — iconos en headers y estados vacíos
   static const double iconLg = 32.0;
 

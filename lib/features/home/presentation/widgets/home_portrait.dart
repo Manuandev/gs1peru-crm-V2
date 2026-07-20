@@ -103,10 +103,10 @@ class HomePortrait extends StatelessWidget {
                                 fontWeight: AppTextStyles.weightBold,
                               ),
                             ),
-                            CustomTextButton(
-                              text: 'Ver todos',
-                              onPressed: () {},
-                            ),
+                            // CustomTextButton(
+                            //   text: 'Ver todos',
+                            //   onPressed: () {},
+                            // ),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.sm),

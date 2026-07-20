@@ -49,6 +49,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onSessionRestored(AuthSessionRestored event, Emitter<AuthState> emit) {
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
     SignalRService.instance.connect();
+    // Para probar FCM aislado (sin SignalR), comentar la línea de arriba.
   }
 
   /// Splash no encontró sesión → marcar como no autenticado
@@ -65,6 +66,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   void _onLoginSuccess(AuthLoginSuccess event, Emitter<AuthState> emit) {
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
     SignalRService.instance.connect();
+    // Para probar FCM aislado (sin SignalR), comentar la línea de arriba.
   }
 
   /// Logout solicitado → limpiar sesión → marcar como no autenticado

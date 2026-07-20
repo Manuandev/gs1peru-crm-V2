@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:flutter/foundation.dart';
 
 class FirebaseNotificationService {
   FirebaseNotificationService._();
@@ -92,6 +93,15 @@ class FirebaseNotificationService {
   }
 
   void _procesarMensaje(RemoteMessage message, {bool navegarAlAbrir = false}) {
+    // TEMPORAL — prueba de FCM sin SignalR. Quitar junto con el otro TEMPORAL
+    // de auth_bloc.dart cuando se confirme el diagnóstico.
+    if (kDebugMode) {
+      debugPrint(
+        '[FCM] onMessage recibido — data: ${message.data}, '
+        'notification.body: ${message.notification?.body}',
+      );
+    }
+
     final cuerpo =
         (message.notification?.body ?? message.data['cuerpo'] ?? '')
             .replaceAll('[', '')
@@ -130,13 +140,27 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final parsed = WebSocketMessageParser.parse(body);
   if (parsed == null) return;
 
-  switch (parsed.process) {
-    case 'NUEVO_LEAD':
-      await LocalNotificationService.instance.showLeadNuevoNotification(parsed);
-    case 'NUEVO_LEAD_BOT':
-      await LocalNotificationService.instance.showLeadNuevoBotNotification(parsed);
-    case 'MENSAJE_WHATSAPP':
-      await LocalNotificationService.instance.showChatNotification(parsed);
+  // Nunca dejar que una excepción aborte el isolate de background en
+  // silencio — sin este try/catch, un fallo acá (parseo del payload,
+  // plugin de notificaciones, SQLite) desaparece sin ningún log y la
+  // notificación simplemente nunca aparece.
+  try {
+    switch (parsed.process) {
+      case 'NUEVO_LEAD':
+        await LocalNotificationService.instance.showLeadNuevoNotification(
+          parsed,
+        );
+      case 'NUEVO_LEAD_BOT':
+        await LocalNotificationService.instance.showLeadNuevoBotNotification(
+          parsed,
+        );
+      case 'MENSAJE_WHATSAPP':
+        await LocalNotificationService.instance.showChatNotification(parsed);
+    }
+  } catch (e, st) {
+    debugPrint(
+      '[FCM background] Error mostrando notificación (${parsed.process}): $e\n$st',
+    );
   }
 }
 

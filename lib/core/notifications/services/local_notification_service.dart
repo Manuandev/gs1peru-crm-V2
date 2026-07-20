@@ -2,6 +2,7 @@
 
 import 'package:app_crm/config/router/app_routes.dart';
 import 'package:app_crm/index_dependencies.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
@@ -179,6 +180,13 @@ class LocalNotificationService {
   /// el contador quedaba "pegado" (ej. seguía en "11 mensajes" después de
   /// descartarla). Se arranca de cero cuando no hay una notificación activa
   /// con ese id.
+  ///
+  /// Cada paso está protegido por separado: en el isolate de background que
+  /// crea FCM con la app cerrada, `getActiveNotifications()` o la lectura de
+  /// SQLite pueden fallar (plugin/canal de plataforma sin registrar del todo
+  /// en ese isolate) — si eso ocurre, el historial se pierde pero la
+  /// notificación del mensaje nuevo debe mostrarse igual, nunca abortar en
+  /// silencio antes de llegar a `showWhatsApp`.
   Future<List<String>> _agregarMensajePersistido({
     required int idNumero,
     required String mensaje,
@@ -186,17 +194,35 @@ class LocalNotificationService {
     final db = LocalDatabase();
     final key = '$_settingsKeyPrefix$idNumero';
 
-    final activas = await flutterLocalNotificationsPlugin.getActiveNotifications();
-    final sigueActiva = activas.any((n) => n.id == idNumero);
+    bool sigueActiva = false;
+    try {
+      final activas = await flutterLocalNotificationsPlugin
+          .getActiveNotifications();
+      sigueActiva = activas.any((n) => n.id == idNumero);
+    } catch (e) {
+      debugPrint('[LocalNotificationService] getActiveNotifications falló: $e');
+    }
 
-    final raw = sigueActiva ? await db.getSetting(key) : null;
+    String? raw;
+    if (sigueActiva) {
+      try {
+        raw = await db.getSetting(key);
+      } catch (e) {
+        debugPrint('[LocalNotificationService] getSetting falló: $e');
+      }
+    }
 
     final mensajes = raw != null && raw.isNotEmpty
         ? raw.split(AppConstants.sepRegistros)
         : <String>[];
     mensajes.add(mensaje);
 
-    await db.setSetting(key, mensajes.join(AppConstants.sepRegistros));
+    try {
+      await db.setSetting(key, mensajes.join(AppConstants.sepRegistros));
+    } catch (e) {
+      debugPrint('[LocalNotificationService] setSetting falló: $e');
+    }
+
     return mensajes;
   }
 

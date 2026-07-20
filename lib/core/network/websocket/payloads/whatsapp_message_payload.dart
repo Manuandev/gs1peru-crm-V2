@@ -48,7 +48,7 @@ class WhatsAppMessagePayload {
       codAsesor: f.length > 1 ? f[1].trim() : '',
       idNumero: f.length > 2 ? (int.tryParse(f[2].trim()) ?? 0) : 0,
       tipoMensaje: f.length > 3 ? f[3].trim() : '',
-      idChatCab: f.length > 4 ? int.parse(f[4].trim()) : 0,
+      idChatCab: f.length > 4 ? (int.tryParse(f[4].trim()) ?? 0) : 0,
       idTokenMeta: f.length > 5 ? f[5].trim() : '',
       fecha: f.length > 6 ? f[6].trim() : '',
       nomArchivo: f.length > 7 ? f[7].trim() : '',

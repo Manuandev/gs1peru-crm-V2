@@ -448,7 +448,7 @@ class _CardInfoSolicitud extends StatelessWidget {
                             solicitud.oportunidad,
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textPrimary,
-                              fontWeight: AppTextStyles.weightBold,
+                              fontWeight: AppTextStyles.weightRegular,
                               fontSize: 10,
                             ),
                             maxLines: 1,
@@ -488,9 +488,11 @@ class _CardInfoSolicitud extends StatelessWidget {
                             comprobante.isEmpty ? '—' : comprobante,
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textPrimary,
-                              fontWeight: AppTextStyles.weightBold,
+                              fontWeight: AppTextStyles.weightRegular,
                               fontSize: 10,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -573,23 +575,31 @@ class _FilaInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    // Label arriba (con ícono) y valor debajo, en vez de lado a lado — con
+    // un valor lado a lado no había espacio suficiente y se desbordaba
+    // (ej. "Oportunidad / Curso" con nombres largos). Apilado + elipsis en
+    // el valor evita el overflow sin importar qué tan largo sea el texto.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icono, size: 13, color: AppColors.textSecondary),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: Text(
-            label,
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 10,
+        Row(
+          children: [
+            Icon(icono, size: 13, color: AppColors.textSecondary),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 10,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          ],
         ),
-        const SizedBox(width: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xxs),
         child,
       ],
     );

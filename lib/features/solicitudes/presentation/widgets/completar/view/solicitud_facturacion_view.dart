@@ -33,6 +33,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // el paso 1 (ver solicitud_completar_view.dart._formKey).
   final _formKey = GlobalKey<FormState>();
 
+  // Igual que en el paso 1 — arranca en false para que nada se marque en
+  // rojo hasta el primer "Siguiente"; de ahí en adelante los campos se
+  // limpian solos al corregirlos (ver _onContinuar).
+  bool _autovalidar = false;
+
   // IDs y labels de combos (id para pre-selección, label para guardar en cubit)
   String _comprobanteId = '';
   String _comprobanteLabel = '';
@@ -210,6 +215,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     }
 
     if (_guardando) return;
+
+    // Recién acá se activa la validación en tiempo real (ver _autovalidar).
+    setState(() => _autovalidar = true);
 
     // Marca en rojo cada campo/combo obligatorio que falte, con su propio
     // mensaje "Requerido" — reemplaza el snackbar genérico de antes.
@@ -517,7 +525,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                 ),
                 child: Form(
                   key: _formKey,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  // Desactivada hasta el primer "Siguiente" — ver
+                  // _autovalidar / solicitud_completar_view.dart.
+                  autovalidateMode: _autovalidar
+                      ? AutovalidateMode.onUserInteraction
+                      : AutovalidateMode.disabled,
                   child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

@@ -36,6 +36,14 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // fallar `_formKey.currentState.validate()`, en vez de un snackbar genérico.
   final _formKey = GlobalKey<FormState>();
 
+  // Arranca en false para que ningún campo se marque en rojo mientras el
+  // asesor recién está escribiendo — la validación solo debe empezar al
+  // presionar "Siguiente" por primera vez (pedido de negocio). Una vez que
+  // eso pasa, se pone en true para que los campos ya marcados se limpien
+  // solos al corregirlos, sin esperar a un nuevo "Siguiente" (ver
+  // _onContinuar).
+  bool _autovalidar = false;
+
   // true mientras se trae la solicitud del backend (task 'DT') — bloquea el
   // formulario para que los combos (que solo leen su valor inicial una vez,
   // en su propio initState) no se construyan antes de tener los datos.
@@ -681,6 +689,11 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
 
     if (_guardando) return;
 
+    // Recién acá se activa la validación en tiempo real (ver _autovalidar) —
+    // antes de este primer click ningún campo se marca en rojo por solo
+    // escribir/tocarlo.
+    setState(() => _autovalidar = true);
+
     // Marca en rojo cada campo/combo obligatorio que falte, con su propio
     // mensaje "Requerido" — reemplaza el snackbar genérico de antes.
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -786,10 +799,14 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                   ),
                   child: Form(
                     key: _formKey,
-                    // Una vez que "Siguiente" marca los campos en rojo, se
-                    // limpian solos al corregirlos (sin esperar a un nuevo
-                    // intento de "Siguiente").
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    // Desactivada hasta el primer "Siguiente" — nada se marca
+                    // en rojo solo por escribir/tocar un campo. Una vez que
+                    // "Siguiente" marca los campos en rojo (_autovalidar
+                    // pasa a true), se limpian solos al corregirlos, sin
+                    // esperar a un nuevo intento de "Siguiente".
+                    autovalidateMode: _autovalidar
+                        ? AutovalidateMode.onUserInteraction
+                        : AutovalidateMode.disabled,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

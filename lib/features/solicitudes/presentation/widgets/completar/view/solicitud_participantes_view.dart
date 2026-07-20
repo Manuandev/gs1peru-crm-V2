@@ -312,15 +312,24 @@ class _SolicitudParticipantesViewState
                               const SizedBox(height: AppSpacing.sm),
                           itemBuilder: (context, index) {
                             final p = state.participantes[index];
-                            final tipoLabel =
-                                tiposParticipante
-                                    .where((t) => t.id == p.tipoParticipante)
-                                    .firstOrNull
-                                    ?.nombre ??
-                                '—';
+                            final tipoCatalogo = tiposParticipante
+                                .where((t) => t.id == p.tipoParticipante)
+                                .firstOrNull;
+                            final tipoLabel = tipoCatalogo?.nombre ?? '—';
                             return _ParticipanteCard(
                               participante: p,
                               tipoParticipanteLabel: tipoLabel,
+                              // Un Invitado no paga — la jefatura pidió que
+                              // la cartilla muestre 0.00 para que no se
+                              // confunda con lo que sí se factura (ver
+                              // ParticipantesState.totalPagantes, que ya
+                              // excluye a los Invitados del total). El
+                              // importe real que haya puesto el asesor NO se
+                              // toca — sigue guardado en
+                              // ParticipanteLocal.importe tal cual, así que
+                              // si luego se cambia el tipo de vuelta a
+                              // Pagante, reaparece sin perderse.
+                              esInvitado: tipoCatalogo?.esInvitado ?? false,
                               habilitado: widget.modoEdicion,
                               onEditar: () =>
                                   _abrirFormularioEditar(context, p),
@@ -403,6 +412,11 @@ class _ParticipanteCard extends StatelessWidget {
   // (que excluyen a los Invitados, ver ParticipantesState.totalPagantes)
   // están tomando el tipo correcto de cada participante.
   final String tipoParticipanteLabel;
+  // Si es true, la cartilla muestra "0.00" en vez del importe real guardado
+  // — un Invitado no paga, ver comentario en el itemBuilder que arma esta
+  // card. El importe real (participante.importe) no se modifica, solo
+  // cambia lo que se pinta acá.
+  final bool esInvitado;
   final bool habilitado;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
@@ -410,6 +424,7 @@ class _ParticipanteCard extends StatelessWidget {
   const _ParticipanteCard({
     required this.participante,
     required this.tipoParticipanteLabel,
+    required this.esInvitado,
     required this.habilitado,
     required this.onEditar,
     required this.onEliminar,
@@ -454,7 +469,7 @@ class _ParticipanteCard extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      participante.importeFormateado,
+                      esInvitado ? '0.00' : participante.importeFormateado,
                       style: AppTextStyles.labelMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: AppTextStyles.weightBold,

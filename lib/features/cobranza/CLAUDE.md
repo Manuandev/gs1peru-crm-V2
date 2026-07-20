@@ -191,9 +191,10 @@ label por defecto pero sí aparecen en la lista sin filtro de tarjeta activo.
   no mostrarla hasta que exista una columna real
 - La carpeta de widgets para facturación es `widgets/factura/` (no `fractura/`)
 - `CobranzaCamposExtra` usa `esArriba` para controlar qué campos aparecen arriba/abajo del formulario según la condición
-- **`O/C` es obligatorio siempre** (contado y crédito) — se valida con un `Form`+`GlobalKey` real
-  en `CobranzaFacturaView` (rojo inline bajo el campo), no con un snackbar. El bloc ya no
-  chequea O/C vacío — el `Form` no deja ni disparar `FacturarPressed` si falla
+- **`O/C`, Descripción sugerida y Hoja de aceptación son todos opcionales** (contado y crédito)
+  — ninguno tiene `validator` en `_CampoCompartido`/`CobranzaFacturaView`. Lo único obligatorio
+  siempre es la condición de pago (combo, siempre trae un valor); en crédito, además, validar/
+  guardar el plan de crédito (ver más abajo)
 - **`_CampoCompartido` (O/C, Descripción, Hoja) usa `textInputAction: TextInputAction.done`** +
   `onSubmitted` que hace `unfocus()` — sin esto, al ser multilinea (`maxLines: 3`) el teclado
   mostraba flecha de "nueva línea" en vez de check, y no había forma de cerrarlo
@@ -244,10 +245,12 @@ label por defecto pero sí aparecen en la lista sin filtro de tarjeta activo.
   `PlanValidarPressed` (el botón "Validar") **ya no** marca `planValidado` — solo navega; si
   el usuario entra al plan y vuelve sin guardar, el badge "Plan de crédito validado" no debe
   aparecer, y tampoco se puede facturar (`_onFacturarPressed` exige `planValidado` en crédito)
-- **Validación de "Facturar"**: O/C es obligatorio siempre (contado y crédito); en crédito
-  además son obligatorios haber validado/guardado el plan y tener fecha de vencimiento.
-  Descripción sugerida y hoja de aceptación siguen siendo opcionales en ambos casos. Se valida
-  dentro de `CobranzaFacturaBloc._onFacturarPressed` (no en el `Form` de la vista)
+- **Validación de "Facturar"**: en contado no hay ningún campo obligatorio aparte de la
+  condición de pago (que ya viene con valor); en crédito son obligatorios haber validado/
+  guardado el plan y tener fecha de vencimiento. O/C, Descripción sugerida y Hoja de aceptación
+  son opcionales en ambos casos. Se valida dentro de `CobranzaFacturaBloc._onFacturarPressed`
+  (no en el `Form` de la vista — el `Form` solo existe por el `maxLength` de los 3 campos
+  compartidos, no aplica ninguna regla de obligatoriedad)
 - **El botón "Continuar facturación" del detalle solo aparece si `idEstado == 0`** (Pend. de
   documento) — `_CobranzaDetalleBody.tieneAccion` en `cobranza_detalle_view.dart`. Antes se
   mostraba (con otro label) para cualquier estado salvo Cancelado, pero el `UE` real solo hace

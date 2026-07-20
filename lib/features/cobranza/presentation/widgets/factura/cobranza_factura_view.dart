@@ -101,7 +101,7 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                             // Extra ARRIBA — solo crédito muestra fecha+validar
                             CobranzaCamposExtra(esArriba: true, state: state),
 
-                            // O/C — siempre obligatorio
+                            // O/C — opcional
                             _CampoCompartido(
                               label: 'O/C',
                               hint: 'Ingresa el número de orden de compra',

@@ -259,37 +259,39 @@ class _SolicitudParticipantesViewState
                         ),
                       ),
 
-                      // Botones
-                      Row(
-                        children: [
-                          _BotonSeccionSmall(
-                            icono: AppIcons.add,
-                            label: 'Nuevo',
-                            enabled:
-                                widget.modoEdicion &&
-                                !(cantidadEsperada != null &&
-                                    state.participantes.length >=
-                                        cantidadEsperada),
-                            onTap: () => _abrirFormularioNuevo(context),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          // _BotonSeccionSmall(
-                          //   icono: AppIcons.downloadFile,
-                          //   label: 'Carga masiva',
-                          //   onTap: () => context.goToCargaMasivaParticipantes(
-                          //     cubit: context.read<ParticipantesCubit>(),
-                          //   ),
-                          // ),
-                          // const SizedBox(width: AppSpacing.xs),
-                          _BotonIconoSmall(
-                            icono: AppIcons.delete,
-                            color: AppColors.error,
-                            onTap: state.participantes.isEmpty
-                                ? () {}
-                                : () => _confirmarEliminarTodos(context),
-                          ),
-                        ],
-                      ),
+                      // Botones — ocultos por completo en modo solo-ver
+                      // (modoEdicion == false, "Revisar solicitud"), no solo
+                      // deshabilitados. Ver solicitudes/CLAUDE.md.
+                      if (widget.modoEdicion)
+                        Row(
+                          children: [
+                            _BotonSeccionSmall(
+                              icono: AppIcons.add,
+                              label: 'Nuevo',
+                              enabled:
+                                  !(cantidadEsperada != null &&
+                                      state.participantes.length >=
+                                          cantidadEsperada),
+                              onTap: () => _abrirFormularioNuevo(context),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            // _BotonSeccionSmall(
+                            //   icono: AppIcons.downloadFile,
+                            //   label: 'Carga masiva',
+                            //   onTap: () => context.goToCargaMasivaParticipantes(
+                            //     cubit: context.read<ParticipantesCubit>(),
+                            //   ),
+                            // ),
+                            // const SizedBox(width: AppSpacing.xs),
+                            _BotonIconoSmall(
+                              icono: AppIcons.delete,
+                              color: AppColors.error,
+                              onTap: state.participantes.isEmpty
+                                  ? () {}
+                                  : () => _confirmarEliminarTodos(context),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -442,13 +444,11 @@ class _ParticipanteCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Acciones ──────────────────────────────────────────
-          _AccionesCard(
-            habilitado: habilitado,
-            onEditar: onEditar,
-            onEliminar: onEliminar,
-          ),
-          const SizedBox(width: AppSpacing.sm),
+          // ── Acciones — ocultas por completo en modo solo-ver ────
+          if (habilitado) ...[
+            _AccionesCard(onEditar: onEditar, onEliminar: onEliminar),
+            const SizedBox(width: AppSpacing.sm),
+          ],
 
           // ── Info ──────────────────────────────────────────────
           Expanded(
@@ -531,15 +531,10 @@ class _ParticipanteCard extends StatelessWidget {
 // ── Acciones del card ─────────────────────────────────────────────────────────
 
 class _AccionesCard extends StatelessWidget {
-  final bool habilitado;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
 
-  const _AccionesCard({
-    required this.habilitado,
-    required this.onEditar,
-    required this.onEliminar,
-  });
+  const _AccionesCard({required this.onEditar, required this.onEliminar});
 
   @override
   Widget build(BuildContext context) {
@@ -550,7 +545,7 @@ class _AccionesCard extends StatelessWidget {
           width: 30,
           height: 30,
           child: IconButton(
-            onPressed: habilitado ? onEditar : null,
+            onPressed: onEditar,
             padding: EdgeInsets.zero,
             icon: const Icon(AppIcons.edit, size: 16, color: AppColors.primary),
           ),
@@ -562,7 +557,6 @@ class _AccionesCard extends StatelessWidget {
             onSelected: (v) {
               if (v == 'eliminar') onEliminar();
             },
-            enabled: habilitado,
             padding: EdgeInsets.zero,
             icon: const Icon(
               AppIcons.moreHorizontal,

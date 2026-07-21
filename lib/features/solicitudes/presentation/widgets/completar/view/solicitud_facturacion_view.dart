@@ -606,10 +606,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
 
-                        // ── Tooltip informativo ────────────────────────────
-                        const _TooltipFacturacion(),
-                        const SizedBox(height: AppSpacing.sm),
-
                         // ── Formulario ─────────────────────────────────────
                         _SeccionDatosFacturacion(
                           habilitado: widget.modoEdicion,
@@ -871,46 +867,6 @@ class _ItemResumen extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-// ── Tooltip informativo ───────────────────────────────────────────────────────
-
-class _TooltipFacturacion extends StatelessWidget {
-  const _TooltipFacturacion();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.ui2,
-        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            size: AppSizing.iconActionSm,
-            color: AppColors.primary,
-          ),
-          const SizedBox(width: AppSpacing.sm2),
-          Expanded(
-            child: Text(
-              'Quién paga será usado para la emisión del comprobante.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.primary,
-                fontWeight: AppTextStyles.weightMedium,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

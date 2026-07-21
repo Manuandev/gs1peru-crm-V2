@@ -174,6 +174,7 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
                   children: [
                     _SeccionSolicitante(
                       datos: formState.solicitante,
+                      modoEdicion: widget.modoEdicion,
                       onEditar: () => widget.onEditarPaso(1),
                     ),
                     const _Separador(),
@@ -188,6 +189,7 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
                       _SeccionFacturacion(
                         datos: formState.facturacion,
                         tipoPersonaLabel: formState.tipoPersonaLabel,
+                        modoEdicion: widget.modoEdicion,
                         onEditar: () => widget.onEditarPaso(3),
                       ),
                     ],
@@ -437,9 +439,14 @@ class _FilaCampos extends StatelessWidget {
 
 class _SeccionSolicitante extends StatelessWidget {
   final DatosSolicitante? datos;
+  final bool modoEdicion;
   final VoidCallback onEditar;
 
-  const _SeccionSolicitante({required this.onEditar, this.datos});
+  const _SeccionSolicitante({
+    required this.onEditar,
+    required this.modoEdicion,
+    this.datos,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -450,7 +457,8 @@ class _SeccionSolicitante extends StatelessWidget {
         _CabeceraSeccion(
           icono: AppIcons.user,
           titulo: '1. Solicitante',
-          accion: _BotonEditar(onTap: onEditar),
+          // Oculto por completo en modo solo-ver, no solo deshabilitado.
+          accion: modoEdicion ? _BotonEditar(onTap: onEditar) : null,
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(
@@ -661,11 +669,13 @@ class _FilaTabla extends StatelessWidget {
 class _SeccionFacturacion extends StatelessWidget {
   final DatosFacturacion? datos;
   final String tipoPersonaLabel;
+  final bool modoEdicion;
   final VoidCallback onEditar;
 
   const _SeccionFacturacion({
     required this.onEditar,
     required this.tipoPersonaLabel,
+    required this.modoEdicion,
     this.datos,
   });
 
@@ -678,7 +688,8 @@ class _SeccionFacturacion extends StatelessWidget {
         _CabeceraSeccion(
           icono: AppIcons.receipt,
           titulo: '3. Facturación',
-          accion: _BotonEditar(onTap: onEditar),
+          // Oculto por completo en modo solo-ver, no solo deshabilitado.
+          accion: modoEdicion ? _BotonEditar(onTap: onEditar) : null,
         ),
         const SizedBox(height: AppSpacing.sm),
         _FilaCampos(

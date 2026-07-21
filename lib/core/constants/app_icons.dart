@@ -561,7 +561,7 @@ class AppIcons {
   // ============================================================
   static const FaIconData etapaNuevo = FontAwesomeIcons.bell;
   static const FaIconData etapaEnDesarrollo = FontAwesomeIcons.chartLine;
-  static const FaIconData etapaPropuesta = FontAwesomeIcons.tag;
+  static const FaIconData etapaPropuesta = FontAwesomeIcons.chartColumn;
   static const FaIconData etapaFicha = FontAwesomeIcons.idCard;
   static const FaIconData etapaCerrado = FontAwesomeIcons.handshake;
   static const FaIconData etapaEvaluando = FontAwesomeIcons.magnifyingGlass;

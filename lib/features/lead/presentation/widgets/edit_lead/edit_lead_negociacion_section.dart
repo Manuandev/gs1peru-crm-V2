@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/index_dependencies.dart';
 
 class EditLeadNegociacionSection extends StatelessWidget {
   final CatalogsLoaded catalogState;
@@ -150,10 +149,6 @@ class EditLeadNegociacionSection extends StatelessWidget {
   }
 
   Widget _buildComboEstado(ColorScheme colorScheme, bool hayEstados) {
-    final colorEstado = AppSocialUtils.colorEstado(
-      estado?.id ?? idEstadoFallback,
-    );
-
     if (!hayEstados) {
       return CustomTextField(
         label: 'Estado (*)',
@@ -170,9 +165,8 @@ class EditLeadNegociacionSection extends StatelessWidget {
       initialValue: estado?.id,
       onChanged: onEstadoChanged,
       dense: true,
-      prefixIcon: FaIcon(
-        AppSocialUtils.iconoEstado(estado?.id ?? idEstadoFallback),
-        color: colorEstado,
+      prefixIcon: AppSocialUtils.widgetEstado(
+        estado?.id ?? idEstadoFallback,
         size: AppSizing.iconActionSm,
       ),
     );

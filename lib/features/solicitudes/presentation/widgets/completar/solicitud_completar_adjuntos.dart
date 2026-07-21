@@ -38,36 +38,40 @@ class BotonAdjuntar extends StatelessWidget {
     final nombreMostrado = archivo?.name ?? nombreExistente;
     final tieneArchivo = nombreMostrado.isNotEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        OutlinedButton.icon(
-          onPressed: (habilitado && !tieneArchivo) ? onAdjuntar : null,
-          icon: const Icon(
-            Icons.attach_file_rounded,
-            size: AppSizing.iconActionSm,
+    if (tieneArchivo) {
+      return TarjetaArchivoAdjunto(
+        nombre: nombreMostrado,
+        onQuitar: habilitado ? onQuitar : null,
+      );
+    }
+
+    // SizedBox + tapTargetSize.shrinkWrap fuerzan el alto exacto — sin esto
+    // el botón queda más alto que buttonHeightCompact (32px) porque Material
+    // reserva un área de toque mínima de 48px aunque `minimumSize` diga otra
+    // cosa, y termina más grande que TarjetaArchivoAdjunto de arriba (mismo
+    // slot, un archivo adjuntado reemplaza al botón, ver build()).
+    return SizedBox(
+      height: AppSizing.buttonHeightCompact,
+      child: OutlinedButton.icon(
+        onPressed: habilitado ? onAdjuntar : null,
+        icon: const Icon(
+          Icons.attach_file_rounded,
+          size: AppSizing.iconActionSm,
+        ),
+        label: Text(label, overflow: TextOverflow.ellipsis),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
           ),
-          label: Text(label, overflow: TextOverflow.ellipsis),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.primary),
-            minimumSize: const Size.fromHeight(AppSizing.buttonHeightCompact),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-            ),
-            textStyle: AppTextStyles.labelMedium.copyWith(
-              fontWeight: AppTextStyles.weightMedium,
-            ),
+          textStyle: AppTextStyles.labelMedium.copyWith(
+            fontWeight: AppTextStyles.weightMedium,
           ),
         ),
-        if (tieneArchivo) ...[
-          const SizedBox(height: AppSpacing.xs),
-          TarjetaArchivoAdjunto(
-            nombre: nombreMostrado,
-            onQuitar: habilitado ? onQuitar : null,
-          ),
-        ],
-      ],
+      ),
     );
   }
 }
@@ -84,13 +88,13 @@ class TarjetaArchivoAdjunto extends StatelessWidget {
     required this.onQuitar,
   });
 
+  bool get _esPdf => nombre.toLowerCase().endsWith('.pdf');
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
+      height: AppSizing.buttonHeightCompact,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.success.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -98,8 +102,8 @@ class TarjetaArchivoAdjunto extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            AppIcons.pdf,
+          Icon(
+            _esPdf ? AppIcons.pdf : AppIcons.image,
             color: AppColors.success,
             size: AppSizing.iconActionSm,
           ),

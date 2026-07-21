@@ -4,6 +4,17 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
+// Arma "nombre.ext" a partir de nombre + extensión, sin duplicar el punto —
+// algunos SPs mandan la extensión con punto ('.pdf') y otros sin él ('pdf').
+// Reusar siempre esta función al concatenar nombre/extensión de un archivo
+// que viene del backend, no hacerlo inline (rompe validaciones que dependen
+// de un único punto antes de la extensión, ej. `fileIcon`/`endsWith('.pdf')`).
+String nombreArchivoConExtension(String nombre, String extension) {
+  if (extension.isEmpty) return nombre;
+  final ext = extension.startsWith('.') ? extension : '.$extension';
+  return '$nombre$ext';
+}
+
 IconData fileIcon(String mensaje) {
   final ext = mensaje.toLowerCase().split('.').last;
   switch (ext) {

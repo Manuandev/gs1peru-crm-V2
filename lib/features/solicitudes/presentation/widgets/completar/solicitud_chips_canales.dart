@@ -40,7 +40,7 @@ class ChipsCanales extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
-              vertical: AppSpacing.sm,
+              vertical: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
               color: activo
@@ -56,12 +56,12 @@ class ChipsCanales extends StatelessWidget {
               children: [
                 AppSocialUtils.widgetCanalExpoById(
                   canal.id,
-                  size: AppSizing.iconActionSm,
+                  size: AppSizing.iconSm,
                 ),
-                const SizedBox(width: AppSpacing.sm2),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   canal.descripcion,
-                  style: AppTextStyles.labelMedium.copyWith(
+                  style: AppTextStyles.labelSmall.copyWith(
                     color: colorTexto,
                     fontWeight: activo
                         ? AppTextStyles.weightSemiBold

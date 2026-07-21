@@ -361,8 +361,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       final oc = detalle.archivos.where((a) => a.tipo == 'oc').firstOrNull;
       _archivoVoucherExistente = voucher == null
           ? ''
-          : '${voucher.nombre}${voucher.extension}';
-      _archivoOCExistente = oc == null ? '' : '${oc.nombre}${oc.extension}';
+          : nombreArchivoConExtension(voucher.nombre, voucher.extension);
+      _archivoOCExistente = oc == null
+          ? ''
+          : nombreArchivoConExtension(oc.nombre, oc.extension);
 
       _tipoDocId = detalle.tipoDocId;
       _tipoDocLabel = tipoDoc?.abreviatura ?? '';
@@ -525,16 +527,16 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   Future<void> _adjuntarArchivo(bool esVoucher) async {
     final resultado = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf'],
+      allowedExtensions: SolicitudExtensiones.archivosAdjuntos,
       withData: true, // asegura PlatformFile.bytes en todas las plataformas
     );
     final archivo = resultado?.files.single;
     if (archivo == null) return;
 
     final extension = archivo.extension?.toLowerCase();
-    if (extension != 'pdf') {
+    if (!SolicitudExtensiones.archivosAdjuntos.contains(extension)) {
       if (mounted) {
-        AppSnackBar.error(context, 'Solo se permiten archivos PDF');
+        AppSnackBar.error(context, 'Solo se permiten archivos PDF o imágenes');
       }
       return;
     }

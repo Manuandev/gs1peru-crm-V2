@@ -13,6 +13,7 @@ export 'domain/entities/solicitud_detalle.dart';
 
 export 'domain/enums/solicitud_filtro.dart';
 export 'domain/enums/solicitud_accion_tipo.dart';
+export 'domain/constants/solicitud_extensiones.dart';
 
 export 'domain/repositories/solicitud_repository.dart';
 

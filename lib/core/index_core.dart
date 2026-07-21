@@ -108,7 +108,7 @@ export 'presentation/widgets/buttons/custom_outlined_button.dart';
 export 'presentation/widgets/buttons/custom_primary_button.dart';
 export 'presentation/widgets/buttons/custom_secondary_button.dart';
 export 'presentation/widgets/buttons/custom_text_button.dart';
-export 'presentation/widgets/buttons/_icon_resolver.dart';
+export 'presentation/widgets/buttons/icon_resolver.dart';
 
 export 'presentation/widgets/inputs/custom_email_field.dart';
 export 'presentation/widgets/inputs/custom_password_field.dart';

@@ -1,5 +1,70 @@
 # Solicitudes Feature
 
+## Paso 3 (Facturación) — reglas para país distinto de Perú + Moneda se quita de la UI (2026-07-21)
+Pedido de negocio (jefe del usuario). Dos cambios independientes en `solicitud_facturacion_view.dart`:
+
+- **Moneda ya no se muestra en el formulario, en ningún caso** (antes el combo siempre estaba
+  visible pero bloqueado, "Moneda SIEMPRE bloqueada" — ver sección de abajo). Se eliminó la Fila 1
+  de 3 columnas (Comprobante/País/Moneda) y quedó en 2 (Comprobante/País). El valor
+  (`_monedaId`/`_monedaLabel`, `DatosFacturacion.monedaId`/`moneda`) **no se tocó** — sigue
+  resolviéndose exactamente igual que antes (`SolicitudFormState.idMonedaBloqueada` si la
+  solicitud viene de una negociación; si no, queda vacío, mismo pendiente de siempre, ver
+  "Regla de negocio — cantidad/importe/moneda bloqueados..." más abajo) y viaja igual al backend —
+  decisión explícita del usuario, no inventar un valor nuevo solo porque el combo desapareció.
+  `validarSolicitudParaGenerar()` (`solicitud_guardar_helper.dart`) **dejó de exigir**
+  `facturacion.monedaId.isNotEmpty` — ya no bloquea "Generar solicitud" por este campo.
+- **Nuevo — `SolicitudFacturacionView._esExtranjero`** (getter, `_paisId.isNotEmpty && _paisId !=
+  _valoresDefecto.idPais`) dispara 3 reglas cuando el "País" elegido en este paso no es Perú:
+  1. **Comprobante** se restringe a solo Boleta (Factura no aplica a un extranjero) — filtrado en
+     `build()`, y si el asesor cambia el combo País a un país extranjero mientras Factura estaba
+     seleccionada, `onPaisChanged` la fuerza a Boleta automáticamente (mismo patrón que "Factura
+     fuerza RUC" en `onComprobanteChanged`, no se tocó ese).
+  2. **Tipo documento** se restringe a **"Otros"** — sin id fijo en `ValoresCRMItem` (el catálogo
+     real no trae uno para esto, a diferencia de RUC/DNI/CDE/Pasaporte/Sin documento), se ubica
+     por nombre (`tiposDocumentoTodos.where((t) => t.nombre.toUpperCase().contains('OTRO'))`).
+     **Si el catálogo real no tiene ningún ítem "Otros"**, el fallback (`tipoDocOtros == null`) es
+     dejar la lista de Tipo documento sin restringir (todos los tipos visibles) — decisión
+     explícita del usuario ("si no hay, omite ese cambio"). **Pendiente de confirmar con el
+     catálogo real** si existe un ítem así y si su nombre realmente contiene "OTRO" — no
+     verificado contra datos reales, solo contra el código.
+  3. **Nacionalidad se oculta** (Fila 3 queda solo con Nombres/Razón social, sin la columna
+     Nacionalidad) y se manda vacía (`_nacionalidadId = ''`) — confirmado con el usuario. Como el
+     combo no está en el árbol de widgets, su `validator` tampoco corre (el `Form` solo valida los
+     campos que están montados). `validarSolicitudParaGenerar()` ajustado a juego:
+     `(esExtranjero || facturacion.nacionalidadId.isNotEmpty)` en vez de exigirla siempre.
+  Como Tipo documento nunca es RUC en la rama extranjera, la Fila 2/3 ya cae sola en la rama
+  "no RUC" de `esRuc` (Número documento + Nombres + Apellido paterno/materno) sin lógica nueva —
+  reutiliza el branching que ya existía.
+  **Pendiente — el usuario avisó que definirá un reordenamiento distinto de los inputs/botones
+  para el caso Perú** (no se tocó el orden de las filas restantes en esta sesión, solo se quitó
+  Moneda y se condicionó Nacionalidad).
+
+## Botones de acción ocultos por completo en modo solo-ver, no solo deshabilitados (2026-07-21)
+Reportado por el usuario — "Revisar solicitud" (`modoEdicion == false`, ver "Validación de
+'Continuar'" más abajo) dejaba varios botones de acción visibles pero grises (`onPressed: null`)
+en vez de no mostrarlos — y uno de ellos ni siquiera estaba deshabilitado, era 100% funcional:
+
+- **Paso 2 (`solicitud_participantes_view.dart`) — bug real, "Eliminar todos" no tenía ningún
+  candado de `modoEdicion`** — el `_BotonIconoSmall` de basurero (junto a "Nuevo") no miraba
+  `widget.modoEdicion` en absoluto; en modo solo-ver era completamente funcional y borraba todos
+  los participantes de una solicitud que se supone es de solo lectura. Junto con "Nuevo" (que sí
+  tenía el candado, pero solo se deshabilitaba — quedaba visible gris), ambos ahora están dentro
+  de `if (widget.modoEdicion) ...` — no se renderizan en absoluto si es solo lectura.
+- **`_AccionesCard`** (ícono editar + los tres puntitos/`PopupMenuButton` de cada
+  `_ParticipanteCard`) — antes recibía `habilitado` y solo deshabilitaba los controles
+  (`onPressed: habilitado ? ... : null`, visibles en gris). Ahora `_ParticipanteCard` solo
+  instancia `_AccionesCard` si `habilitado` es `true` (`if (habilitado) ...`) — `_AccionesCard`
+  perdió el parámetro `habilitado` por completo, ya no lo necesita (si se instancia, siempre está
+  activo).
+- **Paso 4/Resumen (`solicitud_resumen_view.dart`)** — `_SeccionSolicitante`/`_SeccionFacturacion`
+  ganaron un parámetro `modoEdicion` nuevo; el botón "Editar" de su `_CabeceraSeccion` (`accion:`)
+  ahora es `modoEdicion ? _BotonEditar(onTap: onEditar) : null` — `_CabeceraSeccion.accion` ya
+  era nullable, no hizo falta tocar ese widget.
+- **No se tocó** — los campos de formulario del paso 3 (Facturación) siguen usando
+  `enabled: habilitado` (visibles pero no editables) en modo solo-ver; eso es el comportamiento
+  correcto para un formulario en modo lectura, distinto de un botón de acción como "Nuevo"/
+  "Editar"/eliminar, que si no aplica no debería ni aparecer.
+
 ## Bugs reales — switch "El solicitante será participante" sin tope + "Facturar al solicitante" no se re-sincronizaba (2026-07-20)
 Reportados por el usuario en la misma sesión, ambos en `solicitud_completar_view.dart`/
 `solicitud_facturacion_view.dart` (paso 1 y 3 del wizard):

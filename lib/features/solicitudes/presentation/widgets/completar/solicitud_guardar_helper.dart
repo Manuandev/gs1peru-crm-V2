@@ -223,18 +223,29 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
     final idTipoDocRuc = catalogState is CatalogsLoaded
         ? catalogState.valoresDefecto.idTipoDocRuc
         : '';
+    final idPais = catalogState is CatalogsLoaded
+        ? catalogState.valoresDefecto.idPais
+        : '';
     final esRuc = facturacion?.tipoDocId == idTipoDocRuc;
+    // País distinto de Perú — Nacionalidad no aplica en ese caso (se manda
+    // vacía, ver _SeccionDatosFacturacion), así que no se exige acá.
+    final esExtranjero =
+        facturacion != null &&
+        facturacion.paisId.isNotEmpty &&
+        facturacion.paisId != idPais;
 
     // Mismos campos obligatorios (*) que tenía el viejo gate de "Continuar"
     // del paso 3 — ver _SeccionDatosFacturacion en solicitudes/CLAUDE.md.
+    // Moneda ya no se valida acá — el combo se quitó de la UI (pedido de
+    // negocio, 2026-07-21), el valor sigue viajando por detrás sin bloquear
+    // el guardado.
     final facturacionCompleta =
         facturacion != null &&
         facturacion.comprobanteId.isNotEmpty &&
         facturacion.paisId.isNotEmpty &&
-        facturacion.monedaId.isNotEmpty &&
         facturacion.tipoDocId.isNotEmpty &&
         facturacion.numDoc.trim().isNotEmpty &&
-        facturacion.nacionalidadId.isNotEmpty &&
+        (esExtranjero || facturacion.nacionalidadId.isNotEmpty) &&
         facturacion.nombresRazon.trim().isNotEmpty &&
         (esRuc || facturacion.apellidoPaterno.trim().isNotEmpty) &&
         facturacion.celular.trim().isNotEmpty &&

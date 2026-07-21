@@ -99,6 +99,13 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   bool get _esRuc => _tipoDocId == _idTipoDocRuc;
 
+  // País distinto de Perú (pedido de negocio, 2026-07-21) — cuando aplica,
+  // Comprobante se restringe a Boleta (Factura no corresponde a un
+  // extranjero), Tipo documento se restringe a "Otros" y Nacionalidad se
+  // oculta (se manda vacía, no aplica para un país que no es Perú).
+  bool get _esExtranjero =>
+      _paisId.isNotEmpty && _paisId != _valoresDefecto.idPais;
+
   void _onCampoTexto() {
     setState(() {});
     _sincronizarCubit();
@@ -498,9 +505,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final facturarAlSolicitante =
         formState.solicitante?.facturarAlSolicitante ?? false;
     final catalogState = context.watch<CatalogsBloc>().state;
-    final monedas = catalogState is CatalogsLoaded
-        ? catalogState.monedas
-        : const <MonedaItem>[];
     final tiposDocumentoTodos = catalogState is CatalogsLoaded
         ? catalogState.tiposDocumento
         : const <TipoDocumentoItem>[];
@@ -514,17 +518,35 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         ? catalogState.comprobantes
         : const <ComprobanteItem>[];
 
+    // "Otros" en Tipo documento — sin id fijo en ValoresCRMItem (el catálogo
+    // real no trae uno), se ubica por nombre. Si el catálogo real no tiene
+    // ningún ítem "Otros", este fallback queda en null y la restricción de
+    // extranjero simplemente no se aplica sobre Tipo documento (se deja la
+    // lista completa) — avisar a negocio si esto pasa en producción.
+    final tipoDocOtros = tiposDocumentoTodos
+        .where((t) => t.nombre.toUpperCase().contains('OTRO'))
+        .firstOrNull;
+
     // Solo Factura/Boleta se muestran en este combo (aunque el catálogo
-    // real traiga también N. Crédito/N. Débito).
-    final comprobantes = comprobantesTodos
-        .where(
-          (c) => c.id == _idComprobanteFactura || c.id == _idComprobanteBoleta,
-        )
-        .toList();
-    // Factura exige RUC — Boleta admite cualquier tipo de documento.
-    final tiposDocumento = _comprobanteId == _idComprobanteFactura
-        ? tiposDocumentoTodos.where((t) => t.id == _idTipoDocRuc).toList()
-        : tiposDocumentoTodos;
+    // real traiga también N. Crédito/N. Débito). Con un país distinto de
+    // Perú, Factura no aplica — solo Boleta.
+    final comprobantes = _esExtranjero
+        ? comprobantesTodos.where((c) => c.id == _idComprobanteBoleta).toList()
+        : comprobantesTodos
+              .where(
+                (c) =>
+                    c.id == _idComprobanteFactura ||
+                    c.id == _idComprobanteBoleta,
+              )
+              .toList();
+    // Con país extranjero, Tipo documento se restringe a "Otros" (si existe
+    // en el catálogo). Si no, sigue la regla de siempre: Factura exige RUC,
+    // Boleta admite cualquier tipo de documento.
+    final tiposDocumento = _esExtranjero
+        ? (tipoDocOtros != null ? [tipoDocOtros] : tiposDocumentoTodos)
+        : (_comprobanteId == _idComprobanteFactura
+              ? tiposDocumentoTodos.where((t) => t.id == _idTipoDocRuc).toList()
+              : tiposDocumentoTodos);
     final correoLabel = _comprobanteId == _idComprobanteFactura
         ? 'Correo para envío de factura *'
         : 'Correo para envío de boleta *';
@@ -609,8 +631,8 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                         // ── Formulario ─────────────────────────────────────
                         _SeccionDatosFacturacion(
                           habilitado: widget.modoEdicion,
-                          monedaBloqueada: true,
                           esRuc: _esRuc,
+                          esExtranjero: _esExtranjero,
                           correoLabel: correoLabel,
                           numDocMaxLength: DocumentoValidationUtils.maxLength(
                             _tipoDocId,
@@ -633,7 +655,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                           ctrlCelular: _ctrlCelular,
                           ctrlCorreo: _ctrlCorreo,
                           ctrlDireccion: _ctrlDireccion,
-                          monedas: monedas,
                           tiposDocumento: tiposDocumento,
                           nacionalidades: nacionalidades,
                           paises: paises,
@@ -647,9 +668,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                               ? _comprobanteId
                               : null,
                           paisInicialId: _paisId.isNotEmpty ? _paisId : null,
-                          monedaInicialId: _monedaId.isNotEmpty
-                              ? _monedaId
-                              : null,
                           onComprobanteChanged: (item) {
                             setState(() {
                               _comprobanteId = item?.id ?? '';
@@ -670,13 +688,28 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                             setState(() {
                               _paisId = item?.id ?? '';
                               _paisLabel = item?.nombre ?? '';
-                            });
-                            _sincronizarCubit();
-                          },
-                          onMonedaChanged: (item) {
-                            setState(() {
-                              _monedaId = item?.id ?? '';
-                              _monedaLabel = item?.nombre ?? '';
+                              if (_esExtranjero) {
+                                // País distinto de Perú — Factura no
+                                // aplica, se fuerza Boleta.
+                                final boleta = comprobantesTodos
+                                    .where((c) => c.id == _idComprobanteBoleta)
+                                    .firstOrNull;
+                                if (boleta != null) {
+                                  _comprobanteId = boleta.id;
+                                  _comprobanteLabel = boleta.nombre;
+                                }
+                                // Se fuerza Tipo documento "Otros" (si el
+                                // catálogo real lo trae).
+                                if (tipoDocOtros != null) {
+                                  _tipoDocId = tipoDocOtros.id;
+                                  _tipoDocLabel = tipoDocOtros.abreviatura;
+                                  _ctrlNumDoc.clear();
+                                }
+                                // Nacionalidad no aplica para un país que no
+                                // es Perú — se manda vacía.
+                                _nacionalidadId = '';
+                                _nacionalidadLabel = '';
+                              }
                             });
                             _sincronizarCubit();
                           },
@@ -879,10 +912,11 @@ class _ItemResumen extends StatelessWidget {
 
 class _SeccionDatosFacturacion extends StatefulWidget {
   final bool habilitado;
-  // Moneda siempre bloqueada — el asesor nunca la edita acá, el valor real
-  // vendrá de otra parte del flujo (ver solicitudes/CLAUDE.md).
-  final bool monedaBloqueada;
   final bool esRuc;
+  // País distinto de Perú (paso 3) — oculta Nacionalidad (no aplica, se
+  // manda vacía). Comprobante/Tipo documento ya llegan pre-filtrados por el
+  // padre en ese caso (solo Boleta / solo "Otros").
+  final bool esExtranjero;
   final String correoLabel;
   // Longitud/teclado/formatters de Número documento según el tipo elegido —
   // calculados por el padre con DocumentoValidationUtils (ver
@@ -898,7 +932,6 @@ class _SeccionDatosFacturacion extends StatefulWidget {
   final TextEditingController ctrlCelular;
   final TextEditingController ctrlCorreo;
   final TextEditingController ctrlDireccion;
-  final List<MonedaItem> monedas;
   final List<TipoDocumentoItem> tiposDocumento;
   final List<NacionalidadItem> nacionalidades;
   final List<PaisItem> paises;
@@ -907,12 +940,10 @@ class _SeccionDatosFacturacion extends StatefulWidget {
   final ValueChanged<PaisItem> onPaisCelularChanged;
   final String? comprobanteInicialId;
   final String? paisInicialId;
-  final String? monedaInicialId;
   final String? tipoDocInicialId;
   final String? nacionalidadInicialId;
   final ValueChanged<ComprobanteItem?>? onComprobanteChanged;
   final ValueChanged<PaisItem?>? onPaisChanged;
-  final ValueChanged<MonedaItem?>? onMonedaChanged;
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   // Autocompletado por documento (Clientes/BuscarDocumento) — se dispara al
@@ -923,8 +954,8 @@ class _SeccionDatosFacturacion extends StatefulWidget {
 
   const _SeccionDatosFacturacion({
     required this.habilitado,
-    this.monedaBloqueada = false,
     required this.esRuc,
+    required this.esExtranjero,
     required this.correoLabel,
     this.numDocMaxLength,
     this.numDocKeyboardType = TextInputType.number,
@@ -936,7 +967,6 @@ class _SeccionDatosFacturacion extends StatefulWidget {
     required this.ctrlCelular,
     required this.ctrlCorreo,
     required this.ctrlDireccion,
-    required this.monedas,
     required this.tiposDocumento,
     required this.nacionalidades,
     required this.paises,
@@ -945,12 +975,10 @@ class _SeccionDatosFacturacion extends StatefulWidget {
     required this.onPaisCelularChanged,
     this.comprobanteInicialId,
     this.paisInicialId,
-    this.monedaInicialId,
     this.tipoDocInicialId,
     this.nacionalidadInicialId,
     this.onComprobanteChanged,
     this.onPaisChanged,
-    this.onMonedaChanged,
     this.onTipoDocChanged,
     this.onNacionalidadChanged,
     this.onBuscarDocumento,
@@ -987,7 +1015,10 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Fila 1: Comprobante + País + Moneda (3 columnas)
+        // Fila 1: Comprobante + País — Moneda ya no se muestra (pedido de
+        // negocio, 2026-07-21), el valor sigue viajando por detrás tal cual
+        // ya se resolvía antes de este cambio (ver
+        // SolicitudFacturacionView._construirDatosFacturacion).
         Row(
           children: [
             Expanded(
@@ -1008,17 +1039,6 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 enabled: widget.habilitado,
                 initialValue: widget.paisInicialId,
                 onChanged: widget.onPaisChanged,
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: CustomComboField<MonedaItem>(
-                label: 'Moneda *',
-                data: widget.monedas,
-                enabled: widget.habilitado && !widget.monedaBloqueada,
-                initialValue: widget.monedaInicialId,
-                onChanged: widget.onMonedaChanged,
                 validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
@@ -1060,20 +1080,24 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 3: Nacionalidad + Nombres / Razón social
+        // Fila 3: Nacionalidad (oculta si el país no es Perú — no aplica,
+        // se manda vacía) + Nombres / Razón social
         Row(
           children: [
-            Expanded(
-              child: CustomComboField<NacionalidadItem>(
-                label: 'Nacionalidad *',
-                data: widget.nacionalidades,
-                enabled: widget.habilitado,
-                initialValue: widget.nacionalidadInicialId,
-                onChanged: widget.onNacionalidadChanged,
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+            if (!widget.esExtranjero) ...[
+              Expanded(
+                child: CustomComboField<NacionalidadItem>(
+                  label: 'Nacionalidad *',
+                  data: widget.nacionalidades,
+                  enabled: widget.habilitado,
+                  initialValue: widget.nacionalidadInicialId,
+                  onChanged: widget.onNacionalidadChanged,
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Requerido' : null,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Expanded(
               child: CustomTextField(
                 label: widget.esRuc ? 'Razón Social *' : 'Nombres *',

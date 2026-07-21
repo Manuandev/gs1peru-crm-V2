@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
-import '_icon_resolver.dart';
 
 class CustomSecondaryButton extends StatelessWidget {
   final String text;

@@ -32,7 +32,9 @@ class LeadListStatsRow extends StatelessWidget {
           children: [
             Expanded(
               child: _StatCard(
-                icon: AppIcons.message,
+                icon: AppSocialUtils.iconoEstado(
+                  catalogState.valoresDefecto.idEstadoNuevo,
+                ),
                 color: AppSocialUtils.colorEstado(
                   catalogState.valoresDefecto.idEstadoNuevo,
                 ),
@@ -43,7 +45,9 @@ class LeadListStatsRow extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _StatCard(
-                icon: AppIcons.checkCircle,
+                icon: AppSocialUtils.iconoEstado(
+                  catalogState.valoresDefecto.idEstadoEnDesarrollo,
+                ),
                 color: AppSocialUtils.colorEstado(
                   catalogState.valoresDefecto.idEstadoEnDesarrollo,
                 ),
@@ -54,7 +58,9 @@ class LeadListStatsRow extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _StatCard(
-                icon: AppIcons.flag,
+                icon: AppSocialUtils.iconoEstado(
+                  catalogState.valoresDefecto.idEstadoConPropuesta,
+                ),
                 color: AppSocialUtils.colorEstado(
                   catalogState.valoresDefecto.idEstadoConPropuesta,
                 ),
@@ -70,7 +76,10 @@ class LeadListStatsRow extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  final IconData icon;
+  // Object porque el ícono de estado puede venir en FaIconData (FontAwesome,
+  // ej. AppSocialUtils.iconoEstado) o en IconData nativo de Flutter — resolveIcon
+  // decide cuál FaIcon/Icon armar en tiempo de ejecución.
+  final Object icon;
   final Color color;
   final int cantidad;
   final String label;
@@ -102,7 +111,7 @@ class _StatCard extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: AppSizing.iconSm, color: color),
+            child: resolveIcon(icon, AppSizing.iconSm, color),
           ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(

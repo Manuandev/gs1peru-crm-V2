@@ -31,8 +31,9 @@ class LeadListPortrait extends StatelessWidget {
                 LeadListFilterChips(
                   filtroActual: state.filtro,
                   conteos: state.conteos,
-                  onFiltroTap: (filtro) =>
-                      context.read<LeadListBloc>().add(LeadListFiltered(filtro)),
+                  onFiltroTap: (filtro) => context.read<LeadListBloc>().add(
+                    LeadListFiltered(filtro),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 LeadListStatsRow(conteos: state.conteos),
@@ -52,12 +53,14 @@ class LeadListPortrait extends StatelessWidget {
                     LeadListFiltro.enDesarrollo =>
                       'No hay seguimientos en desarrollo.',
                     LeadListFiltro.propuesta =>
-                      'No hay seguimientos listos para propuesta.',
+                      'No hay seguimientos con propuestas.',
                   },
                 )
               : ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   itemCount: leads.length,
                   itemBuilder: (context, index) {
                     final lead = leads[index];

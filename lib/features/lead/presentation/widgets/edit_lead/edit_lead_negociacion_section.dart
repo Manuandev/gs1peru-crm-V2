@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 class EditLeadNegociacionSection extends StatelessWidget {
   final CatalogsLoaded catalogState;
@@ -169,8 +170,8 @@ class EditLeadNegociacionSection extends StatelessWidget {
       initialValue: estado?.id,
       onChanged: onEstadoChanged,
       dense: true,
-      prefixIcon: Icon(
-        AppIcons.flag,
+      prefixIcon: FaIcon(
+        AppSocialUtils.iconoEstado(estado?.id ?? idEstadoFallback),
         color: colorEstado,
         size: AppSizing.iconActionSm,
       ),

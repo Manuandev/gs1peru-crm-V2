@@ -153,6 +153,12 @@ class AppSocialUtils {
 
   static Color bgEstado(String id) => _bgEstado[id] ?? const Color(0xFFF5F5F5);
 
+  /// Ícono crudo del estado (sin color ni widget armado) — para componer un
+  /// [FaIcon] propio cuando no aplica [widgetEstado] (ej. prefixIcon de un
+  /// combo, que usa el tamaño/estilo de los demás campos del formulario).
+  static FaIconData iconoEstado(String id) =>
+      _iconosEstado[id] ?? FontAwesomeIcons.question;
+
   // ============================================================
   // MAPA DE PUENTE — canal expo (CanalExpoItem, dbo.EDU_CANAL_EXPO)
   // "¿Cómo se enteró del evento?" — catálogo aparte del canal de origen

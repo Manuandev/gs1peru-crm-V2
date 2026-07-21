@@ -117,8 +117,7 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
         // placeholder en blanco de prepararNuevaNegociacion() (idLead == 0):
         // en ambos casos se sigue mostrando _ultimoLead en vez del skeleton
         // o de datos en blanco — ver comentario del listener de arriba.
-        final lead =
-            (state is InfoLeadSuccess && state.negociacion.idLead != 0)
+        final lead = (state is InfoLeadSuccess && state.negociacion.idLead != 0)
             ? state.negociacion
             : _ultimoLead;
         if (lead == null) {
@@ -291,7 +290,9 @@ class _ContactoHeaderTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final nombreCompleto = lead.nombreCompleto;
+    final nombreCompleto = lead.nombreCompleto.isNotEmpty
+        ? lead.nombreCompleto
+        : '${lead.prefijoPais} ${lead.numero}';
 
     return Row(
       children: [
@@ -301,12 +302,10 @@ class _ContactoHeaderTitle extends StatelessWidget {
             CircleAvatar(
               radius: AppSizing.avatarRadiusAppBar,
               backgroundColor: AvatarUtils.color(nombreCompleto),
-              child: Text(
-                AvatarUtils.initials(nombreCompleto),
-                style: AppTextStyles.titleSmall.copyWith(
-                  color: AppColors.textOnDark,
-                  fontWeight: AppTextStyles.weightBold,
-                ),
+              child: Icon(
+                AppIcons.user,
+                size: AppSizing.iconSm,
+                color: AppColors.textOnDark,
               ),
             ),
             Positioned(

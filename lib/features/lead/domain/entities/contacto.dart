@@ -24,10 +24,11 @@ class Contacto extends Equatable {
   /// Nombre completo del contacto — vacío si no tiene nombre/apellidos
   /// registrados (el fallback a número de teléfono vive en [ContactoNegociacion],
   /// que sí conoce el [Numero]).
-  String get nombreCompleto =>
-      [nombre, apellidoPaterno, apellidoMaterno]
-          .where((parte) => parte.trim().isNotEmpty)
-          .join(' ');
+  String get nombreCompleto => [
+    nombre,
+    apellidoPaterno,
+    apellidoMaterno,
+  ].where((parte) => parte.trim().isNotEmpty).join(' ');
 
   const Contacto({
     required this.idContacto,

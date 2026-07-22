@@ -202,3 +202,21 @@ Ambos pueden calificar directo como "sin respuesta" en la sección de prioridade
 `UPDATE_PANTALLA_WHATSAPP` (confirmación de mensajes que envía el propio asesor) — eso no debe
 disparar recarga. `HomeRefresh()` vuelve a pedir el dashboard completo (no hay parche en memoria
 como en `ChatListBloc`), consistente con cómo ya reaccionaba al cambio de filtro del moderador.
+
+### `HomeRefresh.silencioso` (2026-07-21)
+
+`HomeRefresh` tiene un flag `silencioso` (default `false`) que controla si `_onRefresh` emite
+`HomeLoading` antes de recargar:
+
+- **`silencioso: true`** (recarga por `MENSAJE_WHATSAPP`/`NUEVO_LEAD_BOT` vía
+  `MessageDispatcher`) — no emite `HomeLoading`, se queda en el `HomeLoaded` anterior mientras
+  pide el dashboard de nuevo y lo reemplaza directo cuando llega. Así se ve como una
+  actualización en tiempo real y no como una pantalla de carga completa.
+- **`silencioso: false`** (default) — pull-to-refresh (`home_view.dart` `RefreshIndicator`),
+  botón reintentar de `AppErrorView`, y el cambio de filtro del moderador
+  (`FiltroCubit.instance.stream`) — estos sí muestran `HomeLoading` porque son acciones
+  explícitas del usuario donde se espera feedback visual.
+
+No se usa merge/patch en memoria para el caso silencioso (a diferencia de
+`HomePrioridadGestionada`) porque el SP siempre trae el dashboard completo y armar un merge
+parcial arriesga a dejar campos desactualizados si el SP omite alguna sección.

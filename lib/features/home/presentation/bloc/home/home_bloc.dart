@@ -51,12 +51,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     _filtroSub = FiltroCubit.instance.stream.listen((_) => add(HomeRefresh()));
     // Recarga "Prioridad ahora" cuando llega un mensaje nuevo de WhatsApp o
     // el bot crea un lead nuevo — ambos pueden entrar directo a "sin respuesta".
+    // Silenciosa: se ve como una actualización en tiempo real, no como una carga.
     _messageSubscription = MessageDispatcher.instance.stream.listen((message) {
       if (isClosed) return;
       switch (message.process) {
         case 'MENSAJE_WHATSAPP':
         case 'NUEVO_LEAD_BOT':
-          add(HomeRefresh());
+          add(const HomeRefresh(silencioso: true));
       }
     });
   }
@@ -74,7 +75,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onRefresh(HomeRefresh event, Emitter<HomeState> emit) async {
-    emit(const HomeLoading());
+    if (!event.silencioso) emit(const HomeLoading());
     await _loadData(emit);
   }
 

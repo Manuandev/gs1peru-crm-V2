@@ -19,11 +19,17 @@ class HomeStarted extends HomeEvent {
   const HomeStarted();
 }
 
-/// El usuario pidió actualizar los datos.
-/// Disparado por: popup "Actualizar" o pull-to-refresh.
-/// No muestra spinner completo para no parpadear la UI.
+/// Se pidió actualizar los datos del dashboard.
+/// Disparado por: pull-to-refresh, botón reintentar (manual, [silencioso]
+/// = false → sí emite HomeLoading) o recarga automática por notificación
+/// del socket (silencioso = true → sin HomeLoading, se ve como una
+/// actualización en tiempo real).
 class HomeRefresh extends HomeEvent {
-  const HomeRefresh();
+  final bool silencioso;
+  const HomeRefresh({this.silencioso = false});
+
+  @override
+  List<Object?> get props => [silencioso];
 }
 
 /// Una prioridad se gestionó correctamente (botón "Gestionar").

@@ -60,6 +60,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         idTipoDocRuc: idTipoDocRuc,
         pasoOrigen: pasoOrigen,
         tiposParticipante: tiposParticipante,
+        cantidadEsperada: formState.cantidadEsperada,
       );
 
   if (result is CrudOk) progreso?.completarPasoActual();

@@ -59,14 +59,16 @@ class _SolicitudParticipantesViewState
   // siendo editable siempre (ver
   // participante_form_sheet.dart), esto es solo una sugerencia inicial.
   //
-  // Al último participante esperado se le sugiere lo que FALTA para que la
-  // suma calce exacto con el total de la negociación, en vez de la misma
-  // división simple que los demás — repartir un total con decimales entre
-  // varios participantes y redondear cada uno por separado a 2 decimales
-  // puede dejar la suma un par de centavos por debajo (o encima) del total
-  // real (ej. 425 / 2 / 1.18 = 180.0847... → 180.08 c/u → suma 360.16, no
-  // 360.1695... → el importe total del footer terminaba en 424.99, no
-  // 425.00). Bug real detectado en vivo por el usuario.
+  // Siempre es la misma división simple para TODOS los participantes,
+  // incluido el último — ya no se le sugiere "lo que falta" para calzar
+  // exacto con el total de la negociación (así era hasta el 2026-07-21).
+  // Pedido de negocio, 2026-07-22: el importe nunca más se fuerza a calzar
+  // contra ningún total — si el asesor edita el importe de otro
+  // participante (ej. un descuento manual), eso NO debe empujarse hacia el
+  // sugerido de uno nuevo. El centavo de redondeo que esto puede dejar
+  // suelto ya no se absorbe acá — se absorbe en el IGV del último Pagante,
+  // recién al completar el máximo de participantes (ver
+  // ParticipantesState.igvPorParticipante).
   double? _importeFijo(BuildContext context) {
     final formState = context.read<SolicitudFormCubit>().state;
     final cantidadEsperada = formState.cantidadEsperada;
@@ -78,12 +80,6 @@ class _SolicitudParticipantesViewState
         : 0.0;
 
     final totalSinIgv = formState.precioTotalLead / (1 + igvPorcentaje / 100);
-
-    final actuales = context.read<ParticipantesCubit>().state.participantes;
-    if (actuales.length == cantidadEsperada - 1) {
-      final sumaOtros = actuales.fold(0.0, (sum, p) => sum + p.importe);
-      return double.parse((totalSinIgv - sumaOtros).toStringAsFixed(2));
-    }
 
     return totalSinIgv / cantidadEsperada;
   }

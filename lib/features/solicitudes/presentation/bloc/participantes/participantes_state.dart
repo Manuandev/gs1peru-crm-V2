@@ -107,11 +107,92 @@ class ParticipantesState {
   /// `tipoParticipante` (id crudo, sin bool propio en `ParticipanteLocal`)
   /// — nunca comparar contra ids hardcodeados. Pedido de negocio, 2026-07-17.
   double totalPagantes(List<TipoParticipanteItem> tiposParticipante) {
-    return participantes.where((p) {
+    return participantes
+        .where((p) {
+          final tipo = tiposParticipante
+              .where((t) => t.id == p.tipoParticipante)
+              .firstOrNull;
+          return !(tipo?.esInvitado ?? false);
+        })
+        .fold(0.0, (sum, p) => sum + p.importe);
+  }
+
+  /// IGV de cada participante (mapeado por `id`), calculado normal
+  /// (`importe × igv%`, redondeado a 2 decimales) salvo el **último
+  /// Pagante** de la lista, cuando ya se completó el máximo de
+  /// participantes esperados (`cantidadEsperada`) — a ese se le asigna "lo
+  /// que falta" para que la SUMA de los IGV de los Pagantes cierre exacta
+  /// contra `totalPagantes × igv%` (el mismo valor que ya se manda como
+  /// DC_IGV agregado, ver `SolicitudRemoteDatasource.guardarSolicitud`).
+  /// Los Invitados nunca se tocan — su IGV no se factura (ver
+  /// `totalPagantes`), ajustarlos no serviría de nada.
+  ///
+  /// Si todavía no se completó el máximo (o la solicitud no viene de una
+  /// negociación con cantidad definida, `cantidadEsperada == null`), cada
+  /// uno usa el cálculo normal, sin ajuste — pedido de negocio, 2026-07-22:
+  /// el ajuste de centavos solo aplica al llegar al máximo, no antes.
+  ///
+  /// El importe (base sin IGV) de cada participante nunca se toca acá —
+  /// ya no se fuerza a calzar contra ningún total (ver `_importeFijo` en
+  /// `solicitud_participantes_view.dart`/`solicitud_completar_view.dart`,
+  /// que ahora siempre sugiere la división simple).
+  Map<int, double> igvPorParticipante(
+    List<TipoParticipanteItem> tiposParticipante,
+    double igvPorcentaje, {
+    int? cantidadEsperada,
+  }) => calcularIgvPorParticipante(
+    participantes,
+    tiposParticipante,
+    igvPorcentaje,
+    cantidadEsperada: cantidadEsperada,
+  );
+
+  /// Versión estática de [igvPorParticipante] — la usa directamente
+  /// `SolicitudRemoteDatasource.guardarSolicitud`, que no tiene una
+  /// instancia de `ParticipantesState` armada, solo la lista cruda que le
+  /// llega por parámetro.
+  static Map<int, double> calcularIgvPorParticipante(
+    List<ParticipanteLocal> participantes,
+    List<TipoParticipanteItem> tiposParticipante,
+    double igvPorcentaje, {
+    int? cantidadEsperada,
+  }) {
+    bool esInvitado(ParticipanteLocal p) {
       final tipo = tiposParticipante
           .where((t) => t.id == p.tipoParticipante)
           .firstOrNull;
-      return !(tipo?.esInvitado ?? false);
-    }).fold(0.0, (sum, p) => sum + p.importe);
+      return tipo?.esInvitado ?? false;
+    }
+
+    final igvs = <int, double>{
+      for (final p in participantes)
+        p.id: double.parse(
+          (p.importe * igvPorcentaje / 100).toStringAsFixed(2),
+        ),
+    };
+
+    final completo =
+        cantidadEsperada != null && participantes.length >= cantidadEsperada;
+    if (!completo) return igvs;
+
+    final pagantes = participantes.where((p) => !esInvitado(p)).toList();
+    if (pagantes.isEmpty) return igvs;
+
+    final ultimo = pagantes.last;
+    final totalImportePagantes = pagantes.fold(
+      0.0,
+      (sum, p) => sum + p.importe,
+    );
+    final igvObjetivo = double.parse(
+      (totalImportePagantes * igvPorcentaje / 100).toStringAsFixed(2),
+    );
+    final igvAcumulado = pagantes
+        .where((p) => p.id != ultimo.id)
+        .fold(0.0, (sum, p) => sum + (igvs[p.id] ?? 0));
+
+    igvs[ultimo.id] = double.parse(
+      (igvObjetivo - igvAcumulado).toStringAsFixed(2),
+    );
+    return igvs;
   }
 }

@@ -100,6 +100,14 @@ class SolicitudRemoteDatasource {
     // esInvitado y excluir a los Invitados de DC_IMPORTE (no pagan, ver
     // ParticipantesState.totalPagantes). Nunca comparar ids hardcodeados.
     required List<TipoParticipanteItem> tiposParticipante,
+    // Cantidad de participantes esperada por la negociación de origen
+    // (SolicitudFormState.cantidadEsperada) — null si esta solicitud no
+    // viene de una negociación con cantidad ya definida. Usado solo para
+    // saber cuándo aplicar el ajuste de centavos del IGV del último
+    // Pagante (ver ParticipantesState.igvPorParticipante) — no bloquea ni
+    // valida nada acá, esa validación ya vive en
+    // validarSolicitudParaGenerar.
+    int? cantidadEsperada,
   }) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
@@ -184,9 +192,23 @@ class SolicitudRemoteDatasource {
       pasoOrigen, // 44 PASO_ORIGEN
     ].join(AppConstants.sepCampos);
 
+    // El IGV de cada participante ya no es siempre `importe × igv%` —
+    // el del último Pagante (recién al completar cantidadEsperada) se
+    // ajusta a "lo que falta" para que la suma cierre exacta contra
+    // dcIgv (arriba). Ver ParticipantesState.igvPorParticipante — mismo
+    // pedido de negocio, 2026-07-22, que reemplaza el ajuste que antes
+    // vivía en el importe (ver _importeFijo en las vistas del wizard).
+    final igvPorParticipante = ParticipantesState.calcularIgvPorParticipante(
+      participantes,
+      tiposParticipante,
+      igvPorcentaje,
+      cantidadEsperada: cantidadEsperada,
+    );
+
     final detalle = participantes
         .map((p) {
-          final igv = p.importe * igvPorcentaje / 100;
+          final igv =
+              igvPorParticipante[p.id] ?? (p.importe * igvPorcentaje / 100);
           return [
             p.id.toString(), // ID
             p.tipoDocId, // ID_TIP_DOC

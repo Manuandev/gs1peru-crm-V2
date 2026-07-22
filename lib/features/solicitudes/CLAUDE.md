@@ -1,5 +1,59 @@
 # Solicitudes Feature
 
+## Importe ya no absorbe el redondeo — el centavo de IGV se mueve al último Pagante (2026-07-22)
+Pedido de negocio (jefe del usuario, relayado en varias rondas de explicación con ejemplos
+numéricos antes de tocar código — ver el chat de esa fecha si hace falta repasar el razonamiento
+completo). Reemplaza el mecanismo de reconciliación de centavos que existía desde 2026-07-16
+("Reconciliación de centavos" más abajo) — ese fix forzaba al importe (base sin IGV) del último
+participante esperado a absorber el redondeo; el nuevo mecanismo mueve esa responsabilidad al
+**IGV**, dejando el importe siempre libre.
+
+- **`_importeFijo()`** (duplicado en `solicitud_participantes_view.dart` y
+  `solicitud_completar_view.dart`, mismo patrón de siempre) **ya no tiene una rama especial para
+  el último participante** — siempre retorna la división simple
+  (`totalSinIgv / cantidadEsperada`), sin importar cuántos participantes ya estén agregados ni
+  qué importes tengan editados a mano. Antes, al llegar al penúltimo (`actuales.length ==
+  cantidadEsperada - 1`), sugería "lo que falta" para que la suma calzara exacto contra la
+  negociación — eso se eliminó a propósito: si el asesor le da un descuento manual a un
+  participante, ese descuento **no debe empujarse** hacia el importe sugerido de otro nuevo
+  participante (mezclaría una decisión de negocio del asesor con el precio de referencia de la
+  negociación). El importe de cada participante, incluido el último, se queda tal cual el
+  sugerido o lo que el asesor haya tipeado — nunca se fuerza a calzar contra ningún total.
+- **`ParticipantesState.igvPorParticipante()` / `.calcularIgvPorParticipante()`** (nuevo, estático
+  — `presentation/bloc/participantes/participantes_state.dart`) — calcula el IGV de cada
+  participante (`importe × igv%`, redondeado normal) salvo el **último Pagante** de la lista
+  (nunca un Invitado — su IGV no se factura, ver `totalPagantes`), y **solo cuando la lista ya
+  alcanzó `cantidadEsperada`** (antes de completar el máximo, todos usan el cálculo normal, sin
+  ajuste). A ese último Pagante se le asigna "lo que falta" —
+  `(sumaImportesPagantes × igv%) − IGV ya acumulado de los demás Pagantes` — para que la SUMA de
+  IGV de los Pagantes cierre exacta contra el mismo valor que ya se manda como `DC_IGV` agregado
+  (`dcImporte × igvPorcentaje / 100`, sin cambios). El ajuste puede salir para cualquier lado
+  (restar o sumar un centavo al IGV "normal" del último) — no hay una regla fija de dirección,
+  depende de hacia dónde cayó el redondeo acumulado de los demás.
+- **`SolicitudRemoteDatasource.guardarSolicitud()`** — el loop que arma el `detalle` por
+  participante (antes `igv = p.importe * igvPorcentaje / 100` para todos, sin excepción) ahora
+  llama `ParticipantesState.calcularIgvPorParticipante(participantes, tiposParticipante,
+  igvPorcentaje, cantidadEsperada: cantidadEsperada)` una sola vez y usa ese mapa (`id → igv`) al
+  armar cada fila — es el único lugar donde el IGV ajustado realmente importa, porque es lo que
+  se manda al SP como `IGV` de `EVT.T_TECMSOLINSCRIPCION02`. Nuevo parámetro `cantidadEsperada`
+  (`int?`, default implícito `null`) threaded de punta a punta: `guardarSolicitud()` →
+  `SolicitudRepository`/`SolicitudRepositoryImpl` → `GuardarSolicitudUseCase` →
+  `guardarSolicitudDesdeWizard()` (`solicitud_guardar_helper.dart`, lo resuelve de
+  `SolicitudFormCubit.state.cantidadEsperada`, mismo valor que ya usa para todo lo demás) — mismo
+  patrón que `igvPorcentaje`/`idTipoDocRuc`.
+- **No se tocó**: los agregados de cabecera (`dcImporte`, `dcIgv`, `dcImporteTotal`) — ya
+  calculaban exactamente el "IGV objetivo" que usa la reconciliación (`dcImporte × igv%`, sin
+  ningún ajuste especial, porque al ser un solo cálculo agregado nunca tuvo el problema de
+  redondeo acumulado). Tampoco se tocaron `_ResumenInversion` (footer del paso 2) ni
+  `_SeccionResumenComercial` (Resumen, paso 4) — ambos ya mostraban `inversion × igv%` como
+  agregado, que sigue siendo exactamente correcto con la regla nueva.
+- **Efecto secundario esperado, confirmado con el usuario**: como el importe ya no se fuerza a
+  calzar exacto contra la negociación, el **total general** (`importes + IGV`) puede quedar 1
+  centavo por encima o por debajo del precio original de la negociación — el residuo nace en el
+  redondeo del importe *sugerido* (`totalSinIgv / cantidadEsperada`, que rara vez es un número
+  exacto de 2 decimales) y ya no se recupera en ningún punto posterior. Aceptado explícitamente
+  ("son centavitos, pero hay que meterlo igual").
+
 ## Paso 3 (Facturación) — reglas para país distinto de Perú + Moneda se quita de la UI (2026-07-21)
 Pedido de negocio (jefe del usuario). Dos cambios independientes en `solicitud_facturacion_view.dart`:
 

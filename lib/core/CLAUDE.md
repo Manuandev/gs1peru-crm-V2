@@ -459,6 +459,12 @@ CustomTextField(
   // focusNode, obscureText, isUpperCase — todos opcionales
 )
 ```
+`mostrarBotonLimpiar: true` (default `false`, requiere `controller`) agrega un ícono "X" que
+limpia el campo cuando tiene texto — mismo patrón que ya usa `CustomComboSearchField`. Agregado
+2026-07-22, disponible en cualquier campo pero **apagado por defecto en toda la app** — pedido
+explícito del usuario, se activa manualmente campo por campo cuando se decida cuáles lo
+necesitan (ningún campo lo tiene activado todavía). Se ignora si ya se pasó un `suffixIcon`
+propio.
 
 ### CustomPasswordField
 Input de contraseña con toggle de visibilidad. Delega a `CustomTextField`.
@@ -594,6 +600,10 @@ CustomComboSearchField(
   // separator, hint, enabled, validator — opcionales
 )
 ```
+Al tocar una coincidencia de la lista, el campo pierde el foco y cierra el teclado
+automáticamente (fix 2026-07-22 — antes se quedaba enfocado tras elegir una opción). El botón
+"check"/listo del teclado mantiene el comportamiento por defecto de Flutter (cierra
+teclado/foco), sin cambios — no confundir ambos casos.
 
 ### CustomComboMultiField
 Combo multi-selección con chips. Abre diálogo con checkboxes.

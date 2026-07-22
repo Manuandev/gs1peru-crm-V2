@@ -58,6 +58,16 @@ class CustomTextField extends StatelessWidget {
   final VoidCallback? onTap;
   // Mantenido por compatibilidad — el estilo compacto es ahora el default
   final bool dense;
+  // Botón "X" que limpia el campo cuando tiene texto — mismo patrón que ya
+  // usa CustomComboSearchField. Agregado 2026-07-22, disponible para
+  // cualquier campo, pero **por ahora ningún campo de la app lo activa** —
+  // pedido explícito del usuario: dejarlo listo pero apagado por defecto,
+  // para habilitarlo manualmente campo por campo cuando se decida cuáles
+  // lo necesitan. Para activarlo en un campo puntual, pasar
+  // `mostrarBotonLimpiar: true` (requiere `controller` — sin uno no hay
+  // texto que observar para saber cuándo mostrar el botón). Se ignora si
+  // ya se pasó un `suffixIcon` propio (no se pisan entre sí).
+  final bool mostrarBotonLimpiar;
 
   const CustomTextField({
     super.key,
@@ -87,7 +97,26 @@ class CustomTextField extends StatelessWidget {
     this.isUpperCase = false,
     this.onTap,
     this.dense = false,
+    this.mostrarBotonLimpiar = false,
   });
+
+  Widget? _buildSuffixIcon() {
+    if (suffixIcon != null) return suffixIcon;
+    if (!mostrarBotonLimpiar || controller == null) return null;
+
+    return AnimatedBuilder(
+      animation: controller!,
+      builder: (_, _) => controller!.text.isEmpty
+          ? const SizedBox.shrink()
+          : GestureDetector(
+              onTap: () {
+                controller!.clear();
+                onChanged?.call('');
+              },
+              child: const Icon(AppIcons.close, size: AppSizing.iconSm),
+            ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,12 +152,8 @@ class CustomTextField extends StatelessWidget {
       // Oculta el contador "x/y" bajo el campo cuando hay maxLength — el
       // límite ya se aplica en silencio, no hace falta mostrarlo.
       buildCounter:
-          (
-            context, {
-            required currentLength,
-            required isFocused,
-            maxLength,
-          }) => null,
+          (context, {required currentLength, required isFocused, maxLength}) =>
+              null,
       style: AppTextStyles.inputTextCompact.copyWith(
         color: enabled ? AppColors.textPrimary : AppColors.textSecondary,
       ),
@@ -140,7 +165,7 @@ class CustomTextField extends StatelessWidget {
         hintStyle: _kHintStyle,
         floatingLabelStyle: _kFloatingLabelStyle,
         prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
+        suffixIcon: _buildSuffixIcon(),
         // Sin esto, Material reserva un área táctil mínima de 48x48 para
         // cada ícono sin importar su propio `size` — infla el campo por
         // encima del alto compacto (isDense) de los campos sin ícono, aunque

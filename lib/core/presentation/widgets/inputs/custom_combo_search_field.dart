@@ -37,6 +37,10 @@ class CustomComboSearchField extends StatefulWidget {
 class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
   late List<ComboItem> _allItems;
   ComboItem? _selected;
+  // Capturado en fieldViewBuilder — se usa en onSelected para quitar el foco
+  // y cerrar el teclado al tocar una coincidencia de la lista (2026-07-22).
+  // Antes el foco se quedaba en el campo tras elegir una opción.
+  FocusNode? _fieldFocusNode;
 
   @override
   void initState() {
@@ -168,8 +172,13 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
       onSelected: (item) {
         _selected = item;
         widget.onChanged?.call(item);
+        // Quita el foco y cierra el teclado al elegir una coincidencia —
+        // ya terminaste de buscar, no hace falta que el campo se quede
+        // activo (2026-07-22).
+        _fieldFocusNode?.unfocus();
       },
       fieldViewBuilder: (context, controller, focusNode, _) {
+        _fieldFocusNode = focusNode;
         return TextFormField(
           controller: controller,
           focusNode: focusNode,

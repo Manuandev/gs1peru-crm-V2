@@ -165,7 +165,7 @@ class _PrioridadTileHomeState extends State<PrioridadTileHome> {
             onTap: () => context.goToDetalleChatDesdeHome(
               idChatCab: prioridad.idChatCab,
             ),
-            tooltip: 'WhatsApp',
+            tooltip: 'Conversación',
           ),
           const SizedBox(width: AppSpacing.xxs),
 

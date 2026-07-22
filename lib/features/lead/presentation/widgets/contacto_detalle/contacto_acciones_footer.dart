@@ -57,7 +57,7 @@ class ContactoAccionesFooter extends StatelessWidget {
           if (_mostrarWhatsApp) ...[
             Expanded(
               child: CustomOutlinedButton(
-                text: 'WhatsApp',
+                text: 'Conversación',
                 icon: AppIcons.whatsapp,
                 borderColor: colorWhatsApp,
                 foregroundColor: colorWhatsApp,

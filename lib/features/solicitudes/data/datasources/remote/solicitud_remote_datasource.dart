@@ -178,7 +178,7 @@ class SolicitudRemoteDatasource {
       facturacion?.celular ?? '', // 30 CELULAR_FAC
       facturacion?.correo ?? '', // 31 CORREO_FAC
       facturacion?.direccion ?? '', // 32 DIRECCION_FAC
-      '', // 33 UBIGEO_FAC — sin selector en la UI todavía
+      facturacion?.ubigeoCodigo ?? '', // 33 UBIGEO_FAC
       facturacion?.monedaId ?? '', // 34 ID_MONEDA
       dcImporte.toStringAsFixed(2), // 35 DC_IMPORTE
       dcIgv.toStringAsFixed(2), // 36 DC_IGV

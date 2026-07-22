@@ -267,6 +267,7 @@ class ValoresCRMItem {
   final String idTipoDocPas;
   final String idEstadoEnDesarrollo;
   final String idEstadoConPropuesta;
+  final String idTipDocOtr;
 
   const ValoresCRMItem({
     this.idCanalWsp = 0,
@@ -283,6 +284,7 @@ class ValoresCRMItem {
     this.idTipoDocPas = '',
     this.idEstadoEnDesarrollo = '',
     this.idEstadoConPropuesta = '',
+    this.idTipDocOtr = '',
   });
 }
 

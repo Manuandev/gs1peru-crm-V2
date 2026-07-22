@@ -215,6 +215,82 @@ class SolicitudCampoCelular extends StatelessWidget {
   }
 }
 
+// ── SolicitudCampoCelularBusqueda (variante con combo de búsqueda) ───────────
+//
+// Mismo propósito que SolicitudCampoCelular (código telefónico + celular),
+// pero el selector de país es un CustomComboSearchField (tipear para
+// filtrar, por prefijo o por nombre del país) en vez de un modal — pedido de
+// negocio, 2026-07-22, **solo para el paso 3 (Facturación)**. Los otros 2
+// lugares que usan el campo de celular (Datos del solicitante, paso 1, y
+// Nuevo participante) siguen con SolicitudCampoCelular (modal) tal cual —
+// decisión explícita, no se generalizó el cambio a los 3 lugares. Si más
+// adelante se pide ahí también, evaluar unificar en un solo widget.
+
+class SolicitudCampoCelularBusqueda extends StatelessWidget {
+  final TextEditingController controller;
+  final bool habilitado;
+  final List<PaisItem> paises;
+  final PaisItem? paisSeleccionado;
+  final ValueChanged<PaisItem> onPaisChanged;
+  final String? Function(String?)? validator;
+
+  const SolicitudCampoCelularBusqueda({
+    super.key,
+    required this.controller,
+    required this.habilitado,
+    required this.paises,
+    required this.paisSeleccionado,
+    required this.onPaisChanged,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final data = paises
+        .map(
+          (p) =>
+              '${p.codigoTelefono}${AppConstants.sepCampos}'
+              '${p.nombre} (+${p.codigoTelefono})',
+        )
+        .toList();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: CustomComboSearchField(
+            data: data,
+            label: 'País',
+            enabled: habilitado,
+            initialValue: paisSeleccionado?.codigoTelefono,
+            onChanged: (item) {
+              if (item == null) return;
+              final pais = paises
+                  .where((p) => p.codigoTelefono == item.id)
+                  .firstOrNull;
+              if (pais != null) onPaisChanged(pais);
+            },
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          flex: 3,
+          child: CustomTextField(
+            label: 'Celular *',
+            controller: controller,
+            keyboardType: TextInputType.phone,
+            enabled: habilitado,
+            maxLength: 9,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            validator: validator,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 // ── Selector de país (código telefónico) — bottom sheet con búsqueda ─────────
 
 class _SelectorPaisTelefono extends StatefulWidget {

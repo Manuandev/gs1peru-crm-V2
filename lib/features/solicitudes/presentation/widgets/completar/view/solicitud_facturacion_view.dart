@@ -1,7 +1,6 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_facturacion_view.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -49,6 +48,18 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   String _tipoDocLabel = '';
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
+
+  // Ubigeo (Departamento/Provincia/Distrito) — solo aplica cuando el país
+  // elegido es Perú (ver _esExtranjero). Provincia depende del Departamento
+  // elegido, Distrito depende de Departamento+Provincia — ver
+  // _onUbigeoDptoChanged/_onUbigeoProvChanged, que resetean los niveles
+  // hijos al cambiar el padre.
+  String _ubigeoDptoId = '';
+  String _ubigeoDptoNombre = '';
+  String _ubigeoProvId = '';
+  String _ubigeoProvNombre = '';
+  String _ubigeoDisId = '';
+  String _ubigeoDisNombre = '';
 
   // País del código telefónico del celular — catálogo real vía CatalogsBloc
   PaisItem? _paisCelular;
@@ -199,6 +210,12 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       actividadEconomica: '',
       nit: _ctrlNit.text,
       observaciones: _ctrlObservaciones.text,
+      ubigeoDptoId: _ubigeoDptoId,
+      ubigeoDptoNombre: _ubigeoDptoNombre,
+      ubigeoProvId: _ubigeoProvId,
+      ubigeoProvNombre: _ubigeoProvNombre,
+      ubigeoDisId: _ubigeoDisId,
+      ubigeoDisNombre: _ubigeoDisNombre,
     );
   }
 
@@ -302,6 +319,12 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       _ctrlDireccion.text = datos.direccion;
       _ctrlNit.text = datos.nit;
       _ctrlObservaciones.text = datos.observaciones;
+      _ubigeoDptoId = datos.ubigeoDptoId;
+      _ubigeoDptoNombre = datos.ubigeoDptoNombre;
+      _ubigeoProvId = datos.ubigeoProvId;
+      _ubigeoProvNombre = datos.ubigeoProvNombre;
+      _ubigeoDisId = datos.ubigeoDisId;
+      _ubigeoDisNombre = datos.ubigeoDisNombre;
 
       if (datos.celularCodigoTelefono.isNotEmpty) {
         final catalogState = context.read<CatalogsBloc>().state;
@@ -517,6 +540,30 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final comprobantesTodos = catalogState is CatalogsLoaded
         ? catalogState.comprobantes
         : const <ComprobanteItem>[];
+    final ubigeoTodos = catalogState is CatalogsLoaded
+        ? catalogState.ubigeo
+        : const <UbigeoItem>[];
+
+    // Ubigeo en cascada — Departamento (prov/dis en '00'), Provincia (dis en
+    // '00', filtrada por el Departamento elegido) y Distrito (filtrada por
+    // Departamento+Provincia). Solo se muestran con país Perú (!esExtranjero,
+    // ver _SeccionDatosFacturacion).
+    final ubigeoDepartamentos = ubigeoTodos
+        .where((u) => u.prov == '00' && u.dis == '00')
+        .toList();
+    final ubigeoProvincias = ubigeoTodos
+        .where(
+          (u) => u.dpto == _ubigeoDptoId && u.prov != '00' && u.dis == '00',
+        )
+        .toList();
+    final ubigeoDistritos = ubigeoTodos
+        .where(
+          (u) =>
+              u.dpto == _ubigeoDptoId &&
+              u.prov == _ubigeoProvId &&
+              u.dis != '00',
+        )
+        .toList();
 
     // "Otros" en Tipo documento — sin id fijo en ValoresCRMItem (el catálogo
     // real no trae uno), se ubica por nombre. Si el catálogo real no tiene
@@ -634,20 +681,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                           esRuc: _esRuc,
                           esExtranjero: _esExtranjero,
                           correoLabel: correoLabel,
-                          numDocMaxLength: DocumentoValidationUtils.maxLength(
-                            _tipoDocId,
-                            _valoresDefecto,
-                          ),
-                          numDocKeyboardType:
-                              DocumentoValidationUtils.keyboardType(
-                                _tipoDocId,
-                                _valoresDefecto,
-                              ),
-                          numDocInputFormatters:
-                              DocumentoValidationUtils.inputFormatters(
-                                _tipoDocId,
-                                _valoresDefecto,
-                              ),
                           ctrlNumDoc: _ctrlNumDoc,
                           ctrlNombresRazon: _ctrlNombresRazon,
                           ctrlApellidoPaterno: _ctrlApellidoPaterno,
@@ -659,6 +692,49 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                           nacionalidades: nacionalidades,
                           paises: paises,
                           comprobantes: comprobantes,
+                          ubigeoDepartamentos: ubigeoDepartamentos,
+                          ubigeoProvincias: ubigeoProvincias,
+                          ubigeoDistritos: ubigeoDistritos,
+                          ubigeoDptoInicialId: _ubigeoDptoId.isNotEmpty
+                              ? _ubigeoDptoId
+                              : null,
+                          ubigeoProvInicialId: _ubigeoProvId.isNotEmpty
+                              ? _ubigeoProvId
+                              : null,
+                          ubigeoDisInicialId: _ubigeoDisId.isNotEmpty
+                              ? _ubigeoDisId
+                              : null,
+                          onUbigeoDptoChanged: (item) {
+                            setState(() {
+                              _ubigeoDptoId = item?.dpto ?? '';
+                              _ubigeoDptoNombre = item?.nombre ?? '';
+                              // Cambiar el Departamento invalida la
+                              // Provincia/Distrito ya elegidos — dependen de
+                              // este nivel.
+                              _ubigeoProvId = '';
+                              _ubigeoProvNombre = '';
+                              _ubigeoDisId = '';
+                              _ubigeoDisNombre = '';
+                            });
+                            _sincronizarCubit();
+                          },
+                          onUbigeoProvChanged: (item) {
+                            setState(() {
+                              _ubigeoProvId = item?.prov ?? '';
+                              _ubigeoProvNombre = item?.nombre ?? '';
+                              // Cambiar la Provincia invalida el Distrito.
+                              _ubigeoDisId = '';
+                              _ubigeoDisNombre = '';
+                            });
+                            _sincronizarCubit();
+                          },
+                          onUbigeoDisChanged: (item) {
+                            setState(() {
+                              _ubigeoDisId = item?.dis ?? '';
+                              _ubigeoDisNombre = item?.nombre ?? '';
+                            });
+                            _sincronizarCubit();
+                          },
                           paisCelular: paisCelular,
                           onPaisCelularChanged: (p) {
                             setState(() => _paisCelular = p);
@@ -709,6 +785,13 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                 // es Perú — se manda vacía.
                                 _nacionalidadId = '';
                                 _nacionalidadLabel = '';
+                                // Ubigeo tampoco aplica — solo existe para Perú.
+                                _ubigeoDptoId = '';
+                                _ubigeoDptoNombre = '';
+                                _ubigeoProvId = '';
+                                _ubigeoProvNombre = '';
+                                _ubigeoDisId = '';
+                                _ubigeoDisNombre = '';
                               }
                             });
                             _sincronizarCubit();
@@ -918,13 +1001,6 @@ class _SeccionDatosFacturacion extends StatefulWidget {
   // padre en ese caso (solo Boleta / solo "Otros").
   final bool esExtranjero;
   final String correoLabel;
-  // Longitud/teclado/formatters de Número documento según el tipo elegido —
-  // calculados por el padre con DocumentoValidationUtils (ver
-  // core/CLAUDE.md), mismo utilitario que usan Datos del solicitante y
-  // Nuevo participante — no reimplementar el mapeo tipo→longitud acá.
-  final int? numDocMaxLength;
-  final TextInputType numDocKeyboardType;
-  final List<TextInputFormatter>? numDocInputFormatters;
   final TextEditingController ctrlNumDoc;
   final TextEditingController ctrlNombresRazon;
   final TextEditingController ctrlApellidoPaterno;
@@ -936,6 +1012,18 @@ class _SeccionDatosFacturacion extends StatefulWidget {
   final List<NacionalidadItem> nacionalidades;
   final List<PaisItem> paises;
   final List<ComprobanteItem> comprobantes;
+  // Ubigeo en cascada — ya filtrados por el padre según Departamento/
+  // Provincia elegidos (ver SolicitudFacturacionView.build). Solo se
+  // muestran si !esExtranjero.
+  final List<UbigeoItem> ubigeoDepartamentos;
+  final List<UbigeoItem> ubigeoProvincias;
+  final List<UbigeoItem> ubigeoDistritos;
+  final String? ubigeoDptoInicialId;
+  final String? ubigeoProvInicialId;
+  final String? ubigeoDisInicialId;
+  final ValueChanged<UbigeoItem?>? onUbigeoDptoChanged;
+  final ValueChanged<UbigeoItem?>? onUbigeoProvChanged;
+  final ValueChanged<UbigeoItem?>? onUbigeoDisChanged;
   final PaisItem? paisCelular;
   final ValueChanged<PaisItem> onPaisCelularChanged;
   final String? comprobanteInicialId;
@@ -957,9 +1045,6 @@ class _SeccionDatosFacturacion extends StatefulWidget {
     required this.esRuc,
     required this.esExtranjero,
     required this.correoLabel,
-    this.numDocMaxLength,
-    this.numDocKeyboardType = TextInputType.number,
-    this.numDocInputFormatters,
     required this.ctrlNumDoc,
     required this.ctrlNombresRazon,
     required this.ctrlApellidoPaterno,
@@ -971,6 +1056,15 @@ class _SeccionDatosFacturacion extends StatefulWidget {
     required this.nacionalidades,
     required this.paises,
     required this.comprobantes,
+    required this.ubigeoDepartamentos,
+    required this.ubigeoProvincias,
+    required this.ubigeoDistritos,
+    this.ubigeoDptoInicialId,
+    this.ubigeoProvInicialId,
+    this.ubigeoDisInicialId,
+    this.onUbigeoDptoChanged,
+    this.onUbigeoProvChanged,
+    this.onUbigeoDisChanged,
     required this.paisCelular,
     required this.onPaisCelularChanged,
     this.comprobanteInicialId,
@@ -1015,23 +1109,13 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Fila 1: Comprobante + País — Moneda ya no se muestra (pedido de
+        // Fila 1: País + Comprobante — Moneda ya no se muestra (pedido de
         // negocio, 2026-07-21), el valor sigue viajando por detrás tal cual
         // ya se resolvía antes de este cambio (ver
-        // SolicitudFacturacionView._construirDatosFacturacion).
+        // SolicitudFacturacionView._construirDatosFacturacion). Orden
+        // (País primero) pedido de negocio, 2026-07-22.
         Row(
           children: [
-            Expanded(
-              child: CustomComboField<ComprobanteItem>(
-                label: 'Comprobante *',
-                data: widget.comprobantes,
-                enabled: widget.habilitado,
-                initialValue: widget.comprobanteInicialId,
-                onChanged: widget.onComprobanteChanged,
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomComboField<PaisItem>(
                 label: 'País *',
@@ -1042,11 +1126,28 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: CustomComboField<ComprobanteItem>(
+                label: 'Comprobante *',
+                data: widget.comprobantes,
+                enabled: widget.habilitado,
+                initialValue: widget.comprobanteInicialId,
+                onChanged: widget.onComprobanteChanged,
+                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 2: Tipo documento + Número documento / RUC
+        // Fila 2: Tipo documento + Número documento / RUC — sin
+        // restricciones de longitud/teclado por tipo de documento (pedido
+        // de negocio, 2026-07-22: ya no se usa DocumentoValidationUtils
+        // acá, solo un tope fijo de 12 caracteres, texto libre, sin
+        // importar si es RUC/DNI/Otros). A diferencia de Datos del
+        // solicitante y Nuevo participante, que SÍ siguen usando ese
+        // utilitario tal cual — este cambio es solo para Facturación.
         Row(
           children: [
             Expanded(
@@ -1063,12 +1164,10 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: widget.esRuc ? 'RUC *' : 'Número documento *',
+                label: 'Número documento *',
                 controller: widget.ctrlNumDoc,
                 focusNode: _numDocFocus,
-                keyboardType: widget.numDocKeyboardType,
-                maxLength: widget.numDocMaxLength,
-                inputFormatters: widget.numDocInputFormatters,
+                maxLength: 12,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => widget.onBuscarDocumento?.call(),
                 enabled: widget.habilitado,
@@ -1080,40 +1179,32 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 3: Nacionalidad (oculta si el país no es Perú — no aplica,
-        // se manda vacía) + Nombres / Razón social
-        Row(
-          children: [
-            if (!widget.esExtranjero) ...[
-              Expanded(
-                child: CustomComboField<NacionalidadItem>(
-                  label: 'Nacionalidad *',
-                  data: widget.nacionalidades,
-                  enabled: widget.habilitado,
-                  initialValue: widget.nacionalidadInicialId,
-                  onChanged: widget.onNacionalidadChanged,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Requerido' : null,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-            ],
-            Expanded(
-              child: CustomTextField(
-                label: widget.esRuc ? 'Razón Social *' : 'Nombres *',
-                controller: widget.ctrlNombresRazon,
-                enabled: widget.habilitado,
-                isUpperCase: true,
-                textCapitalization: TextCapitalization.words,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Requerido' : null,
-              ),
-            ),
-          ],
+        // Fila 3: Nacionalidad (ancho completo, oculta si el país no es
+        // Perú — no aplica, se manda vacía)
+        if (!widget.esExtranjero) ...[
+          CustomComboField<NacionalidadItem>(
+            label: 'Nacionalidad *',
+            data: widget.nacionalidades,
+            enabled: widget.habilitado,
+            initialValue: widget.nacionalidadInicialId,
+            onChanged: widget.onNacionalidadChanged,
+            validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
+
+        // Fila 4: Nombres / Razón social (ancho completo)
+        CustomTextField(
+          label: widget.esRuc ? 'Razón Social *' : 'Nombres *',
+          controller: widget.ctrlNombresRazon,
+          enabled: widget.habilitado,
+          isUpperCase: true,
+          textCapitalization: TextCapitalization.words,
+          validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 4: Apellido paterno + Apellido materno — solo persona natural
+        // Fila 5: Apellido paterno + Apellido materno — solo persona natural
         if (!widget.esRuc) ...[
           Row(
             children: [
@@ -1144,34 +1235,54 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
           const SizedBox(height: AppSpacing.xs),
         ],
 
-        // Fila 5: Celular + Correo (etiqueta según comprobante elegido)
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: SolicitudCampoCelular(
-                controller: widget.ctrlCelular,
-                habilitado: widget.habilitado,
-                paises: widget.paises,
-                paisSeleccionado: widget.paisCelular,
-                onPaisChanged: widget.onPaisCelularChanged,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Requerido' : null,
+        // Fila 6/7: Ubigeo (Departamento + Provincia, luego Distrito ancho
+        // completo) — solo Perú, con combo de búsqueda (tipeas y filtra),
+        // pedido de negocio 2026-07-22. Provincia/Distrito llevan una key
+        // que cambia con el padre (Departamento/Provincia) para forzar que
+        // el combo se remonte limpio cuando el nivel padre cambia —
+        // CustomComboSearchField no re-sincroniza initialValue solo (ver
+        // CustomComboField, que sí lo hace, para contraste).
+        if (!widget.esExtranjero) ...[
+          Row(
+            children: [
+              Expanded(
+                child: _ComboBusquedaUbigeo(
+                  label: 'Departamento *',
+                  items: widget.ubigeoDepartamentos,
+                  nivel: (u) => u.dpto,
+                  enabled: widget.habilitado,
+                  initialValue: widget.ubigeoDptoInicialId,
+                  onChanged: widget.onUbigeoDptoChanged,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: CustomTextField(
-                label: widget.correoLabel,
-                controller: widget.ctrlCorreo,
-                keyboardType: TextInputType.emailAddress,
-                enabled: widget.habilitado,
-                validator: (v) => v.emailValidator,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _ComboBusquedaUbigeo(
+                  key: ValueKey('ubigeo-prov-${widget.ubigeoDptoInicialId}'),
+                  label: 'Provincia *',
+                  items: widget.ubigeoProvincias,
+                  nivel: (u) => u.prov,
+                  enabled: widget.habilitado,
+                  initialValue: widget.ubigeoProvInicialId,
+                  onChanged: widget.onUbigeoProvChanged,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _ComboBusquedaUbigeo(
+            key: ValueKey(
+              'ubigeo-dis-${widget.ubigeoDptoInicialId}-${widget.ubigeoProvInicialId}',
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
+            label: 'Distrito *',
+            items: widget.ubigeoDistritos,
+            nivel: (u) => u.dis,
+            enabled: widget.habilitado,
+            initialValue: widget.ubigeoDisInicialId,
+            onChanged: widget.onUbigeoDisChanged,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
 
         // Dirección de domicilio (ancho completo)
         CustomTextField(
@@ -1181,7 +1292,81 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
           textCapitalization: TextCapitalization.sentences,
           validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
+        const SizedBox(height: AppSpacing.xs),
+
+        // Correo (ancho completo, línea propia — antes compartía fila con
+        // Celular)
+        CustomTextField(
+          label: widget.correoLabel,
+          controller: widget.ctrlCorreo,
+          keyboardType: TextInputType.emailAddress,
+          enabled: widget.habilitado,
+          validator: (v) => v.emailValidator,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+
+        // Celular (ancho completo, línea propia) — combo de país/prefijo
+        // con búsqueda en vez del modal de siempre (solo en Facturación,
+        // pedido de negocio 2026-07-22 — SolicitudCampoCelular, usado en
+        // Datos del solicitante y Nuevo participante, no se tocó).
+        SolicitudCampoCelularBusqueda(
+          controller: widget.ctrlCelular,
+          habilitado: widget.habilitado,
+          paises: widget.paises,
+          paisSeleccionado: widget.paisCelular,
+          onPaisChanged: widget.onPaisCelularChanged,
+          validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
+        ),
       ],
+    );
+  }
+}
+
+// ── Combo de búsqueda para un nivel de Ubigeo (Departamento/Provincia/
+// Distrito) — envuelve CustomComboSearchField (core) resolviendo el
+// UbigeoItem real a partir del código del nivel elegido (dpto/prov/dis
+// según corresponda), ya que ese widget solo maneja pares id¦descripción
+// crudos, no objetos tipados.
+class _ComboBusquedaUbigeo extends StatelessWidget {
+  final String label;
+  final List<UbigeoItem> items;
+  final String Function(UbigeoItem) nivel;
+  final bool enabled;
+  final String? initialValue;
+  final ValueChanged<UbigeoItem?>? onChanged;
+
+  const _ComboBusquedaUbigeo({
+    super.key,
+    required this.label,
+    required this.items,
+    required this.nivel,
+    required this.enabled,
+    this.initialValue,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final data = items
+        .map((u) => '${nivel(u)}${AppConstants.sepCampos}${u.nombre}')
+        .toList();
+
+    return CustomComboSearchField(
+      data: data,
+      label: label,
+      enabled: enabled,
+      initialValue: initialValue,
+      validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+      onChanged: (item) {
+        if (item == null) {
+          onChanged?.call(null);
+          return;
+        }
+        final seleccionado = items
+            .where((u) => nivel(u) == item.id)
+            .firstOrNull;
+        onChanged?.call(seleccionado);
+      },
     );
   }
 }

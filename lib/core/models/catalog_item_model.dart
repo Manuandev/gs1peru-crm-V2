@@ -444,6 +444,7 @@ class ValoresCRMItemModel extends ValoresCRMItem {
     required super.idTipoDocPas,
     required super.idEstadoEnDesarrollo,
     required super.idEstadoConPropuesta,
+    required super.idTipDocOtr,
   });
 
   factory ValoresCRMItemModel.fromRawString(String raw) {
@@ -463,6 +464,7 @@ class ValoresCRMItemModel extends ValoresCRMItem {
       idTipoDocPas: ParseUtils.str(c, 11),
       idEstadoEnDesarrollo: ParseUtils.str(c, 12),
       idEstadoConPropuesta: ParseUtils.str(c, 13),
+      idTipDocOtr: ParseUtils.str(c, 14),
     );
   }
 }

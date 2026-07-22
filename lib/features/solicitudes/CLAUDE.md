@@ -1,5 +1,57 @@
 # Solicitudes Feature
 
+## Paso 3 (Facturación) — Ubigeo nuevo, reorden de campos, combo de celular con búsqueda (2026-07-22)
+Pedido de negocio (jefe del usuario), varios cambios de UI en `_SeccionDatosFacturacion`
+(`solicitud_facturacion_view.dart`):
+
+- **Ubigeo (Departamento/Provincia/Distrito) — nuevo, solo con país Perú.** El catálogo
+  (`UbigeoItem`/`CatalogsBloc.ubigeo`, parte [16] del SP) ya existía pero no tenía ningún
+  selector armado en la UI todavía. Se agregó `_ComboBusquedaUbigeo` (widget privado nuevo,
+  mismo archivo) — 3 niveles en cascada, cada uno con `CustomComboSearchField` (tipear para
+  filtrar, no un dropdown simple): Departamento (filtra `prov=='00' && dis=='00'`), Provincia
+  (filtra por el Departamento elegido, `dis=='00'`), Distrito (filtra por Departamento+Provincia
+  elegidos). Cambiar el Departamento resetea Provincia+Distrito; cambiar Provincia resetea
+  Distrito (`onUbigeoDptoChanged`/`onUbigeoProvChanged` en `_SolicitudFacturacionViewState`).
+  Los combos de Provincia/Distrito llevan un `key` (`ValueKey`) que cambia con el padre —
+  `CustomComboSearchField` (a diferencia de `CustomComboField`, ver core/CLAUDE.md) no
+  re-sincroniza su `initialValue` en `didUpdateWidget`, así que sin ese `key` el campo se
+  quedaba mostrando el texto de la selección vieja aunque el estado ya se hubiera limpiado —
+  el `key` fuerza que Flutter destruya y recree el widget limpio cuando el nivel padre cambia.
+  **Solo se muestra si `!esExtranjero`** (país == Perú) — igual que Nacionalidad.
+  - `DatosFacturacion` ganó 6 campos nuevos (`ubigeoDptoId`/`Nombre`, `ubigeoProvId`/`Nombre`,
+    `ubigeoDisId`/`Nombre`) + getter `ubigeoCodigo` (concatena los 3 ids → código de 6 dígitos).
+  - `SolicitudRemoteDatasource.guardarSolicitud()` ahora manda `facturacion?.ubigeoCodigo ?? ''`
+    como field33 (`UBIGEO_FAC`) — antes siempre iba vacío ("sin selector en la UI todavía").
+  - `validarSolicitudParaGenerar()` exige `ubigeoCodigo.isNotEmpty` salvo `esExtranjero`, mismo
+    criterio que Nacionalidad.
+  - **Pendiente, no resuelto en esta sesión**: leer el Ubigeo de vuelta al reabrir una solicitud
+    ya guardada (task `'DT'`, `SolicitudDetalleModel`) — no se tocó porque no hay `.sql` a la
+    vista para confirmar en qué índice (si alguno) el SP ya trae `UBIGEO_FAC` de vuelta. Hasta
+    que se resuelva, reabrir una solicitud con Ubigeo ya guardado no lo va a prellenar (los 3
+    combos quedan vacíos, el asesor tendría que volver a elegirlos si edita esa solicitud).
+- **Número documento/RUC de Facturación — ya no usa `DocumentoValidationUtils`.** Antes variaba
+  `maxLength`/teclado/formatters según el tipo de documento (DNI=8, RUC=11, CE/Pasaporte=12,
+  mismo utilitario que Datos del solicitante y Nuevo participante). Ahora, **solo en este campo
+  de Facturación**: `maxLength: 12` fijo, teclado de texto libre, sin `inputFormatters`, sin
+  importar el tipo de documento elegido (RUC, DNI, Otros, etc.) — pedido explícito de negocio,
+  "no quiero validaciones". El label también se simplificó: siempre "Número documento *" (antes
+  alternaba a "RUC *" cuando `esRuc`). **No se tocó `DocumentoValidationUtils`** ni su uso en
+  Datos del solicitante/Nuevo participante — siguen exactamente igual, este cambio es exclusivo
+  de Facturación.
+- **Reorden completo de campos**: País + Comprobante (antes era Comprobante + País, ahora País
+  va primero) → Tipo documento + Número documento → Nacionalidad (ahora ancho completo, ya no
+  comparte fila) → Nombres/Razón Social (ancho completo) → Apellido paterno + materno → Ubigeo
+  (Departamento + Provincia en una fila, Distrito ancho completo abajo) → Dirección → Correo
+  (ahora ancho completo, línea propia) → Celular (ahora ancho completo, línea propia — antes
+  compartía fila con Correo).
+- **Celular — nuevo `SolicitudCampoCelularBusqueda`** (`solicitud_inputs.dart`), **solo para
+  este paso**. Reemplaza el modal de `SolicitudCampoCelular` (bottom sheet con buscador) por un
+  `CustomComboSearchField` inline — tipeas "+51" o "Perú" y filtra, sin abrir nada. Decisión
+  explícita del usuario: **no** se tocó `SolicitudCampoCelular` (el widget con modal) — Datos
+  del solicitante (paso 1) y Nuevo participante siguen usándolo tal cual. Si más adelante piden
+  el mismo combo de búsqueda ahí también, evaluar unificar en un solo widget en vez de mantener
+  2 — por ahora quedan intencionalmente separados.
+
 ## Importe ya no absorbe el redondeo — el centavo de IGV se mueve al último Pagante (2026-07-22)
 Pedido de negocio (jefe del usuario, relayado en varias rondas de explicación con ejemplos
 numéricos antes de tocar código — ver el chat de esa fecha si hace falta repasar el razonamiento
@@ -1828,8 +1880,9 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
     RUC, `RUCEMPRE_FAC`/`NOMEMPRE_FAC` se llenan y `NOMBRES_FAC`/apellidos quedan `''`; si no
     es RUC, es al revés. `NUM_DOC_FAC`/`ID_TIP_DOC_FAC`/`ID_NACION_FAC` (el SP reusa esta
     misma variable para `ID_NACIONALIDAD` e `ID_PAIS`) se llenan siempre.
-  - `CARGO_FAC`/`UBIGEO_FAC` se mandan vacíos — el primero porque el SP no lo usa en ningún
-    INSERT/UPDATE, el segundo porque no hay selector de ubigeo en la UI todavía.
+  - `CARGO_FAC` se manda vacío — el SP no lo usa en ningún INSERT/UPDATE. `UBIGEO_FAC` **ya
+    no** se manda vacío desde el 2026-07-22 — ver "Paso 3 (Facturación) — Ubigeo nuevo..." más
+    arriba, ahora manda `facturacion?.ubigeoCodigo`.
 - `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'AR'`, archivos) →
   `SolicitudRemoteDatasource.guardarArchivo()`, vía endpoint `SPSolicitudCUDAppArchivos`
   (`ApiConstants.urlSolicitudesCudArchivos`) — **no** `urlSolicitudesCud` (esa es solo para

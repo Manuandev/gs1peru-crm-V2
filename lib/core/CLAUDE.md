@@ -943,8 +943,10 @@ paso 1, Tipo de participante del formulario de participante) — **ya conectados
 2026-07-15 (ver `solicitudes/CLAUDE.md` → "Catálogo real reemplaza ids hardcodeados"), las
 listas fijas locales que tenían se eliminaron. La regla "saltar Facturación" usa `esInvitado`
 (no compara `id == '2' || id == '3'`).
-`UbigeoItem` (parte [16]) no tiene todavía ningún selector de Ubigeo en la UI — `solicitudes/`
-manda `UBIGEO_FAC` vacío al CUD por esta razón (ver `solicitudes/CLAUDE.md`).
+`UbigeoItem` (parte [16]) ya tiene selector en la UI desde el 2026-07-22 — paso 3 (Facturación)
+de `solicitudes/`, 3 combos en cascada (Departamento/Provincia/Distrito) con
+`CustomComboSearchField`, solo visibles con país Perú (ver `solicitudes/CLAUDE.md`, "Paso 3 —
+Ubigeo nuevo..."). Ningún otro lugar de la app lo usa todavía.
 
 ---
 

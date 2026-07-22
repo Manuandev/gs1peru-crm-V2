@@ -249,6 +249,9 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
         (esExtranjero || facturacion.nacionalidadId.isNotEmpty) &&
         facturacion.nombresRazon.trim().isNotEmpty &&
         (esRuc || facturacion.apellidoPaterno.trim().isNotEmpty) &&
+        // Ubigeo (Departamento/Provincia/Distrito) solo aplica con país
+        // Perú — mismo criterio que Nacionalidad arriba (2026-07-22).
+        (esExtranjero || facturacion.ubigeoCodigo.isNotEmpty) &&
         facturacion.celular.trim().isNotEmpty &&
         facturacion.correo.emailValidator == null &&
         facturacion.direccion.trim().isNotEmpty;

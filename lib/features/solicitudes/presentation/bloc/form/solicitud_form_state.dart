@@ -84,6 +84,18 @@ class DatosFacturacion {
   final String nit;
   final String observaciones;
 
+  // Ubigeo (Departamento/Provincia/Distrito) — solo aplica cuando el país
+  // elegido es Perú (ver SolicitudFacturacionView._esExtranjero). Cada nivel
+  // guarda su propio id (código UbigeoItem.dpto/prov/dis, jerárquico — ver
+  // core/CLAUDE.md) y su nombre para poder restaurar los 3 combos en cascada
+  // al volver "Atrás" y reentrar a este paso, 2026-07-22.
+  final String ubigeoDptoId;
+  final String ubigeoDptoNombre;
+  final String ubigeoProvId;
+  final String ubigeoProvNombre;
+  final String ubigeoDisId;
+  final String ubigeoDisNombre;
+
   const DatosFacturacion({
     required this.comprobanteId,
     required this.comprobante,
@@ -106,7 +118,20 @@ class DatosFacturacion {
     required this.actividadEconomica,
     required this.nit,
     required this.observaciones,
+    this.ubigeoDptoId = '',
+    this.ubigeoDptoNombre = '',
+    this.ubigeoProvId = '',
+    this.ubigeoProvNombre = '',
+    this.ubigeoDisId = '',
+    this.ubigeoDisNombre = '',
   });
+
+  /// Código completo de 6 dígitos (dpto+prov+dis) que espera `UBIGEO_FAC` en
+  /// el CUD — vacío si no se completaron los 3 niveles.
+  String get ubigeoCodigo =>
+      ubigeoDptoId.isEmpty || ubigeoProvId.isEmpty || ubigeoDisId.isEmpty
+      ? ''
+      : '$ubigeoDptoId$ubigeoProvId$ubigeoDisId';
 }
 
 class SolicitudFormState {

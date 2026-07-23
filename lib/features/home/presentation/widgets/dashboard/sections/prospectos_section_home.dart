@@ -31,26 +31,65 @@ class ProspectosSectionHome extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ...prospectos.take(_maxVisible).toList().asMap().entries.map((e) {
-              final isLast =
-                  e.key == (prospectos.length.clamp(0, _maxVisible) - 1);
-              return Column(
+        child: prospectos.isEmpty
+            ? const _EstadoVacioProspectos()
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ProspectoTileHome(prospecto: e.value),
-                  if (!isLast)
-                    Divider(
-                      color: colorScheme.outlineVariant.withValues(
-                        alpha: AppColors.opacityDivider,
-                      ),
-                    ),
+                  ...prospectos
+                      .take(_maxVisible)
+                      .toList()
+                      .asMap()
+                      .entries
+                      .map((e) {
+                        final isLast =
+                            e.key ==
+                            (prospectos.length.clamp(0, _maxVisible) - 1);
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ProspectoTileHome(prospecto: e.value),
+                            if (!isLast)
+                              Divider(
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: AppColors.opacityDivider,
+                                ),
+                              ),
+                          ],
+                        );
+                      }),
                 ],
-              );
-            }),
+              ),
+      ),
+    );
+  }
+}
+
+class _EstadoVacioProspectos extends StatelessWidget {
+  const _EstadoVacioProspectos();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              AppIcons.checkCircle,
+              size: AppSizing.iconLg,
+              color: AppColors.success,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'No hay ningún prospecto nuevo',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: AppTextStyles.weightSemiBold,
+              ),
+            ),
           ],
         ),
       ),

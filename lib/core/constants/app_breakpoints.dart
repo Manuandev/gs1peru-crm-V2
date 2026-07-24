@@ -436,6 +436,11 @@ class AppSizing {
   /// Contenedor cuadrado de ícono en cards/listas (SelectTemplatePortrait, etc.): 40dp
   static const double iconContainerMd = 40.0;
 
+  /// Card cuadrada grande de archivo adjunto (TemplateFileCard — selector y
+  /// formulario de plantillas): 72dp — más grande que iconContainerMd para
+  /// que quepan ícono + nombre + extensión dentro del mismo cuadrado.
+  static const double fileCardSize = 72.0;
+
   /// Altura de la barra de preview de multimedia seleccionada (WhatsAppMediaPicker): 72dp
   static const double previewBarHeight = 72.0;
 

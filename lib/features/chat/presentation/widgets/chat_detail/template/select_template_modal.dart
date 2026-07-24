@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 // ── Tabs de filtro por tipo de archivo ───────────────────────────────────────
@@ -57,38 +58,6 @@ bool _esAudio(String ext) {
     '.opus',
     '.oga',
   }.contains(ext.toLowerCase());
-}
-
-IconData _iconParaExt(String ext) {
-  final e = ext.toLowerCase();
-  if (const {
-    '.jpg',
-    '.jpeg',
-    '.png',
-    '.gif',
-    '.webp',
-    '.bmp',
-    '.mp4',
-    '.mov',
-    '.avi',
-    '.mkv',
-    '.3gp',
-  }.contains(e)) {
-    return AppIcons.image;
-  }
-  if (e == '.pdf') return AppIcons.pdf;
-  if (const {
-    '.ogg',
-    '.mp3',
-    '.m4a',
-    '.aac',
-    '.wav',
-    '.opus',
-    '.oga',
-  }.contains(e)) {
-    return AppIcons.mic;
-  }
-  return AppIcons.fileOutlined;
 }
 
 // ── Sustitución de variables de plantilla ─────────────────────────────────────
@@ -181,7 +150,13 @@ class _SelectTemplateModalState extends State<SelectTemplateModal> {
         children: [
           const _Handle(),
 
-          _Header(onClose: () => Navigator.of(context).pop()),
+          _Header(
+            onClose: () => Navigator.of(context).pop(),
+            onNuevo: () {
+              Navigator.of(context).pop();
+              context.goToTemplateForm();
+            },
+          ),
 
           _ChipTabBar(
             tabIndex: _tabIndex,
@@ -269,7 +244,8 @@ class _Handle extends StatelessWidget {
 
 class _Header extends StatelessWidget {
   final VoidCallback onClose;
-  const _Header({required this.onClose});
+  final VoidCallback onNuevo;
+  const _Header({required this.onClose, required this.onNuevo});
 
   @override
   Widget build(BuildContext context) {
@@ -292,6 +268,12 @@ class _Header extends StatelessWidget {
                 color: colorScheme.onSurface,
               ),
             ),
+          ),
+          IconButton(
+            onPressed: onNuevo,
+            icon: Icon(AppIcons.add, color: colorScheme.primary),
+            tooltip: 'Nueva plantilla',
+            visualDensity: VisualDensity.compact,
           ),
           IconButton(
             onPressed: onClose,
@@ -605,10 +587,11 @@ class _TemplateItem extends StatelessWidget {
               ],
             ),
 
-            // ── Chip de archivo adjunto ─────────────────────
+            // ── Card de archivo adjunto ──────────────────────
             if (tieneArchivo) ...[
               const SizedBox(height: AppSpacing.xs),
-              _ArchivoChip(
+              TemplateFileCard(
+                compact: true,
                 nombre: plantilla.archivoNombre,
                 ext: plantilla.archivoExt,
               ),
@@ -708,66 +691,29 @@ class _TemplatePreview extends StatelessWidget {
                     ),
                   ),
 
-                  // ── Chip de archivo adjunto ────────────────
+                  // ── Card de archivo adjunto ─────────────────
                   if (tieneArchivo) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    _ArchivoChip(
+                    const SizedBox(height: AppSpacing.sm),
+                    TemplateFileCard(
                       nombre: plantilla!.archivoNombre,
                       ext: plantilla!.archivoExt,
                     ),
                   ],
+
+                  // ── Editar plantilla ─────────────────────────
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.goToTemplateForm(
+                        idPlantilla: plantilla!.idPlantilla,
+                      );
+                    },
+                    icon: const Icon(AppIcons.edit),
+                    label: const Text('Editar'),
+                  ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Chip de archivo adjunto ────────────────────────────────────────────────────
-
-class _ArchivoChip extends StatelessWidget {
-  final String nombre;
-  final String ext;
-
-  const _ArchivoChip({required this.nombre, required this.ext});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        border: Border.all(
-          color: colorScheme.outlineVariant,
-          width: AppSizing.hairline,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _iconParaExt(ext),
-            size: AppSizing.iconSm,
-            color: colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: AppSpacing.xxs),
-          Flexible(
-            child: Text(
-              '$nombre$ext',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
             ),
           ),
         ],

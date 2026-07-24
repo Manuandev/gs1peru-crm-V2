@@ -263,4 +263,58 @@ class ChatRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  // ── Gestión de plantillas (crear/editar) ──────────────────────────────────
+  // Tasks 'DP'/'UP' y el endpoint de guardarPlantilla son provisionales — el
+  // SP real todavía no está definido (ver TemplateFormBloc, que por ahora no
+  // invoca ninguno de los dos). Se dejan escritos con el mismo patrón que
+  // getInfoNegociacion('DT')/updateEstado('UE') para no reinventar el
+  // formato de body cuando el backend esté listo.
+
+  Future<PlantillaModel> getPlantilla(int idPlantilla) async {
+    final String body = '${[idPlantilla].join(camp)}${sep}DP';
+
+    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => PlantillaModel.fromRawString(data),
+      ApiEmpty() => throw const AppException('Plantilla no encontrada.'),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  Future<CrudResult> guardarPlantilla(Plantilla plantilla) async {
+    final ip = await _deviceInfo.getLocalIp();
+    // Botones: solo texto por botón, unidos con un separador comodín — el SP
+    // aún no define cómo distinguirlos dentro de un mismo campo.
+    final botonesTexto = plantilla.botones.join(AppConstants.sepComodin);
+
+    final String body =
+        '${[
+          plantilla.idPlantilla,
+          plantilla.nombre,
+          plantilla.idCampania,
+          plantilla.idOportunidad,
+          plantilla.activo ? 1 : 0,
+          plantilla.contenido,
+          plantilla.idEstadoNegociacion,
+          plantilla.compartir ? 1 : 0,
+          plantilla.archivoRuta,
+          plantilla.archivoNombre,
+          plantilla.archivoExt,
+          botonesTexto,
+          _session.codUser,
+          ip,
+        ].join(camp)}${sep}UP';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsCud, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
+    };
+  }
 }

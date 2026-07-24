@@ -34,6 +34,10 @@ abstract class ChatRepository {
 
   Future<List<Plantilla>> getPlantillas();
 
+  Future<Plantilla> getPlantilla(int idPlantilla);
+
+  Future<CrudResult> guardarPlantilla(Plantilla plantilla);
+
   bool sendWhatsAppTemplateMessage({
     required Plantilla plantilla,
     required String mensajeFormateado,

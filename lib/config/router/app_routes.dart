@@ -31,6 +31,7 @@ class AppRoutes {
   static const String detalleChat = '/chats/detalle';
   static const String detalleEditarLead = '/chats/detalle/editar-lead';
   static const String templates = '/chats/templates';
+  static const String templateForm = '/chats/templates/formulario';
 
   static const String detalleSeguimiento = '/seguimiento/detalle';
   static const String detalleSolicitud = '/solicitudes/detalle';

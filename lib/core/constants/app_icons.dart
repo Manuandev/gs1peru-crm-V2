@@ -409,6 +409,20 @@ class AppIcons {
   /// Archivo genérico (fallback de tipo desconocido)
   static const IconData fileGeneric = Icons.insert_drive_file_rounded;
 
+  // ── Formato de texto (toolbar de Descripción en TemplateForm) ────────────────
+
+  /// Negrita — envuelve la selección con *texto* (formato WhatsApp)
+  static const IconData boldText = Icons.format_bold_rounded;
+
+  /// Cursiva — envuelve la selección con _texto_ (formato WhatsApp)
+  static const IconData italicText = Icons.format_italic_rounded;
+
+  /// Tachado — envuelve la selección con ~texto~ (formato WhatsApp)
+  static const IconData strikethroughText = Icons.format_strikethrough_rounded;
+
+  /// Emojis — abre el picker de emojis en Descripción (TemplateForm)
+  static const IconData emoji = Icons.emoji_emotions_outlined;
+
   // ============================================================
   // NAVEGACIÓN — VARIANTES iOS
   // ============================================================

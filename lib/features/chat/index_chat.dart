@@ -26,6 +26,8 @@ export 'domain/usecases/send_chat_message_usecase.dart';
 export 'domain/usecases/send_file_message_usecase.dart';
 export 'domain/usecases/get_templates_usecase.dart';
 export 'domain/usecases/send_template_message_usecase.dart';
+export 'domain/usecases/get_plantilla_usecase.dart';
+export 'domain/usecases/guardar_plantilla_usecase.dart';
 
 export 'domain/usecases/update_lead_estado_usecase.dart';
 export 'domain/usecases/update_lead_info_usecase.dart';
@@ -49,11 +51,16 @@ export 'presentation/bloc/template/select_template_bloc.dart';
 export 'presentation/bloc/template/select_template_event.dart';
 export 'presentation/bloc/template/select_template_state.dart';
 
+export 'presentation/bloc/template_form/template_form_bloc.dart';
+export 'presentation/bloc/template_form/template_form_event.dart';
+export 'presentation/bloc/template_form/template_form_state.dart';
+
 export 'presentation/pages/chat_list_page.dart';
 export 'presentation/pages/chat_detail_page.dart';
 export '../lead/presentation/pages/edit_lead_page.dart';
 export 'presentation/pages/media_viewer_page.dart';
 export 'presentation/pages/select_template_page.dart';
+export 'presentation/pages/template_form_page.dart';
 
 export 'presentation/widgets/chat_list/chat_list_landscape.dart';
 export 'presentation/widgets/chat_list/chat_list_portrait.dart';
@@ -96,3 +103,10 @@ export '../lead/presentation/widgets/edit_lead/edit_lead_portrait.dart';
 export 'presentation/widgets/chat_detail/template/select_template_view.dart';
 export 'presentation/widgets/chat_detail/template/select_template_portrait.dart';
 export 'presentation/widgets/chat_detail/template/select_template_modal.dart';
+export 'presentation/widgets/chat_detail/template/template_file_card.dart';
+
+export 'presentation/widgets/chat_detail/template_form/template_form_view.dart';
+export 'presentation/widgets/chat_detail/template_form/template_form_general_section.dart';
+export 'presentation/widgets/chat_detail/template_form/template_form_adjuntos_section.dart';
+export 'presentation/widgets/chat_detail/template_form/template_form_descripcion_section.dart';
+export 'presentation/widgets/chat_detail/template_form/template_form_botones_section.dart';

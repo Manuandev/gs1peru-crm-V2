@@ -304,6 +304,13 @@ class AppRouter {
         return SelectTemplatePage(negociacion: args['lead'] as Negociacion);
       },
     ),
+    AppRoutes.templateForm: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return TemplateFormPage(idPlantilla: args['idPlantilla'] as int?);
+      },
+    ),
   };
 
   // ── Helpers ────────────────────────────────────────────────

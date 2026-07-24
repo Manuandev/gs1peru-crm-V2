@@ -61,6 +61,14 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<List<Plantilla>> getPlantillas() => _datasource.getTemplates();
 
   @override
+  Future<Plantilla> getPlantilla(int idPlantilla) =>
+      _datasource.getPlantilla(idPlantilla);
+
+  @override
+  Future<CrudResult> guardarPlantilla(Plantilla plantilla) =>
+      _datasource.guardarPlantilla(plantilla);
+
+  @override
   bool sendWhatsAppTemplateMessage({
     required Plantilla plantilla,
     required String mensajeFormateado,

@@ -15,8 +15,17 @@ String nombreArchivoConExtension(String nombre, String extension) {
   return '$nombre$ext';
 }
 
+// Extensiones de imagen/audio reconocidas — mismo criterio que usa el
+// clasificador de tabs en select_template_modal.dart (_esImagen/_esAudio).
+const _extsImagen = {
+  'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'mp4', 'mov', 'avi', 'mkv', '3gp',
+};
+const _extsAudio = {'ogg', 'mp3', 'm4a', 'aac', 'wav', 'opus', 'oga'};
+
 IconData fileIcon(String mensaje) {
   final ext = mensaje.toLowerCase().split('.').last;
+  if (_extsImagen.contains(ext)) return AppIcons.image;
+  if (_extsAudio.contains(ext)) return AppIcons.mic;
   switch (ext) {
     case 'pdf':              return AppIcons.pdf;
     case 'doc': case 'docx': return AppIcons.fileWord;
@@ -28,6 +37,8 @@ IconData fileIcon(String mensaje) {
 
 String fileLabel(String mensaje) {
   final ext = mensaje.toLowerCase().split('.').last;
+  if (_extsImagen.contains(ext)) return 'Imagen';
+  if (_extsAudio.contains(ext)) return 'Audio';
   switch (ext) {
     case 'pdf':              return 'PDF';
     case 'doc': case 'docx': return 'Word';
@@ -39,6 +50,8 @@ String fileLabel(String mensaje) {
 
 Color fileColor(String mensaje) {
   final ext = mensaje.toLowerCase().split('.').last;
+  if (_extsImagen.contains(ext)) return AppColors.success;
+  if (_extsAudio.contains(ext)) return AppColors.warning;
   switch (ext) {
     case 'pdf':              return AppColors.errorLight;
     case 'doc': case 'docx': return AppColors.info;

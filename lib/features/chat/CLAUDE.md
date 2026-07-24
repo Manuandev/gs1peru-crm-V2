@@ -26,6 +26,7 @@ Es el feature más complejo de la app — leer completo antes de tocar cualquier
 | `EditLeadBloc` | `bloc/edit_lead/` | Formulario de edición de datos del lead |
 | `InfoLeadCubit` | `bloc/info_lead/` | Estado reactivo del lead en el detalle del chat |
 | `SelectTemplateBloc` | `bloc/template/` | Selección de template de WhatsApp |
+| `TemplateFormBloc` | `bloc/template_form/` | Formulario crear/editar plantilla — ver sección propia abajo |
 
 **`InfoLeadCubit` se comparte entre `ChatDetailPage` y `EditLeadPage`** — se crea en `ChatDetailPage` y se pasa a `EditLeadPage` con `BlocProvider.value`. No crear uno nuevo en `EditLeadPage`.
 
@@ -41,6 +42,8 @@ Todos los métodos usan `ApiConstants.urlChatsLst` o `ApiConstants.urlLeadsCud`:
 | `L` | `getChats()` | urlChatsLst |
 | `LD` | `getChatMessages(idLead, idUltimoMensaje?)` | urlChatsLst |
 | `LP` | `getTemplates()` | urlChatsLst |
+| `DP` ⚠️ | `getPlantilla(idPlantilla)` | urlChatsLst |
+| `UP` ⚠️ | `guardarPlantilla(plantilla)` | urlLeadsCud |
 | `UE` | `updateEstado(idLead, idEstado)` | urlLeadsCud |
 | `U` | `updateLeadCompleto(lead)` | urlLeadsCud |
 | `CA` | `sendWhatsAppMessage(...)` | SignalR |
@@ -209,6 +212,75 @@ Template tiene: `nombre`, `detalle`, `rutaArchivo`, `nombreArchivo`,
 
 ---
 
+## Gestión de plantillas — crear/editar (solo vista, 2026-07-24)
+
+`TemplateFormPage`/`TemplateFormView` (`presentation/pages/template_form_page.dart`,
+`presentation/widgets/chat_detail/template_form/`) — formulario para crear o editar una
+plantilla, agregado dentro de `chat/` (no hay ni habrá una feature `whatsapp/` aparte — decisión
+explícita del usuario: "plantillas está dentro de la conversación, no voy a hacer algo aparte").
+
+**Entradas** — ambas desde `select_template_modal.dart`:
+- Botón "Nuevo" (ícono `+`) en el header, junto al botón de cerrar → `context.goToTemplateForm()`.
+- Botón "Editar" en `_TemplatePreview`, debajo de la plantilla seleccionada →
+  `context.goToTemplateForm(idPlantilla: plantilla.idPlantilla)`.
+
+**Campos del formulario** (`Plantilla` — nuevos campos de gestión, todos con default para no
+romper el flujo de envío que ya usaba la entidad): `idCampania`, `idOportunidad`,
+`idEstadoNegociacion` (id de `EstadoItem`, el catálogo general de estados de negociación —
+**no confundir con `activo`**, son dos campos distintos aunque el mockup original los mezclaba
+en uno solo), `activo` (bool), `compartir` (bool), `botones` (`List<String>`, solo el texto de
+cada botón — no hay tipos de botón como quick-reply/URL/teléfono).
+
+- Campaña → Oportunidad en cascada, mismo patrón que
+  `edit_lead_portrait.dart._onOportunidadChanged` (filtra `oportunidades.where((o) =>
+  o.idCampania == campania.id)`).
+- Estado usa `CatalogsBloc.estados.where((e) => e.esPadre)`, igual que
+  `edit_lead_negociacion_section.dart`.
+- Adjuntos: imagen/documento se suben con `image_picker`/`file_picker` (como
+  `attachment_picker_widget.dart`); audio se graba con `AudioRecorderWidget` (ya existente en
+  `widgets/chat_detail/audio/`) — no hay opción de subir un audio ya grabado, hay que grabarlo.
+  El archivo queda en un `StagedFile` local, se muestra con `TemplateFileCard` (ver abajo).
+- Descripción: toolbar con negrita/cursiva/tachado (`AppIcons.boldText/italicText/
+  strikethroughText`, envuelven la selección con `*`/`_`/`~`, formato WhatsApp) + botón
+  "+ Variable" que inserta `{{nombre_cliente}}`/`{{apellido_cliente}}`/`{{nombre_asesor}}` en el
+  cursor — mismas 3 variables que ya reemplaza `_formatear` en `select_template_modal.dart`.
+
+**`TemplateFileCard`** (`widgets/chat_detail/template/template_file_card.dart`) — card de
+archivo adjunto con ícono/color por extensión (centralizado en
+`core/utils/ui/file_type_utils.dart` — `fileIcon`/`fileColor`, ya extendido con imagen/audio) +
+nombre + extensión. Reemplaza al viejo `_ArchivoChip` de una sola línea (pedido del jefe: "un
+poco más grande, con más información"). `compact: true` da la versión chica en fila, usada en
+`_TemplateItem` (lista lateral angosta); el default (cuadrado grande, `AppSizing.fileCardSize`)
+se usa en `_TemplatePreview` y en la sección de adjuntos del formulario.
+
+**Reglas de negocio confirmadas (2026-07-24):**
+- Tope de botones: **6** sin archivo adjunto, **3** con archivo adjunto (imagen/documento/audio)
+  — `_maxBotones` en `template_form_view.dart`, recalculado según `_archivo`. Al bajar el tope
+  (por adjuntar un archivo) los botones ya agregados no se recortan solos — el límite solo
+  bloquea agregar más.
+- No se puede adjuntar un archivo si ya hay más de 3 botones agregados (`_puedeAdjuntar`) — el
+  círculo de subir queda deshabilitado y gris hasta que se borren botones. Quitar el archivo
+  vuelve a subir el tope a 6 automáticamente (ambos son getters derivados de `_archivo`/
+  `_botonesCtrls`, no hay que sincronizar nada a mano).
+- Negrita/cursiva/tachado (`_envolverSeleccion`) también funcionan sin texto seleccionado:
+  insertan el par de marcadores con el cursor al medio, listo para escribir — no solo envuelven
+  una selección existente.
+- Toolbar de Descripción incluye emojis (`AppIcons.emoji`, picker propio en grid, sin dependencia
+  nueva) además de negrita/cursiva/tachado/variable.
+
+**Alcance actual — solo vista, explícito:**
+- `TemplateFormBloc` (`bloc/template_form/`) sí tiene toda la arquitectura (`GetPlantillaUseCase`,
+  `GuardarPlantillaUseCase`, `ChatRepository.getPlantilla`/`guardarPlantilla`,
+  `ChatRemoteDatasource` con el body ya armado) pero **ninguna llamada real al backend está
+  activa todavía** — los tasks `DP`/`UP` son provisionales, sin SP definido. `TemplateFormStarted`
+  arma el formulario vacío en memoria (con el `idPlantilla` recibido si es edición) sin pedir el
+  detalle real; `TemplateFormGuardarPressed` no persiste nada. La llamada real a
+  `GetPlantillaUseCase`/`GuardarPlantillaUseCase` queda escrita y comentada dentro de
+  `TemplateFormBloc`, lista para descomentar cuando el SP esté listo.
+- No define tipos de botón (quick-reply/URL/teléfono) — solo texto libre por botón.
+
+---
+
 ## Edición de lead — Cubit compartido
 
 `EditLeadPage` recibe el `InfoLeadCubit` ya creado desde `ChatDetailPage`:
@@ -245,6 +317,7 @@ Ruta: `AppRoutes.mediaPicker` con `TransitionType.slideRight`.
 | `ChatDetailPage` | `AppRoutes.detalleChat` | slideRight | `{'idChatCab': int}` — resuelve el `Chat` completo internamente vía task `LU`, sin importar el origen (lista de chats, lista de leads, home) |
 | `EditLeadPage` | `AppRoutes.detalleEditarLead` | slideRight | `{'lead': InfoLead, 'cubit': InfoLeadCubit}` |
 | `SelectTemplatePage` | `AppRoutes.templates` | slideRight | `{'lead': InfoLead}` |
+| `TemplateFormPage` | `AppRoutes.templateForm` | slideRight | `{'idPlantilla': int?}` — null = crear, con valor = editar |
 | `WhatsAppMediaPicker` | `AppRoutes.mediaPicker` | slideRight | — |
 
 ---

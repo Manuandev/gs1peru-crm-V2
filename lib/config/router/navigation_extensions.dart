@@ -224,6 +224,12 @@ extension NavigationExtensions on BuildContext {
   Future<Plantilla?> goToTemplates({required Negociacion negociacion}) =>
       _push<Plantilla>(AppRoutes.templates, arguments: {'lead': negociacion});
 
+  /// Crear (`idPlantilla` null) o editar (`idPlantilla` con valor) una plantilla.
+  Future<void> goToTemplateForm({int? idPlantilla}) => _push(
+    AppRoutes.templateForm,
+    arguments: {'idPlantilla': idPlantilla},
+  );
+
   /// Navega a un chat desde home: limpia el stack, pone ChatList como base
   /// y apila ChatDetail encima para que el back funcione correctamente.
   Future<void> goToDetalleChatDesdeHome({required int idChatCab}) {

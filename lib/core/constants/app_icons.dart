@@ -74,6 +74,9 @@ class AppIcons {
   /// Agregar / Crear — FAB, botones de nueva entidad
   static const IconData add = Icons.add;
 
+  /// Contraer / quitar — botón "-" de tarjeta expandible (EditContacto, empresa)
+  static const IconData remove = Icons.remove;
+
   /// Editar — lápiz outline
   static const IconData edit = Icons.edit_outlined;
 

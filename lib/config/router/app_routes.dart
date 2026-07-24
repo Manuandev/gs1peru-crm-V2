@@ -48,4 +48,5 @@ class AppRoutes {
   static const String mediaPicker = '/media-picker';
 
   static const String detalleContacto = '/leads/contacto';
+  static const String editarContacto = '/leads/contacto/editar';
 }

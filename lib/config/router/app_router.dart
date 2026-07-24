@@ -237,6 +237,14 @@ class AppRouter {
         return ContactoDetallePage(idNumero: args['idNumero'] as int);
       },
     ),
+    // CONTACTO — crear/editar (solo recibe idNumero, carga sus propios datos)
+    AppRoutes.editarContacto: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return EditContactoPage(idNumero: args['idNumero'] as int);
+      },
+    ),
 
     // HOME
     AppRoutes.notifications: RouteDefinition(

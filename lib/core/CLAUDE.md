@@ -927,6 +927,8 @@ usadas por `ListasGenericasModel.parse`) en `catalog_item_model.dart`. Ambos se 
 | `SexoItem` | id(String), nombre(String) — parte [14] del SP, hardcodeado (`M`/`F`/`PD`) |
 | `TipoParticipanteItem` | id(String), nombre(String), esInvitado(bool) — parte [15] del SP, hardcodeado (`1` Pagante · `2` Invitado · `3` Invitado auspicio · `4` Online). `esInvitado` = `true` en `2`/`3` (no paga) |
 | `UbigeoItem` | dpto(String), prov(String), dis(String), nombre(String), `codigo` (getter = `dpto+prov+dis`) — parte [16] del SP, `DBO.SYSTABUBIGEO01`. Jerárquico: filtrar por `dpto` (departamento), `dpto`+`prov` (provincia), `codigo` completo identifica un distrito. Patrón ubigeo estándar para saber el nivel de una fila: `prov=='00' && dis=='00'` → departamento; `prov!='00' && dis=='00'` → provincia; `prov!='00' && dis!='00'` → distrito |
+| `AreaItem` | id(String=codargu), nombre(String=deslarga) — parte [18] del SP, `SYSTABEXTER02 CODTABLA='AOF'`, agregada 2026-07-23. Área de empresa — usada en `lead/` (`EditContacto`, sección Empresa) |
+| `CargoItem` | id(String=codCargo), nombre(String=desCargo) — parte [19] del SP, `DBO.SYSMCARGO01`, agregada 2026-07-23. Cargo de empresa — usada en `lead/` (`EditContacto`, sección Empresa). `T_EMPRESA_CONTACTO.ID_AREA`/`ID_CARGO` son columnas `INT` — el id de catálogo (String) se manda tal cual, SQL Server lo convierte implícito al insertar |
 
 Todas implementan `Comboable` excepto `ValoresCRMItem` (fila única, no es un ítem de lista/dropdown).
 Parsear con `ListasGenericasModel.parse(rawResponse)`.

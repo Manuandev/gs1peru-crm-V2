@@ -17,4 +17,12 @@ abstract class LeadRepository {
   Future<List<HistorialComentario>> obtenerHistorialSeguimientoPorNumero(
     int idNumero,
   );
+
+  // ⚠️ PENDIENTE — endpoint de lectura aún sin confirmar con backend, ver
+  // lead/CLAUDE.md. Contacto en blanco (idContacto == 0) si el número
+  // todavía no tiene contacto asociado.
+  Future<ContactoDetalle> getContactoPorIdNumero(int idNumero);
+  // CRM.CSV_CONTACTO_CUD_APP — rama CREATE ya funciona; rama UPDATE
+  // pendiente de reglas de negocio (ver lead/CLAUDE.md).
+  Future<CrudResult> guardarContacto(ContactoDetalle contacto);
 }

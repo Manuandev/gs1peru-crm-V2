@@ -131,4 +131,128 @@ class LeadRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  // Task 'D' de CRM.CSV_CONTACTO_LST_APP — formato confirmado contra el .sql
+  // real (2026-07-23). ⚠️ Sigue pendiente confirmar la ruta del controller
+  // C# real en ApiConstants.lstContacto (placeholder). Si el número todavía
+  // no tiene contacto, el SP devuelve '' → ApiEmpty → ContactoDetalle en
+  // blanco (modo "crear").
+  Future<ContactoDetalleModel> getContactoPorIdNumero(int idNumero) async {
+    final String body = '$idNumero${sep}D';
+
+    final result = await _api.postSafe(ApiConstants.urlContactoLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) =>
+        ContactoDetalleModel.fromRawString(data, idNumero),
+      ApiEmpty() => ContactoDetalleModel.vacio(idNumero),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  // Task 'U' de CRM.CSV_CONTACTO_CUD_APP — rama CREATE y UPDATE implementadas
+  // (2026-07-23). Envelope de 6 secciones separadas por sepListas (¯):
+  // token(auto) ¯ datosContacto ¯ 'U' ¯ datosNumeros ¯ datosCorreos ¯ datosEmpresas
+  // — el task va justo después de datosContacto, no al final (a diferencia
+  // del resto de SPs de este proyecto).
+  // Números/correos/empresas: cada fila manda su propio id primero (0 =
+  // nueva, el SP la crea; con id = ya existe y el SP la ignora tal cual, no
+  // la actualiza — pedido de negocio: "si algo ya se tiene, que se quede
+  // ahí nomás"). El UPDATE de T_CONTACTO sí sobreescribe todos sus campos
+  // directo. Validación de número/correo de OTRO contacto sigue activa
+  // (solo sobre filas nuevas); la de documento duplicado quedó deshabilitada
+  // a pedido de negocio. Ver lead/CLAUDE.md.
+  Future<CrudResult> guardarContacto(ContactoDetalle contacto) async {
+    final ip = await _deviceInfo.getLocalIp();
+    final coords = await _deviceInfo.getCoordenadasString();
+
+    // UBIGEO real es VARCHAR(6) = dpto(2)+prov(2)+dis(2) concatenados — el
+    // SP no recibe los 3 niveles por separado.
+    final ubigeo = '${contacto.idDepartamento}${contacto.idProvincia}${contacto.idDistrito}';
+
+    // Salta la validación de "DNI duplicado" cuando ya hay un idContacto
+    // (edición, o segundo intento donde el usuario ya confirmó continuar)
+    // — mismo criterio pendiente de reforzar del lado del SP, ver
+    // lead/CLAUDE.md ("reglas de negocio de duplicados").
+    final ibValidacion = contacto.idContacto == 0 ? 1 : 0;
+
+    final datosContacto = [
+      contacto.idNumero,
+      contacto.idContacto,
+      contacto.nombre,
+      contacto.apellidoPaterno,
+      contacto.apellidoMaterno,
+      contacto.idTipoDocumento,
+      contacto.numeroDocumento,
+      contacto.idNacionalidad,
+      contacto.idPais,
+      contacto.direccion,
+      ubigeo,
+      contacto.prefijoContacto,
+      contacto.linkedin,
+      ibValidacion,
+      _session.codUser,
+      ip,
+      coords,
+    ].join(camp);
+
+    // idNumero va primero: 0 (fila nueva, el SP la crea y la vincula) o el
+    // id real (ya existe y ya está vinculada — el SP la ignora tal cual,
+    // no se actualiza ni esPrincipal/esFavorito).
+    final datosNumeros = contacto.numeros
+        .map(
+          (n) => [
+            n.idNumero,
+            n.prefijo,
+            n.numero,
+            n.esPrincipal ? 1 : 0,
+            n.esFavorito ? 1 : 0,
+          ].join(camp),
+        )
+        .join(AppConstants.sepRegistros);
+
+    // idCorreo va primero — mismo criterio que idNumero/idEmpresaContacto.
+    final datosCorreos = contacto.correos
+        .map((c) => [c.idCorreo, c.correo].join(camp))
+        .join(AppConstants.sepRegistros);
+
+    // Empresas — idEmpresaContacto va primero: 0 (fila nueva, la agrega el
+    // SP) o el id real (ya existe, el SP la ignora para no duplicarla al
+    // reenviar la lista completa en cada guardado). Ubigeo de empresa
+    // (idDepartamento+idProvincia+idDistrito, 2 dígitos c/u) se concatena
+    // igual que el ubigeo del contacto — ver `ubigeo` más arriba. area/cargo
+    // son ids de catálogo (INT) — ver lead/CLAUDE.md.
+    final datosEmpresas = contacto.empresas
+        .map(
+          (e) => [
+            e.idEmpresaContacto,
+            e.idPais,
+            e.ruc,
+            e.nombreEmpresa,
+            e.direccion,
+            '${e.idDepartamento}${e.idProvincia}${e.idDistrito}',
+            e.area,
+            e.cargo,
+          ].join(camp),
+        )
+        .join(AppConstants.sepRegistros);
+
+    final String body = [
+      datosContacto,
+      'U',
+      datosNumeros,
+      datosCorreos,
+      datosEmpresas,
+    ].join(sep);
+
+    final result = await _api.postSafe(ApiConstants.urlContactoCud, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
+    };
+  }
 }

@@ -8,6 +8,10 @@ export 'data/models/historial_comentario_model.dart';
 export 'data/models/contacto_model.dart';
 export 'data/models/numero_model.dart';
 export 'data/models/contacto_negociacion_model.dart';
+export 'data/models/contacto_detalle_model.dart';
+export 'data/models/numero_contacto_model.dart';
+export 'data/models/correo_contacto_model.dart';
+export 'data/models/empresa_contacto_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
 
@@ -17,6 +21,10 @@ export 'domain/entities/contacto_negociacion.dart';
 export 'domain/entities/comentario_lead.dart';
 export 'domain/entities/negociacion.dart';
 export 'domain/entities/historial_comentario.dart';
+export 'domain/entities/contacto_detalle.dart';
+export 'domain/entities/numero_contacto.dart';
+export 'domain/entities/correo_contacto.dart';
+export 'domain/entities/empresa_contacto.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
@@ -79,3 +87,14 @@ export 'presentation/cubit/historial/historial_lead_state.dart';
 export 'presentation/cubit/historial/historial_lead_cubit.dart';
 
 export 'presentation/widgets/lead_detail_sheet/tabs/negociaciones_tab.dart';
+
+// EditContacto — pantalla "Crear/Editar contacto" (recibe solo idNumero)
+export 'presentation/bloc/contacto_form/contacto_form_cubit.dart';
+export 'presentation/bloc/contacto_form/contacto_form_state.dart';
+export 'presentation/pages/edit_contacto_page.dart';
+export 'presentation/widgets/edit_contacto/edit_contacto_view.dart';
+export 'presentation/widgets/edit_contacto/edit_contacto_portrait.dart';
+export 'presentation/widgets/edit_contacto/edit_contacto_datos_section.dart';
+export 'presentation/widgets/edit_contacto/edit_contacto_celular_section.dart';
+export 'presentation/widgets/edit_contacto/edit_contacto_correo_section.dart';
+export 'presentation/widgets/edit_contacto/edit_contacto_empresa_section.dart';

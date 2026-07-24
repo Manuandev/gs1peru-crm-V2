@@ -36,6 +36,12 @@ class ListasGenericas {
   final List<UbigeoItem> ubigeo;
   // Parte [17] del SP lstListas — DBO.EDU_CANAL_EXPO, canales de expo
   final List<CanalExpoItem> canalesExpo;
+  // Parte [18] del SP lstListas — SYSTABEXTER02 CODTABLA='AOF', áreas de empresa
+  final List<AreaItem> areas;
+  // Parte [19] del SP lstListas — DBO.SYSMCARGO01, cargos de empresa
+  final List<CargoItem> cargos;
+  // Parte [20] del SP lstListas — hardcodeado, saludos de contacto
+  final List<PrefijoContactoItem> prefijosContacto;
 
   const ListasGenericas({
     required this.campanias,
@@ -56,6 +62,9 @@ class ListasGenericas {
     this.tiposParticipante = const [],
     this.ubigeo = const [],
     this.canalesExpo = const [],
+    this.areas = const [],
+    this.cargos = const [],
+    this.prefijosContacto = const [],
   });
 }
 
@@ -359,4 +368,40 @@ class CanalExpoItem with Comboable {
 
   @override
   List<dynamic> get fields => [id, descripcion];
+}
+
+// SP lstListas parte [18]: codargu ¦ deslarga — SYSTABEXTER02 CODTABLA='AOF'.
+// Área de empresa — usado en EditContacto (lead/), sección Empresa.
+class AreaItem with Comboable {
+  final String id;
+  final String nombre;
+
+  const AreaItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+// SP lstListas parte [19]: codCargo ¦ desCargo — DBO.SYSMCARGO01.
+// Cargo de empresa — usado en EditContacto (lead/), sección Empresa.
+class CargoItem with Comboable {
+  final String id;
+  final String nombre;
+
+  const CargoItem({required this.id, required this.nombre});
+
+  @override
+  List<dynamic> get fields => [id, nombre];
+}
+
+// SP lstListas parte [20]: lista plana de saludos (hardcodeada, ej.
+// 'Estimado'¬'Estimada') — a diferencia del resto de catálogos, cada fila es
+// un solo valor (sin id¦label separados), así que id == nombre acá.
+class PrefijoContactoItem with Comboable {
+  final String valor;
+
+  const PrefijoContactoItem({required this.valor});
+
+  @override
+  List<dynamic> get fields => [valor, valor];
 }

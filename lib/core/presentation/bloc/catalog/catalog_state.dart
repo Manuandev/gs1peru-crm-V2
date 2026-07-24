@@ -41,6 +41,9 @@ class CatalogsLoaded extends CatalogsState {
   List<TipoParticipanteItem> get tiposParticipante => listas.tiposParticipante;
   List<UbigeoItem> get ubigeo => listas.ubigeo;
   List<CanalExpoItem> get canalesExpo => listas.canalesExpo;
+  List<AreaItem> get areas => listas.areas;
+  List<CargoItem> get cargos => listas.cargos;
+  List<PrefijoContactoItem> get prefijosContacto => listas.prefijosContacto;
 
   @override
   List<Object?> get props => [
@@ -62,6 +65,9 @@ class CatalogsLoaded extends CatalogsState {
     tiposParticipante,
     ubigeo,
     canalesExpo,
+    areas,
+    cargos,
+    prefijosContacto,
   ];
 }
 

@@ -6,6 +6,136 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 ## Pantallas
 - `LeadListPage` → lista de leads con chips de filtro; recibe `filtroInicial` opcional (`LeadListFiltro?`) para preseleccionar un chip al entrar (ej. desde `CardTotalesHome` en el dashboard)
 - `LeadDetallePage` → detalle completo del lead con comentarios y stepper de estado
+- `EditContactoPage` (ruta `AppRoutes.editarContacto`, `context.goToEditarContacto(idNumero:)`) →
+  crear/editar contacto. Recibe **solo `idNumero`** — `ContactoFormCubit` (bloc/contacto_form/)
+  carga el `ContactoDetalle` completo (identidad + documento + nacionalidad + ubicación +
+  listas de celulares/correos/empresas) al entrar. Título dinámico en `EditContactoView`:
+  `idContacto != 0` → "Editar contacto", `idContacto == 0` → "Editar número". Sin límite de
+  celulares/correos (pedido explícito de negocio, 2026-07-23). Estructura: `EditContactoPage` →
+  `EditContactoView` (BasePage + AppBar dinámico + guardandoNotifier) → `EditContactoPortrait`
+  (StatefulWidget con todo el estado local: combos de catálogo + listas dinámicas de
+  `NumeroFormRow`/`CorreoFormRow`/`EmpresaFormRow`, ver `contacto_form_rows.dart`) → 4 secciones
+  Stateless (`EditContactoDatosSection`/`CelularSection`/`CorreoSection`/`EmpresaSection`).
+  **Backend — SPs reales, confirmados 2026-07-23**:
+  `D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`
+  (repo aparte, con su propio git — .sql en UTF-16LE con BOM, cualquier edición futura debe
+  preservar esa codificación o SSMS los muestra corruptos, ver nota de `solicitudes/CLAUDE.md`).
+  - `CRM.CSV_CONTACTO_CUD_APP` — task `'U'` (crear/actualizar). Rama CREATE (`@ID_CONTACTO` nulo/0)
+    funciona; rama UPDATE existe pero con reglas de negocio pendientes de definir con negocio:
+    validación de DNI duplicado no distingue "el usuario ya confirmó continuar" (siempre bloquea
+    si `@IB_VALIDACION=1`), el check de "números en otro usuario" no excluye los que ya son del
+    mismo contacto, y no hay tope de 3 números/3 correos todavía (decisión pendiente: bloquear con
+    alerta + devolver data actual, o permitir sin límite como hoy).
+  - `CRM.CSV_CONTACTO_LST_APP` — task `'D'` (detalle por idNumero), escrito desde cero 2026-07-23
+    (el archivo anterior era un placeholder — copia sin terminar de `CSV_LEADS_LST_APP`, nunca
+    desplegado). Resuelve `@ID_CONTACTO` vía `T_CONTACTO_NUMERO` activo más reciente para el
+    `idNumero` recibido; si no hay contacto, `SELECT ''` → `ApiEmpty` en Flutter → pantalla arranca
+    en blanco (modo "crear"). Formato de respuesta documentado en el header de
+    `contacto_detalle_model.dart` (Flutter) — los índices de campo ya calzan 1:1, no requirió
+    tocar el parser. **UBIGEO** en `T_CONTACTO` es `VARCHAR(6)` (dpto+prov+dis, 2 dígitos c/u) —
+    el SP lo parte en 3 al leer; `lead_remote_datasource.dart.guardarContacto` concatena los 3
+    niveles de vuelta a 6 caracteres al guardar (`ubigeo` local var).
+  - **Área/Cargo de Empresa — catálogo real conectado 2026-07-23.** El usuario agregó las partes
+    [18] (`SYSTABEXTER02 CODTABLA='AOF'`) y [19] (`DBO.SYSMCARGO01`) al SP `CSV_LISTAS_LST_APP` —
+    `AreaItem`/`CargoItem` (`core/models/catalog_item.dart`) + `CatalogsBloc.areas`/`.cargos`.
+    `EmpresaFormRow.area`/`cargo` (`contacto_form_rows.dart`) pasaron de `TextEditingController`
+    a `AreaItem?`/`CargoItem?`, matcheados contra el catálogo en
+    `EditContactoPortrait._inicializarCombos` (por índice, mismo orden que
+    `widget.contacto.empresas`). `EditContactoEmpresaSection` ya usa `CustomComboField<AreaItem>`/
+    `<CargoItem>` en vez de texto libre.
+  - `T_EMPRESA` solo tiene una columna `NOMBRE` (no hay "razón social" separada) — el campo
+    `razonSocial` del formulario/entidad Flutter es a efectos prácticos un espejo de
+    `nombreEmpresa`, ambos se guardan en la misma columna.
+  **Catálogos/combos con búsqueda — actualizado 2026-07-23**:
+  - Prefijo (saludo Estimado/Estimada) ya usa catálogo real, `PrefijoContactoItem` (parte [20] del
+    SP lstListas, hardcodeado del lado del SP igual que Sexo/TipoParticipante — formato plano, un
+    solo valor por fila, sin separar id/label). Combo simple (`CustomComboField`, no búsqueda) —
+    solo 2-5 opciones fijas, pedido explícito de negocio.
+  - Prefijo de celular ya NO usa el paquete `country_picker` (era un modal) — usa
+    `CustomComboSearchField` sobre `PaisItem.codigoTelefono`, mismo patrón que
+    `SolicitudCampoCelularBusqueda` (`solicitudes/`). `NumeroFormRow.pais` es `PaisItem?`, no
+    `Country?`. `agregar_numero_panel.dart` (`edit_lead/`, sin usar) sigue con `country_picker` —
+    no se tocó, es código muerto aparte.
+  - País (Datos de contacto) y Área/Cargo (Empresa) también pasaron de `CustomComboField` a
+    `CustomComboSearchField` — se puede escribir para filtrar en vez de solo desplegar la lista.
+  - **Tipo de documento excluye "Sin documento" y RUC** (`valoresDefecto.idTipoDocSnd`/
+    `idTipoDocRuc`, filtrados juntos en `build()`) — un contacto es persona natural
+    (DNI/CE/Pasaporte/Otros); RUC vive solo en la sección Empresa, con su propio campo y
+    autocompletado (pedido de negocio 2026-07-23).
+  - **Autocompletado por documento** — mismo servicio que `solicitudes/`
+    (`DocumentoExternoService`/`DocumentoExterno`, ver `core/CLAUDE.md`), dispara al perder foco
+    el campo Número de documento (`EditContactoPortrait._buscarDocumento`). Prellena
+    Nombres/Apellidos/Dirección/País/Nacionalidad solo si vienen vacíos (nunca pisa lo ya
+    tipeado), y agrega una fila nueva a la lista de Correos si el documento trae uno que todavía
+    no está en la lista.
+  - Nacionalidad (Datos de contacto) también pasó a `CustomComboSearchField` (antes
+    `CustomComboField`), y se autocompleta a "Peruano" (`valoresDefecto.idNacionalidad`) si el
+    contacto no trae una (`_inicializarCombos`), igual que ya hacía País.
+  - **Todo texto libre se guarda en MAYÚSCULAS** (pedido de negocio 2026-07-23) — Nombres/
+    Apellidos/Dirección (contacto), Correo, Razón social/Dirección (empresa). Doble capa: los
+    `CustomTextField` llevan `isUpperCase: true` (feedback visual mientras se tipea) Y
+    `EditContactoPortrait._construirContacto()` fuerza `.toUpperCase()` de nuevo al armar el
+    payload (helper `_mayus()`) — necesario porque el autocompletado por documento/RUC asigna
+    texto directo al controller (`row.nombreCtrl.text = ...`), sin pasar por el formatter del
+    widget; sin este segundo forzado, un valor traído por autocompletado se guardaría con el
+    casing que devuelva RENIEC/SUNAT. RUC y N° de documento NO llevan mayúscula (numéricos);
+    LinkedIn tampoco (URL, sensible a mayúsculas/minúsculas).
+
+  **Empresa — RUC autocompletado, País con búsqueda + default Perú, Ubigeo completo — 2026-07-23.**
+  - Orden final de campos en `EditContactoEmpresaSection` (pedido explícito de negocio): País+RUC
+    → Razón social → Área+Cargo → Departamento+Provincia → Distrito → Dirección.
+  - **RUC** (`EmpresaFormRow.rucCtrl`) usa el mismo patrón de autocompletado por foco que Número
+    de documento — `EmpresaFormRow.rucFocus`/`ultimoRucBuscado` (nuevos campos) +
+    `EditContactoPortrait._wireRucFocus()`/`_buscarRuc()`, mismo `DocumentoExternoService`.
+    Prellena `nombreCtrl`/`razonSocialCtrl` (ambos desde `resultado.nomEmpresa` — recordar que
+    `T_EMPRESA` solo tiene una columna `NOMBRE`) y `direccionCtrl`, solo si vienen vacíos.
+    Overlay propio `_buscandoRuc` (`AppLoadingOverlay`, mensaje "Buscando datos del RUC...").
+  - **País** (antes `TextEditingController` libre) es ahora `EmpresaFormRow.pais` (`PaisItem?`),
+    combo `CustomComboSearchField` (mismo `_ComboBusquedaCatalogo<PaisItem>` que ya usa la sección
+    Datos). Default a Perú (`valoresDefecto.idPais`) tanto en `_agregarEmpresa()` (fila nueva)
+    como en `_inicializarCombos()` (fila cargada del backend con `idPais` vacío).
+  - **Ubigeo de empresa** (`EmpresaFormRow.departamento`/`provincia`/`distrito`, `UbigeoItem?`) —
+    combos en cascada (`_ComboBusquedaUbigeo`, mismo patrón que la sección Datos), calculados por
+    fila dentro de `_EmpresaCard.build()` filtrando `catalogState.ubigeo` por `dpto`/`prov` del
+    padre. **Ahora se persiste de verdad** (antes se mandaba `''` fijo al guardar): `T_EMPRESA`
+    también es `UBIGEO VARCHAR(6)` (dpto+prov+dis, igual que `T_CONTACTO`) —
+    `CSV_CONTACTO_LST_APP` lo parte en 3 al leer (empresa pasó a 12 campos:
+    `...¦idDpto¦idProv¦idDis`, ver `empresa_contacto_model.dart`) y
+    `lead_remote_datasource.dart.guardarContacto()` lo concatena de vuelta al guardar
+    (`'${e.idDepartamento}${e.idProvincia}${e.idDistrito}'`, mismo criterio que `ubigeo` del
+    contacto).
+  - **Empresas existentes SÍ se actualizan — cambio de negocio 2026-07-24.** Detectado en vivo
+    2026-07-23 (reportado como "no sale el ubigeo en la empresa"): el patrón
+    `idEmpresaContacto=0`→insert que ya usan números/correos (esos SÍ se dejan intactos si ya
+    existen, sigue igual) se había aplicado tal cual a empresas, así que completar País/RUC/
+    Ubigeo/Área/Cargo en una empresa que el contacto ya tenía se perdía en silencio al guardar.
+    Corregido en `CRM.CSV_CONTACTO_CUD_APP` (bloque "EMPRESAS", `StoredProcedures/` fuera de
+    este repo): `idEmpresaContacto=0` sigue insertando (igual que antes); `idEmpresaContacto≠0`
+    ahora hace `UPDATE` directo — sobreescribe `T_EMPRESA` (ID_PAIS/RUC/NOMBRE/DIRECCION/UBIGEO)
+    y `T_EMPRESA_CONTACTO` (ID_AREA/ID_CARGO) con lo que llega, mismo criterio "de frente el
+    update" que ya usa `T_CONTACTO`. Asume columnas `FC_USUARIO_M`/`IP_USUARIO_M`/
+    `ID_USUARIO_M`/`LL_USUARIO_M` en ambas tablas — si alguna no las tiene, avisar para
+    agregarlas o quitar esas columnas del UPDATE. Todavía sin desplegar a la base real (sigue
+    solo en el archivo `.sql` local, como el resto de cambios de esta sesión).
+  - **Autocompletado por RUC — le faltaba el `AppLoadingOverlay`, corregido 2026-07-23.**
+    `_buscandoRuc` ya existía en el `State` pero el `Stack` de `build()` no tenía la rama
+    correspondiente — la búsqueda ocurría pero no bloqueaba la pantalla ni daba feedback visual
+    (bug real, mismo patrón que `_buscandoDocumento`, ya corregido).
+  - **`ContactoUpdateNotifier`** (`core/utils/contacto_update_notifier.dart`, mismo patrón que
+    `LeadUpdateNotifier` pero keyed por `idNumero`) — refresca "Datos" en Conversaciones tras
+    editar, agregado 2026-07-23. Bug real detectado en vivo: `ChatDetailPage` resolvía el `Chat`
+    (nombre/apellido/empresa/cargo) UNA sola vez en `initState`; al editar el contacto desde
+    `DatosTab` y volver, la pestaña seguía mostrando los datos viejos hasta salir de la
+    conversación y reentrar. Fix: `EditContactoPortrait._guardar()` llama
+    `ContactoUpdateNotifier.instance.notify(idNumero)` en el caso `CrudOk()`;
+    `_ChatDetailPageState` (`chat/presentation/pages/chat_detail_page.dart`) se suscribe en
+    `initState()` y, si el aviso es del mismo `idNumero` que su `Chat` actual, lo vuelve a pedir
+    (`_cargarChat(silencioso: true)`) sin pasar por el loading de pantalla completa — solo
+    reemplaza `_chat`, así `ChatDetailView`/`ChatLeadPanel`/`DatosTab` (que leen
+    `widget.conversacion` directo, sin cachearlo aparte) quedan con datos frescos sin perder
+    scroll ni el estado de los BLoCs de mensajes. Si se agrega otra pantalla que cachee datos de
+    contacto derivados de `Chat`/`ContactoDetalle` fuera de un cubit reactivo, suscribirse al
+    mismo notifier en vez de inventar uno nuevo.
 
 ## BLoCs / Cubits
 - `LeadListBloc` (list/) → carga leads por tipo, filtra en memoria; conteos por filtro (usa `idEstadoPadre` para agrupar sub-estados bajo su padre)

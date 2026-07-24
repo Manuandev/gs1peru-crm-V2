@@ -188,6 +188,9 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToDetalleContacto({required int idNumero}) =>
       _push(AppRoutes.detalleContacto, arguments: {'idNumero': idNumero});
 
+  Future<void> goToEditarContacto({required int idNumero}) =>
+      _push(AppRoutes.editarContacto, arguments: {'idNumero': idNumero});
+
   // ── Lead — detalle ─────────────────────────────────────────
 
   Future<void> goToDetalleLead({required int idLead}) =>

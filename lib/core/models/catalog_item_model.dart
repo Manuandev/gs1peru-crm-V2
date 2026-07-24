@@ -22,6 +22,9 @@ class ListasGenericasModel extends ListasGenericas {
     super.tiposParticipante,
     super.ubigeo,
     super.canalesExpo,
+    super.areas,
+    super.cargos,
+    super.prefijosContacto,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -44,6 +47,9 @@ class ListasGenericasModel extends ListasGenericas {
     final tiposParticipanteRaw = partes.length > 15 ? partes[15] : '';
     final ubigeoRaw = partes.length > 16 ? partes[16] : '';
     final canalesExpoRaw = partes.length > 17 ? partes[17] : '';
+    final areasRaw = partes.length > 18 ? partes[18] : '';
+    final cargosRaw = partes.length > 19 ? partes[19] : '';
+    final prefijosContactoRaw = partes.length > 20 ? partes[20] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -115,6 +121,18 @@ class ListasGenericasModel extends ListasGenericas {
         ? <CanalExpoItemModel>[]
         : CanalExpoItemModel.parseList(canalesExpoRaw);
 
+    final areas = areasRaw.trim().isEmpty
+        ? <AreaItemModel>[]
+        : AreaItemModel.parseList(areasRaw);
+
+    final cargos = cargosRaw.trim().isEmpty
+        ? <CargoItemModel>[]
+        : CargoItemModel.parseList(cargosRaw);
+
+    final prefijosContacto = prefijosContactoRaw.trim().isEmpty
+        ? <PrefijoContactoItemModel>[]
+        : PrefijoContactoItemModel.parseList(prefijosContactoRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -134,6 +152,9 @@ class ListasGenericasModel extends ListasGenericas {
       tiposParticipante: tiposParticipante,
       ubigeo: ubigeo,
       canalesExpo: canalesExpo,
+      areas: areas,
+      cargos: cargos,
+      prefijosContacto: prefijosContacto,
     );
   }
 }
@@ -562,6 +583,52 @@ class CanalExpoItemModel extends CanalExpoItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => CanalExpoItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class AreaItemModel extends AreaItem {
+  const AreaItemModel({required super.id, required super.nombre});
+
+  factory AreaItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return AreaItemModel(id: ParseUtils.str(c, 0), nombre: ParseUtils.str(c, 1));
+  }
+
+  static List<AreaItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => AreaItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class CargoItemModel extends CargoItem {
+  const CargoItemModel({required super.id, required super.nombre});
+
+  factory CargoItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return CargoItemModel(id: ParseUtils.str(c, 0), nombre: ParseUtils.str(c, 1));
+  }
+
+  static List<CargoItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => CargoItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class PrefijoContactoItemModel extends PrefijoContactoItem {
+  const PrefijoContactoItemModel({required super.valor});
+
+  static List<PrefijoContactoItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => PrefijoContactoItemModel(valor: r.trim()))
         .toList();
   }
 }

@@ -65,6 +65,15 @@ class ApiConstants {
   // Autocompletado por DNI/RUC — interno primero, RENIEC/SUNAT de fallback.
   static const String buscarDocumento = 'Clientes/BuscarDocumento';
 
+  // ========== CONTACTO ==========
+  // SPs reales confirmados (2026-07-23): CRM.CSV_CONTACTO_LST_APP (task 'D')
+  // y CRM.CSV_CONTACTO_CUD_APP (task 'U', solo rama CREATE) — ver
+  // lead_remote_datasource.dart y lead/CLAUDE.md. ⚠️ Los nombres de ruta de
+  // acá (segmento del controller C#) siguen siendo un placeholder — ajustar
+  // cuando se confirme el nombre real del controller/acción.
+  static const String lstContacto = 'Contacto/SPContactoLSTApp';
+  static const String cudContacto = 'Contacto/SPContactoCUDApp';
+
   // ========== HELPERS ==========
 
   // URLs completas (helpers)
@@ -117,4 +126,8 @@ class ApiConstants {
 
   // ========== CLIENTES ==========
   static String get urlBuscarDocumento => '$baseUrl$buscarDocumento';
+
+  // ========== CONTACTO ==========
+  static String get urlContactoLst => '$baseUrl$lstContacto';
+  static String get urlContactoCud => '$baseUrl$cudContacto';
 }

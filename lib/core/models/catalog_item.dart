@@ -188,15 +188,17 @@ class PaisItem with Comboable {
   final String id;
   final String nombre;
   final String codigoTelefono;
+  final bool esNacional;
 
   const PaisItem({
     required this.id,
     required this.nombre,
     required this.codigoTelefono,
+    required this.esNacional,
   });
 
   @override
-  List<dynamic> get fields => [id, nombre];
+  List<dynamic> get fields => [id, nombre, codigoTelefono, esNacional];
 }
 
 // SP lstListas parte [10]: codargu ¦ deslarga — SYSTABEXTER02 CODTABLA='F01'.
@@ -204,25 +206,26 @@ class PaisItem with Comboable {
 class TipoDocumentoItem with Comboable {
   final String id;
   final String nombre;
+  final String abreviatura;
+  final bool esNacional;
+  final int canCaracteresMax;
 
-  const TipoDocumentoItem({required this.id, required this.nombre});
-
-  // El SP solo trae la descripción larga (ej. "DOC. NACIONAL DE IDENTIDAD").
-  // La UI necesita la forma abreviada (DNI/CE/RUC/...) — no viene del backend,
-  // se mapea acá por id (mismos ids reales de SYSTABEXTER02 CODTABLA='F01').
-  static const Map<String, String> _abreviaturas = {
-    '0': 'Sin documento',
-    '1': 'DNI',
-    '4': 'Carnet de extranjería',
-    '6': 'RUC',
-    '7': 'Pasaporte',
-    'A': 'Céd. Diplomática',
-  };
-
-  String get abreviatura => _abreviaturas[id] ?? nombre;
+  const TipoDocumentoItem({
+    required this.id,
+    required this.nombre,
+    required this.abreviatura,
+    required this.esNacional,
+    required this.canCaracteresMax,
+  });
 
   @override
-  List<dynamic> get fields => [id, nombre, abreviatura];
+  List<dynamic> get fields => [
+    id,
+    nombre,
+    abreviatura,
+    esNacional,
+    canCaracteresMax,
+  ];
 }
 
 // SP lstListas parte [11]: codargu ¦ deslarga — SYSTABEXTER02 CODTABLA='DFA',
@@ -243,16 +246,16 @@ class ComprobanteItem with Comboable {
 class NacionalidadItem with Comboable {
   final String id;
   final String nombre;
-  final String valor4;
+  final bool esNacional;
 
   const NacionalidadItem({
     required this.id,
     required this.nombre,
-    required this.valor4,
+    required this.esNacional,
   });
 
   @override
-  List<dynamic> get fields => [id, nombre];
+  List<dynamic> get fields => [id, nombre, esNacional];
 }
 
 // SP lstListas parte [13]: fila única (sin @sepRegistro) con los IDs por

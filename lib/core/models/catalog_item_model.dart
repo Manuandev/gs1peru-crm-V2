@@ -362,6 +362,7 @@ class PaisItemModel extends PaisItem {
     required super.id,
     required super.nombre,
     required super.codigoTelefono,
+    required super.esNacional,
   });
 
   factory PaisItemModel.fromRawString(String raw) {
@@ -370,6 +371,7 @@ class PaisItemModel extends PaisItem {
       id: ParseUtils.str(c, 0),
       nombre: ParseUtils.str(c, 1),
       codigoTelefono: ParseUtils.str(c, 2),
+      esNacional: ParseUtils.toBoolNAC(c, 3),
     );
   }
 
@@ -383,13 +385,22 @@ class PaisItemModel extends PaisItem {
 }
 
 class TipoDocumentoItemModel extends TipoDocumentoItem {
-  const TipoDocumentoItemModel({required super.id, required super.nombre});
+  const TipoDocumentoItemModel({
+    required super.id,
+    required super.nombre,
+    required super.abreviatura,
+    required super.esNacional,
+    required super.canCaracteresMax,
+  });
 
   factory TipoDocumentoItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return TipoDocumentoItemModel(
       id: ParseUtils.str(c, 0),
       nombre: ParseUtils.str(c, 1),
+      abreviatura: ParseUtils.str(c, 2),
+      esNacional: ParseUtils.toBoolNAC(c, 3),
+      canCaracteresMax: ParseUtils.toInt(c, 4),
     );
   }
 
@@ -426,7 +437,7 @@ class NacionalidadItemModel extends NacionalidadItem {
   const NacionalidadItemModel({
     required super.id,
     required super.nombre,
-    required super.valor4,
+    required super.esNacional,
   });
 
   factory NacionalidadItemModel.fromRawString(String raw) {
@@ -434,7 +445,7 @@ class NacionalidadItemModel extends NacionalidadItem {
     return NacionalidadItemModel(
       id: ParseUtils.str(c, 0),
       nombre: ParseUtils.str(c, 1),
-      valor4: ParseUtils.str(c, 2),
+      esNacional: ParseUtils.toBoolNAC(c, 2),
     );
   }
 

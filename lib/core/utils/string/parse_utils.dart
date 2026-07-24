@@ -27,4 +27,12 @@ class ParseUtils {
   /// '' si es null o 0, para que el SP lo trate como NULL vía NULLIF/TRY_CAST.
   static String orEmpty(dynamic val) =>
       (val == null || val == 0) ? '' : val.toString();
+
+  // Si es NAC es nacional | Si es INT es internacional
+  static bool toBoolNAC(List<String> campos, int i) =>
+      str(campos, i).toUpperCase() == 'NAC';
+
+  // Si es NAC es nacional | Si es INT es internacional
+  static bool toBoolINT(List<String> campos, int i) =>
+      str(campos, i).toUpperCase() == 'INT';
 }

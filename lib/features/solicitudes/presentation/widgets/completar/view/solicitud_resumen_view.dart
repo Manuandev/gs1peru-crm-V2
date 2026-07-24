@@ -54,22 +54,28 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
   // snackbar y dejar al asesor parado en el mismo paso.
   Future<void> _onGuardar() async {
     if (_guardando || _generando) return;
-    setState(() => _guardando = true);
 
-    final result = await guardarBorradorCompleto(
-      context,
-      idLead: widget.solicitud.idLead,
-      pasoOrigen: '4',
-      progreso: _progreso,
-    );
+    // Nada cambió desde que se cargó esta solicitud — navega directo al
+    // detalle sin mostrar spinner ni overlay de guardado (ver
+    // solicitudSinCambiosPendientes, solicitud_guardar_helper.dart).
+    if (!solicitudSinCambiosPendientes(context)) {
+      setState(() => _guardando = true);
 
-    if (!mounted) return;
-    _progreso.reset();
-    setState(() => _guardando = false);
+      final result = await guardarBorradorCompleto(
+        context,
+        idLead: widget.solicitud.idLead,
+        pasoOrigen: '4',
+        progreso: _progreso,
+      );
 
-    if (result is! CrudOk) {
-      mostrarResultadoGuardarSolicitud(context, result);
-      return;
+      if (!mounted) return;
+      _progreso.reset();
+      setState(() => _guardando = false);
+
+      if (result is! CrudOk) {
+        mostrarResultadoGuardarSolicitud(context, result);
+        return;
+      }
     }
 
     final numSol = context.read<SolicitudFormCubit>().state.numSol;

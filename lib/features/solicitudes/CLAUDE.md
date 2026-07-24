@@ -1,5 +1,155 @@
 # Solicitudes Feature
 
+## "huboCambios" pasó de flag booleano a comparación real de contenido (2026-07-24)
+Seguimiento del punto de abajo ("'Siguiente'/'Guardar' ya no vuelve a guardar si nada cambió") —
+el usuario probó activar y desactivar el switch "El solicitante será participante" (quedando en
+el mismo valor que tenía al cargar) y encontró que igual guardaba al presionar "Siguiente". Causa:
+la primera versión de `huboCambios` era un flag booleano prendido a mano en cada edición
+(`marcarCambio: true`) — no distinguía "tocaste algo" de "el resultado final es distinto al que
+se cargó". Activar y desactivar son DOS toques, cada uno prendía el flag, sin comparar si el
+valor final volvió a ser igual al original.
+
+- **Reemplazado por comparación de contenido real.** `DatosSolicitante`, `DatosFacturacion`
+  (`solicitud_form_state.dart`) y `ParticipanteLocal` (`participantes_state.dart`) ahora extienden
+  `Equatable` (con `props` listando todos sus campos) — dos instancias con los mismos valores son
+  `==` aunque sean objetos distintos. `SolicitudFormState` ganó un snapshot "cargado" de cada
+  dato relevante: `tipoPersonaCargado`, `solicitanteCargado`, `facturacionCargado`,
+  `archivoVoucherCargado`, `archivoOCCargado`. `huboCambios` ahora es un **getter** (ya no un
+  campo) que compara cada valor actual contra su snapshot:
+  ```dart
+  bool get huboCambios =>
+      tipoPersona != tipoPersonaCargado ||
+      solicitante != solicitanteCargado ||
+      facturacion != facturacionCargado ||
+      archivoVoucher != archivoVoucherCargado ||
+      archivoOC != archivoOCCargado;
+  ```
+  `ParticipantesState` ganó el mismo patrón: `participantesCargado` (snapshot) +
+  `huboCambios` (getter) que compara la lista actual contra el snapshot **por contenido y sin
+  importar el orden** (`_mismaLista`, ordena ambas listas por `id` antes de comparar elemento a
+  elemento) — necesario porque `sincronizarSolicitante()` reinserta el registro `esSolicitante`
+  al INICIO de la lista (`[solicitanteParticipante, ...resto]`), así que un ciclo apagar→prender
+  puede reordenar sin que el CONJUNTO de participantes realmente haya cambiado.
+- **`SolicitudFormCubit.guardarSolicitante()`/`guardarFacturacion()`/`cambiarTipoPersona()` ya NO
+  reciben un parámetro `marcarCambio`** — se eliminó por completo, ya no hace falta distinguir
+  "esto es una edición real" de "esto es el flush antes de guardar" o "esto es la carga inicial":
+  cualquier llamada simplemente actualiza `state.solicitante`/`facturacion`/`tipoPersona`, y
+  `huboCambios` se calcula solo comparando contra el snapshot en el momento en que alguien lo
+  pregunta (`solicitudSinCambiosPendientes()`). Esto también simplifica `_sincronizarCubit()` en
+  los pasos 1 y 3 — volvieron a su forma simple, sin ningún parámetro extra.
+- **`SolicitudFormCubit.marcarSinCambios()`/`ParticipantesCubit.marcarSinCambios()`** sincronizan
+  los snapshots "cargado" a los valores ACTUALES — se llaman en 2 momentos: (1) al terminar de
+  cargar una solicitud existente (`_cargarDetalle()`, paso 1 — `cargarParticipantes()` ya siembra
+  su propio snapshot internamente, no hace falta llamar `ParticipantesCubit.marcarSinCambios()`
+  ahí aparte) y (2) después de cada guardado exitoso (`guardarBorradorCompleto()`, sin cambios en
+  esta parte — sigue llamando a ambos `marcarSinCambios()` tras un `CrudOk`).
+- **`ParticipantesCubit.sincronizarSolicitante()` ahora también cae a `participantesCargado`**
+  para recuperar el `id`/`importe` del registro `esSolicitante` cuando ya no está en la lista
+  actual (`anterior = ...participantes...firstOrNull ?? ...participantesCargado...firstOrNull`)
+  — necesario para el caso concreto que reportó el usuario: apagar el switch saca el registro de
+  `participantes` (pero no de `participantesCargado`, que solo se actualiza al cargar/guardar);
+  sin este fallback, prenderlo de nuevo antes de guardar generaba un `id` NUEVO (`_nextId++`) en
+  vez de recuperar el original, y el resultado ya no comparaba igual contra lo cargado —
+  `huboCambios` se quedaba en `true` aunque el switch hubiera vuelto a su estado original.
+- **Efecto neto**: entrar a revisar una solicitud ya guardada y, sin importar cuántos toques
+  intermedios hagas (prender/apagar un switch, escribir y borrar un campo, etc.), si el
+  RESULTADO FINAL es idéntico al que se cargó, "Siguiente"/"Guardar" no llama al backend — solo
+  si terminas con un valor genuinamente distinto.
+
+## Bug real — apagar "El solicitante será participante" no sincronizaba la lista al instante (2026-07-24)
+Reportado por el usuario con un repro concreto: entra a una solicitud ya al máximo de
+participantes (con el propio solicitante como uno de ellos) → va a Facturación (paso 3) → vuelve
+atrás hasta el paso 1 → apaga el switch "El solicitante será participante" → intenta prenderlo de
+nuevo enseguida → le sale "Ya se alcanzó el máximo de participante(s)", como si el switch nunca se
+hubiera apagado.
+
+- **Causa**: `_onSolicitanteParticipanteChanged()` (`solicitud_completar_view.dart`) solo llamaba
+  `_sincronizarCubit()` (sincroniza `SolicitudFormCubit`, el snapshot de "qué marcó el asesor") —
+  `ParticipantesCubit.sincronizarSolicitante()` (el que de verdad agrega/quita el
+  `ParticipanteLocal` de la lista) solo se llamaba en `_onContinuar()`, al presionar "Siguiente".
+  Efecto real: apagar el switch actualizaba la UI y el `SolicitudFormCubit`, pero el participante
+  seguía en `ParticipantesCubit` hasta guardar — si el asesor intentaba prenderlo de nuevo antes de
+  eso, el chequeo del máximo (`actuales.length >= cantidadEsperada`, ver comentario del método)
+  leía la lista todavía sin actualizar y bloqueaba con el mensaje de error, aunque el switch ya se
+  viera apagado en pantalla.
+- **Corregido**: `_onSolicitanteParticipanteChanged()` ahora llama
+  `ParticipantesCubit.sincronizarSolicitante()` directo (mismos parámetros que ya usaba
+  `_onContinuar` — `_idTipoParticipantePagante()`/`_importeFijo()`), además de
+  `SolicitudFormCubit.guardarSolicitante(marcarCambio: true)` — ambos cubits quedan sincronizados
+  al toque del switch, no solo al presionar "Siguiente". El llamado que ya hacía `_onContinuar` a
+  `sincronizarSolicitante()` no se tocó (sigue siendo idempotente, no duplica nada — es el mismo
+  patrón "buscar el registro `esSolicitante` anterior y reemplazarlo" de siempre).
+
+## "Siguiente"/"Guardar" ya no vuelve a guardar si nada cambió (2026-07-24)
+**⚠️ El mecanismo de detección de cambios que describe esta sección (flag booleano
+`marcarCambio`) fue reemplazado el mismo día por comparación de contenido real — ver "'huboCambios'
+pasó de flag booleano a comparación real de contenido" arriba.** El resto de esta sección (por qué
+existe la verificación, dónde vive, qué NO se tocó) sigue vigente tal cual — solo cambió CÓMO se
+calcula `huboCambios` (de un flag prendido a mano a un getter que compara contra un snapshot).
+
+Pedido de negocio — al revisar/editar una solicitud ya guardada, avanzar de paso sin tocar nada
+seguía disparando un guardado completo en el backend en cada "Siguiente" (el mismo problema que
+ya documentaba "Cada 'Siguiente' ahora valida Y guarda de verdad" más abajo — ese cambio de
+2026-07-17 sigue vigente, esto solo evita el guardado cuando es innecesario).
+
+- **Nuevo `SolicitudFormState.huboCambios`/`ParticipantesState.huboCambios`** (`bool`, default
+  `false`) — un flag por cubit que marca si hubo una edición real del asesor sin guardar
+  todavía. `SolicitudFormCubit.guardarSolicitante()`/`guardarFacturacion()`/`cambiarTipoPersona()`
+  ganaron un parámetro `marcarCambio` (default `false`) — solo lo pasan en `true` los call sites
+  que representan una edición real: `_sincronizarCubit()` de los pasos 1 y 3 (la sincronización
+  en vivo de cada campo/combo, ver "Wizard de una sola page" más abajo) y el `onChanged` del
+  toggle Jurídica/Natural en el paso 1. Los archivos (`guardarArchivoVoucher/OC`,
+  `quitarArchivoVoucher/OC`) siempre marcan `huboCambios: true` sin parámetro — nunca se llaman
+  durante la carga, solo por acción del asesor. `ParticipantesCubit.agregar/editar/eliminar/
+  eliminarTodos` también marcan `huboCambios: true` directo, sin parámetro — son sus únicos
+  puntos de mutación reales.
+- **Por qué el flag NO se prende en cada "Siguiente"** — los 3 pasos con campos propios (1 y 3)
+  tienen un patrón de "flush": justo antes de guardar, `_onContinuar` vuelve a llamar
+  `guardarSolicitante()`/`guardarFacturacion()` con el snapshot actual (por si el último cambio no
+  alcanzó a sincronizarse) — esa llamada de flush **no** pasa `marcarCambio`, así que no prende el
+  flag por sí sola. Tampoco lo hacen las llamadas de carga inicial (`_cargarDetalle()`, `_cargando`
+  bloquea `_sincronizarCubit()` mientras carga) ni `sincronizarSolicitante()` de
+  `ParticipantesCubit` (se llama en cada "Siguiente" del paso 1, tenga o no cambios reales el
+  switch "El solicitante será participante").
+- **Bug real encontrado al implementar esto — paso 3 marcaba `huboCambios` con solo entrar a
+  revisarlo por primera vez, sin tocar nada.** `didChangeDependencies()` seteaba `_prefillDone =
+  true` ANTES de restaurar los campos (`_ctrlNumDoc.text = datos.numDoc`, etc.) — como esos
+  `TextEditingController` ya tienen `addListener(_onCampoTexto)` desde `initState()`, asignarles
+  `.text` durante la restauración disparaba `_sincronizarCubit()`, y como `_prefillDone` ya estaba
+  en `true` en ese momento, el guard de `_sincronizarCubit()` no bloqueaba nada — terminaba
+  llamando `guardarFacturacion(marcarCambio: true)` solo por restaurar datos ya guardados.
+  Corregido con un flag nuevo, `_restaurando` (empieza en `true`, se apaga recién en un `finally`
+  que envuelve TODA la restauración — se extrajo el cuerpo de `didChangeDependencies()` a
+  `_restaurarPaso()` para poder envolverlo) — `_sincronizarCubit()` ahora también revisa
+  `_restaurando` antes de sincronizar. El paso 1 no tenía este bug — ahí `_cargando` ya envolvía
+  correctamente toda la carga (se apaga al final de `_cargarDetalle()`, después de todas las
+  asignaciones), no al principio.
+- **`solicitudSinCambiosPendientes(context)`** (`solicitud_guardar_helper.dart`) — `true` si
+  `numSol` ya existe y ambos cubits tienen `huboCambios == false`. Los 4 botones ("Siguiente" de
+  los pasos 1-3 y "Guardar" del Resumen) lo llaman **antes** de mostrar cualquier spinner/overlay
+  — si da `true`, ni siquiera llaman a `guardarBorradorCompleto()`, solo avanzan al siguiente
+  paso (o navegan al detalle, en el caso de Resumen) directo, sin que se vea nada de carga en
+  pantalla. Pedido explícito del usuario: no basta con evitar el guardado real, tampoco debe
+  asomar ningún indicador de "guardando" cuando no hay nada que guardar — un intento inicial que
+  sí llamaba a `guardarBorradorCompleto()` (que cortaba internamente) alcanzaba a mostrar el
+  spinner del botón por un instante antes de retornar. `guardarBorradorCompleto()` repite la
+  misma verificación como red de seguridad (por si algún caller nuevo la llama directo sin
+  chequear antes), retornando `CrudOk('')` sin llamar al backend ni a `subirArchivosPendientes`
+  (si no hubo cambios, tampoco hay un archivo pendiente de subir — adjuntar uno también pasa por
+  `guardarArchivoVoucher/OC`, que sí marca el flag). Una solicitud nueva (`numSol` vacío) siempre
+  se guarda, sin importar el flag — todavía no existe en el backend, tiene que crearse sí o sí.
+  Tras un guardado real exitoso, ambos cubits se resetean con `marcarSinCambios()` para que el
+  próximo "Siguiente" vuelva a partir de "sin cambios".
+- **No se tocó `generarSolicitudCompleta()` ("Generar solicitud", Resumen)** — llama
+  `guardarSolicitudDesdeWizard()` directo, no pasa por `guardarBorradorCompleto()`, así que
+  siempre se ejecuta sin importar los flags — es la acción que cambia `IB_BORRADOR` de 1 a 0,
+  tiene que correr siempre que se presione, haya habido ediciones de campo o no.
+- **El flag es compartido entre pasos, no exclusivo del que lo prendió** — como
+  `guardarBorradorCompleto()` siempre guarda el snapshot COMPLETO (cabecera + facturación +
+  participantes, sin importar qué paso disparó el guardado), basta con que CUALQUIER paso tenga
+  algo pendiente para que el próximo "Siguiente" (en cualquier paso) dispare el guardado — no
+  hace falta que sea el mismo paso que hizo el cambio.
+
 ## Paso 3 (Facturación) — Ubigeo nuevo, reorden de campos, combo de celular con búsqueda (2026-07-22)
 Pedido de negocio (jefe del usuario), varios cambios de UI en `_SeccionDatosFacturacion`
 (`solicitud_facturacion_view.dart`):

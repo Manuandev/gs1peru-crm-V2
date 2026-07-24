@@ -67,6 +67,17 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // Evita pre-rellenar más de una vez
   bool _prefillDone = false;
 
+  // true mientras `didChangeDependencies()` está restaurando el paso (desde
+  // el cubit compartido o con los defaults) — a diferencia de `_prefillDone`
+  // (que se marca en `true` al INICIO del método para no reentrar), este
+  // flag se apaga recién al final de esa restauración. Sin esto, asignar
+  // `.text` a un controller durante la restauración disparaba su listener
+  // (`_onCampoTexto` → `_sincronizarCubit()`), que con `_prefillDone` ya en
+  // `true` prendía `SolicitudFormState.huboCambios` como si el asesor
+  // hubiera editado algo — pasaba con solo entrar por primera vez a este
+  // paso de una solicitud ya guardada, sin tocar nada.
+  bool _restaurando = true;
+
   // true mientras se guarda el borrador (botón "Guardar")
   bool _guardando = false;
 
@@ -129,7 +140,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   // inicial (didChangeDependencies) haya terminado, para no pisarlo con un
   // draft vacío a medio construir.
   void _sincronizarCubit() {
-    if (!_prefillDone || !mounted) return;
+    if (!_prefillDone || _restaurando || !mounted) return;
     context.read<SolicitudFormCubit>().guardarFacturacion(
       _construirDatosFacturacion(_paisCelular),
     );
@@ -247,11 +258,19 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     // mensaje "Requerido" — reemplaza el snackbar genérico de antes.
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _guardando = true);
-
     context.read<SolicitudFormCubit>().guardarFacturacion(
       _construirDatosFacturacion(paisCelular),
     );
+
+    // Nada cambió desde que se cargó esta solicitud — avanza directo, sin
+    // mostrar spinner ni overlay de guardado (ver
+    // solicitudSinCambiosPendientes, solicitud_guardar_helper.dart).
+    if (solicitudSinCambiosPendientes(context)) {
+      widget.onContinuar();
+      return;
+    }
+
+    setState(() => _guardando = true);
 
     final result = await guardarBorradorCompleto(
       context,
@@ -295,7 +314,17 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     super.didChangeDependencies();
     if (_prefillDone) return;
     _prefillDone = true;
+    // `_restaurando` se apaga recién en el `finally`, después de terminar
+    // TODA la restauración (sin importar cuál de los 3 `return` de abajo se
+    // tome) — ver comentario en la declaración del campo.
+    try {
+      _restaurarPaso();
+    } finally {
+      _restaurando = false;
+    }
+  }
 
+  void _restaurarPaso() {
     final formState = context.read<SolicitudFormCubit>().state;
     final datos = formState.facturacion;
     if (datos != null) {

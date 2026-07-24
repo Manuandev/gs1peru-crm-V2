@@ -1,6 +1,6 @@
 // lib/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart
 
-import 'package:app_crm/index_dependencies.dart'; // Cubit, PlatformFile
+import 'package:app_crm/index_dependencies.dart'; // Cubit, PlatformFile, Equatable
 
 part 'solicitud_form_state.dart';
 
@@ -83,4 +83,25 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
       emit(state.copyWith(archivoOC: archivo));
 
   void quitarArchivoOC() => emit(state.copyWith(limpiarArchivoOC: true));
+
+  /// Sincroniza los snapshots "cargado" (`tipoPersonaCargado`/
+  /// `solicitanteCargado`/`facturacionCargado`/`archivoVoucherCargado`/
+  /// `archivoOCCargado`) a los valores ACTUALES — con esto,
+  /// `SolicitudFormState.huboCambios` vuelve a `false` hasta que el asesor
+  /// edite algo de verdad (comparación por contenido, ver ese getter). Se
+  /// llama: (1) al terminar de cargar una solicitud existente
+  /// (`_cargarDetalle()`, paso 1) y (2) después de cada guardado exitoso
+  /// (`guardarBorradorCompleto()`).
+  void marcarSinCambios() => emit(
+    state.copyWith(
+      tipoPersonaCargado: state.tipoPersona,
+      solicitanteCargado: state.solicitante,
+      facturacionCargado: state.facturacion,
+      limpiarFacturacionCargado: state.facturacion == null,
+      archivoVoucherCargado: state.archivoVoucher,
+      limpiarArchivoVoucherCargado: state.archivoVoucher == null,
+      archivoOCCargado: state.archivoOC,
+      limpiarArchivoOCCargado: state.archivoOC == null,
+    ),
+  );
 }

@@ -2,7 +2,7 @@
 
 part of 'solicitud_form_cubit.dart';
 
-class DatosSolicitante {
+class DatosSolicitante extends Equatable {
   final String tipoDocId;
   final String tipoDocLabel;
   final String numDoc;
@@ -59,9 +59,40 @@ class DatosSolicitante {
       tipoDocLabel.isNotEmpty ? '$tipoDocLabel $numDoc' : numDoc;
 
   String get canalTexto => canalNombre.isEmpty ? '—' : canalNombre;
+
+  // Extiende Equatable (no solo campos) para poder comparar por CONTENIDO
+  // contra `SolicitudFormState.solicitanteCargado` — ver
+  // `SolicitudFormState.huboCambios`. Sin esto, dos instancias con los
+  // mismos valores serían "distintas" (comparación por identidad), y
+  // cualquier reconstrucción (aunque no cambie nada) marcaría la solicitud
+  // como "con cambios pendientes".
+  @override
+  List<Object?> get props => [
+    tipoDocId,
+    tipoDocLabel,
+    numDoc,
+    nacionalidadId,
+    nacionalidad,
+    sexoId,
+    nombres,
+    apellidoPaterno,
+    apellidoMaterno,
+    cargo,
+    celular,
+    celularCodigoTelefono,
+    correo,
+    canalId,
+    canalNombre,
+    ruc,
+    razonSocial,
+    solicitanteEsParticipante,
+    facturarAlSolicitante,
+    archivoVoucherNombre,
+    archivoOCNombre,
+  ];
 }
 
-class DatosFacturacion {
+class DatosFacturacion extends Equatable {
   final String comprobanteId;
   final String comprobante;
   final String paisId;
@@ -132,6 +163,39 @@ class DatosFacturacion {
       ubigeoDptoId.isEmpty || ubigeoProvId.isEmpty || ubigeoDisId.isEmpty
       ? ''
       : '$ubigeoDptoId$ubigeoProvId$ubigeoDisId';
+
+  // Ver comentario de `DatosSolicitante.props` — mismo motivo (comparación
+  // por contenido contra `SolicitudFormState.facturacionCargado`).
+  @override
+  List<Object?> get props => [
+    comprobanteId,
+    comprobante,
+    paisId,
+    pais,
+    monedaId,
+    moneda,
+    tipoDocId,
+    tipoDocLabel,
+    numDoc,
+    nacionalidadId,
+    nacionalidad,
+    nombresRazon,
+    apellidoPaterno,
+    apellidoMaterno,
+    celular,
+    celularCodigoTelefono,
+    correo,
+    direccion,
+    actividadEconomica,
+    nit,
+    observaciones,
+    ubigeoDptoId,
+    ubigeoDptoNombre,
+    ubigeoProvId,
+    ubigeoProvNombre,
+    ubigeoDisId,
+    ubigeoDisNombre,
+  ];
 }
 
 class SolicitudFormState {
@@ -208,6 +272,24 @@ class SolicitudFormState {
   /// de solo-prellenado que el resto de datos de contacto de arriba.
   final String cargoLead;
 
+  /// Snapshot de `tipoPersona`/`solicitante`/`facturacion`/`archivoVoucher`/
+  /// `archivoOC` tal como quedaron la última vez que se cargó (task 'DT') o
+  /// se guardó con éxito esta solicitud — `SolicitudFormCubit.marcarSinCambios()`
+  /// los sincroniza a los valores actuales en ambos momentos. `huboCambios`
+  /// (abajo) compara CONTENIDO contra estos snapshots, no solo "¿se llamó
+  /// guardarSolicitante/guardarFacturacion?" — así, si el asesor edita un
+  /// campo y lo vuelve a dejar igual (ej. prende y apaga un switch), el
+  /// resultado final se detecta como "sin cambios reales" y
+  /// `guardarBorradorCompleto()` no vuelve a guardar. Pedido explícito del
+  /// usuario, 2026-07-24 — reemplaza un primer intento con un flag booleano
+  /// simple (`huboCambios` como campo, prendido a mano en cada edición) que
+  /// no distinguía "tocaste algo" de "el resultado final es distinto".
+  final String tipoPersonaCargado;
+  final DatosSolicitante? solicitanteCargado;
+  final DatosFacturacion? facturacionCargado;
+  final PlatformFile? archivoVoucherCargado;
+  final PlatformFile? archivoOCCargado;
+
   const SolicitudFormState({
     this.tipoPersona = 'juridica',
     this.numSol = '',
@@ -229,10 +311,27 @@ class SolicitudFormState {
     this.celularCodigoTelefonoLead = '',
     this.rucLead = '',
     this.cargoLead = '',
+    this.tipoPersonaCargado = 'juridica',
+    this.solicitanteCargado,
+    this.facturacionCargado,
+    this.archivoVoucherCargado,
+    this.archivoOCCargado,
   });
 
   String get tipoPersonaLabel =>
       tipoPersona == 'juridica' ? 'Jurídica' : 'Natural';
+
+  /// true si `tipoPersona`/`solicitante`/`facturacion`/`archivoVoucher`/
+  /// `archivoOC` difieren (por contenido) de lo que se cargó o se guardó por
+  /// última vez. Usado por `solicitudSinCambiosPendientes()`
+  /// (`solicitud_guardar_helper.dart`) para decidir si "Siguiente"/"Guardar"
+  /// necesita golpear el backend, o solo dejar avanzar el wizard.
+  bool get huboCambios =>
+      tipoPersona != tipoPersonaCargado ||
+      solicitante != solicitanteCargado ||
+      facturacion != facturacionCargado ||
+      archivoVoucher != archivoVoucherCargado ||
+      archivoOC != archivoOCCargado;
 
   SolicitudFormState copyWith({
     String? tipoPersona,
@@ -257,6 +356,14 @@ class SolicitudFormState {
     String? celularCodigoTelefonoLead,
     String? rucLead,
     String? cargoLead,
+    String? tipoPersonaCargado,
+    DatosSolicitante? solicitanteCargado,
+    DatosFacturacion? facturacionCargado,
+    bool limpiarFacturacionCargado = false,
+    PlatformFile? archivoVoucherCargado,
+    bool limpiarArchivoVoucherCargado = false,
+    PlatformFile? archivoOCCargado,
+    bool limpiarArchivoOCCargado = false,
   }) => SolicitudFormState(
     tipoPersona: tipoPersona ?? this.tipoPersona,
     numSol: numSol ?? this.numSol,
@@ -281,5 +388,16 @@ class SolicitudFormState {
         celularCodigoTelefonoLead ?? this.celularCodigoTelefonoLead,
     rucLead: rucLead ?? this.rucLead,
     cargoLead: cargoLead ?? this.cargoLead,
+    tipoPersonaCargado: tipoPersonaCargado ?? this.tipoPersonaCargado,
+    solicitanteCargado: solicitanteCargado ?? this.solicitanteCargado,
+    facturacionCargado: limpiarFacturacionCargado
+        ? null
+        : (facturacionCargado ?? this.facturacionCargado),
+    archivoVoucherCargado: limpiarArchivoVoucherCargado
+        ? null
+        : (archivoVoucherCargado ?? this.archivoVoucherCargado),
+    archivoOCCargado: limpiarArchivoOCCargado
+        ? null
+        : (archivoOCCargado ?? this.archivoOCCargado),
   );
 }

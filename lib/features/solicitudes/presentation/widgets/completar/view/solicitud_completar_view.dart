@@ -310,6 +310,12 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _sembrarValoresPorDefecto();
       _prellenarDesdeNegociacion();
       setState(() => _cargando = false);
+      // Creación nueva — `numSol` sigue vacío, así que
+      // `guardarBorradorCompleto()` siempre va a guardar sin importar este
+      // flag (ver `solicitudSinCambiosPendientes`), pero se deja igual de
+      // consistente que la rama de edición.
+      context.read<SolicitudFormCubit>().marcarSinCambios();
+      context.read<ParticipantesCubit>().marcarSinCambios();
       return;
     }
 
@@ -516,6 +522,13 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         }
       }
 
+      // Marca esto como la línea base "sin cambios" — recién a partir de
+      // acá cualquier edición real del asesor hace que
+      // `SolicitudFormState.huboCambios` pase a `true` (comparación por
+      // contenido contra este snapshot, ver ese getter). `ParticipantesCubit`
+      // ya quedó marcado dentro de `cargarParticipantes()` (arriba).
+      context.read<SolicitudFormCubit>().marcarSinCambios();
+
       setState(() => _cargando = false);
     } catch (e) {
       if (!mounted) return;
@@ -643,6 +656,17 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   // entere recién al presionar "Generar solicitud" en Resumen. Apagarlo
   // (quitar al solicitante de la lista) siempre está permitido, nunca se
   // bloquea esa dirección.
+  //
+  // Bug real reportado por el usuario, 2026-07-24 — este método solo
+  // sincronizaba `SolicitudFormCubit` (vía `_sincronizarCubit()`);
+  // `ParticipantesCubit.sincronizarSolicitante()` recién se llamaba al
+  // presionar "Siguiente". Efecto real: apagar el switch no quitaba al
+  // participante de la lista todavía — si el asesor lo volvía a prender de
+  // inmediato (sin pasar por "Siguiente" primero), el chequeo del máximo de
+  // arriba leía `ParticipantesCubit` con la lista vieja (el participante
+  // seguía ahí) y bloqueaba con "Ya se alcanzó el máximo...", aunque el
+  // switch ya se veía apagado en pantalla. Corregido: ahora sincroniza
+  // ambos cubits al toque, no solo al continuar.
   void _onSolicitanteParticipanteChanged(bool v) {
     if (v) {
       final cantidadEsperada = context
@@ -661,7 +685,14 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       }
     }
     setState(() => _solicitanteParticipante = v);
-    _sincronizarCubit();
+
+    final datos = _construirDatosSolicitante(_paisCelular);
+    context.read<SolicitudFormCubit>().guardarSolicitante(datos);
+    context.read<ParticipantesCubit>().sincronizarSolicitante(
+      datos,
+      idTipoParticipantePagante: _idTipoParticipantePagante(),
+      importeFijo: _importeFijo(),
+    );
   }
 
   // null si esta solicitud no viene de una negociación con precio ya
@@ -725,8 +756,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     // mensaje "Requerido" — reemplaza el snackbar genérico de antes.
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _guardando = true);
-
     final datos = _construirDatosSolicitante(paisCelular);
     context.read<SolicitudFormCubit>().guardarSolicitante(datos);
     context.read<ParticipantesCubit>().sincronizarSolicitante(
@@ -734,6 +763,16 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       idTipoParticipantePagante: _idTipoParticipantePagante(),
       importeFijo: _importeFijo(),
     );
+
+    // Nada cambió desde que se cargó esta solicitud — avanza directo, sin
+    // mostrar spinner ni overlay de guardado (ver
+    // solicitudSinCambiosPendientes, solicitud_guardar_helper.dart).
+    if (solicitudSinCambiosPendientes(context)) {
+      widget.onContinuar();
+      return;
+    }
+
+    setState(() => _guardando = true);
 
     final result = await guardarBorradorCompleto(
       context,

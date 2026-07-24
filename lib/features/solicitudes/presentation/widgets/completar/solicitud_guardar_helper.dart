@@ -330,10 +330,39 @@ Future<CrudResult> generarSolicitudCompleta(
   return result;
 }
 
+/// true si esta solicitud ya existe (`numSol` confirmado, se entró a
+/// revisarla/editarla) y no hay ningún cambio real pendiente en
+/// `SolicitudFormCubit`/`ParticipantesCubit` desde que se cargó o se guardó
+/// por última vez. Una solicitud nueva (`numSol` vacío) nunca cae acá —
+/// todavía no existe en el backend, tiene que guardarse sí o sí la primera
+/// vez.
+///
+/// Pedido de negocio, 2026-07-24: los 4 botones "Siguiente"/"Guardar" de
+/// los pasos 1-3 y Resumen llaman esto ANTES de mostrar cualquier
+/// spinner/overlay de guardado — si da `true`, ni siquiera llaman a
+/// [guardarBorradorCompleto], solo avanzan/navegan directo, sin que se vea
+/// nada de carga en pantalla. Antes, moverse de paso sin editar nada igual
+/// mostraba el flujo completo de guardado (spinner + overlay) aunque no
+/// hubiera nada que mandar al backend.
+bool solicitudSinCambiosPendientes(BuildContext context) {
+  final formState = context.read<SolicitudFormCubit>().state;
+  if (formState.numSol.isEmpty) return false;
+  return !formState.huboCambios &&
+      !context.read<ParticipantesCubit>().state.huboCambios;
+}
+
 /// Flujo completo de "Guardar" (borrador, `IB_BORRADOR=1`): guarda el CUD y,
 /// si sale bien, sube voucher/O.C. pendientes — mismo patrón que
 /// [generarSolicitudCompleta], sin ninguna validación previa ("Guardar"
 /// nunca valida campos obligatorios, a diferencia de "Generar solicitud").
+///
+/// Repite la misma verificación de [solicitudSinCambiosPendientes] como red
+/// de seguridad (por si algún caller nuevo llama esto directo sin chequear
+/// antes) — pero el camino esperado es que el caller ya lo haya chequeado y
+/// ni siquiera llegue a llamar esta función cuando no hay nada que guardar,
+/// para no mostrar ningún spinner/overlay de más. "Generar solicitud"
+/// (`generarSolicitudCompleta`) no pasa por acá — esa acción siempre debe
+/// ejecutarse, es la que cambia `IB_BORRADOR` de 1 a 0.
 Future<CrudResult> guardarBorradorCompleto(
   BuildContext context, {
   required String idLead,
@@ -343,6 +372,12 @@ Future<CrudResult> guardarBorradorCompleto(
   required String pasoOrigen,
   SolicitudProgreso? progreso,
 }) async {
+  if (solicitudSinCambiosPendientes(context)) {
+    return const CrudOk('');
+  }
+  final formCubit = context.read<SolicitudFormCubit>();
+  final participantesCubit = context.read<ParticipantesCubit>();
+
   final result = await guardarSolicitudDesdeWizard(
     context,
     idLead: idLead,
@@ -351,6 +386,9 @@ Future<CrudResult> guardarBorradorCompleto(
     progreso: progreso,
   );
   if (result is! CrudOk) return result;
+
+  formCubit.marcarSinCambios();
+  participantesCubit.marcarSinCambios();
 
   final archivosOk = await subirArchivosPendientes(context, progreso: progreso);
   if (!archivosOk) {

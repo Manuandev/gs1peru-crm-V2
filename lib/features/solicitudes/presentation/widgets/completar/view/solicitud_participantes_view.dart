@@ -142,22 +142,28 @@ class _SolicitudParticipantesViewState
         return;
       }
 
-      setState(() => _guardando = true);
+      // Nada cambió desde que se cargó esta solicitud — deja pasar directo
+      // a la lógica de "saltar Facturación" de abajo, sin mostrar spinner
+      // ni overlay de guardado (ver solicitudSinCambiosPendientes,
+      // solicitud_guardar_helper.dart).
+      if (!solicitudSinCambiosPendientes(context)) {
+        setState(() => _guardando = true);
 
-      final result = await guardarBorradorCompleto(
-        context,
-        idLead: widget.solicitud.idLead,
-        pasoOrigen: '2',
-        progreso: _progreso,
-      );
+        final result = await guardarBorradorCompleto(
+          context,
+          idLead: widget.solicitud.idLead,
+          pasoOrigen: '2',
+          progreso: _progreso,
+        );
 
-      if (!mounted) return;
-      _progreso.reset();
-      setState(() => _guardando = false);
+        if (!mounted) return;
+        _progreso.reset();
+        setState(() => _guardando = false);
 
-      if (result is! CrudOk) {
-        mostrarResultadoGuardarSolicitud(context, result);
-        return;
+        if (result is! CrudOk) {
+          mostrarResultadoGuardarSolicitud(context, result);
+          return;
+        }
       }
     }
 

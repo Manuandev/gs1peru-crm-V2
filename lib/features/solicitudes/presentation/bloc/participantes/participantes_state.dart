@@ -2,7 +2,7 @@
 
 part of 'participantes_cubit.dart';
 
-class ParticipanteLocal {
+class ParticipanteLocal extends Equatable {
   final int id;
   final String tipoDocId;
   final String tipoDoc;
@@ -88,15 +88,76 @@ class ParticipanteLocal {
       esSolicitante: esSolicitante ?? this.esSolicitante,
     );
   }
+
+  // Extiende Equatable para poder comparar por CONTENIDO contra
+  // `ParticipantesState.participantesCargado` — ver
+  // `ParticipantesState.huboCambios`, mismo motivo que
+  // `DatosSolicitante`/`DatosFacturacion` (`solicitud_form_state.dart`).
+  @override
+  List<Object?> get props => [
+    id,
+    tipoDocId,
+    tipoDoc,
+    numDoc,
+    nacionalidadId,
+    nacionalidad,
+    nombres,
+    apellidoPaterno,
+    apellidoMaterno,
+    correo,
+    cargo,
+    celular,
+    celularCodigoTelefono,
+    tipoParticipante,
+    importe,
+    esSolicitante,
+  ];
 }
 
 class ParticipantesState {
   final List<ParticipanteLocal> participantes;
 
-  const ParticipantesState({required this.participantes});
+  /// Snapshot de `participantes` tal como quedó la última vez que se cargó
+  /// (task 'DT') o se guardó con éxito esta solicitud —
+  /// `ParticipantesCubit.marcarSinCambios()`/`cargarParticipantes()` lo
+  /// sincronizan. `huboCambios` (abajo) compara la lista ACTUAL contra este
+  /// snapshot por contenido (no por identidad ni por orden — ver
+  /// `_mismaLista`), así que agregar y luego quitar el mismo participante
+  /// (o prender/apagar el switch "El solicitante será participante" y
+  /// volver al estado original) se detecta como "sin cambios reales". Mismo
+  /// patrón que `SolicitudFormState.huboCambios`.
+  final List<ParticipanteLocal> participantesCargado;
 
-  ParticipantesState copyWith({List<ParticipanteLocal>? participantes}) =>
-      ParticipantesState(participantes: participantes ?? this.participantes);
+  const ParticipantesState({
+    required this.participantes,
+    this.participantesCargado = const [],
+  });
+
+  ParticipantesState copyWith({
+    List<ParticipanteLocal>? participantes,
+    List<ParticipanteLocal>? participantesCargado,
+  }) => ParticipantesState(
+    participantes: participantes ?? this.participantes,
+    participantesCargado: participantesCargado ?? this.participantesCargado,
+  );
+
+  /// true si `participantes` difiere (por contenido, sin importar el orden)
+  /// de `participantesCargado`. Usado por `solicitudSinCambiosPendientes()`
+  /// (`solicitud_guardar_helper.dart`).
+  bool get huboCambios => !_mismaLista(participantes, participantesCargado);
+
+  static bool _mismaLista(
+    List<ParticipanteLocal> a,
+    List<ParticipanteLocal> b,
+  ) {
+    if (a.length != b.length) return false;
+    final ordenadosA = [...a]..sort((x, y) => x.id.compareTo(y.id));
+    final ordenadosB = [...b]..sort((x, y) => x.id.compareTo(y.id));
+    for (var i = 0; i < ordenadosA.length; i++) {
+      if (ordenadosA[i] != ordenadosB[i]) return false;
+    }
+    return true;
+  }
 
   /// Suma solo el importe de los participantes **Pagantes** — un Invitado
   /// no paga, así que su importe (el que se le haya puesto/sugerido, el

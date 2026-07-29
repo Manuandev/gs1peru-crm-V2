@@ -6,6 +6,9 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 ## Pantallas
 - `LeadListPage` → lista de leads con chips de filtro; recibe `filtroInicial` opcional (`LeadListFiltro?`) para preseleccionar un chip al entrar (ej. desde `CardTotalesHome` en el dashboard)
 - `LeadDetallePage` → detalle completo del lead con comentarios y stepper de estado
+- `EditContactoSimplePage` (ruta `AppRoutes.editarContactoSimple`,
+  `context.goToEditarContactoSimple(idNumero:)`) → versión reducida de `EditContactoPage`, ver
+  sección dedicada más abajo ("EditContactoSimple — pantalla reducida...")
 - `EditContactoPage` (ruta `AppRoutes.editarContacto`, `context.goToEditarContacto(idNumero:)`) →
   crear/editar contacto. Recibe **solo `idNumero`** — `ContactoFormCubit` (bloc/contacto_form/)
   carga el `ContactoDetalle` completo (identidad + documento + nacionalidad + ubicación +
@@ -136,6 +139,122 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
     scroll ni el estado de los BLoCs de mensajes. Si se agrega otra pantalla que cachee datos de
     contacto derivados de `Chat`/`ContactoDetalle` fuera de un cubit reactivo, suscribirse al
     mismo notifier en vez de inventar uno nuevo.
+
+## EditContactoSimple — pantalla reducida "Editar contacto" (pedido de negocio 2026-07-27)
+
+Alternativa a `EditContacto` (arriba) — **no la reemplaza, sigue existiendo intacta** (queda
+sin caller hoy, pero se conserva por si negocio la vuelve a pedir). El jefe del usuario pidió
+una pantalla con muchos menos campos y sin la lógica de listas N-celulares/N-correos/N-empresas:
+solo tipo/número documento, nacionalidad, **prefijo** (saludo Estimado/Estimada — campo que ya
+existía en la pantalla completa, `PrefijoContactoItem`/`CRM.T_CONTACTO.PREFIJO`; se confundió
+al armar la primera versión con "Sexo" porque la imagen de referencia venía de
+`SeccionDatosSolicitante` en `solicitudes/`, que sí tiene un combo Sexo — corregido 2026-07-27,
+esta pantalla nunca tuvo ni necesitó una columna nueva), nombres, apellidos, **un** celular (el
+anclado en `idNumero`, no una lista), **un** correo, **una** empresa (RUC/razón social/cargo).
+Estructura calcada de `SeccionDatosSolicitante` pero como pantalla propia de `lead/` — no se
+reusó el widget de `solicitudes/` (features no comparten widgets de UI entre sí en este
+proyecto).
+
+- Ruta `AppRoutes.editarContactoSimple`, `context.goToEditarContactoSimple(idNumero:)`. Recibe
+  **solo `idNumero`**, igual que `EditContacto`. Estructura: `EditContactoSimplePage` →
+  `EditContactoSimpleView` (BasePage + AppBar dinámico + guardandoNotifier, mismo patrón que
+  `EditContactoView`) → `EditContactoSimplePortrait` (`presentation/widgets/edit_contacto_simple/`).
+  Título dinámico igual que la pantalla completa. El combo Prefijo usa el mismo
+  `CustomComboField<PrefijoContactoItem>`/`CatalogsBloc.prefijosContacto` que ya usa
+  `EditContactoDatosSection` — no es un catálogo nuevo, es el mismo campo con el mismo widget.
+- **Entidad propia `ContactoSimple`** (`domain/entities/contacto_simple.dart`) — no se tocó
+  `ContactoDetalle` ni sus sub-entidades (`NumeroContacto`/`CorreoContacto`/`EmpresaContacto`).
+  Campos: `idContacto`, `idNumero` (ancla), `idTipoDocumento`, `numeroDocumento`,
+  `idNacionalidad`, `prefijoContacto` (saludo, `String` — igual que en `ContactoDetalle`, sin
+  id/label separado), `nombre`, `apellidoPaterno`, `apellidoMaterno`, `prefijoCelular` +
+  `celular` (uno solo), `idCorreo` + `correo` (uno solo), `idEmpresaContacto` + `ruc` +
+  `razonSocial` + `idCargo` (una sola empresa). **No tiene** país/ubigeo/dirección/linkedin/
+  sexo/área — esos campos son exclusivos de la pantalla completa y no se muestran acá.
+- **`ContactoSimpleFormCubit`** (`bloc/contacto_simple_form/`) — mismo patrón exacto que
+  `ContactoFormCubit` (cargar por `idNumero` / guardar), pero contra el repositorio nuevo.
+- **Backend — mismos 2 SPs de siempre, tasks nuevos, agregados el 2026-07-27**
+  (`D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`, repo aparte — `.sql` de
+  CUD en UTF-16LE con BOM, el de LST en UTF-8; cualquier edición futura debe preservar la
+  codificación de cada uno o SSMS los muestra corruptos):
+  - `CRM.CSV_CONTACTO_LST_APP` — nuevo task `'DS'` (detalle simple por `idNumero`). Devuelve
+    9 campos de contacto (incluye `PREFIJO`, columna que ya existía) + a lo más 1 fila de
+    celular (el que matchea el `idNumero` ancla)/correo(el primero activo)/empresa(la primera
+    vinculada). Mismo criterio que `'D'` para resolver `@ID_CONTACTO` desde
+    `T_CONTACTO_NUMERO`; si no hay contacto, `SELECT ''` → `ApiEmpty` → pantalla en blanco
+    (modo "crear"), igual que `'D'`.
+  - `CRM.CSV_CONTACTO_CUD_APP` — nuevo task `'US'` (crear/actualizar simple). Mismo endpoint
+    (`urlContactoCud`, es el mismo SP) que `'U'` — solo cambia la letra de task. Reusa las
+    mismas tablas temporales (`@T_NUMEROS`/`@T_CORREOS`/`@T_EMPRESAS`/etc.) y la misma lógica de
+    alta-si-no-existe para número/correo, y alta-o-`UPDATE` para empresa (mismo criterio "de
+    frente el update" agregado a `'U'` el 2026-07-24) — con listas de a lo más 1 fila, la
+    lógica genérica de N filas ya funciona sin cambios. Sí escribe `PREFIJO` (columna que ya
+    existía, `@PREFIJO_US`) tanto al crear como al actualizar — **nunca toca**
+    `ID_PAIS`/`DIRECCION`/`UBIGEO`/`LINKEDIN`/`ID_AREA` de un contacto o empresa ya existente
+    (esos sí son exclusivos de la pantalla completa) — un guardado desde acá no debe borrar lo
+    que el usuario ya tenía cargado desde ahí.
+  - **No se agregó ninguna columna nueva a la base** — la primera versión (misma sesión)
+    intentó agregar `SEXO` a `T_CONTACTO` con un `ALTER TABLE` guardado, pero era un error de
+    interpretación de la imagen de referencia (ver arriba); se quitó por completo de ambos SPs
+    antes de que nadie llegara a ejecutarlos contra la base real.
+  - Task `'D'`/`'U'` (pantalla completa) **no se modificaron**.
+  - **Único call site real movido a la pantalla simple**: el botón "Crear/Editar contacto" de
+    `DatosTab` (`chat/`, panel de Conversaciones) — antes `context.goToEditarContacto`, ahora
+    `context.goToEditarContactoSimple`. Es el único lugar de toda la app que llamaba a
+    `goToEditarContacto` — la pantalla completa queda sin ningún caller por ahora (a propósito,
+    el usuario pidió conservarla para el futuro), pero la ruta/página/bloc siguen intactos y
+    navegables si se agrega otro punto de entrada.
+  - **Pendiente** — no se agregó autocompletado de RUC por documento/viceversa entre pantallas
+    — cada una tiene su propio flujo de `DocumentoExternoService` independiente, sin compartir
+    el último documento buscado. Los `.sql` de esta pantalla siguen sin desplegarse a la base
+    real (igual que el resto de cambios pendientes documentados en este archivo).
+
+  - **Celular/Prefijo bloqueados — 2026-07-28.** `EditContactoSimplePortrait` ahora renderiza
+    "Prefijo"/"Celular" con `enabled: false` (antes editables, sin bloqueo real). Decisión
+    explícita de negocio: `idNumero` es el ancla de toda la pantalla — ese celular nunca se
+    edita desde acá (para eso está la lista de N celulares de `EditContacto`, pantalla
+    completa). Motivo real: el SP (`CSV_CONTACTO_CUD_APP`, task `'US'`) resuelve el bloque
+    NÚMERO por (prefijo, número) contra `T_NUMERO`, no por id — si el texto cambiaba, insertaba
+    un `T_NUMERO`/`T_CONTACTO_NUMERO` nuevo **sin desactivar el anterior**, dejando al contacto
+    con 2 celulares activos y el `idNumero` ancla huérfano. No se tocó el SP para esto — con el
+    campo bloqueado, el valor enviado siempre es el mismo que se cargó, así que ese bloque del
+    SP queda como no-op seguro.
+
+  - **Correo — actualiza en sitio en vez de duplicar, corregido 2026-07-28.** El bloque CORREO
+    de `CSV_CONTACTO_CUD_APP` task `'US'` comparaba por **texto** (`CO.CORREO = TC.CORREO`) para
+    decidir si insertar — si el usuario cambiaba el texto del correo, no matcheaba con el
+    guardado, así que insertaba una fila nueva **dejando la anterior activa también** (bug real
+    reportado en vivo: el contacto terminaba con 2 correos activos). Corregido: ahora decide por
+    `ID_CONTACTO_CORREO` (0/NULL = fila nueva, se inserta; con valor = ya existe, se hace
+    `UPDATE ... SET CORREO = ...` en sitio) — mismo criterio de "id decide, no texto" que ya usa
+    el resto del SP. Distinto del task `'U'` (pantalla completa), que sigue congelando correos
+    ya guardados sin tocarlos (decisión de negocio previa, 2026-07-23, no se modificó).
+
+  - **Empresa — el RUC decide "misma empresa" vs "empresa distinta", corregido 2026-07-28.**
+    Bug real reportado en vivo: con `idEmpresaContacto<>0` (empresa ya vinculada), el SP hacía
+    `UPDATE` directo sobre `T_EMPRESA` con lo que llegara, **sin comparar el RUC**. Si el asesor
+    cambiaba el RUC a una empresa distinta (ej. de "NATCODE" a "GC1"), el SP sobreescribía en
+    sitio la fila compartida de `T_EMPRESA` — como esa tabla es una sola fila por empresa
+    referenciada por todos sus contactos, el cambio afectaba a cualquier otro contacto vinculado
+    a la empresa anterior, no solo al que se estaba editando.
+    Corregido en `CRM.CSV_CONTACTO_CUD_APP` (task `'US'`, bloque EMPRESA): ahora compara el RUC
+    que llega contra el RUC de la empresa que ya tenía la conexión — **RUC igual** → sigue
+    actualizando en sitio (razón social/cargo, mismo criterio "de frente el update" de siempre).
+    **RUC distinto** (o conexión nueva, `idEmpresaContacto=0`) → resuelve la empresa por RUC
+    (reusa si ya existe una `T_EMPRESA` con ese RUC — nunca pisa su `NOMBRE`, es fila compartida
+    — o la crea si no existe) y crea una conexión `T_EMPRESA_CONTACTO` **nueva**, desactivando
+    (`IB_ACTIVO=0`) la conexión anterior — la empresa anterior en sí nunca se toca. Ajustado en
+    conjunto con `CRM.CSV_CONTACTO_LST_APP` (task `'DS'`): la consulta de empresa ahora filtra
+    `EC.IB_ACTIVO = 1` y ordena `DESC` (antes no filtraba activo y ordenaba ascendente — con la
+    conexión anterior desactivada pero no eliminada, sin este fix habría seguido devolviendo la
+    empresa vieja en vez de la nueva). Mismo criterio "vínculo activo más reciente" que ya usan
+    número/correo y la resolución de `@ID_CONTACTO` del propio SP. Task `'U'`/`'D'` (pantalla
+    completa) **no se tocaron** — tienen el mismo patrón de UPDATE-sin-comparar-RUC ahí también
+    (el flujo de lista de N empresas no tiene el mismo concepto de "conexión anterior" a
+    desactivar), pero esa pantalla no tiene caller hoy, así que no era el foco de este fix;
+    queda pendiente si se reactiva.
+    Los 3 archivos (`edit_contacto_simple_portrait.dart`, `CSV_CONTACTO_CUD_APP.sql`,
+    `CSV_CONTACTO_LST_APP.sql`) siguen sin desplegarse a la base real, como el resto de cambios
+    de `EditContactoSimple` documentados en este archivo.
 
 ## BLoCs / Cubits
 - `LeadListBloc` (list/) → carga leads por tipo, filtra en memoria; conteos por filtro (usa `idEstadoPadre` para agrupar sub-estados bajo su padre)

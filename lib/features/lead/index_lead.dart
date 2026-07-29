@@ -12,6 +12,7 @@ export 'data/models/contacto_detalle_model.dart';
 export 'data/models/numero_contacto_model.dart';
 export 'data/models/correo_contacto_model.dart';
 export 'data/models/empresa_contacto_model.dart';
+export 'data/models/contacto_simple_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
 
@@ -25,6 +26,7 @@ export 'domain/entities/contacto_detalle.dart';
 export 'domain/entities/numero_contacto.dart';
 export 'domain/entities/correo_contacto.dart';
 export 'domain/entities/empresa_contacto.dart';
+export 'domain/entities/contacto_simple.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
@@ -98,3 +100,12 @@ export 'presentation/widgets/edit_contacto/edit_contacto_datos_section.dart';
 export 'presentation/widgets/edit_contacto/edit_contacto_celular_section.dart';
 export 'presentation/widgets/edit_contacto/edit_contacto_correo_section.dart';
 export 'presentation/widgets/edit_contacto/edit_contacto_empresa_section.dart';
+
+// EditContactoSimple — pantalla reducida "Editar contacto" (pedido de
+// negocio 2026-07-27, recibe solo idNumero) — alternativa a EditContacto
+// (arriba), que sigue existiendo intacta. Ver lead/CLAUDE.md.
+export 'presentation/bloc/contacto_simple_form/contacto_simple_form_cubit.dart';
+export 'presentation/bloc/contacto_simple_form/contacto_simple_form_state.dart';
+export 'presentation/pages/edit_contacto_simple_page.dart';
+export 'presentation/widgets/edit_contacto_simple/edit_contacto_simple_view.dart';
+export 'presentation/widgets/edit_contacto_simple/edit_contacto_simple_portrait.dart';

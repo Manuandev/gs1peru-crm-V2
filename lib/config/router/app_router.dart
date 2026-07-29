@@ -245,6 +245,15 @@ class AppRouter {
         return EditContactoPage(idNumero: args['idNumero'] as int);
       },
     ),
+    // CONTACTO — versión reducida (pedido de negocio 2026-07-27, ver
+    // lead/CLAUDE.md) — no reemplaza a la de arriba, que sigue intacta.
+    AppRoutes.editarContactoSimple: RouteDefinition(
+      transition: TransitionType.slideRight,
+      builder: (context) {
+        final args = _requireArgs<Map<String, dynamic>>(context);
+        return EditContactoSimplePage(idNumero: args['idNumero'] as int);
+      },
+    ),
 
     // HOME
     AppRoutes.notifications: RouteDefinition(

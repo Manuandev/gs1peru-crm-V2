@@ -50,4 +50,6 @@ class AppRoutes {
 
   static const String detalleContacto = '/leads/contacto';
   static const String editarContacto = '/leads/contacto/editar';
+  // Pantalla reducida — pedido de negocio 2026-07-27, ver lead/CLAUDE.md.
+  static const String editarContactoSimple = '/leads/contacto/editar-simple';
 }

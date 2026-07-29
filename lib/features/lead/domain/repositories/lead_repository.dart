@@ -25,4 +25,11 @@ abstract class LeadRepository {
   // CRM.CSV_CONTACTO_CUD_APP — rama CREATE ya funciona; rama UPDATE
   // pendiente de reglas de negocio (ver lead/CLAUDE.md).
   Future<CrudResult> guardarContacto(ContactoDetalle contacto);
+
+  // CRM.CSV_CONTACTO_LST_APP task 'DS' / CSV_CONTACTO_CUD_APP task 'US' —
+  // pantalla EditContactoSimple (versión reducida de EditContacto, ver
+  // lead/CLAUDE.md). Contacto en blanco (idContacto == 0) si el número
+  // todavía no tiene contacto asociado.
+  Future<ContactoSimple> getContactoSimplePorIdNumero(int idNumero);
+  Future<CrudResult> guardarContactoSimple(ContactoSimple contacto);
 }

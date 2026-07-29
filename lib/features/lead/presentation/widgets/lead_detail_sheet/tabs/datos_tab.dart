@@ -194,7 +194,11 @@ class DatosTab extends StatelessWidget {
           CustomOutlinedButton(
             text: chat.idContacto == 0 ? 'Crear contacto' : 'Editar contacto',
             icon: chat.idContacto == 0 ? AppIcons.add : AppIcons.edit,
-            onPressed: () => context.goToEditarContacto(idNumero: idNumero),
+            // Pantalla reducida (pedido de negocio 2026-07-27) — la
+            // pantalla completa (EditContacto) sigue intacta, solo este
+            // único punto de entrada real se movió a la simplificada.
+            onPressed: () =>
+                context.goToEditarContactoSimple(idNumero: idNumero),
           ),
         ],
       ),

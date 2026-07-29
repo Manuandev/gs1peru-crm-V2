@@ -255,4 +255,90 @@ class LeadRemoteDatasource {
       ApiError(:final message) => CrudError(message),
     };
   }
+
+  // Task 'DS' de CRM.CSV_CONTACTO_LST_APP — detalle SIMPLE por idNumero,
+  // pantalla EditContactoSimple (versión reducida de EditContacto, pedido
+  // de negocio 2026-07-27, ver lead/CLAUDE.md). Mismo endpoint que el task
+  // 'D' — es el mismo SP, solo cambia la letra de task. Si el número
+  // todavía no tiene contacto, el SP devuelve '' → ApiEmpty → contacto en
+  // blanco (modo "crear").
+  Future<ContactoSimpleModel> getContactoSimplePorIdNumero(
+    int idNumero,
+  ) async {
+    final String body = '$idNumero${sep}DS';
+
+    final result = await _api.postSafe(ApiConstants.urlContactoLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) =>
+        ContactoSimpleModel.fromRawString(data, idNumero),
+      ApiEmpty() => ContactoSimpleModel.vacio(idNumero),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  // Task 'US' de CRM.CSV_CONTACTO_CUD_APP — crear/actualizar SIMPLE, mismo
+  // endpoint que el task 'U' (mismo SP, otra letra de task). Envelope de 5
+  // secciones separadas por sepListas (¯):
+  // token(auto) ¯ datosContacto ¯ 'US' ¯ datosNumero ¯ datosCorreo ¯ datosEmpresa
+  // — siempre a lo más 1 fila en numero/correo/empresa (pantalla simple).
+  // idNumero(numero)/idCorreo/idEmpresaContacto van primero: 0 = fila nueva
+  // (el SP la crea), con id = ya existe. Nunca toca idPais/dirección/
+  // ubigeo/linkedin/prefijo(saludo) de un contacto ya existente — esos
+  // campos son exclusivos de la pantalla completa y no se muestran acá.
+  Future<CrudResult> guardarContactoSimple(ContactoSimple contacto) async {
+    final ip = await _deviceInfo.getLocalIp();
+    final coords = await _deviceInfo.getCoordenadasString();
+
+    final datosContacto = [
+      contacto.idNumero,
+      contacto.idContacto,
+      contacto.nombre,
+      contacto.apellidoPaterno,
+      contacto.apellidoMaterno,
+      contacto.idTipoDocumento,
+      contacto.numeroDocumento,
+      contacto.idNacionalidad,
+      contacto.prefijoContacto,
+      _session.codUser,
+      ip,
+      coords,
+    ].join(camp);
+
+    final datosNumero = contacto.celular.trim().isEmpty
+        ? ''
+        : [contacto.idNumero, contacto.prefijoCelular, contacto.celular]
+              .join(camp);
+
+    final datosCorreo = contacto.correo.trim().isEmpty
+        ? ''
+        : [contacto.idCorreo, contacto.correo].join(camp);
+
+    final datosEmpresa = contacto.razonSocial.trim().isEmpty
+        ? ''
+        : [
+            contacto.idEmpresaContacto,
+            contacto.ruc,
+            contacto.razonSocial,
+            contacto.idCargo,
+          ].join(camp);
+
+    final String body = [
+      datosContacto,
+      'US',
+      datosNumero,
+      datosCorreo,
+      datosEmpresa,
+    ].join(sep);
+
+    final result = await _api.postSafe(ApiConstants.urlContactoCud, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => parseCrudResponse(data),
+      ApiEmpty() => const CrudEmpty(),
+      ApiNoInternet() => const CrudNoInternet(),
+      ApiError(:final message) => CrudError(message),
+    };
+  }
 }

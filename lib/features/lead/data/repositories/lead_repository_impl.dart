@@ -39,4 +39,12 @@ class LeadRepositoryImpl implements LeadRepository {
   @override
   Future<CrudResult> guardarContacto(ContactoDetalle contacto) =>
       _remote.guardarContacto(contacto);
+
+  @override
+  Future<ContactoSimpleModel> getContactoSimplePorIdNumero(int idNumero) =>
+      _remote.getContactoSimplePorIdNumero(idNumero);
+
+  @override
+  Future<CrudResult> guardarContactoSimple(ContactoSimple contacto) =>
+      _remote.guardarContactoSimple(contacto);
 }

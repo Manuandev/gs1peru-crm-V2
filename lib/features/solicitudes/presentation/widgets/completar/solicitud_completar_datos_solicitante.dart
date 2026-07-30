@@ -24,9 +24,15 @@ class SeccionDatosSolicitante extends StatefulWidget {
   final String? tipoDocInicialId;
   final String? nacionalidadInicialId;
   final String? sexoInicialId;
+  // Id del CargoItem ya elegido (para preseleccionar el combo al reabrir),
+  // y callback con el ítem completo (id + descripción) cada vez que se
+  // elige uno — el padre guarda el id (DatosSolicitante.cargoId) y escribe
+  // la descripción en widget.ctrlCargo por su cuenta.
+  final String? cargoInicialId;
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   final ValueChanged<SexoItem?>? onSexoChanged;
+  final ValueChanged<CargoItem?>? onCargoChanged;
   // Autocompletado por documento (Clientes/BuscarDocumento) — se dispara al
   // perder foco o al presionar el check del teclado en Número documento. El
   // indicador de carga es un overlay de pantalla completa que arma el padre
@@ -49,9 +55,11 @@ class SeccionDatosSolicitante extends StatefulWidget {
     this.tipoDocInicialId,
     this.nacionalidadInicialId,
     this.sexoInicialId,
+    this.cargoInicialId,
     this.onTipoDocChanged,
     this.onNacionalidadChanged,
     this.onSexoChanged,
+    this.onCargoChanged,
     this.onBuscarDocumento,
   });
 
@@ -253,25 +261,23 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
 
         // Cargo — combo con búsqueda (CargoItem, DBO.SYSMCARGO01), mismo
         // catálogo y mismo widget que ya usa lead/EditContacto (sección
-        // Empresa). Por ahora solo se guarda la descripción elegida como
-        // texto libre en widget.ctrlCargo (DatosSolicitante.cargo sigue
-        // siendo String — el CUD de Solicitudes no tiene columna de id de
-        // cargo todavía, ver solicitudes/CLAUDE.md).
+        // Empresa). Guarda id (DatosSolicitante.cargoId, 2026-07-30) +
+        // descripción (widget.ctrlCargo, para mostrar sin resolver contra
+        // el catálogo en Resumen/Detalle) — ver solicitudes/CLAUDE.md.
         CustomComboSearchField(
           data: cargos
               .map((c) => '${c.id}${AppConstants.sepCampos}${c.nombre}')
               .toList(),
           label: 'Cargo *',
           enabled: widget.habilitado,
-          initialValue: cargos
-              .where(
-                (c) =>
-                    c.nombre.trim().toUpperCase() ==
-                    widget.ctrlCargo.text.trim().toUpperCase(),
-              )
-              .firstOrNull
-              ?.id,
-          onChanged: (item) => widget.ctrlCargo.text = item?.descripcion ?? '',
+          initialValue: widget.cargoInicialId,
+          onChanged: (item) {
+            final cargo = item == null
+                ? null
+                : cargos.where((c) => c.id == item.id).firstOrNull;
+            widget.ctrlCargo.text = cargo?.nombre ?? '';
+            widget.onCargoChanged?.call(cargo);
+          },
           validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: AppSpacing.xs),

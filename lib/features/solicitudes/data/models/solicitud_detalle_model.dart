@@ -134,6 +134,14 @@ class SolicitudDetalleModel {
   // solicitud por primera vez. Vacío si no hay negociación de origen (no
   // debería pasar en la práctica, todas las solicitudes se crean desde una).
   final String idLeadOrigen;
+  // Ubigeo de facturación (6 dígitos, dpto+prov+dis) — campo agregado el
+  // 2026-07-30 (campos[41], TC.UBIGEO al final del SELECT). Antes el SP
+  // nunca lo traía de vuelta, así que Departamento/Provincia/Distrito
+  // quedaban vacíos al reabrir una solicitud ya guardada aunque el guardado
+  // sí los persistía (ver solicitudes/CLAUDE.md). Se parte en 3 en
+  // solicitud_completar_view.dart._cargarDetalle() (2 dígitos c/u), mismo
+  // criterio que DatosFacturacion.ubigeoCodigo usa para juntarlos al guardar.
+  final String facUbigeoCodigo;
 
   final List<SolicitudParticipanteRaw> participantes;
   final List<SolicitudArchivoRaw> archivos;
@@ -178,6 +186,7 @@ class SolicitudDetalleModel {
     required this.idEstadoGes,
     required this.cantParticipantes,
     required this.idLeadOrigen,
+    this.facUbigeoCodigo = '',
     required this.participantes,
     required this.archivos,
   });
@@ -254,6 +263,7 @@ class SolicitudDetalleModel {
       cantParticipantes: int.tryParse(campos[37]) ?? 0,
       facNacionalidadId: campos.length > 38 ? campos[38] : '',
       idLeadOrigen: campos.length > 39 ? campos[39] : '',
+      facUbigeoCodigo: campos.length > 41 ? campos[41] : '',
       participantes: participantes,
       archivos: archivos,
     );

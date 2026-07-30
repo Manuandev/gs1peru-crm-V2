@@ -133,6 +133,7 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       apellidoMaterno: datos.apellidoMaterno,
       correo: datos.correo,
       cargo: datos.cargo,
+      cargoId: datos.cargoId,
       celular: datos.celular,
       celularCodigoTelefono: datos.celularCodigoTelefono,
       tipoParticipante: idTipoParticipantePagante,

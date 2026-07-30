@@ -60,6 +60,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
   String? _nacionalidadInicialId;
+  // Id del CargoItem elegido (catálogo real) — nuevo 2026-07-30, ver
+  // ParticipanteLocal.cargoId. Sembrado desde el participante ya guardado
+  // (edición) en initState, igual que tipoDocId/nacionalidadId.
+  String _cargoId = '';
   late String _tipoParticipante;
   PaisItem? _paisSeleccionado;
 
@@ -90,6 +94,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     _nacionalidadInicialId = _nacionalidadId.isNotEmpty
         ? _nacionalidadId
         : null;
+    _cargoId = p?.cargoId ?? '';
 
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
@@ -204,6 +209,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
       apellidoMaterno: _apellidoMaternoCtrl.text.trim().toUpperCase(),
       correo: _correoCtrl.text.trim(),
       cargo: _cargoCtrl.text.trim().toUpperCase(),
+      cargoId: _cargoId,
       celular: _celularCtrl.text.trim(),
       celularCodigoTelefono: _paisSeleccionado?.codigoTelefono ?? '',
       tipoParticipante: _tipoParticipante,
@@ -534,8 +540,8 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           // Cargo — combo con búsqueda (CargoItem,
                           // DBO.SYSMCARGO01), mismo catálogo/widget que
                           // Datos del solicitante (paso 1) y lead/EditContacto.
-                          // Por ahora solo guarda la descripción elegida como
-                          // texto libre en _cargoCtrl.
+                          // Guarda id (_cargoId, 2026-07-30) + descripción
+                          // (_cargoCtrl, para las cards/Resumen).
                           CustomComboSearchField(
                             data: cargos
                                 .map(
@@ -544,16 +550,18 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                                 )
                                 .toList(),
                             label: 'Cargo *',
-                            initialValue: cargos
-                                .where(
-                                  (c) =>
-                                      c.nombre.trim().toUpperCase() ==
-                                      _cargoCtrl.text.trim().toUpperCase(),
-                                )
-                                .firstOrNull
-                                ?.id,
-                            onChanged: (item) =>
-                                _cargoCtrl.text = item?.descripcion ?? '',
+                            initialValue: _cargoId.isNotEmpty
+                                ? _cargoId
+                                : null,
+                            onChanged: (item) => setState(() {
+                              final cargo = item == null
+                                  ? null
+                                  : cargos
+                                        .where((c) => c.id == item.id)
+                                        .firstOrNull;
+                              _cargoId = cargo?.id ?? '';
+                              _cargoCtrl.text = cargo?.nombre ?? '';
+                            }),
                             validator: (v) =>
                                 v == null || v.isEmpty ? 'Requerido' : null,
                           ),

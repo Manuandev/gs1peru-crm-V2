@@ -180,7 +180,11 @@ class SolicitudRemoteDatasource {
       solicitante.nombres, // 10 NOMBRES_SOL
       solicitante.apellidoPaterno, // 11 APELLIDO_P_SOL
       solicitante.apellidoMaterno, // 12 APELLIDO_M_SOL
-      solicitante.cargo, // 13 CARGO_SOL
+      // 13 CARGO_SOL — prioriza el id del catálogo real (CargoItem, elegido
+      // por combo); cae al texto libre si no hay id (solicitud prellenada
+      // desde una negociación sin pasar por el combo, ver
+      // DatosSolicitante.cargoId) — pedido de negocio 2026-07-30.
+      solicitante.cargoId.isNotEmpty ? solicitante.cargoId : solicitante.cargo,
       solicitante.celular, // 14 CELULAR_SOL
       solicitante.correo, // 15 CORREO_SOL
       solicitante.solicitanteEsParticipante
@@ -250,7 +254,9 @@ class SolicitudRemoteDatasource {
             p.apellidoMaterno, // APELLIDO_M
             p.correo, // CORREO
             p.celular, // CELULAR
-            p.cargo, // CARGO
+            // CARGO — mismo criterio que CARGO_SOL: prioriza el id del
+            // catálogo real, cae al texto libre si no hay id.
+            p.cargoId.isNotEmpty ? p.cargoId : p.cargo,
             p.importe.toStringAsFixed(2), // IMPORTE
             igv.toStringAsFixed(2), // IGV
             '1', // IB_IGV — siempre true, no hay switch en la UI para desactivarlo

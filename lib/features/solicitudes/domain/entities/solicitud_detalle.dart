@@ -41,6 +41,14 @@ class SolicitudDetalle {
   final String facRazonSocial;
   final String facRuc;
   final String facDireccion;
+  // Datos de facturación para persona natural (Boleta) — el SP solo llena
+  // RUCEMPRE/NOMEMPRE cuando el tipo de documento de facturación es RUC; en
+  // cualquier otro caso llena estos 3 campos en su lugar (mutuamente
+  // excluyentes, mismo criterio que el CUD/wizard). Ver facTieneRuc.
+  final String facNumDoc;
+  final String facNombres;
+  final String facApellidoPaterno;
+  final String facApellidoMaterno;
 
   final List<HistorialSolicitud> historial;
 
@@ -55,6 +63,19 @@ class SolicitudDetalle {
     required this.facRazonSocial,
     required this.facRuc,
     required this.facDireccion,
+    this.facNumDoc = '',
+    this.facNombres = '',
+    this.facApellidoPaterno = '',
+    this.facApellidoMaterno = '',
     this.historial = const [],
   });
+
+  // true si la facturación es con RUC (Factura, razón social) — false si es
+  // con documento de persona natural (Boleta, nombre completo).
+  bool get facTieneRuc => facRuc.isNotEmpty;
+
+  String get facNombreCompleto =>
+      '$facNombres $facApellidoPaterno $facApellidoMaterno'
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
 }

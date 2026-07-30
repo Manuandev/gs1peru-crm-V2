@@ -89,6 +89,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
   String _sexoId = '';
+  // Id del CargoItem elegido (catálogo real, CatalogsBloc.cargos) — nuevo
+  // 2026-07-30, ver DatosSolicitante.cargoId. El label sigue viviendo en
+  // _ctrlCargo (controller), como el resto de campos de texto de este paso.
+  String _cargoId = '';
 
   // Controladores — Datos del solicitante
   final _ctrlNumDoc = TextEditingController();
@@ -345,6 +349,12 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       final paises = catalogState is CatalogsLoaded
           ? catalogState.paises
           : const <PaisItem>[];
+      final ubigeoTodos = catalogState is CatalogsLoaded
+          ? catalogState.ubigeo
+          : const <UbigeoItem>[];
+      final cargos = catalogState is CatalogsLoaded
+          ? catalogState.cargos
+          : const <CargoItem>[];
       final valoresDefecto = catalogState is CatalogsLoaded
           ? catalogState.valoresDefecto
           : const ValoresCRMItem();
@@ -355,6 +365,13 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       final nacionalidad = nacionalidades
           .where((n) => n.id == detalle.nacionalidadId)
           .firstOrNull;
+      // Desde el 2026-07-30 detalle.cargo trae el id del CargoItem elegido
+      // (antes era texto libre) — si matchea, resuelve la descripción real;
+      // si no (solicitud vieja guardada antes de este cambio, o el
+      // prellenado desde negociación que nunca tuvo id), cae a mostrar el
+      // valor crudo tal cual, mismo fallback de siempre.
+      final cargo = cargos.where((c) => c.id == detalle.cargo).firstOrNull;
+      final cargoLabel = cargo?.nombre ?? detalle.cargo;
       final canal = detalle.canalId.isEmpty
           ? null
           : canales
@@ -387,7 +404,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlNombres.text = detalle.nombres;
       _ctrlApellidoPaterno.text = detalle.apellidoPaterno;
       _ctrlApellidoMaterno.text = detalle.apellidoMaterno;
-      _ctrlCargo.text = detalle.cargo;
+      _cargoId = cargo?.id ?? '';
+      _ctrlCargo.text = cargoLabel;
       _ctrlCelular.text = detalle.celular;
       _ctrlCorreo.text = detalle.correo;
       _ctrlRuc.text = detalle.ruc;
@@ -403,7 +421,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         nombres: detalle.nombres,
         apellidoPaterno: detalle.apellidoPaterno,
         apellidoMaterno: detalle.apellidoMaterno,
-        cargo: detalle.cargo,
+        cargo: cargoLabel,
+        cargoId: _cargoId,
         celular: detalle.celular,
         correo: detalle.correo,
         canalId: canal?.id,
@@ -440,6 +459,46 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             .where((n) => n.id == detalle.facNacionalidadId)
             .firstOrNull;
 
+        // Ubigeo de facturación — el código de 6 dígitos que guardó el CUD
+        // (dpto+prov+dis, 2 c/u) recién empezó a volver del SP el
+        // 2026-07-30 (detalle.facUbigeoCodigo, campo nuevo); antes se
+        // guardaba bien pero nunca se leía de vuelta, así que los 3 combos
+        // quedaban vacíos al reabrir la solicitud. Mismo criterio de
+        // "nivel" que usa el resto del feature para Ubigeo (ver
+        // core/CLAUDE.md → UbigeoItem): prov=='00'&&dis=='00' es
+        // departamento, prov!='00'&&dis=='00' es provincia.
+        final ubigeoCodigo = detalle.facUbigeoCodigo;
+        final ubigeoDptoId = ubigeoCodigo.length >= 2
+            ? ubigeoCodigo.substring(0, 2)
+            : '';
+        final ubigeoProvId = ubigeoCodigo.length >= 4
+            ? ubigeoCodigo.substring(2, 4)
+            : '';
+        final ubigeoDisId = ubigeoCodigo.length >= 6
+            ? ubigeoCodigo.substring(4, 6)
+            : '';
+        final ubigeoDpto = ubigeoTodos
+            .where(
+              (u) => u.dpto == ubigeoDptoId && u.prov == '00' && u.dis == '00',
+            )
+            .firstOrNull;
+        final ubigeoProv = ubigeoTodos
+            .where(
+              (u) =>
+                  u.dpto == ubigeoDptoId &&
+                  u.prov == ubigeoProvId &&
+                  u.dis == '00',
+            )
+            .firstOrNull;
+        final ubigeoDis = ubigeoTodos
+            .where(
+              (u) =>
+                  u.dpto == ubigeoDptoId &&
+                  u.prov == ubigeoProvId &&
+                  u.dis == ubigeoDisId,
+            )
+            .firstOrNull;
+
         context.read<SolicitudFormCubit>().guardarFacturacion(
           DatosFacturacion(
             comprobanteId: detalle.facComprobanteId,
@@ -462,6 +521,12 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             actividadEconomica: '',
             nit: '',
             observaciones: '',
+            ubigeoDptoId: ubigeoDptoId,
+            ubigeoDptoNombre: ubigeoDpto?.nombre ?? '',
+            ubigeoProvId: ubigeoProvId,
+            ubigeoProvNombre: ubigeoProv?.nombre ?? '',
+            ubigeoDisId: ubigeoDisId,
+            ubigeoDisNombre: ubigeoDis?.nombre ?? '',
           ),
         );
       }
@@ -473,6 +538,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
         final nacionalidadP = nacionalidades
             .where((n) => n.id == p.nacionalidadId)
             .firstOrNull;
+        // Mismo criterio que el cargo del solicitante (arriba) — p.cargo
+        // ahora trae el id del CargoItem (2026-07-30); si no matchea (dato
+        // viejo, texto libre), se muestra tal cual.
+        final cargoP = cargos.where((c) => c.id == p.cargo).firstOrNull;
         return ParticipanteLocal(
           id: int.tryParse(p.id) ?? 0,
           tipoDocId: p.tipoDocId,
@@ -484,7 +553,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
           apellidoPaterno: p.apellidoPaterno,
           apellidoMaterno: p.apellidoMaterno,
           correo: p.correo,
-          cargo: p.cargo,
+          cargo: cargoP?.nombre ?? p.cargo,
+          cargoId: cargoP?.id ?? '',
           celular: p.celular,
           tipoParticipante: p.tipoParticipante,
           importe: p.importe,
@@ -610,6 +680,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       apellidoPaterno: _ctrlApellidoPaterno.text,
       apellidoMaterno: _ctrlApellidoMaterno.text,
       cargo: _ctrlCargo.text,
+      cargoId: _cargoId,
       celular: _ctrlCelular.text,
       celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
       correo: _ctrlCorreo.text,
@@ -984,6 +1055,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                               ? _nacionalidadId
                               : null,
                           sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
+                          cargoInicialId: _cargoId.isNotEmpty
+                              ? _cargoId
+                              : null,
                           onTipoDocChanged: (item) {
                             setState(() {
                               _tipoDocId = item?.id ?? '';
@@ -1000,6 +1074,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                           },
                           onSexoChanged: (item) {
                             setState(() => _sexoId = item?.id ?? '');
+                            _sincronizarCubit();
+                          },
+                          onCargoChanged: (item) {
+                            setState(() => _cargoId = item?.id ?? '');
                             _sincronizarCubit();
                           },
                           onBuscarDocumento: _buscarDocumentoSolicitante,

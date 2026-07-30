@@ -1,5 +1,150 @@
 # Solicitudes Feature
 
+## Bugs reales — Detalle de Facturación sin DNI/Nombre + pila de Detalle apilándose (2026-07-30)
+Dos bugs reportados por el usuario en la misma sesión, ambos con causa ya diagnosticable con los
+`.sql` reales a la vista:
+
+- **"Detalle de Solicitud" (`SolicitudDetalleView`, la pantalla de solo lectura desde la lista —
+  no el wizard) no mostraba N° documento/Nombre en Facturación cuando era DNI (sin RUC), aunque
+  "Revisar solicitud" (el wizard en modo lectura) sí los mostraba.** Causa: el fix ya estaba
+  **diseñado y documentado** en la entrada de arriba ("Detalle de Facturación — RUC+Razón social
+  vs N° documento+Nombre...") — pero en esa sesión no había acceso al archivo `.sql` real, así
+  que el `.sql` con los 4 campos nuevos (`NRO_DOCUMENTO`/`NOMBRES`/`APE_PATERNO`/`APE_MATERNO` de
+  facturación) solo se le entregó al usuario **por chat**, nunca se aplicó a un archivo — el SP
+  desplegado se quedó con los 10 campos de siempre, así que `SolicitudDetalleRealModel.
+  fromRawString` (que ya esperaba `campos[10-13]`) siempre los recibía vacíos. Ahora que sí hay
+  acceso a `CSV_SOLICITUD_LST_APP.sql`, se aplicó de verdad: se agregaron `/*10*/`-`/*13*/` al
+  `CONCAT` del task `'DV'` (mismos 4 campos, mismo orden que ya esperaba Flutter) — edición hecha
+  preservando el UTF-16LE+BOM del archivo, mismo procedimiento que el resto de esta sesión. No
+  hizo falta tocar nada en Flutter, el modelo ya estaba listo desde el intento anterior.
+- **Bucle de pantallas "Detalle de Solicitud" al guardar repetidas veces desde el Resumen
+  (paso 4).** `SolicitudResumenView._onGuardar()` hacía `Navigator.of(context).pop()` (sale del
+  wizard) seguido de `context.goToDetalleSolicitud(...)` (**push**, no reemplazo). Si el wizard
+  se abrió desde un Detalle ya existente ("Editar ficha"/"Validar", el flujo normal de edición —
+  no la creación desde una negociación, que no tiene Detalle debajo), el `pop()` solo sacaba el
+  wizard y dejaba ese Detalle debajo; el `push` de después metía uno **nuevo** encima. Cada ciclo
+  editar→guardar apilaba una pantalla más — con varios ciclos, el botón atrás terminaba mostrando
+  una cadena entera de Detalle en vez de volver a la lista, tal como reportó el usuario.
+  Corregido con `Navigator.of(context).popUntil((route) => route.settings.name !=
+  AppRoutes.detalleSolicitud)` **antes** del push — saca cualquier Detalle que haya quedado justo
+  debajo del wizard (y de paso limpia pilas ya infladas de antes de este fix, no solo evita que
+  sigan creciendo) para que el push de después nunca deje más de un nivel de Detalle en la pila,
+  sin importar cuántas veces se repita el ciclo. **No se tocó** `_onGenerarSolicitud()`
+  (`goToSolicitudGenerada`, distinto flujo — pantalla de éxito de un solo uso, sin este patrón de
+  bucle) ni el botón "Continuar" en modo solo-ver (ya usaba `popUntil` correctamente desde antes).
+
+## Tipo documento — también se restringe a "nacionales" con país Perú (2026-07-30)
+Seguimiento del toggle Jurídica/Natural (sección de abajo) — el usuario confirmó el
+comportamiento ya implementado (con Perú, Razón Social/Nombres se decide por Tipo documento ==
+RUC; con extranjero, por el toggle) y pidió una restricción más: **con país Perú, el combo Tipo
+documento debe mostrar solo los tipos con `esNacional == true`** — antes, fuera de la rama
+"Factura exige RUC", se dejaba pasar la lista COMPLETA sin filtrar (incluía tipos de extranjero
+también). Ahora es simétrico a la rama ya existente de extranjero:
+
+- `tiposDocumentoNacional` (nuevo, junto a `tiposDocumentoExtranjero`) = `tiposDocumentoTodos.
+  where((t) => t.esNacional)`. La rama `!_esExtranjero` de `tiposDocumento` pasó de
+  `tiposDocumentoTodos` (sin filtrar, salvo Factura→RUC) a `tiposDocumentoNacional` (con el
+  mismo fallback a la lista completa si el catálogo no trae ningún nacional).
+- `onPaisChanged` ganó la rama simétrica a la que ya limpiaba Tipo documento al pasar a
+  extranjero: si el país vuelve a ser Perú y el tipo ya elegido no está en
+  `tiposDocumentoNacional` (venía de un tipo exclusivo de extranjero), se limpia para forzar una
+  elección nueva — mismo criterio, ya no se fuerza ningún tipo específico, solo se vacía.
+
+## Cargo se guarda por id + Ubigeo de Facturación se restaura al reabrir (2026-07-30)
+Dos pedidos del usuario en la misma sesión, ambos con `.sql` reales a la vista (ver también
+"Investigación — guardo Perú..." más abajo, misma sesión):
+
+- **Ubigeo (Departamento/Provincia/Distrito, paso 3) no se restauraba al reabrir una solicitud
+  ya guardada** — quedaba anotado como pendiente desde el 2026-07-22 ("no hay `.sql` a la vista
+  para confirmar en qué índice el SP ya trae UBIGEO_FAC de vuelta"). Confirmado leyendo
+  `CSV_SOLICITUD_LST_APP.sql` completo: el task `'DT'` (el que usa el wizard) **nunca**
+  seleccionaba `TC.UBIGEO` — se guardaba bien (`UBIGEO_FAC`, ver `CSV_SOLICITUD_CUD_APP.sql`,
+  sin cambios ahí) pero jamás volvía. Se agregó `/*42*/, @sepCampos , TC.UBIGEO` al final del
+  `SELECT` de cabecera del task `'DT'` (mismo patrón "nunca correr los índices existentes" del
+  resto del feature) — edición hecha con PowerShell/`UnicodeEncoding` preservando el UTF-16LE+BOM
+  del archivo, igual que las ediciones anteriores a estos `.sql`.
+  - Flutter: `SolicitudDetalleModel.facUbigeoCodigo` (nuevo, `campos[41]`, default `''` si el SP
+    desplegado todavía no lo trae — guard defensivo de siempre).
+    `solicitud_completar_view.dart._cargarDetalle()` parte ese código de 6 dígitos en
+    3 (`substring(0,2)`/`substring(2,4)`/`substring(4,6)`) y resuelve cada nivel contra
+    `CatalogsBloc.ubigeo` (mismo criterio de nivel que ya documenta `core/CLAUDE.md` →
+    `UbigeoItem`) antes de pasarlos a `DatosFacturacion` — `SolicitudFacturacionView.
+    _restaurarPaso()` ya sabía leer esos 6 campos de `DatosFacturacion`, simplemente nunca
+    recibía datos reales.
+- **Cargo (Solicitante paso 1 + Participante) ahora guarda el id del catálogo real
+  (`CargoItem`), no la descripción como texto libre** — pedido de negocio, "para poder hacer
+  reportería mejor". `DatosSolicitante`/`ParticipanteLocal` ganaron `cargoId` (`String`, default
+  `''`) — `cargo` (la descripción) se queda igual, sigue siendo lo que se muestra en Resumen/
+  Detalle/cards, ningún lugar de display se tocó. `SeccionDatosSolicitante` y
+  `participante_form_sheet.dart` ganaron el tracking del id elegido (`cargoInicialId`/
+  `onCargoChanged` en el primero; `_cargoId` local en el segundo) — el `initialValue` del combo
+  ahora matchea por **id exacto** en vez del fuzzy-match por texto que tenía desde el
+  2026-07-29 (limitación documentada en la sección de abajo, "Cargo con combo de catálogo...").
+  `guardarSolicitud()` manda `cargoId` si no está vacío, si no cae a `cargo` (texto) — este
+  fallback cubre el prellenado desde negociación (`SolicitudFormState.cargoLead`, texto libre
+  sin id, ver `_prellenarDesdeNegociacion()`) que nunca pasa por el combo si el asesor no lo
+  toca. Al releer (`_cargarDetalle()`), `detalle.cargo`/`p.cargo` (ahora el id, para solicitudes
+  guardadas después de este cambio) se resuelve contra `CatalogsBloc.cargos`; si no matchea
+  (solicitud vieja con texto libre, o el id ya no existe en el catálogo) cae a mostrar el valor
+  crudo tal cual — mismo patrón de degradación que ya tenía el combo. **No se tocó el ancho de
+  columna** — `CARGO_SOL`/`CARGO` (`EVT.T_TECMSOLINSCRIPCION01`/`02`) son `VARCHAR(50)`, de sobra
+  para un id de catálogo corto, no hizo falta `ALTER TABLE`.
+
+## Toggle Jurídica/Natural de Facturación — corrección: solo aplica con país extranjero (2026-07-30)
+Sigue a "Cargo con combo de catálogo... + toggle Jurídica/Natural de vista" (2026-07-29, más
+abajo) — el usuario probó el toggle recién agregado y corrigió 2 cosas el mismo día:
+
+- **El toggle NO debe decidir Razón Social vs Nombres/Apellidos con país Perú** — "jurídica/
+  natural me sirve cuando es extranjero... cuando es Perú, de frente por el RUC". Con
+  `!_esExtranjero` esa decisión vuelve a ser `_esRuc` (Tipo documento == RUC), el criterio
+  original de antes de que existiera el toggle — el toggle en sí **ni se muestra** en ese caso.
+  Con país extranjero, el toggle sigue decidiendo esa misma pareja de campos (Número documento +
+  Razón Social si Jurídica; Número documento + Nombres + Apellidos si Natural) — confirmado con
+  el usuario que es exactamente ese layout, solo que ya no se llama "RUC" porque un extranjero no
+  tiene RUC peruano.
+  - `_SeccionDatosFacturacion` perdió los parámetros `esRuc`/`esJuridica` — se reemplazaron por
+    uno solo, `mostrarRazonSocial` (`bool`), que el padre calcula como
+    `_esExtranjero ? (_tipoPersonaVista == 'juridica') : _esRuc`. El getter `_esRuc` del padre
+    (`SolicitudFacturacionViewState`) no se tocó — sigue existiendo para el autocompletado por
+    documento (`_buscarDocumento`) y la regla "Factura exige RUC", ninguna de las dos depende del
+    toggle.
+- **Ubicación — el toggle ya no vive en su propia fila** (dejaba un hueco en blanco cuando no
+  aplicaba, "que quede ese hueco blanco, que es horrible") — ahora es el último elemento de la
+  fila de encabezado (ícono + "Datos de facturación"/"¿Quién paga la inscripción?"), alineado a
+  la derecha, y **solo se renderiza `if (_esExtranjero)`** — con Perú el encabezado vuelve a ser
+  solo ícono+título, sin hueco ni toggle.
+- **`_tipoPersonaVista` no se tocó** — sigue sembrándose desde `SolicitudFormState.tipoPersona`
+  en `_restaurarPaso()`/`_aplicarDatosSolicitante()`, sigue sin guardarse en `DatosFacturacion`
+  ni mandarse al backend. Simplemente ahora es irrelevante mientras el país sea Perú (el toggle
+  no se muestra ni se lee para nada en ese caso) — vuelve a importar en cuanto el asesor elige un
+  país extranjero.
+
+## Detalle de Facturación — RUC+Razón social vs N° documento+Nombre según corresponda (2026-07-30)
+Pedido del usuario: `_SeccionDatosFacturacion` (`solicitud_detalle_view.dart`) siempre mostraba
+"Razón social" + "RUC" fijos, sin importar el tipo de comprobante — con Boleta (persona natural,
+sin RUC) esos 2 campos simplemente salían vacíos, sin mostrar nunca el N° documento/nombre real
+de esa facturación.
+
+- **El SP `'DV'` (`CSV_SOLICITUD_LST_APP`, el que alimenta esta pantalla — distinto del `'DT'`
+  que usa el wizard) nunca seleccionó el N° documento/nombres de facturación para persona
+  natural**, solo `NOMEMPRE`/`RUCEMPRE`/`DIRECCION` de `T_TECMSOLINSCRIPCION01_FACTURACION`
+  (alias `FAC`) — la tabla sí tiene esas columnas (confirmado contra el `'DT'`, que las trae
+  como `NRO_DOCUMENTO`/`NOMBRES`/`APE_PATERNO`/`APE_MATERNO`), simplemente no se habían
+  seleccionado en el `'DV'` porque solo se pensó en el caso Factura/RUC al armarlo. Se agregaron
+  4 campos nuevos al final del `CONCAT` (índices 10-13, mismo patrón "nunca correr los índices
+  existentes" del resto del feature): `FAC.NRO_DOCUMENTO`, `FAC.NOMBRES`, `FAC.APE_PATERNO`,
+  `FAC.APE_MATERNO` — SQL entregado al usuario en el chat, pendiente de que lo despliegue (el
+  `.sql` de este SP no vive en este repo).
+- **Flutter**: `SolicitudDetalle` ganó `facNumDoc`/`facNombres`/`facApellidoPaterno`/
+  `facApellidoMaterno` (default `''`, guard defensivo si el SP viejo todavía no trae los campos
+  nuevos — `ParseUtils.str` ya retorna `''` si el índice no existe) + 2 getters:
+  `facTieneRuc` (`facRuc.isNotEmpty` — mismo criterio que usa el CUD/wizard para decidir si la
+  facturación es con RUC o persona natural, ya que ambos grupos de campos son mutuamente
+  excluyentes en el guardado) y `facNombreCompleto` (concatena nombres+apellidos, colapsando
+  espacios). `SolicitudDetalleRealModel.fromRawString` parsea los 4 campos nuevos en los
+  índices 10-13. `_SeccionDatosFacturacion` ahora renderiza condicional: `facTieneRuc == true` →
+  "RUC" + "Razón social"; si no → "N° documento" + "Nombre" (`facNombreCompleto`).
+
 ## Investigación — "guardo Perú, se guarda otro país" (2026-07-30, EN CURSO)
 Reportado por el usuario: al elegir País = Perú en Facturación, a veces queda guardado un país
 distinto. Pidió revisar `CSV_SOLICITUD_CUD_APP.sql` (`D:\Proyectos\NatCodee\NC.SQLChangeLock\

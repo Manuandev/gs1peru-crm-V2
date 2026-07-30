@@ -80,6 +80,23 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
 
     final numSol = context.read<SolicitudFormCubit>().state.numSol;
     Navigator.of(context).pop(); // sale del wizard
+
+    // Bug real reportado por el usuario, 2026-07-30 — este método hacía
+    // pop() + goToDetalleSolicitud() (push) sin más. Si el wizard se abrió
+    // desde un Detalle ya existente ("Editar ficha"/"Validar"), el pop solo
+    // sacaba el wizard y dejaba ese Detalle debajo — el push de acá metía
+    // uno NUEVO encima, así que cada ciclo editar→guardar apilaba una
+    // pantalla más. Con varios ciclos, el botón atrás terminaba mostrando
+    // una cadena entera de Detalle en vez de volver a la lista. Se limpia
+    // cualquier Detalle que haya quedado justo debajo del wizard (self-cura
+    // también las pilas ya infladas de sesiones anteriores a este fix, no
+    // solo evita que crezcan de acá en adelante) antes de empujar el
+    // Detalle fresco — así la pila nunca crece más de un nivel de Detalle,
+    // sin importar cuántas veces se repita el ciclo.
+    if (!mounted) return;
+    Navigator.of(
+      context,
+    ).popUntil((route) => route.settings.name != AppRoutes.detalleSolicitud);
     context.goToDetalleSolicitud(
       solicitud: widget.solicitud.copyWith(idSolicitud: numSol),
     );

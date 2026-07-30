@@ -630,13 +630,16 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         )
         .toList();
 
-    // Tipos de documento "del extranjero" — TipoDocumentoItem.esNacional
-    // == false (mismo campo real del catálogo que ya usa PaisItem, ver
+    // Tipos de documento "del extranjero"/"nacionales" — TipoDocumentoItem.
+    // esNacional (mismo campo real del catálogo que ya usa PaisItem, ver
     // _esExtranjero arriba), reemplaza el fallback frágil de buscar por
-    // nombre que contuviera "OTRO". Si el catálogo no trae ninguno con
-    // esNacional == false, se deja la lista completa sin restringir.
+    // nombre que contuviera "OTRO". Si el catálogo no trae ninguno de un
+    // lado, se deja la lista completa sin restringir (fallback de siempre).
     final tiposDocumentoExtranjero = tiposDocumentoTodos
         .where((t) => !t.esNacional)
+        .toList();
+    final tiposDocumentoNacional = tiposDocumentoTodos
+        .where((t) => t.esNacional)
         .toList();
 
     // Solo Factura/Boleta se muestran en este combo (aunque el catálogo
@@ -652,15 +655,20 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
               )
               .toList();
     // Con país extranjero, Tipo documento se restringe a los tipos con
-    // esNacional == false (DNI queda fuera). Si no, sigue la regla de
-    // siempre: Factura exige RUC, Boleta admite cualquier tipo de documento.
+    // esNacional == false. Con país Perú, se restringe a los tipos con
+    // esNacional == true (DNI, RUC...) — pedido de negocio 2026-07-30,
+    // "que salgan solamente los tipos de documento que son nacionales".
+    // Factura sigue exigiendo específicamente RUC (subconjunto de los
+    // nacionales), Boleta admite cualquier nacional.
     final tiposDocumento = _esExtranjero
         ? (tiposDocumentoExtranjero.isNotEmpty
               ? tiposDocumentoExtranjero
               : tiposDocumentoTodos)
         : (_comprobanteId == _idComprobanteFactura
               ? tiposDocumentoTodos.where((t) => t.id == _idTipoDocRuc).toList()
-              : tiposDocumentoTodos);
+              : (tiposDocumentoNacional.isNotEmpty
+                    ? tiposDocumentoNacional
+                    : tiposDocumentoTodos));
     final correoLabel = _comprobanteId == _idComprobanteFactura
         ? 'Correo para envío de factura *'
         : 'Correo para envío de boleta *';
@@ -727,6 +735,16 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // ── Encabezado + Toggle ────────────────────────────
+                        // Toggle Jurídica/Natural (SOLO de vista, ver
+                        // comentario en _tipoPersonaVista) vive en la misma
+                        // fila que el ícono/título — pedido de negocio
+                        // 2026-07-30: antes iba en su propia fila debajo,
+                        // dejando un hueco en blanco cuando no aplicaba
+                        // (país Perú, ver más abajo). Solo se muestra con
+                        // país extranjero — con Perú, Razón Social vs
+                        // Nombres/Apellidos se decide como siempre por Tipo
+                        // documento == RUC (_esRuc), el toggle no aplica ahí
+                        // ("jurídica/natural me sirve cuando es extranjero").
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -756,30 +774,30 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                 ],
                               ),
                             ),
+                            if (_esExtranjero) ...[
+                              const SizedBox(width: AppSpacing.sm),
+                              SolicitudToggleTipoPersona(
+                                valor: _tipoPersonaVista,
+                                habilitado: widget.modoEdicion,
+                                onChanged: (v) =>
+                                    setState(() => _tipoPersonaVista = v),
+                              ),
+                            ],
                           ],
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-
-                        // ── Toggle Jurídica/Natural — SOLO de vista, ver
-                        // comentario en el campo _tipoPersonaVista. Decide
-                        // Razón Social vs Nombres/Apellidos acá abajo, nada
-                        // más — no se guarda ni se manda al backend.
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: SolicitudToggleTipoPersona(
-                            valor: _tipoPersonaVista,
-                            habilitado: widget.modoEdicion,
-                            onChanged: (v) =>
-                                setState(() => _tipoPersonaVista = v),
-                          ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
 
                         // ── Formulario ─────────────────────────────────────
                         _SeccionDatosFacturacion(
                           habilitado: widget.modoEdicion,
-                          esRuc: _esRuc,
-                          esJuridica: _tipoPersonaVista == 'juridica',
+                          // Con país extranjero, Razón Social vs Nombres/
+                          // Apellidos la decide el toggle de vista de arriba
+                          // (_tipoPersonaVista); con Perú, sigue el criterio
+                          // de siempre (_esRuc, Tipo documento == RUC) — el
+                          // toggle ni se muestra en ese caso.
+                          mostrarRazonSocial: _esExtranjero
+                              ? _tipoPersonaVista == 'juridica'
+                              : _esRuc,
                           esExtranjero: _esExtranjero,
                           correoLabel: correoLabel,
                           ctrlNumDoc: _ctrlNumDoc,
@@ -904,6 +922,17 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                 _ubigeoProvNombre = '';
                                 _ubigeoDisId = '';
                                 _ubigeoDisNombre = '';
+                              } else if (!tiposDocumentoNacional.any(
+                                (t) => t.id == _tipoDocId,
+                              )) {
+                                // Volvió a un país nacional (Perú) — si el
+                                // tipo documento que tenía elegido era uno
+                                // exclusivo de extranjero, ya no es válido
+                                // acá, se limpia para forzar una nueva
+                                // elección (simétrico al caso de arriba).
+                                _tipoDocId = '';
+                                _tipoDocLabel = '';
+                                _ctrlNumDoc.clear();
                               }
                             });
                             _sincronizarCubit();
@@ -1101,21 +1130,19 @@ class _ItemResumen extends StatelessWidget {
 
 // ── Sección Datos de facturación ─────────────────────────────────────────────
 //
-// Los campos de identidad cambian según el tipo de documento (esRuc):
-// RUC -> RUC + Razón Social. Cualquier otro -> Número documento + Nombres +
-// Apellido paterno + Apellido materno (opcional).
+// Los campos de identidad cambian según mostrarRazonSocial: true -> Número
+// documento + Razón Social. false -> Número documento + Nombres + Apellido
+// paterno + Apellido materno (opcional).
 
 class _SeccionDatosFacturacion extends StatefulWidget {
   final bool habilitado;
-  // Tipo documento == RUC (catálogo real) — solo usado acá para el
-  // autocompletado por documento del padre; ver esJuridica para la
-  // decisión de qué campos de nombre mostrar.
-  final bool esRuc;
-  // Toggle Jurídica/Natural — SOLO de vista (ver
-  // SolicitudFacturacionView._tipoPersonaVista). Decide si se muestra Razón
-  // Social (jurídica) o Nombres + Apellido paterno/materno (natural),
-  // independiente de esRuc/Tipo documento.
-  final bool esJuridica;
+  // Decide si se muestra Razón Social o Nombres + Apellido paterno/materno.
+  // Con país Perú (!esExtranjero) es _esRuc (Tipo documento == RUC, criterio
+  // de siempre); con país extranjero es el toggle Jurídica/Natural de vista
+  // (SolicitudFacturacionView._tipoPersonaVista) — pedido de negocio
+  // 2026-07-30: el toggle "solo sirve cuando es extranjero", con Perú se
+  // sigue decidiendo por RUC como antes de que existiera el toggle.
+  final bool mostrarRazonSocial;
   // País distinto de Perú (paso 3) — oculta Nacionalidad (no aplica, se
   // manda vacía). Comprobante/Tipo documento ya llegan pre-filtrados por el
   // padre en ese caso (solo Boleta / solo los de esNacional == false).
@@ -1172,8 +1199,7 @@ class _SeccionDatosFacturacion extends StatefulWidget {
 
   const _SeccionDatosFacturacion({
     required this.habilitado,
-    required this.esRuc,
-    required this.esJuridica,
+    required this.mostrarRazonSocial,
     required this.esExtranjero,
     required this.correoLabel,
     required this.ctrlNumDoc,
@@ -1329,11 +1355,10 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
           const SizedBox(height: AppSpacing.xs),
         ],
 
-        // Fila 4: Nombres / Razón social (ancho completo) — la etiqueta
-        // sigue el toggle Jurídica/Natural de vista (esJuridica), no
-        // esRuc/Tipo documento.
+        // Fila 4: Nombres / Razón social (ancho completo) — ver
+        // mostrarRazonSocial (Perú: _esRuc: extranjero: toggle de vista)
         CustomTextField(
-          label: widget.esJuridica ? 'Razón Social *' : 'Nombres *',
+          label: widget.mostrarRazonSocial ? 'Razón Social *' : 'Nombres *',
           controller: widget.ctrlNombresRazon,
           enabled: widget.habilitado,
           isUpperCase: true,
@@ -1343,8 +1368,8 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
         const SizedBox(height: AppSpacing.xs),
 
         // Fila 5: Apellido paterno + Apellido materno — solo persona
-        // natural (esJuridica, toggle de vista — ver arriba)
-        if (!widget.esJuridica) ...[
+        // natural (ver mostrarRazonSocial arriba)
+        if (!widget.mostrarRazonSocial) ...[
           Row(
             children: [
               Expanded(

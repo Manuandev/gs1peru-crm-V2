@@ -31,6 +31,10 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
     required super.facRazonSocial,
     required super.facRuc,
     required super.facDireccion,
+    super.facNumDoc,
+    super.facNombres,
+    super.facApellidoPaterno,
+    super.facApellidoMaterno,
     super.historial,
   });
 
@@ -45,6 +49,10 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
   //  7  NOMEMPRE_FAC (razón social)
   //  8  RUCEMPRE_FAC
   //  9  DIRECCION_FAC
+  // 10  NRO_DOCUMENTO_FAC (persona natural — agregado 2026-07-30)
+  // 11  NOMBRES_FAC (persona natural — agregado 2026-07-30)
+  // 12  APE_PATERNO_FAC (persona natural — agregado 2026-07-30)
+  // 13  APE_MATERNO_FAC (persona natural — agregado 2026-07-30)
   factory SolicitudDetalleRealModel.fromRawString(String raw) {
     final secciones = raw.split(AppConstants.sepListas);
     final c = secciones.isNotEmpty
@@ -63,6 +71,10 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
       facRazonSocial: ParseUtils.str(c, 7),
       facRuc: ParseUtils.str(c, 8),
       facDireccion: ParseUtils.str(c, 9),
+      facNumDoc: ParseUtils.str(c, 10),
+      facNombres: ParseUtils.str(c, 11),
+      facApellidoPaterno: ParseUtils.str(c, 12),
+      facApellidoMaterno: ParseUtils.str(c, 13),
       historial: _parseHistorial(historialRaw),
     );
   }

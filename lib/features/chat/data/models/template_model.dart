@@ -23,7 +23,19 @@ class PlantillaModel extends Plantilla {
   });
 
   factory PlantillaModel.fromRawString(String raw) {
-    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    // Task 'LP' (lista) manda un solo bloque de campos por registro — nunca
+    // trae sepListas, así que este split no le afecta. Task 'DP' (detalle,
+    // ver getPlantilla) agrega una segunda sección con los botones, separada
+    // por sepListas: campos¯botón¬botón¬botón.
+    final secciones = raw.split(AppConstants.sepListas);
+    final c = ParseUtils.campos(secciones[0], AppConstants.sepCampos);
+    final botones = secciones.length > 1
+        ? secciones[1]
+              .split(AppConstants.sepRegistros)
+              .map((b) => b.trim())
+              .where((b) => b.isNotEmpty)
+              .toList()
+        : const <String>[];
 
     return PlantillaModel(
       idPlantilla: ParseUtils.toInt(c, 0),
@@ -35,17 +47,12 @@ class PlantillaModel extends Plantilla {
       archivoNombre: ParseUtils.str(c, 6),
       archivoExt: ParseUtils.str(c, 7),
       tieneBoton: ParseUtils.toBool(c, 8),
-      // Índices 9-13: campos de gestión — el SP todavía no los devuelve
-      // (parte [4] del SP `LP` actual solo trae 0-8). ParseUtils.str/toInt/
-      // toBool ya devuelven el default si el índice no existe, así que esto
-      // no rompe con el raw actual y queda listo para cuando el SP los sume.
       idCampania: ParseUtils.toInt(c, 9),
       idOportunidad: ParseUtils.toInt(c, 10),
       idEstadoNegociacion: ParseUtils.str(c, 11),
       activo: c.length > 12 ? ParseUtils.toBool(c, 12) : true,
       compartir: ParseUtils.toBool(c, 13),
-      // botones: lista de textos — el SP aún no define cómo viajan dentro de
-      // un mismo registro (sub-separador pendiente), se deja vacía por ahora.
+      botones: botones,
     );
   }
 

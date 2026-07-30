@@ -38,6 +38,12 @@ abstract class ChatRepository {
 
   Future<CrudResult> guardarPlantilla(Plantilla plantilla);
 
+  Future<({String ruta, String nombre, String ext})?> subirArchivoPlantilla({
+    required String filePath,
+    required String fileName,
+    required String tipo,
+  });
+
   bool sendWhatsAppTemplateMessage({
     required Plantilla plantilla,
     required String mensajeFormateado,

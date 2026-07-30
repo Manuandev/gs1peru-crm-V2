@@ -2,6 +2,7 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
 const _plantillaVacia = Plantilla(
@@ -18,24 +19,23 @@ const _plantillaVacia = Plantilla(
 
 /// Bloc del formulario de crear/editar plantilla.
 ///
-/// Primera entrega — solo vista: `TemplateFormStarted` nunca dispara la carga
-/// real (queda escrita y comentada), y `TemplateFormGuardarPressed` no
-/// persiste nada todavía. `GetPlantillaUseCase`/`GuardarPlantillaUseCase` ya
-/// están inyectados y listos para cuando el SP de backend se defina.
+/// `TemplateFormStarted` (modo editar) carga el detalle real
+/// (`CRM.CSV_PLANTILLA_LST_APP`, task 'DP'). El guardado (`guardar()`, más
+/// abajo) no es un evento — ver por qué en su comentario.
 class TemplateFormBloc extends Bloc<TemplateFormEvent, TemplateFormState> {
-  // ignore: unused_field — se usa al descomentar la carga real, ver _onStarted.
   final GetPlantillaUseCase _getPlantilla;
-  // ignore: unused_field — se usa al descomentar el guardado real, ver _onGuardarPressed.
   final GuardarPlantillaUseCase _guardarPlantilla;
+  final SubirArchivoPlantillaUseCase _subirArchivo;
 
   TemplateFormBloc({
     required GetPlantillaUseCase getPlantilla,
     required GuardarPlantillaUseCase guardarPlantilla,
+    required SubirArchivoPlantillaUseCase subirArchivo,
   }) : _getPlantilla = getPlantilla,
        _guardarPlantilla = guardarPlantilla,
+       _subirArchivo = subirArchivo,
        super(const TemplateFormInitial()) {
     on<TemplateFormStarted>(_onStarted);
-    on<TemplateFormGuardarPressed>(_onGuardarPressed);
   }
 
   Future<void> _onStarted(
@@ -48,53 +48,45 @@ class TemplateFormBloc extends Bloc<TemplateFormEvent, TemplateFormState> {
       return;
     }
 
-    // Modo editar — por ahora abre igual con el formulario vacío (solo con
-    // el id ya seteado), sin traer los datos reales de la plantilla.
-    // TODO: descomentar cuando el SP de detalle ('DP') esté definido:
-    // emit(const TemplateFormInitial());
-    // try {
-    //   final plantilla = await _getPlantilla.call(event.idPlantilla!);
-    //   emit(TemplateFormLoaded(plantilla: plantilla));
-    // } on AppException catch (e) {
-    //   emit(TemplateFormError(e.message));
-    // }
-    emit(
-      TemplateFormLoaded(
-        plantilla: Plantilla(
-          idPlantilla: event.idPlantilla!,
-          nombre: _plantillaVacia.nombre,
-          idMeta: _plantillaVacia.idMeta,
-          estadoMeta: _plantillaVacia.estadoMeta,
-          contenido: _plantillaVacia.contenido,
-          archivoRuta: _plantillaVacia.archivoRuta,
-          archivoNombre: _plantillaVacia.archivoNombre,
-          archivoExt: _plantillaVacia.archivoExt,
-          tieneBoton: _plantillaVacia.tieneBoton,
-        ),
-      ),
-    );
+    // Modo editar — trae el detalle real de la plantilla (task 'DP').
+    emit(const TemplateFormInitial());
+    try {
+      final plantilla = await _getPlantilla.call(event.idPlantilla!);
+      emit(TemplateFormLoaded(plantilla: plantilla));
+    } on AppException catch (e) {
+      emit(TemplateFormError(e.message));
+    }
   }
 
-  Future<void> _onGuardarPressed(
-    TemplateFormGuardarPressed event,
-    Emitter<TemplateFormState> emit,
-  ) async {
-    // No persiste nada todavía — solo refleja los datos armados por la vista
-    // en el estado, para que el flujo de UI (ej. navegar de vuelta) siga
-    // funcionando de punta a punta sin depender del backend.
-    // TODO: descomentar cuando el SP de guardado ('UP') esté definido:
-    // emit(TemplateFormLoaded(plantilla: event.plantilla, guardando: true));
-    // final result = await _guardarPlantilla.call(event.plantilla);
-    // switch (result) {
-    //   case CrudOk():
-    //     emit(TemplateFormLoaded(plantilla: event.plantilla));
-    //   case CrudAlert(:final message) || CrudError(:final message):
-    //     emit(TemplateFormError(message));
-    //   case CrudNoInternet():
-    //     emit(const TemplateFormError('Sin conexión a Internet.'));
-    //   case CrudEmpty():
-    //     emit(const TemplateFormError('El servidor no respondió.'));
-    // }
-    emit(TemplateFormLoaded(plantilla: event.plantilla));
+  /// Orquesta el guardado completo: si `archivoLocal` no es null (el usuario
+  /// eligió/grabó un adjunto en esta sesión y todavía no se subió), primero
+  /// lo sube y recién con la ruta/nombre/ext reales del servidor arma la
+  /// plantilla a guardar; si es null, guarda directo (sin archivo, o con el
+  /// que ya traía la plantilla desde antes, sin tocarlo).
+  ///
+  /// No pasa por un evento/estado del Bloc a propósito — la vista necesita el
+  /// `CrudResult` al toque para decidir si vuelve atrás o se queda mostrando
+  /// el error sin perder lo tipeado (todos los campos del formulario viven en
+  /// el State local de la vista, no en este Bloc, hasta este momento).
+  Future<CrudResult> guardar(Plantilla plantilla, {StagedFile? archivoLocal}) async {
+    var aGuardar = plantilla;
+
+    if (archivoLocal != null) {
+      final subido = await _subirArchivo.call(
+        filePath: archivoLocal.path,
+        fileName: '${archivoLocal.nameWithoutExt}${archivoLocal.ext}',
+        tipo: archivoLocal.tipo,
+      );
+      if (subido == null) {
+        return const CrudError('No se pudo subir el archivo adjunto.');
+      }
+      aGuardar = plantilla.copyWith(
+        archivoRuta: subido.ruta,
+        archivoNombre: subido.nombre,
+        archivoExt: subido.ext,
+      );
+    }
+
+    return _guardarPlantilla.call(aGuardar);
   }
 }

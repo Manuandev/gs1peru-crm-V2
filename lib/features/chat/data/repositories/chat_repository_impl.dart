@@ -69,6 +69,17 @@ class ChatRepositoryImpl implements ChatRepository {
       _datasource.guardarPlantilla(plantilla);
 
   @override
+  Future<({String ruta, String nombre, String ext})?> subirArchivoPlantilla({
+    required String filePath,
+    required String fileName,
+    required String tipo,
+  }) => _datasource.subirArchivoPlantilla(
+    filePath: filePath,
+    fileName: fileName,
+    tipo: tipo,
+  );
+
+  @override
   bool sendWhatsAppTemplateMessage({
     required Plantilla plantilla,
     required String mensajeFormateado,

@@ -41,6 +41,28 @@ class Plantilla extends Equatable {
     this.botones = const [],
   });
 
+  Plantilla copyWith({
+    String? archivoRuta,
+    String? archivoNombre,
+    String? archivoExt,
+  }) => Plantilla(
+    idPlantilla: idPlantilla,
+    nombre: nombre,
+    idMeta: idMeta,
+    estadoMeta: estadoMeta,
+    contenido: contenido,
+    archivoRuta: archivoRuta ?? this.archivoRuta,
+    archivoNombre: archivoNombre ?? this.archivoNombre,
+    archivoExt: archivoExt ?? this.archivoExt,
+    tieneBoton: tieneBoton,
+    idCampania: idCampania,
+    idOportunidad: idOportunidad,
+    idEstadoNegociacion: idEstadoNegociacion,
+    activo: activo,
+    compartir: compartir,
+    botones: botones,
+  );
+
   @override
   List<Object?> get props => [
     idPlantilla,

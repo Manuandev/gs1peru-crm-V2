@@ -44,6 +44,11 @@ class ApiConstants {
   static const String enviarMensaje = 'Wsp/SendMessageWhatsApp';
   static const String guardarMultimedia = 'Wsp/GuardarMultimediaWhatsApp';
 
+  // ========== PLANTILLAS (WhatsApp) ==========
+  static const String lstPlantillas = 'Wsp/SPPlantillaLSTApp';
+  static const String cudPlantillas = 'Wsp/SPPlantillaCUDApp';
+  static const String guardarMultimediaPlantilla = 'Wsp/GuardarMultimediaPlantilla';
+
   // ========== PROSPECTOS ==========
   static const String lstProspectos = 'Prospecto/SPProspectoLSTApp';
   static const String cudProspectos = 'Prospecto/SPProspectoCUDApp';
@@ -111,6 +116,12 @@ class ApiConstants {
   static String get urlActualizarFavorito => '$baseUrl$actualizarFavorito';
   static String get urlEnviarMensaje => '$baseUrl$enviarMensaje';
   static String get urlGuardarMultimedia => '$baseUrl$guardarMultimedia';
+
+  // ========== PLANTILLAS (WhatsApp) ==========
+  static String get urlPlantillasLst => '$baseUrl$lstPlantillas';
+  static String get urlPlantillasCud => '$baseUrl$cudPlantillas';
+  static String get urlGuardarMultimediaPlantilla =>
+      '$baseUrl$guardarMultimediaPlantilla';
 
   // ========== PROSPECTOS ==========
   static String get urlProspectosLst => '$baseUrl$lstProspectos';

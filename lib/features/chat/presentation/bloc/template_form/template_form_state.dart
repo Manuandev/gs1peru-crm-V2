@@ -17,12 +17,11 @@ class TemplateFormInitial extends TemplateFormState {
 
 class TemplateFormLoaded extends TemplateFormState {
   final Plantilla plantilla;
-  final bool guardando;
 
-  const TemplateFormLoaded({required this.plantilla, this.guardando = false});
+  const TemplateFormLoaded({required this.plantilla});
 
   @override
-  List<Object?> get props => [plantilla, guardando];
+  List<Object?> get props => [plantilla];
 }
 
 class TemplateFormError extends TemplateFormState {

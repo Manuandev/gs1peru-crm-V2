@@ -56,7 +56,15 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
   bool _activo = true;
   bool _compartir = false;
   StagedFile? _archivo;
+  // true cuando `_archivo` viene de elegirlo/grabarlo recién en esta sesión
+  // (path LOCAL del dispositivo, todavía no subido) — false cuando viene tal
+  // cual de la plantilla ya guardada (ruta real del servidor, cargada en
+  // initState) o cuando no hay archivo. Solo dispara la subida en _guardar()
+  // si es true — así no se re-sube un archivo que ya estaba en el servidor
+  // por el simple hecho de haber editado otro campo del formulario.
+  bool _archivoEsNuevo = false;
   bool _grabandoAudio = false;
+  bool _guardando = false;
 
   @override
   void initState() {
@@ -143,7 +151,18 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
     setState(() => _botonesCtrls.removeAt(index).dispose());
   }
 
-  void _guardar() {
+  // Solo arma el StagedFile local (path del dispositivo) — no sube nada
+  // todavía. La subida real pasa recién al presionar "Guardar plantilla"
+  // (_guardar), y solo si hace falta — ver TemplateFormBloc.guardar().
+  void _onArchivoSeleccionado(StagedFile local) {
+    setState(() {
+      _archivo = local;
+      _archivoEsNuevo = true;
+      _grabandoAudio = false;
+    });
+  }
+
+  Future<void> _guardar() async {
     final plantilla = Plantilla(
       idPlantilla: widget.plantilla.idPlantilla,
       nombre: _nombreCtrl.text,
@@ -165,10 +184,30 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
           .toList(),
     );
 
-    // No persiste nada todavía (ver TemplateFormBloc._onGuardarPressed) —
-    // solo deja el formulario navegable de punta a punta.
-    context.read<TemplateFormBloc>().add(TemplateFormGuardarPressed(plantilla));
-    context.goBack();
+    setState(() => _guardando = true);
+
+    // Si hay un archivo elegido/grabado en esta sesión, el Bloc lo sube
+    // primero (y recién con la ruta real del servidor guarda la plantilla);
+    // si no hay archivo nuevo (sin adjunto, o el que ya traía la plantilla
+    // sin tocarlo), guarda directo — ver TemplateFormBloc.guardar().
+    final result = await context.read<TemplateFormBloc>().guardar(
+      plantilla,
+      archivoLocal: _archivoEsNuevo ? _archivo : null,
+    );
+
+    if (!mounted) return;
+    setState(() => _guardando = false);
+
+    switch (result) {
+      case CrudOk():
+        context.goBack();
+      case CrudAlert(:final message) || CrudError(:final message):
+        AppSnackBar.error(context, message);
+      case CrudNoInternet():
+        AppSnackBar.error(context, 'Sin conexión a Internet.');
+      case CrudEmpty():
+        AppSnackBar.error(context, 'El servidor no respondió.');
+    }
   }
 
   @override
@@ -203,11 +242,12 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
                   archivo: _archivo,
                   grabando: _grabandoAudio,
                   puedeAdjuntar: _puedeAdjuntar,
-                  onArchivoSeleccionado: (f) => setState(() {
-                    _archivo = f;
-                    _grabandoAudio = false;
+                  subiendo: _guardando,
+                  onArchivoSeleccionado: _onArchivoSeleccionado,
+                  onQuitarArchivo: () => setState(() {
+                    _archivo = null;
+                    _archivoEsNuevo = false;
                   }),
-                  onQuitarArchivo: () => setState(() => _archivo = null),
                   onIniciarGrabacion: () =>
                       setState(() => _grabandoAudio = true),
                   onCancelarGrabacion: () =>
@@ -229,6 +269,7 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
         FormSaveBar(
           onCancelar: () => context.goBack(),
           onGuardar: _guardar,
+          isLoading: _guardando,
           textoGuardar: 'Guardar plantilla',
         ),
       ],

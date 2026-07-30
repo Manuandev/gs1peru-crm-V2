@@ -22,6 +22,7 @@ class TemplateFormPage extends StatelessWidget {
       create: (ctx) => TemplateFormBloc(
         getPlantilla: GetPlantillaUseCase(ctx.read<ChatRepository>()),
         guardarPlantilla: GuardarPlantillaUseCase(ctx.read<ChatRepository>()),
+        subirArchivo: SubirArchivoPlantillaUseCase(ctx.read<ChatRepository>()),
       )..add(TemplateFormStarted(idPlantilla)),
       child: const TemplateFormView(),
     );

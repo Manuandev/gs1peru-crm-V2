@@ -2,8 +2,6 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
-import 'package:app_crm/features/chat/index_chat.dart';
-
 abstract class TemplateFormEvent extends Equatable {
   const TemplateFormEvent();
 
@@ -20,11 +18,7 @@ class TemplateFormStarted extends TemplateFormEvent {
   List<Object?> get props => [idPlantilla];
 }
 
-class TemplateFormGuardarPressed extends TemplateFormEvent {
-  final Plantilla plantilla;
-
-  const TemplateFormGuardarPressed(this.plantilla);
-
-  @override
-  List<Object?> get props => [plantilla];
-}
+// El guardado (con o sin subida de archivo previa) no pasa por un evento —
+// ver TemplateFormBloc.guardar(). El resultado (CrudResult) lo necesita la
+// vista al toque para decidir si vuelve atrás o se queda mostrando el error
+// sin perder lo tipeado, y un evento fire-and-forget no puede devolver nada.

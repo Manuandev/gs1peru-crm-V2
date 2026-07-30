@@ -10,11 +10,14 @@ import 'package:app_crm/features/chat/index_chat.dart';
 
 /// Sección "Adjuntos (imagen, documento, audio)" del formulario de plantilla.
 ///
-/// Imagen y documento se suben con el mismo picker que ya usa
+/// Imagen y documento se eligen con el mismo picker que ya usa
 /// `AttachmentPickerWidget`; audio se graba con `AudioRecorderWidget`
 /// (ya existente en `widgets/chat_detail/audio/`) — pedido explícito del
-/// usuario, para audio "hay que grabar" en vez de subir un archivo. Todo
-/// queda en estado local (`StagedFile`), no se sube nada al servidor todavía.
+/// usuario, para audio "hay que grabar" en vez de subir un archivo. Este
+/// widget solo arma el `StagedFile` local (path del dispositivo) — la subida
+/// real al servidor pasa recién al presionar "Guardar plantilla"
+/// (`TemplateFormBloc.guardar`, no acá), así que no hace falta ningún estado
+/// de carga propio de este picker.
 class TemplateFormAdjuntosSection extends StatelessWidget {
   final StagedFile? archivo;
   final bool grabando;
@@ -22,6 +25,10 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
   // tope de botones baja a 3 (ver template_form_view.dart), así que no se
   // debe permitir adjuntar si ese tope ya está superado.
   final bool puedeAdjuntar;
+  // true mientras se guarda la plantilla completa (subida de archivo + CUD,
+  // ver TemplateFormBloc.guardar) — bloquea el círculo de subir para que no
+  // se cambie el adjunto a mitad de un guardado ya en curso.
+  final bool subiendo;
   final ValueChanged<StagedFile> onArchivoSeleccionado;
   final VoidCallback onQuitarArchivo;
   final VoidCallback onIniciarGrabacion;
@@ -32,6 +39,7 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
     required this.archivo,
     required this.grabando,
     required this.puedeAdjuntar,
+    this.subiendo = false,
     required this.onArchivoSeleccionado,
     required this.onQuitarArchivo,
     required this.onIniciarGrabacion,
@@ -138,21 +146,31 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: puedeAdjuntar ? () => _elegirOrigen(context) : null,
+                  onTap: (puedeAdjuntar && !subiendo)
+                      ? () => _elegirOrigen(context)
+                      : null,
                   child: Container(
                     width: AppSizing.iconContainerMd,
                     height: AppSizing.iconContainerMd,
                     decoration: BoxDecoration(
-                      color: puedeAdjuntar
+                      color: (puedeAdjuntar && !subiendo)
                           ? colorScheme.primary
                           : colorScheme.onSurfaceVariant,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      AppIcons.upload,
-                      size: AppSizing.iconActionSm,
-                      color: AppColors.textOnDark,
-                    ),
+                    child: subiendo
+                        ? Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xs),
+                            child: CircularProgressIndicator(
+                              strokeWidth: AppSizing.spinnerStrokeSmall,
+                              color: AppColors.textOnDark,
+                            ),
+                          )
+                        : Icon(
+                            AppIcons.upload,
+                            size: AppSizing.iconActionSm,
+                            color: AppColors.textOnDark,
+                          ),
                   ),
                 ),
               ],

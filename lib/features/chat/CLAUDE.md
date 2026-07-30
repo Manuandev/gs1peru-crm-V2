@@ -41,9 +41,10 @@ Todos los métodos usan `ApiConstants.urlChatsLst` o `ApiConstants.urlLeadsCud`:
 | `D` | `getInfoLead(idLead)` | urlChatsLst |
 | `L` | `getChats()` | urlChatsLst |
 | `LD` | `getChatMessages(idLead, idUltimoMensaje?)` | urlChatsLst |
-| `LP` | `getTemplates()` | urlChatsLst |
-| `DP` ⚠️ | `getPlantilla(idPlantilla)` | urlChatsLst |
-| `UP` ⚠️ | `guardarPlantilla(plantilla)` | urlLeadsCud |
+| `LP` | `getTemplates()` | urlPlantillasLst (`Wsp/SPPlantillaLSTApp` → `CRM.CSV_PLANTILLA_LST_APP`) |
+| `DP` | `getPlantilla(idPlantilla)` | urlPlantillasLst — detalle para editar, con botones |
+| `U` | `TemplateFormBloc.guardar(...)` → `guardarPlantilla(plantilla)` | urlPlantillasCud (`Wsp/SPPlantillaCUDApp` → `CRM.CSV_PLANTILLA_CUD_APP`) |
+| — | `subirArchivoPlantilla(...)` | urlGuardarMultimediaPlantilla (`Wsp/GuardarMultimediaPlantilla`) — solo si hay un adjunto nuevo, antes de `U` |
 | `UE` | `updateEstado(idLead, idEstado)` | urlLeadsCud |
 | `U` | `updateLeadCompleto(lead)` | urlLeadsCud |
 | `CA` | `sendWhatsAppMessage(...)` | SignalR |
@@ -268,15 +269,54 @@ se usa en `_TemplatePreview` y en la sección de adjuntos del formulario.
 - Toolbar de Descripción incluye emojis (`AppIcons.emoji`, picker propio en grid, sin dependencia
   nueva) además de negrita/cursiva/tachado/variable.
 
-**Alcance actual — solo vista, explícito:**
-- `TemplateFormBloc` (`bloc/template_form/`) sí tiene toda la arquitectura (`GetPlantillaUseCase`,
-  `GuardarPlantillaUseCase`, `ChatRepository.getPlantilla`/`guardarPlantilla`,
-  `ChatRemoteDatasource` con el body ya armado) pero **ninguna llamada real al backend está
-  activa todavía** — los tasks `DP`/`UP` son provisionales, sin SP definido. `TemplateFormStarted`
-  arma el formulario vacío en memoria (con el `idPlantilla` recibido si es edición) sin pedir el
-  detalle real; `TemplateFormGuardarPressed` no persiste nada. La llamada real a
-  `GetPlantillaUseCase`/`GuardarPlantillaUseCase` queda escrita y comentada dentro de
-  `TemplateFormBloc`, lista para descomentar cuando el SP esté listo.
+**Alcance actual (actualizado 2026-07-29) — guardar, listar y cargar para editar ya son reales:**
+- `CRM.CSV_PLANTILLA_CUD_APP` (task `'U'`, repo `NC.SQLChangeLock`) crea o actualiza
+  `CRM.T_PLANTILLA_WHATSAPP` + reemplaza por completo (borrar/insertar) `T_PLANTILLA_WHATSAPP_BOTON`/
+  `_ARCHIVO` en cada guardado — no hace diff, manda el estado completo del formulario cada vez.
+  `TIPO_PLANTILLA`/`IB_EDITABLE` (columnas nullable de `T_PLANTILLA_WHATSAPP`) y `ID_META`/
+  `ESTADO_META` no los toca el formulario — esos dos últimos los puebla la sincronización con Meta,
+  no la app.
+- **Botones**: solo se manda el texto de cada uno (`plantilla.botones.join(sepRegistros)`,
+  campo aparte del cuerpo principal) — el SP les asigna `ID_PLANTILLA_BOTON`/`ORDEN` él mismo
+  (PK manual `MAX+1`, no `IDENTITY`). El orden depende de `STRING_SPLIT` (SQL Server 2016+); si
+  algún día el orden de los botones sale mal, cambiar el split del SP a un método que garantice
+  orden explícitamente (ver comentario en el `.sql`).
+- **Archivo adjunto — subida real, orquestada al presionar "Guardar plantilla" (no al elegir el
+  archivo)**: `TemplateFormBloc.guardar(plantilla, {archivoLocal})` — si `archivoLocal` no es
+  `null` (el usuario eligió/grabó un archivo en esta sesión, todavía con path LOCAL del
+  dispositivo), primero lo sube (`SubirArchivoPlantillaUseCase` → `ChatRemoteDatasource.
+  subirArchivoPlantilla`, mismo mecanismo por chunks de 2MB que `uploadAndSendFileMessage`) y
+  recién con la ruta/nombre/ext REALES que devuelve el servidor arma la plantilla a guardar
+  (`Plantilla.copyWith`); si no hay archivo nuevo (sin adjunto, o el que ya traía la plantilla al
+  editar, sin tocarlo), guarda directo sin pasar por la subida. Esta decisión (subir-antes-de-
+  guardar vs guardar-directo) vive en el Bloc a propósito, no en el evento — `guardar()` no es un
+  event handler porque la vista necesita el `CrudResult` al toque para decidir si vuelve atrás o
+  se queda mostrando el error sin perder lo tipeado.
+  - Endpoint dedicado `Wsp/GuardarMultimediaPlantilla` (`WspController.cs`) — variante de
+    `GuardarMultimediaWhatsApp` sin `idLead`/`idChatCab` (una plantilla no pertenece a ninguna
+    conversación) ni notificación SignalR al terminar. Guarda **plano** en
+    `<FileServer>\ARCHIVOS_WSP\PLANTILLAS` (se crea si no existe, sin subcarpeta por plantilla —
+    pedido explícito del usuario) — el nombre final en disco lleva un prefijo `uploadToken_`
+    (token generado en Flutter, `DateTime.now().microsecondsSinceEpoch`, viaja igual en todos los
+    chunks de una misma subida) para no pisar otro archivo con el mismo nombre y para que los
+    chunks temporales de subidas simultáneas no choquen. `ARCHIVO_TOKEN` (columna NOT NULL de
+    `T_PLANTILLA_WHATSAPP_ARCHIVO`) lo sigue generando el SP con `NEWID()`, es un dato aparte del
+    prefijo del nombre de archivo.
+  - Si `archivoNombre` llega vacío al SP, solo borra el archivo anterior de esa plantilla sin
+    insertar uno nuevo — así es como se "quita" un adjunto ya guardado.
+- `getTemplates()`/`getPlantilla()` apuntan a `ApiConstants.urlPlantillasLst` (`Wsp/
+  SPPlantillaLSTApp`, endpoint dedicado — antes usaban el genérico `urlChatsLst`) y
+  `guardarPlantilla()`/`subirArchivoPlantilla()` a `urlPlantillasCud`/`urlGuardarMultimediaPlantilla`
+  — los 3 métodos nuevos en `WspController.cs` son passthrough puro (mismo patrón que
+  `SPWhatsappLSTApp`) salvo `GuardarMultimediaPlantilla`, que sí tiene lógica propia de archivos
+  (igual que `GuardarMultimediaWhatsApp`, del que es variante).
+- **Detalle para editar — ya real.** `CRM.CSV_PLANTILLA_LST_APP` ganó la rama `'DP'` (antes solo
+  tenía `'LP'`): devuelve los mismos 9 campos base + los 5 de gestión (`idCampania`/
+  `idOportunidad`/`idEstadoNegociacion`/`activo`/`compartir`) + una sección aparte (separada por
+  `sepListas`) con los botones (`STRING_AGG` de `TEXTO` ordenado por `ORDEN`, separados por
+  `sepRegistros`). `PlantillaModel.fromRawString` ahora separa esa sección extra antes de parsear
+  los campos — compatible con `'LP'` (nunca trae `sepListas`, así que el split no le afecta).
+  `TemplateFormBloc._onStarted` en modo editar ya llama `GetPlantillaUseCase` de verdad.
 - No define tipos de botón (quick-reply/URL/teléfono) — solo texto libre por botón.
 
 ---

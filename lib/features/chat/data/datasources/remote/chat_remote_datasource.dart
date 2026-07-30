@@ -254,7 +254,7 @@ class ChatRemoteDatasource {
   Future<List<PlantillaModel>> getTemplates() async {
     final String body = '${sep}LP';
 
-    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
+    final result = await _api.postSafe(ApiConstants.urlPlantillasLst, body);
 
     return switch (result) {
       ApiSuccess(:final data) => PlantillaModel.parseList(data),
@@ -265,16 +265,16 @@ class ChatRemoteDatasource {
   }
 
   // ── Gestión de plantillas (crear/editar) ──────────────────────────────────
-  // Tasks 'DP'/'UP' y el endpoint de guardarPlantilla son provisionales — el
-  // SP real todavía no está definido (ver TemplateFormBloc, que por ahora no
-  // invoca ninguno de los dos). Se dejan escritos con el mismo patrón que
-  // getInfoNegociacion('DT')/updateEstado('UE') para no reinventar el
-  // formato de body cuando el backend esté listo.
+  // El task 'DP' (detalle de una plantilla) es provisional — el SP
+  // (CRM.CSV_PLANTILLA_LST_APP) todavía no tiene esa rama, solo 'LP'. Se deja
+  // escrito con el mismo patrón que getInfoNegociacion('DT') para no
+  // reinventar el formato de body cuando ese endpoint exista — TemplateFormBloc
+  // no lo invoca todavía (ver _onStarted).
 
   Future<PlantillaModel> getPlantilla(int idPlantilla) async {
     final String body = '${[idPlantilla].join(camp)}${sep}DP';
 
-    final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
+    final result = await _api.postSafe(ApiConstants.urlPlantillasLst, body);
 
     return switch (result) {
       ApiSuccess(:final data) => PlantillaModel.fromRawString(data),
@@ -284,31 +284,39 @@ class ChatRemoteDatasource {
     };
   }
 
+  // Task 'U' — CRM.CSV_PLANTILLA_CUD_APP. Cabecera (@L_DATA, 14 campos):
+  // idPlantilla¦nombre¦contenido¦idCampania¦idOportunidad¦idEstadoNegociacion¦
+  // activo¦compartir¦archivoRuta¦archivoNombre¦archivoExt¦codUser¦ip¦coords.
+  // Botones van en una sección aparte (@L_DATA_BTN) — solo el texto de cada
+  // uno, separados por sepRegistros (el SP los reemplaza todos en cada
+  // guardado, no hace falta mandar ids). idMeta/estadoMeta no se mandan — los
+  // puebla la sincronización con Meta, no este formulario.
   Future<CrudResult> guardarPlantilla(Plantilla plantilla) async {
     final ip = await _deviceInfo.getLocalIp();
-    // Botones: solo texto por botón, unidos con un separador comodín — el SP
-    // aún no define cómo distinguirlos dentro de un mismo campo.
-    final botonesTexto = plantilla.botones.join(AppConstants.sepComodin);
+    final coords = await _deviceInfo.getCoordenadasString();
 
-    final String body =
-        '${[
-          plantilla.idPlantilla,
-          plantilla.nombre,
-          plantilla.idCampania,
-          plantilla.idOportunidad,
-          plantilla.activo ? 1 : 0,
-          plantilla.contenido,
-          plantilla.idEstadoNegociacion,
-          plantilla.compartir ? 1 : 0,
-          plantilla.archivoRuta,
-          plantilla.archivoNombre,
-          plantilla.archivoExt,
-          botonesTexto,
-          _session.codUser,
-          ip,
-        ].join(camp)}${sep}UP';
+    final cabecera = [
+      plantilla.idPlantilla,
+      plantilla.nombre,
+      plantilla.contenido,
+      plantilla.idCampania,
+      plantilla.idOportunidad,
+      plantilla.idEstadoNegociacion,
+      plantilla.activo ? 1 : 0,
+      plantilla.compartir ? 1 : 0,
+      plantilla.archivoRuta,
+      plantilla.archivoNombre,
+      plantilla.archivoExt,
+      _session.codUser,
+      ip,
+      coords,
+    ].join(camp);
 
-    final result = await _api.postSafe(ApiConstants.urlLeadsCud, body);
+    final botones = plantilla.botones.join(AppConstants.sepRegistros);
+
+    final String body = [cabecera, 'U', botones].join(sep);
+
+    final result = await _api.postSafe(ApiConstants.urlPlantillasCud, body);
 
     return switch (result) {
       ApiSuccess(:final data) => parseCrudResponse(data),
@@ -316,5 +324,96 @@ class ChatRemoteDatasource {
       ApiNoInternet() => const CrudNoInternet(),
       ApiError(:final message) => CrudError(message),
     };
+  }
+
+  // Sube el adjunto (imagen/documento/audio) del formulario de plantillas —
+  // mismo mecanismo por chunks de uploadAndSendFileMessage, pero sin
+  // idLead/idChatCab (una plantilla no pertenece a ninguna conversación).
+  // uploadToken se genera acá mismo y viaja igual en todos los chunks de esta
+  // subida — es la carpeta estable que usa el controller entre llamadas,
+  // necesaria porque en modo "crear" todavía no existe un ID_PLANTILLA.
+  Future<({String ruta, String nombre, String ext})?> subirArchivoPlantilla({
+    required String filePath,
+    required String fileName,
+    required String tipo,
+  }) async {
+    final user = _session.user;
+    if (user == null) return null;
+
+    try {
+      final file = File(filePath);
+      final fileBytes = await file.readAsBytes();
+      if (fileBytes.isEmpty) return null;
+
+      final dotIndex = fileName.lastIndexOf('.');
+      final fileExt = dotIndex != -1 ? fileName.substring(dotIndex) : '';
+      final uploadToken = DateTime.now().microsecondsSinceEpoch.toString();
+
+      final cabecera = [fileName, fileExt, tipo, uploadToken].join(camp);
+
+      final urlUpload = ApiConstants.urlGuardarMultimediaPlantilla;
+
+      const int chunkSize = 2 * 1024 * 1024;
+      final int totalSize = fileBytes.length;
+      final int totalChunks = (totalSize / chunkSize).ceil();
+
+      for (int i = 0; i < totalChunks; i++) {
+        final start = i * chunkSize;
+        var end = start + chunkSize;
+        if (end > totalSize) end = totalSize;
+
+        final chunkBytes = fileBytes.sublist(start, end);
+
+        final dataString = [
+          user.token,
+          cabecera,
+          '',
+          'C',
+          i,
+          totalChunks,
+        ].join(sep);
+
+        final result = await _api.postMultipart(
+          url: urlUpload,
+          fields: {'data': dataString},
+          fileFieldName: 'files',
+          fileBytes: chunkBytes,
+          fileName: fileName,
+          headers: {'Token': user.token},
+        );
+
+        if (result.isEmpty) return null;
+
+        final datos = result.split(camp);
+        if (datos[0] != 'OK') return null;
+      }
+
+      final mergeData = [
+        user.token,
+        cabecera,
+        '',
+        'C',
+        totalChunks,
+        totalChunks,
+      ].join(sep);
+
+      final mergeResult = await _api.postMultipart(
+        url: urlUpload,
+        fields: {'data': mergeData},
+        fileFieldName: 'files',
+        fileBytes: <int>[],
+        fileName: fileName,
+        headers: {'Token': user.token},
+      );
+
+      if (mergeResult.isEmpty) return null;
+
+      final mergeDatos = mergeResult.split(camp);
+      if (mergeDatos[0] != 'OK' || mergeDatos.length < 4) return null;
+
+      return (ruta: mergeDatos[1], nombre: mergeDatos[2], ext: mergeDatos[3]);
+    } catch (_) {
+      return null;
+    }
   }
 }

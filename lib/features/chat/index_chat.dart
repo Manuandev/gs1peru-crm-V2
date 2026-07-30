@@ -28,6 +28,7 @@ export 'domain/usecases/get_templates_usecase.dart';
 export 'domain/usecases/send_template_message_usecase.dart';
 export 'domain/usecases/get_plantilla_usecase.dart';
 export 'domain/usecases/guardar_plantilla_usecase.dart';
+export 'domain/usecases/subir_archivo_plantilla_usecase.dart';
 
 export 'domain/usecases/update_lead_estado_usecase.dart';
 export 'domain/usecases/update_lead_info_usecase.dart';

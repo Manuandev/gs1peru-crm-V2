@@ -1416,29 +1416,40 @@ null.emailValidator          // 'El email es requerido'
 ### DocumentoValidationUtils — `utils/documento_validation_utils.dart`
 
 Regla de longitud/teclado/formatters de un campo de N° documento según el tipo de documento
-elegido (DNI=8 dígitos, Carnet ext.=12, RUC=11 dígitos, Pasaporte=12) — único lugar para esta
-regla, no reimplementarla por formulario. Compara contra los ids reales de
-`CatalogsBloc.valoresDefecto` (parte [13] del SP), nunca hardcodear `'1'`/`'4'`/`'6'`/`'7'`.
+elegido — único lugar para esta regla, no reimplementarla por formulario.
+**`maxLength` (2026-07-30) lee la longitud REAL del catálogo** —
+`TipoDocumentoItem.canCaracteresMax` (parte [10] del SP `lstListas`, índice [4] del raw) — ya
+no es un mapa fijo por id (`DNI=8`/`CE=12`/`RUC=11`/`Pasaporte=12`, hardcodeado a mano). Recibe
+`List<TipoDocumentoItem>`, no `ValoresCRMItem`. `keyboardType`/`inputFormatters` (¿solo
+dígitos?) siguen comparando contra los ids reales de `CatalogsBloc.valoresDefecto` (parte [13]
+del SP, DNI/RUC), nunca hardcodear `'1'`/`'4'`/`'6'`/`'7'`.
 
 ```dart
-final valoresDefecto = context.watch<CatalogsBloc>().state is CatalogsLoaded
-    ? (context.watch<CatalogsBloc>().state as CatalogsLoaded).valoresDefecto
+final catalogState = context.watch<CatalogsBloc>().state;
+final tiposDocumento = catalogState is CatalogsLoaded
+    ? catalogState.tiposDocumento
+    : const <TipoDocumentoItem>[];
+final valoresDefecto = catalogState is CatalogsLoaded
+    ? catalogState.valoresDefecto
     : const ValoresCRMItem();
 
 CustomTextField(
   label: 'Número documento *',
   controller: ctrlNumDoc,
   keyboardType: DocumentoValidationUtils.keyboardType(tipoDocId, valoresDefecto),
-  maxLength: DocumentoValidationUtils.maxLength(tipoDocId, valoresDefecto),
+  maxLength: DocumentoValidationUtils.maxLength(tipoDocId, tiposDocumento),
   inputFormatters: DocumentoValidationUtils.inputFormatters(tipoDocId, valoresDefecto),
 )
 ```
 
-Usado en `solicitudes/` — Datos del solicitante (paso 1), Facturación (paso 3) y Nuevo
-participante, los 3 lugares con un campo de N° documento propio (ver `solicitudes/CLAUDE.md`).
-Al cambiar el combo Tipo documento en cualquiera de esos 3, limpiar el controller de N°
-documento (`ctrl.clear()`) — el texto ya tipeado puede no calzar con la nueva longitud/formato
-(ej. letras de Pasaporte al cambiar a DNI) y Flutter no lo trunca/filtra retroactivamente.
+Usado en `solicitudes/` — Datos del solicitante (paso 1), Facturación (paso 3, revirtió el
+2026-07-30 un `maxLength: 12` fijo sin restricciones que tenía desde el 2026-07-22) y Nuevo
+participante — y en `lead/EditContacto` (pantalla completa). Al cambiar el combo Tipo documento
+en cualquiera de esos, limpiar el controller de N° documento (`ctrl.clear()`) — el texto ya
+tipeado puede no calzar con la nueva longitud/formato (ej. letras de Pasaporte al cambiar a DNI)
+y Flutter no lo trunca/filtra retroactivamente. **`EditContactoSimplePortrait`** (`lead/`,
+pantalla reducida) no usa este utilitario todavía — su campo Número documento sigue con teclado
+numérico fijo y sin `maxLength`, gap preexistente sin resolver.
 
 ### LauncherUtils — `utils/launcher/launcher_utils.dart`
 

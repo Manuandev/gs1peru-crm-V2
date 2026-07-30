@@ -6,8 +6,24 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
 
-class ChatListPage extends StatelessWidget {
+class ChatListPage extends StatefulWidget {
   const ChatListPage({super.key});
+
+  @override
+  State<ChatListPage> createState() => _ChatListPageState();
+}
+
+class _ChatListPageState extends State<ChatListPage> {
+  @override
+  void initState() {
+    super.initState();
+    // ChatListBloc es global (vive en app_widget.dart, no muere con esta page)
+    // porque necesita seguir escuchando WebSocket para el badge del drawer aunque
+    // el usuario esté en otra pantalla — por eso hace falta refrescar a mano cada
+    // vez que se reingresa, a diferencia de Seguimiento/Solicitudes/Cobranza (cuyo
+    // bloc se crea de cero en cada entrada a la page).
+    context.read<ChatListBloc>().add(const ChatListRefreshed());
+  }
 
   @override
   Widget build(BuildContext context) {

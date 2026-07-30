@@ -1,5 +1,127 @@
 # Solicitudes Feature
 
+## Investigación — "guardo Perú, se guarda otro país" (2026-07-30, EN CURSO)
+Reportado por el usuario: al elegir País = Perú en Facturación, a veces queda guardado un país
+distinto. Pidió revisar `CSV_SOLICITUD_CUD_APP.sql` (`D:\Proyectos\NatCodee\NC.SQLChangeLock\
+DBEAN\StoredProcedures\`, repo aparte) y los anchos reales de columna — mismo patrón de
+truncamiento silencioso ya documentado en "Bug real de fondo — ID_PAIS se truncaba" (2026-07-16,
+más abajo).
+
+- **Leído el `.sql` completo (602 líneas) — no hay ningún truncamiento evidente en el camino de
+  País.** `@ID_PAIS_FAC VARCHAR(8)` recibe `field43` (`facturacion?.paisId`) y lo pone directo en
+  la columna `ID_PAIS` de `T_TECMSOLINSCRIPCION01_FACTURACION` (`INSERT`/`UPDATE`, sin ningún
+  `CONVERT`/`CAST` de por medio) — ancho suficiente para un id de 3 dígitos como "165" (Perú). El
+  mapeo `field25` (`nacionalidadId`) → `@ID_NACION_FAC` → columna `ID_NACIONALIDAD` y `field43`
+  (`paisId`) → `@ID_PAIS_FAC` → columna `ID_PAIS` **está bien alineado, ya NO invertido** — el
+  comentario viejo en `solicitud_remote_datasource.dart` que decía "el SP reusa esta misma
+  variable para ID_PAIS" (dejado el 2026-07-17 cuando SÍ estaba invertido/pendiente de confirmar)
+  quedó desactualizado y se corrigió de paso.
+- **Sí se encontraron 2 variables locales angostas y se ampliaron, mismo patrón preventivo que
+  ya se aplicó a Nacionalidad/País el 2026-07-16** — `@ID_TIP_DOC_SOL`/`@ID_TIP_DOC_FAC`
+  (Tipo documento del solicitante y de facturación) estaban en `VARCHAR(2)`. `TipoDocumentoItem`
+  viene del mismo catálogo (`SYSTABEXTER02`) que `PaisItem`/`NacionalidadItem` — ambos ya
+  demostraron tener ids de 3 dígitos (Perú = "165") — así que un id de tipo documento de 3
+  dígitos se habría truncado en silencio ahí también. Se ampliaron a `VARCHAR(10)` (mismo ancho
+  que ya usa `@ID_NACION_FAC`) directo en el `.sql` — edición hecha preservando el encoding
+  UTF-16LE + BOM del archivo (con PowerShell/`System.Text.UnicodeEncoding`, no con un editor de
+  texto plano — confirmado con `git diff --stat` que el archivo cambió solo 4 bytes, exactamente
+  los 2 caracteres nuevos × 2 bytes UTF-16 de cada reemplazo `(2)`→`(10)`). **Ojo — esto no
+  explica por sí solo el síntoma reportado** (el tipo de documento no es lo mismo que el país),
+  es una corrección preventiva encontrada de paso, con el mismo patrón de riesgo.
+- **La causa más probable — pendiente de confirmar con datos reales — es la que ya quedó
+  anotada sin resolver el 2026-07-16**: `EVT.T_TECMSOLINSCRIPCION01.ID_NACIONALIDAD` y
+  `EVT.T_TECMSOLINSCRIPCION02.ID_NACIONALIDAD` (las COLUMNAS reales, no las variables del SP)
+  quedaron confirmadas en `VARCHAR(2)` en esa auditoría — con un `ALTER TABLE` sugerido pero
+  **nunca confirmado como ejecutado**. Si "Perú" en la duda del usuario en realidad se refiere a
+  elegir Nacionalidad "Peruano/a" (fácil de confundir con País en la conversación — ambos combos
+  conviven en el paso 1 y en Facturación) y ese id también es de 3 dígitos, truncar a 2
+  caracteres explicaría exactamente el síntoma (un id distinto, que al releerse resuelve a una
+  nacionalidad/país completamente diferente). **No se tocó la tabla real** — alterar una
+  columna de una tabla en producción no es algo que se deba hacer sin confirmar primero con
+  datos reales, y este entorno no tiene acceso directo a la base de datos.
+- **Diagnóstico armado, pendiente de que el usuario lo corra** — 3 consultas
+  (`INFORMATION_SCHEMA.COLUMNS` sobre las 3 tablas de Solicitudes + `MAX(LEN(CODARGU))` real por
+  catálogo en `SYSTABEXTER02` CPA/NPA/F01 + el id concreto de "Perú"/"Peruano" en ambos
+  catálogos) — entregado al usuario como archivo aparte (`diagnostico_columnas_solicitud.sql`,
+  scratchpad de la sesión). Con el resultado real se puede confirmar la causa exacta y, si hace
+  falta, generar el `ALTER TABLE` preciso (ancho real necesario, no uno inventado).
+
+## Número documento — máximo real por tipo, en las 3 partes (2026-07-30)
+Pedido de negocio — "cada tipo de documento tiene su propio máximo, revísalo" — aplicado a
+Datos del solicitante (paso 1), Nuevo/Editar participante y Facturación (paso 3).
+
+- **`DocumentoValidationUtils.maxLength`** (`core/utils/documento_validation_utils.dart`)
+  dejó de ser un mapa fijo por id (`DNI=8`, `CE=12`, `RUC=11`, `Pasaporte=12`, copiado a mano) —
+  ahora lee `TipoDocumentoItem.canCaracteresMax` (parte [10] del SP `lstListas`, índice [4] del
+  raw — campo real que el catálogo ya traía pero no se usaba en ningún lado, ver
+  `core/CLAUDE.md`). Firma cambió de `maxLength(tipoDocId, ValoresCRMItem)` a
+  `maxLength(tipoDocId, List<TipoDocumentoItem>)` — los 4 call sites existentes (Datos del
+  solicitante, Nuevo participante, Facturación, `lead/EditContacto`) ya tenían la lista de
+  `TipoDocumentoItem` a mano en su `build()`, no hizo falta threadear nada nuevo. Si el tipo no
+  está en la lista o `canCaracteresMax` viene en 0, no hay tope (`null`, mismo comportamiento
+  que antes cuando no matcheaba ningún id conocido).
+- **Facturación (paso 3) — revierte el `maxLength: 12` fijo sin restricciones del 2026-07-22**
+  ("no quiero validaciones"). Ahora Número documento/RUC usa
+  `DocumentoValidationUtils.maxLength/keyboardType/inputFormatters` igual que los otros 2
+  lugares — `_SeccionDatosFacturacion` ganó 3 parámetros nuevos (`numDocMaxLength`,
+  `numDocKeyboardType`, `numDocInputFormatters`), calculados en
+  `_SolicitudFacturacionViewState.build()` contra `tiposDocumentoTodos` (catálogo completo, no
+  la lista ya filtrada por extranjero/Factura-RUC — el tipo elegido puede ser cualquiera de
+  esos). Pedido explícito del usuario esta vez — supersede la decisión de 2026-07-22.
+- **No se tocó `EditContactoSimplePortrait`** (`lead/`, pantalla reducida) — su campo "Número
+  documento" nunca usó `DocumentoValidationUtils` (teclado numérico fijo, sin `maxLength`,
+  gap preexistente sin relación con este pedido) — fuera de alcance, el pedido era sobre las 3
+  partes de la solicitud.
+
+## Cargo con combo de catálogo (Solicitante + Participante) + Facturación: extranjero real, toggle Jurídica/Natural de vista (2026-07-29)
+Pedido de negocio, varios cambios independientes:
+
+- **Campo "Cargo" (Datos del solicitante, paso 1, y Nuevo/Editar participante) pasó de
+  `CustomTextField` libre a `CustomComboSearchField`** — mismo catálogo (`CargoItem`,
+  `CatalogsBloc.cargos`, `DBO.SYSMCARGO01`, ver `core/CLAUDE.md`) y mismo widget que ya usa
+  `lead/EditContacto` (sección Empresa). **Por ahora solo se guarda la descripción elegida como
+  texto libre** (`widget.ctrlCargo`/`_cargoCtrl`, sin id) — `DatosSolicitante.cargo`/
+  `ParticipanteLocal.cargo` siguen siendo `String`, el CUD de Solicitudes no tiene columna de id
+  de cargo todavía. El `initialValue` del combo se resuelve buscando en el catálogo un
+  `CargoItem.nombre` que matchee (case-insensitive) el texto ya guardado — si una solicitud
+  vieja tiene un cargo tipeado a mano que no existe en el catálogo real, el combo no lo
+  encuentra y queda vacío (el asesor tiene que volver a elegirlo de la lista). Mismo patrón en
+  `solicitud_completar_datos_solicitante.dart` (`SeccionDatosSolicitante`) y
+  `participante_form_sheet.dart`.
+- **Facturación (paso 3) — `_esExtranjero` ya no compara `_paisId` contra
+  `valoresDefecto.idPais`; ahora busca el `PaisItem` elegido en `CatalogsBloc.paises` y lee su
+  campo real `esNacional`** (`bool`, parte [9] del SP — el mismo campo que ya traía
+  `TipoDocumentoItem`/`NacionalidadItem`, ver `core/CLAUDE.md`, que hasta esta sesión no se
+  usaba en ningún lado del wizard). Más robusto que comparar contra un solo id fijo (Perú) —
+  cualquier país con `esNacional == true` en el catálogo real (aunque no sea el id de Perú)
+  ahora se trata como nacional.
+- **Tipo documento con país extranjero — ya no se fuerza "Otros" a ciegas (fallback frágil por
+  nombre, `contains('OTRO')`).** El combo ahora muestra **todos** los tipos de documento con
+  `TipoDocumentoItem.esNacional == false` (`tiposDocumentoExtranjero`) — el asesor elige el que
+  corresponda (Carnet de extranjería, Pasaporte, etc.), no uno solo impuesto. Si el tipo ya
+  seleccionado no está en esa lista al cambiar el País a uno extranjero, se limpia (no se
+  autoselecciona ninguno) para forzar una elección nueva. Si el catálogo no trae ningún tipo con
+  `esNacional == false`, cae al fallback de siempre (lista completa sin restringir).
+- **Búsqueda de documento (Clientes/BuscarDocumento, RENIEC/SUNAT) ya no se dispara con país
+  extranjero** — `_buscarDocumento()` corta al toque (`if (_esExtranjero) return;`) antes de
+  revisar longitud de documento o nada más. Un documento extranjero no existe en esas fuentes;
+  el asesor completa Nombres/Apellidos/Correo/Dirección a mano. Con país Perú, sin cambios.
+- **Nuevo — toggle Jurídica/Natural en Facturación, `_tipoPersonaVista`, SOLO de vista.** Mismo
+  widget que el paso 1 (`SolicitudToggleTipoPersona`), pero es un estado local de
+  `SolicitudFacturacionView`, **no se guarda en `DatosFacturacion` ni se manda al backend** —
+  decide únicamente si el formulario muestra "Razón Social" (jurídica) o "Nombres" + Apellido
+  paterno/materno (natural). Arranca sembrado con `SolicitudFormState.tipoPersona` (el del paso
+  1) cada vez que se restaura el paso (`_restaurarPaso()`) o se aplican los datos del
+  solicitante (`_aplicarDatosSolicitante()`, switch "Facturar al solicitante") — de ahí en
+  adelante es 100% independiente, el asesor lo puede cambiar acá sin afectar el paso 1 ni
+  viceversa. **Reemplaza a `_esRuc`/`esRuc` solo para esa decisión de UI** (label del campo +
+  visibilidad de Apellidos, dentro de `_SeccionDatosFacturacion`) — `_esRuc`/`esRuc` (Tipo
+  documento == RUC) se queda intacto para todo lo demás: la regla "Factura exige RUC"
+  (`onComprobanteChanged`) y qué campo llena el autocompletado por documento
+  (`_buscarDocumento()`, `nomEmpresa` vs `nombres`/apellidos). Nuevo parámetro `esJuridica` en
+  `_SeccionDatosFacturacion` (separado de `esRuc`, que ese widget conserva solo para el
+  autocompletado del padre — ya no lo usa internamente para render).
+
 ## Paso 2 — botón "Nuevo" solo ícono + pluralización real + símbolo de moneda en el resumen (2026-07-29)
 Tres ajustes de UI pedidos por el usuario en `solicitud_participantes_view.dart`:
 

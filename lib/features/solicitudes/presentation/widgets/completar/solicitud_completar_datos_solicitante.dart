@@ -95,13 +95,16 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
     final sexos = catalogState is CatalogsLoaded
         ? catalogState.sexos
         : const <SexoItem>[];
+    final cargos = catalogState is CatalogsLoaded
+        ? catalogState.cargos
+        : const <CargoItem>[];
     final valoresDefecto = catalogState is CatalogsLoaded
         ? catalogState.valoresDefecto
         : const ValoresCRMItem();
 
     final maxLenDoc = DocumentoValidationUtils.maxLength(
       _tipoDocId,
-      valoresDefecto,
+      tiposDocumento,
     );
     final teclado = DocumentoValidationUtils.keyboardType(
       _tipoDocId,
@@ -248,15 +251,28 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Cargo
-        CustomTextField(
+        // Cargo — combo con búsqueda (CargoItem, DBO.SYSMCARGO01), mismo
+        // catálogo y mismo widget que ya usa lead/EditContacto (sección
+        // Empresa). Por ahora solo se guarda la descripción elegida como
+        // texto libre en widget.ctrlCargo (DatosSolicitante.cargo sigue
+        // siendo String — el CUD de Solicitudes no tiene columna de id de
+        // cargo todavía, ver solicitudes/CLAUDE.md).
+        CustomComboSearchField(
+          data: cargos
+              .map((c) => '${c.id}${AppConstants.sepCampos}${c.nombre}')
+              .toList(),
           label: 'Cargo *',
-          controller: widget.ctrlCargo,
           enabled: widget.habilitado,
-          isUpperCase: true,
-          textCapitalization: TextCapitalization.sentences,
-          validator: (v) =>
-              v == null || v.trim().isEmpty ? 'Requerido' : null,
+          initialValue: cargos
+              .where(
+                (c) =>
+                    c.nombre.trim().toUpperCase() ==
+                    widget.ctrlCargo.text.trim().toUpperCase(),
+              )
+              .firstOrNull
+              ?.id,
+          onChanged: (item) => widget.ctrlCargo.text = item?.descripcion ?? '',
+          validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: AppSpacing.xs),
 

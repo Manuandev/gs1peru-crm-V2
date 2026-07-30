@@ -30,6 +30,25 @@ Es el feature más complejo de la app — leer completo antes de tocar cualquier
 
 **`InfoLeadCubit` se comparte entre `ChatDetailPage` y `EditLeadPage`** — se crea en `ChatDetailPage` y se pasa a `EditLeadPage` con `BlocProvider.value`. No crear uno nuevo en `EditLeadPage`.
 
+**`ChatListBloc` es la única excepción a "el bloc se crea en su Page y muere con ella"
+(regla general de `features/CLAUDE.md`)** — vive **global**, provisto en
+`app_widget.dart` junto a `AuthBloc`/`ThemeCubit`/`DrawerBloc`/`CatalogsBloc` (tabla que ese
+mismo archivo tiene desactualizada, no lo lista). Motivo: se suscribe a
+`MessageDispatcher.instance.stream` y a `LeadUpdateNotifier.instance.stream` para mantener
+fresca la lista en memoria y el badge del drawer (`context.updateBadge`) en tiempo real
+**aunque el usuario esté en otra pantalla** (Home, Seguimiento, etc.) — si muriera con
+`ChatListPage`, esas suscripciones se cortarían cada vez que se sale de Conversaciones.
+- **Bug real corregido (2026-07-30)**: como el bloc es global y solo dispara
+  `ChatListStarted()` una vez al arrancar la app (`app_widget.dart`), `ChatListPage`
+  (`StatelessWidget` sin `initState`) nunca volvía a pedir datos al reentrar — a diferencia
+  de Seguimiento/Solicitudes/Cobranza, que sí recargan siempre porque su Page crea un Bloc
+  nuevo (`BlocProvider(create: ...)`) en cada entrada. Corregido convirtiendo `ChatListPage`
+  a `StatefulWidget` — su `initState()` dispara `ChatListRefreshed()` a mano en cada entrada,
+  simulando el mismo efecto de "recarga completa al entrar" sin tener que sacrificar el bloc
+  global (que sigue vivo para el WebSocket/badge). Si se agrega otra pantalla con un bloc
+  global por el mismo motivo (necesita seguir escuchando algo fuera de su propia página),
+  replicar este patrón — `initState()` + evento de refresh — en vez de dejarla sin recarga.
+
 ---
 
 ## Endpoints y códigos de operación

@@ -196,8 +196,12 @@ class SolicitudRemoteDatasource {
       facturacion?.numDoc ?? '', // 22 NUM_DOC_FAC
       esRuc ? (facturacion?.numDoc ?? '') : '', // 23 RUCEMPRE_FAC
       esRuc ? (facturacion?.nombresRazon ?? '') : '', // 24 NOMEMPRE_FAC
-      facturacion?.nacionalidadId ??
-          '', // 25 ID_NACION_FAC (el SP reusa esta misma variable para ID_PAIS)
+      // 25 ID_NACION_FAC — comentario viejo decía "el SP reusa esta misma
+      // variable para ID_PAIS", ya no es así: confirmado 2026-07-30 leyendo
+      // CSV_SOLICITUD_CUD_APP.sql actual, @ID_NACION_FAC (field25) puebla
+      // ID_NACIONALIDAD y @ID_PAIS_FAC (field43) puebla ID_PAIS, cada una
+      // con su propia variable — ver solicitudes/CLAUDE.md.
+      facturacion?.nacionalidadId ?? '',
       esRuc ? '' : (facturacion?.nombresRazon ?? ''), // 26 NOMBRES_FAC
       esRuc ? '' : (facturacion?.apellidoPaterno ?? ''), // 27 APELLIDO_P_FAC
       esRuc ? '' : (facturacion?.apellidoMaterno ?? ''), // 28 APELLIDO_M_FAC

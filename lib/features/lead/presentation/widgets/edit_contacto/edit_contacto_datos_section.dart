@@ -132,7 +132,7 @@ class EditContactoDatosSection extends StatelessWidget {
             ),
             maxLength: DocumentoValidationUtils.maxLength(
               tipoDocumento?.id ?? '',
-              valoresDefecto,
+              tiposDocumento,
             ),
             inputFormatters: DocumentoValidationUtils.inputFormatters(
               tipoDocumento?.id ?? '',

@@ -292,9 +292,12 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     final tiposParticipante = catalogState is CatalogsLoaded
         ? catalogState.tiposParticipante
         : const <TipoParticipanteItem>[];
+    final cargos = catalogState is CatalogsLoaded
+        ? catalogState.cargos
+        : const <CargoItem>[];
     final maxLenDoc = DocumentoValidationUtils.maxLength(
       _tipoDocId,
-      valoresDefecto,
+      tiposDocumento,
     );
     final tecladoDoc = DocumentoValidationUtils.keyboardType(
       _tipoDocId,
@@ -528,14 +531,31 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
 
-                          // Cargo
-                          CustomTextField(
+                          // Cargo — combo con búsqueda (CargoItem,
+                          // DBO.SYSMCARGO01), mismo catálogo/widget que
+                          // Datos del solicitante (paso 1) y lead/EditContacto.
+                          // Por ahora solo guarda la descripción elegida como
+                          // texto libre en _cargoCtrl.
+                          CustomComboSearchField(
+                            data: cargos
+                                .map(
+                                  (c) =>
+                                      '${c.id}${AppConstants.sepCampos}${c.nombre}',
+                                )
+                                .toList(),
                             label: 'Cargo *',
-                            controller: _cargoCtrl,
-                            isUpperCase: true,
-                            validator: (v) => v == null || v.trim().isEmpty
-                                ? 'Requerido'
-                                : null,
+                            initialValue: cargos
+                                .where(
+                                  (c) =>
+                                      c.nombre.trim().toUpperCase() ==
+                                      _cargoCtrl.text.trim().toUpperCase(),
+                                )
+                                .firstOrNull
+                                ?.id,
+                            onChanged: (item) =>
+                                _cargoCtrl.text = item?.descripcion ?? '',
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Requerido' : null,
                           ),
                           const SizedBox(height: AppSpacing.sm),
 

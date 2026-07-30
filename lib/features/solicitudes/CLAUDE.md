@@ -1,5 +1,30 @@
 # Solicitudes Feature
 
+## Paso 2 — botón "Nuevo" solo ícono + pluralización real + símbolo de moneda en el resumen (2026-07-29)
+Tres ajustes de UI pedidos por el usuario en `solicitud_participantes_view.dart`:
+
+- **Botón "Nuevo" (encabezado Participantes) pasó de `_BotonSeccionSmall` (ícono+texto) a
+  `_BotonIconoSmall`** — mismo tamaño que el botón de basurero "Eliminar todos" que ya estaba al
+  lado. `_BotonIconoSmall` ganó un parámetro `enabled` (default `true`, antes no existía —
+  apagaba/prendía color pero no bloqueaba `onTap`) para poder reusarlo acá con el mismo criterio
+  de tope que ya tenía "Nuevo" (`cantidadEsperada` alcanzada). "Carga masiva" **no se tocó** —
+  sigue con `_BotonSeccionSmall` (ícono+texto), el pedido era solo sobre "Nuevo".
+- **"N participante/s" ahora pluraliza de verdad** — antes siempre mostraba el literal
+  `"participante/s"` sin importar el conteo; ahora es `"1 participante"` / `"2 participantes"`
+  (`etiquetaParticipantes`, calculado dentro del `BlocBuilder<ParticipantesCubit,
+  ParticipantesState>` porque depende de `state.participantes.length`).
+- **El ícono circular de `_ResumenInversion` (footer "Inversión/IGV/Importe total") ahora
+  muestra el símbolo de la moneda de la negociación de origen** (`MonedaItem.simbolo` — parte
+  [7] del SP de catálogos, `core/CLAUDE.md`) en vez del ícono genérico `AppIcons.pieChart` fijo.
+  Se resuelve en el `build()` de `_SolicitudParticipantesViewState` cruzando
+  `SolicitudFormState.idMonedaBloqueada` (mismo id que ya usa Facturación para bloquear el combo
+  Moneda, ver "Regla de negocio — cantidad/importe/moneda bloqueados..." más abajo) contra
+  `CatalogsBloc.monedas`, y viaja como `_ResumenInversion.monedaSimbolo` (`String?`, nuevo
+  parámetro). **Si la solicitud no viene de una negociación (`idMonedaBloqueada == null`) o el
+  catálogo todavía no la resuelve, se mantiene el ícono `pieChart` de siempre como fallback** —
+  no hay ningún otro origen de moneda en este paso (2, antes de llegar a Facturación) para
+  resolverlo de otra forma.
+
 ## Carga masiva de participantes — ya funciona de punta a punta, sin validaciones de campo todavía (2026-07-29)
 Pedido del usuario: mismo comportamiento que `GestionRegistroEventoEdit.js` (web,
 `GS1Peru.AppWeb`) — descargar la plantilla real al celular y poder subir un Excel para agregar

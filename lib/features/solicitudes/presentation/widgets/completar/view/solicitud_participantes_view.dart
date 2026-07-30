@@ -190,19 +190,30 @@ class _SolicitudParticipantesViewState
     final tiposParticipante = catalogState is CatalogsLoaded
         ? catalogState.tiposParticipante
         : const <TipoParticipanteItem>[];
+    final monedas = catalogState is CatalogsLoaded
+        ? catalogState.monedas
+        : const <MonedaItem>[];
     // Cantidad exacta que exige la negociación de origen (null si esta
     // solicitud no viene de una) — se muestra junto al conteo actual para
     // que el asesor sepa cuánto le falta/sobra antes de generar. Solo
     // "Generar solicitud" exige que calcen exacto (ver
     // validarSolicitudParaGenerar en solicitud_guardar_helper.dart);
     // "Guardar" (borrador) deja pasar cualquier cantidad.
-    final cantidadEsperada = context
-        .watch<SolicitudFormCubit>()
-        .state
-        .cantidadEsperada;
+    final formState = context.watch<SolicitudFormCubit>().state;
+    final cantidadEsperada = formState.cantidadEsperada;
+    // Símbolo de la moneda ya fijada por la negociación de origen (ver
+    // SolicitudFormState.idMonedaBloqueada) — null si esta solicitud no
+    // viene de una negociación o si el catálogo aún no trae ese id.
+    final idMonedaBloqueada = formState.idMonedaBloqueada;
+    final monedaSimbolo = (idMonedaBloqueada != null && idMonedaBloqueada.isNotEmpty)
+        ? monedas.where((m) => m.id == idMonedaBloqueada).firstOrNull?.simbolo
+        : null;
 
     return BlocBuilder<ParticipantesCubit, ParticipantesState>(
       builder: (context, state) {
+        final etiquetaParticipantes = state.participantes.length == 1
+            ? 'participante'
+            : 'participantes';
         return Stack(
           children: [
             Column(
@@ -249,8 +260,8 @@ class _SolicitudParticipantesViewState
                                 const SizedBox(width: AppSpacing.xs),
                                 Text(
                                   cantidadEsperada != null
-                                      ? '${state.participantes.length} participante/s · Máximo: $cantidadEsperada'
-                                      : '${state.participantes.length} participante/s',
+                                      ? '${state.participantes.length} $etiquetaParticipantes · Máximo: $cantidadEsperada'
+                                      : '${state.participantes.length} $etiquetaParticipantes',
                                   style: AppTextStyles.labelSmall.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
@@ -267,9 +278,9 @@ class _SolicitudParticipantesViewState
                       if (widget.modoEdicion)
                         Row(
                           children: [
-                            _BotonSeccionSmall(
+                            _BotonIconoSmall(
                               icono: AppIcons.add,
-                              label: 'Nuevo',
+                              color: AppColors.primary,
                               enabled:
                                   !(cantidadEsperada != null &&
                                       state.participantes.length >=
@@ -358,6 +369,7 @@ class _SolicitudParticipantesViewState
                   child: _ResumenInversion(
                     total: state.totalPagantes(tiposParticipante),
                     igvPorcentaje: igvPorcentaje,
+                    monedaSimbolo: monedaSimbolo,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -604,20 +616,23 @@ class _BotonIconoSmall extends StatelessWidget {
   final IconData icono;
   final Color color;
   final VoidCallback onTap;
+  final bool enabled;
 
   const _BotonIconoSmall({
     required this.icono,
     required this.color,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorEfectivo = enabled ? color : AppColors.textDisabled;
     return OutlinedButton(
-      onPressed: onTap,
+      onPressed: enabled ? onTap : null,
       style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color),
+        foregroundColor: colorEfectivo,
+        side: BorderSide(color: colorEfectivo),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
           vertical: AppSpacing.sm,
@@ -714,8 +729,17 @@ class _ResumenInversion extends StatelessWidget {
   // sumar es lo correcto.
   final double total;
   final double igvPorcentaje;
+  // Símbolo de la moneda fijada por la negociación de origen (ver
+  // SolicitudFormState.idMonedaBloqueada) — null si esta solicitud no viene
+  // de una negociación o el catálogo aún no la resuelve; en ese caso se
+  // muestra el ícono genérico de siempre en vez del símbolo.
+  final String? monedaSimbolo;
 
-  const _ResumenInversion({required this.total, required this.igvPorcentaje});
+  const _ResumenInversion({
+    required this.total,
+    required this.igvPorcentaje,
+    this.monedaSimbolo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -744,11 +768,21 @@ class _ResumenInversion extends StatelessWidget {
                 color: AppColors.ui2,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                AppIcons.pieChart,
-                color: AppColors.primary,
-                size: AppSizing.iconMd,
-              ),
+              child: (monedaSimbolo != null && monedaSimbolo!.isNotEmpty)
+                  ? Center(
+                      child: Text(
+                        monedaSimbolo!,
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: AppTextStyles.weightBold,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      AppIcons.pieChart,
+                      color: AppColors.primary,
+                      size: AppSizing.iconMd,
+                    ),
             ),
           ),
           Expanded(

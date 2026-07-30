@@ -37,7 +37,7 @@ class _EditContactoViewState extends State<EditContactoView> {
         builder: (context, state) {
           final titulo = state is ContactoFormSuccess && state.contacto.idContacto != 0
               ? 'Editar contacto'
-              : 'Editar número';
+              : 'Editar contacto';
           return Text(
             titulo,
             style: AppTextStyles.titleLarge.copyWith(

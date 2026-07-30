@@ -39,7 +39,7 @@ class _EditContactoSimpleViewState extends State<EditContactoSimpleView> {
           final titulo =
               state is ContactoSimpleFormSuccess && state.contacto.idContacto != 0
               ? 'Editar contacto'
-              : 'Editar número';
+              : 'Editar contacto';
           return Text(
             titulo,
             style: AppTextStyles.titleLarge.copyWith(

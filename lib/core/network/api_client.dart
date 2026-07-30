@@ -89,6 +89,22 @@ class ApiClient {
     return response.data?.toString() ?? '';
   }
 
+  // Igual que postJsonGetText pero para respuestas binarias (ej. descarga de
+  // plantillas Excel) — responseType.bytes evita que Dio intente decodificar
+  // la respuesta como texto/JSON.
+  Future<List<int>> postJsonGetBytes(String url, String body) async {
+    final response = await _dio.post(
+      url,
+      data: body,
+      options: Options(
+        contentType: 'application/json',
+        responseType: ResponseType.bytes,
+        headers: {'Token': _token},
+      ),
+    );
+    return response.data as List<int>;
+  }
+
   // Agrega esto en api_client.dart — debajo de postJsonGetText
   Future<ApiResult<String>> postSafe(String url, String body) async {
     try {

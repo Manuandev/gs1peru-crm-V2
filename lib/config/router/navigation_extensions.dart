@@ -126,7 +126,11 @@ extension NavigationExtensions on BuildContext {
 
   Future<void> goToCargaMasivaParticipantes({
     required ParticipantesCubit cubit,
-  }) => _push(AppRoutes.cargaMasivaParticipantes, arguments: {'cubit': cubit});
+    int? cantidadEsperada,
+  }) => _push(
+    AppRoutes.cargaMasivaParticipantes,
+    arguments: {'cubit': cubit, 'cantidadEsperada': cantidadEsperada},
+  );
 
   Future<void> goToDetalleCobranza({required String numSol}) =>
       _push(AppRoutes.detalleCobranza, arguments: {'numSol': numSol});

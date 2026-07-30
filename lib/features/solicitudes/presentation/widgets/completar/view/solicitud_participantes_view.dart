@@ -277,14 +277,19 @@ class _SolicitudParticipantesViewState
                               onTap: () => _abrirFormularioNuevo(context),
                             ),
                             const SizedBox(width: AppSpacing.xs),
-                            // _BotonSeccionSmall(
-                            //   icono: AppIcons.downloadFile,
-                            //   label: 'Carga masiva',
-                            //   onTap: () => context.goToCargaMasivaParticipantes(
-                            //     cubit: context.read<ParticipantesCubit>(),
-                            //   ),
-                            // ),
-                            // const SizedBox(width: AppSpacing.xs),
+                            _BotonSeccionSmall(
+                              icono: AppIcons.downloadFile,
+                              label: 'Carga masiva',
+                              enabled:
+                                  !(cantidadEsperada != null &&
+                                      state.participantes.length >=
+                                          cantidadEsperada),
+                              onTap: () => context.goToCargaMasivaParticipantes(
+                                cubit: context.read<ParticipantesCubit>(),
+                                cantidadEsperada: cantidadEsperada,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
                             _BotonIconoSmall(
                               icono: AppIcons.delete,
                               color: AppColors.error,

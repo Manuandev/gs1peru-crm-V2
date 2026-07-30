@@ -38,6 +38,7 @@ export 'package:photo_manager/photo_manager.dart';
 // ─── Files ───────────────────────────────────────────────────────
 export 'package:file_picker/file_picker.dart';
 export 'package:open_filex/open_filex.dart';
+export 'package:excel/excel.dart' hide Border, BorderStyle, TextSpan;
 
 // ─── Permisos ────────────────────────────────────────────────────
 export 'package:permission_handler/permission_handler.dart';

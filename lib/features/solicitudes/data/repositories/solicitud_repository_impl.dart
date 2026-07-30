@@ -72,4 +72,8 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
   @override
   Future<CrudResult> eliminarSolicitud(String numSol) =>
       _remote.eliminarSolicitud(numSol);
+
+  @override
+  Future<List<int>> descargarPlantillaCargaMasiva() =>
+      _remote.descargarPlantillaCargaMasiva();
 }

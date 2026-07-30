@@ -164,6 +164,7 @@ class AppRouter {
         final args = _requireArgs<Map<String, dynamic>>(context);
         return SolicitudCargaMasivaPage(
           cubit: args['cubit'] as ParticipantesCubit,
+          cantidadEsperada: args['cantidadEsperada'] as int?,
         );
       },
     ),

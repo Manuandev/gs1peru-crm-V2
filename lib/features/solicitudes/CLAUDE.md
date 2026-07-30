@@ -1,5 +1,79 @@
 # Solicitudes Feature
 
+## Carga masiva de participantes — ya funciona de punta a punta, sin validaciones de campo todavía (2026-07-29)
+Pedido del usuario: mismo comportamiento que `GestionRegistroEventoEdit.js` (web,
+`GS1Peru.AppWeb`) — descargar la plantilla real al celular y poder subir un Excel para agregar
+participantes. Antes `SolicitudCargaMasivaPage`/`SolicitudCargaMasivaView` solo validaba la
+extensión del archivo seleccionado; ni el botón "Descargar plantilla" ni "Subir participantes"
+hacían nada, y el botón que abre esta pantalla desde el paso 2 estaba comentado (no había forma
+de llegar acá desde la UI).
+
+- **Backend nuevo — `WebServiceIEC` (repo aparte, `D:\Proyectos\GS1\WebServiceIEC`), no
+  `gs1peru-crm-V2`.** La app apunta a este proyecto (`EnvConfig.baseUrl`,
+  `.../gs1pe_interfaz/`), no a `GS1Peru.AppWeb` (la intranet, dueña del JS de referencia) — el
+  endpoint `Generic/DescargarArchivoPlantilla` que usa la web **no existía** en el backend de la
+  app. Se agregó `GenericController` (`Controllers/CRM/GenericController.cs`, `ApiController`
+  nuevo — ojo, ya existía una clase `Generic.cs` en el mismo namespace pero es un helper
+  estático sin routing, no tiene que ver con esto) con la acción `DescargarArchivoPlantilla`,
+  mismo contrato que su equivalente en `GS1Peru.AppWeb.Controllers.Modules.General.
+  GenericController` — lee del mismo `FileServer\PLANTILLAS\<subcarpeta según fase>\<archivo>`
+  compartido entre ambos proyectos, así que no hizo falta duplicar ningún archivo físico en
+  disco. Body: `fase¦folderFiles¦archivo` (`folderFiles` se ignora, se mantiene por paridad con
+  la web) con el `token¯` que antepone `TokenBodyInterceptor` — la acción lo descarta antes de
+  parsear. Registrado en el `.csproj` (proyecto viejo, sin wildcard — hay que sumar
+  `<Compile Include>` a mano para que un archivo nuevo compile).
+- **Flutter — capa completa**: `SolicitudRemoteDatasource.descargarPlantillaCargaMasiva()`
+  (`ApiClient.postJsonGetBytes`, método nuevo — `responseType: ResponseType.bytes`, ninguno de
+  los métodos existentes devolvía binario) → `SolicitudRepository`/`Impl` →
+  `DescargarPlantillaCargaMasivaUseCase`. Pide siempre `fase='1'` (subcarpeta `CARGA_MASIVA`) y
+  el archivo `Carga_Masiva_Participantes.xlsm` — mismo nombre que ya usa la web, ya debería estar
+  en el `FileServer` compartido.
+- **Descarga al celular** — mismo patrón que `message_bubble.dart` (`chat/`, descarga de
+  adjuntos): guarda los bytes con `getApplicationDocumentsDirectory()` y abre con
+  `OpenFilex.open()` (el picker "Abrir con..." del sistema deja al usuario guardarlo/compartirlo
+  desde ahí). No se implementó un flujo de "Descargas" custom — se reusó el mecanismo que ya
+  existía en la app en vez de crear uno nuevo.
+- **Parseo del Excel — 100% local, igual que la web.** `GestionRegistroEventoEdit.js` lee el
+  archivo con `XLSX.js` en el navegador y arma los participantes en memoria sin llamar al
+  backend — Flutter hace lo mismo con el paquete `excel` (`pubspec.yaml`, nuevo). **Ojo —
+  `excel` define clases que colisionan con Flutter/Material**: `Border`, `BorderStyle` y
+  `TextSpan` — se ocultan con `hide` en `index_dependencies.dart`
+  (`export 'package:excel/excel.dart' hide Border, BorderStyle, TextSpan;`). Nunca importar
+  `package:excel/excel.dart` directo en un archivo que también use Material — siempre a través
+  del index.
+- **Columnas del Excel** (mismo orden que la plantilla real, 10 columnas): `[0]` Tipo documento,
+  `[1]` N° documento, `[2]` Nacionalidad, `[3]` Nombres, `[4]` Apellido paterno, `[5]` Apellido
+  materno, `[6]` Cargo, `[7]` País (prefijo celular), `[8]` N° celular, `[9]` Correo. Los 3
+  campos de texto libre (Tipo documento, Nacionalidad, País) se cruzan contra el catálogo real
+  (`CatalogsBloc` — `tiposDocumento`/`nacionalidades`/`paises`) comparando por nombre
+  (`abreviatura`/`nombre`, sin distinguir mayúsculas/tildes de más) para resolver el id — si no
+  matchea nada, el campo se agrega igual con el id vacío, no bloquea la fila. `tipoParticipante`
+  siempre se asigna al id de "Pagante" (`esInvitado == false`, mismo patrón que el resto del
+  feature, nunca hardcodeado). `importe` siempre entra en `0` — el asesor lo ajusta después desde
+  el formulario de cada participante, igual que uno agregado a mano.
+  **Pendiente, explícito (pedido del usuario — "luego metemos las validaciones")**: no hay
+  ninguna validación de campos obligatorios/formato todavía (a diferencia de la web, que sí
+  valida 10 columnas exactas + campos vacíos antes de dejar subir, ver
+  `fnValidacionCargaMasivaParticipantes` en el JS). Cada fila con al menos un dato en
+  Tipo documento/N° documento/Nombres/Correo se agrega tal cual venga, aunque falte algo. Filas
+  100% vacías se ignoran sin contar como error.
+- **Tope de `cantidadEsperada` sí se respeta** (a diferencia de las validaciones de campo, esto
+  es una regla dura ya existente en el resto del feature — ver "Botón 'Nuevo' se deshabilita al
+  llegar al máximo" más abajo): si la solicitud viene de una negociación con cantidad definida,
+  el import se recorta a los cupos libres (`cantidadEsperada - participantes.length` actual) y
+  avisa con un snackbar cuántas filas del Excel no entraron por eso.
+- **Botón "Carga masiva" del paso 2 — estaba comentado, ya no.** `_BotonSeccionSmall` (mismo
+  widget que ya usa "Nuevo", con su mismo patrón `enabled`) ahora llama
+  `context.goToCargaMasivaParticipantes(cubit:, cantidadEsperada:)` — `cantidadEsperada` es un
+  parámetro nuevo de esa extensión/ruta (`AppRoutes.cargaMasivaParticipantes` →
+  `SolicitudCargaMasivaPage` → `SolicitudCargaMasivaView`), threaded para el recorte de arriba.
+  Se deshabilita con el mismo criterio que "Nuevo" (`participantes.length >= cantidadEsperada`).
+- **Vista previa ya muestra datos reales** — `_VistaPreviaImportacion` dejó de mostrar 3 filas
+  mock hardcodeadas; ahora renderiza hasta 3 de los `ParticipanteLocal` ya parseados
+  (Tipo doc./N° doc./Nombre completo/Cargo/Nacionalidad/Celular/Correo) y un solo chip verde con
+  el conteo total a importar — se quitó el chip rojo de "errores" que no tenía ningún dato real
+  detrás todavía (no hay validación que produzca esa cifra, ver arriba).
+
 ## "huboCambios" pasó de flag booleano a comparación real de contenido (2026-07-24)
 Seguimiento del punto de abajo ("'Siguiente'/'Guardar' ya no vuelve a guardar si nada cambió") —
 el usuario probó activar y desactivar el switch "El solicitante será participante" (quedando en
@@ -1661,8 +1735,10 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
   archivos de esa solicitud, no solo el tipo que se está subiendo) antes de insertar el
   nuevo — si se suben voucher y O/C en la misma sesión, la segunda llamada borra a la
   primera. Sin confirmar con backend todavía si conviene mandarlos juntos en un solo `'AR'`.
-- "Carga masiva" (Excel) solo valida la extensión del archivo seleccionado — no procesa ni
-  sube el archivo.
+- ~~"Carga masiva" (Excel) solo valida la extensión...~~ — hecho, 2026-07-29. Descarga la
+  plantilla real (nuevo endpoint en `WebServiceIEC`) y parsea el Excel 100% local (paquete
+  `excel`), igual que la web. Sigue sin validar campos obligatorios/formato por fila — ver
+  "Carga masiva de participantes — ya funciona de punta a punta..." arriba.
 
 ## Pendiente (roadmap del CUD) — leer esto primero si retomas el feature
 1. ~~`SolicitudRemoteDatasource.guardarSolicitud()` (task `'U'`)~~ — hecho.
@@ -1681,8 +1757,9 @@ Gestiona el flujo de solicitudes de inscripción: lista con filtros, detalle, y 
    (Seguimiento, solo visible si la negociación está ganada), acá el botón "Generar" se
    muestra para toda negociación no cerrada (`idEstadoPadre != '04'`) — no valida que esté
    ganada antes de dejar crear la solicitud.
-6. "Carga masiva" (Excel) y guardar el `DatosFacturacion.actividadEconomica`/`nit`/
-   `observaciones` (capturados en el paso 3 pero el SP no tiene columna para
+6. ~~"Carga masiva" (Excel)~~ — hecho, 2026-07-29 (ver arriba). Sigue pendiente: validaciones
+   de campo por fila (obligatorios/formato), y guardar el `DatosFacturacion.actividadEconomica`/
+   `nit`/`observaciones` (capturados en el paso 3 pero el SP no tiene columna para
    `actividadEconomica`/`observaciones`, y `nit` no se manda en `guardarSolicitud()`) siguen
    sin SP/sin conectar.
 - **Campaña y Evento ya NO forman parte del paso 1** — se removieron por completo (campos,
@@ -1926,7 +2003,8 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   orden que los demás pasos). "Continuar" aplica la regla de saltar Facturación (ver
   "Estado general"). El resumen de inversión (`_ResumenInversion`) usa el IGV real de
   `CatalogsBloc.igvPorcentaje` y muestra los montos sin símbolo de moneda
-- `SolicitudCargaMasivaView` (completar/) → selector de archivo Excel para carga masiva
+- `SolicitudCargaMasivaView` (completar/) → descarga de plantilla real + selector/parseo local
+  de Excel para carga masiva (ver "Carga masiva de participantes..." más arriba)
 - `SolicitudFacturacionView` (completar/) → formulario paso 3 (datos de facturación). El
   toggle Jurídica/Natural es de solo lectura aquí (`habilitado: false`); "Facturar al
   solicitante" en el resumen del pie lee el valor real de
@@ -2047,7 +2125,10 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   = `'voucher'` o `'oc'`, sin id — el GUID del archivo lo genera el backend). Devuelve `bool`
   (no `CrudResult` — la respuesta del endpoint es `OK¦N` por chunk, no el formato
   `OK¯msg¯data`).
-- "Carga masiva" (Excel) todavía no tiene SP conectado.
+- ~~"Carga masiva" (Excel) todavía no tiene SP conectado~~ — la descarga de plantilla ahora usa
+  `Generic/DescargarArchivoPlantilla` (`WebServiceIEC`, nuevo, ver arriba); la subida sigue sin
+  SP — se agrega 100% en memoria vía `ParticipantesCubit`, igual que un participante creado a
+  mano.
 
 ## `SolicitudDetalleView` ya no confía en el `Solicitud` de navegación (2026-07-14)
 `SolicitudDetalleView`/`_BotonesDetalle` mostraban el header y decidían `puedeEditar` con el

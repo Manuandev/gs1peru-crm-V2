@@ -39,4 +39,6 @@ abstract class SolicitudRepository {
   });
 
   Future<CrudResult> eliminarSolicitud(String numSol);
+
+  Future<List<int>> descargarPlantillaCargaMasiva();
 }

@@ -28,6 +28,33 @@ class SolicitudRemoteDatasource {
     };
   }
 
+  // Endpoint 'Generic/DescargarArchivoPlantilla' (WebServiceIEC) — lee el
+  // archivo del FileServer compartido, mismo contrato que ya usa
+  // GS1Peru.AppWeb para su propia carga masiva (fase¦folderFiles¦archivo).
+  // fase '1' = subcarpeta CARGA_MASIVA. Retorna los bytes crudos del .xlsm —
+  // lanza AppException si el archivo no existe o el servidor no responde.
+  Future<List<int>> descargarPlantillaCargaMasiva() async {
+    const body = '1¦PLANTILLAS¦Carga_Masiva_Participantes.xlsm';
+    try {
+      final bytes = await _api.postJsonGetBytes(
+        ApiConstants.urlDescargarPlantilla,
+        body,
+      );
+      if (bytes.isEmpty) {
+        throw const AppException(
+          'La plantilla no se encuentra disponible en estos momentos.',
+        );
+      }
+      return bytes;
+    } on AppException {
+      rethrow;
+    } catch (_) {
+      throw const AppException(
+        'No se pudo descargar la plantilla. Intenta más tarde.',
+      );
+    }
+  }
+
   // Task 'DT' — [CRM].[CSV_SOLICITUD_LST_APP] (misma SP que 'LS', endpoint
   // urlSolicitudesLst). Trae solicitante + facturación + participantes +
   // archivos de una solicitud ya guardada, dado su NUMSOL — usado para

@@ -65,6 +65,11 @@ class ApiConstants {
   // Autocompletado por DNI/RUC — interno primero, RENIEC/SUNAT de fallback.
   static const String buscarDocumento = 'Clientes/BuscarDocumento';
 
+  // ========== GENERIC ==========
+  // Descarga de plantillas Excel (ej. carga masiva de participantes) — lee
+  // del mismo FileServer\PLANTILLAS\<subcarpeta> que usa GS1Peru.AppWeb.
+  static const String descargarPlantilla = 'Generic/DescargarArchivoPlantilla';
+
   // ========== CONTACTO ==========
   // SPs reales confirmados (2026-07-23): CRM.CSV_CONTACTO_LST_APP (task 'D')
   // y CRM.CSV_CONTACTO_CUD_APP (task 'U', solo rama CREATE) — ver
@@ -126,6 +131,9 @@ class ApiConstants {
 
   // ========== CLIENTES ==========
   static String get urlBuscarDocumento => '$baseUrl$buscarDocumento';
+
+  // ========== GENERIC ==========
+  static String get urlDescargarPlantilla => '$baseUrl$descargarPlantilla';
 
   // ========== CONTACTO ==========
   static String get urlContactoLst => '$baseUrl$lstContacto';

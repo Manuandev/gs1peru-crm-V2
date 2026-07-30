@@ -1,13 +1,22 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_carga_masiva_view.dart
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class SolicitudCargaMasivaView extends StatefulWidget {
-  const SolicitudCargaMasivaView({super.key});
+  // Máximo de participantes de la negociación de origen — null si esta
+  // solicitud no viene de una negociación con cantidad ya definida (ver
+  // SolicitudFormState.cantidadEsperada). Cuando no es null, el import se
+  // recorta a los cupos que todavía quedan libres.
+  final int? cantidadEsperada;
+
+  const SolicitudCargaMasivaView({super.key, this.cantidadEsperada});
 
   @override
   State<SolicitudCargaMasivaView> createState() =>
@@ -15,40 +24,230 @@ class SolicitudCargaMasivaView extends StatefulWidget {
 }
 
 class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
-  static const _extensionesPermitidas = ['xlsx', 'xls'];
+  static const _extensionesPermitidas = ['xlsx', 'xls', 'xlsm'];
+  static const _tamanioMaximoBytes = 10 * 1024 * 1024;
 
   PlatformFile? _archivo;
-  bool get _archivoSeleccionado => _archivo != null;
+  List<ParticipanteLocal> _participantesParseados = [];
+  String? _errorParseo;
+  bool _descargando = false;
+  bool _subiendo = false;
 
   Future<void> _seleccionarArchivo() async {
     final resultado = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: _extensionesPermitidas,
+      withData: true,
     );
     final archivo = resultado?.files.single;
     if (archivo == null) return;
 
     final extension = archivo.extension?.toLowerCase();
-    if (!_extensionesPermitidas.contains(extension)) {
+    if (!_extensionesPermitidas.contains(extension) ||
+        archivo.bytes == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Solo se permiten archivos Excel (.xlsx, .xls)',
-            ),
-            backgroundColor: AppColors.errorDark,
-            behavior: SnackBarBehavior.floating,
-          ),
+        AppSnackBar.error(
+          context,
+          'Solo se permiten archivos Excel (.xlsx, .xls, .xlsm)',
         );
       }
       return;
     }
+    if (archivo.size > _tamanioMaximoBytes) {
+      if (mounted) {
+        AppSnackBar.error(context, 'El archivo supera las 10 MB permitidas.');
+      }
+      return;
+    }
 
-    setState(() => _archivo = archivo);
+    setState(() {
+      _archivo = archivo;
+      _participantesParseados = [];
+      _errorParseo = null;
+    });
+    _parsearArchivo(archivo);
   }
 
   void _quitarArchivo() {
-    setState(() => _archivo = null);
+    setState(() {
+      _archivo = null;
+      _participantesParseados = [];
+      _errorParseo = null;
+    });
+  }
+
+  // Parseo 100% local (mismo enfoque que GestionRegistroEventoEdit.js en la
+  // web, que lee el Excel con XLSX.js en el navegador sin llamar al
+  // backend) — columnas del Excel, en orden: [0] Tipo documento,
+  // [1] N° documento, [2] Nacionalidad, [3] Nombres, [4] Apellido paterno,
+  // [5] Apellido materno, [6] Cargo, [7] País (prefijo celular),
+  // [8] N° celular, [9] Correo. Los textos se cruzan contra el catálogo
+  // real (CatalogsBloc) para resolver los ids — si algo no matchea, el
+  // participante igual se agrega con ese campo vacío (las validaciones de
+  // campo quedan para una siguiente pasada, pedido explícito del usuario).
+  void _parsearArchivo(PlatformFile archivo) {
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) {
+      setState(
+        () => _errorParseo = 'Los catálogos aún no cargan, intenta de nuevo.',
+      );
+      return;
+    }
+
+    try {
+      final libro = Excel.decodeBytes(archivo.bytes!);
+      if (libro.tables.isEmpty) {
+        setState(() => _errorParseo = 'El archivo no cumple con el formato.');
+        return;
+      }
+
+      final hoja = libro.tables[libro.tables.keys.first]!;
+      final filas = hoja.rows;
+
+      final idTipoParticipantePagante =
+          catalogState.tiposParticipante
+              .where((t) => !t.esInvitado)
+              .firstOrNull
+              ?.id ??
+          '';
+
+      final cantidadEsperada = widget.cantidadEsperada;
+      final yaAgregados = context
+          .read<ParticipantesCubit>()
+          .state
+          .participantes
+          .length;
+      final cupoRestante = cantidadEsperada == null
+          ? null
+          : (cantidadEsperada - yaAgregados).clamp(0, cantidadEsperada);
+
+      String celda(List<Data?> fila, int indice) => indice < fila.length
+          ? (fila[indice]?.value?.toString().trim() ?? '')
+          : '';
+
+      final parseados = <ParticipanteLocal>[];
+      var filasIgnoradasPorCupo = 0;
+
+      for (var i = 1; i < filas.length; i++) {
+        final fila = filas[i];
+
+        final tipoDocTexto = celda(fila, 0);
+        final numDoc = celda(fila, 1);
+        final nacionalidadTexto = celda(fila, 2);
+        final nombres = celda(fila, 3);
+        final apellidoPaterno = celda(fila, 4);
+        final apellidoMaterno = celda(fila, 5);
+        final cargo = celda(fila, 6);
+        final paisTexto = celda(fila, 7);
+        final nroCelular = celda(fila, 8);
+        final correo = celda(fila, 9);
+
+        // Fila completamente vacía — se ignora, no cuenta como registro.
+        final vacia = [
+          tipoDocTexto,
+          numDoc,
+          nombres,
+          correo,
+        ].every((v) => v.isEmpty);
+        if (vacia) continue;
+
+        if (cupoRestante != null && parseados.length >= cupoRestante) {
+          filasIgnoradasPorCupo++;
+          continue;
+        }
+
+        final tipoDocTextoNorm = tipoDocTexto.toUpperCase();
+        final tipoDoc = catalogState.tiposDocumento
+            .where(
+              (t) =>
+                  t.abreviatura.toUpperCase() == tipoDocTextoNorm ||
+                  t.nombre.toUpperCase() == tipoDocTextoNorm,
+            )
+            .firstOrNull;
+        final nacionalidad = catalogState.nacionalidades
+            .where((n) => n.nombre.toUpperCase() == nacionalidadTexto.toUpperCase())
+            .firstOrNull;
+        final pais = catalogState.paises
+            .where((p) => p.nombre.toUpperCase() == paisTexto.toUpperCase())
+            .firstOrNull;
+
+        parseados.add(
+          ParticipanteLocal(
+            id: 0, // ParticipantesCubit.agregar reasigna el id real al subir
+            tipoDocId: tipoDoc?.id ?? '',
+            tipoDoc: tipoDoc?.abreviatura ?? tipoDocTexto,
+            numDoc: numDoc,
+            nacionalidadId: nacionalidad?.id ?? '',
+            nacionalidad: nacionalidad?.nombre ?? nacionalidadTexto,
+            nombres: nombres,
+            apellidoPaterno: apellidoPaterno,
+            apellidoMaterno: apellidoMaterno,
+            correo: correo,
+            cargo: cargo,
+            celular: nroCelular,
+            celularCodigoTelefono: pais?.codigoTelefono ?? '',
+            tipoParticipante: idTipoParticipantePagante,
+            importe: 0,
+          ),
+        );
+      }
+
+      setState(() {
+        _participantesParseados = parseados;
+        _errorParseo = parseados.isEmpty
+            ? 'El archivo importado no tiene registros.'
+            : null;
+      });
+
+      if (filasIgnoradasPorCupo > 0 && mounted) {
+        AppSnackBar.warning(
+          context,
+          'Se alcanzó el máximo de $cantidadEsperada participante(s) — '
+          '$filasIgnoradasPorCupo fila(s) del Excel no se importaron.',
+        );
+      }
+    } catch (_) {
+      setState(() => _errorParseo = 'El archivo no cumple con el formato.');
+    }
+  }
+
+  Future<void> _descargarPlantilla() async {
+    setState(() => _descargando = true);
+    try {
+      final useCase = DescargarPlantillaCargaMasivaUseCase(
+        context.read<SolicitudRepository>(),
+      );
+      final bytes = await useCase();
+
+      final dir = await getApplicationDocumentsDirectory();
+      final savePath = '${dir.path}/Carga_Masiva_Participantes.xlsm';
+      await File(savePath).writeAsBytes(bytes);
+      await OpenFilex.open(savePath);
+    } on AppException catch (e) {
+      if (mounted) AppSnackBar.error(context, e.message);
+    } catch (_) {
+      if (mounted) {
+        AppSnackBar.error(context, 'No se pudo descargar la plantilla.');
+      }
+    } finally {
+      if (mounted) setState(() => _descargando = false);
+    }
+  }
+
+  void _subirParticipantes() {
+    if (_participantesParseados.isEmpty) return;
+    setState(() => _subiendo = true);
+
+    final cubit = context.read<ParticipantesCubit>();
+    for (final p in _participantesParseados) {
+      cubit.agregar(p);
+    }
+
+    AppSnackBar.success(
+      context,
+      '${_participantesParseados.length} participante(s) agregado(s).',
+    );
+    context.goBack();
   }
 
   @override
@@ -80,7 +279,10 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
                     titulo: 'Descarga la plantilla',
                     descripcion:
                         'Descarga la plantilla Excel en blanco y completa la información requerida.',
-                    contenido: const _ContenidoPaso1(),
+                    contenido: _ContenidoPaso1(
+                      descargando: _descargando,
+                      onDescargar: _descargarPlantilla,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   const _PasoSection(
@@ -102,9 +304,15 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
                       onArchivoQuitado: _quitarArchivo,
                     ),
                   ),
-                  if (_archivoSeleccionado) ...[
+                  if (_errorParseo != null) ...[
                     const SizedBox(height: AppSpacing.lg),
-                    const _VistaPreviaImportacion(),
+                    _BannerError(mensaje: _errorParseo!),
+                  ],
+                  if (_participantesParseados.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    _VistaPreviaImportacion(
+                      participantes: _participantesParseados,
+                    ),
                   ],
                 ],
               ),
@@ -131,7 +339,11 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
                   child: CustomPrimaryButton(
                     text: 'Subir participantes',
                     icon: AppIcons.upload,
-                    onPressed: _archivoSeleccionado ? () {} : null,
+                    isLoading: _subiendo,
+                    onPressed:
+                        _participantesParseados.isNotEmpty && !_subiendo
+                        ? _subirParticipantes
+                        : null,
                   ),
                 ),
               ],
@@ -212,7 +424,13 @@ class _PasoSection extends StatelessWidget {
 // ── Paso 1: Descargar plantilla ───────────────────────────────────────────────
 
 class _ContenidoPaso1 extends StatelessWidget {
-  const _ContenidoPaso1();
+  final bool descargando;
+  final VoidCallback onDescargar;
+
+  const _ContenidoPaso1({
+    required this.descargando,
+    required this.onDescargar,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -220,9 +438,19 @@ class _ContenidoPaso1 extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         OutlinedButton.icon(
-          onPressed: () {},
-          icon: const Icon(AppIcons.download, size: AppSizing.iconActionSm),
-          label: const Text('Descargar plantilla Excel'),
+          onPressed: descargando ? null : onDescargar,
+          icon: descargando
+              ? const SizedBox(
+                  width: AppSizing.iconActionSm,
+                  height: AppSizing.iconActionSm,
+                  child: CircularProgressIndicator(
+                    strokeWidth: AppSizing.spinnerStrokeSmall,
+                  ),
+                )
+              : const Icon(AppIcons.download, size: AppSizing.iconActionSm),
+          label: Text(
+            descargando ? 'Descargando...' : 'Descargar plantilla Excel',
+          ),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.primary,
             side: const BorderSide(color: AppColors.primary),
@@ -387,7 +615,7 @@ class _ContenidoPaso3 extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         Center(
           child: Text(
-            'Formato permitido: .xlsx, .xls (Máx. 10 MB)',
+            'Formato permitido: .xlsx, .xls, .xlsm (Máx. 10 MB)',
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -495,54 +723,40 @@ class _AreaCarga extends StatelessWidget {
 // ── Vista previa de importación ───────────────────────────────────────────────
 
 class _VistaPreviaImportacion extends StatelessWidget {
-  const _VistaPreviaImportacion();
+  final List<ParticipanteLocal> participantes;
+
+  const _VistaPreviaImportacion({required this.participantes});
 
   static const _columnas = [
-    'DOCUMENTO',
+    'TIPO DOC.',
+    'N° DOC.',
     'NOMBRE COMPLETO',
-    'AP. PATERNO',
-    'AP. MATERNO',
+    'CARGO',
+    'NACIONALIDAD',
+    'CELULAR',
     'CORREO',
-    'PAÍS',
-    'TELÉFONO',
-    'PART.',
-  ];
-
-  static const _filas = [
-    [
-      '29383293',
-      'Miguel Cáceres Méndez',
-      'Cáceres',
-      'Méndez',
-      'mcaceres@gmail.com',
-      'Perú',
-      '5037613284',
-      'SI',
-    ],
-    [
-      '29934323',
-      'Joao Roque Vargas',
-      'Roque',
-      'Vargas',
-      'joao.roque@gmail.com',
-      'Brasil',
-      '50379150391',
-      'SI',
-    ],
-    [
-      '29043223',
-      'Karla Maria Contreras',
-      'Maria',
-      'Contreras',
-      'karlamaria@gmail.com',
-      'Perú',
-      '50377269772',
-      'SI',
-    ],
   ];
 
   @override
   Widget build(BuildContext context) {
+    final filas = participantes
+        .take(3)
+        .map(
+          (p) => [
+            p.tipoDoc,
+            p.numDoc,
+            p.nombreCompleto,
+            p.cargo,
+            p.nacionalidad,
+            [
+              p.celularCodigoTelefono,
+              p.celular,
+            ].where((s) => s.isNotEmpty).join(' '),
+            p.correo,
+          ],
+        )
+        .toList();
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.border),
@@ -584,9 +798,7 @@ class _VistaPreviaImportacion extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              _ChipConteo(count: 5, valido: true),
-              const SizedBox(width: AppSpacing.xs),
-              _ChipConteo(count: 0, valido: false),
+              _ChipConteo(count: participantes.length, valido: true),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -594,7 +806,7 @@ class _VistaPreviaImportacion extends StatelessWidget {
           // Tabla de vista previa
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: _buildTabla(),
+            child: _buildTabla(filas),
           ),
           const SizedBox(height: AppSpacing.sm),
 
@@ -616,7 +828,9 @@ class _VistaPreviaImportacion extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
-                    'Se mostrarán hasta 3 filas en la vista previa. El total de registros se validará al subir el archivo.',
+                    'Se muestran hasta 3 filas en la vista previa. '
+                    'Se importarán ${participantes.length} participante(s) en total — '
+                    'las validaciones de campo se agregarán más adelante.',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -630,7 +844,7 @@ class _VistaPreviaImportacion extends StatelessWidget {
     );
   }
 
-  Widget _buildTabla() {
+  Widget _buildTabla(List<List<String>> filas) {
     return Table(
       border: TableBorder.all(color: AppColors.border, width: 0.5),
       defaultColumnWidth: const IntrinsicColumnWidth(),
@@ -646,42 +860,49 @@ class _VistaPreviaImportacion extends StatelessWidget {
               )
               .toList(),
         ),
-        ..._filas.map(
+        ...filas.map(
           (fila) => TableRow(
-            children: [
-              ...fila
-                  .sublist(0, fila.length - 1)
-                  .map((cel) => _CeldaTabla(texto: cel)),
-              // Última columna PART. con chip verde
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xs,
-                    vertical: AppSpacing.xs,
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xxs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.success,
-                      borderRadius: BorderRadius.circular(AppSizing.radiusXs),
-                    ),
-                    child: Text(
-                      fila.last,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textOnDark,
-                        fontWeight: AppTextStyles.weightBold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            children: fila.map((cel) => _CeldaTabla(texto: cel)).toList(),
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Banner de error de parseo ─────────────────────────────────────────────────
+
+class _BannerError extends StatelessWidget {
+  final String mensaje;
+
+  const _BannerError({required this.mensaje});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.error.withAlpha(26),
+        border: Border.all(color: AppColors.error),
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            AppIcons.warning,
+            size: AppSizing.iconSm,
+            color: AppColors.error,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              mensaje,
+              style: AppTextStyles.labelSmall.copyWith(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

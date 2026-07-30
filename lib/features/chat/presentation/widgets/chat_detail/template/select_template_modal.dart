@@ -140,6 +140,20 @@ class _SelectTemplateModalState extends State<SelectTemplateModal> {
   int _tabIndex = 0;
   Plantilla? _seleccionada;
 
+  // No cierra el modal — el formulario se apila encima en el mismo
+  // Navigator (goToTemplateForm usa NavigationService.navigatorKey, el
+  // mismo que showModalBottomSheet resuelve como ancestro, así que ambos
+  // comparten stack). Al volver, el SelectTemplateBloc sigue vivo con el
+  // mismo estado que tenía — solo se le pide un refresh para traer la
+  // plantilla nueva/editada, en vez de recrear todo el modal desde cero.
+  Future<void> _abrirFormulario(BuildContext context, {int? idPlantilla}) async {
+    final bloc = context.read<SelectTemplateBloc>();
+    await context.goToTemplateForm(idPlantilla: idPlantilla);
+    if (!context.mounted) return;
+    bloc.add(const SelectTemplateRefresh());
+    if (idPlantilla != null) setState(() => _seleccionada = null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.sizeOf(context).height;
@@ -152,10 +166,7 @@ class _SelectTemplateModalState extends State<SelectTemplateModal> {
 
           _Header(
             onClose: () => Navigator.of(context).pop(),
-            onNuevo: () {
-              Navigator.of(context).pop();
-              context.goToTemplateForm();
-            },
+            onNuevo: () => _abrirFormulario(context),
           ),
 
           _ChipTabBar(
@@ -197,6 +208,8 @@ class _SelectTemplateModalState extends State<SelectTemplateModal> {
                   plantillas: filtradas,
                   seleccionada: _seleccionada,
                   onSeleccionar: (p) => setState(() => _seleccionada = p),
+                  onEditar: (idPlantilla) =>
+                      _abrirFormulario(context, idPlantilla: idPlantilla),
                   nombreCliente: widget.nombreCliente,
                   apellidoCliente: widget.apellidoCliente,
                   nombreAsesor: widget.nombreAsesor,
@@ -366,6 +379,7 @@ class _PlantillasTab extends StatelessWidget {
   final List<Plantilla> plantillas;
   final Plantilla? seleccionada;
   final ValueChanged<Plantilla> onSeleccionar;
+  final ValueChanged<int> onEditar;
   final String nombreCliente;
   final String apellidoCliente;
   final String nombreAsesor;
@@ -374,6 +388,7 @@ class _PlantillasTab extends StatelessWidget {
     required this.plantillas,
     required this.seleccionada,
     required this.onSeleccionar,
+    required this.onEditar,
     required this.nombreCliente,
     required this.apellidoCliente,
     required this.nombreAsesor,
@@ -469,6 +484,7 @@ class _PlantillasTab extends StatelessWidget {
         Expanded(
           child: _TemplatePreview(
             plantilla: seleccionada,
+            onEditar: onEditar,
             nombreCliente: nombreCliente,
             apellidoCliente: apellidoCliente,
             nombreAsesor: nombreAsesor,
@@ -607,12 +623,14 @@ class _TemplateItem extends StatelessWidget {
 
 class _TemplatePreview extends StatelessWidget {
   final Plantilla? plantilla;
+  final ValueChanged<int> onEditar;
   final String nombreCliente;
   final String apellidoCliente;
   final String nombreAsesor;
 
   const _TemplatePreview({
     required this.plantilla,
+    required this.onEditar,
     required this.nombreCliente,
     required this.apellidoCliente,
     required this.nombreAsesor,
@@ -703,12 +721,7 @@ class _TemplatePreview extends StatelessWidget {
                   // ── Editar plantilla ─────────────────────────
                   const SizedBox(height: AppSpacing.sm),
                   OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.goToTemplateForm(
-                        idPlantilla: plantilla!.idPlantilla,
-                      );
-                    },
+                    onPressed: () => onEditar(plantilla!.idPlantilla),
                     icon: const Icon(AppIcons.edit),
                     label: const Text('Editar'),
                   ),

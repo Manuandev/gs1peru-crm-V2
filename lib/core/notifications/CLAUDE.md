@@ -24,6 +24,15 @@ Backend → SignalR hub
 - `NUEVO_LEAD` se suprime si el usuario está en `AppRoutes.seguimiento`.
 - `NUEVO_LEAD_BOT` nunca se suprime — siempre se muestra.
 
+**Filtro por destinatario (`NotificationHandler._parseWhatsApp`, 2026-07-31):** `MENSAJE_WHATSAPP`
+solo se muestra si `codAsesor` (payload) coincide con `SessionService().codUser` — un asesor o
+supervisor con la app abierta nunca debe ver el push del chat de otro asesor. `NUEVO_LEAD_BOT` no
+tiene este filtro — sí debe llegarle tanto al asesor asignado como a su supervisor (el backend en
+`GS1Peru-SocketCore` ya replica esta misma regla del lado FCM con `incluirSupervisores`, ver
+`FcmService.EnviarAsync` — ese repo es el dueño real de a quién le llega el push cuando la app está
+cerrada; este filtro de acá cubre el caso con la app abierta, donde el broadcast de SignalR llega
+sin distinción de destinatario a todos los conectados).
+
 ---
 
 ## Flujo 2 — Background/Killed via FCM

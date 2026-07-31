@@ -60,6 +60,10 @@ class NotificationHandler {
     final p = WhatsAppMessagePayload.fromMessage(message);
     if (p == null) return null;
 
+    // Un mensaje de WhatsApp solo debe notificarle al asesor asignado a ese
+    // chat — a diferencia de NUEVO_LEAD_BOT, nunca le llega al supervisor.
+    if (p.codAsesor != SessionService().codUser) return null;
+
     LocalNotificationService.instance.showWhatsApp(
       idNumero: p.idNumero,
       idChatCab: p.idChatCab,

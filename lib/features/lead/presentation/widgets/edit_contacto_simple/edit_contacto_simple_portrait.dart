@@ -212,6 +212,16 @@ class _EditContactoSimplePortraitState
 
   bool get _esNuevoContacto => widget.contacto.idContacto == 0;
 
+  // Prefijo/Celular quedan editables SOLO si el contacto todavía no trae un
+  // número real vinculado (idNumero == 0 o celular vacío) — pedido de
+  // negocio 2026-08-03: un contacto sin celular capturado (ej. creado a
+  // mano, sin conversación de WhatsApp de por medio) no tiene nada que
+  // proteger. Si YA trae celular, se sigue bloqueando (motivo original,
+  // 2026-07-28, ver comentario más abajo): editar el texto acá generaría
+  // una conexión T_NUMERO duplicada en vez de reemplazar la existente.
+  bool get _celularEditable =>
+      widget.contacto.idNumero == 0 || widget.contacto.celular.isEmpty;
+
   void _setGuardando({bool? isLoading, bool? mostrandoExito}) {
     setState(() {
       if (isLoading != null) _isLoading = isLoading;
@@ -425,12 +435,15 @@ class _EditContactoSimplePortraitState
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    // Prefijo/Celular bloqueados -- pedido de negocio
-                    // 2026-07-28: idNumero es el ancla de esta pantalla, el
-                    // celular que la abrió nunca se cambia desde acá (para
-                    // eso existe la lista de N celulares de EditContacto,
-                    // pantalla completa). Editarlo aquí generaría una
-                    // conexión duplicada en vez de reemplazar el número.
+                    // Prefijo/Celular bloqueados SOLO si el contacto ya trae
+                    // un número real (ver _celularEditable) — idNumero es el
+                    // ancla de esta pantalla, ese celular no se reemplaza
+                    // desde acá (para eso existe la lista de N celulares de
+                    // EditContacto, pantalla completa): editarlo generaría
+                    // una conexión T_NUMERO duplicada en vez de reemplazar
+                    // el número existente. Si el contacto no trae celular
+                    // todavía, no hay nada que proteger y se puede cargar
+                    // uno nuevo directo desde acá.
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -439,9 +452,17 @@ class _EditContactoSimplePortraitState
                           child: CustomComboSearchField(
                             data: prefijosCelular,
                             label: 'Prefijo',
-                            enabled: false,
+                            enabled: _celularEditable && !_isLoading,
                             initialValue: _paisCelular?.codigoTelefono,
-                            onChanged: (_) {},
+                            onChanged: (item) {
+                              if (item == null) return;
+                              final pais = catalogState.paises
+                                  .where((p) => p.codigoTelefono == item.id)
+                                  .firstOrNull;
+                              if (pais != null) {
+                                setState(() => _paisCelular = pais);
+                              }
+                            },
                           ),
                         ),
                         const SizedBox(width: AppSpacing.xs),
@@ -450,7 +471,8 @@ class _EditContactoSimplePortraitState
                           child: CustomTextField(
                             label: 'Celular',
                             controller: _celularCtrl,
-                            enabled: false,
+                            enabled: _celularEditable && !_isLoading,
+                            keyboardType: TextInputType.phone,
                           ),
                         ),
                       ],
@@ -523,64 +545,23 @@ class _EditContactoSimplePortraitState
           const AppLoadingOverlay(message: 'Buscando datos del documento...'),
         if (_buscandoRuc)
           const AppLoadingOverlay(message: 'Buscando datos del RUC...'),
-        if (_isLoading)
-          AppLoadingOverlay(
-            message: _esNuevoContacto
+        // Overlay único "Guardando... → check verde animado" (reusa
+        // AppProcessOverlay, core — mismo patrón que EditLeadPortrait) — antes
+        // eran AppLoadingOverlay + un check estático propio (_ExitoOverlaySimple,
+        // ya no existe).
+        if (_isLoading || _mostrandoExito)
+          AppProcessOverlay(
+            status: _isLoading
+                ? AppProcessStatus.cargando
+                : AppProcessStatus.exito,
+            loadingMessage: _esNuevoContacto
                 ? 'Creando contacto...'
                 : 'Editando contacto...',
-          ),
-        if (_mostrandoExito)
-          _ExitoOverlaySimple(
-            mensaje: _esNuevoContacto
+            successMessage: _esNuevoContacto
                 ? 'El contacto se creó correctamente'
                 : 'El contacto se editó correctamente',
           ),
       ],
-    );
-  }
-}
-
-class _ExitoOverlaySimple extends StatelessWidget {
-  final String mensaje;
-  const _ExitoOverlaySimple({required this.mensaje});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: Container(
-        color: AppColors.black(0.4),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.lg,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(AppSizing.radiusLg),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  AppIcons.checkCircle,
-                  color: AppColors.success,
-                  size: AppSizing.iconXl,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  mensaje,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.titleSmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: AppTextStyles.weightSemiBold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

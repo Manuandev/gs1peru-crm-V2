@@ -154,6 +154,19 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
     scroll ni el estado de los BLoCs de mensajes. Si se agrega otra pantalla que cachee datos de
     contacto derivados de `Chat`/`ContactoDetalle` fuera de un cubit reactivo, suscribirse al
     mismo notifier en vez de inventar uno nuevo.
+  - **Segundo consumidor — `ContactoDetalleView` (Seguimiento), agregado 2026-08-03.** Botón
+    "Editar contacto" en `ContactoInfoTab` (pestaña "Información" de `ContactoDetallePage`),
+    mismo patrón exacto que el botón de `DatosTab`: `CustomOutlinedButton` +
+    `context.goToEditarContactoSimple(idNumero: lead.idNumero)` — `lead.idNumero` (no
+    `lead.idContacto`) porque `EditContactoSimple` sigue anclado en `idNumero` a propósito (ver
+    nota de la migración más abajo en este archivo). `_ContactoDetalleViewState` se suscribe a
+    `ContactoUpdateNotifier` en `initState()` (junto a su suscripción ya existente a
+    `LeadUpdateNotifier`) filtrando `update.idNumero == _ultimoLead?.idNumero`, y llama a su
+    `_refrescar()` ya existente (recarga `InfoLeadCubit.cargarPorIdContacto` +
+    `NegociacionesCubit.cargarNegociaciones`) — reusa el mismo mecanismo silencioso que ya evita
+    el skeleton/parpadeo en refrescos de fondo (ver `_ultimoLead` en `contacto_detalle_view.dart`),
+    sin necesidad de tocar `ContactoInfoTab` para el refresh (queda stateless, solo dispara la
+    navegación).
 
 ## EditContactoSimple — pantalla reducida "Editar contacto" (pedido de negocio 2026-07-27)
 
@@ -234,6 +247,36 @@ proyecto).
     con 2 celulares activos y el `idNumero` ancla huérfano. No se tocó el SP para esto — con el
     campo bloqueado, el valor enviado siempre es el mismo que se cargó, así que ese bloque del
     SP queda como no-op seguro.
+  - **Bloqueo relajado a condicional — 2026-08-03.** El bloqueo de arriba asumía que siempre
+    había un celular real que proteger — pero un contacto puede llegar a esta pantalla sin
+    ninguno vinculado todavía (`idNumero == 0` o `celular` vacío, ej. un lead creado sin
+    conversación de WhatsApp de por medio). En ese caso no hay nada que duplicar, así que
+    `_celularEditable` (`idNumero == 0 || celular.isEmpty`) habilita Prefijo/Celular normalmente;
+    si el contacto YA trae un celular, se sigue bloqueando igual que antes (motivo 2026-07-28
+    sigue vigente ahí). El `onChanged` del combo Prefijo, antes un no-op (`(_) {}`, el campo
+    nunca disparaba nada por estar siempre deshabilitado), ahora sí resuelve el `PaisItem` real
+    por `codigoTelefono` y actualiza `_paisCelular` — mismo patrón que
+    `edit_contacto_celular_section.dart` (pantalla completa).
+  - **2 bugs reales del SP corregidos en vivo — 2026-08-03**, encontrados al probar el flujo de
+    arriba end-to-end con datos reales en SSMS (`CRM.CSV_CONTACTO_CUD_APP.sql`, repo aparte,
+    `C:\DEV\BDNatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\` en esta máquina — el path que
+    documentaba antes esta sección era de otra máquina, puede variar por dev):
+    - **`FK_T_EMPRESA_T_PAIS`** — task `'US'`, los 2 bloques que insertan una empresa nueva
+      (alta directa y la rama "RUC distinto → nueva conexión", `@T_EMPRESAS`/
+      `@T_EMPRESAS_NUEVAS_US`) mandaban `ID_PAIS = ''` a mano porque la pantalla simple no
+      muestra combo de País para Empresa. `''` no matchea ningún `T_PAIS.ID_PAIS` real →
+      reventaba el INSERT. Corregido a `NULL` (no un país inventado tipo Perú por default — el
+      FK permite `NULL` sin validar, y no hay forma de saber qué país eligió el usuario si la
+      pantalla ni se lo pregunta). `T_CONTACTO.ID_PAIS` no tiene este FK, por eso su propio `''`
+      (mismo task) nunca dio error.
+    - **`IB_ACTIVO` faltante en `T_CONTACTO`** — los 2 `INSERT INTO CRM.T_CONTACTO` (alta de
+      contacto nuevo, tasks `'U'` y `'US'`) nunca incluían la columna `IB_ACTIVO` en absoluto —
+      es `NOT NULL` sin default, así que el INSERT reventaba con "Cannot insert the value NULL
+      into column IB_ACTIVO" apenas se creaba un contacto realmente nuevo (no se había detectado
+      antes porque las pruebas previas siempre eran sobre contactos ya existentes). Corregido
+      agregando `IB_ACTIVO = 1` a ambos INSERT.
+    - Los cambios quedan en el archivo `.sql` del repo — hace falta volver a correr el
+      `ALTER PROCEDURE` en SSMS para desplegarlos a la base real antes de que tengan efecto.
 
   - **Correo — actualiza en sitio en vez de duplicar, corregido 2026-07-28.** El bloque CORREO
     de `CSV_CONTACTO_CUD_APP` task `'US'` comparaba por **texto** (`CO.CORREO = TC.CORREO`) para
@@ -692,6 +735,14 @@ successMessage: ...)` en vez de los dos overlays separados (`AppLoadingOverlay` 
 siendo `_setGuardando()`/`_guardar()` quien decide cuándo mostrar cada estado y quien retrocede
 solo tras el check (`Future.delayed` + `context.goBack()`); `AppProcessOverlay` solo anima la
 transición visual entre "cargando" y "éxito", no controla temporizadores.
+
+**Mismo cambio replicado en `EditContactoSimplePortrait` y `EditContactoPortrait`** (ambas ya
+tenían el patrón viejo `AppLoadingOverlay` + un `_ExitoOverlay`/`_ExitoOverlaySimple` propio,
+idéntico al que tenía `EditLeadPortrait`) — mismo `if (_isLoading || _mostrandoExito)
+AppProcessOverlay(...)`, mismos `_setGuardando()`/`guardandoNotifier` sin tocar. Los overlays de
+`_buscandoDocumento`/`_buscandoRuc` (autocompletado por documento/RUC, ver sección de arriba) NO
+se tocaron — siguen con `AppLoadingOverlay` normal, es un concepto distinto (spinner corto de
+una búsqueda, no el flujo de guardado de 2 pasos).
 
 ### Causa real (Seguimiento) — InfoLeadCubit compartido se auto-interrumpía al crear
 

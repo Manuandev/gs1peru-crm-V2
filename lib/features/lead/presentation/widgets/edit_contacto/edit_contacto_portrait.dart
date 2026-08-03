@@ -731,64 +731,23 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
           const AppLoadingOverlay(message: 'Buscando datos del documento...'),
         if (_buscandoRuc)
           const AppLoadingOverlay(message: 'Buscando datos del RUC...'),
-        if (_isLoading)
-          AppLoadingOverlay(
-            message: _esNuevoContacto
+        // Overlay único "Guardando... → check verde animado" (reusa
+        // AppProcessOverlay, core — mismo patrón que EditLeadPortrait/
+        // EditContactoSimplePortrait) — antes eran AppLoadingOverlay + un
+        // check estático propio (_ExitoOverlay, ya no existe).
+        if (_isLoading || _mostrandoExito)
+          AppProcessOverlay(
+            status: _isLoading
+                ? AppProcessStatus.cargando
+                : AppProcessStatus.exito,
+            loadingMessage: _esNuevoContacto
                 ? 'Creando contacto...'
                 : 'Editando contacto...',
-          ),
-        if (_mostrandoExito)
-          _ExitoOverlay(
-            mensaje: _esNuevoContacto
+            successMessage: _esNuevoContacto
                 ? 'El contacto se creó correctamente'
                 : 'El contacto se editó correctamente',
           ),
       ],
-    );
-  }
-}
-
-class _ExitoOverlay extends StatelessWidget {
-  final String mensaje;
-  const _ExitoOverlay({required this.mensaje});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: Container(
-        color: AppColors.black(0.4),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.lg,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(AppSizing.radiusLg),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  AppIcons.checkCircle,
-                  color: AppColors.success,
-                  size: AppSizing.iconXl,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  mensaje,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.titleSmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: AppTextStyles.weightSemiBold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

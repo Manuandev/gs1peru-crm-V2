@@ -20,6 +20,7 @@ class ContactoDetalleView extends StatefulWidget {
 
 class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   StreamSubscription<LeadUpdate>? _updateSub;
+  StreamSubscription<ContactoUpdate>? _contactoSub;
   late final InfoLeadCubit _cubit;
   // Última negociación cargada con éxito — se sigue mostrando mientras el
   // cubit pasa por InfoLeadLoading en un refresh (ver builder más abajo), en
@@ -60,11 +61,24 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
         _refrescar();
       }
     });
+
+    // Editar contacto (botón de ContactoInfoTab, EditContactoSimple) no pasa
+    // por LeadUpdateNotifier — es otro SP/flujo por completo (CSV_CONTACTO_*,
+    // no CSV_LEADS_*). Mismo patrón que ChatDetailPage: se suscribe al bus
+    // dedicado, keyed por idNumero (ancla de EditContactoSimple), y refresca
+    // en silencio (_refrescar() ya evita el skeleton mientras haya
+    // _ultimoLead, ver comentario de esa variable).
+    _contactoSub = ContactoUpdateNotifier.instance.stream.listen((update) {
+      if (_ultimoLead != null && update.idNumero == _ultimoLead!.idNumero) {
+        _refrescar();
+      }
+    });
   }
 
   @override
   void dispose() {
     _updateSub?.cancel();
+    _contactoSub?.cancel();
     super.dispose();
   }
 

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 /// Pestaña "Información": grilla de 2 columnas con los datos del lead
@@ -143,6 +144,18 @@ class ContactoInfoTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
+          // Mismo patrón/pantalla que DatosTab (chat/lead_detail_sheet) —
+          // EditContactoSimple, ancla en idNumero (no idContacto: es otro
+          // SP/flujo, CSV_CONTACTO_* — ver lead/CLAUDE.md). El refresco al
+          // volver no se dispara acá: ContactoDetalleView ya se suscribe a
+          // ContactoUpdateNotifier (mismo bus que usa EditContactoSimple al
+          // guardar) y recarga sola.
+          CustomOutlinedButton(
+            text: 'Editar contacto',
+            icon: AppIcons.edit,
+            onPressed: () =>
+                context.goToEditarContactoSimple(idNumero: lead.idNumero),
+          ),
         ],
       ),
     );

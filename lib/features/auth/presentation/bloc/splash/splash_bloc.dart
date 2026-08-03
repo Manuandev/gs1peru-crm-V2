@@ -48,14 +48,24 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
       final onboarding = await LocalDatabase().getSetting('onboarding_completado');
 
       if (onboarding == null) {
-        // Escenario 1 — primer ingreso: carrusel inmediato, config en background
+        // Escenario 1 — primer ingreso: carrusel inmediato, config/versión en
+        // background (el carrusel requiere interacción del usuario para
+        // avanzar, así que ya da tiempo de sobra a que termine).
         emit(const SplashMostrarOnboarding());
         unawaited(_cargarConfiguracion());
+        unawaited(AppUpdateService().verificar());
         return;
       }
 
-      // Escenarios 2/3 — usuario recurrente: config bloqueante, luego sesión
-      await _cargarConfiguracion();
+      // Escenarios 2/3 — usuario recurrente: config + chequeo de versión
+      // bloqueantes (en paralelo), luego sesión. El resultado de la versión
+      // queda en AppUpdateService — LoginView lo lee al entrar y muestra el
+      // diálogo obligatorio de actualización si corresponde (ver
+      // auth/CLAUDE.md).
+      await Future.wait([
+        _cargarConfiguracion(),
+        AppUpdateService().verificar(),
+      ]);
 
       final user = await _restoreSessionUsecase();
 

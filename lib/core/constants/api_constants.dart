@@ -149,4 +149,11 @@ class ApiConstants {
   // ========== CONTACTO ==========
   static String get urlContactoLst => '$baseUrl$lstContacto';
   static String get urlContactoCud => '$baseUrl$cudContacto';
+
+  // ========== ACTUALIZACIÓN DE LA APP ==========
+  // Host completamente distinto al backend del CRM (EnvConfig.baseUrl) — es
+  // el servidor de archivos donde se publica el .apk de cada release, no
+  // compone con baseUrl. Ver AppUpdateService / auth/CLAUDE.md.
+  static const String urlVersionCheck =
+      'https://natcodee.net:40805/gs1pe_crm/update/version.json';
 }

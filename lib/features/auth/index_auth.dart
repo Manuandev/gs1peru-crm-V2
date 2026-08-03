@@ -47,6 +47,7 @@ export 'presentation/widgets/login/login_layout.dart';
 export 'presentation/widgets/login/login_ola_clipper.dart';
 export 'presentation/widgets/login/login_ilustracion_widget.dart';
 export 'presentation/widgets/login/login_divisor_widget.dart';
+export 'presentation/widgets/login/update_required_dialog.dart';
 
 export 'presentation/widgets/recuperar_clave/recuperar_clave_view.dart';
 export 'presentation/widgets/recuperar_clave/recuperar_clave_ilustracion_widget.dart';

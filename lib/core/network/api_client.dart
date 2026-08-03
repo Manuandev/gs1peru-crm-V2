@@ -31,6 +31,9 @@ class ApiClient {
     );
 
     _dio.interceptors.addAll([
+      // Primero — si hay una actualización pendiente y es un endpoint CUD,
+      // corta acá mismo, antes de gastar tiempo armando el body con token.
+      UpdateRequiredInterceptor(),
       TokenBodyInterceptor(this),
       CleanResponseInterceptor(),
       ErrorInterceptor(),

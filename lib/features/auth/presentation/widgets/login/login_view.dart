@@ -36,6 +36,17 @@ class _LoginViewState extends State<LoginView> {
         authState.prefillPassword,
       );
     }
+
+    // Chequeado una sola vez en SplashBloc (junto a la config) — si el
+    // backend reporta una versión más nueva, se muestra acá el diálogo
+    // obligatorio de actualización (ver auth/CLAUDE.md).
+    final actualizacionPendiente = AppUpdateService().actualizacionPendiente;
+    if (actualizacionPendiente != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        mostrarDialogoActualizacionObligatoria(context, actualizacionPendiente);
+      });
+    }
   }
 
   @override
@@ -44,8 +55,30 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  // Vuelve a validar justo antes de intentar el login — no solo al entrar a
+  // la pantalla — porque AppUpdateService().obtenerPendiente() ya no golpea
+  // la URL (lee memoria/SQLite), así que repetir el chequeo acá es barato.
+  // Si hay una actualización pendiente, corta antes de llamar al backend y
+  // muestra el mismo diálogo obligatorio con un mensaje propio de Login.
+  Future<bool> _bloqueadoPorActualizacion() async {
+    final pendiente = await AppUpdateService().obtenerPendiente();
+    if (pendiente == null) return false;
+    if (!mounted) return true;
+    await mostrarDialogoActualizacionObligatoria(
+      context,
+      pendiente,
+      titulo: 'Actualización requerida',
+      mensaje: 'No es posible iniciar sesión: esta versión de la '
+          'aplicación no está actualizada. Actualiza a la última versión '
+          'disponible para continuar.',
+    );
+    return true;
+  }
+
+  Future<void> _handleLogin() async {
     if (!_formController.validate()) return;
+    if (await _bloqueadoPorActualizacion()) return;
+    if (!mounted) return;
     context.read<LoginBloc>().add(
       LoginSubmitted(
         username: _formController.username,
@@ -55,7 +88,9 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  void _handleGoogleLogin() {
+  Future<void> _handleGoogleLogin() async {
+    if (await _bloqueadoPorActualizacion()) return;
+    if (!mounted) return;
     context.read<LoginBloc>().add(const LoginWithGoogleSubmitted());
   }
 

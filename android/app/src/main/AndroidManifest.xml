@@ -26,6 +26,15 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- ========================= -->
+    <!-- ACTUALIZACIÓN DE LA APP -->
+    <!-- ========================= -->
+    <!-- Instalar el APK descargado desde el diálogo de "nueva versión" del
+         Login (ver auth/CLAUDE.md) — Android 8+ (API 26+) exige esta
+         declaración además del permiso especial que el usuario habilita a
+         mano en Ajustes ("instalar apps desconocidas") la primera vez. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <application
         android:label="GS1 CRM"
         android:name="${applicationName}"

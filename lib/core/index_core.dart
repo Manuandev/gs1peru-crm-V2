@@ -45,6 +45,7 @@ export 'models/catalog_item.dart';
 export 'models/catalog_item_model.dart';
 export 'models/configuracion_item.dart';
 export 'models/documento_externo.dart';
+export 'models/update_info.dart';
 // #endregion models
 
 export 'navigation/app_route_observer.dart';
@@ -59,6 +60,7 @@ export 'network/interceptors/error_interceptor.dart';
 export 'network/interceptors/interceptors.dart';
 export 'network/interceptors/clean_response_interceptor.dart';
 export 'network/interceptors/token_interceptor.dart';
+export 'network/interceptors/update_required_interceptor.dart';
 
 export 'network/websocket/connection/i_signalr_service.dart';
 export 'network/websocket/connection/signalr_service.dart';
@@ -140,6 +142,7 @@ export 'services/session_service.dart';
 export 'services/device_info_service.dart';
 export 'services/location_permission_manager.dart';
 export 'services/documento_externo_service.dart';
+export 'services/app_update_service.dart';
 
 export 'services/catalog_repository_impl.dart';
 export 'services/catalog_repository.dart';
@@ -153,6 +156,7 @@ export 'utils/elapsed_time_utils.dart';
 export 'utils/lead_update_notifier.dart';
 export 'utils/contacto_update_notifier.dart';
 export 'utils/documento_validation_utils.dart';
+export 'utils/version_utils.dart';
 
 export 'utils/date/date_extensions.dart';
 export 'utils/date/date_formats.dart';

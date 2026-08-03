@@ -14,7 +14,8 @@
 //       está en T_NUMERO): 0 idNumero ¦ 1 prefijoPais ¦ 2 numero
 //   [2] primer correo activo (puede venir vacío): 0 idCorreo ¦ 1 correo
 //   [3] primera empresa vinculada (puede venir vacío):
-//       0 idEmpresaContacto ¦ 1 ruc ¦ 2 razonSocial ¦ 3 idCargo
+//       0 idEmpresaContacto ¦ 1 ruc ¦ 2 razonSocial ¦ 3 cargo (texto libre,
+//       NOM_CARGO — ya no un id de catálogo)
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -37,7 +38,7 @@ class ContactoSimpleModel extends ContactoSimple {
     super.idEmpresaContacto,
     super.ruc,
     super.razonSocial,
-    super.idCargo,
+    super.cargo,
   });
 
   /// Contacto en blanco anclado a [idNumero] — usado cuando el número
@@ -80,7 +81,7 @@ class ContactoSimpleModel extends ContactoSimple {
       idEmpresaContacto: ParseUtils.toInt(empresaFields, 0),
       ruc: ParseUtils.str(empresaFields, 1),
       razonSocial: ParseUtils.str(empresaFields, 2),
-      idCargo: ParseUtils.str(empresaFields, 3),
+      cargo: ParseUtils.str(empresaFields, 3),
     );
   }
 }

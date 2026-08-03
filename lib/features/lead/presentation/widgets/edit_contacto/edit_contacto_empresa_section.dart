@@ -25,8 +25,8 @@ class EditContactoEmpresaSection extends StatelessWidget {
   final ValueChanged<EmpresaFormRow> onToggleExpandido;
   final ValueChanged<EmpresaFormRow> onCambioCampo;
   final void Function(EmpresaFormRow row, PaisItem? pais) onPaisChanged;
-  final void Function(EmpresaFormRow row, AreaItem? area) onAreaChanged;
-  final void Function(EmpresaFormRow row, CargoItem? cargo) onCargoChanged;
+  final void Function(EmpresaFormRow row, String area) onAreaChanged;
+  final void Function(EmpresaFormRow row, String cargo) onCargoChanged;
   final void Function(EmpresaFormRow row, UbigeoItem? item) onDepartamentoChanged;
   final void Function(EmpresaFormRow row, UbigeoItem? item) onProvinciaChanged;
   final void Function(EmpresaFormRow row, UbigeoItem? item) onDistritoChanged;
@@ -121,8 +121,8 @@ class _EmpresaCard extends StatelessWidget {
   final VoidCallback onToggleExpandido;
   final VoidCallback onCambioCampo;
   final ValueChanged<PaisItem?> onPaisChanged;
-  final ValueChanged<AreaItem?> onAreaChanged;
-  final ValueChanged<CargoItem?> onCargoChanged;
+  final ValueChanged<String> onAreaChanged;
+  final ValueChanged<String> onCargoChanged;
   final ValueChanged<UbigeoItem?> onDepartamentoChanged;
   final ValueChanged<UbigeoItem?> onProvinciaChanged;
   final ValueChanged<UbigeoItem?> onDistritoChanged;
@@ -268,7 +268,10 @@ class _EmpresaCard extends StatelessWidget {
               onChanged: (_) => onCambioCampo(),
             ),
             const SizedBox(height: AppSpacing.xs),
-            // Área + Cargo
+            // Área + Cargo — el combo solo sugiere opciones del catálogo;
+            // si el asesor tipea algo que no está en la lista y confirma con
+            // el check del teclado, se guarda ese texto tal cual (nunca un
+            // id), ver contacto_form_rows.dart.
             FormFieldRow(
               izquierdo: CustomComboSearchField(
                 data: areas
@@ -276,14 +279,9 @@ class _EmpresaCard extends StatelessWidget {
                     .toList(),
                 label: 'Área',
                 enabled: !isLoading,
-                initialValue: row.area?.id,
-                onChanged: (item) {
-                  if (item == null) {
-                    onAreaChanged(null);
-                    return;
-                  }
-                  onAreaChanged(areas.where((a) => a.id == item.id).firstOrNull);
-                },
+                allowFreeText: true,
+                initialText: row.area,
+                onChanged: (item) => onAreaChanged(item?.descripcion ?? ''),
               ),
               derecho: CustomComboSearchField(
                 data: cargos
@@ -291,14 +289,9 @@ class _EmpresaCard extends StatelessWidget {
                     .toList(),
                 label: 'Cargo',
                 enabled: !isLoading,
-                initialValue: row.cargo?.id,
-                onChanged: (item) {
-                  if (item == null) {
-                    onCargoChanged(null);
-                    return;
-                  }
-                  onCargoChanged(cargos.where((c) => c.id == item.id).firstOrNull);
-                },
+                allowFreeText: true,
+                initialText: row.cargo,
+                onChanged: (item) => onCargoChanged(item?.descripcion ?? ''),
               ),
             ),
             const SizedBox(height: AppSpacing.xs),

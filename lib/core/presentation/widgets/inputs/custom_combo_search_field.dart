@@ -15,6 +15,17 @@ class CustomComboSearchField extends StatefulWidget {
   final bool enabled;
   final String? Function(String?)? validator;
   final int maxSuggestions;
+  // Si no matchea ningún ítem del catálogo, al confirmar (check del teclado)
+  // el texto tipeado se manda tal cual como selección — ComboItem con id
+  // vacío, descripcion = texto libre. Apagado por defecto (comportamiento
+  // estricto de siempre); solo lo activan los campos que lo necesiten
+  // (ver Área/Cargo en EditContacto, lead/CLAUDE.md).
+  final bool allowFreeText;
+  // Solo con [allowFreeText]: valor inicial por TEXTO en vez de por id —
+  // usar cuando lo guardado no es un id de catálogo sino el label libre ya
+  // tipeado en una sesión anterior. Si el texto matchea un ítem real del
+  // catálogo, igual se resuelve como selección normal (conserva el id).
+  final String? initialText;
 
   const CustomComboSearchField({
     super.key,
@@ -28,6 +39,8 @@ class CustomComboSearchField extends StatefulWidget {
     this.enabled = true,
     this.validator,
     this.maxSuggestions = 6,
+    this.allowFreeText = false,
+    this.initialText,
   });
 
   @override
@@ -46,9 +59,40 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
   void initState() {
     super.initState();
     _allItems = ComboItem.fromList(widget.data, separator: widget.separator);
-    _selected = widget.initialValue != null
-        ? _allItems.where((e) => e.id == widget.initialValue).firstOrNull
-        : null;
+    _selected = _resolverInicial();
+  }
+
+  ComboItem? _resolverInicial() {
+    if (widget.initialValue != null) {
+      return _allItems.where((e) => e.id == widget.initialValue).firstOrNull;
+    }
+    final texto = widget.initialText?.trim() ?? '';
+    if (widget.allowFreeText && texto.isNotEmpty) {
+      return _allItems.where((e) => _display(e) == texto).firstOrNull ??
+          ComboItem(id: '', descripcion: texto);
+    }
+    return null;
+  }
+
+  // Confirma el texto tipeado como selección — matchea contra el catálogo
+  // (sin distinguir mayúsculas) si existe, si no lo manda tal cual como
+  // texto libre (id vacío). Solo se llama con [allowFreeText] activo.
+  void _commitFreeText(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
+      if (_selected != null) {
+        _selected = null;
+        widget.onChanged?.call(null);
+      }
+      return;
+    }
+    final match = _allItems
+        .where((e) => _display(e).toLowerCase() == trimmed.toLowerCase())
+        .firstOrNull;
+    final item = match ?? ComboItem(id: '', descripcion: trimmed);
+    _selected = item;
+    widget.onChanged?.call(item);
+    _fieldFocusNode?.unfocus();
   }
 
   @override
@@ -189,6 +233,8 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
                 : AppColors.textSecondary,
           ),
           decoration: _buildDecoration(context, controller),
+          textInputAction: widget.allowFreeText ? TextInputAction.done : null,
+          onFieldSubmitted: widget.allowFreeText ? _commitFreeText : null,
           validator: widget.validator != null
               ? (_) => widget.validator!(_selected?.id)
               : null,

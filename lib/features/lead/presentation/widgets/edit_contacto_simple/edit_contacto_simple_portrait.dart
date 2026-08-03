@@ -47,7 +47,8 @@ class _EditContactoSimplePortraitState
 
   late final TextEditingController _rucCtrl;
   late final TextEditingController _razonSocialCtrl;
-  CargoItem? _cargo;
+  // Texto libre (NOM_CARGO) — el combo solo sugiere, no fuerza el catálogo.
+  String _cargo = '';
 
   bool _combosInicializados = false;
   bool _isLoading = false;
@@ -107,7 +108,9 @@ class _EditContactoSimplePortraitState
         : state.paises
               .where((p) => p.codigoTelefono == c.prefijoCelular.replaceAll('+', '').trim())
               .firstOrNull;
-    _cargo = state.cargos.where((cg) => cg.id == c.idCargo).firstOrNull;
+    // Cargo ya viene como texto libre desde el backend (NOM_CARGO) — no hay
+    // id de catálogo que matchear, se copia tal cual.
+    _cargo = c.cargo;
   }
 
   @override
@@ -233,7 +236,7 @@ class _EditContactoSimplePortraitState
       correo: _mayus(_correoCtrl.text),
       ruc: _rucCtrl.text.trim(),
       razonSocial: _mayus(_razonSocialCtrl.text),
-      idCargo: _cargo?.id ?? '',
+      cargo: _cargo,
     );
   }
 
@@ -488,20 +491,19 @@ class _EditContactoSimplePortraitState
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
+                    // El combo solo sugiere Cargos ya usados por otros
+                    // asesores; si no está en la lista, se guarda el texto
+                    // tipeado tal cual al confirmar con el check del teclado.
                     CustomComboSearchField(
                       data: catalogState.cargos
                           .map((cg) => '${cg.id}${AppConstants.sepCampos}${cg.nombre}')
                           .toList(),
                       label: 'Cargo',
                       enabled: !_isLoading,
-                      initialValue: _cargo?.id,
-                      onChanged: (item) => setState(() {
-                        _cargo = item == null
-                            ? null
-                            : catalogState.cargos
-                                  .where((cg) => cg.id == item.id)
-                                  .firstOrNull;
-                      }),
+                      allowFreeText: true,
+                      initialText: _cargo,
+                      onChanged: (item) =>
+                          setState(() => _cargo = item?.descripcion ?? ''),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                   ],

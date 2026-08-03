@@ -196,12 +196,10 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
                 .where((p) => p.id == state.valoresDefecto.idPais)
                 .firstOrNull
           : state.paises.where((p) => p.id == original.idPais).firstOrNull;
-      _empresas[i].area = state.areas
-          .where((a) => a.id == original.area)
-          .firstOrNull;
-      _empresas[i].cargo = state.cargos
-          .where((cg) => cg.id == original.cargo)
-          .firstOrNull;
+      // Área/Cargo ya vienen como texto libre desde el backend (NOM_AREA/
+      // NOM_CARGO) — no hay id de catálogo que matchear, se copian tal cual.
+      _empresas[i].area = original.area;
+      _empresas[i].cargo = original.cargo;
       _empresas[i].departamento = state.ubigeo
           .where(
             (u) =>
@@ -503,8 +501,8 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
               ruc: r.rucCtrl.text.trim(),
               razonSocial: _mayus(r.razonSocialCtrl.text),
               direccion: _mayus(r.direccionCtrl.text),
-              area: r.area?.id ?? '',
-              cargo: r.cargo?.id ?? '',
+              area: r.area,
+              cargo: r.cargo,
               idDepartamento: r.departamento?.dpto ?? '',
               idProvincia: r.provincia?.prov ?? '',
               idDistrito: r.distrito?.dis ?? '',
@@ -698,10 +696,10 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
                       onCambioCampo: (_) => setState(() {}),
                       onPaisChanged: (row, item) =>
                           setState(() => row.pais = item),
-                      onAreaChanged: (row, item) =>
-                          setState(() => row.area = item),
-                      onCargoChanged: (row, item) =>
-                          setState(() => row.cargo = item),
+                      onAreaChanged: (row, area) =>
+                          setState(() => row.area = area),
+                      onCargoChanged: (row, cargo) =>
+                          setState(() => row.cargo = cargo),
                       onDepartamentoChanged: (row, item) => setState(() {
                         row.departamento = item;
                         row.provincia = null;

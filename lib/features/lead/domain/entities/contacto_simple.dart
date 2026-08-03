@@ -31,7 +31,9 @@ class ContactoSimple extends Equatable {
   final int idEmpresaContacto;
   final String ruc;
   final String razonSocial;
-  final String idCargo;
+  // Texto libre (T_EMPRESA_CONTACTO.NOM_CARGO) — el combo de Cargo solo
+  // sugiere opciones del catálogo, nunca fuerza un id (ver lead/CLAUDE.md).
+  final String cargo;
 
   const ContactoSimple({
     this.idContacto = 0,
@@ -50,7 +52,7 @@ class ContactoSimple extends Equatable {
     this.idEmpresaContacto = 0,
     this.ruc = '',
     this.razonSocial = '',
-    this.idCargo = '',
+    this.cargo = '',
   });
 
   ContactoSimple copyWith({
@@ -70,7 +72,7 @@ class ContactoSimple extends Equatable {
     int? idEmpresaContacto,
     String? ruc,
     String? razonSocial,
-    String? idCargo,
+    String? cargo,
   }) {
     return ContactoSimple(
       idContacto: idContacto ?? this.idContacto,
@@ -89,7 +91,7 @@ class ContactoSimple extends Equatable {
       idEmpresaContacto: idEmpresaContacto ?? this.idEmpresaContacto,
       ruc: ruc ?? this.ruc,
       razonSocial: razonSocial ?? this.razonSocial,
-      idCargo: idCargo ?? this.idCargo,
+      cargo: cargo ?? this.cargo,
     );
   }
 
@@ -111,6 +113,6 @@ class ContactoSimple extends Equatable {
     idEmpresaContacto,
     ruc,
     razonSocial,
-    idCargo,
+    cargo,
   ];
 }

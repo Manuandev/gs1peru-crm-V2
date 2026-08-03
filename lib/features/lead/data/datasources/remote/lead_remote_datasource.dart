@@ -222,7 +222,8 @@ class LeadRemoteDatasource {
     // reenviar la lista completa en cada guardado). Ubigeo de empresa
     // (idDepartamento+idProvincia+idDistrito, 2 dígitos c/u) se concatena
     // igual que el ubigeo del contacto — ver `ubigeo` más arriba. area/cargo
-    // son ids de catálogo (INT) — ver lead/CLAUDE.md.
+    // son TEXTO LIBRE (NOM_AREA/NOM_CARGO, ya no ID_AREA/ID_CARGO) — el
+    // combo solo sugiere, nunca fuerza un id de catálogo, ver lead/CLAUDE.md.
     final datosEmpresas = contacto.empresas
         .map(
           (e) => [
@@ -321,7 +322,7 @@ class LeadRemoteDatasource {
             contacto.idEmpresaContacto,
             contacto.ruc,
             contacto.razonSocial,
-            contacto.idCargo,
+            contacto.cargo,
           ].join(camp);
 
     final String body = [

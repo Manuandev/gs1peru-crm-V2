@@ -56,11 +56,13 @@ class EmpresaFormRow {
   final TextEditingController rucCtrl;
   final TextEditingController razonSocialCtrl;
   final TextEditingController direccionCtrl;
-  // Catálogo real — País (PaisItem), Área/Cargo (SYSTABEXTER02 CODTABLA='AOF'
-  // / DBO.SYSMCARGO01), ya no texto libre, ver lead/CLAUDE.md.
+  // País sí es catálogo real (PaisItem). Área/Cargo son texto libre — el
+  // combo (SYSTABEXTER02 CODTABLA='AOF' / DBO.SYSMCARGO01) solo sugiere
+  // opciones ya usadas por otros asesores; si el valor no está en la lista,
+  // se guarda el texto tal cual (nunca un id), ver lead/CLAUDE.md.
   PaisItem? pais;
-  AreaItem? area;
-  CargoItem? cargo;
+  String area;
+  String cargo;
   // Ubigeo propio de la empresa (T_EMPRESA.UBIGEO) — independiente del
   // ubigeo del contacto.
   UbigeoItem? departamento;
@@ -81,18 +83,16 @@ class EmpresaFormRow {
     String razonSocialInicial = '',
     String direccionInicial = '',
     this.pais,
-    this.area,
-    this.cargo,
+    this.area = '',
+    this.cargo = '',
     this.expandido = false,
   }) : nombreCtrl = TextEditingController(text: nombreInicial),
        rucCtrl = TextEditingController(text: rucInicial),
        razonSocialCtrl = TextEditingController(text: razonSocialInicial),
        direccionCtrl = TextEditingController(text: direccionInicial);
 
-  String get subtitulo => [
-    cargo?.nombre ?? '',
-    area?.nombre ?? '',
-  ].where((s) => s.trim().isNotEmpty).join(' · ');
+  String get subtitulo =>
+      [cargo, area].where((s) => s.trim().isNotEmpty).join(' · ');
 
   void dispose() {
     nombreCtrl.dispose();

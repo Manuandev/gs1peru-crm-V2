@@ -38,14 +38,29 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
     tocar el parser. **UBIGEO** en `T_CONTACTO` es `VARCHAR(6)` (dpto+prov+dis, 2 dígitos c/u) —
     el SP lo parte en 3 al leer; `lead_remote_datasource.dart.guardarContacto` concatena los 3
     niveles de vuelta a 6 caracteres al guardar (`ubigeo` local var).
-  - **Área/Cargo de Empresa — catálogo real conectado 2026-07-23.** El usuario agregó las partes
-    [18] (`SYSTABEXTER02 CODTABLA='AOF'`) y [19] (`DBO.SYSMCARGO01`) al SP `CSV_LISTAS_LST_APP` —
-    `AreaItem`/`CargoItem` (`core/models/catalog_item.dart`) + `CatalogsBloc.areas`/`.cargos`.
-    `EmpresaFormRow.area`/`cargo` (`contacto_form_rows.dart`) pasaron de `TextEditingController`
-    a `AreaItem?`/`CargoItem?`, matcheados contra el catálogo en
-    `EditContactoPortrait._inicializarCombos` (por índice, mismo orden que
-    `widget.contacto.empresas`). `EditContactoEmpresaSection` ya usa `CustomComboField<AreaItem>`/
-    `<CargoItem>` en vez de texto libre.
+  - **Área/Cargo de Empresa — combo con sugerencias + texto libre (actualizado 2026-08-03).**
+    `AreaItem`/`CargoItem` (`core/models/catalog_item.dart`, partes [18]/[19] del SP
+    `CSV_LISTAS_LST_APP`) siguen existiendo y alimentan `CatalogsBloc.areas`/`.cargos`, pero
+    **solo como sugerencias** — el valor real que se guarda/muestra es texto libre, nunca un id.
+    Pedido explícito de negocio: el combo ayuda al asesor a ver qué ya usaron otros, pero si el
+    cargo/área no está en la lista, tipearlo y confirmar con el check del teclado (botón "done")
+    lo guarda tal cual. `EmpresaFormRow.area`/`.cargo` (`contacto_form_rows.dart`) son `String`
+    (no `AreaItem?`/`CargoItem?`) — mismo tipo que `EmpresaContacto.area`/`.cargo` y
+    `ContactoSimple.cargo`, así que no hace falta matchear nada contra el catálogo al cargar
+    (`EditContactoPortrait._inicializarCombos`/`EditContactoSimplePortrait._inicializarCombos`
+    copian el valor directo). `EditContactoEmpresaSection`/`EditContactoSimplePortrait` usan
+    `CustomComboSearchField(allowFreeText: true, initialText: ...)` (ver `core/CLAUDE.md` →
+    CustomComboSearchField) en vez de `initialValue`/id.
+  - **Backend — bug real corregido 2026-08-03.** El SP de guardado
+    (`CRM.CSV_CONTACTO_CUD_APP`, tasks `'U'`/`'US'`) hace tiempo ya escribía en
+    `T_EMPRESA_CONTACTO.NOM_AREA`/`NOM_CARGO` (VARCHAR, texto libre) — las columnas
+    `ID_AREA`/`ID_CARGO` (enteras) quedaron sin uso en ese SP. Pero el SP de lectura
+    (`CRM.CSV_CONTACTO_LST_APP`, tasks `'D'`/`'DS'`) seguía leyendo `ID_AREA`/`ID_CARGO` — dos
+    columnas completamente distintas — así que **nada de lo guardado volvía a aparecer al
+    reabrir el contacto**. Corregido: ambos tasks ahora leen `NOM_AREA`/`NOM_CARGO` directo (ya
+    son texto, sin `CONVERT`). Si en algún momento se reintroduce un catálogo estricto para
+    Área/Cargo, hay que decidir de nuevo qué columna es la fuente de verdad — no dejar que
+    lectura y escritura apunten a columnas distintas otra vez.
   - `T_EMPRESA` solo tiene una columna `NOMBRE` (no hay "razón social" separada) — el campo
     `razonSocial` del formulario/entidad Flutter es a efectos prácticos un espejo de
     `nombreEmpresa`, ambos se guardan en la misma columna.
@@ -168,7 +183,8 @@ proyecto).
   `idNacionalidad`, `prefijoContacto` (saludo, `String` — igual que en `ContactoDetalle`, sin
   id/label separado), `nombre`, `apellidoPaterno`, `apellidoMaterno`, `prefijoCelular` +
   `celular` (uno solo), `idCorreo` + `correo` (uno solo), `idEmpresaContacto` + `ruc` +
-  `razonSocial` + `idCargo` (una sola empresa). **No tiene** país/ubigeo/dirección/linkedin/
+  `razonSocial` + `cargo` (texto libre, una sola empresa — renombrado desde `idCargo` el
+  2026-08-03, nunca fue un id). **No tiene** país/ubigeo/dirección/linkedin/
   sexo/área — esos campos son exclusivos de la pantalla completa y no se muestran acá.
 - **`ContactoSimpleFormCubit`** (`bloc/contacto_simple_form/`) — mismo patrón exacto que
   `ContactoFormCubit` (cargar por `idNumero` / guardar), pero contra el repositorio nuevo.

@@ -603,7 +603,29 @@ CustomComboSearchField(
 Al tocar una coincidencia de la lista, el campo pierde el foco y cierra el teclado
 automáticamente (fix 2026-07-22 — antes se quedaba enfocado tras elegir una opción). El botón
 "check"/listo del teclado mantiene el comportamiento por defecto de Flutter (cierra
-teclado/foco), sin cambios — no confundir ambos casos.
+teclado/foco), sin cambios — no confundir ambos casos, **salvo con `allowFreeText: true`** (ver
+abajo), donde ese mismo botón sí dispara lógica propia.
+
+**`allowFreeText: true`** (agregado 2026-08-03, apagado por defecto — no afecta a ningún campo
+existente) — permite que el valor final sea texto libre si no matchea ningún ítem del catálogo:
+```dart
+CustomComboSearchField(
+  data: cargos.map((c) => '${c.id}¦${c.nombre}').toList(),
+  label: 'Cargo',
+  allowFreeText: true,
+  initialText: row.cargo,        // texto ya guardado — en vez de initialValue (id)
+  onChanged: (item) => row.cargo = item?.descripcion ?? '',  // item.id vacío si es texto libre
+)
+```
+El combo sigue mostrando/filtrando las sugerencias del catálogo como siempre; la diferencia está
+en qué pasa al confirmar (botón "check"/done del teclado, `onFieldSubmitted`): si el texto
+tipeado matchea una sugerencia (sin distinguir mayúsculas) se resuelve como selección normal
+(conserva `id`); si no matchea nada, igual se manda como `ComboItem(id: '', descripcion: texto)`
+— el caller debe leer `item?.descripcion`, no `item?.id`, para no perder el valor libre. Usar
+`initialText` (no `initialValue`) cuando lo que se carga ya es el texto guardado y no un id de
+catálogo — ver Área/Cargo en `lead/CLAUDE.md`. Tocar afuera del campo sin presionar el check NO
+confirma el texto libre (a propósito, replica "aprieto el check del teclado" tal como se pidió,
+no cualquier pérdida de foco).
 
 ### CustomComboMultiField
 Combo multi-selección con chips. Abre diálogo con checkboxes.
@@ -927,8 +949,8 @@ usadas por `ListasGenericasModel.parse`) en `catalog_item_model.dart`. Ambos se 
 | `SexoItem` | id(String), nombre(String) — parte [14] del SP, hardcodeado (`M`/`F`/`PD`) |
 | `TipoParticipanteItem` | id(String), nombre(String), esInvitado(bool) — parte [15] del SP, hardcodeado (`1` Pagante · `2` Invitado · `3` Invitado auspicio · `4` Online). `esInvitado` = `true` en `2`/`3` (no paga) |
 | `UbigeoItem` | dpto(String), prov(String), dis(String), nombre(String), `codigo` (getter = `dpto+prov+dis`) — parte [16] del SP, `DBO.SYSTABUBIGEO01`. Jerárquico: filtrar por `dpto` (departamento), `dpto`+`prov` (provincia), `codigo` completo identifica un distrito. Patrón ubigeo estándar para saber el nivel de una fila: `prov=='00' && dis=='00'` → departamento; `prov!='00' && dis=='00'` → provincia; `prov!='00' && dis!='00'` → distrito |
-| `AreaItem` | id(String=codargu), nombre(String=deslarga) — parte [18] del SP, `SYSTABEXTER02 CODTABLA='AOF'`, agregada 2026-07-23. Área de empresa — usada en `lead/` (`EditContacto`, sección Empresa) |
-| `CargoItem` | id(String=codCargo), nombre(String=desCargo) — parte [19] del SP, `DBO.SYSMCARGO01`, agregada 2026-07-23. Cargo de empresa — usada en `lead/` (`EditContacto`, sección Empresa). `T_EMPRESA_CONTACTO.ID_AREA`/`ID_CARGO` son columnas `INT` — el id de catálogo (String) se manda tal cual, SQL Server lo convierte implícito al insertar |
+| `AreaItem` | id(String=codargu), nombre(String=deslarga) — parte [18] del SP, `SYSTABEXTER02 CODTABLA='AOF'`, agregada 2026-07-23. Área de empresa — usada en `lead/` (`EditContacto`, sección Empresa) **solo como sugerencia** del combo (`CustomComboSearchField(allowFreeText: true)`) — el valor guardado es texto libre (`T_EMPRESA_CONTACTO.NOM_AREA`), nunca el id, ver lead/CLAUDE.md |
+| `CargoItem` | id(String=codCargo), nombre(String=desCargo) — parte [19] del SP, `DBO.SYSMCARGO01`, agregada 2026-07-23. Cargo de empresa — usada en `lead/` (`EditContacto`/`EditContactoSimple`) **solo como sugerencia**, mismo criterio que `AreaItem` (`NOM_CARGO`, texto libre). ⚠️ `T_EMPRESA_CONTACTO.ID_AREA`/`ID_CARGO` (columnas `INT`) existen pero están sin uso — no escribir ahí, la fuente de verdad es `NOM_AREA`/`NOM_CARGO` (VARCHAR) |
 
 Todas implementan `Comboable` excepto `ValoresCRMItem` (fila única, no es un ítem de lista/dropdown).
 Parsear con `ListasGenericasModel.parse(rawResponse)`.

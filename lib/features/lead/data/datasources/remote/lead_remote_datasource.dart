@@ -25,15 +25,21 @@ class LeadRemoteDatasource {
     };
   }
 
+  // idContacto — 2026-08-03: antes se mandaba idNumero como field1, pero el
+  // SP (CRM.CSV_LEADS_CUD_APP, task 'U') lo parsea como @ID_CONTACTO y lo
+  // graba directo en T_LEAD.ID_CONTACTO (columna ya existente ahí) — bug
+  // real: se guardaba el id del NÚMERO donde la tabla espera el id de
+  // CONTACTO. Un lead siempre tiene un contacto (ya no siempre "el mismo
+  // número"), así que este es el ancla correcta para crear/actualizar.
   Future<CrudResult> updateNegociacion(
     Negociacion negociacion,
-    int idNumero,
+    int idContacto,
   ) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
 
     final String body = [
-      idNumero,
+      idContacto,
       negociacion.idLead,
       negociacion.idEstado,
       ParseUtils.orEmpty(negociacion.idCampania),
@@ -80,12 +86,15 @@ class LeadRemoteDatasource {
     };
   }
 
-  // Task 'DN' — mismo shape de columnas que 'DT', pero ancla en NÚMERO (el
-  // lead más reciente de ese número). Usada por Seguimiento ("Ver detalle"),
-  // que ahora navega por idNumero, no por idLead — 'DT' se queda reservado
-  // para Conversaciones y para ver un lead histórico puntual.
-  Future<NegociacionModel> getLeadDetallePorNumero(int idNumero) async {
-    final String body = '$idNumero${sep}DN';
+  // Task 'DN' — mismo shape de columnas que 'DT', pero ancla en CONTACTO (el
+  // lead más reciente de ese contacto). Usada por Seguimiento ("Ver
+  // detalle"), que ahora navega por idContacto, no por idLead — 'DT' se
+  // queda reservado para Conversaciones y para ver un lead histórico puntual.
+  // 2026-08-03 — migrado de idNumero a idContacto (SP y cliente): un lead
+  // siempre tiene contacto (T_LEAD.ID_CONTACTO), el número puede
+  // cambiar/duplicarse.
+  Future<NegociacionModel> getLeadDetallePorContacto(int idContacto) async {
+    final String body = '$idContacto${sep}DN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -99,8 +108,11 @@ class LeadRemoteDatasource {
     };
   }
 
-  Future<List<NegociacionModel>> obtenerNegociaciones(int idNumero) async {
-    final String body = '$idNumero${sep}LN';
+  // Task 'LN' — historial de negociaciones del CONTACTO. 2026-08-03 —
+  // migrado de idNumero a idContacto (mismo motivo que
+  // getLeadDetallePorContacto arriba).
+  Future<List<NegociacionModel>> obtenerNegociaciones(int idContacto) async {
+    final String body = '$idContacto${sep}LN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -113,13 +125,14 @@ class LeadRemoteDatasource {
   }
 
   // Task 'LHN' — historial de seguimiento de todos los leads activos del
-  // mismo número. Usado por el tab Historial en Seguimiento
+  // mismo CONTACTO. Usado por el tab Historial en Seguimiento
   // (ContactoDetalleView) y en Conversaciones (ChatLeadPanel) — mismo
-  // llamado en los dos.
-  Future<List<HistorialComentarioModel>> obtenerHistorialSeguimientoPorNumero(
-    int idNumero,
+  // llamado en los dos. 2026-08-03 — migrado de idNumero a idContacto (mismo
+  // motivo que getLeadDetallePorContacto arriba).
+  Future<List<HistorialComentarioModel>> obtenerHistorialSeguimientoPorContacto(
+    int idContacto,
   ) async {
-    final String body = '$idNumero${sep}LHN';
+    final String body = '$idContacto${sep}LHN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -177,6 +190,10 @@ class LeadRemoteDatasource {
     // lead/CLAUDE.md ("reglas de negocio de duplicados").
     final ibValidacion = contacto.idContacto == 0 ? 1 : 0;
 
+    // ⚠️ 2026-08-03 — contacto.idNumero (field1) es MUERTO del lado del SP
+    // (CSV_CONTACTO_CUD_APP, tasks 'U'/'US') — se parsea pero nunca se usa;
+    // el contacto ancla en idContacto (field2, 0 = crear). Se sigue mandando
+    // por compatibilidad de formato con el SP, no porque el SP lo necesite.
     final datosContacto = [
       contacto.idNumero,
       contacto.idContacto,
@@ -292,6 +309,13 @@ class LeadRemoteDatasource {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
 
+    // ⚠️ 2026-08-03 — contacto.idNumero es MUERTO del lado del SP
+    // (CSV_CONTACTO_CUD_APP, task 'US') en las 2 posiciones donde se manda
+    // abajo: field1 de datosContacto y field1 de datosNumero — el SP mismo
+    // lo comenta como "sin uso acá" y resuelve el número por
+    // PREFIJO_PAIS+NUMERO (texto), no por id. El contacto ancla en
+    // idContacto (field2 de datosContacto, 0 = crear). Se sigue mandando por
+    // compatibilidad de formato, no porque el SP lo necesite.
     final datosContacto = [
       contacto.idNumero,
       contacto.idContacto,

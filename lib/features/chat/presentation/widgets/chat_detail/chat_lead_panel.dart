@@ -147,10 +147,12 @@ class _ChatLeadPanelState extends State<ChatLeadPanel> {
                 ),
                 NegociacionesTab(
                   leadId: widget.negociacion.idLead,
-                  idNumero: widget.idNumero,
+                  // idContacto, no idNumero — ver migración 2026-08-03 en
+                  // lead/CLAUDE.md. Chat ya trae idContacto propio.
+                  idContacto: widget.chat.idContacto,
                   onCerrar: _cerrar,
                 ),
-                HistorialTab(idNumero: widget.idNumero),
+                HistorialTab(idContacto: widget.chat.idContacto),
               ],
             ),
           ),

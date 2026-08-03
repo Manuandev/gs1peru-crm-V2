@@ -19,8 +19,8 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   // En el contexto de chat se deja null; load(idNumero) usa el SP de WhatsApp.
   final GetLeadDetalleUseCase? _getLeadDetalle;
   // Opcional: solo se inyecta en Seguimiento ("Ver detalle" del contacto,
-  // ContactoDetallePage) — task 'DN', ancla en idNumero en vez de idLead.
-  final GetLeadDetallePorNumeroUseCase? _getLeadDetallePorNumero;
+  // ContactoDetallePage) — task 'DN', ancla en idContacto en vez de idLead.
+  final GetLeadDetallePorContactoUseCase? _getLeadDetallePorContacto;
 
   final _successController = StreamController<String>.broadcast();
   Stream<String> get successes => _successController.stream;
@@ -36,7 +36,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     this._updateEstado,
     this._updateInfo, [
     this._getLeadDetalle,
-    this._getLeadDetallePorNumero,
+    this._getLeadDetallePorContacto,
   ]) : super(const InfoLeadInitial()) {
     _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
       // Yo mismo disparé este aviso al guardar — ya tengo el estado fresco
@@ -134,6 +134,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
           idInteres: 0,
           descripcionInteres: '',
           activo: true,
+          idContacto: actual.idContacto,
           idNumero: actual.idNumero,
           prefijoPais: actual.prefijoPais,
           numero: actual.numero,
@@ -174,6 +175,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       idInteres: chat.idInteres,
       descripcionInteres: chat.nombreInteres,
       activo: true,
+      idContacto: chat.idContacto,
       idNumero: chat.idNumero,
       prefijoPais: chat.prefijoPais,
       numero: chat.numero,
@@ -206,17 +208,19 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     }
   }
 
-  /// Carga el lead más reciente de un número — task 'DN'.
-  /// Usa Seguimiento (ContactoDetallePage), que navega por idNumero en vez
+  /// Carga el lead más reciente de un contacto — task 'DN'.
+  /// Usa Seguimiento (ContactoDetallePage), que navega por idContacto en vez
   /// de idLead. Distinto de cargarPorIdLead(idLead), que trae un lead puntual.
-  Future<void> cargarPorIdNumero(int idNumero) async {
+  /// 2026-08-03 — migrado de idNumero a idContacto (T_LEAD.ID_CONTACTO): un
+  /// lead siempre tiene contacto, el número puede cambiar/duplicarse.
+  Future<void> cargarPorIdContacto(int idContacto) async {
     if (isClosed) return;
     emit(const InfoLeadLoading());
     try {
-      final detalle = await _getLeadDetallePorNumero!(idNumero);
+      final detalle = await _getLeadDetallePorContacto!(idContacto);
       if (isClosed) return;
-      // El SP resuelve el lead más reciente del número — se guarda recién acá
-      // porque hasta este punto no se sabía qué idLead venía.
+      // El SP resuelve el lead más reciente del contacto — se guarda recién
+      // acá porque hasta este punto no se sabía qué idLead venía.
       _idLead = detalle.idLead;
       emit(InfoLeadSuccess(detalle));
     } on AppException catch (e) {
@@ -300,8 +304,13 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   // contacto ya no se editan desde acá (son de solo lectura en el form).
   // Retorna true solo si el servidor confirmó el guardado (CrudOk) — lo usa
   // EditLeadPortrait para saber si puede redirigir a "Generar solicitud".
+  // ⚠️ 2026-08-03 — antes recibía `idNumero` y lo mandaba tal cual a
+  // CSV_LEADS_CUD_APP (task 'U'), pero ese SP lo parsea como @ID_CONTACTO y
+  // lo graba directo en T_LEAD.ID_CONTACTO — bug real: se guardaba el id del
+  // NÚMERO donde la tabla espera el id de CONTACTO. Corregido: ahora recibe
+  // idContacto (T_LEAD siempre tiene un contacto, ya no ancla por número).
   Future<bool> updateLead({
-    required int idNumero,
+    required int idContacto,
     String? idEstado,
     String? estado,
     String? idEstadoPadre,
@@ -355,7 +364,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
     emit(InfoLeadSuccess(updated));
 
     try {
-      final result = await _updateInfo(updated, idNumero);
+      final result = await _updateInfo(updated, idContacto);
 
       if (isClosed) return false;
 

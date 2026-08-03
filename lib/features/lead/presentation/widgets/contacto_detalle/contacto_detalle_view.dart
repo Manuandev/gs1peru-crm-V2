@@ -9,9 +9,10 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoDetalleView extends StatefulWidget {
-  final int idNumero;
+  // 2026-08-03 — migrado de idNumero a idContacto (T_LEAD.ID_CONTACTO).
+  final int idContacto;
 
-  const ContactoDetalleView({super.key, required this.idNumero});
+  const ContactoDetalleView({super.key, required this.idContacto});
 
   @override
   State<ContactoDetalleView> createState() => _ContactoDetalleViewState();
@@ -31,14 +32,14 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   void initState() {
     super.initState();
     _cubit = context.read<InfoLeadCubit>();
-    _cubit.cargarPorIdNumero(widget.idNumero);
+    _cubit.cargarPorIdContacto(widget.idContacto);
 
     // ContactoNegociacionesTab edita leads históricos con SU PROPIO
     // InfoLeadCubit (ver contacto_negociacion_card.dart) — esta pantalla no
     // se entera por ahí, así que escucha directo el mismo bus que usa
-    // LeadListBloc, filtrando por idNumero (no por idLead: cualquier lead
-    // de este número que cambie puede alterar cuál es "el más reciente" que
-    // muestra Información, o afectar el historial de Negociaciones).
+    // LeadListBloc, filtrando por idContacto (no por idLead: cualquier lead
+    // de este contacto que cambie puede alterar cuál es "el más reciente"
+    // que muestra Información, o afectar el historial de Negociaciones).
     //
     // Ojo — "Crear negociación" (ContactoNegociacionesTab._crearNegociacion)
     // SÍ usa este mismo InfoLeadCubit compartido (a diferencia de editar una
@@ -55,7 +56,7 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
       if (identical(update.source, _cubit)) return;
       final negociacion = update.updatedLead;
       if (negociacion is Negociacion &&
-          negociacion.idNumero == widget.idNumero) {
+          negociacion.idContacto == widget.idContacto) {
         _refrescar();
       }
     });
@@ -68,15 +69,17 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   }
 
   Future<void> _refrescar() => Future.wait([
-    _cubit.cargarPorIdNumero(widget.idNumero),
-    context.read<NegociacionesCubit>().cargarNegociaciones(widget.idNumero),
+    _cubit.cargarPorIdContacto(widget.idContacto),
+    context.read<NegociacionesCubit>().cargarNegociaciones(
+      widget.idContacto,
+    ),
   ]);
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<InfoLeadCubit, InfoLeadState>(
-      // NegociacionesCubit.cargarNegociaciones necesita idNumero, que solo se
-      // conoce una vez que InfoLeadCubit resuelve el lead — por eso se
+      // NegociacionesCubit.cargarNegociaciones necesita idContacto, que solo
+      // se conoce una vez que InfoLeadCubit resuelve el lead — por eso se
       // dispara acá y no en initState (ahí solo se tiene idLead).
       //
       // idLead == 0 es el placeholder en blanco que deja
@@ -84,15 +87,15 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
       // para sembrar el form de "Crear negociación" en el mismo cubit
       // compartido — no es un lead real cargado. Sin este filtro, cada tap en
       // "+ Crear negociación" pisaba _ultimoLead con datos en blanco y
-      // disparaba una recarga innecesaria de NegociacionesCubit (misma
-      // idNumero, ya correcta), que de puro async pasaba por
+      // disparaba una recarga innecesaria de NegociacionesCubit (mismo
+      // idContacto, ya correcto), que de puro async pasaba por
       // NegociacionesLoading y hacía parpadear la lista a "Sin negociaciones"
       // un instante antes de navegar a Editar.
       listener: (context, state) {
         if (state is InfoLeadSuccess && state.negociacion.idLead != 0) {
           _ultimoLead = state.negociacion;
           context.read<NegociacionesCubit>().cargarNegociaciones(
-            state.negociacion.idNumero,
+            state.negociacion.idContacto,
           );
         }
       },
@@ -109,7 +112,7 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
             ],
             body: AppErrorView(
               message: state.message,
-              onRetry: () => _cubit.cargarPorIdNumero(widget.idNumero),
+              onRetry: () => _cubit.cargarPorIdContacto(widget.idContacto),
             ),
           );
         }
@@ -229,10 +232,10 @@ class _ContactoScaffold extends StatelessWidget {
                           negociaciones: negociaciones,
                         ),
                         ContactoNegociacionesTab(
-                          idNumero: lead.idNumero,
+                          idContacto: lead.idContacto,
                           negociaciones: negociaciones,
                         ),
-                        HistorialTab(idNumero: lead.idNumero),
+                        HistorialTab(idContacto: lead.idContacto),
                       ],
                     );
                   },

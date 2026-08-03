@@ -15,12 +15,13 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoNegociacionesTab extends StatelessWidget {
-  final int idNumero;
+  // 2026-08-03 — migrado de idNumero a idContacto (T_LEAD.ID_CONTACTO).
+  final int idContacto;
   final List<Negociacion> negociaciones;
 
   const ContactoNegociacionesTab({
     super.key,
-    required this.idNumero,
+    required this.idContacto,
     required this.negociaciones,
   });
 
@@ -56,7 +57,7 @@ class ContactoNegociacionesTab extends StatelessWidget {
       cubit.load(idLeadPrevio);
     }
     if (context.mounted) {
-      context.read<NegociacionesCubit>().cargarNegociaciones(idNumero);
+      context.read<NegociacionesCubit>().cargarNegociaciones(idContacto);
     }
   }
 

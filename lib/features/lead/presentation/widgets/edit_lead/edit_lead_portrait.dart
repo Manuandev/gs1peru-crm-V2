@@ -404,7 +404,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     if (context.mounted) {
       // ignore: use_build_context_synchronously
       guardadoOk = await context.read<InfoLeadCubit>().updateLead(
-        idNumero: widget.negociacion.idNumero,
+        // idContacto, no idNumero — ver comentario en InfoLeadCubit.updateLead.
+        idContacto: widget.negociacion.idContacto,
         idEstado: idEstadoEfectivo,
         estado: estadoEfectivo,
         idEstadoPadre: tieneSubEstado ? _estado?.id : '',

@@ -6,16 +6,24 @@ import 'package:app_crm/features/lead/index_lead.dart';
 abstract class LeadRepository {
   Future<List<ContactoNegociacion>> getLeads();
   Future<Negociacion> getLeadDetalle(int idLead);
-  // Task 'DN' — mismo detalle que getLeadDetalle, pero anclado en idNumero
-  // (el lead más reciente de ese número). Usa Seguimiento ("Ver detalle").
-  Future<Negociacion> getLeadDetallePorNumero(int idNumero);
-  Future<CrudResult> updateNegociacion(Negociacion negociacion, int idNumero);
-  // SP 'LN' — historial de negociaciones (leads) del mismo número
-  Future<List<Negociacion>> obtenerNegociaciones(int idNumero);
+  // Task 'DN' — mismo detalle que getLeadDetalle, pero anclado en idContacto
+  // (el lead más reciente de ese contacto). Usa Seguimiento ("Ver detalle").
+  // 2026-08-03 — migrado de idNumero a idContacto: un lead siempre tiene
+  // contacto (T_LEAD.ID_CONTACTO), el número puede cambiar/duplicarse.
+  Future<Negociacion> getLeadDetallePorContacto(int idContacto);
+  // idContacto — 2026-08-03: antes era idNumero, pero CSV_LEADS_CUD_APP
+  // (task 'U') parsea este campo como @ID_CONTACTO y lo graba directo en
+  // T_LEAD.ID_CONTACTO (bug real corregido, ver Negociacion.idContacto).
+  Future<CrudResult> updateNegociacion(Negociacion negociacion, int idContacto);
+  // SP 'LN' — historial de negociaciones (leads) del mismo CONTACTO.
+  // 2026-08-03 — migrado de idNumero a idContacto (mismo motivo que
+  // getLeadDetallePorContacto arriba).
+  Future<List<Negociacion>> obtenerNegociaciones(int idContacto);
   // SP 'LHN' — historial de seguimiento de todos los leads activos del
-  // mismo número
-  Future<List<HistorialComentario>> obtenerHistorialSeguimientoPorNumero(
-    int idNumero,
+  // mismo CONTACTO. 2026-08-03 — migrado de idNumero a idContacto (mismo
+  // motivo que getLeadDetallePorContacto arriba).
+  Future<List<HistorialComentario>> obtenerHistorialSeguimientoPorContacto(
+    int idContacto,
   );
 
   // ⚠️ PENDIENTE — endpoint de lectura aún sin confirmar con backend, ver

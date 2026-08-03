@@ -235,7 +235,7 @@ class AppRouter {
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);
-        return ContactoDetallePage(idNumero: args['idNumero'] as int);
+        return ContactoDetallePage(idContacto: args['idContacto'] as int);
       },
     ),
     // CONTACTO — crear/editar (solo recibe idNumero, carga sus propios datos)

@@ -67,6 +67,8 @@ class ContactoNegociacionModel extends ContactoNegociacion {
         descripcionInteres: ParseUtils.str(fields, 24),
         // Sin columna propia de "activo" en este SP.
         activo: true,
+        // 1 → CT.ID_CONTACTO — ancla real para guardar, ver Negociacion.idContacto.
+        idContacto: ParseUtils.toInt(fields, 1),
         // 33 → LD.ID_TIP_MONEDA
         idMoneda: ParseUtils.str(fields, 33),
         // 34 → CL.CT_LEADS (total de leads del número)

@@ -9,13 +9,14 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 class NegociacionesTab extends StatefulWidget {
   final int leadId;
-  final int idNumero;
+  // 2026-08-03 — migrado de idNumero a idContacto (T_LEAD.ID_CONTACTO).
+  final int idContacto;
   final VoidCallback? onCerrar;
 
   const NegociacionesTab({
     super.key,
     required this.leadId,
-    required this.idNumero,
+    required this.idContacto,
     this.onCerrar,
   });
 
@@ -31,16 +32,18 @@ class _NegociacionesTabState extends State<NegociacionesTab>
   @override
   void initState() {
     super.initState();
-    // Sin número no hay nada que buscar — el SP devolvería vacío igual.
-    if (widget.idNumero > 0) {
-      context.read<NegociacionesCubit>().cargarNegociaciones(widget.idNumero);
+    // Sin contacto no hay nada que buscar — el SP devolvería vacío igual.
+    if (widget.idContacto > 0) {
+      context.read<NegociacionesCubit>().cargarNegociaciones(
+        widget.idContacto,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    if (widget.idNumero == 0) return const _EstadoVacio();
+    if (widget.idContacto == 0) return const _EstadoVacio();
 
     return BlocBuilder<NegociacionesCubit, NegociacionesState>(
       builder: (context, state) {
@@ -51,12 +54,12 @@ class _NegociacionesTabState extends State<NegociacionesTab>
             message: mensaje,
             onRetry: () => context
                 .read<NegociacionesCubit>()
-                .cargarNegociaciones(widget.idNumero),
+                .cargarNegociaciones(widget.idContacto),
           ),
           NegociacionesSuccess(:final negociaciones) => _ListaNegociaciones(
             negociaciones: negociaciones,
             leadId: widget.leadId,
-            idNumero: widget.idNumero,
+            idContacto: widget.idContacto,
             onCerrar: widget.onCerrar,
           ),
         };
@@ -74,13 +77,13 @@ enum _FiltroNeg { todas, activa, ganadas }
 class _ListaNegociaciones extends StatefulWidget {
   final List<Negociacion> negociaciones;
   final int leadId;
-  final int idNumero;
+  final int idContacto;
   final VoidCallback? onCerrar;
 
   const _ListaNegociaciones({
     required this.negociaciones,
     required this.leadId,
-    required this.idNumero,
+    required this.idContacto,
     this.onCerrar,
   });
 
@@ -137,7 +140,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
       cubit.load(idLeadPrevio);
     }
     if (mounted) {
-      context.read<NegociacionesCubit>().cargarNegociaciones(widget.idNumero);
+      context.read<NegociacionesCubit>().cargarNegociaciones(widget.idContacto);
     }
   }
 
@@ -274,7 +277,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
                   onGenerarSolicitud: () => _generarSolicitud(negociacion),
                   onEdited: () => context
                       .read<NegociacionesCubit>()
-                      .cargarNegociaciones(widget.idNumero),
+                      .cargarNegociaciones(widget.idContacto),
                 ),
               ),
 

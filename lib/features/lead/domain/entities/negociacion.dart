@@ -48,10 +48,24 @@ class Negociacion extends Equatable {
   // el historial completo).
   final int totalLeadsNumero;
 
+  // 2026-08-03 — ANCLA REAL, tanto para guardar (T_LEAD.ID_CONTACTO) como
+  // para leer (getLeadDetallePorContacto/obtenerNegociaciones/
+  // obtenerHistorialSeguimientoPorContacto, ver lead_repository.dart).
+  // Reemplaza a idNumero para ambos propósitos. Antes un lead se conectaba
+  // a través de T_NUMERO_LEAD (número→lead); ahora T_LEAD tiene columna
+  // ID_CONTACTO directa — un lead siempre tiene un contacto, ya no siempre
+  // "el mismo número". Todos los SPs que alimentan Negociacion ya lo traen
+  // ('DT'/'DN'/'LS' vía JOIN a T_CONTACTO, 'LN' como literal @ID_CONTACTO
+  // agregado al final sin JOIN — ver NegociacionModel.fromRawString).
+  final int idContacto;
+
   // Contacto/número — de solo lectura en el form de edición. Con default
   // porque no todos los SPs que alimentan Negociacion los traen (ej. 'LN' —
   // historial de negociaciones). Se completan desde el SP de detalle ('DT')
   // o desde el Chat ya cargado en lista.
+  // ⚠️ idNumero YA NO se usa como ancla para guardar/crear/leer el lead (ver
+  // idContacto arriba) — sigue siendo el id real del NÚMERO de teléfono
+  // (T_NUMERO), útil solo para mostrarlo.
   final int idNumero;
   final String prefijoPais;
   final String numero;
@@ -65,10 +79,13 @@ class Negociacion extends Equatable {
   // de arriba: solo lo trae 'DT'/'DN', 'LN' lo deja vacío.
   final String ruc;
 
-  // Cargo del contacto (CT.ID_CARGO) — pese al nombre de la columna, el SP
-  // ya lo trae como texto libre (no un id de catálogo, ver mismo campo ya
-  // parseado como texto en ConversationModel/chat) — mismo candado que
-  // ruc/nombres/apellidos: solo lo trae 'DT'/'DN', 'LN' lo deja vacío.
+  // Cargo — texto libre (T_EMPRESA_CONTACTO.NOM_CARGO), NO un id de catálogo.
+  // 2026-08-03 — corregido en CSV_LEADS_LST_APP: antes salía de CT.ID_CARGO
+  // (columna de T_CONTACTO, entera pese al nombre); el cargo real vive en la
+  // empresa vinculada al contacto (T_EMPRESA_CONTACTO), no en el contacto
+  // mismo — un contacto puede tener cargos distintos en empresas distintas.
+  // Mismo candado que ruc/nombres/apellidos de arriba: solo lo trae
+  // 'DT'/'DN', 'LN' lo deja vacío (no hace JOIN con T_EMPRESA_CONTACTO).
   final String cargo;
 
   final String numSol;
@@ -146,6 +163,7 @@ class Negociacion extends Equatable {
     required this.activo,
     this.idMoneda = '',
     this.totalLeadsNumero = 0,
+    this.idContacto = 0,
     this.idNumero = 0,
     this.prefijoPais = '',
     this.numero = '',
@@ -188,6 +206,7 @@ class Negociacion extends Equatable {
     activo,
     idMoneda,
     totalLeadsNumero,
+    idContacto,
     idNumero,
     prefijoPais,
     numero,
@@ -229,6 +248,7 @@ class Negociacion extends Equatable {
     bool? activo,
     String? idMoneda,
     int? totalLeadsNumero,
+    int? idContacto,
     int? idNumero,
     String? prefijoPais,
     String? numero,
@@ -270,6 +290,7 @@ class Negociacion extends Equatable {
       activo: activo ?? this.activo,
       idMoneda: idMoneda ?? this.idMoneda,
       totalLeadsNumero: totalLeadsNumero ?? this.totalLeadsNumero,
+      idContacto: idContacto ?? this.idContacto,
       idNumero: idNumero ?? this.idNumero,
       prefijoPais: prefijoPais ?? this.prefijoPais,
       numero: numero ?? this.numero,

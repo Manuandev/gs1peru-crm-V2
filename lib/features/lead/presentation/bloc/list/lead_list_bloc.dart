@@ -73,12 +73,13 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
     LeadListLeadUpdated event,
     Emitter<LeadListState> emit,
   ) {
-    // Matchea por idNumero, no por idLead: al crear una negociación nueva
-    // para un número que ya tenía otra activa, el idLead cambia pero la
-    // fila (número) en la lista es la misma.
+    // Matchea por idContacto, no por idLead: al crear una negociación nueva
+    // para un contacto que ya tenía otra activa, el idLead cambia pero la
+    // fila (contacto) en la lista es la misma. 2026-08-03 — antes matcheaba
+    // por idNumero (c.numero.idNumero) — un lead ya no ancla por número.
     _allLeads = _allLeads
         .map(
-          (c) => c.numero.idNumero == event.negociacion.idNumero
+          (c) => c.contacto.idContacto == event.negociacion.idContacto
               ? c.copyWith(negociacion: event.negociacion)
               : c,
         )

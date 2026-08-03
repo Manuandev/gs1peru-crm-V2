@@ -5,9 +5,10 @@
 // que reparte los mismos campos entre Contacto/Numero/Negociacion.
 // 'LS' comparte exactamente el mismo layout de columnas que 'DT' (mismo
 // SELECT, solo cambia el WHERE) — ver comentario de índices en
-// NegociacionModel.fromDetalleRawString. cargo (32, CT.ID_CARGO) llega como
-// id crudo sin catálogo — no se parsea todavía para no mostrar un número
-// donde se espera un puesto.
+// NegociacionModel.fromDetalleRawString. cargo (32) es texto libre
+// (T_EMPRESA_CONTACTO.NOM_CARGO, 2026-08-03) — antes salía de CT.ID_CARGO
+// (id crudo sin catálogo) y no se parseaba para no mostrar un número donde
+// se esperaba un puesto; con el SP corregido ya es seguro parsearlo.
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -38,6 +39,8 @@ class ContactoModel extends Contacto {
       nombreEmpresa: ParseUtils.str(fields, 5),
       // 06 → CT.ASESOR_PRINCIPAL
       asesor: ParseUtils.str(fields, 6),
+      // 32 → T_EMPRESA_CONTACTO.NOM_CARGO (texto libre)
+      cargo: ParseUtils.strNullable(fields, 32),
       // 12 → CO.CORREO
       correo: ParseUtils.strNullable(fields, 12),
     );

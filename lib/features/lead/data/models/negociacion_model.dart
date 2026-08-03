@@ -38,6 +38,7 @@ class NegociacionModel extends Negociacion {
     required super.activo,
     super.idMoneda,
     super.totalLeadsNumero,
+    super.idContacto,
     super.idNumero,
     super.prefijoPais,
     super.numero,
@@ -84,6 +85,9 @@ class NegociacionModel extends Negociacion {
       idMoneda: ParseUtils.str(fields, 22),
       numSol: ParseUtils.str(fields, 23),
       idEstadoSol: ParseUtils.toInt(fields, 24),
+      // ⚠️ 'LN' no hace JOIN con CRM.T_CONTACTO — no hay CT.ID_CONTACTO en
+      // este shape de columnas, idContacto queda en su default (0). Ver
+      // comentario en Negociacion.idContacto.
     );
   }
 
@@ -121,9 +125,10 @@ class NegociacionModel extends Negociacion {
   // 14  LE.DESCRIPCION        30 LD.FC_USUARIO_C (fecha creación)
   // 15  EP.ID_ESTADO (padre)  31 CCU.ID_CONVERSACION_CAB (→ idChatCab,
   //                               2026-07-15)
-  // 16  EP.DESCRIPCION (padre) 32 CT.ID_CARGO (pese al nombre, ya es texto
-  //                               libre — mismo campo que ConversationModel
-  //                               ya parsea como String en chat/, 2026-07-17)
+  // 16  EP.DESCRIPCION (padre) 32 T_EMPRESA_CONTACTO.NOM_CARGO (texto libre
+  //                               — 2026-08-03, antes CT.ID_CARGO; el cargo
+  //                               real vive en la empresa vinculada, no en
+  //                               el contacto)
   //                            33 LD.ID_TIP_MONEDA
   //                            34 CL.CT_LEADS (total de leads del número)
   //                            35 LI.NUMSOL
@@ -166,6 +171,8 @@ class NegociacionModel extends Negociacion {
       idInteres: ParseUtils.toInt(fields, 23),
       descripcionInteres: ParseUtils.str(fields, 24),
       activo: true,
+      // 1 → CT.ID_CONTACTO — ancla real para guardar, ver Negociacion.idContacto.
+      idContacto: ParseUtils.toInt(fields, 1),
       idNumero: ParseUtils.toInt(fields, 8),
       prefijoPais: ParseUtils.str(fields, 9),
       numero: ParseUtils.str(fields, 10),

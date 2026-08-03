@@ -13,10 +13,10 @@ class NegociacionesCubit extends Cubit<NegociacionesState> {
   NegociacionesCubit({required this.obtenerNegociacionesUseCase})
     : super(const NegociacionesInitial());
 
-  Future<void> cargarNegociaciones(int idNumero) async {
+  Future<void> cargarNegociaciones(int idContacto) async {
     emit(const NegociacionesLoading());
     try {
-      final negociaciones = await obtenerNegociacionesUseCase.call(idNumero);
+      final negociaciones = await obtenerNegociacionesUseCase.call(idContacto);
       emit(NegociacionesSuccess(negociaciones: negociaciones));
     } catch (e) {
       emit(NegociacionesError(mensaje: e.toString()));

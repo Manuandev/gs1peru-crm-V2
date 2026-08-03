@@ -6,9 +6,10 @@ import 'package:app_crm/features/chat/index_chat.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class ContactoDetallePage extends StatelessWidget {
-  final int idNumero;
+  // 2026-08-03 — migrado de idNumero a idContacto (T_LEAD.ID_CONTACTO).
+  final int idContacto;
 
-  const ContactoDetallePage({super.key, required this.idNumero});
+  const ContactoDetallePage({super.key, required this.idContacto});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class ContactoDetallePage extends StatelessWidget {
             // InfoLeadCubit (sin pasar cubit), justamente para no disparar
             // InfoLeadLoading sobre este cubit y tumbar toda esta pantalla.
             null,
-            GetLeadDetallePorNumeroUseCase(context.read<LeadRepository>()),
+            GetLeadDetallePorContactoUseCase(context.read<LeadRepository>()),
           ),
         ),
         BlocProvider(
@@ -35,12 +36,13 @@ class ContactoDetallePage extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => HistorialLeadCubit(
-            obtenerHistorialPorNumeroUseCase:
-                GetHistorialSeguimientoPorNumero(context.read<LeadRepository>()),
+            obtenerHistorialPorContactoUseCase: GetHistorialSeguimientoPorContacto(
+              context.read<LeadRepository>(),
+            ),
           ),
         ),
       ],
-      child: ContactoDetalleView(idNumero: idNumero),
+      child: ContactoDetalleView(idContacto: idContacto),
     );
   }
 }

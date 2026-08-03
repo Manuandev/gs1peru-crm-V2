@@ -309,20 +309,103 @@ proyecto).
 
 ## SPs que consume
 - `[CRM].[SP_LeadsLst]` → lista de leads por tipo ('PO' o 'PA') y agente/moderador
-- Task `'LHN'` (`obtenerHistorialSeguimientoPorNumero(idNumero)`) → seguimiento de **todos los leads
-  activos del mismo número** (`T_NUMERO_LEAD`/`T_LEAD` con `IB_ACTIVO=1`). Es el único llamado que usa
-  `HistorialTab` (`presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart`, único parámetro
-  `idNumero`, requerido) — mismo call en `ContactoDetalleView` (`HistorialTab(idNumero:
-  lead.idNumero)`, Seguimiento) y en `ChatLeadPanel` (`HistorialTab(idNumero: widget.idNumero)`,
+- Task `'LHN'` (`obtenerHistorialSeguimientoPorContacto(idContacto)`) → seguimiento de **todos los
+  leads activos del mismo contacto** (`LD.ID_CONTACTO`, ver migración abajo — antes era
+  `T_NUMERO_LEAD`/`ID_NUMERO`). Es el único llamado que usa `HistorialTab`
+  (`presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart`, único parámetro `idContacto`,
+  requerido) — mismo call en `ContactoDetalleView` (`HistorialTab(idContacto: lead.idContacto)`,
+  Seguimiento) y en `ChatLeadPanel` (`HistorialTab(idContacto: widget.chat.idContacto)`,
   Conversaciones). Unificado 2026-07-20 a pedido explícito de negocio: "ambos son lo mismo" — antes
   Conversaciones usaba `'LH'` (por lead puntual) y Seguimiento pasó primero por `'LCG'` y luego por
-  `'LH'` también, hasta terminar acá los dos. `'LH'` (por lead) y `'LCG'` (por número, agrupando
+  `'LH'` también, hasta terminar acá los dos. `'LH'` (por lead) y `'LCG'` (por contacto, agrupando
   `T_LEAD_COMENTARIO` con ícono/color de actividad y usuario nominal) se eliminaron por completo del
   cliente — sin caller, no había motivo para mantenerlos. El SP real conserva ambos tasks (`'LH'` y
   `'LCG'`) por si se vuelven a necesitar del lado del backend, pero el cliente Flutter ya no los
   invoca.
 - `HistorialComentarioModel.parseListSeguimiento`/`fromRawStringSeguimiento` parsean la respuesta de
   `'LHN'` (7 campos posicionales — ver comentario en el modelo).
+
+## Migración de ancla ID_NUMERO → ID_CONTACTO (2026-08-03, completa)
+
+Decisión de negocio: un lead ya no se conecta por `ID_NUMERO` (el número de teléfono podía
+cambiar/duplicarse) — ahora ancla en `ID_CONTACTO`, porque **un lead siempre tiene un contacto**.
+`CRM.T_LEAD` tiene columna `ID_CONTACTO` directa (usada por `CSV_LEADS_CUD_APP` task `'U'` desde
+antes de esta fecha; el viejo INSERT a `T_NUMERO_LEAD` en creación ya estaba comentado ahí).
+
+- **Bug real corregido (escritura)**: `Negociacion` no tenía campo `idContacto` — `EditLeadPortrait`/
+  `InfoLeadCubit.updateLead` mandaban `idNumero` como `field1` a `CSV_LEADS_CUD_APP` task `'U'`,
+  que lo parsea como `@ID_CONTACTO` y lo graba directo en `T_LEAD.ID_CONTACTO`: se estaba
+  guardando el id del NÚMERO donde la tabla espera el id de CONTACTO. Corregido de punta a punta:
+  `Negociacion.idContacto` (nuevo campo) → `InfoLeadCubit.updateLead` ahora recibe `idContacto` (no
+  `idNumero`) → `UpdateLeadInfoUseCase`/`LeadRepository.updateNegociacion`/
+  `LeadRemoteDatasource.updateNegociacion` renombrados en cadena, mandan `idContacto` como `field1`.
+  El SP no necesitó cambios (ya esperaba `@ID_CONTACTO` ahí).
+- **Lectura, migrada también** — `CSV_LEADS_LST_APP` (`NC.SQLChangeLock`, fuera de este repo):
+  tasks `'LS'`, `'LN'`, `'LHN'`, `'LCG'` y `'DN'` ahora anclan en `CT.ID_CONTACTO`/`LD.ID_CONTACTO`
+  en vez de `T_NUMERO`/`T_NUMERO_LEAD` (que dejó de recibir INSERTs al crear un lead). `'DT'`
+  también se corrigió: resolvía el contacto vía `T_NUMERO_LEAD`/`T_NUMERO` (tabla ya sin datos
+  nuevos), ahora usa `LD.ID_CONTACTO` directo. `T_NUMERO`/`T_CONTACTO_NUMERO` se siguen usando solo
+  para mostrar "el número del contacto" (dato secundario, resuelto por el vínculo activo más
+  reciente), nunca para resolver el lead.
+  - `Negociacion.idContacto` se parsea de `CT.ID_CONTACTO` en `NegociacionModel.
+    fromDetalleRawString` (tasks `'DT'`/`'DN'`) y en `ContactoNegociacionModel.fromRawString`
+    (task `'LS'`); en `'LN'` se agregó como literal `@ID_CONTACTO` al final de la fila (columna 25,
+    sin JOIN — el SP ya conoce el valor porque es el parámetro de entrada de ese task).
+  - Cliente Flutter renombrado en cadena: `LeadRepository.getLeadDetallePorContacto`/
+    `obtenerNegociaciones`/`obtenerHistorialSeguimientoPorContacto` (antes `...PorNumero`) →
+    `GetLeadDetallePorContactoUseCase`/`GetNegociacionesLead`/`GetHistorialSeguimientoPorContacto`
+    → `InfoLeadCubit.cargarPorIdContacto`/`NegociacionesCubit.cargarNegociaciones`/
+    `HistorialLeadCubit.cargarHistorialPorContacto` → widgets `HistorialTab`/`NegociacionesTab`/
+    `ContactoNegociacionesTab` (prop `idContacto`, antes `idNumero`) → `ContactoDetallePage`/
+    `ContactoDetalleView` (prop `idContacto`) → ruta `AppRoutes.detalleContacto`
+    (`context.goToDetalleContacto(idContacto:)`, antes `idNumero`) → único caller real,
+    `lead_list_portrait.dart` (`lead.contacto.idContacto`, antes `lead.numero.idNumero`).
+    `ChatLeadPanel` (Conversaciones) usa `widget.chat.idContacto` para `NegociacionesTab`/
+    `HistorialTab` — `Chat` ya traía `idContacto` propio, sin necesidad de threading extra.
+  - **No tocado a propósito** — `ContactoFormCubit`/`ContactoSimpleFormCubit.cargarPorIdNumero`
+    (`EditContacto`/`EditContactoSimple`) siguen ancladas en `idNumero`: son otro SP por completo
+    (`CSV_CONTACTO_LST_APP`/`CUD_APP`), donde `idNumero` sigue siendo el ancla correcta de esa
+    pantalla (edita el contacto vinculado a ESE número puntual) — no forma parte de esta migración.
+- **Bug real corregido de paso (mismo SP, mismo pase 2026-08-03) — Cargo dejó de ser
+  `CT.ID_CARGO`.** Al reestructurar los JOINs de empresa (`LS`/`DT`/`DN`) para anclar en
+  `CT.ID_CONTACTO`, se detectó que el cargo del contacto se leía de `T_CONTACTO.ID_CARGO` — una
+  columna entera (id crudo sin catálogo) — cuando el cargo real es texto libre y vive en
+  `T_EMPRESA_CONTACTO.NOM_CARGO` (mismo criterio que ya se corrigió en `CSV_CONTACTO_LST_APP`, ver
+  nota "Área/Cargo de Empresa" más arriba en este archivo) — un contacto puede tener cargos
+  distintos en empresas distintas, no tiene sentido que el cargo viva en el contacto mismo.
+  Corregido: la resolución de empresa (antes `LEFT JOIN T_EMPRESA EM ON EM.ID_EMPRESA = (subquery
+  TOP 1 EM2.ID_EMPRESA)`) pasó a `OUTER APPLY` (alias `ECX`) que trae `EM2.ID_EMPRESA` +
+  `CE2.NOM_CARGO` juntos, y el campo de salida (columna 32, sin cambiar el índice) ahora es
+  `ISNULL(ECX.NOM_CARGO,'')` en vez de `CT.ID_CARGO`. Del lado Flutter, el índice no cambió
+  (`NegociacionModel.fromDetalleRawString`/`cargo: fields[32]` sigue igual) — solo se corrigió el
+  comentario (decía "ya es texto libre" de forma incorrecta/adelantada) y se habilitó
+  `ContactoModel.cargo` (antes deliberadamente sin parsear "para no mostrar un número donde se
+  espera un puesto" — ya es seguro parsearlo). `Negociacion.cargo` no cambió de tipo (ya era
+  `String`), solo la fuente real del dato.
+
+## Revisión de CRM.CSV_CONTACTO_LST_APP / CUD_APP (2026-08-03) — ya estaban bien
+
+A diferencia de `CSV_LEADS_LST_APP`/`CUD_APP`, acá **no había bug de conector** — se revisaron ambos
+SPs completos (`NC.SQLChangeLock`, fuera de este repo) y `idContacto` ya es el ancla real en los
+dos. Solo se dejó documentado, sin tocar el formato de campos (decisión explícita: cero riesgo de
+desincronizar cliente/SP mientras no haya un motivo real para tocarlo):
+
+- **LST (tasks `'D'`/`'DS'`)** — correcto por diseño: `idNumero` se usa **una sola vez**, al
+  principio de cada task, para resolver `@ID_CONTACTO` vía `T_CONTACTO_NUMERO` (vínculo activo más
+  reciente). Todo lo demás (`T_CONTACTO`, `T_CONTACTO_CORREO`, `T_EMPRESA_CONTACTO`, la lista
+  completa de números) ya resuelve por `@ID_CONTACTO`. Tiene sentido que sea así: `EditContacto`/
+  `EditContactoSimple` siempre se abren DESDE un número (una conversación de WhatsApp), nunca desde
+  un contacto ya identificado — `idNumero` como punto de entrada es intencional, no legacy.
+- **CUD (tasks `'U'`/`'US'`)** — `idContacto` ya ancla crear/actualizar (`0` = crear). Se encontró
+  **código muerto** (marcado con `⚠️`, no eliminado): `@ID_NUMERO` (`field1` de `datosContacto` en
+  ambos tasks) se parsea pero nunca se usa en el cuerpo del SP — ni para identificar el contacto
+  (eso es `@ID_CONTACTO`) ni el número (eso es `PREFIJO_PAIS`+`NUMERO`, texto, no id). En `'US'` el
+  propio SP ya comentaba esto ("`idNumero(sin uso acá)`") para el `idNumero` de la fila de número
+  también (`field1` de `datosNumero`). El cliente Flutter (`guardarContacto`/
+  `guardarContactoSimple`, `lead_remote_datasource.dart`) sigue mandando esos campos por
+  compatibilidad de formato con el SP — quitarlos correría los índices de los campos siguientes en
+  2 tasks del SP + 2 métodos Dart en paralelo, más riesgo que beneficio sin un motivo real para
+  hacerlo ahora.
 
 ## Dependencias externas
 - `LeadRepository` (RepositoryProvider global)

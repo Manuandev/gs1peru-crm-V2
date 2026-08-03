@@ -6,12 +6,12 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class HistorialTab extends StatefulWidget {
-  // Seguimiento de todos los leads activos del número (SP 'LHN') — mismo
+  // Seguimiento de todos los leads activos del contacto (SP 'LHN') — mismo
   // llamado en Seguimiento (ContactoDetalleView) y Conversaciones
-  // (ChatLeadPanel).
-  final int idNumero;
+  // (ChatLeadPanel). 2026-08-03 — migrado de idNumero a idContacto.
+  final int idContacto;
 
-  const HistorialTab({super.key, required this.idNumero});
+  const HistorialTab({super.key, required this.idContacto});
 
   @override
   State<HistorialTab> createState() => _HistorialTabState();
@@ -32,8 +32,8 @@ class _HistorialTabState extends State<HistorialTab>
   }
 
   void _cargar() {
-    context.read<HistorialLeadCubit>().cargarHistorialPorNumero(
-      widget.idNumero,
+    context.read<HistorialLeadCubit>().cargarHistorialPorContacto(
+      widget.idContacto,
     );
   }
 

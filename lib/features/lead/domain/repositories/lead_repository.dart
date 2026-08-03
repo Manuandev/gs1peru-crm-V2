@@ -36,8 +36,8 @@ abstract class LeadRepository {
 
   // CRM.CSV_CONTACTO_LST_APP task 'DS' / CSV_CONTACTO_CUD_APP task 'US' —
   // pantalla EditContactoSimple (versión reducida de EditContacto, ver
-  // lead/CLAUDE.md). Contacto en blanco (idContacto == 0) si el número
-  // todavía no tiene contacto asociado.
-  Future<ContactoSimple> getContactoSimplePorIdNumero(int idNumero);
+  // lead/CLAUDE.md). Ancla en idContacto (migrado de idNumero 2026-08-03).
+  // Contacto en blanco (idContacto == 0) si todavía no existe.
+  Future<ContactoSimple> getContactoSimplePorIdContacto(int idContacto);
   Future<CrudResult> guardarContactoSimple(ContactoSimple contacto);
 }

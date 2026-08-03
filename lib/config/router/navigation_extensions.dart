@@ -197,9 +197,10 @@ extension NavigationExtensions on BuildContext {
       _push(AppRoutes.editarContacto, arguments: {'idNumero': idNumero});
 
   // Pantalla reducida — pedido de negocio 2026-07-27, ver lead/CLAUDE.md.
-  Future<void> goToEditarContactoSimple({required int idNumero}) => _push(
+  // Ancla en idContacto (migrado de idNumero 2026-08-03, ver lead/CLAUDE.md).
+  Future<void> goToEditarContactoSimple({required int idContacto}) => _push(
     AppRoutes.editarContactoSimple,
-    arguments: {'idNumero': idNumero},
+    arguments: {'idContacto': idContacto},
   );
 
   // ── Lead — detalle ─────────────────────────────────────────

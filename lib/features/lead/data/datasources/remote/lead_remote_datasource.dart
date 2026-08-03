@@ -274,23 +274,24 @@ class LeadRemoteDatasource {
     };
   }
 
-  // Task 'DS' de CRM.CSV_CONTACTO_LST_APP — detalle SIMPLE por idNumero,
+  // Task 'DS' de CRM.CSV_CONTACTO_LST_APP — detalle SIMPLE por idContacto,
   // pantalla EditContactoSimple (versión reducida de EditContacto, pedido
-  // de negocio 2026-07-27, ver lead/CLAUDE.md). Mismo endpoint que el task
-  // 'D' — es el mismo SP, solo cambia la letra de task. Si el número
-  // todavía no tiene contacto, el SP devuelve '' → ApiEmpty → contacto en
-  // blanco (modo "crear").
-  Future<ContactoSimpleModel> getContactoSimplePorIdNumero(
-    int idNumero,
+  // de negocio 2026-07-27, ver lead/CLAUDE.md). Migrado de idNumero a
+  // idContacto como ancla (2026-08-03) — el caller siempre llega con un
+  // idContacto ya resuelto (desde un lead), y anclar en idNumero rompía si
+  // el contacto no tenía ningún T_CONTACTO_NUMERO activo. Si el contacto no
+  // existe, el SP devuelve '' → ApiEmpty → contacto en blanco (modo "crear").
+  Future<ContactoSimpleModel> getContactoSimplePorIdContacto(
+    int idContacto,
   ) async {
-    final String body = '$idNumero${sep}DS';
+    final String body = '$idContacto${sep}DS';
 
     final result = await _api.postSafe(ApiConstants.urlContactoLst, body);
 
     return switch (result) {
       ApiSuccess(:final data) =>
-        ContactoSimpleModel.fromRawString(data, idNumero),
-      ApiEmpty() => ContactoSimpleModel.vacio(idNumero),
+        ContactoSimpleModel.fromRawString(data, idContacto),
+      ApiEmpty() => ContactoSimpleModel.vacio(idContacto),
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };

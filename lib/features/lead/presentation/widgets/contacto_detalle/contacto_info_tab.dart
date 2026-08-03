@@ -154,7 +154,7 @@ class ContactoInfoTab extends StatelessWidget {
             text: 'Editar contacto',
             icon: AppIcons.edit,
             onPressed: () =>
-                context.goToEditarContactoSimple(idNumero: lead.idNumero),
+                context.goToEditarContactoSimple(idContacto: lead.idContacto),
           ),
         ],
       ),

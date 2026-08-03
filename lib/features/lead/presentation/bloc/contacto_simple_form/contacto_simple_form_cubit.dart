@@ -1,8 +1,9 @@
 // lib/features/lead/presentation/bloc/contacto_simple_form/contacto_simple_form_cubit.dart
 //
 // Carga y guarda el ContactoSimple de la pantalla EditContactoSimple — ancla
-// en idNumero, el único dato que recibe la pantalla (ver EditContactoSimplePage).
-// Mismo patrón que ContactoFormCubit (contacto_form/), pantalla completa.
+// en idContacto (migrado de idNumero 2026-08-03, ver lead/CLAUDE.md), el
+// único dato que recibe la pantalla (ver EditContactoSimplePage). Mismo
+// patrón que ContactoFormCubit (contacto_form/), pantalla completa.
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -14,11 +15,11 @@ class ContactoSimpleFormCubit extends Cubit<ContactoSimpleFormState> {
   ContactoSimpleFormCubit(this._repository)
     : super(const ContactoSimpleFormInitial());
 
-  Future<void> cargarPorIdNumero(int idNumero) async {
+  Future<void> cargarPorIdContacto(int idContacto) async {
     emit(const ContactoSimpleFormLoading());
     try {
-      final contacto = await _repository.getContactoSimplePorIdNumero(
-        idNumero,
+      final contacto = await _repository.getContactoSimplePorIdContacto(
+        idContacto,
       );
       emit(ContactoSimpleFormSuccess(contacto));
     } on AppException catch (e) {

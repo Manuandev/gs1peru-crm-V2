@@ -11,9 +11,9 @@ import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 class EditContactoSimpleView extends StatefulWidget {
-  final int idNumero;
+  final int idContacto;
 
-  const EditContactoSimpleView({super.key, required this.idNumero});
+  const EditContactoSimpleView({super.key, required this.idContacto});
 
   @override
   State<EditContactoSimpleView> createState() =>
@@ -70,7 +70,7 @@ class _EditContactoSimpleViewState extends State<EditContactoSimpleView> {
               message: state.message,
               onRetry: () => context
                   .read<ContactoSimpleFormCubit>()
-                  .cargarPorIdNumero(widget.idNumero),
+                  .cargarPorIdContacto(widget.idContacto),
             );
           }
           if (state is! ContactoSimpleFormSuccess) return const AppLoadingView();

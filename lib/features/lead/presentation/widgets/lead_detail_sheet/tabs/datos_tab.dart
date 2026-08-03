@@ -9,7 +9,6 @@ import 'package:app_crm/features/lead/index_lead.dart';
 class DatosTab extends StatelessWidget {
   final Chat chat;
   final Negociacion negociacion;
-  final int idNumero;
   final InfoLeadCubit? cubit;
   final VoidCallback? onCerrar;
 
@@ -17,7 +16,6 @@ class DatosTab extends StatelessWidget {
     super.key,
     required this.chat,
     required this.negociacion,
-    required this.idNumero,
     this.cubit,
     this.onCerrar,
   });
@@ -197,8 +195,12 @@ class DatosTab extends StatelessWidget {
             // Pantalla reducida (pedido de negocio 2026-07-27) — la
             // pantalla completa (EditContacto) sigue intacta, solo este
             // único punto de entrada real se movió a la simplificada.
-            onPressed: () =>
-                context.goToEditarContactoSimple(idNumero: idNumero),
+            // Ancla en idContacto (migrado de idNumero 2026-08-03, ver
+            // lead/CLAUDE.md) — 0 abre el formulario en blanco ("crear"),
+            // mismo comportamiento que antes.
+            onPressed: () => context.goToEditarContactoSimple(
+              idContacto: chat.idContacto,
+            ),
           ),
         ],
       ),

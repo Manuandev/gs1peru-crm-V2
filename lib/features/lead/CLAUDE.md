@@ -7,8 +7,9 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
 - `LeadListPage` → lista de leads con chips de filtro; recibe `filtroInicial` opcional (`LeadListFiltro?`) para preseleccionar un chip al entrar (ej. desde `CardTotalesHome` en el dashboard)
 - `LeadDetallePage` → detalle completo del lead con comentarios y stepper de estado
 - `EditContactoSimplePage` (ruta `AppRoutes.editarContactoSimple`,
-  `context.goToEditarContactoSimple(idNumero:)`) → versión reducida de `EditContactoPage`, ver
-  sección dedicada más abajo ("EditContactoSimple — pantalla reducida...")
+  `context.goToEditarContactoSimple(idContacto:)` — migrado de `idNumero` 2026-08-03, ver
+  "EditContactoSimple — migrado de idNumero a idContacto" más abajo) → versión reducida de
+  `EditContactoPage`, ver sección dedicada más abajo ("EditContactoSimple — pantalla reducida...")
 - `EditContactoPage` (ruta `AppRoutes.editarContacto`, `context.goToEditarContacto(idNumero:)`) →
   crear/editar contacto. Recibe **solo `idNumero`** — `ContactoFormCubit` (bloc/contacto_form/)
   carga el `ContactoDetalle` completo (identidad + documento + nacionalidad + ubicación +
@@ -157,9 +158,10 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
   - **Segundo consumidor — `ContactoDetalleView` (Seguimiento), agregado 2026-08-03.** Botón
     "Editar contacto" en `ContactoInfoTab` (pestaña "Información" de `ContactoDetallePage`),
     mismo patrón exacto que el botón de `DatosTab`: `CustomOutlinedButton` +
-    `context.goToEditarContactoSimple(idNumero: lead.idNumero)` — `lead.idNumero` (no
-    `lead.idContacto`) porque `EditContactoSimple` sigue anclado en `idNumero` a propósito (ver
-    nota de la migración más abajo en este archivo). `_ContactoDetalleViewState` se suscribe a
+    `context.goToEditarContactoSimple(idContacto: lead.idContacto)` (originalmente se mandó
+    `lead.idNumero` — corregido el mismo día al migrar `EditContactoSimple` a `idContacto`, ver
+    "EditContactoSimple — migrado de idNumero a idContacto" más abajo en este archivo).
+    `_ContactoDetalleViewState` se suscribe a
     `ContactoUpdateNotifier` en `initState()` (junto a su suscripción ya existente a
     `LeadUpdateNotifier`) filtrando `update.idNumero == _ultimoLead?.idNumero`, y llama a su
     `_refrescar()` ya existente (recarga `InfoLeadCubit.cargarPorIdContacto` +
@@ -183,8 +185,10 @@ Estructura calcada de `SeccionDatosSolicitante` pero como pantalla propia de `le
 reusó el widget de `solicitudes/` (features no comparten widgets de UI entre sí en este
 proyecto).
 
-- Ruta `AppRoutes.editarContactoSimple`, `context.goToEditarContactoSimple(idNumero:)`. Recibe
-  **solo `idNumero`**, igual que `EditContacto`. Estructura: `EditContactoSimplePage` →
+- Ruta `AppRoutes.editarContactoSimple`, `context.goToEditarContactoSimple(idContacto:)` (migrado
+  de `idNumero` 2026-08-03, ver "EditContactoSimple — migrado de idNumero a idContacto" más abajo
+  en este archivo — `EditContacto`, la pantalla completa, sigue recibiendo **solo `idNumero`**,
+  no se tocó). Estructura: `EditContactoSimplePage` →
   `EditContactoSimpleView` (BasePage + AppBar dinámico + guardandoNotifier, mismo patrón que
   `EditContactoView`) → `EditContactoSimplePortrait` (`presentation/widgets/edit_contacto_simple/`).
   Título dinámico igual que la pantalla completa. El combo Prefijo usa el mismo
@@ -277,6 +281,50 @@ proyecto).
       agregando `IB_ACTIVO = 1` a ambos INSERT.
     - Los cambios quedan en el archivo `.sql` del repo — hace falta volver a correr el
       `ALTER PROCEDURE` en SSMS para desplegarlos a la base real antes de que tengan efecto.
+
+  - **EditContactoSimple — migrado de idNumero a idContacto, 2026-08-03.** Motivo real: el botón
+    "Editar contacto" de `ContactoInfoTab` (Seguimiento, agregado el mismo día) abría el
+    formulario en blanco para un lead que sí tenía contacto (nombres/correo/empresa vacíos en
+    Información, pero eso era dato real — el bug de verdad era el celular, que SÍ se veía en
+    Información pero el formulario no cargaba nada). Causa: el task `'DS'` de
+    `CSV_CONTACTO_LST_APP` recibía `idNumero` y resolvía `@ID_CONTACTO` a través de
+    `T_CONTACTO_NUMERO` — si el contacto no tenía NINGÚN número vinculado activo (`idNumero`
+    quedaba en `0`, ver `Negociacion.idNumero`, campo separado de `idContacto`), la resolución
+    fallaba y el SP devolvía `''` (modo "crear"), aunque el contacto sí existiera vía
+    `idContacto`. Mismo síntoma raíz que ya se había corregido para leads (`CSV_LEADS_LST_APP`,
+    ver "Migración de ancla ID_NUMERO → ID_CONTACTO" más abajo) — acá faltaba aplicar el mismo
+    criterio.
+    - **SQL** (`CRM.CSV_CONTACTO_LST_APP.sql`, repo aparte — este archivo es **UTF-8 sin BOM**,
+      a diferencia de `CSV_CONTACTO_CUD_APP.sql` que es UTF-16LE con BOM; cualquier edición
+      futura debe preservar la codificación de cada uno o SSMS los muestra corruptos): task
+      `'DS'` ahora recibe `@ID_CONTACTO` directo como `field1` (antes `@ID_NUMERO`) — valida que
+      el contacto exista (`IF NOT EXISTS ... SELECT ''; RETURN`, antes `IF (@ID_CONTACTO IS
+      NULL)`) y resuelve el "número vinculado activo más reciente" (`@ID_NUMERO`, puede quedar
+      `NULL` si el contacto no tiene ninguno) desde `T_CONTACTO_NUMERO` — mismo patrón exacto
+      `OUTER APPLY`/`SELECT TOP 1 ... WHERE NC.ID_CONTACTO = @ID_CONTACTO AND NC.IB_ACTIVO = 1
+      ORDER BY NC.FC_USUARIO_C DESC` que ya usa `CSV_LEADS_LST_APP` (tasks `'DT'`/`'DN'`). El
+      celular/correo/empresa ya resolvían por `@ID_CONTACTO` desde antes (ver nota "Revisión de
+      CRM.CSV_CONTACTO_LST_APP / CUD_APP" más abajo — ya estaban bien), solo el ancla de entrada
+      cambió. Task `'D'` (pantalla completa `EditContacto`, sin caller) **no se tocó** — sigue
+      anclado en `idNumero`, a propósito, ver nota de arriba.
+    - **Cliente Flutter**, renombrado en cadena: `LeadRemoteDatasource.getContactoSimplePorIdNumero`
+      → `getContactoSimplePorIdContacto` → `LeadRepository`/`LeadRepositoryImpl` (mismo rename) →
+      `ContactoSimpleFormCubit.cargarPorIdNumero` → `cargarPorIdContacto` →
+      `EditContactoSimplePage`/`EditContactoSimpleView` (prop `idContacto`, antes `idNumero`) →
+      ruta `AppRoutes.editarContactoSimple`, `context.goToEditarContactoSimple(idContacto:)`
+      (antes `idNumero:`) → los 2 callers reales: `ContactoInfoTab` (`lead.idContacto`) y
+      `DatosTab` (`chat.idContacto`, ya lo usaba para el label "Crear"/"Editar" — `idNumero`
+      quedó sin otro uso en ese widget, se eliminó del todo el prop, incluido en
+      `ChatLeadPanel` donde se instancia).
+    - **`ContactoSimpleModel`** — antes `idNumero` era un simple echo del parámetro de entrada
+      (`idNumero: idNumeroAncla`, sin leerlo de la respuesta). Ahora se parsea de verdad del
+      campo `[0][1]` de la respuesta (el número resuelto por el SP, puede ser `0`) —
+      `fromRawString(raw, idContactoAncla)`. `ContactoSimpleModel.vacio` también pasó de anclar
+      en `idNumero` a `idContacto`.
+    - **Efecto en `_celularEditable`** (`edit_contacto_simple_portrait.dart`, ver nota de arriba)
+      — no cambió de código, pero ahora su condición (`idNumero == 0 || celular.isEmpty`) refleja
+      con precisión "el contacto no tiene ningún número vinculado" en vez de depender de que el
+      SP haya podido resolver el contacto en primer lugar.
 
   - **Correo — actualiza en sitio en vez de duplicar, corregido 2026-07-28.** El bloque CORREO
     de `CSV_CONTACTO_CUD_APP` task `'US'` comparaba por **texto** (`CO.CORREO = TC.CORREO`) para
@@ -405,10 +453,14 @@ antes de esta fecha; el viejo INSERT a `T_NUMERO_LEAD` en creación ya estaba co
     `lead_list_portrait.dart` (`lead.contacto.idContacto`, antes `lead.numero.idNumero`).
     `ChatLeadPanel` (Conversaciones) usa `widget.chat.idContacto` para `NegociacionesTab`/
     `HistorialTab` — `Chat` ya traía `idContacto` propio, sin necesidad de threading extra.
-  - **No tocado a propósito** — `ContactoFormCubit`/`ContactoSimpleFormCubit.cargarPorIdNumero`
-    (`EditContacto`/`EditContactoSimple`) siguen ancladas en `idNumero`: son otro SP por completo
-    (`CSV_CONTACTO_LST_APP`/`CUD_APP`), donde `idNumero` sigue siendo el ancla correcta de esa
-    pantalla (edita el contacto vinculado a ESE número puntual) — no forma parte de esta migración.
+  - **`ContactoFormCubit` (EditContacto, pantalla completa, sin caller hoy) NO se tocó** — sigue
+    anclada en `idNumero` (task `'D'` de `CSV_CONTACTO_LST_APP`), a propósito: esa pantalla no
+    tiene caller real hoy, así que no era el foco del cambio de abajo.
+  - **`ContactoSimpleFormCubit.cargarPorIdNumero` SÍ se migró a `idContacto`
+    (`cargarPorIdContacto`) — 2026-08-03**, ver sección "EditContactoSimple — migrado de
+    idNumero a idContacto" más abajo en este archivo. Esta nota decía originalmente que ninguna
+    de las dos pantallas formaba parte de la migración — quedó desactualizada para
+    `EditContactoSimple`, se corrige acá.
 - **Bug real corregido de paso (mismo SP, mismo pase 2026-08-03) — Cargo dejó de ser
   `CT.ID_CARGO`.** Al reestructurar los JOINs de empresa (`LS`/`DT`/`DN`) para anclar en
   `CT.ID_CONTACTO`, se detectó que el cargo del contacto se leía de `T_CONTACTO.ID_CARGO` — una

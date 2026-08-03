@@ -1,17 +1,23 @@
 // lib/features/lead/data/models/contacto_simple_model.dart
 //
 // Parsea la respuesta de CRM.CSV_CONTACTO_LST_APP, task 'DS' (detalle
-// simple de contacto por idNumero — pantalla EditContactoSimple, ver
-// lead/CLAUDE.md). Si el número todavía no tiene contacto asociado, el SP
+// simple de contacto — pantalla EditContactoSimple, ver lead/CLAUDE.md).
+// Migrado de idNumero a idContacto como ancla (2026-08-03, mismo criterio
+// que la migración de CSV_LEADS_LST_APP): el caller siempre llega con un
+// idContacto ya resuelto (desde un lead), y anclar en idNumero rompía si el
+// contacto no tenía ningún T_CONTACTO_NUMERO activo — el detalle no se
+// podía cargar aunque el contacto sí existiera (bug real detectado en
+// vivo). Si el contacto no existe (idContacto == 0 o no matchea), el SP
 // devuelve '' (ApiEmpty del lado de Flutter) — ver ContactoSimpleModel.vacio.
 //
 // Secciones separadas por sepListas (¯):
 //   [0] datos del contacto (campos separados por ¦):
-//       0 idContacto ¦ 1 idNumero ¦ 2 idTipoDocumento ¦ 3 numeroDocumento ¦
+//       0 idContacto ¦ 1 idNumero (vínculo activo más reciente, 0 si el
+//       contacto no tiene ninguno) ¦ 2 idTipoDocumento ¦ 3 numeroDocumento ¦
 //       4 idNacionalidad ¦ 5 prefijoContacto (saludo) ¦ 6 nombre ¦
 //       7 apellidoPaterno ¦ 8 apellidoMaterno
-//   [1] celular anclado en idNumero (puede venir vacío si el número aún no
-//       está en T_NUMERO): 0 idNumero ¦ 1 prefijoPais ¦ 2 numero
+//   [1] celular del idNumero resuelto arriba (vacío si el contacto no
+//       tiene ninguno vinculado): 0 idNumero ¦ 1 prefijoPais ¦ 2 numero
 //   [2] primer correo activo (puede venir vacío): 0 idCorreo ¦ 1 correo
 //   [3] primera empresa vinculada (puede venir vacío):
 //       0 idEmpresaContacto ¦ 1 ruc ¦ 2 razonSocial ¦ 3 cargo (texto libre,
@@ -41,15 +47,15 @@ class ContactoSimpleModel extends ContactoSimple {
     super.cargo,
   });
 
-  /// Contacto en blanco anclado a [idNumero] — usado cuando el número
-  /// todavía no tiene contacto asociado (pantalla arranca en modo "crear").
-  factory ContactoSimpleModel.vacio(int idNumero) =>
-      ContactoSimpleModel(idNumero: idNumero);
+  /// Contacto en blanco anclado a [idContacto] — usado cuando el contacto
+  /// todavía no existe (pantalla arranca en modo "crear").
+  factory ContactoSimpleModel.vacio(int idContacto) =>
+      ContactoSimpleModel(idContacto: idContacto);
 
-  factory ContactoSimpleModel.fromRawString(String raw, int idNumeroAncla) {
+  factory ContactoSimpleModel.fromRawString(String raw, int idContactoAncla) {
     final secciones = raw.split(AppConstants.sepListas);
     if (secciones.isEmpty || secciones[0].trim().isEmpty) {
-      return ContactoSimpleModel.vacio(idNumeroAncla);
+      return ContactoSimpleModel.vacio(idContactoAncla);
     }
 
     final fields = ParseUtils.campos(secciones[0], AppConstants.sepCampos);
@@ -66,7 +72,7 @@ class ContactoSimpleModel extends ContactoSimple {
 
     return ContactoSimpleModel(
       idContacto: ParseUtils.toInt(fields, 0),
-      idNumero: idNumeroAncla,
+      idNumero: ParseUtils.toInt(fields, 1),
       idTipoDocumento: ParseUtils.str(fields, 2),
       numeroDocumento: ParseUtils.str(fields, 3),
       idNacionalidad: ParseUtils.str(fields, 4),

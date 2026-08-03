@@ -141,7 +141,6 @@ class _ChatLeadPanelState extends State<ChatLeadPanel> {
                 DatosTab(
                   chat: widget.chat,
                   negociacion: widget.negociacion,
-                  idNumero: widget.idNumero,
                   cubit: widget.cubit,
                   onCerrar: _cerrar,
                 ),

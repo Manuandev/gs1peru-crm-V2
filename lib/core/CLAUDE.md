@@ -552,12 +552,17 @@ solicitante, RUC de Información comercial, N° documento del formulario de part
 
 ### AppProcessOverlay
 Overlay de pantalla completa para operaciones asíncronas de 2 pasos: "Guardando/Subiendo..."
-(spinner) → check verde animado (éxito), con transición animada entre ambos (`AnimatedSwitcher`
-+ scale/fade). Generaliza el patrón "loading card → check card" que antes se repetía a mano por
-pantalla (ver `lead/CLAUDE.md` → `EditLeadPortrait`, primer caller real, agregado 2026-08-03) —
-pensado para cualquier flujo con el mismo patrón: guardar formularios, subir archivos/multimedia,
-etc. El check usa una animación propia (círculo `easeOutBack` + ícono `elasticOut` con delay,
-`_CheckAnimado` interno) en vez de un ícono estático.
+(anillo girando + logo de la app pulsando, `_LogoCargando`) → check verde animado (éxito), con
+transición animada entre ambos (`AnimatedSwitcher` + scale/fade). Generaliza el patrón "loading
+card → check card" que antes se repetía a mano por pantalla (ver `lead/CLAUDE.md` →
+`EditLeadPortrait`, primer caller real, agregado 2026-08-03) — pensado para cualquier flujo con
+el mismo patrón: guardar formularios, subir archivos/multimedia, etc. El estado "cargando" usa
+`AppImages.logoTheme(context)` pulsando (0.88↔1.0) en el centro del `CircularProgressIndicator`
+de siempre — mismo lenguaje visual que el logo pulsando de Splash
+(`auth/splash_portrait.dart._pulseController`) pero en tamaño compacto (72px, cabe en la
+tarjeta, no ocupa la pantalla como el splash). El check usa una animación propia (círculo
+`easeOutBack` + ícono `elasticOut` con delay, `_CheckAnimado` interno) en vez de un ícono
+estático.
 ```dart
 Stack(
   children: [

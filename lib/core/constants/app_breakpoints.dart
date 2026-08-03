@@ -378,6 +378,39 @@ class AppSizing {
   static const double animRingStroke = 1.5;
 
   // ============================================================
+  // APP PROCESS OVERLAY — logo animado en carga/éxito (core)
+  // ============================================================
+
+  /// Ancho del logo (isotipo + wordmark) en el estado "cargando" de
+  /// AppProcessOverlay — el asset fuente no es cuadrado (1142x767, ver
+  /// comentario en app_process_overlay.dart), se muestra completo con su
+  /// aspect ratio real en vez de recortarlo (el "1" del wordmark queda
+  /// fuera del círculo del isotipo, un recorte cuadrado lo cortaría).
+  /// Chico a propósito — cabe con margen dentro de processGlowSize: 60dp
+  static const double processLogoWidth = 60.0;
+
+  /// Diámetro del resplandor radial detrás del logo (estado "cargando") en
+  /// AppProcessOverlay — más chico que processGlowSizeCheck a propósito
+  /// (pedido explícito: el logo de carga no debe verse más grande que el
+  /// check de éxito): 76dp
+  static const double processGlowSize = 76.0;
+
+  /// Diámetro del resplandor radial detrás del check (estado "éxito") en
+  /// AppProcessOverlay: 100dp
+  static const double processGlowSizeCheck = 100.0;
+
+  /// Ancho/alto FIJOS (no mínimos) de la tarjeta de AppProcessOverlay —
+  /// mismo tamaño exacto para "cargando" y "éxito", pedido explícito: un
+  /// tamaño mínimo no alcanza porque un texto largo sin límite de ancho
+  /// (ej. "éxito", una sola línea) puede estirar esa tarjeta más que la
+  /// otra. Con ancho/alto fijos ambas quedan pixel-idénticas siempre, y de
+  /// paso el texto queda forzado a envolver dentro de ese ancho en vez de
+  /// crecer sin límite. Calculado con margen sobre el contenido normal de
+  /// ambos estados (logo/check + mensaje de 2 líneas): 240dp / 200dp
+  static const double processCardWidth = 240.0;
+  static const double processCardHeight = 200.0;
+
+  // ============================================================
   // ÍCONOS DE ESTADO VACÍO / ERROR (responsive)
   // ============================================================
 

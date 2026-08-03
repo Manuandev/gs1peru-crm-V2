@@ -12,6 +12,8 @@ class MessageList extends StatelessWidget {
   final AudioController audioController;
   final int idNumero;
   final String nombre;
+  final ChatMessage? mensajeSeleccionado;
+  final void Function(ChatMessage message) onLongPressMessage;
 
   const MessageList({
     super.key,
@@ -21,6 +23,8 @@ class MessageList extends StatelessWidget {
     this.isLoadingMore = false,
     required this.idNumero,
     required this.nombre,
+    required this.mensajeSeleccionado,
+    required this.onLongPressMessage,
   });
 
   @override
@@ -68,20 +72,45 @@ class MessageList extends StatelessWidget {
             previousMessage == null ||
             !_isSameDay(message.fechaHora, previousMessage.fechaHora);
 
+        final seleccionado =
+            mensajeSeleccionado != null &&
+            _mismoMensaje(mensajeSeleccionado!, message);
+
         return Column(
           key: ValueKey(message.idTokenMeta),
           children: [
             if (showDateSeparator) _DateSeparator(fecha: message.fechaHora),
-            MessageBubble(
-              message: message,
-              audioController: audioController,
-              idNumero: idNumero,
-              nombre: nombre,
+            GestureDetector(
+              onLongPress: () => onLongPressMessage(message),
+              child: Container(
+                width: double.infinity,
+                color: seleccionado
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: AppColors.opacityActiveItem)
+                    : AppColors.transparent,
+                child: MessageBubble(
+                  message: message,
+                  audioController: audioController,
+                  idNumero: idNumero,
+                  nombre: nombre,
+                ),
+              ),
             ),
           ],
         );
       },
     );
+  }
+
+  // Identidad estable del mensaje — no compara por igualdad de campos
+  // (Equatable) porque el estadoEntrega cambia con los checks de WhatsApp
+  // y eso apagaría el resaltado de selección aunque siga siendo el mismo mensaje.
+  bool _mismoMensaje(ChatMessage a, ChatMessage b) {
+    if (a.idTokenMeta.isNotEmpty || b.idTokenMeta.isNotEmpty) {
+      return a.idTokenMeta == b.idTokenMeta;
+    }
+    return a == b;
   }
 
   bool _isSameDay(String fecha1, String fecha2) {

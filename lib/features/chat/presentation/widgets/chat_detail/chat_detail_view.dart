@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/config/index_config.dart';
@@ -37,6 +38,11 @@ class _ChatDetailViewState extends State<ChatDetailView>
 
   int _previousMessageCount = 0;
   ChatListBloc? _chatListBloc;
+
+  // Selección de mensaje estilo WhatsApp — solo uno a la vez, activada con
+  // long press (ver MessageList/MessageBubble). Mientras haya uno seleccionado
+  // el AppBar cambia a modo "back + copiar" (ver build()).
+  ChatMessage? _mensajeSeleccionado;
 
   @override
   void initState() {
@@ -110,93 +116,145 @@ class _ChatDetailViewState extends State<ChatDetailView>
     );
   }
 
+  void _seleccionarMensaje(ChatMessage message) {
+    setState(() => _mensajeSeleccionado = message);
+  }
+
+  void _limpiarSeleccion() {
+    setState(() => _mensajeSeleccionado = null);
+  }
+
+  void _copiarMensajeSeleccionado() {
+    final mensaje = _mensajeSeleccionado;
+    if (mensaje == null) return;
+    Clipboard.setData(ClipboardData(text: mensaje.contenido));
+    _limpiarSeleccion();
+    AppSnackBar.success(
+      context,
+      'Mensaje copiado',
+      position: SnackPosition.top,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final mensajeSeleccionado = _mensajeSeleccionado;
+    final enSeleccion = mensajeSeleccionado != null;
 
     return BasePage(
       bodyPadding: EdgeInsets.zero,
-      titleWidget: BlocBuilder<InfoLeadCubit, InfoLeadState>(
-        buildWhen: (prev, curr) => curr is InfoLeadSuccess,
-        builder: (context, infoState) {
-          if (infoState is! InfoLeadSuccess) return const SizedBox.shrink();
-          return BlocSelector<ChatDetailBloc, ChatDetailState, String?>(
-            selector: (state) {
-              final msgs = switch (state) {
-                ChatDetailSuccess s => s.messages,
-                ChatDetailLoadingMore s => s.messages,
-                _ => <ChatMessage>[],
-              };
-              for (var i = msgs.length - 1; i >= 0; i--) {
-                if (msgs[i].direccionMensaje == 'CLI') return msgs[i].fechaHora;
-              }
-              return null;
-            },
-            builder: (context, fechaUltimaRespuesta) => ChatDetailAppBar(
-              negociacion: infoState.negociacion,
-              nombreCompleto: widget.conversacion.nombreCompleto,
-              idCanal: infoState.negociacion.idCanal,
-              fechaUltimaRespuesta: fechaUltimaRespuesta,
-              onTap: () {
-                FocusScope.of(context).unfocus();
-                context.goToEditarLead(
-                  idLead: infoState.negociacion.idLead,
-                  cubit: context.read<InfoLeadCubit>(),
-                  desdeConversacion: true,
+      titleWidget: enSeleccion
+          ? Text(
+              '1 mensaje seleccionado',
+              style: AppTextStyles.titleMedium.copyWith(
+                color: colorScheme.onPrimary,
+                fontWeight: AppTextStyles.weightBold,
+              ),
+            )
+          : BlocBuilder<InfoLeadCubit, InfoLeadState>(
+              buildWhen: (prev, curr) => curr is InfoLeadSuccess,
+              builder: (context, infoState) {
+                if (infoState is! InfoLeadSuccess) {
+                  return const SizedBox.shrink();
+                }
+                return BlocSelector<ChatDetailBloc, ChatDetailState, String?>(
+                  selector: (state) {
+                    final msgs = switch (state) {
+                      ChatDetailSuccess s => s.messages,
+                      ChatDetailLoadingMore s => s.messages,
+                      _ => <ChatMessage>[],
+                    };
+                    for (var i = msgs.length - 1; i >= 0; i--) {
+                      if (msgs[i].direccionMensaje == 'CLI') {
+                        return msgs[i].fechaHora;
+                      }
+                    }
+                    return null;
+                  },
+                  builder: (context, fechaUltimaRespuesta) => ChatDetailAppBar(
+                    negociacion: infoState.negociacion,
+                    nombreCompleto: widget.conversacion.nombreCompleto,
+                    idCanal: infoState.negociacion.idCanal,
+                    fechaUltimaRespuesta: fechaUltimaRespuesta,
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      context.goToEditarLead(
+                        idLead: infoState.negociacion.idLead,
+                        cubit: context.read<InfoLeadCubit>(),
+                        desdeConversacion: true,
+                      );
+                    },
+                  ),
                 );
               },
             ),
-          );
-        },
-      ),
       drawerSide: DrawerSide.none,
       footer: const SizedBox.shrink(),
       appBarLeadingButtons: [
         IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.goBack(),
+          onPressed: enSeleccion ? _limpiarSeleccion : () => context.goBack(),
         ),
       ],
 
-      appBarTrailingButtons: [
-        Builder(
-          builder: (context) {
-            final chat = widget.conversacion;
-            final telefono = chat.numero.isNotEmpty
-                ? '${chat.prefijoPais} ${chat.numero}'.trim()
-                : null;
-            return IconButton(
-              icon: const Icon(AppIcons.phone, color: AppColors.background),
-              onPressed: telefono == null
-                  ? null
-                  : () => LauncherUtils.abrirTelefono(telefono),
-            );
-          },
-        ),
-      ],
+      appBarTrailingButtons: enSeleccion
+          ? const []
+          : [
+              Builder(
+                builder: (context) {
+                  final chat = widget.conversacion;
+                  final telefono = chat.numero.isNotEmpty
+                      ? '${chat.prefijoPais} ${chat.numero}'.trim()
+                      : null;
+                  return IconButton(
+                    icon: const Icon(
+                      AppIcons.phone,
+                      color: AppColors.background,
+                    ),
+                    onPressed: telefono == null
+                        ? null
+                        : () => LauncherUtils.abrirTelefono(telefono),
+                  );
+                },
+              ),
+            ],
 
-      appBarPopupItems: [
-        AppBarPopupItem(
-          value: 'datos',
-          icon: Icons.assignment_outlined,
-          label: 'Datos',
-          subtitle: 'Información del contacto',
-          showDividerAfter: false,
-        ),
-        AppBarPopupItem(
-          value: 'negociaciones',
-          icon: Icons.handshake_outlined,
-          label: 'Negociaciones',
-          subtitle: 'Gestiona sus negociaciones',
-        ),
-        AppBarPopupItem(
-          value: 'historial',
-          icon: Icons.history_outlined,
-          label: 'Historial',
-          subtitle: 'Actividades',
-        ),
-      ],
+      appBarPopupItems: enSeleccion
+          ? [
+              AppBarPopupItem(
+                value: 'copiar',
+                icon: AppIcons.copy,
+                label: 'Copiar',
+                showDividerAfter: false,
+              ),
+            ]
+          : [
+              AppBarPopupItem(
+                value: 'datos',
+                icon: Icons.assignment_outlined,
+                label: 'Datos',
+                subtitle: 'Información del contacto',
+                showDividerAfter: false,
+              ),
+              AppBarPopupItem(
+                value: 'negociaciones',
+                icon: Icons.handshake_outlined,
+                label: 'Negociaciones',
+                subtitle: 'Gestiona sus negociaciones',
+              ),
+              AppBarPopupItem(
+                value: 'historial',
+                icon: Icons.history_outlined,
+                label: 'Historial',
+                subtitle: 'Actividades',
+              ),
+            ],
       onPopupSelected: (value) {
+        if (enSeleccion) {
+          if (value == 'copiar') _copiarMensajeSeleccionado();
+          return;
+        }
         if (context.read<InfoLeadCubit>().state is! InfoLeadSuccess) return;
         FocusScope.of(context).unfocus();
         final tabIndex = switch (value) {
@@ -326,6 +384,8 @@ class _ChatDetailViewState extends State<ChatDetailView>
                       audioController: _audioController,
                       idNumero: widget.idNumero,
                       nombre: widget.conversacion.nombreCompleto,
+                      mensajeSeleccionado: mensajeSeleccionado,
+                      onLongPressMessage: _seleccionarMensaje,
                     );
                   },
                 ),

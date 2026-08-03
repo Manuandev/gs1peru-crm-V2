@@ -679,6 +679,20 @@ Fix: `EditLeadPortrait` recibe `guardandoNotifier` (`ValueNotifier<bool>?`), cre
 punto de salida manual a esta pantalla (otro botón, gesto, etc.), debe leer el mismo notifier —
 no inventar un guard paralelo.
 
+### Overlay de guardado/éxito — `AppProcessOverlay` (2026-08-03)
+
+El `_ExitoOverlay` privado que mencionan las notas de arriba (bug de `guardandoNotifier`) **ya no
+existe** — se generalizó a `AppProcessOverlay` (`core/`, ver `core/CLAUDE.md`), un overlay
+reusable de 2 pasos ("Guardando..." con spinner → check verde animado) con transición animada
+entre ambos estados, pensado para reusarse en cualquier pantalla con el mismo patrón (subida de
+archivos, otros formularios), no solo acá. `EditLeadPortrait.build()` ahora renderiza un único
+`if (_isLoading || _mostrandoExito) AppProcessOverlay(status: ..., loadingMessage: ...,
+successMessage: ...)` en vez de los dos overlays separados (`AppLoadingOverlay` +
+`_ExitoOverlay`) que se cortaban en seco uno con otro. La lógica de negocio no cambió — sigue
+siendo `_setGuardando()`/`_guardar()` quien decide cuándo mostrar cada estado y quien retrocede
+solo tras el check (`Future.delayed` + `context.goBack()`); `AppProcessOverlay` solo anima la
+transición visual entre "cargando" y "éxito", no controla temporizadores.
+
 ### Causa real (Seguimiento) — InfoLeadCubit compartido se auto-interrumpía al crear
 
 El guard de arriba (`guardandoNotifier`) evita el pop manual prematuro, pero en Seguimiento

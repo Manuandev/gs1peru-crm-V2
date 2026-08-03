@@ -87,9 +87,20 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   // Costo final es el único campo editable de la fila financiera; Descuento
   // se deriva de él (ver getters financieros).
   late final TextEditingController _costoFinalCtrl;
+  // Cantidad nunca puede quedar por debajo de 1 — ver _onCantidadFocusChange.
+  late final FocusNode _cantidadFocus;
 
   bool _isLoading = false;
   bool _combosInicializados = false;
+  // Defaults de Precio base/Costo final/Moneda (ver _inicializarCombos) solo
+  // se aplican UNA VEZ, al entrar a la pantalla — no en cada re-sync de
+  // combos. _inicializarCombos también corre en didUpdateWidget cada vez que
+  // cambia widget.negociacion (ej. justo después de guardar, cuando
+  // InfoLeadCubit emite la negociación ya persistida) — sin este flag, un
+  // Costo final puesto a propósito en 0 (negociación gratuita) se volvería a
+  // pisar con el precio calculado apenas se guarda, deshaciendo la elección
+  // del usuario.
+  bool _defaultsFinancierosAplicados = false;
   // true mientras se muestra el check verde de "guardado correctamente" —
   // ver _ExitoOverlay y _guardar().
   bool _mostrandoExito = false;
@@ -100,8 +111,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   void initState() {
     super.initState();
     final n = widget.negociacion;
-    // Al crear, Cantidad arranca en 1 por defecto — no en blanco/0.
-    final cantidadInicial = (n.idLead == 0 && n.cantidad == 0) ? 1 : n.cantidad;
+    // Cantidad nunca arranca en 0/blanco — si la negociación no trae
+    // cantidad (crear o editar), se completa en 1. Precio base/Costo
+    // final/Moneda dependen de la Oportunidad del catálogo (que acá todavía
+    // no está cargado) — esos defaults se completan más abajo, en
+    // _inicializarCombos.
+    final cantidadInicial = n.cantidad > 0 ? n.cantidad : 1;
     _cantidadCtrl = TextEditingController(
       text: NumberFormatUtils.fmtInt(cantidadInicial),
     );
@@ -118,6 +133,10 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     // cantidad) crecía, y Descuento (subtotal - costoFinal) se inflaba solo
     // por subir la cantidad, no porque hubiera un descuento real.
     _cantidadCtrl.addListener(_onCantidadChanged);
+    // Cantidad no puede quedar por debajo de 1 — se corrige recién al
+    // perder el foco (no en cada tecla), para no pelear con el usuario
+    // mientras borra el campo para tipear un valor nuevo.
+    _cantidadFocus = FocusNode()..addListener(_onCantidadFocusChange);
   }
 
   void _onCantidadChanged() {
@@ -126,6 +145,13 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     );
     if (_costoFinalCtrl.text != nuevoCostoFinal) {
       _costoFinalCtrl.text = nuevoCostoFinal;
+    }
+  }
+
+  void _onCantidadFocusChange() {
+    if (_cantidadFocus.hasFocus) return; // solo al perder el foco
+    if (_cantidad < 1) {
+      _cantidadCtrl.text = NumberFormatUtils.fmtInt(1);
     }
   }
 
@@ -157,6 +183,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _cantidadCtrl.dispose();
     _precioBaseCtrl.dispose();
     _costoFinalCtrl.dispose();
+    _cantidadFocus.dispose();
     // _seccionCambio.dispose();
     widget.guardandoNotifier?.value = false;
     super.dispose();
@@ -187,9 +214,41 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     }
     _interes = state.intereses.where((e) => e.id == n.idInteres).firstOrNull;
 
-    _monedaItem =
-        state.monedas.where((m) => m.id == n.idMoneda).firstOrNull ??
-        state.monedas.firstOrNull;
+    // Moneda: fuente normal es el idMoneda de la negociación.
+    _monedaItem = state.monedas.where((m) => m.id == n.idMoneda).firstOrNull;
+
+    // Defaults de Precio base/Costo final/Moneda cuando la negociación no
+    // los trae — pedido de negocio, solo al ENTRAR a la pantalla (ver
+    // _defaultsFinancierosAplicados). Si el usuario deja Costo final en 0 a
+    // propósito (negociación gratuita) y guarda, ese 0 debe respetarse en
+    // cualquier re-sync posterior de este método — nunca se vuelve a
+    // "corregir" solo porque siga siendo 0.
+    if (!_defaultsFinancierosAplicados) {
+      // Moneda: si no matcheó por id, se completa con la moneda de la
+      // Oportunidad elegida — "primera moneda del catálogo" queda solo como
+      // último recurso, si tampoco la Oportunidad trae una moneda válida.
+      _monedaItem ??= state.monedas
+          .where((m) => m.id == _oportunidad?.idMoneda)
+          .firstOrNull;
+      _monedaItem ??= state.monedas.firstOrNull;
+
+      // Precio base / Costo final: se completan con el precio general de la
+      // Oportunidad elegida. Con ambos completados así, Descuento (subtotal
+      // - costoFinal, ver getter _descuento) sale en 0 automáticamente, sin
+      // necesitar un default aparte.
+      final precioGeneralOportunidad = _oportunidad?.importeGeneral ?? 0;
+      if (n.precioBase <= 0) {
+        _precioBaseCtrl.text = NumberFormatUtils.fmtDecimal(
+          precioGeneralOportunidad,
+        );
+      }
+      if (n.precio <= 0) {
+        _costoFinalCtrl.text = NumberFormatUtils.fmtDecimal(
+          precioGeneralOportunidad * _cantidad,
+        );
+      }
+      _defaultsFinancierosAplicados = true;
+    }
 
     if (state.estados.isNotEmpty) {
       final tienePadre = n.idEstadoPadre.isNotEmpty;
@@ -579,6 +638,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                     ]),
                     builder: (context, _) => EditLeadFinancieraSection(
                       cantidadCtrl: _cantidadCtrl,
+                      cantidadFocusNode: _cantidadFocus,
                       precioBaseCtrl: _precioBaseCtrl,
                       costoFinalCtrl: _costoFinalCtrl,
                       monedas: catalogState.monedas,
@@ -596,73 +656,25 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             formSaveBar,
           ],
         ),
-        // Recuadro centrado "Creando/Editando negociación..." mientras se
-        // guarda — reusa AppLoadingOverlay (core), mismo patrón que el resto
-        // de la app.
-        if (_isLoading)
-          AppLoadingOverlay(
-            message: _esNuevo
+        // Overlay único "Guardando... → check verde animado" (reusa
+        // AppProcessOverlay, core) — antes eran dos overlays separados
+        // (AppLoadingOverlay + un check estático) que se cortaban en seco
+        // uno con otro; ahora AppProcessOverlay anima la transición entre
+        // ambos estados. _guardar() retrocede solo tras mostrar el check
+        // (ver _setGuardando()).
+        if (_isLoading || _mostrandoExito)
+          AppProcessOverlay(
+            status: _isLoading
+                ? AppProcessStatus.cargando
+                : AppProcessStatus.exito,
+            loadingMessage: _esNuevo
                 ? 'Creando negociación...'
                 : 'Editando negociación...',
-          ),
-        // Check verde tras guardar con éxito (ver _guardar) — se muestra un
-        // momento y el propio _guardar() retrocede solo después.
-        if (_mostrandoExito)
-          _ExitoOverlay(
-            mensaje: _esNuevo
+            successMessage: _esNuevo
                 ? 'La negociación se creó correctamente'
                 : 'La negociación se editó correctamente',
           ),
       ],
-    );
-  }
-}
-
-// ── Overlay de éxito ─────────────────────────────────────────────────────────
-// Check verde grande + mensaje, mismo patrón visual que AppLoadingOverlay
-// (core) pero para el estado de éxito — solo se usa acá, tras guardar.
-class _ExitoOverlay extends StatelessWidget {
-  final String mensaje;
-
-  const _ExitoOverlay({required this.mensaje});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: Container(
-        color: AppColors.black(0.4),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.lg,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(AppSizing.radiusLg),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  AppIcons.checkCircle,
-                  color: AppColors.success,
-                  size: AppSizing.iconXl,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  mensaje,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.titleSmall.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: AppTextStyles.weightSemiBold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

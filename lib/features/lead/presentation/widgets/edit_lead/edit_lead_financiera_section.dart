@@ -20,6 +20,9 @@ class EditLeadFinancieraSection extends StatelessWidget {
   final double subtotal;
   final double descuento;
   final double costoFinal;
+  // Corrige Cantidad a 1 al perder el foco si quedó en 0/vacío — ver
+  // _onCantidadFocusChange en EditLeadPortrait.
+  final FocusNode? cantidadFocusNode;
 
   const EditLeadFinancieraSection({
     super.key,
@@ -32,6 +35,7 @@ class EditLeadFinancieraSection extends StatelessWidget {
     required this.subtotal,
     required this.descuento,
     required this.costoFinal,
+    this.cantidadFocusNode,
   });
 
   String get _simbolo => monedaItem?.simbolo ?? '';
@@ -62,6 +66,7 @@ class EditLeadFinancieraSection extends StatelessWidget {
           derecho: CustomTextField(
             label: 'Cantidad (*)',
             controller: cantidadCtrl,
+            focusNode: cantidadFocusNode,
             enabled: !isLoading,
             dense: true,
             prefixIcon: Icon(

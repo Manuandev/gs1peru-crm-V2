@@ -550,6 +550,32 @@ El `Container` con color ya capta el hit-test por sí solo — no hace falta
 solicitante, RUC de Información comercial, N° documento del formulario de participante — ver
 `solicitudes/CLAUDE.md` → "Autocompletado por documento").
 
+### AppProcessOverlay
+Overlay de pantalla completa para operaciones asíncronas de 2 pasos: "Guardando/Subiendo..."
+(spinner) → check verde animado (éxito), con transición animada entre ambos (`AnimatedSwitcher`
++ scale/fade). Generaliza el patrón "loading card → check card" que antes se repetía a mano por
+pantalla (ver `lead/CLAUDE.md` → `EditLeadPortrait`, primer caller real, agregado 2026-08-03) —
+pensado para cualquier flujo con el mismo patrón: guardar formularios, subir archivos/multimedia,
+etc. El check usa una animación propia (círculo `easeOutBack` + ícono `elasticOut` con delay,
+`_CheckAnimado` interno) en vez de un ícono estático.
+```dart
+Stack(
+  children: [
+    MiFormulario(),
+    if (_status != null)
+      AppProcessOverlay(
+        status: _status!,             // AppProcessStatus.cargando | .exito
+        loadingMessage: 'Guardando...',
+        successMessage: 'Se guardó correctamente',
+      ),
+  ],
+)
+```
+El caller decide cuándo mostrar `exito` (ej. tras confirmar el guardado) y cuándo dejar de
+renderizar el overlay — el widget solo anima la transición entre sus 2 estados, no controla
+temporizadores de auto-cierre (eso sigue siendo responsabilidad del caller, ver
+`EditLeadPortrait._setGuardando()`/`_guardar()`).
+
 ### AppEmptyView
 Vista de estado vacío con mensaje customizable.
 ```dart

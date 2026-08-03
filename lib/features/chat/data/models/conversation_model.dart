@@ -87,7 +87,10 @@ class ChatModel extends Chat {
   // 14  EP.ID_ESTADO         32  QT_IA.QT_MENSAJES_IA
   // 15  EP.DESCRIPCION       33  FC_IA_LAST.FC_USUARIO_C
   // 16  CP.ID_CAMPANIA       34  CC.ID_CONVERSACION_CAB
-  // 17  CP.NOMBRE            35  CT.ID_CARGO
+  // 17  CP.NOMBRE            35  CE.NOM_CARGO (T_EMPRESA_CONTACTO, texto
+  //                              libre — 2026-08-03, verificado; el cargo
+  //                              vive en la empresa vinculada, no en
+  //                              T_CONTACTO.ID_CARGO, columna vieja sin uso)
   //                          36  CO.CORREO
   factory ChatModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);

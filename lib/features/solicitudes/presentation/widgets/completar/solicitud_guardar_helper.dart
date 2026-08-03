@@ -63,8 +63,6 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         cantidadEsperada: formState.cantidadEsperada,
       );
 
-  if (result is CrudOk) progreso?.completarPasoActual();
-
   // La primera vez que se crea (numSol venía vacío), el backend genera el
   // NUMSOL real y lo devuelve en CrudOk.data — hay que guardarlo para que
   // el próximo "Guardar" actualice esta misma solicitud en vez de crear
@@ -111,6 +109,20 @@ Future<bool> _subirArchivo(
 /// El SP `CSV_SOLICITUD_CUD_APP` (task `'AR'`) filtra el `DELETE` por
 /// NUMSOL + tipo de archivo (corregido 2026-07-16) — voucher y O.C. ya no
 /// se pisan entre sí al subirse en la misma sesión.
+///
+/// **Bug real corregido 2026-08-03** — `archivoVoucher`/`archivoOC`
+/// (`SolicitudFormCubit.state`) nunca se limpian a `null` después de
+/// subirse; antes esta función solo miraba `!= null`, así que cualquier
+/// "Siguiente"/"Guardar" posterior en OTRO paso (ej. agregar un
+/// participante en el paso 2) volvía a subir el mismo archivo de nuevo, sin
+/// que hubiera cambiado. Ahora compara contra `archivoVoucherCargado`/
+/// `archivoOCCargado` (el snapshot de "lo último subido con éxito", ver
+/// `SolicitudFormState.huboCambios`) — solo sube si es una instancia
+/// distinta (el asesor tuvo que volver a elegir un archivo con el picker
+/// para que cambie). Importante: `guardarBorradorCompleto()` debe llamar
+/// esta función ANTES de `marcarSinCambios()` — si no, el snapshot ya
+/// estaría sincronizado y esta comparación nunca detectaría un archivo
+/// realmente nuevo en su primera subida.
 Future<bool> subirArchivosPendientes(
   BuildContext context, {
   SolicitudProgreso? progreso,
@@ -120,19 +132,17 @@ Future<bool> subirArchivosPendientes(
   if (numSol.isEmpty) return true;
 
   final voucher = formState.archivoVoucher;
-  if (voucher != null) {
+  if (voucher != null && voucher != formState.archivoVoucherCargado) {
     progreso?.iniciarPaso('Subiendo voucher...');
     final ok = await _subirArchivo(context, numSol, 'voucher', voucher);
     if (!ok) return false;
-    progreso?.completarPasoActual();
   }
 
   final oc = formState.archivoOC;
-  if (oc != null) {
+  if (oc != null && oc != formState.archivoOCCargado) {
     progreso?.iniciarPaso('Subiendo O.C....');
     final ok = await _subirArchivo(context, numSol, 'oc', oc);
     if (!ok) return false;
-    progreso?.completarPasoActual();
   }
 
   return true;
@@ -299,9 +309,12 @@ String? avisoPrecioTotalNoCalza(SolicitudFormState formState) {
 /// presionar "Generar solicitud" para reintentar solo la subida.
 ///
 /// Asume que [validarSolicitudParaGenerar] ya se llamó y retornó `null` —
-/// este helper ya no repite esa validación. Si se pasa [progreso], al
-/// terminar TODO con éxito se deja el último check visible ~500ms antes de
-/// retornar, para que el asesor lo alcance a ver antes de navegar.
+/// este helper ya no repite esa validación. Si se pasa [progreso], mientras
+/// corren los pasos (guardar, subir voucher, subir O.C.) el overlay solo
+/// cambia de mensaje, sin mostrar ningún check intermedio — recién cuando
+/// TODO termina con éxito se llama `progreso.mostrarExito(...)` (el check
+/// animado) y se espera ~1.5s antes de retornar, para que el asesor lo
+/// alcance a ver antes de navegar.
 Future<CrudResult> generarSolicitudCompleta(
   BuildContext context, {
   required String idLead,
@@ -325,7 +338,8 @@ Future<CrudResult> generarSolicitudCompleta(
   }
 
   if (progreso != null) {
-    await Future.delayed(const Duration(milliseconds: 500));
+    progreso.mostrarExito('La solicitud se generó correctamente');
+    await Future.delayed(const Duration(milliseconds: 1500));
   }
   return result;
 }
@@ -387,10 +401,17 @@ Future<CrudResult> guardarBorradorCompleto(
   );
   if (result is! CrudOk) return result;
 
+  // Ojo — tiene que subir los archivos ANTES de marcarSinCambios(): esa
+  // llamada sincroniza archivoVoucherCargado/archivoOCCargado al valor
+  // actual, que es justo lo que subirArchivosPendientes() usa para decidir
+  // si un archivo es nuevo o ya se subió (ver su comentario). Si el orden
+  // se invierte, un archivo recién elegido nunca llegaría a subirse la
+  // primera vez (el snapshot ya lo daría por "subido" antes de intentarlo).
+  final archivosOk = await subirArchivosPendientes(context, progreso: progreso);
+
   formCubit.marcarSinCambios();
   participantesCubit.marcarSinCambios();
 
-  final archivosOk = await subirArchivosPendientes(context, progreso: progreso);
   if (!archivosOk) {
     return const CrudAlert(
       'La solicitud se guardó, pero un archivo adjunto no se pudo subir. '
@@ -399,7 +420,8 @@ Future<CrudResult> guardarBorradorCompleto(
   }
 
   if (progreso != null) {
-    await Future.delayed(const Duration(milliseconds: 500));
+    progreso.mostrarExito('La solicitud se guardó correctamente');
+    await Future.delayed(const Duration(milliseconds: 1500));
   }
   return result;
 }

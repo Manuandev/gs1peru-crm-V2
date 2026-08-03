@@ -192,7 +192,16 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     super.dispose();
   }
 
-  void _guardar() {
+  Future<void> _guardar() async {
+    // Red de seguridad — normalmente ya corrió por el blur/check del
+    // teclado en N° documento (ver _onNumDocFocusChange), pero si por lo
+    // que sea no llegó a dispararse (bug real reportado en vivo en
+    // Facturación, mismo patrón acá), "Guardar" terminaba validando con
+    // Nombres/Apellidos todavía vacíos. Idempotente — si el documento ya
+    // se buscó, no repite la llamada.
+    await _buscarDocumento();
+    if (!mounted) return;
+
     if (!_formKey.currentState!.validate()) return;
 
     final importe = double.tryParse(_importeCtrl.text.trim()) ?? 0.0;

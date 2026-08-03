@@ -54,8 +54,8 @@ class _SolicitudDetalleViewState extends State<SolicitudDetalleView> {
     if (!mounted) return;
 
     if (result is CrudOk) {
-      _progreso.completarPasoActual();
-      await Future.delayed(const Duration(milliseconds: 500));
+      _progreso.mostrarExito('Solicitud eliminada correctamente');
+      await Future.delayed(const Duration(milliseconds: 1500));
       if (!mounted) return;
       _progreso.reset();
       // clearAndPush — igual que entrar de nuevo a la pantalla, la lista

@@ -1,5 +1,63 @@
 # Solicitudes Feature
 
+## Bug real — voucher/O.C. se volvían a subir en cada "Siguiente" posterior, aunque no cambiaran (2026-08-03)
+Pregunta del usuario: si ya adjuntó voucher/O.C. en el paso 1 y sigue avanzando por el wizard
+presionando "Siguiente" en los pasos 2/3, ¿se vuelven a subir esos mismos archivos? Respuesta:
+**sí, se subían de nuevo — confirmado como bug real, ya corregido.**
+
+- **Causa**: `archivoVoucher`/`archivoOC` (`SolicitudFormCubit.state`, `PlatformFile?`) nunca se
+  limpian a `null` después de una subida exitosa — quedan en memoria toda la sesión del wizard.
+  `subirArchivosPendientes()` (`solicitud_guardar_helper.dart`) solo miraba `!= null` para
+  decidir si subir — sin comparar contra nada que indicara "esto ya se subió". Cualquier
+  "Siguiente"/"Guardar" posterior en **cualquier** paso que tuviera algo pendiente en OTRA parte
+  de la solicitud (ej. agregar un participante en el paso 2 — `solicitudSinCambiosPendientes()`
+  exige que ni el formulario NI la lista de participantes tengan cambios, así que un cambio en
+  participantes igual dispara `guardarBorradorCompleto()` completo) volvía a subir el mismo
+  voucher/O.C., sin que hubiera cambiado nada en el archivo en sí.
+- **Fix**: `subirArchivosPendientes()` ahora compara contra `archivoVoucherCargado`/
+  `archivoOCCargado` (`SolicitudFormState`, el snapshot de "lo último subido con éxito" que ya
+  existía para el cálculo de `huboCambios`, ver sección de abajo) — solo sube si es una
+  instancia distinta (el asesor tuvo que volver a elegir un archivo con el picker para que
+  cambie; `PlatformFile` no tiene `==` propio, así que la comparación por referencia ya alcanza).
+  **Ojo con el orden en `guardarBorradorCompleto()`** — tiene que llamar
+  `subirArchivosPendientes()` **antes** de `marcarSinCambios()`, no después (como estaba): ese
+  método sincroniza `archivoVoucherCargado = archivoVoucher`, así que si corriera primero, la
+  comparación de arriba nunca detectaría un archivo genuinamente nuevo en su primera subida —
+  se invirtió el orden. `generarSolicitudCompleta()` no tenía este problema (nunca llamó
+  `marcarSinCambios()`), no necesitó reordenarse.
+
+## Bug real — "Siguiente"/"Guardar" validaba antes de que terminara la búsqueda por documento (2026-08-03)
+Reportado en vivo por el usuario en Facturación (paso 3): escribía el N° documento (DNI, 8
+dígitos), presionaba el check del teclado y nada pasaba — nunca aparecía el overlay "Buscando
+datos del documento...", Nombres/Apellidos quedaban vacíos, y al presionar "Siguiente" saltaban
+en rojo "Requerido" de inmediato.
+
+**Causa real**: los 3 lugares con búsqueda por documento (`_SolicitudFacturacionViewState.
+_buscarDocumento()`, `_SolicitudCompletarViewState._buscarDocumentoSolicitante()`/
+`_buscarRucComercial()`, `_ParticipanteFormSheetState._buscarDocumento()`) solo se disparan por
+blur (`FocusNode`) o por el submit del teclado (`onSubmitted`) del campo — **nunca** desde el
+botón "Siguiente"/"Guardar" en sí. `_onContinuar()`/`_guardar()` llaman
+`_formKey.currentState?.validate()` de forma **síncrona e inmediata** — si por lo que sea el
+blur/submit del campo no llegó a disparar la búsqueda (confirmado en vivo: ni el check del
+teclado la disparaba en el dispositivo del usuario — la causa exacta de por qué ese trigger
+específico no corrió no se pudo diagnosticar sin poder probar en vivo, pero el síntoma reportado
+— cero overlay, cero autocompletado — apunta a que el evento de blur/submit nunca llegó a
+disparar la función en absoluto, no a que la búsqueda corriera y no encontrara datos), la
+validación revienta con campos vacíos antes de que hubiera ninguna chance de autocompletarlos.
+
+**Fix — red de seguridad, no un diagnóstico del trigger original**: los 3 `_onContinuar()`/
+`_guardar()` ahora llaman (`await`) la(s) función(es) de búsqueda de su pantalla **antes** de
+`setState(() => _autovalidar = true)`/`validate()` — `participante_form_sheet.dart._guardar()`
+pasó de `void` a `Future<void>` para poder hacerlo (su `onPressed: _guardar` sigue siendo válido
+sin cambios — Dart permite asignar una función `Future<void> Function()` donde se espera
+`VoidCallback`/`void Function()`). Las 4 funciones de búsqueda ya eran idempotentes de antes
+(`_ultimoDocBuscado`/`_ultimoRucBuscado` — si ese mismo número ya se buscó, no repiten la
+llamada), así que esto no duplica ninguna búsqueda cuando el blur/submit sí funcionó — solo cubre
+el caso en que no funcionó. **No se tocó** la lógica interna de ninguna búsqueda (`_esExtranjero`,
+`DocumentoExternoService`, qué campos rellena cada una) — se revisó todo eso primero y se
+descartó como causa (país Perú resuelve `_esExtranjero == false` correctamente, el DNI de 8
+dígitos pasa el chequeo de longitud).
+
 ## Bugs reales — Detalle de Facturación sin DNI/Nombre + pila de Detalle apilándose (2026-07-30)
 Dos bugs reportados por el usuario en la misma sesión, ambos con causa ya diagnosticable con los
 `.sql` reales a la vista:
@@ -1030,9 +1088,10 @@ Rediseño pedido por el usuario de la lista y el detalle:
   `!ibValidado`** (mismo criterio que el botón "Validar" de la card — una vez validada, no se
   puede eliminar). Flujo: confirmar (`context.showConfirmDialog`) → `SolicitudProgreso`/
   `SolicitudProgresoOverlay` (el mismo widget que ya usa el wizard para Guardar/Generar, ver
-  sección de arriba — reusado tal cual, un solo paso "Eliminando solicitud..." → check → pausa
-  500ms) → `context.goToSolicitudes()` (`clearAndPush`, recarga la lista fresca sola, no hace
-  falta lógica extra para "refrescar").
+  sección de arriba — reusado tal cual, un solo paso "Eliminando solicitud..." →
+  `mostrarExito('Solicitud eliminada correctamente')` → pausa 1.5s) →
+  `context.goToSolicitudes()` (`clearAndPush`, recarga la lista fresca sola, no hace falta
+  lógica extra para "refrescar").
   - **Nuevo task `'DEL'` en `CSV_SOLICITUD_CUD_APP`** (no existía ningún mecanismo de borrado de
     solicitud completa antes de esto) — borra en cascada, en este orden (por FKs):
     `T_TECMSOLINSCRIPCION02_ASISTENCIA` → `T_TECMSOLINSCRIPCION02` (participantes) →
@@ -1340,20 +1399,29 @@ abajo) — cuatro cambios relacionados con guardar/generar y subir archivos:
   usa ese `paso` para navegar directo ahí (`widget.onEditarPaso(paso)`) antes de mostrar el
   mensaje, en vez de solo fallar en Resumen sin decir dónde falta algo. **"Guardar" (borrador)
   nunca llama esta función — sigue sin validar nada, deja pasar cualquier estado a medio llenar.**
-- **Stepper de progreso paso a paso en los 5 botones Guardar/Generar** — nuevo
-  `SolicitudProgreso` (`ValueNotifier<List<PasoProgresoItem>>`) + `SolicitudProgresoOverlay`
-  (`solicitud_progreso_guardado.dart`, mismo patrón visual que `AppLoadingOverlay` de core pero
-  con una lista de pasos en vez de un mensaje único). Cada paso aparece con spinner al iniciar
-  (`progreso.iniciarPaso(texto)`) y pasa a check al completarse (`progreso.completarPasoActual()`)
-  — los pasos que no aplican (sin archivo adjunto) ni se agregan a la lista. Textos: "Guardando
-  solicitud..."/"Generando solicitud..." (según `esBorrador`), "Subiendo voucher...", "Subiendo
-  O.C....". `generarSolicitudCompleta()`/`guardarBorradorCompleto()` (esta última nueva, espejo de
-  `generarSolicitudCompleta` pero con `esBorrador: true` y sin validación previa — reemplaza el
-  chaining manual `guardarSolicitudDesdeWizard` + `subirArchivosPendientes` que tenían los 4
-  botones "Guardar") reciben un `progreso` opcional y, si viene, dejan el último check visible
-  ~500ms antes de retornar (para que se alcance a ver antes de navegar/cerrar). Cada uno de los 5
-  `State` (`solicitud_completar_view.dart`, `solicitud_participantes_view.dart`,
-  `solicitud_facturacion_view.dart`, `solicitud_resumen_view.dart` ×2) tiene su propio
+- **Stepper de progreso paso a paso en los 5 botones Guardar/Generar** — `SolicitudProgreso`
+  (`ValueNotifier<SolicitudProgresoValor>`) + `SolicitudProgresoOverlay`
+  (`solicitud_progreso_guardado.dart`). Textos: "Guardando solicitud..."/"Generando solicitud..."
+  (según `esBorrador`), "Subiendo voucher...", "Subiendo O.C...." — los pasos que no aplican (sin
+  archivo adjunto) simplemente no llaman `progreso.iniciarPaso(...)`.
+  **Rediseñado 2026-08-03 — ahora reusa `AppProcessOverlay`** (`core/`, el mismo overlay con
+  logo GS1 + resplandor + check animado que ya usan `EditLeadPortrait`/
+  `EditContactoSimplePortrait`), pedido explícito del usuario: mientras corren los pasos
+  intermedios, el overlay se queda en `AppProcessStatus.cargando` y **solo cambia el texto**
+  (`progreso.iniciarPaso(texto)`) de un paso a otro — ya no aparece un check por cada paso
+  completado (`completarPasoActual()`, que existía antes, se eliminó junto con
+  `PasoProgresoItem`/`PasoProgresoEstado`, la lista de pasos con su propio ícono). El check
+  animado aparece **una sola vez, al final**, cuando TODO el flujo (guardado + archivos, si
+  había) terminó con éxito — `progreso.mostrarExito(mensaje)`, mismo patrón que el resto de la
+  app: pasa a `AppProcessStatus.exito` y el caller espera ~1.5s (antes 500ms — el check animado
+  de `AppProcessOverlay` tarda ~550ms en completar su animación, 500ms lo cortaba a la mitad)
+  antes de navegar/cerrar. `generarSolicitudCompleta()`/`guardarBorradorCompleto()` (esta última
+  espejo de la primera pero con `esBorrador: true` y sin validación previa) son los únicos 2
+  lugares que llaman `mostrarExito()` — los pasos intermedios (`guardarSolicitudDesdeWizard`,
+  `subirArchivosPendientes`) solo llaman `iniciarPaso()`, nunca marcan éxito por su cuenta.
+  Cada uno de los 5 `State` (`solicitud_completar_view.dart`, `solicitud_participantes_view.dart`,
+  `solicitud_facturacion_view.dart`, `solicitud_resumen_view.dart` ×2, más
+  `solicitud_detalle_view.dart` para "Eliminar solicitud", 1 solo paso) tiene su propio
   `SolicitudProgreso` (`dispose()` lo libera) y lo resetea (`_progreso.reset()`) apenas termina el
   flujo, antes de mostrar el snackbar o navegar.
 - **Bug real corregido — paso 1 no mostraba un voucher/O.C. ya subido al reabrir la solicitud.**

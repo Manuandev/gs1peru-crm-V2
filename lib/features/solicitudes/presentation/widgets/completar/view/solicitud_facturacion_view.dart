@@ -279,6 +279,16 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
     if (_guardando) return;
 
+    // Red de seguridad — normalmente _buscarDocumento() ya corrió por el
+    // blur/check del teclado en Número documento (ver _numDocFocus en
+    // _SeccionDatosFacturacionState), pero si por lo que sea eso no llegó a
+    // dispararse (bug real reportado en vivo: en algunos dispositivos ni el
+    // check del teclado lo disparaba), "Siguiente" terminaba validando con
+    // Nombres/Apellidos todavía vacíos, sin haber intentado autocompletar.
+    // Idempotente — si el número ya se buscó, no repite la llamada.
+    await _buscarDocumento();
+    if (!mounted) return;
+
     // Recién acá se activa la validación en tiempo real (ver _autovalidar).
     setState(() => _autovalidar = true);
 

@@ -534,6 +534,8 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
         celularCodigoTelefonoNegociacion: n.prefijoPais,
         rucNegociacion: n.ruc,
         cargoNegociacion: n.cargo,
+        tipoDocIdNegociacion: n.tipoDocId,
+        numDocNegociacion: n.numDoc,
       );
       return;
     }

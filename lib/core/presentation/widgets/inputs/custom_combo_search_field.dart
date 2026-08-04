@@ -235,8 +235,16 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
           decoration: _buildDecoration(context, controller),
           textInputAction: widget.allowFreeText ? TextInputAction.done : null,
           onFieldSubmitted: widget.allowFreeText ? _commitFreeText : null,
+          // Con allowFreeText, una selección de texto libre confirmada tiene
+          // id vacío a propósito (ComboItem(id: '', descripcion: texto), ver
+          // _commitFreeText) — validar por id ahí siempre marcaría "Requerido"
+          // aunque el asesor sí haya tipeado y confirmado algo. Sin
+          // allowFreeText, el id sigue siendo lo correcto a validar (solo
+          // existen selecciones reales del catálogo).
           validator: widget.validator != null
-              ? (_) => widget.validator!(_selected?.id)
+              ? (_) => widget.validator!(
+                  widget.allowFreeText ? _selected?.descripcion : _selected?.id,
+                )
               : null,
         );
       },

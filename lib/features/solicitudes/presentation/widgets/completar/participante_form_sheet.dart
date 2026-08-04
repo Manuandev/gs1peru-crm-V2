@@ -147,6 +147,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
 
     _numDocFocus = FocusNode()..addListener(_onNumDocFocusChange);
     _numDocCtrl = TextEditingController(text: p?.numDoc ?? '');
+    // Ya viene resuelto (edición) — sembrar acá evita que "Guardar" dispare
+    // una búsqueda RENIEC/SUNAT sobre un documento que no cambió, mismo
+    // bug/mismo fix que solicitud_completar_view.dart._ultimoDocSolicitanteBuscado.
+    _ultimoDocBuscado = p?.numDoc ?? '';
     _nombresCtrl = TextEditingController(text: p?.nombres ?? '');
     _apellidoPaternoCtrl = TextEditingController(
       text: p?.apellidoPaterno ?? '',
@@ -216,7 +220,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
       nombres: _nombresCtrl.text.trim().toUpperCase(),
       apellidoPaterno: _apellidoPaternoCtrl.text.trim().toUpperCase(),
       apellidoMaterno: _apellidoMaternoCtrl.text.trim().toUpperCase(),
-      correo: _correoCtrl.text.trim(),
+      // Correo también en mayúsculas — pedido de negocio, mismo criterio que
+      // el resto de campos de este formulario y que solicitud_completar_view.
+      // dart._mayus()/solicitud_facturacion_view.dart._mayus() (2026-08-04).
+      correo: _correoCtrl.text.trim().toUpperCase(),
       cargo: _cargoCtrl.text.trim().toUpperCase(),
       cargoId: _cargoId,
       celular: _celularCtrl.text.trim(),
@@ -542,6 +549,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             label: 'Correo electrónico *',
                             controller: _correoCtrl,
                             keyboardType: TextInputType.emailAddress,
+                            isUpperCase: true,
                             validator: (v) => v.emailValidator,
                           ),
                           const SizedBox(height: AppSpacing.sm),
@@ -550,7 +558,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                           // DBO.SYSMCARGO01), mismo catálogo/widget que
                           // Datos del solicitante (paso 1) y lead/EditContacto.
                           // Guarda id (_cargoId, 2026-07-30) + descripción
-                          // (_cargoCtrl, para las cards/Resumen).
+                          // (_cargoCtrl, para las cards/Resumen). Texto libre
+                          // (allowFreeText, 2026-08-04) — si el cargo no está
+                          // en el catálogo, tipearlo y confirmar con el check
+                          // del teclado lo guarda tal cual (_cargoId queda '').
                           CustomComboSearchField(
                             data: cargos
                                 .map(
@@ -559,17 +570,11 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                                 )
                                 .toList(),
                             label: 'Cargo *',
-                            initialValue: _cargoId.isNotEmpty
-                                ? _cargoId
-                                : null,
+                            allowFreeText: true,
+                            initialText: _cargoCtrl.text,
                             onChanged: (item) => setState(() {
-                              final cargo = item == null
-                                  ? null
-                                  : cargos
-                                        .where((c) => c.id == item.id)
-                                        .firstOrNull;
-                              _cargoId = cargo?.id ?? '';
-                              _cargoCtrl.text = cargo?.nombre ?? '';
+                              _cargoId = item?.id ?? '';
+                              _cargoCtrl.text = item?.descripcion ?? '';
                             }),
                             validator: (v) =>
                                 v == null || v.isEmpty ? 'Requerido' : null,

@@ -94,6 +94,12 @@ extension NavigationExtensions on BuildContext {
     String? celularCodigoTelefonoNegociacion,
     String? rucNegociacion,
     String? cargoNegociacion,
+    // Tipo/N° de documento del contacto (T_CONTACTO.ID_TIP_DOC/NRO_DOC) —
+    // 2026-08-04, mismo candado que los de arriba (solo prellenan, nunca
+    // bloquean). Antes no existían — el N° documento quedaba vacío al crear
+    // desde una negociación aunque el resto de datos sí se prellenara.
+    String? tipoDocIdNegociacion,
+    String? numDocNegociacion,
   }) => _push(
     AppRoutes.fichaCompletarSolicitud,
     arguments: {
@@ -113,6 +119,8 @@ extension NavigationExtensions on BuildContext {
       'celularCodigoTelefonoNegociacion': celularCodigoTelefonoNegociacion,
       'rucNegociacion': rucNegociacion,
       'cargoNegociacion': cargoNegociacion,
+      'tipoDocIdNegociacion': tipoDocIdNegociacion,
+      'numDocNegociacion': numDocNegociacion,
     },
   );
 

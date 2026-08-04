@@ -1,5 +1,188 @@
 # Solicitudes Feature
 
+## Bug real — N° documento nunca llegaba al crear desde una negociación + Tipo/N° documento agregados a Negociacion + mayúsculas en texto libre (2026-08-04)
+El usuario mostró un screenshot real: al crear una solicitud desde "Editar lead"/"Generar
+solicitud", el paso 1 llegaba con Nombres/Apellidos/Cargo/Correo/RUC/Razón social ya prellenados
+(2026-07-15 en adelante, ver secciones de abajo) pero **N° documento siempre vacío** — nunca se
+había agregado, a diferencia del resto de datos de contacto.
+
+- **Causa real, confirmada leyendo `CSV_LEADS_LST_APP.sql` completo** (`D:\Proyectos\NatCodee\
+  NC.SQLChangeLock\DBEAN\StoredProcedures\`, repo aparte): los tasks `'DT'`/`'DN'` (los que
+  alimentan `Negociacion`, ver `lead/CLAUDE.md`) hacen `LEFT JOIN CRM.T_CONTACTO CT` pero nunca
+  seleccionaban `CT.ID_TIP_DOC`/`CT.NRO_DOC` — sí lo hace `CSV_CONTACTO_LST_APP` (el SP de
+  `EditContacto`, con las mismas columnas reales) pero nadie lo había replicado acá. No era un gap
+  de Flutter — `Negociacion` ni siquiera tenía dónde guardar ese dato.
+- **SQL editado** (pendiente de `ALTER PROCEDURE` en SSMS): se agregaron 2 campos nuevos al final
+  del `CONCAT` de ambos tasks (`ISNULL(CT.ID_TIP_DOC,'')`/`ISNULL(CT.NRO_DOC,'')`), mismo patrón
+  "nunca correr los índices existentes" del resto del feature — edición hecha con PowerShell/
+  `[System.Text.Encoding]::Unicode`, preservando el UTF-16LE+BOM del archivo (confirmado con
+  `ReadAllBytes` que el BOM `FF FE` sigue ahí). **Ojo — los comentarios `/*NN*/` dentro de ese
+  `.sql` están desactualizados desde hace varias sesiones** (hay 3 campos con la misma etiqueta
+  `/*01*/` cerca del inicio de `'DT'`/`'DN'`) — la posición real que importa es el ORDEN en el
+  `CONCAT`, confirmado contando campo por campo y cruzando contra los índices que ya usa
+  `NegociacionModel.fromDetalleRawString` (que sí están bien, mantenidos aparte en un comentario
+  en el modelo Dart, no en el SP). Los 2 campos nuevos quedaron en las posiciones reales 41/42.
+- **Flutter**: `Negociacion.tipoDocId`/`.numDoc` (nuevo, default `''`) →
+  `NegociacionModel.fromDetalleRawString` los parsea de `fields[41]`/`fields[42]` (`fromRawString`,
+  el parser del task `'LN'`, los deja en su default — ese SP no hace `JOIN` con `T_CONTACTO`,
+  mismo candado que `ruc`/`cargo`). Threaded en cadena hasta el wizard, mismo patrón que
+  `cargoNegociacion`: `goToFichaCompletarSolicitud` (+2 params) → `AppRouter` → `SolicitudCompletarPage`
+  → `SolicitudFormCubit.sembrarDatosNegociacion` (+2 params) → `SolicitudFormState.tipoDocIdLead`/
+  `.numDocLead` → `SolicitudCompletarView._prellenarDesdeNegociacion()`. Los 3 orígenes reales
+  (`edit_lead_portrait.dart`, `negociaciones_tab.dart`, `contacto_negociacion_card.dart`) ya
+  mandan los 2 campos nuevos.
+  - **A diferencia del resto de `_prellenarDesdeNegociacion()` (que solo llena controllers),
+    Tipo documento SÍ se sobreescribe** — `_sembrarValoresPorDefecto()` corre antes en
+    `_cargarDetalle()` y deja el default DNI; si el contacto real tiene otro tipo (Carnet de
+    extranjería, etc.), ese default ya no debe ganar. Se resuelve `tipoDocIdLead` contra
+    `CatalogsBloc.tiposDocumento` (mismo catálogo, `TipoDocumentoItem.id`) para obtener también
+    el label (`abreviatura`), no solo el id.
+  - **No se siembra `_ultimoDocSolicitanteBuscado`** con este valor (a diferencia de
+    `_cargarDetalle()` cuando SÍ hay `numSol`, ver sección de abajo) — a propósito: es la primera
+    vez que este documento se ve en la sesión, así que "Siguiente" debe poder disparar la
+    búsqueda RENIEC/SUNAT normal si el asesor lo confirma, igual que si lo hubiera tipeado a mano.
+- **Segundo pedido de la misma sesión — mayúsculas en todo el texto libre del wizard**, mismo
+  criterio ya establecido en `lead/EditContacto` (ver `lead/CLAUDE.md`, "Todo texto libre se
+  guarda en MAYÚSCULAS"): doble capa, `isUpperCase: true` en los `CustomTextField` (feedback
+  visual mientras se tipea — ya existía en la mayoría, se completó donde faltaba: Correo en los 3
+  formularios, Dirección de domicilio en Facturación) + `_mayus()` (helper privado, `.trim().
+  toUpperCase()`, uno por archivo — `solicitud_completar_view.dart`, `solicitud_facturacion_view.
+  dart`, ya existía parcialmente en `participante_form_sheet.dart`) forzado de nuevo al construir
+  `DatosSolicitante`/`DatosFacturacion`/`ParticipanteLocal` — necesario porque el autocompletado
+  por documento (RENIEC/SUNAT) y el prellenado desde negociación asignan texto directo al
+  controller, sin pasar por el formatter del widget. Aplica a Nombres/Apellidos/Correo/Cargo/
+  Razón social/Dirección/Observaciones/detalle de canal — **nunca** a RUC/celular (numéricos);
+  N° documento SÍ se fuerza a mayúsculas (Carnet de extranjería/Pasaporte pueden traer letras,
+  mismo criterio que ya tenía `participante_form_sheet.dart` desde antes). El Cargo con texto
+  libre (`CustomComboSearchField`, ver sección de abajo) no tiene una capa visual de mayúsculas
+  (el widget no soporta `isUpperCase`, mismo caso que Área/Cargo en `lead/`) — solo la capa final
+  al guardar.
+
+## Cargo — ancho de columna real ampliado a VARCHAR(200) + confirmado que ya llega desde la negociación (2026-08-04)
+Seguimiento del cambio de Cargo a texto libre (arriba) — el usuario pidió ampliar el ancho real,
+ya que texto libre puede superar los ~50 caracteres que alcanzaba cuando Cargo era un id corto de
+catálogo.
+
+- **`CRM.CSV_SOLICITUD_CUD_APP.sql`** (`D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\
+  StoredProcedures\`, repo aparte) — `@CARGO_SOL`/`@CARGO_FAC` (variables locales del SP, no
+  columnas) pasaron de `VARCHAR(50)` a `VARCHAR(200)`. Sin este cambio, ampliar solo la columna
+  real no alcanzaba — la variable local trunca el valor ANTES de llegar al `INSERT`/`UPDATE`,
+  mismo patrón de truncamiento silencioso documentado varias veces en este archivo (ver
+  "Investigación — 'guardo Perú, se guarda otro país'"). Edición hecha con PowerShell/
+  `[System.Text.Encoding]::Unicode`, preservando el UTF-16LE+BOM del archivo — confirmado que el
+  único cambio real son los 2 reemplazos `(50)`→`(200)`. **`@CARGO_FAC` no se usa en ningún
+  `INSERT`/`UPDATE` del SP** (ya documentado en "Cargo se guarda por id..." más abajo) — se amplió
+  igual por consistencia con `@CARGO_SOL`, sin efecto real hoy.
+  - **Pendiente de desplegar** — como el resto de cambios a este archivo en sesiones anteriores,
+    hace falta correr `ALTER PROCEDURE` en SSMS para que el ancho ampliado tenga efecto.
+  - **Columnas reales `EVT.T_TECMSOLINSCRIPCION01.CARGO`/`EVT.T_TECMSOLINSCRIPCION02.CARGO`**
+    — confirmadas en `VARCHAR(50)` en la auditoría del 2026-07-30 ("Cargo se guarda por id...").
+    Ampliar una columna `VARCHAR` nunca trunca datos existentes (solo agranda el límite), comando
+    entregado al usuario para correrlo él mismo (no hay acceso a la base real desde acá):
+    ```sql
+    ALTER TABLE EVT.T_TECMSOLINSCRIPCION01 ALTER COLUMN CARGO VARCHAR(200);
+    ALTER TABLE EVT.T_TECMSOLINSCRIPCION02 ALTER COLUMN CARGO VARCHAR(200);
+    ```
+- **Cargo desde la negociación (Lead) al crear una solicitud — confirmado que YA está conectado
+  de punta a punta, no hizo falta ningún cambio.** `cargoNegociacion: n.cargo`/`detalle.cargo` ya
+  se manda en los 3 lugares reales que crean una solicitud desde una negociación
+  (`edit_lead_portrait.dart` — redirect automático a Ganada/05 —, `negociaciones_tab.dart` y
+  `contacto_negociacion_card.dart` — botón manual "Generar solicitud") → `SolicitudFormCubit.
+  sembrarDatosNegociacion(cargo:)` → `SolicitudFormState.cargoLead` →
+  `SolicitudCompletarView._prellenarDesdeNegociacion()` (ya leía `cargoLead`, sin cambios). La
+  nota vieja de `lead/CLAUDE.md` ("Cargo quedó fuera... resolverlo de verdad necesita un catálogo
+  nuevo") quedó desactualizada — predata el fix del 2026-08-03 que cambió `Negociacion.cargo` de
+  `CT.ID_CARGO` (id crudo) a `T_EMPRESA_CONTACTO.NOM_CARGO` (texto libre, confirmado leyendo
+  `CSV_LEADS_LST_APP.sql` completo — las 3 tareas que alimentan negociaciones ya seleccionan
+  `ISNULL(ECX.NOM_CARGO,'')`). **Si en la app real el cargo sigue sin verse al crear desde una
+  negociación, la causa más probable es que ese fix de `CSV_LEADS_LST_APP` (2026-08-03) todavía no
+  se desplegó a la base real** (mismo patrón "cambio en el .sql, pendiente de `ALTER PROCEDURE`")
+  — no un gap del lado de Flutter.
+
+## Bug real — "Facturar al solicitante" no completaba Facturación la primera vez que se tocaba el switch al editar + Cargo con texto libre + Departamento/Provincia default Lima + búsqueda de documento innecesaria en 3 lugares más (2026-08-04)
+Reportado en vivo por el usuario, varios pedidos de la misma sesión:
+
+- **Bug real — activar/desactivar "Facturar al solicitante" (paso 1) no reflejaba nada en
+  Facturación (paso 3) si esa pantalla nunca se había visitado en la sesión.** Repro exacto del
+  usuario: entra a editar una solicitud YA GUARDADA con facturación existente, en el paso 1
+  desactiva y vuelve a activar el switch (sin haber entrado a Facturación todavía), va al paso 3
+  — la facturación mostrada seguía siendo la VIEJA (la que ya estaba guardada), no la recalculada
+  del solicitante. Si en cambio ya había visitado Facturación una vez antes de tocar el switch, sí
+  funcionaba (`BlocListener` de `SolicitudFacturacionView`, ver abajo). Causa:
+  `SolicitudFacturacionView._restaurarPaso()` priorizaba "ya hay `facturacion` en el cubit"
+  (`formState.facturacion != null`, poblado por `_cargarDetalle()` con lo ya guardado en backend)
+  por ENCIMA de "el switch está activo" — la rama que aplicaba los datos del solicitante
+  (`_aplicarDatosSolicitante`) nunca se alcanzaba en ese caso. El toggle en sí (paso 1) solo
+  actualizaba `DatosSolicitante.facturarAlSolicitante` (un bool), sin tocar `DatosFacturacion` —
+  todo el recálculo vivía exclusivamente dentro de `SolicitudFacturacionView`, que no existe hasta
+  que el asesor navega ahí por primera vez.
+  - **Fix — el paso 1 ahora es quien mantiene `SolicitudFormCubit.state.facturacion`
+    sincronizado con el switch, en todo momento, exista o no `SolicitudFacturacionView`
+    todavía.** Nueva función pura `construirFacturacionDesdeSolicitante()`
+    (`solicitud_facturacion_helper.dart`, nuevo archivo) — mismo cálculo que antes vivía
+    hardcodeado dentro de `_aplicarDatosSolicitante` (Jurídica → Factura+RUC+Razón social;
+    Natural → Boleta+Tipo doc./Nombres/Apellidos del solicitante; Nacionalidad/celular/correo
+    copiados; País siempre Perú), ahora reusable desde cualquier lado sin necesitar el `State` de
+    Facturación. `SolicitudCompletarView._onFacturarAlSolicitanteChanged()` (nuevo, reemplaza el
+    `onChanged` inline del switch) llama este helper y empuja el resultado con
+    `SolicitudFormCubit.guardarFacturacion()` apenas se activa — **al desactivar, llama
+    `SolicitudFormCubit.limpiarFacturacion()`** (método nuevo, `facturacion` vuelve a `null`),
+    pedido explícito de negocio: "si lo desactivo, toda la facturación se borra para completarlo
+    de nuevo". `SolicitudFacturacionView._restaurarPaso()` se simplificó: si el cubit ya trae
+    `facturacion`, confía en él tal cual (ya no decide por separado si "reaplicar" o no); solo
+    queda una red de seguridad (recalcula con el mismo helper) para el caso límite en que el
+    catálogo no hubiera cargado todavía cuando se tocó el switch. El `BlocListener` que ya existía
+    ahí (para cuando Facturación SÍ está viva) se generalizó a ambas direcciones del switch (antes
+    solo apagado→encendido) y ahora solo copia lo que ya calculó el paso 1
+    (`_restaurarDesdeFacturacion`) o limpia campos (`_limpiarCamposFacturacion`) — ya no
+    recalcula por su cuenta, evitando lógica duplicada entre paso 1 y paso 3.
+  - **Moneda se preserva, no se recalcula** — no es un dato del solicitante; el helper recibe
+    `monedaIdActual`/`idMonedaBloqueada` y solo cae a la moneda de la negociación de origen si
+    todavía no había ninguna elegida, mismo criterio que ya usaba el default "sin datos" de este
+    paso.
+  - **Dirección de domicilio — a propósito NO se toca por este fix, pedido explícito del
+    usuario ("eso ya lo vemos después").** Sigue llenándose solo vía el autocompletado por
+    documento del propio paso 3 (`_buscarDocumento`, SUNAT), no por este helper.
+- **Nuevo — Departamento/Provincia de Facturación por defecto Lima/Lima, siempre** (pedido de
+  negocio explícito: "en todos, en todos, en todos, sea jurídica, natural, sea todo lo que sea").
+  `resolverUbigeoLimaDepartamento()`/`resolverUbigeoLimaProvincia()` (mismo archivo helper) —
+  resuelven por **nombre** ("LIMA", sin distinguir mayúsculas) contra `CatalogsBloc.ubigeo`, nunca
+  un código INEI hardcodeado. Se aplica en las 3 ramas donde antes se sembraban defaults: el
+  cálculo del helper (activar el switch), y la rama "ni datos guardados ni switch activo" de
+  `_restaurarPaso()`. Distrito NO se toca (el usuario solo pidió Departamento/Provincia).
+- **Cargo (Datos del solicitante + Nuevo/Editar participante) pasó de combo estricto por id a
+  texto libre (`allowFreeText: true`)** — pedido explícito: "si no tengo la opción que busco, en
+  el label voy a poder escribir cualquier cosa... eso se va a tener que guardar". Mismo patrón ya
+  usado en Área/Cargo de `lead/EditContacto` (ver `core/CLAUDE.md` → `CustomComboSearchField`).
+  `SeccionDatosSolicitante.onCargoChanged`/`participante_form_sheet.dart` cambiaron de recibir
+  `CargoItem?` a recibir `String` (el id — vacío si es texto libre) — ya no hace falta resolver el
+  ítem contra el catálogo en el callback, `item.descripcion` del propio combo ya trae el texto
+  correcto (matcheado o libre). `SeccionDatosSolicitante` perdió el parámetro `cargoInicialId`
+  (`initialValue` por id) a favor de `initialText: widget.ctrlCargo.text` (mismo criterio que
+  Área/Cargo — el texto ya resuelto, no un id). **Bug encontrado al implementar**: el `validator`
+  interno de `CustomComboSearchField` siempre comparaba contra `_selected?.id`, que con texto
+  libre confirmado queda vacío a propósito — un Cargo obligatorio con texto libre SIEMPRE marcaba
+  "Requerido" aunque el asesor hubiera tipeado y confirmado algo. Corregido en el widget
+  (`core/`, ver `core/CLAUDE.md`): con `allowFreeText: true` valida contra `_selected?.descripcion`
+  en su lugar — no afecta a los usos existentes de `allowFreeText` (Área/Cargo de `lead/`, ninguno
+  pasaba `validator`) ni a ningún combo sin `allowFreeText` (sigue validando por id).
+- **"Buscando datos del documento..." aparecía al presionar "Siguiente"/"Guardar" sobre un
+  documento que no había cambiado** — reportado en Datos del solicitante (paso 1): entra a
+  validar/editar una solicitud ya guardada, sin tocar el campo N° documento, presiona "Siguiente"
+  y sale el overlay de búsqueda igual. Causa: el fix del 2026-08-03 ("'Siguiente'/'Guardar'
+  validaba antes de que terminara la búsqueda por documento") hizo que los 4 lugares con
+  autocompletado por documento llamen su función de búsqueda de forma incondicional antes de
+  validar — cada una ya era idempotente (`_ultimoDocBuscado`/`_ultimoDocSolicitanteBuscado`/
+  `_ultimoRucBuscado`, no repite la llamada si el mismo número ya se buscó), pero **ese
+  "último buscado" nunca se sembraba al CARGAR una solicitud existente** — solo se actualizaba
+  cuando el asesor de verdad disparaba una búsqueda en esa sesión. Con el tracker en `''`, el
+  primer "Siguiente" siempre trataba el número ya guardado como "nuevo", disparando una búsqueda
+  real. Corregido en los 3 lugares que quedaban con este gap (el propio paso 1 lo reportó el
+  usuario; Facturación y Nuevo/Editar participante tienen el mismo patrón exacto, corregidos de
+  paso): `_cargarDetalle()` (paso 1) siembra `_ultimoDocSolicitanteBuscado`/`_ultimoRucBuscado` con
+  los valores ya guardados; `_restaurarDesdeFacturacion()` (paso 3) siembra `_ultimoDocBuscado`;
+  `participante_form_sheet.dart.initState()` siembra `_ultimoDocBuscado` con `p?.numDoc` al editar.
+
 ## Bug real — voucher/O.C. se volvían a subir en cada "Siguiente" posterior, aunque no cambiaran (2026-08-03)
 Pregunta del usuario: si ya adjuntó voucher/O.C. en el paso 1 y sigue avanzando por el wizard
 presionando "Siguiente" en los pasos 2/3, ¿se vuelven a subir esos mismos archivos? Respuesta:

@@ -226,6 +226,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     }
   }
 
+  // Ver comentario completo en solicitud_completar_view.dart._mayus() —
+  // mismo criterio, misma segunda capa (isUpperCase:true en los campos ya
+  // cubre el tipeo; esto cubre lo que llega por autocompletado/prellenado).
+  String _mayus(String s) => s.trim().toUpperCase();
+
   DatosFacturacion _construirDatosFacturacion(PaisItem? paisCelular) {
     return DatosFacturacion(
       comprobanteId: _comprobanteId,
@@ -236,19 +241,21 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       moneda: _monedaLabel,
       tipoDocId: _tipoDocId,
       tipoDocLabel: _tipoDocLabel,
-      numDoc: _ctrlNumDoc.text,
+      // Mayúsculas también acá — mismo criterio que el paso 1 (DNI/RUC son
+      // dígitos, no-op; Carnet de extranjería/Pasaporte pueden traer letras).
+      numDoc: _mayus(_ctrlNumDoc.text),
       nacionalidadId: _nacionalidadId,
       nacionalidad: _nacionalidadLabel,
-      nombresRazon: _ctrlNombresRazon.text,
-      apellidoPaterno: _ctrlApellidoPaterno.text,
-      apellidoMaterno: _ctrlApellidoMaterno.text,
+      nombresRazon: _mayus(_ctrlNombresRazon.text),
+      apellidoPaterno: _mayus(_ctrlApellidoPaterno.text),
+      apellidoMaterno: _mayus(_ctrlApellidoMaterno.text),
       celular: _ctrlCelular.text,
       celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
-      correo: _ctrlCorreo.text,
-      direccion: _ctrlDireccion.text,
+      correo: _mayus(_ctrlCorreo.text),
+      direccion: _mayus(_ctrlDireccion.text),
       actividadEconomica: '',
       nit: _ctrlNit.text,
-      observaciones: _ctrlObservaciones.text,
+      observaciones: _mayus(_ctrlObservaciones.text),
       ubigeoDptoId: _ubigeoDptoId,
       ubigeoDptoNombre: _ubigeoDptoNombre,
       ubigeoProvId: _ubigeoProvId,
@@ -369,41 +376,19 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     _tipoPersonaVista = formState.tipoPersona;
     final datos = formState.facturacion;
     if (datos != null) {
-      // Ya se guardó facturación antes (venimos de "Atrás") — restaurar.
-      _comprobanteId = datos.comprobanteId;
-      _comprobanteLabel = datos.comprobante;
-      _tipoDocId = datos.tipoDocId;
-      _tipoDocLabel = datos.tipoDocLabel;
-      _paisId = datos.paisId;
-      _paisLabel = datos.pais;
-      _monedaId = datos.monedaId;
-      _monedaLabel = datos.moneda;
-      _nacionalidadId = datos.nacionalidadId;
-      _nacionalidadLabel = datos.nacionalidad;
-      _ctrlNumDoc.text = datos.numDoc;
-      _ctrlNombresRazon.text = datos.nombresRazon;
-      _ctrlApellidoPaterno.text = datos.apellidoPaterno;
-      _ctrlApellidoMaterno.text = datos.apellidoMaterno;
-      _ctrlCelular.text = datos.celular;
-      _ctrlCorreo.text = datos.correo;
-      _ctrlDireccion.text = datos.direccion;
-      _ctrlNit.text = datos.nit;
-      _ctrlObservaciones.text = datos.observaciones;
-      _ubigeoDptoId = datos.ubigeoDptoId;
-      _ubigeoDptoNombre = datos.ubigeoDptoNombre;
-      _ubigeoProvId = datos.ubigeoProvId;
-      _ubigeoProvNombre = datos.ubigeoProvNombre;
-      _ubigeoDisId = datos.ubigeoDisId;
-      _ubigeoDisNombre = datos.ubigeoDisNombre;
-
-      if (datos.celularCodigoTelefono.isNotEmpty) {
-        final catalogState = context.read<CatalogsBloc>().state;
-        if (catalogState is CatalogsLoaded) {
-          _paisCelular = catalogState.paises
-              .where((p) => p.codigoTelefono == datos.celularCodigoTelefono)
-              .firstOrNull;
-        }
-      }
+      // Ya hay facturación en el cubit — venimos de "Atrás", o el paso 1 ya
+      // la calculó al activar "Facturar al solicitante" (ver
+      // _onFacturarAlSolicitanteChanged, solicitud_completar_view.dart) antes
+      // de que este paso se construyera por primera vez. Bug real corregido
+      // 2026-08-04: antes esta rama restauraba SIEMPRE que hubiera datos acá,
+      // sin mirar si el switch seguía activo — si la solicitud ya tenía
+      // facturación guardada de antes y el asesor desactivaba/reactivaba el
+      // switch en el paso 1 sin haber visitado este paso todavía, esta rama
+      // mostraba la facturación VIEJA en vez de recalcular. Ahora el paso 1
+      // es quien mantiene `formState.facturacion` sincronizado con el switch
+      // en todo momento (incluso antes de que este paso exista), así que acá
+      // basta con confiar en lo que ya trae el cubit.
+      _restaurarDesdeFacturacion(datos);
       return;
     }
 
@@ -424,24 +409,35 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       }
     }
 
-    // Primera vez en este paso — si el solicitante marcó "Facturar al
-    // solicitante", autocompletar con sus mismos datos. Pedido de negocio,
-    // 2026-07-17. El caso "activó el switch después de haber entrado una vez
-    // a este paso" lo cubre el BlocListener del build() de más abajo — ver
-    // comentario en _aplicarDatosSolicitante.
+    // Red de seguridad: "Facturar al solicitante" ya está activo pero el
+    // cubit todavía no trae `facturacion` (el catálogo no había cargado
+    // cuando se tocó el switch en el paso 1) — recalcula acá con el mismo
+    // helper que usa ese switch, para no depender de que ese camino haya
+    // corrido a tiempo.
     final solicitante = formState.solicitante;
     if (solicitante != null && solicitante.facturarAlSolicitante) {
-      _aplicarDatosSolicitante(solicitante, formState.tipoPersona);
-      return;
+      final catalogState = context.read<CatalogsBloc>().state;
+      if (catalogState is CatalogsLoaded) {
+        _restaurarDesdeFacturacion(
+          construirFacturacionDesdeSolicitante(
+            solicitante: solicitante,
+            tipoPersona: formState.tipoPersona,
+            catalogos: catalogState,
+            idMonedaBloqueada: formState.idMonedaBloqueada,
+          ),
+        );
+        return;
+      }
     }
 
     // Ni datos guardados ni "Facturar al solicitante" — Comprobante y Tipo
     // documento arrancan según el tipo de persona del paso 1: Jurídica →
     // Factura/RUC, Natural → Boleta/DNI (antes Tipo documento siempre caía
     // en DNI sin importar el tipo de persona, y Comprobante no tenía
-    // ningún default). Nacionalidad/País mantienen su propio default fijo
-    // (Perú), igual que Datos del solicitante y Nuevo participante (ver
-    // solicitudes/CLAUDE.md). Pedido de negocio, 2026-07-17.
+    // ningún default). Nacionalidad/País/Departamento/Provincia mantienen su
+    // propio default fijo (Perú/Perú/Lima/Lima), igual que Datos del
+    // solicitante y Nuevo participante (ver solicitudes/CLAUDE.md). Pedido
+    // de negocio, 2026-07-17 (Perú) y 2026-08-04 (Lima/Lima).
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
       final valoresDefecto = catalogState.valoresDefecto;
@@ -487,99 +483,106 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         _paisId = paisDefecto.id;
         _paisLabel = paisDefecto.nombre;
       }
+
+      // Departamento/Provincia siempre Lima/Lima por defecto — pedido de
+      // negocio 2026-08-04, sin importar jurídica/natural.
+      final ubigeoLimaDpto = resolverUbigeoLimaDepartamento(catalogState.ubigeo);
+      final ubigeoLimaProv = resolverUbigeoLimaProvincia(
+        catalogState.ubigeo,
+        ubigeoLimaDpto?.dpto ?? '',
+      );
+      if (ubigeoLimaDpto != null) {
+        _ubigeoDptoId = ubigeoLimaDpto.dpto;
+        _ubigeoDptoNombre = ubigeoLimaDpto.nombre;
+      }
+      if (ubigeoLimaProv != null) {
+        _ubigeoProvId = ubigeoLimaProv.prov;
+        _ubigeoProvNombre = ubigeoLimaProv.nombre;
+      }
     }
   }
 
-  // Aplica los datos del solicitante (paso 1) a los campos de este paso —
-  // Jurídica pinta RUC + Razón Social (capturados en "Información
-  // comercial", paso 1 — DatosSolicitante.ruc/razonSocial, NO los datos
-  // personales); Natural pinta el documento personal + nombres/apellidos tal
-  // cual los tiene el solicitante.
-  //
-  // Se llama en 2 momentos: (1) didChangeDependencies, la primera vez que
-  // este paso se construye con el switch ya activo, y (2) el BlocListener de
-  // build() de más abajo, cada vez que el switch pasa de apagado a encendido
-  // mientras este paso ya está vivo en el IndexedStack. Bug real detectado
-  // en vivo: antes esto solo corría en (1) — como el paso nunca se destruye
-  // dentro del wizard (IndexedStack), activar el switch DESPUÉS de haber
-  // visitado este paso una vez (aunque sea sin haber tocado nada) no
-  // reflejaba nada al volver, porque `didChangeDependencies` ya se había
-  // marcado como hecho (`_prefillDone`) y `formState.facturacion` ya existía
-  // (con los defaults de la rama "sin datos"), así que la rama de acá nunca
-  // se volvía a evaluar.
-  void _aplicarDatosSolicitante(
-    DatosSolicitante solicitante,
-    String tipoPersona,
-  ) {
-    final esJuridica = tipoPersona == 'juridica';
-    // El toggle de vista sigue al tipo de persona del solicitante que se
-    // está copiando — si no, los datos recién copiados (Razón Social o
-    // Nombres/Apellidos, según corresponda) podrían quedar en la sección
-    // que el toggle no muestra.
-    _tipoPersonaVista = tipoPersona;
-    final catalogState = context.read<CatalogsBloc>().state;
+  // Copia un DatosFacturacion (del cubit) a los campos/controllers locales
+  // de este paso — único lugar que hace esta asignación, reusado por la
+  // restauración inicial y por el BlocListener de más abajo (cada vez que
+  // "Facturar al solicitante" cambia mientras este paso ya está vivo).
+  void _restaurarDesdeFacturacion(DatosFacturacion datos) {
+    _comprobanteId = datos.comprobanteId;
+    _comprobanteLabel = datos.comprobante;
+    _tipoDocId = datos.tipoDocId;
+    _tipoDocLabel = datos.tipoDocLabel;
+    _paisId = datos.paisId;
+    _paisLabel = datos.pais;
+    _monedaId = datos.monedaId;
+    _monedaLabel = datos.moneda;
+    _nacionalidadId = datos.nacionalidadId;
+    _nacionalidadLabel = datos.nacionalidad;
+    _ctrlNumDoc.text = datos.numDoc;
+    // Ya viene resuelto (restaurado o recién calculado) — sembrar acá evita
+    // que "Siguiente" dispare una búsqueda RENIEC/SUNAT innecesaria sobre un
+    // documento que no cambió, mismo bug/mismo fix que
+    // solicitud_completar_view.dart._ultimoDocSolicitanteBuscado.
+    _ultimoDocBuscado = datos.numDoc;
+    _ctrlNombresRazon.text = datos.nombresRazon;
+    _ctrlApellidoPaterno.text = datos.apellidoPaterno;
+    _ctrlApellidoMaterno.text = datos.apellidoMaterno;
+    _ctrlCelular.text = datos.celular;
+    _ctrlCorreo.text = datos.correo;
+    _ctrlDireccion.text = datos.direccion;
+    _ctrlNit.text = datos.nit;
+    _ctrlObservaciones.text = datos.observaciones;
+    _ubigeoDptoId = datos.ubigeoDptoId;
+    _ubigeoDptoNombre = datos.ubigeoDptoNombre;
+    _ubigeoProvId = datos.ubigeoProvId;
+    _ubigeoProvNombre = datos.ubigeoProvNombre;
+    _ubigeoDisId = datos.ubigeoDisId;
+    _ubigeoDisNombre = datos.ubigeoDisNombre;
 
-    if (esJuridica) {
+    if (datos.celularCodigoTelefono.isNotEmpty) {
+      final catalogState = context.read<CatalogsBloc>().state;
       if (catalogState is CatalogsLoaded) {
-        final valoresDefecto = catalogState.valoresDefecto;
-        final factura = catalogState.comprobantes
-            .where((c) => c.id == valoresDefecto.idTipoFactura)
+        _paisCelular = catalogState.paises
+            .where((p) => p.codigoTelefono == datos.celularCodigoTelefono)
             .firstOrNull;
-        if (factura != null) {
-          _comprobanteId = factura.id;
-          _comprobanteLabel = factura.nombre;
-        }
-        // Jurídica solo puede facturar con RUC — se fuerza el tipo
-        // documento para que la UI muestre RUC/Razón Social en vez de
-        // Número documento/Nombres/Apellidos (ver esRuc).
-        final ruc = catalogState.tiposDocumento
-            .where((t) => t.id == valoresDefecto.idTipoDocRuc)
-            .firstOrNull;
-        if (ruc != null) {
-          _tipoDocId = ruc.id;
-          _tipoDocLabel = ruc.abreviatura;
-        }
       }
-      _ctrlNumDoc.text = solicitante.ruc;
-      _ctrlNombresRazon.text = solicitante.razonSocial;
     } else {
-      if (catalogState is CatalogsLoaded) {
-        final boleta = catalogState.comprobantes
-            .where((c) => c.id == catalogState.valoresDefecto.idTipoBoleta)
-            .firstOrNull;
-        if (boleta != null) {
-          _comprobanteId = boleta.id;
-          _comprobanteLabel = boleta.nombre;
-        }
-      }
-      _tipoDocId = solicitante.tipoDocId;
-      _tipoDocLabel = solicitante.tipoDocLabel;
-      _ctrlNumDoc.text = solicitante.numDoc;
-      _ctrlNombresRazon.text = solicitante.nombres;
-      _ctrlApellidoPaterno.text = solicitante.apellidoPaterno;
-      _ctrlApellidoMaterno.text = solicitante.apellidoMaterno;
+      _paisCelular = null;
     }
+  }
 
-    _nacionalidadId = solicitante.nacionalidadId;
-    _nacionalidadLabel = solicitante.nacionalidad;
-    _ctrlCelular.text = solicitante.celular;
-    _ctrlCorreo.text = solicitante.correo;
-
-    if (catalogState is CatalogsLoaded) {
-      _paisCelular = catalogState.paises
-          .where((p) => p.codigoTelefono == solicitante.celularCodigoTelefono)
-          .firstOrNull;
-      // DatosSolicitante no tiene "País" (solo Nacionalidad) — mismo default
-      // que la rama sin datos previos. Sin esto "País" se quedaba vacío
-      // también en este camino (mismo bug real).
-      final paisDefecto = catalogState.paises
-          .where((p) => p.id == catalogState.valoresDefecto.idPais)
-          .firstOrNull;
-      if (paisDefecto != null) {
-        _paisId = paisDefecto.id;
-        _paisLabel = paisDefecto.nombre;
-      }
-    }
+  // Vacía por completo los campos de este paso — pedido de negocio
+  // 2026-08-04: al desactivar "Facturar al solicitante" en el paso 1 (ver
+  // _onFacturarAlSolicitanteChanged), toda la facturación se borra para que
+  // el asesor la vuelva a completar desde cero, en vez de dejar datos del
+  // solicitante ya desvinculados del switch.
+  void _limpiarCamposFacturacion() {
+    _comprobanteId = '';
+    _comprobanteLabel = '';
+    _tipoDocId = '';
+    _tipoDocLabel = '';
+    _paisId = '';
+    _paisLabel = '';
+    _monedaId = '';
+    _monedaLabel = '';
+    _nacionalidadId = '';
+    _nacionalidadLabel = '';
+    _ctrlNumDoc.clear();
+    _ultimoDocBuscado = '';
+    _ctrlNombresRazon.clear();
+    _ctrlApellidoPaterno.clear();
+    _ctrlApellidoMaterno.clear();
+    _ctrlCelular.clear();
+    _ctrlCorreo.clear();
+    _ctrlDireccion.clear();
+    _ctrlNit.clear();
+    _ctrlObservaciones.clear();
+    _ubigeoDptoId = '';
+    _ubigeoDptoNombre = '';
+    _ubigeoProvId = '';
+    _ubigeoProvNombre = '';
+    _ubigeoDisId = '';
+    _ubigeoDisNombre = '';
+    _paisCelular = null;
   }
 
   @override
@@ -708,21 +711,26 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
             : paises.where((p) => p.id == _valoresDefecto.idPais).firstOrNull ??
                   paises.first);
 
-    // Re-sincroniza este paso con el solicitante cuando "Facturar al
-    // solicitante" pasa de apagado a encendido MIENTRAS este paso ya está
-    // vivo en el IndexedStack (volver al paso 1, activar el switch, volver
-    // acá) — ver comentario completo en _aplicarDatosSolicitante.
+    // Re-sincroniza este paso con "Facturar al solicitante" cada vez que
+    // cambia MIENTRAS este paso ya está vivo en el IndexedStack (volver al
+    // paso 1, tocar el switch, volver acá) — en cualquier dirección, no solo
+    // apagado→encendido: encendido ya deja `formState.facturacion` listo
+    // (calculado por solicitud_completar_view.dart._onFacturarAlSolicitanteChanged),
+    // apagado lo deja en `null` (`SolicitudFormCubit.limpiarFacturacion()`).
     return BlocListener<SolicitudFormCubit, SolicitudFormState>(
       listenWhen: (previous, current) =>
-          current.solicitante?.facturarAlSolicitante == true &&
-          previous.solicitante?.facturarAlSolicitante != true,
+          current.solicitante?.facturarAlSolicitante !=
+          previous.solicitante?.facturarAlSolicitante,
       listener: (context, state) {
-        final solicitante = state.solicitante;
-        if (solicitante == null) return;
-        setState(
-          () => _aplicarDatosSolicitante(solicitante, state.tipoPersona),
-        );
-        _sincronizarCubit();
+        final facturarAlSolicitante =
+            state.solicitante?.facturarAlSolicitante ?? false;
+        setState(() {
+          if (facturarAlSolicitante && state.facturacion != null) {
+            _restaurarDesdeFacturacion(state.facturacion!);
+          } else if (!facturarAlSolicitante) {
+            _limpiarCamposFacturacion();
+          }
+        });
       },
       child: Stack(
         children: [
@@ -1463,6 +1471,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
           label: 'Dirección de domicilio *',
           controller: widget.ctrlDireccion,
           enabled: widget.habilitado,
+          isUpperCase: true,
           textCapitalization: TextCapitalization.sentences,
           validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
@@ -1475,6 +1484,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
           controller: widget.ctrlCorreo,
           keyboardType: TextInputType.emailAddress,
           enabled: widget.habilitado,
+          isUpperCase: true,
           validator: (v) => v.emailValidator,
         ),
         const SizedBox(height: AppSpacing.xs),

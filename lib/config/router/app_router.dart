@@ -145,6 +145,8 @@ class AppRouter {
               args['celularCodigoTelefonoNegociacion'] as String?,
           rucNegociacion: args['rucNegociacion'] as String?,
           cargoNegociacion: args['cargoNegociacion'] as String?,
+          tipoDocIdNegociacion: args['tipoDocIdNegociacion'] as String?,
+          numDocNegociacion: args['numDocNegociacion'] as String?,
         );
       },
     ),

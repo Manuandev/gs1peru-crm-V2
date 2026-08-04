@@ -88,6 +88,15 @@ class Negociacion extends Equatable {
   // 'DT'/'DN', 'LN' lo deja vacío (no hace JOIN con T_EMPRESA_CONTACTO).
   final String cargo;
 
+  // Tipo/N° de documento del contacto (T_CONTACTO.ID_TIP_DOC/NRO_DOC) —
+  // 2026-08-04, agregado para prellenar el paso 1 del wizard de Solicitudes
+  // al crear desde una negociación (antes nunca se traía, el N° documento
+  // quedaba vacío). Mismo candado que ruc/cargo/nombres de arriba: solo lo
+  // trae 'DT'/'DN', 'LN' lo deja vacío. `tipoDocId` es el id del catálogo
+  // real (`TipoDocumentoItem`, `SYSTABEXTER02 CODTABLA='F01'`), no texto.
+  final String tipoDocId;
+  final String numDoc;
+
   final String numSol;
   final int idEstadoSol;
 
@@ -174,6 +183,8 @@ class Negociacion extends Equatable {
     this.correo = '',
     this.ruc = '',
     this.cargo = '',
+    this.tipoDocId = '',
+    this.numDoc = '',
     this.numSol = '',
     this.idEstadoSol = 0,
     this.idChatCab = 0,
@@ -217,6 +228,8 @@ class Negociacion extends Equatable {
     correo,
     ruc,
     cargo,
+    tipoDocId,
+    numDoc,
     numSol,
     idEstadoSol,
     idChatCab,
@@ -259,6 +272,8 @@ class Negociacion extends Equatable {
     String? correo,
     String? ruc,
     String? cargo,
+    String? tipoDocId,
+    String? numDoc,
     String? numSol,
     int? idEstadoSol,
     int? idChatCab,
@@ -301,6 +316,8 @@ class Negociacion extends Equatable {
       correo: correo ?? this.correo,
       ruc: ruc ?? this.ruc,
       cargo: cargo ?? this.cargo,
+      tipoDocId: tipoDocId ?? this.tipoDocId,
+      numDoc: numDoc ?? this.numDoc,
       numSol: numSol ?? this.numSol,
       idEstadoSol: idEstadoSol ?? this.idEstadoSol,
       idChatCab: idChatCab ?? this.idChatCab,

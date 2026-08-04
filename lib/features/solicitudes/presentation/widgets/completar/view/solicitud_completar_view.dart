@@ -287,6 +287,28 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlRuc.text = formState.rucLead;
     }
 
+    // N° documento del contacto — 2026-08-04, antes quedaba vacío al crear
+    // desde una negociación. Tipo documento SÍ se sobreescribe (a diferencia
+    // del resto de este método, que solo llena controllers) porque
+    // _sembrarValoresPorDefecto() ya corrió antes en _cargarDetalle() y dejó
+    // el default DNI — si el contacto real tiene otro tipo (Carnet de
+    // extranjería, etc.), ese default ya no aplica.
+    if (formState.numDocLead.isNotEmpty) {
+      _ctrlNumDoc.text = formState.numDocLead;
+    }
+    if (formState.tipoDocIdLead.isNotEmpty) {
+      final catalogState = context.read<CatalogsBloc>().state;
+      if (catalogState is CatalogsLoaded) {
+        final tipoDoc = catalogState.tiposDocumento
+            .where((t) => t.id == formState.tipoDocIdLead)
+            .firstOrNull;
+        if (tipoDoc != null) {
+          _tipoDocId = tipoDoc.id;
+          _tipoDocLabel = tipoDoc.abreviatura;
+        }
+      }
+    }
+
     if (formState.celularCodigoTelefonoLead.isNotEmpty) {
       final catalogState = context.read<CatalogsBloc>().state;
       if (catalogState is CatalogsLoaded) {
@@ -401,6 +423,13 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _solicitanteParticipante = detalle.solicitanteEsParticipante;
       _facturarAlSolicitante = detalle.facturarAlSolicitante;
       _ctrlNumDoc.text = detalle.numDoc;
+      // Ya viene resuelto desde el backend — sembrar acá evita que
+      // "Siguiente" dispare una búsqueda RENIEC/SUNAT (con su overlay
+      // "Buscando datos del documento...") sobre un documento que no
+      // cambió, solo porque se está validando/editando una solicitud ya
+      // guardada sin haber tocado el campo. Bug real reportado en vivo,
+      // 2026-08-04 — mismo criterio para el RUC comercial más abajo.
+      _ultimoDocSolicitanteBuscado = detalle.numDoc;
       _ctrlNombres.text = detalle.nombres;
       _ctrlApellidoPaterno.text = detalle.apellidoPaterno;
       _ctrlApellidoMaterno.text = detalle.apellidoMaterno;
@@ -409,6 +438,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       _ctrlCelular.text = detalle.celular;
       _ctrlCorreo.text = detalle.correo;
       _ctrlRuc.text = detalle.ruc;
+      _ultimoRucBuscado = detalle.ruc;
       _ctrlRazonSocial.text = detalle.razonSocial;
 
       final datosSolicitante = DatosSolicitante(
@@ -667,29 +697,42 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     if (confirmado && mounted) widget.onCancelar();
   }
 
+  // Fuerza MAYÚSCULAS en texto libre al armar el payload — mismo criterio
+  // que EditContactoPortrait._mayus() (lead/CLAUDE.md, "Todo texto libre se
+  // guarda en MAYÚSCULAS"). Segunda capa además de isUpperCase:true en los
+  // CustomTextField (feedback visual mientras se tipea) — necesaria porque
+  // el autocompletado por documento (RENIEC/SUNAT) y el prellenado desde
+  // negociación asignan texto directo al controller, sin pasar por el
+  // formatter del widget. Nunca aplicar a campos numéricos/de documento
+  // (N° documento, RUC, celular).
+  String _mayus(String s) => s.trim().toUpperCase();
+
   DatosSolicitante _construirDatosSolicitante(PaisItem? paisCelular) {
     final archivos = context.read<SolicitudFormCubit>().state;
     return DatosSolicitante(
       tipoDocId: _tipoDocId,
       tipoDocLabel: _tipoDocLabel,
-      numDoc: _ctrlNumDoc.text,
+      // Mayúsculas también acá — DNI es solo dígitos (no-op), pero Carnet de
+      // extranjería/Pasaporte pueden traer letras (mismo criterio ya usado
+      // en participante_form_sheet.dart).
+      numDoc: _mayus(_ctrlNumDoc.text),
       nacionalidadId: _nacionalidadId,
       nacionalidad: _nacionalidadLabel,
       sexoId: _sexoId,
-      nombres: _ctrlNombres.text,
-      apellidoPaterno: _ctrlApellidoPaterno.text,
-      apellidoMaterno: _ctrlApellidoMaterno.text,
-      cargo: _ctrlCargo.text,
+      nombres: _mayus(_ctrlNombres.text),
+      apellidoPaterno: _mayus(_ctrlApellidoPaterno.text),
+      apellidoMaterno: _mayus(_ctrlApellidoMaterno.text),
+      cargo: _mayus(_ctrlCargo.text),
       cargoId: _cargoId,
       celular: _ctrlCelular.text,
       celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
-      correo: _ctrlCorreo.text,
+      correo: _mayus(_ctrlCorreo.text),
       canalId: _canalSeleccionado?.id,
       canalNombre: _canalSeleccionado?.esDetallado == true
-          ? _ctrlCanalDetalle.text.trim()
+          ? _mayus(_ctrlCanalDetalle.text)
           : (_canalSeleccionado?.descripcion ?? ''),
       ruc: _ctrlRuc.text,
-      razonSocial: _ctrlRazonSocial.text,
+      razonSocial: _mayus(_ctrlRazonSocial.text),
       solicitanteEsParticipante: _solicitanteParticipante,
       facturarAlSolicitante: _facturarAlSolicitante,
       // Prioridad: archivo recién adjuntado en esta sesión → archivo ya
@@ -763,6 +806,43 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       datos,
       idTipoParticipantePagante: _idTipoParticipantePagante(),
       importeFijo: _importeFijo(),
+    );
+  }
+
+  // "Facturar al solicitante" tiene que reflejarse en Facturación (paso 3)
+  // de inmediato, no solo cuando ese paso ya esté vivo en el wizard — antes
+  // el auto-completado solo pasaba dentro de SolicitudFacturacionView (por
+  // BlocListener o al construirse por primera vez), así que activar/
+  // desactivar el switch ANTES de haber visitado el paso 3 una vez no tenía
+  // ningún efecto hasta llegar ahí (bug real reportado en vivo). Ahora se
+  // escribe directo en SolicitudFormCubit desde acá, con el mismo cálculo
+  // que usa el paso 3 (construirFacturacionDesdeSolicitante) — así, cuando
+  // el asesor llegue a Facturación, `formState.facturacion` ya viene
+  // correcto sin importar el orden en que tocó las pantallas. Activar
+  // completa TODOS los datos del solicitante (Jurídica: Factura+RUC+Razón
+  // social; Natural: Boleta+DNI+Nombres), desactivar borra la facturación
+  // por completo para que se vuelva a completar de cero.
+  void _onFacturarAlSolicitanteChanged(bool v, PaisItem? paisCelular) {
+    setState(() => _facturarAlSolicitante = v);
+    _sincronizarCubit();
+
+    final formCubit = context.read<SolicitudFormCubit>();
+    if (!v) {
+      formCubit.limpiarFacturacion();
+      return;
+    }
+
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return;
+    final formState = formCubit.state;
+    formCubit.guardarFacturacion(
+      construirFacturacionDesdeSolicitante(
+        solicitante: _construirDatosSolicitante(paisCelular),
+        tipoPersona: formState.tipoPersona,
+        catalogos: catalogState,
+        monedaIdActual: formState.facturacion?.monedaId,
+        idMonedaBloqueada: formState.idMonedaBloqueada,
+      ),
     );
   }
 
@@ -1066,9 +1146,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                               ? _nacionalidadId
                               : null,
                           sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
-                          cargoInicialId: _cargoId.isNotEmpty
-                              ? _cargoId
-                              : null,
                           onTipoDocChanged: (item) {
                             setState(() {
                               _tipoDocId = item?.id ?? '';
@@ -1087,8 +1164,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                             setState(() => _sexoId = item?.id ?? '');
                             _sincronizarCubit();
                           },
-                          onCargoChanged: (item) {
-                            setState(() => _cargoId = item?.id ?? '');
+                          onCargoChanged: (id) {
+                            setState(() => _cargoId = id);
                             _sincronizarCubit();
                           },
                           onBuscarDocumento: _buscarDocumentoSolicitante,
@@ -1112,10 +1189,8 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                           facturarAlSolicitante: _facturarAlSolicitante,
                           onSolicitanteChanged:
                               _onSolicitanteParticipanteChanged,
-                          onFacturarChanged: (v) {
-                            setState(() => _facturarAlSolicitante = v);
-                            _sincronizarCubit();
-                          },
+                          onFacturarChanged: (v) =>
+                              _onFacturarAlSolicitanteChanged(v, paisCelular),
                           habilitado: widget.modoEdicion,
                         ),
                       ],

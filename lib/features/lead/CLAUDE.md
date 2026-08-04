@@ -667,10 +667,19 @@ ningún origen, edite o cree, venga o no de conversación.
   (`nombresNegociacion`/`apellidoPaternoNegociacion`/`apellidoMaternoNegociacion`/
   `nombreEmpresaNegociacion`/`correoNegociacion`/`celularNegociacion`/
   `celularCodigoTelefonoNegociacion`/`rucNegociacion`) y uno más solo para validación de
-  consistencia (`precioTotalNegociacion`, nunca se muestra ni bloquea nada). **Cargo quedó
-  fuera** — llega como id crudo sin catálogo (`CT.ID_CARGO`), nunca parseado; resolverlo de
-  verdad necesita un catálogo nuevo, no solo threading del lado del cliente. **RUC sí se agregó**
-  (`Negociacion.ruc`, `CRM.T_EMPRESA.RUC` — ver `solicitudes/CLAUDE.md`).
+  consistencia (`precioTotalNegociacion`, nunca se muestra ni bloquea nada). **`cargoNegociacion`
+  también se agregó** (nota vieja acá decía que quedaba fuera por ser un id crudo sin catálogo —
+  desactualizada: el fix del 2026-08-03, ver "Migración de ancla..." más abajo en este archivo,
+  cambió `Negociacion.cargo` de `CT.ID_CARGO` a `T_EMPRESA_CONTACTO.NOM_CARGO` — texto libre real
+  — y Cargo en `solicitudes/` pasó a texto libre el 2026-08-04 (ver `solicitudes/CLAUDE.md` →
+  "Cargo con texto libre"), así que ya no hace falta ningún catálogo para threadearlo). **RUC sí
+  se agregó** (`Negociacion.ruc`, `CRM.T_EMPRESA.RUC` — ver `solicitudes/CLAUDE.md`).
+  **`tipoDocIdNegociacion`/`numDocNegociacion` agregados el 2026-08-04** — bug real reportado en
+  vivo, el N° documento del paso 1 quedaba vacío al crear desde una negociación (a diferencia de
+  todo el resto de datos de contacto de arriba, que sí llegaban). `Negociacion` no tenía estos 2
+  campos — se agregaron (`tipoDocId`/`numDoc`, `T_CONTACTO.ID_TIP_DOC`/`NRO_DOC`, nunca antes
+  seleccionados en `CSV_LEADS_LST_APP` tasks `'DT'`/`'DN'`) — ver detalle completo en
+  `solicitudes/CLAUDE.md` → "Bug real — N° documento nunca llegaba...".
   **Ojo — `Negociacion.ruc`/`nombres`/`apellidoPaterno`/`apellidoMaterno`/`nombreEmpresa`/
   `correo` solo los trae el SP de detalle (`'DT'`/`'DN'`) — el de historial (`'LN'`, el que
   alimenta `NegociacionesCubit`) no hace join con `T_CONTACTO`/`T_EMPRESA`/`T_CONTACTO_CORREO`,

@@ -658,6 +658,17 @@ catálogo — ver Área/Cargo en `lead/CLAUDE.md`. Tocar afuera del campo sin pr
 confirma el texto libre (a propósito, replica "aprieto el check del teclado" tal como se pidió,
 no cualquier pérdida de foco).
 
+**`allowFreeText: true` + `validator` (Cargo de `solicitudes/`, agregado 2026-08-04)** — el
+`validator` interno del widget compara contra `_selected?.id` por defecto (correcto cuando el
+campo exige una selección real del catálogo, como cualquier combo sin `allowFreeText`), pero con
+texto libre confirmado `_selected.id` queda vacío a propósito (`ComboItem(id: '', descripcion:
+texto)`) — validar por id ahí marcaba "Requerido" aunque el asesor sí hubiera tipeado y
+confirmado algo. Con `allowFreeText: true` el widget valida contra `_selected?.descripcion` en
+su lugar (sin id no matcheado, con texto libre confirmado sí). Los usos existentes de
+`allowFreeText` (Área/Cargo de `lead/EditContacto`) nunca pasaban `validator` (campos opcionales),
+así que no cambiaron de comportamiento — este ajuste solo importa para un combo con texto libre
+que además sea obligatorio.
+
 ### CustomComboMultiField
 Combo multi-selección con chips. Abre diálogo con checkboxes.
 ```dart

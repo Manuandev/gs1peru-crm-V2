@@ -19,6 +19,13 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
   void guardarFacturacion(DatosFacturacion datos) =>
       emit(state.copyWith(facturacion: datos));
 
+  /// Vacía la facturación ya capturada — llamado al apagar "Facturar al
+  /// solicitante" (paso 1, pedido de negocio: cada vez que se desactiva el
+  /// switch, Facturación se limpia por completo para completarla de nuevo).
+  /// `facturacion` vuelve a `null`, así el paso 3 recae en su propia rama de
+  /// defaults (Perú/DNI-o-RUC según tipo de persona + Lima/Lima) al construirse.
+  void limpiarFacturacion() => emit(state.copyWith(limpiarFacturacion: true));
+
   /// Setea/actualiza el NUMSOL — llamado una vez al entrar al wizard (con
   /// el NUMSOL real si se edita una solicitud existente, o vacío si es
   /// creación) y de nuevo tras el primer guardado exitoso de una solicitud
@@ -51,6 +58,12 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
     String celularCodigoTelefono = '',
     String ruc = '',
     String cargo = '',
+    // Tipo/N° de documento del contacto — 2026-08-04, mismo candado que el
+    // resto de datos de contacto de arriba (solo prellenan, el asesor los
+    // puede editar). Antes no existían — el N° documento del paso 1 quedaba
+    // vacío al crear desde una negociación.
+    String tipoDocId = '',
+    String numDoc = '',
   }) => emit(
     state.copyWith(
       cantidadEsperada: cantidad,
@@ -67,6 +80,8 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
       celularCodigoTelefonoLead: celularCodigoTelefono,
       rucLead: ruc,
       cargoLead: cargo,
+      tipoDocIdLead: tipoDocId,
+      numDocLead: numDoc,
     ),
   );
 

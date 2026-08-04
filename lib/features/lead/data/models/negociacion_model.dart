@@ -49,6 +49,8 @@ class NegociacionModel extends Negociacion {
     super.correo,
     super.ruc,
     super.cargo,
+    super.tipoDocId,
+    super.numDoc,
     super.numSol,
     super.idEstadoSol,
     super.idChatCab,
@@ -145,6 +147,21 @@ class NegociacionModel extends Negociacion {
   //                               alimenta Negociacion.fechaPrimerMensajeCliente,
   //                               que usa ContactoAccionesFooter para pintar
   //                               el botón de WhatsApp verde/gris.
+  //                            41 CT.ID_TIP_DOC (2026-08-04, agregado al
+  //                               final) → Negociacion.tipoDocId
+  //                            42 CT.NRO_DOC (2026-08-04) → Negociacion.numDoc
+  //                               — ambos para prellenar Tipo/N° documento
+  //                               del paso 1 de Solicitudes al crear desde
+  //                               una negociación (antes siempre vacío).
+  //                               ⚠️ Los comentarios `/*NN*/` DENTRO del .sql
+  //                               (CSV_LEADS_LST_APP, repo aparte) están
+  //                               desactualizados desde hace varias sesiones
+  //                               (había 3 campos duplicados con la misma
+  //                               etiqueta "/*01*/" cerca del inicio) — la
+  //                               posición real que importa acá es el ORDEN
+  //                               en el CONCAT, no la etiqueta. Si se vuelve
+  //                               a tocar ese SP, contar por orden real, no
+  //                               confiar en las etiquetas `/*NN*/`.
   factory NegociacionModel.fromDetalleRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -189,6 +206,8 @@ class NegociacionModel extends Negociacion {
       idEstadoSol: ParseUtils.toInt(fields, 36),
       idChatCab: ParseUtils.toInt(fields, 31),
       fechaPrimerMensajeCliente: ParseUtils.str(fields, 40),
+      tipoDocId: ParseUtils.str(fields, 41),
+      numDoc: ParseUtils.str(fields, 42),
     );
   }
 

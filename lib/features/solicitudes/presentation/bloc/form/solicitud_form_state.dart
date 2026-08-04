@@ -283,6 +283,13 @@ class SolicitudFormState {
   /// de solo-prellenado que el resto de datos de contacto de arriba.
   final String cargoLead;
 
+  /// Tipo/N° de documento del contacto de la negociación (`Negociacion.
+  /// tipoDocId`/`numDoc`, `T_CONTACTO.ID_TIP_DOC`/`NRO_DOC`) — 2026-08-04,
+  /// mismo candado/mismo trato de solo-prellenado que el resto de arriba.
+  /// `tipoDocId` es el id real del catálogo (`TipoDocumentoItem`).
+  final String tipoDocIdLead;
+  final String numDocLead;
+
   /// Snapshot de `tipoPersona`/`solicitante`/`facturacion`/`archivoVoucher`/
   /// `archivoOC` tal como quedaron la última vez que se cargó (task 'DT') o
   /// se guardó con éxito esta solicitud — `SolicitudFormCubit.marcarSinCambios()`
@@ -322,6 +329,8 @@ class SolicitudFormState {
     this.celularCodigoTelefonoLead = '',
     this.rucLead = '',
     this.cargoLead = '',
+    this.tipoDocIdLead = '',
+    this.numDocLead = '',
     this.tipoPersonaCargado = 'juridica',
     this.solicitanteCargado,
     this.facturacionCargado,
@@ -349,6 +358,7 @@ class SolicitudFormState {
     String? numSol,
     DatosSolicitante? solicitante,
     DatosFacturacion? facturacion,
+    bool limpiarFacturacion = false,
     PlatformFile? archivoVoucher,
     bool limpiarArchivoVoucher = false,
     PlatformFile? archivoOC,
@@ -367,6 +377,8 @@ class SolicitudFormState {
     String? celularCodigoTelefonoLead,
     String? rucLead,
     String? cargoLead,
+    String? tipoDocIdLead,
+    String? numDocLead,
     String? tipoPersonaCargado,
     DatosSolicitante? solicitanteCargado,
     DatosFacturacion? facturacionCargado,
@@ -379,7 +391,7 @@ class SolicitudFormState {
     tipoPersona: tipoPersona ?? this.tipoPersona,
     numSol: numSol ?? this.numSol,
     solicitante: solicitante ?? this.solicitante,
-    facturacion: facturacion ?? this.facturacion,
+    facturacion: limpiarFacturacion ? null : (facturacion ?? this.facturacion),
     archivoVoucher: limpiarArchivoVoucher
         ? null
         : (archivoVoucher ?? this.archivoVoucher),
@@ -399,6 +411,8 @@ class SolicitudFormState {
         celularCodigoTelefonoLead ?? this.celularCodigoTelefonoLead,
     rucLead: rucLead ?? this.rucLead,
     cargoLead: cargoLead ?? this.cargoLead,
+    tipoDocIdLead: tipoDocIdLead ?? this.tipoDocIdLead,
+    numDocLead: numDocLead ?? this.numDocLead,
     tipoPersonaCargado: tipoPersonaCargado ?? this.tipoPersonaCargado,
     solicitanteCargado: solicitanteCargado ?? this.solicitanteCargado,
     facturacionCargado: limpiarFacturacionCargado

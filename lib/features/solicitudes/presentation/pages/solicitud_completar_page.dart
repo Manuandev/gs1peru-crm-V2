@@ -28,6 +28,11 @@ class SolicitudCompletarPage extends StatelessWidget {
   final String? celularCodigoTelefonoNegociacion;
   final String? rucNegociacion;
   final String? cargoNegociacion;
+  // Tipo/N° de documento del contacto — 2026-08-04, mismo candado que el
+  // resto ("de referencia", solo prellena). Ver SolicitudFormCubit.
+  // sembrarDatosNegociacion.
+  final String? tipoDocIdNegociacion;
+  final String? numDocNegociacion;
 
   const SolicitudCompletarPage({
     super.key,
@@ -47,6 +52,8 @@ class SolicitudCompletarPage extends StatelessWidget {
     this.celularCodigoTelefonoNegociacion,
     this.rucNegociacion,
     this.cargoNegociacion,
+    this.tipoDocIdNegociacion,
+    this.numDocNegociacion,
   });
 
   @override
@@ -76,6 +83,8 @@ class SolicitudCompletarPage extends StatelessWidget {
                 celularCodigoTelefono: celularCodigoTelefonoNegociacion ?? '',
                 ruc: rucNegociacion ?? '',
                 cargo: cargoNegociacion ?? '',
+                tipoDocId: tipoDocIdNegociacion ?? '',
+                numDoc: numDocNegociacion ?? '',
               );
             }
             return cubit;

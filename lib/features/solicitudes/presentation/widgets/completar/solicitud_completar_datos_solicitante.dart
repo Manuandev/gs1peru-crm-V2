@@ -24,15 +24,17 @@ class SeccionDatosSolicitante extends StatefulWidget {
   final String? tipoDocInicialId;
   final String? nacionalidadInicialId;
   final String? sexoInicialId;
-  // Id del CargoItem ya elegido (para preseleccionar el combo al reabrir),
-  // y callback con el ítem completo (id + descripción) cada vez que se
-  // elige uno — el padre guarda el id (DatosSolicitante.cargoId) y escribe
-  // la descripción en widget.ctrlCargo por su cuenta.
-  final String? cargoInicialId;
+  // Combo de Cargo con texto libre (allowFreeText, 2026-08-04) — si el cargo
+  // buscado no está en el catálogo, tipearlo y confirmar con el check del
+  // teclado lo guarda tal cual (mismo patrón que Área/Cargo en
+  // lead/EditContacto, ver core/CLAUDE.md → CustomComboSearchField). El
+  // callback entrega el id del catálogo si matcheó, o '' si es texto libre —
+  // el padre guarda ese id (DatosSolicitante.cargoId) y escribe la
+  // descripción en widget.ctrlCargo por su cuenta.
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   final ValueChanged<SexoItem?>? onSexoChanged;
-  final ValueChanged<CargoItem?>? onCargoChanged;
+  final ValueChanged<String>? onCargoChanged;
   // Autocompletado por documento (Clientes/BuscarDocumento) — se dispara al
   // perder foco o al presionar el check del teclado en Número documento. El
   // indicador de carga es un overlay de pantalla completa que arma el padre
@@ -55,7 +57,6 @@ class SeccionDatosSolicitante extends StatefulWidget {
     this.tipoDocInicialId,
     this.nacionalidadInicialId,
     this.sexoInicialId,
-    this.cargoInicialId,
     this.onTipoDocChanged,
     this.onNacionalidadChanged,
     this.onSexoChanged,
@@ -270,13 +271,11 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
               .toList(),
           label: 'Cargo *',
           enabled: widget.habilitado,
-          initialValue: widget.cargoInicialId,
+          allowFreeText: true,
+          initialText: widget.ctrlCargo.text,
           onChanged: (item) {
-            final cargo = item == null
-                ? null
-                : cargos.where((c) => c.id == item.id).firstOrNull;
-            widget.ctrlCargo.text = cargo?.nombre ?? '';
-            widget.onCargoChanged?.call(cargo);
+            widget.ctrlCargo.text = item?.descripcion ?? '';
+            widget.onCargoChanged?.call(item?.id ?? '');
           },
           validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
         ),
@@ -305,6 +304,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 controller: widget.ctrlCorreo,
                 keyboardType: TextInputType.emailAddress,
                 enabled: widget.habilitado,
+                isUpperCase: true,
                 validator: (v) => v.emailValidator,
               ),
             ),

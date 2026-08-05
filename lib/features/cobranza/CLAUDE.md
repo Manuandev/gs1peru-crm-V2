@@ -1,5 +1,28 @@
 # Cobranza Feature
 
+## La última cuota del plan de crédito absorbe el centavo de redondeo (2026-08-05)
+Mismo pedido y mismo criterio que el revert de participantes de `solicitudes/` (ver
+`solicitudes/CLAUDE.md`, "Revert — el último participante vuelve a absorber el centavo de
+redondeo del importe") — acá aplicado al cronograma de cuotas, que tenía el mismo problema de
+fondo y nunca había tenido ningún ajuste: `CobranzaPlanBloc._onVistaPrevia` generaba las N
+cuotas con `montoTotal / n` sin redondear ni reconciliar — si esa división no caía en un número
+exacto de 2 decimales, la suma de las cuotas (cada una mostrada/enviada al backend con
+`toStringAsFixed(2)`, ver `cobranza_plan_cronograma_card.dart`/`guardarPlanCredito`) quedaba por
+debajo o por encima de `montoTotal`, visible en el footer "Total: X" (`state.totalCuotas`,
+`cobranza_plan_state.dart`) sin calzar contra el monto del comprobante mostrado arriba
+(`CobranzaPlanResumenCard`).
+
+- **`_onVistaPrevia`** ahora redondea `montoPorCuota` a 2 decimales antes de usarlo, y la
+  **última** cuota (`i == n - 1`) recibe `montoTotal - montoPorCuota * (n - 1)` en vez del mismo
+  valor que las demás — así `state.totalCuotas` cierra exacto contra `state.montoTotal`. Las
+  primeras `n - 1` cuotas no cambiaron (división simple redondeada).
+- **No se tocó** `_onModificarCuota` (edición manual de una cuota, ver "Regla de negocio del
+  cronograma" más abajo) — si el usuario edita el monto de una cuota a mano (hoy `_onModificarCuota`
+  solo permite editar Días/Fecha, no Monto — el monto no es editable en el formulario actual),
+  este ajuste no aplica; es exclusivo de "Vista previa" (regenerar todo el cronograma).
+- **Con 1 sola cuota** (`n == 1`), la fórmula cae en `montoTotal - montoPorCuota * 0 =
+  montoTotal` — sin cambio de comportamiento respecto a antes.
+
 ## `CobranzaCard` compactada (2026-07-14)
 `CobranzaCard` (`presentation/widgets/lista/cobranza_card.dart`) se redujo de escala — mismo
 criterio aplicado antes a `SolicitudCard` (`solicitudes/`): padding general `md` → `sm`, avatar

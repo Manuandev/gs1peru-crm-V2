@@ -87,21 +87,40 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
   // comprobante / N cada una, días por defecto 7*i (i=1..N) — el único dato
   // confirmado es que la cuota única por defecto es 7 días; ajustable a mano
   // después vía "Modificar" en cada cuota.
+  //
+  // La ÚLTIMA cuota absorbe el centavo de redondeo (mismo criterio que
+  // `_importeFijo()` del último participante en `solicitudes/`, ver
+  // cobranza/CLAUDE.md, 2026-08-05) — `montoTotal / n` rara vez cae en un
+  // número exacto de 2 decimales; si las N cuotas usaran esa división tal
+  // cual, la SUMA de las cuotas (cada una redondeada a 2 decimales al
+  // mostrarse/guardarse, ver `toStringAsFixed(2)` en
+  // `cobranza_plan_cronograma_card.dart`/`guardarPlanCredito`) quedaría por
+  // debajo o por encima de `montoTotal`. Las primeras `n-1` cuotas usan la
+  // división simple redondeada; la última recibe `montoTotal - suma de las
+  // anteriores`, para que el cronograma cierre exacto contra el total del
+  // comprobante.
   void _onVistaPrevia(
     VistaPreviaPressed event,
     Emitter<CobranzaPlanState> emit,
   ) {
     final n = state.numCuotasDeseadas;
-    final montoPorCuota = state.montoTotal / n;
+    final montoPorCuota = double.parse(
+      (state.montoTotal / n).toStringAsFixed(2),
+    );
 
-    final cuotas = List<CuotaPlan>.generate(
-      n,
-      (i) => CuotaPlan(
+    final cuotas = List<CuotaPlan>.generate(n, (i) {
+      final esUltima = i == n - 1;
+      final monto = esUltima
+          ? double.parse(
+              (state.montoTotal - montoPorCuota * (n - 1)).toStringAsFixed(2),
+            )
+          : montoPorCuota;
+      return CuotaPlan(
         numeroCuota: i + 1,
         fechaVencimiento: _fechaMasDias(7 * (i + 1)),
-        monto: montoPorCuota,
-      ),
-    );
+        monto: monto,
+      );
+    });
 
     emit(state.copyWith(
       cuotas: cuotas,

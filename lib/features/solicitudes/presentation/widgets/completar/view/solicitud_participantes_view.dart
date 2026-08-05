@@ -59,16 +59,16 @@ class _SolicitudParticipantesViewState
   // siendo editable siempre (ver
   // participante_form_sheet.dart), esto es solo una sugerencia inicial.
   //
-  // Siempre es la misma división simple para TODOS los participantes,
-  // incluido el último — ya no se le sugiere "lo que falta" para calzar
-  // exacto con el total de la negociación (así era hasta el 2026-07-21).
-  // Pedido de negocio, 2026-07-22: el importe nunca más se fuerza a calzar
-  // contra ningún total — si el asesor edita el importe de otro
-  // participante (ej. un descuento manual), eso NO debe empujarse hacia el
-  // sugerido de uno nuevo. El centavo de redondeo que esto puede dejar
-  // suelto ya no se absorbe acá — se absorbe en el IGV del último Pagante,
-  // recién al completar el máximo de participantes (ver
-  // ParticipantesState.igvPorParticipante).
+  // El ÚLTIMO participante esperado (`cantidadEsperada`) vuelve a recibir
+  // "lo que falta" en vez de la división simple, para que la suma de
+  // importes calce exacto contra la negociación — revertido el 2026-08-05
+  // (pedido explícito del usuario, "que absorba"), volviendo al
+  // comportamiento previo al 2026-07-22. Ese cambio del 2026-07-22 lo había
+  // quitado porque un descuento manual en otro participante se empujaba
+  // sin querer hacia el sugerido de uno nuevo — riesgo que vuelve a existir
+  // con este revert, aceptado a cambio de que el total del footer/Resumen
+  // cierre exacto contra `precioTotalLead` en el caso común (nadie edita el
+  // importe sugerido a mano).
   double? _importeFijo(BuildContext context) {
     final formState = context.read<SolicitudFormCubit>().state;
     final cantidadEsperada = formState.cantidadEsperada;
@@ -80,6 +80,12 @@ class _SolicitudParticipantesViewState
         : 0.0;
 
     final totalSinIgv = formState.precioTotalLead / (1 + igvPorcentaje / 100);
+
+    final actuales = context.read<ParticipantesCubit>().state.participantes;
+    if (actuales.length == cantidadEsperada - 1) {
+      final sumaActual = actuales.fold(0.0, (sum, p) => sum + p.importe);
+      return totalSinIgv - sumaActual;
+    }
 
     return totalSinIgv / cantidadEsperada;
   }

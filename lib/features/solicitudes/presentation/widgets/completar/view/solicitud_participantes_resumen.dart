@@ -34,7 +34,15 @@ class ResumenInversion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inversion = total;
-    final igv = inversion * igvPorcentaje / 100;
+    // El IGV se redondea a 2 decimales ANTES de sumarlo — antes "Importe
+    // total" usaba el IGV crudo (sin redondear) mientras la fila "IGV" de
+    // arriba mostraba la versión redondeada, así que el total podía no
+    // calzar con la suma literal de las 2 filas de encima (ej. Inversión
+    // 7627.12 + IGV 1372.88 mostrando un total distinto de 9000.00) — bug
+    // real reportado por el usuario, 2026-08-05. Con el IGV ya redondeado,
+    // "Importe total" siempre es exactamente Inversión + IGV, los 2 números
+    // que el usuario ve arriba.
+    final igv = double.parse((inversion * igvPorcentaje / 100).toStringAsFixed(2));
     final importeTotal = inversion + igv;
     final igvLabel = igvPorcentaje % 1 == 0
         ? igvPorcentaje.toInt().toString()

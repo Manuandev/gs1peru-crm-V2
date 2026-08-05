@@ -229,10 +229,10 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
   // null si esta solicitud no viene de una negociación con precio ya
   // definido — mismo cálculo que usa "Nuevo participante"
   // (solicitud_participantes_view.dart._importeFijo, ver el comentario ahí
-  // para el detalle de la fórmula — siempre división simple, ya no se
-  // ajusta al último para calzar exacto, ver 2026-07-22), necesario acá
-  // también porque el switch "El solicitante será participante" genera su
-  // propio ParticipanteLocal sin pasar por ese formulario.
+  // para el detalle de la fórmula, incluida la absorción del último
+  // participante restaurada el 2026-08-05), necesario acá también porque
+  // el switch "El solicitante será participante" genera su propio
+  // ParticipanteLocal sin pasar por ese formulario.
   double? _importeFijo() {
     final formState = context.read<SolicitudFormCubit>().state;
     final cantidadEsperada = formState.cantidadEsperada;
@@ -244,6 +244,12 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
         : 0.0;
 
     final totalSinIgv = formState.precioTotalLead / (1 + igvPorcentaje / 100);
+
+    final actuales = context.read<ParticipantesCubit>().state.participantes;
+    if (actuales.length == cantidadEsperada - 1) {
+      final sumaActual = actuales.fold(0.0, (sum, p) => sum + p.importe);
+      return totalSinIgv - sumaActual;
+    }
 
     return totalSinIgv / cantidadEsperada;
   }

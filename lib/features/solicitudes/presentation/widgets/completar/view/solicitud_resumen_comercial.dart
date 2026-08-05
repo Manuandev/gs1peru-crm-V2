@@ -32,7 +32,12 @@ class SeccionResumenComercial extends StatelessWidget {
     final igvPorcentaje = catalogState is CatalogsLoaded
         ? catalogState.igvPorcentaje
         : 0.0;
-    final igv = inversion * igvPorcentaje / 100;
+    // IGV redondeado a 2 decimales antes de sumar — mismo fix que
+    // ResumenInversion (solicitud_participantes_resumen.dart, paso 2,
+    // 2026-08-05): usar el IGV crudo acá hacía que "Importe total" no
+    // calzara con la suma literal de Inversión + IGV tal como se muestran
+    // arriba.
+    final igv = double.parse((inversion * igvPorcentaje / 100).toStringAsFixed(2));
     final importeTotal = inversion + igv;
 
     return Column(

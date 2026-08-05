@@ -1,5 +1,56 @@
 # Solicitudes Feature
 
+## Bug real — "Importe total" no calzaba con la suma literal de Inversión + IGV mostradas (2026-08-05)
+Encontrado por el usuario justo al probar el revert de arriba: con Inversión **7627.12** e IGV
+**1372.88** (ambos ya mostrados en pantalla), "Importe total" mostraba **9000.01** — un centavo
+más de lo que la suma literal de esas 2 cifras da (9000.00). Causa: tanto
+`ResumenInversion` (paso 2) como `SeccionResumenComercial` (Resumen, paso 4) calculaban
+`igv = inversion * igvPorcentaje / 100` **sin redondear** y usaban ese valor crudo para
+`importeTotal = inversion + igv` — la fila "IGV" que ve el usuario sí se redondea a 2 decimales
+solo al pintarse (`.toStringAsFixed(2)`), pero el total se armaba con la versión sin redondear,
+así que en ciertos casos el total mostrado terminaba un centavo por encima/debajo de lo que la
+suma visual de las 2 filas de arriba sugiere — no es lo mismo que el residuo de ±1 centavo
+contra la negociación (ver sección de abajo, "son centavitos, pero hay que meterlo igual", ese
+sigue existiendo) — este era un problema aparte, de consistencia interna entre lo que se ve en
+pantalla.
+
+- **Fix, en ambos archivos**: `igv` ahora se redondea a 2 decimales (`double.parse(...
+  toStringAsFixed(2))`) **antes** de sumarlo — `importeTotal = inversion + igv` (con el `igv` ya
+  redondeado). Con esto, "Importe total" siempre es exactamente la suma de las 2 cifras que el
+  usuario ve arriba (Inversión + IGV), sin importar el redondeo interno de `inversion`.
+
+## Revert — el último participante vuelve a absorber el centavo de redondeo del importe (2026-08-05)
+Reportado por el usuario con un caso real: 3 participantes a 2542.37 c/u (sugerido por
+`_importeFijo()`), footer mostraba **Importe total 8999.99** en vez de **9000.00**. Causa: desde
+el 2026-07-22 (ver "Importe ya no absorbe el redondeo..." más abajo), `_importeFijo()` siempre
+sugiere la división simple (`totalSinIgv / cantidadEsperada`) para TODOS los participantes,
+incluido el último — como esa división rara vez cae en un número exacto de 2 decimales, la SUMA
+de los importes ya guardados (cada uno redondeado a 2 decimales) queda por debajo del total sin
+IGV real, y ese faltante se arrastra hasta el total del footer/Resumen. No es un bug de cálculo
+— es el trade-off que se aceptó explícitamente el 2026-07-22 ("son centavitos, pero hay que
+meterlo igual"). El usuario, al ver el caso concreto, pidió revertirlo.
+
+- **`_importeFijo()`** (duplicado a propósito, mismo patrón de siempre, en
+  `solicitud_participantes_view.dart` y `solicitud_completar_view_guardado.dart`) recuperó la
+  rama especial para el último participante esperado que tenía antes del 2026-07-22: si
+  `participantes.length == cantidadEsperada - 1` (se está por agregar/sincronizar el último), en
+  vez de la división simple retorna **lo que falta** —
+  `totalSinIgv - sum(importes de los participantes ya agregados)` — para que la suma total calce
+  exacto (o lo más cerca posible) contra `precioTotalLead` de la negociación. El resto de
+  participantes (no el último) sigue con la división simple, sin cambios.
+- **Riesgo aceptado al revertir, mismo que motivó el cambio del 2026-07-22**: si el asesor edita
+  a mano el importe de un participante ya agregado (ej. un descuento manual) y **después** agrega
+  uno nuevo que resulta ser el último esperado, ese ajuste manual se empuja sin querer hacia el
+  importe sugerido del nuevo — el asesor puede seguir editándolo él mismo si no lo quiere así,
+  el campo Importe sigue siendo 100% editable (ver "Importe de participante ya no bloqueado..."
+  más abajo). Aceptado explícitamente por el usuario al pedir el revert.
+- **No se tocó** `ParticipantesState.igvPorParticipante()`/`calcularIgvPorParticipante()` (el
+  mecanismo que agregó el 2026-07-22, que ajusta el IGV del último Pagante en el **guardado al
+  backend** por participante) — es un mecanismo aparte, sigue vigente sin cambios. No afecta el
+  total mostrado en el footer/Resumen (que solo suma `importe` de cada participante, nunca lee
+  ese mapa de IGV ajustado) — el fix de este total pasa exclusivamente por que `_importeFijo()`
+  vuelva a sugerir un importe que sume exacto.
+
 ## Bug real — N° documento nunca llegaba al crear desde una negociación + Tipo/N° documento agregados a Negociacion + mayúsculas en texto libre (2026-08-04)
 El usuario mostró un screenshot real: al crear una solicitud desde "Editar lead"/"Generar
 solicitud", el paso 1 llegaba con Nombres/Apellidos/Cargo/Correo/RUC/Razón social ya prellenados

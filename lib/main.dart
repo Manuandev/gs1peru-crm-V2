@@ -1,18 +1,41 @@
 // lib/main.dart
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/app_widget.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/config/index_config.dart';
 
 // ✅ TOP-LEVEL obligatorio — debe estar fuera del main
 @pragma('vm:entry-point')
 Future<void> _firebaseBackgroundHandler(RemoteMessage message) =>
     firebaseMessagingBackgroundHandler(message);
 
+// Confía en el certificado intermedio que el servidor no manda en el
+// handshake TLS — sin esto, Android con parches de seguridad desactualizados
+// no arma la cadena de confianza y el socket SignalR nunca conecta (ver
+// signalr_service.dart). Falla en silencio si el .crt aún no fue colocado en
+// assets/certs/ (ver assets/certs/README.md) — estado transitorio mientras
+// se consigue el archivo real, no debe bloquear el arranque de la app.
+Future<void> _confiarEnCertificadoIntermedio() async {
+  try {
+    final bytes = await rootBundle.load(EnvConfig.certificadoConfianza);
+    SecurityContext.defaultContext.setTrustedCertificatesBytes(
+      bytes.buffer.asUint8List(),
+    );
+  } catch (e) {
+    debugPrint('[TLS] No se pudo cargar el certificado de confianza: $e');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await _confiarEnCertificadoIntermedio();
 
   // ── FIREBASE — primero siempre ───────────────────────────────
   await Firebase.initializeApp();

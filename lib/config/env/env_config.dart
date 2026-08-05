@@ -41,6 +41,20 @@ class EnvConfig {
     }
   }
 
+  // Certificado intermedio que el servidor no envía en el handshake TLS —
+  // sin él, Android con parches de seguridad desactualizados no arma la
+  // cadena de confianza y el socket nunca conecta (dev y qa comparten host,
+  // natcodee.net, por eso comparten certificado).
+  static String get certificadoConfianza {
+    switch (current) {
+      case Environment.dev:
+      case Environment.qa:
+        return 'assets/certs/natcodee_intermedio.crt';
+      case Environment.prod:
+        return 'assets/certs/prod_intermedio.crt';
+    }
+  }
+
   // Configuraciones adicionales
   static const Duration timeoutDuration = Duration(seconds: 30);
   static const int maxRetries = 3;

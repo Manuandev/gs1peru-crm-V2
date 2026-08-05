@@ -4,6 +4,11 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class NotificacionModel extends Notificacion {
+  // Solo se llenan en mensaje/derivación — se usan para reconstruir el texto
+  // cuando varios mensajes del mismo chat se agrupan en _agruparMensajes.
+  final String nombreCliente;
+  final String oportunidad;
+
   const NotificacionModel({
     required super.id,
     required super.idLead,
@@ -13,6 +18,8 @@ class NotificacionModel extends Notificacion {
     required super.fechaHora,
     required super.leido,
     super.idChatCab,
+    this.nombreCliente = '',
+    this.oportunidad = '',
   });
 
   // Campos del SP CSV_NOTIFICACIONES_LST_APP (separados por ¦):
@@ -40,12 +47,16 @@ class NotificacionModel extends Notificacion {
 
     var descripcion = datosRaw;
     int? idChatCab;
+    var nombreCliente = '';
+    var oportunidad = '';
 
     if (tipo == TipoNotificacion.mensaje ||
         tipo == TipoNotificacion.derivacion) {
-      final (desc, chatCab) = _parseDatosChat(tipo, datosRaw);
+      final (desc, chatCab, nombre, oport) = _parseDatosChat(tipo, datosRaw);
       descripcion = desc;
       idChatCab = chatCab;
+      nombreCliente = nombre;
+      oportunidad = oport;
     } else if (tipo == TipoNotificacion.recordatorio) {
       descripcion = _parseDatosRecordatorio(datosRaw);
     } else if (tipo == TipoNotificacion.leadPorContactar) {
@@ -63,15 +74,61 @@ class NotificacionModel extends Notificacion {
       fechaHora: ParseUtils.str(c, n - 1),
       leido: ParseUtils.toBool(c, n - 4),
       idChatCab: idChatCab,
+      nombreCliente: nombreCliente,
+      oportunidad: oportunidad,
     );
   }
 
-  static List<NotificacionModel> parseList(String rawResponse) {
-    return rawResponse
+  static List<Notificacion> parseList(String rawResponse) {
+    final notificaciones = rawResponse
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => NotificacionModel.fromRawString(r))
         .toList();
+
+    return _agruparMensajes(notificaciones);
+  }
+
+  // Cada mensaje de WhatsApp genera su propia fila en T_NOTIFICACION (ver
+  // CSV_WHATSAPP_CHAT_CUD_SP_V03) — si el cliente manda varios seguidos,
+  // llegan varias notificaciones para el mismo idChatCab. Acá se colapsan en
+  // una sola tarjeta usando los datos del mensaje más reciente + el total
+  // agrupado, para no inundar la lista ni desplazar otras notificaciones.
+  // Solo aplica a tipo mensaje (CODIGO CHAT) — derivación (AIA) y el resto de
+  // tipos se muestran uno por uno, sin agrupar (pedido explícito de negocio).
+  static List<Notificacion> _agruparMensajes(List<NotificacionModel> lista) {
+    final resultado = <Notificacion>[];
+    final chatsProcesados = <int>{};
+
+    for (final n in lista) {
+      if (n.tipo != TipoNotificacion.mensaje || n.idChatCab == null) {
+        resultado.add(n);
+        continue;
+      }
+      // La lista viene ordenada por FC_USUARIO_C DESC desde el SP, así que la
+      // primera notificación de este chat que encontramos es la más reciente.
+      if (!chatsProcesados.add(n.idChatCab!)) continue;
+
+      final cantidad = lista
+          .where(
+            (o) =>
+                o.tipo == TipoNotificacion.mensaje &&
+                o.idChatCab == n.idChatCab,
+          )
+          .length;
+
+      resultado.add(
+        cantidad > 1
+            ? n.copyWith(
+                descripcion:
+                    '${n.nombreCliente} te ha enviado $cantidad mensajes '
+                    'nuevos para la oportunidad ${n.oportunidad}.',
+              )
+            : n,
+      );
+    }
+
+    return resultado;
   }
 
   // Agrupación real por T_NOTIFICACION_TIPO.CODIGO — todo lo que no matchea
@@ -91,7 +148,10 @@ class NotificacionModel extends Notificacion {
   // "Manuel Antonio Cardenas Valente¦Curso Digital Procurement¦Nuevo mensaje"
   //   0: nombre cliente  1: oportunidad  2: título
   //   3: idChatCab  4: idNumero — PENDIENTE de confirmar con un ejemplo que los traiga
-  static (String, int?) _parseDatosChat(
+  // nombreCliente/oportunidad se devuelven también sin formatear porque
+  // _agruparMensajes los necesita para reconstruir el texto cuando colapsa
+  // varias notificaciones del mismo idChatCab en una sola.
+  static (String, int?, String, String) _parseDatosChat(
     TipoNotificacion tipo,
     String datosRaw,
   ) {
@@ -104,7 +164,7 @@ class NotificacionModel extends Notificacion {
         ? '$nombreCliente de la oportunidad $oportunidad te ha enviado un mensaje.'
         : 'Se te ha derivado a $nombreCliente interesado en $oportunidad.';
 
-    return (descripcion, idChatCab);
+    return (descripcion, idChatCab, nombreCliente, oportunidad);
   }
 
   // DATOS para RECORDATORIOS (SP CSV_NOTIFICACIONES_LST_APP, comentario del

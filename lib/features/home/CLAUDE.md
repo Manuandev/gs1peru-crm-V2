@@ -188,6 +188,47 @@ futuros) sigue cayendo en `actividad` como fallback.
   ahí). Si negocio pide un chip propio para Recordatorios/Por contactar/Reasignados, agregar el
   getter correspondiente a `NotificationsLoaded` y su `_FiltroChip` en `notifications_portrait.dart`.
 
+### Marcar como leídas — automático y masivo (no selectivo)
+
+Al entrar a la pantalla, `NotificationsBloc._onStarted` (`presentation/bloc/notifications/
+notifications_bloc.dart`) carga la lista y dispara `unawaited(_marcarLeidas())`, que llama
+`CSV_NOTIFICACIONES_CUD_APP` tarea `LE` — este SP hace `UPDATE ... SET IB_LEIDO = 1 WHERE
+ID_USUARIO = @ID_USUARIO`, es decir marca **todas** las notificaciones del usuario como leídas de
+una sola vez, no hay forma de marcar una individual. `NotificationsRefresh` (pull-to-refresh) no
+vuelve a llamarlo. El estado ya emitido conserva el `leido` previo (por eso el punto azul se ve en
+la visita actual y desaparece en la siguiente).
+
+### Agrupación de mensajes por chat — `NotificacionModel._agruparMensajes` (2026-08-05)
+
+Cada mensaje de WhatsApp entrante genera su propia fila en `T_NOTIFICACION`
+(`CSV_WHATSAPP_CHAT_CUD_SP_V03`, tipo CHAT = `ID_TIPO_NOTIFICACION 5`) — una ráfaga de varios
+mensajes seguidos del mismo chat llegaba como una tarjeta por mensaje. `NotificacionModel.parseList`
+ahora agrupa después de parsear: todas las notificaciones con `tipo == TipoNotificacion.mensaje`
+que comparten `idChatCab` se colapsan en una sola, usando los datos de la más reciente (la lista ya
+viene ordenada `FC_USUARIO_C DESC` desde el SP) y una descripción con el conteo: `"{nombre} te ha
+enviado {cantidad} mensajes nuevos para la oportunidad {oportunidad}."`. Si solo hay 1 notificación
+para ese chat, se muestra el texto individual de siempre sin tocar.
+
+- **Solo tipo mensaje (CODIGO `CHAT`)** — derivación (`AIA`) y el resto de tipos NO se agrupan,
+  cada uno se sigue mostrando por separado (pedido explícito de negocio: aunque "Negociación
+  derivada" comparta el mismo `idChatCab`/`ID_TIPO_NOTIFICACION 5` que los mensajes reales, debe
+  quedar como su propia tarjeta).
+- `NotificacionModel` ganó dos campos internos, `nombreCliente`/`oportunidad` (default `''`), solo
+  para poder reconstruir el texto agrupado — no están en la entidad `Notificacion` (dominio) porque
+  son un detalle de reconstrucción de texto del modelo, no algo que la UI necesite leer directo.
+- `_parseDatosChat` pasó de devolver `(descripcion, idChatCab)` a `(descripcion, idChatCab,
+  nombreCliente, oportunidad)` — cualquier otro caller nuevo de este método debe actualizar el
+  destructuring.
+- **Efecto colateral esperado, no un bug**: como el agrupamiento ocurre en `parseList` (antes de
+  llegar al bloc/state), los contadores derivados (`NotificationsLoaded.mensajes.length`, chip
+  "Mensajes", tarjeta "Mensajes sin leer" en `notifications_portrait.dart`) ahora cuentan
+  conversaciones con mensaje nuevo, no mensajes individuales — es el comportamiento esperado tras
+  agrupar, no requiere cambios adicionales en el bloc ni en la UI.
+- `HomeRemoteDatasource.getNotifications()` y `NotificacionModel.parseList` cambiaron su tipo de
+  retorno de `List<NotificacionModel>` a `List<Notificacion>` porque el ítem agrupado se construye
+  con `Notificacion.copyWith` (definido en la clase base), no con el constructor de
+  `NotificacionModel`.
+
 ---
 
 ## Recarga en tiempo real — "Prioridad ahora"

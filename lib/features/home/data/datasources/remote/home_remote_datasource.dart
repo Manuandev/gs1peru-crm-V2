@@ -39,7 +39,7 @@ class HomeRemoteDatasource {
     };
   }
 
-  Future<List<NotificacionModel>> getNotifications() async {
+  Future<List<Notificacion>> getNotifications() async {
     final String body =
         '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LS';
 
@@ -47,7 +47,7 @@ class HomeRemoteDatasource {
 
     return switch (result) {
       ApiSuccess(:final data) => NotificacionModel.parseList(data),
-      ApiEmpty() => const <NotificacionModel>[],
+      ApiEmpty() => const <Notificacion>[],
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };

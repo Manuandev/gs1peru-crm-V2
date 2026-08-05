@@ -52,7 +52,7 @@ class _SolicitudParticipantesViewState
   // `precioBaseLead` (precio por unidad ANTES del descuento) — es el precio
   // total de la negociación (ya con el descuento aplicado) repartido entre
   // la cantidad esperada de participantes, sin IGV (el IGV se vuelve a
-  // sumar en el total del footer, ver _ResumenInversion). Ej.: precio total
+  // sumar en el total del footer, ver ResumenInversion). Ej.: precio total
   // 280, cantidad 2 → 140 c/u con IGV → 118.64 sin IGV. `precioBaseLead`
   // sigue existiendo, pero solo para avisoPrecioTotalNoCalza (ver
   // solicitud_guardar_helper.dart) — ya no para esto. El importe sigue
@@ -278,7 +278,7 @@ class _SolicitudParticipantesViewState
                       if (widget.modoEdicion)
                         Row(
                           children: [
-                            _BotonIconoSmall(
+                            BotonIconoSmall(
                               icono: AppIcons.add,
                               color: AppColors.primary,
                               enabled:
@@ -288,7 +288,7 @@ class _SolicitudParticipantesViewState
                               onTap: () => _abrirFormularioNuevo(context),
                             ),
                             const SizedBox(width: AppSpacing.xs),
-                            _BotonSeccionSmall(
+                            BotonSeccionSmall(
                               icono: AppIcons.downloadFile,
                               label: 'Carga masiva',
                               enabled:
@@ -301,7 +301,7 @@ class _SolicitudParticipantesViewState
                               ),
                             ),
                             const SizedBox(width: AppSpacing.xs),
-                            _BotonIconoSmall(
+                            BotonIconoSmall(
                               icono: AppIcons.delete,
                               color: AppColors.error,
                               onTap: state.participantes.isEmpty
@@ -336,7 +336,7 @@ class _SolicitudParticipantesViewState
                                 .where((t) => t.id == p.tipoParticipante)
                                 .firstOrNull;
                             final tipoLabel = tipoCatalogo?.nombre ?? '—';
-                            return _ParticipanteCard(
+                            return ParticipanteCard(
                               participante: p,
                               tipoParticipanteLabel: tipoLabel,
                               // Un Invitado no paga — la jefatura pidió que
@@ -366,7 +366,7 @@ class _SolicitudParticipantesViewState
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.sm,
                   ),
-                  child: _ResumenInversion(
+                  child: ResumenInversion(
                     total: state.totalPagantes(tiposParticipante),
                     igvPorcentaje: igvPorcentaje,
                     monedaSimbolo: monedaSimbolo,
@@ -418,477 +418,6 @@ class _SolicitudParticipantesViewState
           ],
         );
       },
-    );
-  }
-}
-
-// ── Card de participante ──────────────────────────────────────────────────────
-
-class _ParticipanteCard extends StatelessWidget {
-  final ParticipanteLocal participante;
-  // Descripción real del catálogo (Pagante/Invitado/Invitado auspicio/
-  // Online) — resuelta por el padre contra CatalogsBloc.tiposParticipante,
-  // esta card no tiene acceso directo al catálogo. Se muestra para que el
-  // asesor pueda verificar de un vistazo si los cálculos de la inversión
-  // (que excluyen a los Invitados, ver ParticipantesState.totalPagantes)
-  // están tomando el tipo correcto de cada participante.
-  final String tipoParticipanteLabel;
-  // Si es true, la cartilla muestra "0.00" en vez del importe real guardado
-  // — un Invitado no paga, ver comentario en el itemBuilder que arma esta
-  // card. El importe real (participante.importe) no se modifica, solo
-  // cambia lo que se pinta acá.
-  final bool esInvitado;
-  final bool habilitado;
-  final VoidCallback onEditar;
-  final VoidCallback onEliminar;
-
-  const _ParticipanteCard({
-    required this.participante,
-    required this.tipoParticipanteLabel,
-    required this.esInvitado,
-    required this.habilitado,
-    required this.onEditar,
-    required this.onEliminar,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Acciones — ocultas por completo en modo solo-ver ────
-          if (habilitado) ...[
-            _AccionesCard(onEditar: onEditar, onEliminar: onEliminar),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-
-          // ── Info ──────────────────────────────────────────────
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        participante.nombreCompleto,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: AppTextStyles.weightBold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      esInvitado ? '0.00' : participante.importeFormateado,
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: AppTextStyles.weightBold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                _FilaInfo(
-                  label1: 'N° doc:',
-                  valor1: participante.numDoc,
-                  icono2: AppIcons.phone,
-                  valor2: participante.celular,
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                _FilaInfo(
-                  label1: 'Nac.:',
-                  valor1: participante.nacionalidad,
-                  icono2: AppIcons.email,
-                  valor2: participante.correo,
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                _FilaInfo(
-                  label1: 'Cargo:',
-                  valor1: participante.cargo,
-                  icono2: AppIcons.user,
-                  valor2: tipoParticipanteLabel,
-                ),
-                // RichText(
-                //   text: TextSpan(
-                //     style: const TextStyle(fontSize: 10),
-                //     children: [
-                //       TextSpan(
-                //         text: 'Cargo: ',
-                //         style: TextStyle(
-                //           color: AppColors.textSecondary,
-                //           fontWeight: AppTextStyles.weightMedium,
-                //         ),
-                //       ),
-                //       TextSpan(
-                //         text: participante.cargo,
-                //         style: TextStyle(
-                //           color: AppColors.textPrimary,
-                //           fontWeight: AppTextStyles.weightRegular,
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Acciones del card ─────────────────────────────────────────────────────────
-
-class _AccionesCard extends StatelessWidget {
-  final VoidCallback onEditar;
-  final VoidCallback onEliminar;
-
-  const _AccionesCard({required this.onEditar, required this.onEliminar});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 30,
-          height: 30,
-          child: IconButton(
-            onPressed: onEditar,
-            padding: EdgeInsets.zero,
-            icon: const Icon(AppIcons.edit, size: 16, color: AppColors.primary),
-          ),
-        ),
-        SizedBox(
-          width: 30,
-          height: 30,
-          child: PopupMenuButton<String>(
-            onSelected: (v) {
-              if (v == 'eliminar') onEliminar();
-            },
-            padding: EdgeInsets.zero,
-            icon: const Icon(
-              AppIcons.moreHorizontal,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: 'eliminar',
-                child: Row(
-                  children: [
-                    const Icon(
-                      AppIcons.delete,
-                      size: AppSizing.iconSm,
-                      color: AppColors.error,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      'Eliminar',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Botón icono solo ──────────────────────────────────────────────────────────
-
-class _BotonIconoSmall extends StatelessWidget {
-  final IconData icono;
-  final Color color;
-  final VoidCallback onTap;
-  final bool enabled;
-
-  const _BotonIconoSmall({
-    required this.icono,
-    required this.color,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorEfectivo = enabled ? color : AppColors.textDisabled;
-    return OutlinedButton(
-      onPressed: enabled ? onTap : null,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: colorEfectivo,
-        side: BorderSide(color: colorEfectivo),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.sm,
-        ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        ),
-      ),
-      child: Icon(icono, size: 14),
-    );
-  }
-}
-
-// ── Fila de dos campos ────────────────────────────────────────────────────────
-
-class _FilaInfo extends StatelessWidget {
-  final String? label1;
-  final IconData? icono2;
-  final String valor1;
-  final String valor2;
-
-  const _FilaInfo({
-    this.label1,
-    required this.valor1,
-    this.icono2,
-    required this.valor2,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: _Campo(label: label1, valor: valor1),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: _Campo(icono: icono2, valor: valor2),
-        ),
-      ],
-    );
-  }
-}
-
-class _Campo extends StatelessWidget {
-  final String? label;
-  final IconData? icono;
-  final String valor;
-
-  const _Campo({this.label, this.icono, required this.valor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (icono != null) ...[
-          Icon(icono, size: 11, color: AppColors.textSecondary),
-          const SizedBox(width: AppSpacing.xxs),
-        ] else if (label != null)
-          Text(
-            '$label ',
-            style: const TextStyle(
-              fontSize: 10,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        Expanded(
-          child: Text(
-            valor,
-            style: const TextStyle(fontSize: 10, color: AppColors.textPrimary),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Resumen de inversión ──────────────────────────────────────────────────────
-
-class _ResumenInversion extends StatelessWidget {
-  // Suma de los importes de participantes PAGANTES únicamente (ver
-  // ParticipantesState.totalPagantes — los Invitados no se cuentan, aunque
-  // tengan su propio importe puesto, 2026-07-17). Desde el 2026-07-16 cada
-  // importe ya es la BASE sin IGV (ver _importeFijo), así que `total` acá
-  // ES la inversión directamente. El IGV se SUMA encima para el importe
-  // total — revierte el fix del 2026-07-14 (donde el importe venía con IGV
-  // incluido y había que extraerlo); con la nueva definición del importe,
-  // sumar es lo correcto.
-  final double total;
-  final double igvPorcentaje;
-  // Símbolo de la moneda fijada por la negociación de origen (ver
-  // SolicitudFormState.idMonedaBloqueada) — null si esta solicitud no viene
-  // de una negociación o el catálogo aún no la resuelve; en ese caso se
-  // muestra el ícono genérico de siempre en vez del símbolo.
-  final String? monedaSimbolo;
-
-  const _ResumenInversion({
-    required this.total,
-    required this.igvPorcentaje,
-    this.monedaSimbolo,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final inversion = total;
-    final igv = inversion * igvPorcentaje / 100;
-    final importeTotal = inversion + igv;
-    final igvLabel = igvPorcentaje % 1 == 0
-        ? igvPorcentaje.toInt().toString()
-        : igvPorcentaje.toStringAsFixed(1);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.ui1,
-        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        border: Border.all(color: AppColors.ui3),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.ui2,
-                shape: BoxShape.circle,
-              ),
-              child: (monedaSimbolo != null && monedaSimbolo!.isNotEmpty)
-                  ? Center(
-                      child: Text(
-                        monedaSimbolo!,
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: AppTextStyles.weightBold,
-                        ),
-                      ),
-                    )
-                  : const Icon(
-                      AppIcons.pieChart,
-                      color: AppColors.primary,
-                      size: AppSizing.iconMd,
-                    ),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                _FilaMonto(
-                  label: 'Inversión',
-                  monto: inversion,
-                  negrita: false,
-                ),
-                const Divider(height: 1, thickness: 0.5),
-                _FilaMonto(
-                  label: 'IGV ($igvLabel%)',
-                  monto: igv,
-                  negrita: false,
-                ),
-                const Divider(height: 1, thickness: 0.5),
-                _FilaMonto(
-                  label: 'Importe total',
-                  monto: importeTotal,
-                  negrita: true,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilaMonto extends StatelessWidget {
-  final String label;
-  final double monto;
-  final bool negrita;
-
-  const _FilaMonto({
-    required this.label,
-    required this.monto,
-    required this.negrita,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final estilo = AppTextStyles.bodySmall.copyWith(
-      color: AppColors.textPrimary,
-      fontWeight: negrita
-          ? AppTextStyles.weightBold
-          : AppTextStyles.weightRegular,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.xs,
-        horizontal: AppSpacing.xs,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: estilo),
-          Text(monto.toStringAsFixed(2), style: estilo),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Botón pequeño de sección ──────────────────────────────────────────────────
-
-class _BotonSeccionSmall extends StatelessWidget {
-  final IconData icono;
-  final String label;
-  final VoidCallback onTap;
-  final bool enabled;
-
-  const _BotonSeccionSmall({
-    required this.icono,
-    required this.label,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = enabled ? AppColors.primary : AppColors.textDisabled;
-    return OutlinedButton.icon(
-      onPressed: enabled ? onTap : null,
-      icon: Icon(icono, size: 14),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.sm,
-        ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        ),
-        textStyle: AppTextStyles.labelSmall.copyWith(
-          fontWeight: AppTextStyles.weightSemiBold,
-        ),
-      ),
     );
   }
 }

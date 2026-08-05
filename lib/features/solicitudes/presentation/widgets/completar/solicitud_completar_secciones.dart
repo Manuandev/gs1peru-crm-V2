@@ -1,12 +1,116 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_completar_secciones.dart
 //
 // Secciones auxiliares de SolicitudCompletarView (paso 1): tooltip
-// informativo, switches del solicitante e información comercial (RUC).
+// informativo, canal del evento, switches del solicitante, información
+// comercial (RUC) y botones de pie.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
+
+// ── Sección Canal del evento ("¿Cómo se enteró?") ────────────────────────────
+
+class SeccionCanalEvento extends StatelessWidget {
+  final List<CanalExpoItem> canales;
+  final CanalExpoItem? seleccionado;
+  final bool habilitado;
+  final ValueChanged<CanalExpoItem> onSeleccionar;
+  final TextEditingController ctrlDetalle;
+
+  const SeccionCanalEvento({
+    super.key,
+    required this.canales,
+    required this.seleccionado,
+    required this.habilitado,
+    required this.onSeleccionar,
+    required this.ctrlDetalle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '¿Cómo se enteró del evento?',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: AppTextStyles.weightMedium,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        ChipsCanales(
+          canales: canales,
+          seleccionado: seleccionado,
+          habilitado: habilitado,
+          onSeleccionar: onSeleccionar,
+        ),
+        if (seleccionado?.esDetallado == true) ...[
+          const SizedBox(height: AppSpacing.xs),
+          CustomTextField(
+            label: '¿Desde dónde se enteró? *',
+            hint: 'Ej: Feria, recomendación, etc.',
+            controller: ctrlDetalle,
+            enabled: habilitado,
+            textCapitalization: TextCapitalization.sentences,
+            validator: (v) =>
+                v == null || v.trim().isEmpty ? 'Requerido' : null,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Botones de pie del paso 1 (Cancelar/Siguiente o Continuar) ──────────────
+
+class BotonesPasoSolicitante extends StatelessWidget {
+  final bool modoEdicion;
+  final bool guardando;
+  final VoidCallback onCancelar;
+  final VoidCallback onContinuar;
+
+  const BotonesPasoSolicitante({
+    super.key,
+    required this.modoEdicion,
+    required this.guardando,
+    required this.onCancelar,
+    required this.onContinuar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: modoEdicion
+          ? Row(
+              children: [
+                Expanded(
+                  child: CustomSecondaryButton(
+                    text: 'Cancelar',
+                    backgroundColor: AppColors.brandRaspberryAccessible,
+                    onPressed: onCancelar,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: CustomPrimaryButton(
+                    text: 'Siguiente →',
+                    isLoading: guardando,
+                    onPressed: onContinuar,
+                  ),
+                ),
+              ],
+            )
+          : CustomPrimaryButton(text: 'Continuar →', onPressed: onContinuar),
+    );
+  }
+}
 
 // ── Tooltip — 3 partes de la solicitud ───────────────────────────────────────
 

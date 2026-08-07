@@ -329,7 +329,17 @@ Future<CrudResult> generarSolicitudCompleta(
   );
   if (result is! CrudOk) return result;
 
-  final archivosOk = await subirArchivosPendientes(context, progreso: progreso);
+  // subirArchivosPendientes() puede lanzar AppException (ej. actualización
+  // obligatoria pendiente, ver UpdateRequiredInterceptor) — sin este
+  // try/catch, la excepción se propagaba sin capturar hasta la vista,
+  // dejando el overlay de guardado pegado en "cargando" en vez de mostrar
+  // el mensaje real (bug real, 2026-08-07).
+  final bool archivosOk;
+  try {
+    archivosOk = await subirArchivosPendientes(context, progreso: progreso);
+  } on AppException catch (e) {
+    return CrudError(e.message);
+  }
   if (!archivosOk) {
     return const CrudAlert(
       'La solicitud se generó, pero un archivo adjunto no se pudo subir. '
@@ -407,7 +417,19 @@ Future<CrudResult> guardarBorradorCompleto(
   // si un archivo es nuevo o ya se subió (ver su comentario). Si el orden
   // se invierte, un archivo recién elegido nunca llegaría a subirse la
   // primera vez (el snapshot ya lo daría por "subido" antes de intentarlo).
-  final archivosOk = await subirArchivosPendientes(context, progreso: progreso);
+  //
+  // subirArchivosPendientes() puede lanzar AppException (ej. actualización
+  // obligatoria pendiente) — se captura acá para no dejar el overlay de
+  // guardado pegado en "cargando" (mismo motivo que en
+  // generarSolicitudCompleta, ver su comentario).
+  final bool archivosOk;
+  try {
+    archivosOk = await subirArchivosPendientes(context, progreso: progreso);
+  } on AppException catch (e) {
+    formCubit.marcarSinCambios();
+    participantesCubit.marcarSinCambios();
+    return CrudError(e.message);
+  }
 
   formCubit.marcarSinCambios();
   participantesCubit.marcarSinCambios();

@@ -188,13 +188,20 @@ pasar una escritura al backend con una versión vieja.
 ### Flujo
 
 ```
-SplashBloc (una sola vez por arranque, en paralelo a la config)
+SplashBloc (una sola vez por arranque, en paralelo a la config — solo en el escenario
+"usuario recurrente", ver abajo)
   └── AppUpdateService().verificar()
         ├── GET ApiConstants.urlVersionCheck (host de archivos, natcodee.net — no es el
         │     backend del CRM, por eso usa un Dio propio en vez de ApiClient)
         ├── compara VersionUtils.esMenor(AppConstants.version, remota.Version)
         └── si hay pendiente → guarda en memoria + SQLite (setting 'update_pendiente')
               si NO hay pendiente → limpia cualquier flag viejo (el usuario ya actualizó)
+
+  └── si AppUpdateService().actualizacionPendiente != null (recién resuelto arriba)
+        → AuthLocalDatasource().clearSession() + emit(SplashSessionNotFound()) — NO
+          llama _restoreSessionUsecase(), aunque hubiera una sesión guardada válida.
+          Manda directo a Login sin restaurar nada.
+        si NO hay pendiente → sigue el flujo normal (_restoreSessionUsecase())
 
 LoginView.initState()
   └── si AppUpdateService().actualizacionPendiente != null
@@ -216,6 +223,32 @@ Prospectos/Plantillas/Home — cualquier endpoint "...Cud...")
           botón "Guardar" individual
 ```
 
+**Bug real corregido (2026-08-07) — un usuario con sesión recordada entraba directo a Home
+con una versión vieja, sin ver nunca el diálogo obligatorio.** Antes, `SplashBloc` siempre
+llamaba `_restoreSessionUsecase()` sin mirar el resultado de `AppUpdateService().verificar()`
+— con sesión válida, iba directo a `SplashSessionFound()` → Home. El único candado en ese
+caso era `UpdateRequiredInterceptor`, que bloquea guardados pero deja navegar y leer
+libremente — el asesor podía usar la app entera sin enterarse de que había una actualización
+pendiente, hasta el primer intento de guardar. Corregido: `_onCheckSessionRequested` (rama
+"usuario recurrente") ahora chequea `AppUpdateService().actualizacionPendiente` justo después
+del `Future.wait` que corre `verificar()` — si hay pendiente, limpia la sesión guardada
+(`AuthLocalDatasource().clearSession()`) y emite `SplashSessionNotFound()` directo, sin llamar
+`_restoreSessionUsecase()` — el usuario cae en Login y ahí `LoginView.initState()` ya muestra
+el diálogo obligatorio de inmediato (mismo mecanismo de siempre, ver arriba). No aplica al
+escenario "primer ingreso" (`onboarding == null`) — ahí `verificar()` corre en background
+(`unawaited`) y todavía no hay ninguna sesión que restaurar/limpiar.
+
+**Bug real corregido (2026-08-07) — la subida de voucher/O.C. en Solicitudes (task `'AR'`,
+`SolicitudRemoteDatasource.guardarArchivo()`) no atrapaba el rechazo del interceptor.** A
+diferencia del resto de endpoints CUD (que usan `ApiClient.postSafe`, con su propio
+try/catch), ese método usa `postMultipart`, que no captura `DioException` — el rechazo de
+`UpdateRequiredInterceptor` se propagaba sin capturar hasta la vista, dejando el overlay de
+guardado pegado en "cargando" en vez de mostrar el mensaje. Corregido: `guardarArchivo()`
+ahora envuelve el loop de chunks en `try/catch (DioException)` y relanza como `AppException`;
+`generarSolicitudCompleta()`/`guardarBorradorCompleto()` (`solicitud_guardar_helper.dart`,
+`solicitudes/`) atrapan esa excepción alrededor de `subirArchivosPendientes()` y la convierten
+en `CrudError(e.message)` — mismo patrón que el resto del flujo.
+
 **No cubre** envío de mensajes de WhatsApp ni subida de multimedia (`chat/`) — esos van por
 SignalR o por endpoints que no siguen la convención de nombre "...Cud..." (`SendMessageWhatsApp`,
 `GuardarMultimediaWhatsApp`), fuera de este bloqueo a propósito (pedido explícito: solo
@@ -231,7 +264,7 @@ SignalR o por endpoints que no siguen la convención de nombre "...Cud..." (`Sen
 | `core/network/interceptors/update_required_interceptor.dart` | Corta cualquier request a un endpoint "...Cud..." si hay actualización pendiente |
 | `auth/presentation/widgets/login/update_required_dialog.dart` | Diálogo obligatorio (sin cerrar/back) — descarga con barra de progreso + `OpenFilex.open` para instalar. `titulo`/`mensaje` opcionales para variantes (ej. Login) |
 
-**`AppConstants.version`** es la fuente de verdad de la versión instalada (ya en `'1.0.4'`,
+**`AppConstants.version`** es la fuente de verdad de la versión instalada (ya en `'1.0.5'`,
 mismo valor que se muestra en el footer de Login) — subirla en cada release junto con
 `pubspec.yaml`.
 

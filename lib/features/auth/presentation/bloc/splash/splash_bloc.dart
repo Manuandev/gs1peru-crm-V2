@@ -58,14 +58,24 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
       }
 
       // Escenarios 2/3 — usuario recurrente: config + chequeo de versión
-      // bloqueantes (en paralelo), luego sesión. El resultado de la versión
-      // queda en AppUpdateService — LoginView lo lee al entrar y muestra el
-      // diálogo obligatorio de actualización si corresponde (ver
-      // auth/CLAUDE.md).
+      // bloqueantes (en paralelo), luego sesión.
       await Future.wait([
         _cargarConfiguracion(),
         AppUpdateService().verificar(),
       ]);
+
+      // Si hay una actualización pendiente, no se restaura la sesión
+      // guardada — se limpia y se manda directo a Login, que es quien
+      // muestra el diálogo obligatorio (ver LoginView.initState()). Sin
+      // esto, un usuario con sesión recordada entraba directo a Home con
+      // una versión vieja sin ver nunca el diálogo — el único candado
+      // hasta ahora era UpdateRequiredInterceptor, que corta guardados pero
+      // deja navegar/leer libremente (ver auth/CLAUDE.md).
+      if (AppUpdateService().actualizacionPendiente != null) {
+        await AuthLocalDatasource().clearSession();
+        emit(const SplashSessionNotFound());
+        return;
+      }
 
       final user = await _restoreSessionUsecase();
 

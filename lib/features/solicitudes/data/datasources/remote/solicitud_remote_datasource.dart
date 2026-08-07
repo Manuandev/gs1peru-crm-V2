@@ -6,6 +6,8 @@
 //   '02' Con Documentos  — documentación completa, pendiente de cobranza
 //   '03' Lista p/Cobr.   — aprobada y lista para enviar a cobranza
 
+import 'package:app_crm/index_dependencies.dart'; // DioException (dio)
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
@@ -349,37 +351,49 @@ class SolicitudRemoteDatasource {
     final totalChunks = (totalSize / chunkSize).ceil();
     final urlUpload = ApiConstants.urlSolicitudesCudArchivos;
 
-    for (var i = 0; i < totalChunks; i++) {
-      final start = i * chunkSize;
-      final end = (start + chunkSize > totalSize)
-          ? totalSize
-          : start + chunkSize;
-      final chunkBytes = fileBytes.sublist(start, end);
+    // A diferencia del resto de llamadas CUD (que usan ApiClient.postSafe,
+    // con su propio try/catch), postMultipart no atrapa DioException — sin
+    // este try/catch, un rechazo de UpdateRequiredInterceptor (ruta contiene
+    // "Cud") se propagaba sin capturar hasta la vista, dejando el overlay de
+    // guardado pegado en "cargando" para siempre en vez de mostrar el
+    // mensaje de actualización obligatoria (bug real, 2026-08-07).
+    try {
+      for (var i = 0; i < totalChunks; i++) {
+        final start = i * chunkSize;
+        final end = (start + chunkSize > totalSize)
+            ? totalSize
+            : start + chunkSize;
+        final chunkBytes = fileBytes.sublist(start, end);
 
-      final dataString = [
-        token,
-        cabecera,
-        detalle,
-        'AR',
-        i + 1,
-        totalChunks,
-      ].join(AppConstants.sepListas);
+        final dataString = [
+          token,
+          cabecera,
+          detalle,
+          'AR',
+          i + 1,
+          totalChunks,
+        ].join(AppConstants.sepListas);
 
-      final result = await _api.postMultipart(
-        url: urlUpload,
-        fields: {'data': dataString},
-        fileFieldName: 'files',
-        fileBytes: chunkBytes,
-        fileName: '$fileNameSeguro.$fileExtSeguro',
-        headers: {'Token': token},
-      );
+        final result = await _api.postMultipart(
+          url: urlUpload,
+          fields: {'data': dataString},
+          fileFieldName: 'files',
+          fileBytes: chunkBytes,
+          fileName: '$fileNameSeguro.$fileExtSeguro',
+          headers: {'Token': token},
+        );
 
-      if (result.isEmpty) return false;
-      final datos = result.split(AppConstants.sepCampos);
-      if (datos[0] != 'OK') return false;
+        if (result.isEmpty) return false;
+        final datos = result.split(AppConstants.sepCampos);
+        if (datos[0] != 'OK') return false;
+      }
+
+      return true;
+    } on DioException catch (e) {
+      final inner = e.error;
+      if (inner is AppException) throw inner;
+      throw AppException(e.message ?? 'Error al subir el archivo.');
     }
-
-    return true;
   }
 
   // Quita separadores de ruta y ".." — el backend arma la ruta física del

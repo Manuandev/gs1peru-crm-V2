@@ -25,6 +25,12 @@ abstract class LeadRepository {
   Future<List<HistorialComentario>> obtenerHistorialSeguimientoPorContacto(
     int idContacto,
   );
+  // SP 'LRN' — recordatorios futuros de todos los leads del mismo CONTACTO,
+  // ordenados por fecha ascendente. Usado por el tab "Recordatorios" y la
+  // card "Próximo recordatorio" de Información.
+  Future<List<LeadRecordatorio>> obtenerRecordatoriosPorContacto(
+    int idContacto,
+  );
 
   // ⚠️ PENDIENTE — endpoint de lectura aún sin confirmar con backend, ver
   // lead/CLAUDE.md. Contacto en blanco (idContacto == 0) si el número

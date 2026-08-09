@@ -41,6 +41,13 @@ class ContactoDetallePage extends StatelessWidget {
             ),
           ),
         ),
+        BlocProvider(
+          create: (_) => RecordatoriosLeadCubit(
+            obtenerRecordatoriosPorContactoUseCase: GetRecordatoriosPorContacto(
+              context.read<LeadRepository>(),
+            ),
+          ),
+        ),
       ],
       child: ContactoDetalleView(idContacto: idContacto),
     );

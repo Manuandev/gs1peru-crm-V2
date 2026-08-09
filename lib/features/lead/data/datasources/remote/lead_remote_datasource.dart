@@ -145,6 +145,25 @@ class LeadRemoteDatasource {
     };
   }
 
+  // Task 'LRN' — recordatorios futuros (GETDATE() <= FC_RECORDATORIO, ya
+  // filtrado en el SP) de todos los leads del mismo CONTACTO, ordenados por
+  // fecha ascendente. Usado por el tab "Recordatorios" y la card "Próximo
+  // recordatorio" de Información en ContactoDetalleView (Seguimiento).
+  Future<List<LeadRecordatorioModel>> obtenerRecordatoriosPorContacto(
+    int idContacto,
+  ) async {
+    final String body = '$idContacto${sep}LRN';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => LeadRecordatorioModel.parseList(data),
+      ApiEmpty() => [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   // Task 'D' de CRM.CSV_CONTACTO_LST_APP — formato confirmado contra el .sql
   // real (2026-07-23). ⚠️ Sigue pendiente confirmar la ruta del controller
   // C# real en ApiConstants.lstContacto (placeholder). Si el número todavía

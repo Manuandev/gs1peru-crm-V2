@@ -13,6 +13,7 @@ export 'data/models/numero_contacto_model.dart';
 export 'data/models/correo_contacto_model.dart';
 export 'data/models/empresa_contacto_model.dart';
 export 'data/models/contacto_simple_model.dart';
+export 'data/models/lead_recordatorio_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
 
@@ -27,6 +28,7 @@ export 'domain/entities/numero_contacto.dart';
 export 'domain/entities/correo_contacto.dart';
 export 'domain/entities/empresa_contacto.dart';
 export 'domain/entities/contacto_simple.dart';
+export 'domain/entities/lead_recordatorio.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
@@ -38,6 +40,7 @@ export 'domain/usecases/get_lead_detalle_usecase.dart';
 export 'domain/usecases/get_lead_detalle_por_numero_usecase.dart';
 export 'domain/usecases/get_negociaciones_lead.dart';
 export 'domain/usecases/get_historial_seguimiento_por_numero.dart';
+export 'domain/usecases/get_recordatorios_por_contacto.dart';
 
 export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';
@@ -52,7 +55,10 @@ export 'presentation/widgets/contacto_detalle/contacto_detalle_view.dart';
 export 'presentation/widgets/contacto_detalle/contacto_negociaciones_tab.dart';
 export 'presentation/widgets/contacto_detalle/contacto_negociacion_card.dart';
 export 'presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart';
+export 'presentation/widgets/lead_detail_sheet/tabs/recordatorios_tab.dart';
 export 'presentation/widgets/contacto_detalle/contacto_info_tab.dart';
+export 'presentation/widgets/contacto_detalle/lead_recordatorio_card.dart';
+export 'presentation/widgets/contacto_detalle/proximo_recordatorio_card.dart';
 export 'presentation/widgets/lead_detail_sheet/negociacion_card.dart';
 export 'presentation/widgets/lead_detail_sheet/tabs/datos_tab.dart';
 
@@ -87,6 +93,8 @@ export 'presentation/cubit/negociaciones/negociaciones_state.dart';
 export 'presentation/cubit/negociaciones/negociaciones_cubit.dart';
 export 'presentation/cubit/historial/historial_lead_state.dart';
 export 'presentation/cubit/historial/historial_lead_cubit.dart';
+export 'presentation/cubit/recordatorios/recordatorios_lead_state.dart';
+export 'presentation/cubit/recordatorios/recordatorios_lead_cubit.dart';
 
 export 'presentation/widgets/lead_detail_sheet/tabs/negociaciones_tab.dart';
 

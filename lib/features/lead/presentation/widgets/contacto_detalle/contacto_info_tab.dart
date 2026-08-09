@@ -30,6 +30,7 @@ class ContactoInfoTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const ProximoRecordatorioCard(),
           _InfoCard(
             filas: [
               _FilaCampos(

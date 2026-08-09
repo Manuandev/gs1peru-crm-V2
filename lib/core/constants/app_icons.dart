@@ -550,6 +550,10 @@ class AppIcons {
   /// Historial de actividades — tab Historial en LeadDetailSheet y popup del chat
   static const IconData historial = Icons.history_rounded;
 
+  /// Recordatorio de seguimiento (CRM.T_LEAD_RECORDATORIO) — tab Recordatorios
+  /// y card "Próximo recordatorio" en ContactoDetalleView (Seguimiento)
+  static const IconData recordatorio = Icons.notifications_active_outlined;
+
   // ============================================================
   // CANALES — FontAwesome (logos de redes sociales/origen)
   // FaIconData: usar con FaIcon() o resolveIcon().

@@ -34,6 +34,9 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
     super.initState();
     _cubit = context.read<InfoLeadCubit>();
     _cubit.cargarPorIdContacto(widget.idContacto);
+    context.read<RecordatoriosLeadCubit>().cargarRecordatoriosPorContacto(
+      widget.idContacto,
+    );
 
     // ContactoNegociacionesTab edita leads históricos con SU PROPIO
     // InfoLeadCubit (ver contacto_negociacion_card.dart) — esta pantalla no
@@ -85,6 +88,9 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   Future<void> _refrescar() => Future.wait([
     _cubit.cargarPorIdContacto(widget.idContacto),
     context.read<NegociacionesCubit>().cargarNegociaciones(
+      widget.idContacto,
+    ),
+    context.read<RecordatoriosLeadCubit>().cargarRecordatoriosPorContacto(
       widget.idContacto,
     ),
   ]);
@@ -159,7 +165,7 @@ class _ContactoScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: BasePage(
         bodyPadding: EdgeInsets.zero,
         titleWidget: _ContactoHeaderTitle(lead: lead),
@@ -212,22 +218,35 @@ class _ContactoScaffold extends StatelessWidget {
                   labelPadding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.xxs,
                   ),
-                  labelStyle: AppTextStyles.labelMedium.copyWith(
+                  // Achicado (antes labelMedium/iconXs) — con 4 tabs
+                  // (se agregó "Recordatorios") ya no entraban cómodos,
+                  // mismo criterio compacto que ya usa ChatLeadPanel.
+                  labelStyle: AppTextStyles.labelSmall.copyWith(
                     fontWeight: AppTextStyles.weightBold,
                   ),
-                  unselectedLabelStyle: AppTextStyles.labelMedium,
+                  unselectedLabelStyle: AppTextStyles.labelSmall,
                   tabs: const [
                     Tab(
-                      icon: Icon(AppIcons.datosLead, size: AppSizing.iconXs),
+                      icon: Icon(AppIcons.datosLead, size: AppSizing.iconInline),
                       text: 'Información',
                     ),
                     Tab(
-                      icon: Icon(AppIcons.negociacion, size: AppSizing.iconXs),
+                      icon: Icon(
+                        AppIcons.negociacion,
+                        size: AppSizing.iconInline,
+                      ),
                       text: 'Negociaciones',
                     ),
                     Tab(
-                      icon: Icon(AppIcons.historial, size: AppSizing.iconXs),
+                      icon: Icon(AppIcons.historial, size: AppSizing.iconInline),
                       text: 'Historial',
+                    ),
+                    Tab(
+                      icon: Icon(
+                        AppIcons.recordatorio,
+                        size: AppSizing.iconInline,
+                      ),
+                      text: 'Recordatorios',
                     ),
                   ],
                 ),
@@ -250,6 +269,7 @@ class _ContactoScaffold extends StatelessWidget {
                           negociaciones: negociaciones,
                         ),
                         HistorialTab(idContacto: lead.idContacto),
+                        RecordatoriosTab(idContacto: lead.idContacto),
                       ],
                     );
                   },

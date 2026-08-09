@@ -35,6 +35,11 @@ class LeadRepositoryImpl implements LeadRepository {
   ) => _remote.obtenerHistorialSeguimientoPorContacto(idContacto);
 
   @override
+  Future<List<LeadRecordatorioModel>> obtenerRecordatoriosPorContacto(
+    int idContacto,
+  ) => _remote.obtenerRecordatoriosPorContacto(idContacto);
+
+  @override
   Future<ContactoDetalleModel> getContactoPorIdNumero(int idNumero) =>
       _remote.getContactoPorIdNumero(idNumero);
 

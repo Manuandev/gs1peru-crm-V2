@@ -186,12 +186,24 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
                 ),
               ),
             ),
-        ] else
+        ] else ...[
           TemplateFileCard(
             nombre: archivo!.nameWithoutExt,
             ext: archivo!.ext,
+            sizeBytes: archivo!.sizeBytes,
+            detailed: true,
             onRemove: onQuitarArchivo,
           ),
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xxs),
+            child: Text(
+              'Solo se permite un archivo por plantilla — sube uno nuevo para reemplazarlo.',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

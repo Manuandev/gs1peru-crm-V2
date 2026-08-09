@@ -65,6 +65,9 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
   bool _archivoEsNuevo = false;
   bool _grabandoAudio = false;
   bool _guardando = false;
+  // true durante el check verde tras un guardado exitoso — mismo patrón de
+  // 2 pasos que EditLeadPortrait (ver AppProcessOverlay, core/CLAUDE.md).
+  bool _mostrandoExito = false;
 
   @override
   void initState() {
@@ -200,7 +203,9 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
 
     switch (result) {
       case CrudOk():
-        context.goBack();
+        setState(() => _mostrandoExito = true);
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) context.goBack();
       case CrudAlert(:final message) || CrudError(:final message):
         AppSnackBar.error(context, message);
       case CrudNoInternet():
@@ -212,66 +217,91 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final esNueva = widget.plantilla.idPlantilla == 0;
+
+    return Stack(
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const FormSectionTitle('Datos generales'),
-                const SizedBox(height: AppSpacing.sm),
-                TemplateFormGeneralSection(
-                  nombreCtrl: _nombreCtrl,
-                  campania: _campania,
-                  oportunidad: _oportunidad,
-                  oportunidadesFiltradas: _oportunidadesFiltradas,
-                  estado: _estado,
-                  activo: _activo,
-                  compartir: _compartir,
-                  onCampaniaChanged: _onCampaniaChanged,
-                  onOportunidadChanged: (item) =>
-                      setState(() => _oportunidad = item),
-                  onEstadoChanged: (item) => setState(() => _estado = item),
-                  onActivoChanged: (v) => setState(() => _activo = v),
-                  onCompartirChanged: (v) => setState(() => _compartir = v),
+        Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const FormSectionTitle('Datos generales'),
+                    const SizedBox(height: AppSpacing.sm),
+                    TemplateFormGeneralSection(
+                      nombreCtrl: _nombreCtrl,
+                      campania: _campania,
+                      oportunidad: _oportunidad,
+                      oportunidadesFiltradas: _oportunidadesFiltradas,
+                      estado: _estado,
+                      activo: _activo,
+                      compartir: _compartir,
+                      onCampaniaChanged: _onCampaniaChanged,
+                      onOportunidadChanged: (item) =>
+                          setState(() => _oportunidad = item),
+                      onEstadoChanged: (item) =>
+                          setState(() => _estado = item),
+                      onActivoChanged: (v) => setState(() => _activo = v),
+                      onCompartirChanged: (v) =>
+                          setState(() => _compartir = v),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    TemplateFormAdjuntosSection(
+                      archivo: _archivo,
+                      grabando: _grabandoAudio,
+                      puedeAdjuntar: _puedeAdjuntar,
+                      subiendo: _guardando,
+                      onArchivoSeleccionado: _onArchivoSeleccionado,
+                      onQuitarArchivo: () => setState(() {
+                        _archivo = null;
+                        _archivoEsNuevo = false;
+                      }),
+                      onIniciarGrabacion: () =>
+                          setState(() => _grabandoAudio = true),
+                      onCancelarGrabacion: () =>
+                          setState(() => _grabandoAudio = false),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    TemplateFormDescripcionSection(controller: _contenidoCtrl),
+                    const SizedBox(height: AppSpacing.lg),
+                    TemplateFormBotonesSection(
+                      botonesCtrls: _botonesCtrls,
+                      maxBotones: _maxBotones,
+                      onAgregar: _agregarBoton,
+                      onQuitar: _quitarBoton,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                TemplateFormAdjuntosSection(
-                  archivo: _archivo,
-                  grabando: _grabandoAudio,
-                  puedeAdjuntar: _puedeAdjuntar,
-                  subiendo: _guardando,
-                  onArchivoSeleccionado: _onArchivoSeleccionado,
-                  onQuitarArchivo: () => setState(() {
-                    _archivo = null;
-                    _archivoEsNuevo = false;
-                  }),
-                  onIniciarGrabacion: () =>
-                      setState(() => _grabandoAudio = true),
-                  onCancelarGrabacion: () =>
-                      setState(() => _grabandoAudio = false),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                TemplateFormDescripcionSection(controller: _contenidoCtrl),
-                const SizedBox(height: AppSpacing.lg),
-                TemplateFormBotonesSection(
-                  botonesCtrls: _botonesCtrls,
-                  maxBotones: _maxBotones,
-                  onAgregar: _agregarBoton,
-                  onQuitar: _quitarBoton,
-                ),
-              ],
+              ),
             ),
+            FormSaveBar(
+              onCancelar: () => context.goBack(),
+              onGuardar: _guardar,
+              isLoading: _guardando || _mostrandoExito,
+              textoGuardar: 'Guardar plantilla',
+            ),
+          ],
+        ),
+        // Mismo overlay de 2 pasos "Guardando... → check verde" que
+        // EditLeadPortrait (ver AppProcessOverlay, core/CLAUDE.md) — cubre
+        // tanto la subida del archivo adjunto (si hay uno nuevo) como el
+        // guardado de la plantilla en sí, ambos parte de la misma llamada
+        // a TemplateFormBloc.guardar() en _guardar().
+        if (_guardando || _mostrandoExito)
+          AppProcessOverlay(
+            status: _guardando
+                ? AppProcessStatus.cargando
+                : AppProcessStatus.exito,
+            loadingMessage: esNueva
+                ? 'Creando plantilla...'
+                : 'Editando plantilla...',
+            successMessage: esNueva
+                ? 'La plantilla se creó correctamente'
+                : 'La plantilla se editó correctamente',
           ),
-        ),
-        FormSaveBar(
-          onCancelar: () => context.goBack(),
-          onGuardar: _guardar,
-          isLoading: _guardando,
-          textoGuardar: 'Guardar plantilla',
-        ),
       ],
     );
   }

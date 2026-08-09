@@ -48,6 +48,15 @@ String fileLabel(String mensaje) {
   }
 }
 
+// Formatea bytes a "KB"/"MB" para mostrar el peso de un archivo adjunto
+// (ej. TemplateFileCard) — bajo 1MB redondea a KB entero, desde 1MB usa un
+// decimal.
+String formatFileSize(int bytes) {
+  if (bytes <= 0) return '0 KB';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} KB';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+}
+
 Color fileColor(String mensaje) {
   final ext = mensaje.toLowerCase().split('.').last;
   if (_extsImagen.contains(ext)) return AppColors.success;

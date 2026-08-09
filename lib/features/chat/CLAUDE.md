@@ -271,7 +271,13 @@ archivo adjunto con ícono/color por extensión (centralizado en
 nombre + extensión. Reemplaza al viejo `_ArchivoChip` de una sola línea (pedido del jefe: "un
 poco más grande, con más información"). `compact: true` da la versión chica en fila, usada en
 `_TemplateItem` (lista lateral angosta); el default (cuadrado grande, `AppSizing.fileCardSize`)
-se usa en `_TemplatePreview` y en la sección de adjuntos del formulario.
+se usa en `_TemplatePreview`. `detailed: true` (agregado 2026-08-09) da una tercera versión en
+fila — ícono cuadrado + nombre en negrita + "EXT · peso" debajo (`sizeBytes`, peso formateado con
+`file_type_utils.dart.formatFileSize`) + botón de quitar como ícono simple a la derecha (no el
+círculo rojo superpuesto del cuadrado default) — es la que usa
+`TemplateFormAdjuntosSection` para mostrar el archivo ya adjuntado en el formulario, junto con el
+texto de ayuda "Solo se permite un archivo por plantilla — sube uno nuevo para reemplazarlo."
+debajo de la card.
 
 **Reglas de negocio confirmadas (2026-07-24):**
 - Tope de botones: **6** sin archivo adjunto, **3** con archivo adjunto (imagen/documento/audio)
@@ -337,6 +343,18 @@ se usa en `_TemplatePreview` y en la sección de adjuntos del formulario.
   los campos — compatible con `'LP'` (nunca trae `sepListas`, así que el split no le afecta).
   `TemplateFormBloc._onStarted` en modo editar ya llama `GetPlantillaUseCase` de verdad.
 - No define tipos de botón (quick-reply/URL/teléfono) — solo texto libre por botón.
+- **Overlay de guardado — `AppProcessOverlay` (2026-08-09).** `_TemplateFormPortraitState` en
+  `template_form_view.dart` replica el mismo patrón de 2 pasos que `EditLeadPortrait` (ver
+  `core/CLAUDE.md` → `AppProcessOverlay` y `lead/CLAUDE.md` → "Overlay de guardado/éxito"):
+  `_guardando` (ya existía) + `_mostrandoExito` (nuevo) controlan un único
+  `if (_guardando || _mostrandoExito) AppProcessOverlay(...)` al final del `Stack` que envuelve
+  el `build()`. En el caso `CrudOk()` de `_guardar()`, en vez de `context.goBack()` inmediato,
+  ahora hace `setState(() => _mostrandoExito = true)` → espera 1.5s → recién ahí vuelve atrás —
+  mismo timing que `EditLeadPortrait._guardar()`. El mensaje de carga/éxito varía por
+  `widget.plantilla.idPlantilla == 0` (crear vs editar), igual criterio que allá. Como
+  `TemplateFormBloc.guardar()` ya orquesta subida de archivo + CUD en una sola llamada (ver
+  arriba), este único overlay cubre ambos pasos sin distinguir "subiendo archivo" de "guardando
+  plantilla" — no hace falta un tercer estado intermedio.
 
 ---
 

@@ -69,6 +69,36 @@ class AuthRemoteDatasource {
     }
   }
 
+  // Task 'O' — dbo.CSV_SYSMUSER01_LOGOUT_APP. Invalida el TOKEN activo del
+  // usuario (busca por TIPO_USER+COD_USER+NAVEGADOR, no por el valor del
+  // token en sí) y limpia el token FCM guardado en SYSMUSER01_FCM. Best
+  // effort — si falla (sin internet, servidor caído), no debe impedir que
+  // el logout local siga adelante (ver AuthRepositoryImpl.logout()).
+  //
+  // [codUser] — opcional, default SessionService().codUser (logout normal,
+  // con la sesión ya restaurada a memoria). Se puede pasar explícito para
+  // el caso Splash: cuando se fuerza un logout SIN haber restaurado la
+  // sesión (ej. actualización obligatoria pendiente), SessionService sigue
+  // vacío — ahí el caller lee el codUser directo de la SessionModel
+  // guardada en SQLite (persistido en cada login, ver auth/CLAUDE.md).
+  Future<void> logout({String? codUser}) async {
+    final id = codUser ?? _session.codUser;
+    if (id.isEmpty) return; // nada que invalidar sin saber de quién
+
+    final info = await DeviceInfoService.getInfoConTimeout();
+
+    final body =
+        '${[
+          'PER',
+          info['navegador'],
+          id,
+          info['ip_local'],
+          info['coordenadas'],
+        ].join(camp)}${sep}O';
+
+    await _api.postSafe(ApiConstants.urlLogout, body);
+  }
+
   Future<CrudResult> recuperarClave(String correo) async {
     final ip = await _deviceInfo.getLocalIp();
 

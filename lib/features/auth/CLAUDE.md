@@ -132,8 +132,95 @@ Logout (desde cualquier pantalla)
         └── AuthLogoutRequested
               → limpiarTokenFCM() + SignalR.close()
               → LocalNotificationService.cancelAll()  (ver notifications/CLAUDE.md)
-              → clearSession() → AuthUnauthenticated → LoginPage
+              → LogoutUsecase → AuthRepositoryImpl.logout()
+                    → AuthRemoteDatasource.logout()  (SP real, ver abajo — antes de
+                      limpiar memoria/token, los necesita para armar el body)
+                    → limpia memoria (SessionService/ApiClient) + SQLite
+              → AuthUnauthenticated → LoginPage
 ```
+
+### Logout — SP real (agregado 2026-08-07)
+
+`AuthRemoteDatasource.logout()` llama `ApiConstants.urlLogout`
+(`Seguridad/CerrarSesionAppCRM` → `dbo.CSV_SYSMUSER01_LOGOUT_APP`, task `'O'`) — el SP
+invalida el `TOKEN` activo buscando por `TIPO_USER + COD_USER + NAVEGADOR` (no valida el
+valor del token en sí) y limpia el token FCM en `SYSMUSER01_FCM`.
+
+```dart
+// Body (antes del token¯ que prepende TokenBodyInterceptor):
+// TIPO_USER¦NAVEGADOR¦ID_USUARIO¦IP_USUARIO¦LL_USUARIO¯O
+final body = '${[
+  'PER',                    // TIPO_USER — hardcodeado, igual que buildLoginBody()
+  info['navegador'],        // NAVEGADOR — 'Flutter App', mismo valor que guardó el login
+  _session.codUser,         // ID_USUARIO — SessionService().codUser
+  info['ip_local'],         // IP_USUARIO
+  info['coordenadas'],      // LL_USUARIO — 'lat,long' (Latitud/Longitud)
+].join(camp)}${sep}O';
+```
+
+**Best effort** — `postSafe` nunca lanza excepción (atrapa `DioException` internamente), así
+que si falla (sin internet, servidor caído) el logout local sigue adelante igual;
+`AuthRepositoryImpl.logout()` llama `_remote.logout()` **antes** de limpiar
+`ApiClient`/`SessionService`/SQLite, porque el body necesita el token y el `codUser` todavía
+activos.
+
+### Invalidar el TOKEN también en cierres forzados desde el Splash (agregado 2026-08-07)
+
+El mismo SP de logout se dispara ahora en **todo** lugar donde antes solo se limpiaba SQLite
+sin avisar al backend — si no, el `TOKEN_ACT` de esa fila se quedaba en `1` para siempre,
+aunque la app local ya tratara al usuario como deslogueado:
+
+- `SplashBloc._onCheckSessionRequested` → rama `AppUpdateService().actualizacionPendiente !=
+  null` (actualización obligatoria pendiente).
+- `AuthRepositoryImpl.tryRestoreSession()` → sesión vencida (`entity.isExpired`), sesión no
+  recordada (`SessionNotRememberedException`), Google sin `idToken`/`email` guardado, y Google
+  cuyo re-login falla con `AppException` (ver más abajo — típicamente el idToken venció).
+
+**`SessionModel`/tabla `session` (SQLite) ganó la columna `cod_user`** (migración a versión 4
+de `LocalDatabase`, `_onUpgrade`) — se persiste en **ambos** logins (`login()`/
+`loginWithGoogle()`, campo `UserModel.codUser`, que el backend siempre devuelve sin importar el
+tipo). Es lo que permite invalidar el TOKEN en estos cierres forzados: en la mayoría de estas
+ramas (Splash con actualización pendiente, sesión vencida, sesión no recordada) la sesión
+**nunca llegó a restaurarse a memoria** — `SessionService()`/`ApiClient().token` siguen
+vacíos, así que `AuthRemoteDatasource.logout()` no puede usar su default
+(`SessionService().codUser`). Por eso `logout()` acepta un `codUser` opcional — el caller lee
+el valor persistido directo de la `SessionModel`/`SessionEntity` guardada.
+`AuthRepositoryImpl._invalidarTokenRemoto(SessionEntity)` centraliza esto para los 4 casos
+dentro de `tryRestoreSession()`; `SplashBloc` lo hace inline (no tiene `AuthRepository`
+inyectado, solo usecases) leyendo `AuthLocalDatasource().getStoredSession()` antes de limpiar.
+
+Todas estas llamadas son **fire-and-forget** (`unawaited`) y best effort — nunca bloquean ni
+interrumpen el flujo de Splash/restauración, y `AuthRemoteDatasource.logout()` nunca lanza
+excepción (atrapa `DioException` en `postSafe`). Sesiones guardadas **antes** de este cambio no
+tienen `cod_user` en su fila (columna nueva, queda `NULL`) — para esas, la invalidación remota
+se salta en silencio (`if (id.isEmpty) return`) hasta que el usuario vuelva a loguearse una vez.
+
+### Re-login de Google en silencio — ya no expira cada ~1h (agregado 2026-08-07)
+
+Antes, `tryRestoreSession()` reintentaba el login de Google reusando el `idToken` guardado en
+SQLite — como ese token lo emite Google (no el backend) y dura ~1h, cualquier reapertura de la
+app pasada esa hora fallaba (`AppException` del backend al rechazar un token vencido) y el
+usuario terminaba en Login, teniendo que tocar "Iniciar con Google" de nuevo aunque nunca
+hubiera cerrado sesión a propósito.
+
+**`AuthRepositoryImpl._reautenticarGoogleSilenciosamente(String? emailGuardado)`** — usa
+`GoogleSignIn.instance.attemptLightweightAuthentication()` (`google_sign_in: ^7.2.0`, ya
+inicializado en `main()` con `GoogleSignIn.instance.initialize(serverClientId: ...)` antes de
+`runApp()`) para pedir un idToken **fresco** sin mostrar ningún diálogo — restaura la sesión
+nativa del SDK en el dispositivo (misma cuenta con la que se hizo `authenticate()` la primera
+vez) siempre que el usuario no haya cerrado sesión de Google ni revocado el acceso a nivel de
+sistema. Verifica que el email de la cuenta recuperada coincida con `emailGuardado` (la
+`SessionModel` local) antes de confiar en ella — si no matchea, la trata como no recuperable.
+Si retorna `null` (sesión nativa también perdida/revocada), cae al flujo de siempre: invalida
+el TOKEN remoto con `_invalidarTokenRemoto()` y manda a Login.
+
+`tryRestoreSession()` ya no usa `entity.idToken` (el guardado en SQLite) para la llamada al
+backend — solo llama `loginWithGoogle(accessToken: cuenta.authentication.idToken!, correo:
+cuenta.email)` con el token fresco que devuelve el paso de arriba. El campo `idToken` en
+`SessionModel`/`SessionEntity` sigue existiendo y se sigue guardando en cada
+`loginWithGoogle()` (sin cambios ahí), pero para la restauración en el Splash ya es
+efectivamente vestigial — nunca se vuelve a leer de SQLite salvo para el guard viejo (que ya
+no aplica, se eliminó junto con el resto de esa rama).
 
 ---
 

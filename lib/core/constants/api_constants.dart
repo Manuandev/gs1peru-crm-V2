@@ -16,6 +16,9 @@ class ApiConstants {
   static const String login = 'Seguridad/ValidarLoginAppCRM';
   static const String loginGoogle = 'Seguridad/ValidarLoginGoogleApp';
   static const String recuperarUsuario = 'Seguridad/RecuperarUsuario';
+  // SP real: dbo.CSV_SYSMUSER01_LOGOUT_APP (task 'O') — invalida el TOKEN activo
+  // (TIPO_USER + COD_USER + NAVEGADOR) y limpia el token FCM en SYSMUSER01_FCM.
+  static const String logout = 'Seguridad/CerrarSesionAppCRM';
 
   // ========== LISTAS ==========
   static const String lstListas = 'Listas/SPListasLSTApp';
@@ -90,6 +93,7 @@ class ApiConstants {
   static String get urlLogin => '$baseUrl$login';
   static String get urlLoginGoogle => '$baseUrl$loginGoogle';
   static String get urlRecuperarUsuario => '$baseUrl$recuperarUsuario';
+  static String get urlLogout => '$baseUrl$logout';
 
   // ========== LISTAS ==========
   static String get urlListasLst => '$baseUrl$lstListas';

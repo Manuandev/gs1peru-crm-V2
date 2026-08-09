@@ -9,6 +9,7 @@ class SessionModel {
   final String? password;
   final String? email;
   final String? idToken;
+  final String? codUser;
   final DateTime expiresAt;
   final bool rememberMe;
 
@@ -20,6 +21,7 @@ class SessionModel {
     this.password,
     this.email,
     this.idToken,
+    this.codUser,
   });
 
   factory SessionModel.fromMap(Map<String, dynamic> map) {
@@ -31,6 +33,7 @@ class SessionModel {
       password:   map['password'] as String?,
       email:      map['email'] as String?,
       idToken:    map['id_token'] as String?,
+      codUser:    map['cod_user'] as String?,
       expiresAt:  DateTime.parse(map['expires_at'] as String),
       rememberMe: (map['remember_me'] as int?) == 1,
     );
@@ -42,6 +45,7 @@ class SessionModel {
         'password':    password,
         'email':       email,
         'id_token':    idToken,
+        'cod_user':    codUser,
         'expires_at':  expiresAt.toIso8601String(),
         'remember_me': rememberMe ? 1 : 0,
       };
@@ -52,6 +56,7 @@ class SessionModel {
         password:   password,
         email:      email,
         idToken:    idToken,
+        codUser:    codUser,
         expiresAt:  expiresAt,
         rememberMe: rememberMe,
       );

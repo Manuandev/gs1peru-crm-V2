@@ -8,6 +8,7 @@ class SessionEntity {
   final String? password;    // solo si loginType = credentials
   final String? email;       // solo si loginType = google
   final String? idToken;     // solo si loginType = google
+  final String? codUser;     // siempre, en ambos tipos — ver auth/CLAUDE.md
   final DateTime expiresAt;
   final bool rememberMe;
 
@@ -19,6 +20,7 @@ class SessionEntity {
     this.password,
     this.email,
     this.idToken,
+    this.codUser,
   });
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);

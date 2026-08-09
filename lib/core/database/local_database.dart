@@ -46,7 +46,7 @@ class LocalDatabase implements ILocalDatabase {
 
     _database = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -63,6 +63,7 @@ class LocalDatabase implements ILocalDatabase {
         password    TEXT,
         email       TEXT,
         id_token    TEXT,
+        cod_user    TEXT,
         expires_at  TEXT NOT NULL,
         remember_me INTEGER NOT NULL DEFAULT 0
       )
@@ -87,6 +88,9 @@ class LocalDatabase implements ILocalDatabase {
     }
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE session ADD COLUMN id_token TEXT');
+    }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE session ADD COLUMN cod_user TEXT');
     }
   }
 

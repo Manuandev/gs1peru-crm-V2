@@ -72,6 +72,16 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
       // hasta ahora era UpdateRequiredInterceptor, que corta guardados pero
       // deja navegar/leer libremente (ver auth/CLAUDE.md).
       if (AppUpdateService().actualizacionPendiente != null) {
+        // La sesión nunca se restauró a memoria en esta rama (no se llamó
+        // _restoreSessionUsecase()) — SessionService/ApiClient siguen
+        // vacíos, así que el logout remoto no puede usar su default. Se lee
+        // el codUser directo de la sesión guardada en SQLite (persistido en
+        // cada login, ver auth/CLAUDE.md) para poder invalidar el TOKEN en
+        // el backend igual. Fire-and-forget — no debe demorar la
+        // navegación a Login, y AuthRemoteDatasource.logout() ya es best
+        // effort (nunca lanza excepción).
+        final sesionGuardada = await AuthLocalDatasource().getStoredSession();
+        unawaited(AuthRemoteDatasource().logout(codUser: sesionGuardada?.codUser));
         await AuthLocalDatasource().clearSession();
         emit(const SplashSessionNotFound());
         return;

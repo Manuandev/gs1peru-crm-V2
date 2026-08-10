@@ -23,6 +23,19 @@ debajo o por encima de `montoTotal`, visible en el footer "Total: X" (`state.tot
 - **Con 1 sola cuota** (`n == 1`), la fórmula cae en `montoTotal - montoPorCuota * 0 =
   montoTotal` — sin cambio de comportamiento respecto a antes.
 
+## Overlay de carga al facturar — `AppProcessOverlay` (2026-08-09)
+`CobranzaFacturaView` (`widgets/factura/`) envuelve su `Form` en un `Stack` y muestra
+`AppProcessOverlay(status: AppProcessStatus.cargando, ...)` mientras
+`state.status == CobranzaFacturaStatus.loading` — mismo widget reusable que ya usan
+`EditLeadPortrait` (`lead/`) y `TemplateFormView` (`chat/`, ver sus CLAUDE.md). Antes, mientras
+corrían las 2 llamadas secuenciales de `_onFacturarPressed` (crédito: `RC` guardar plan + `UE`
+cambiar estado; contado: solo `UE`), el único feedback era el botón "Facturar" deshabilitado —
+sin overlay ni spinner. A diferencia de `EditLeadPortrait`/`TemplateFormView`, acá **no** se
+agregó el paso "check verde" (`AppProcessStatus.exito`) — el listener de `CobranzaFacturaPage`
+ya maneja `facturadoOk` con snackbar + navegación inmediata (`context.goToCobranza()`), así que
+alcanza con mostrar el overlay solo durante `loading`; al pasar a `facturadoOk` el overlay
+desaparece solo (deja de cumplir la condición `if`) y el listener toma el control.
+
 ## `CobranzaCard` compactada (2026-07-14)
 `CobranzaCard` (`presentation/widgets/lista/cobranza_card.dart`) se redujo de escala — mismo
 criterio aplicado antes a `SolicitudCard` (`solicitudes/`): padding general `md` → `sm`, avatar

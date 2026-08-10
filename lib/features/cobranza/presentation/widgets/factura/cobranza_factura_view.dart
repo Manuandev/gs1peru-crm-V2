@@ -61,98 +61,115 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
               onPressed: () => context.goBack(),
             ),
           ],
-          body: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── 1. Header fijo ─────────────────────────
-                        CobranzaFacturaHeader(state: state),
-                        const SizedBox(height: AppSpacing.sm),
-
-                        // ── 2. Card de formulario ──────────────────
-                        _FormCard(
+          body: Stack(
+            children: [
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Combo condición de pago
-                            CustomComboField<CondicionItem>(
-                              label: 'Condición de pago',
-                              data: condicionesDisponibles,
-                              idIndex: 0,
-                              labelIndex: 1,
-                              initialValue: state.idCondicion,
-                              onChanged: (item) {
-                                if (item != null) {
-                                  context.read<CobranzaFacturaBloc>().add(
-                                    CondicionChanged(
-                                      item.fields[0],
-                                      item.fields[1],
-                                    ),
-                                  );
-                                }
-                              },
+                            // ── 1. Header fijo ─────────────────────────
+                            CobranzaFacturaHeader(state: state),
+                            const SizedBox(height: AppSpacing.sm),
+
+                            // ── 2. Card de formulario ──────────────────
+                            _FormCard(
+                              children: [
+                                // Combo condición de pago
+                                CustomComboField<CondicionItem>(
+                                  label: 'Condición de pago',
+                                  data: condicionesDisponibles,
+                                  idIndex: 0,
+                                  labelIndex: 1,
+                                  initialValue: state.idCondicion,
+                                  onChanged: (item) {
+                                    if (item != null) {
+                                      context.read<CobranzaFacturaBloc>().add(
+                                        CondicionChanged(
+                                          item.fields[0],
+                                          item.fields[1],
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+
+                                // Extra ARRIBA — solo crédito muestra fecha+validar
+                                CobranzaCamposExtra(esArriba: true, state: state),
+
+                                // O/C — opcional
+                                _CampoCompartido(
+                                  label: 'O/C',
+                                  hint: 'Ingresa el número de orden de compra',
+                                  controller: _ocCtrl,
+                                  maxChars: _maxChars,
+                                  onChanged: (v) => context
+                                      .read<CobranzaFacturaBloc>()
+                                      .add(OcChanged(v)),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+
+                                // Descripción — siempre
+                                _CampoCompartido(
+                                  label: 'Descripción sugerida',
+                                  hint: 'Ingresa una descripción para el documento',
+                                  controller: _descCtrl,
+                                  maxChars: _maxChars,
+                                  onChanged: (v) => context
+                                      .read<CobranzaFacturaBloc>()
+                                      .add(DescripcionChanged(v)),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+
+                                // Hoja de aceptación — siempre
+                                _CampoCompartido(
+                                  label: 'Hoja de aceptación',
+                                  hint: 'Ingresa observaciones o notas (opcional)',
+                                  controller: _hojaCtrl,
+                                  maxChars: _maxChars,
+                                  onChanged: (v) => context
+                                      .read<CobranzaFacturaBloc>()
+                                      .add(HojaAceptacionChanged(v)),
+                                ),
+
+                                // Extra ABAJO — solo contado muestra adjuntar
+                                CobranzaCamposExtra(esArriba: false, state: state),
+                              ],
                             ),
                             const SizedBox(height: AppSpacing.sm),
 
-                            // Extra ARRIBA — solo crédito muestra fecha+validar
-                            CobranzaCamposExtra(esArriba: true, state: state),
-
-                            // O/C — opcional
-                            _CampoCompartido(
-                              label: 'O/C',
-                              hint: 'Ingresa el número de orden de compra',
-                              controller: _ocCtrl,
-                              maxChars: _maxChars,
-                              onChanged: (v) => context
-                                  .read<CobranzaFacturaBloc>()
-                                  .add(OcChanged(v)),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-
-                            // Descripción — siempre
-                            _CampoCompartido(
-                              label: 'Descripción sugerida',
-                              hint: 'Ingresa una descripción para el documento',
-                              controller: _descCtrl,
-                              maxChars: _maxChars,
-                              onChanged: (v) => context
-                                  .read<CobranzaFacturaBloc>()
-                                  .add(DescripcionChanged(v)),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-
-                            // Hoja de aceptación — siempre
-                            _CampoCompartido(
-                              label: 'Hoja de aceptación',
-                              hint: 'Ingresa observaciones o notas (opcional)',
-                              controller: _hojaCtrl,
-                              maxChars: _maxChars,
-                              onChanged: (v) => context
-                                  .read<CobranzaFacturaBloc>()
-                                  .add(HojaAceptacionChanged(v)),
-                            ),
-
-                            // Extra ABAJO — solo contado muestra adjuntar
-                            CobranzaCamposExtra(esArriba: false, state: state),
+                            // ── 3. Resumen + aviso ─────────────────────
+                            CobranzaResumenCard(state: state),
                           ],
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-
-                        // ── 3. Resumen + aviso ─────────────────────
-                        CobranzaResumenCard(state: state),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
 
-                // ── 4. Botones fijos ──────────────────────────────
-                _BotonesFactura(state: state, onFacturar: _onFacturarPressed),
-              ],
-            ),
+                    // ── 4. Botones fijos ──────────────────────────────
+                    _BotonesFactura(state: state, onFacturar: _onFacturarPressed),
+                  ],
+                ),
+              ),
+              // Mismo overlay de carga que EditLeadPortrait/TemplateFormView
+              // (AppProcessOverlay, core/CLAUDE.md) — cubre las 2 llamadas
+              // secuenciales de _onFacturarPressed en crédito (RC + UE; solo
+              // UE en contado). Al terminar, CobranzaFacturaPage ya maneja el
+              // snackbar + navegación (facturadoOk) o el error, así que acá
+              // solo hace falta el paso "cargando" — no un check de éxito.
+              if (state.status == CobranzaFacturaStatus.loading)
+                AppProcessOverlay(
+                  status: AppProcessStatus.cargando,
+                  loadingMessage: state.esCredito
+                      ? 'Guardando plan y facturando...'
+                      : 'Facturando...',
+                ),
+            ],
           ),
         );
       },

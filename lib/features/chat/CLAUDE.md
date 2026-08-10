@@ -301,11 +301,24 @@ debajo de la card.
   `TIPO_PLANTILLA`/`IB_EDITABLE` (columnas nullable de `T_PLANTILLA_WHATSAPP`) y `ID_META`/
   `ESTADO_META` no los toca el formulario — esos dos últimos los puebla la sincronización con Meta,
   no la app.
-- **Botones**: solo se manda el texto de cada uno (`plantilla.botones.join(sepRegistros)`,
-  campo aparte del cuerpo principal) — el SP les asigna `ID_PLANTILLA_BOTON`/`ORDEN` él mismo
-  (PK manual `MAX+1`, no `IDENTITY`). El orden depende de `STRING_SPLIT` (SQL Server 2016+); si
-  algún día el orden de los botones sale mal, cambiar el split del SP a un método que garantice
-  orden explícitamente (ver comentario en el `.sql`).
+- **Botones — update en sitio por id (2026-08-09), ya no borrar+reinsertar todos en cada
+  guardado.** `Plantilla.botones` es `List<PlantillaBoton>` (`idBoton` + `texto`, no
+  `List<String>`) — cada botón viaja `idBoton¦texto` (id `0` = nuevo, campo aparte del cuerpo
+  principal, registros separados por `sepRegistros`). `CSV_PLANTILLA_CUD_APP` (task `'U'`) ahora
+  hace `DELETE` solo de los que ya no vienen en la lista (se quitaron en el formulario), `UPDATE`
+  en sitio de los que traen id (texto/orden), e `INSERT` (PK manual `MAX+1`, no `IDENTITY`) solo
+  de los nuevos (id `0`) — antes borraba y reinsertaba TODOS con id nuevo en cada guardado,
+  aunque solo se hubiera tocado un carácter de un botón ya existente. De paso se cambió el split
+  de `STRING_SPLIT` a `fnSplitStringTable15` (mismo método que ya usa la cabecera del SP) — el
+  orden ya no depende de `STRING_SPLIT`, que no lo garantizaba (viejo TODO de esta misma nota,
+  ya resuelto). `CSV_PLANTILLA_LST_APP` (task `'DP'`) devuelve `@BOTONES` como
+  `idBoton¦texto¬idBoton¦texto...` (antes solo `texto¬texto...`) — necesario para que el
+  formulario sepa qué id mandar de vuelta al reabrir una plantilla para editar.
+  `_TemplateFormPortraitState` (`template_form_view.dart`) mantiene `_botonesIds` en paralelo a
+  `_botonesCtrls` (mismo índice) — `_agregarBoton`/`_quitarBoton` mutan ambas listas juntas;
+  `_guardar()` arma `PlantillaBoton(idBoton: _botonesIds[i], texto: ...)` por cada controller con
+  texto no vacío. El **archivo** adjunto sigue con el criterio viejo (borrar + insertar si llega
+  uno nuevo, sin id de ida y vuelta) — decisión explícita del usuario, no se tocó.
 - **Archivo adjunto — subida real, orquestada al presionar "Guardar plantilla" (no al elegir el
   archivo)**: `TemplateFormBloc.guardar(plantilla, {archivoLocal})` — si `archivoLocal` no es
   `null` (el usuario eligió/grabó un archivo en esta sesión, todavía con path LOCAL del

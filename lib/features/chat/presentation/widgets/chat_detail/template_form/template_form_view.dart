@@ -48,6 +48,11 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _contenidoCtrl;
   late final List<TextEditingController> _botonesCtrls;
+  // idBoton de cada botón, en el mismo índice que su controller en
+  // _botonesCtrls (0 = nuevo, todavía sin guardar) — viaja de vuelta al
+  // guardar para que el SP actualice en sitio en vez de borrar/reinsertar
+  // todos los botones en cada guardado (ver Plantilla.botones/chat/CLAUDE.md).
+  late final List<int> _botonesIds;
 
   CampaniaItem? _campania;
   OportunidadItem? _oportunidad;
@@ -77,8 +82,9 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
     _nombreCtrl = TextEditingController(text: p.nombre);
     _contenidoCtrl = TextEditingController(text: p.contenido);
     _botonesCtrls = p.botones
-        .map((texto) => TextEditingController(text: texto))
+        .map((b) => TextEditingController(text: b.texto))
         .toList();
+    _botonesIds = p.botones.map((b) => b.idBoton).toList();
     _activo = p.activo;
     _compartir = p.compartir;
 
@@ -147,11 +153,17 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
 
   void _agregarBoton() {
     if (_botonesCtrls.length >= _maxBotones) return;
-    setState(() => _botonesCtrls.add(TextEditingController()));
+    setState(() {
+      _botonesCtrls.add(TextEditingController());
+      _botonesIds.add(0);
+    });
   }
 
   void _quitarBoton(int index) {
-    setState(() => _botonesCtrls.removeAt(index).dispose());
+    setState(() {
+      _botonesCtrls.removeAt(index).dispose();
+      _botonesIds.removeAt(index);
+    });
   }
 
   // Solo arma el StagedFile local (path del dispositivo) — no sube nada
@@ -181,10 +193,14 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
       idEstadoNegociacion: _estado?.id ?? '',
       activo: _activo,
       compartir: _compartir,
-      botones: _botonesCtrls
-          .map((c) => c.text.trim())
-          .where((t) => t.isNotEmpty)
-          .toList(),
+      botones: [
+        for (var i = 0; i < _botonesCtrls.length; i++)
+          if (_botonesCtrls[i].text.trim().isNotEmpty)
+            PlantillaBoton(
+              idBoton: _botonesIds[i],
+              texto: _botonesCtrls[i].text.trim(),
+            ),
+      ],
     );
 
     setState(() => _guardando = true);

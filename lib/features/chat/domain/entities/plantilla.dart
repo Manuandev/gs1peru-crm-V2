@@ -2,6 +2,20 @@
 
 import 'package:app_crm/index_dependencies.dart';
 
+/// Un botón de plantilla — `idBoton` viaja de ida y vuelta con el servidor
+/// para poder actualizarlo en sitio al re-guardar (`0` = nuevo, todavía sin
+/// insertar) en vez de que `CSV_PLANTILLA_CUD_APP` borre y reinserte todos
+/// los botones en cada guardado — ver `chat/CLAUDE.md`.
+class PlantillaBoton extends Equatable {
+  final int idBoton;
+  final String texto;
+
+  const PlantillaBoton({this.idBoton = 0, required this.texto});
+
+  @override
+  List<Object?> get props => [idBoton, texto];
+}
+
 class Plantilla extends Equatable {
   final int idPlantilla;
   final String nombre;
@@ -21,7 +35,7 @@ class Plantilla extends Equatable {
   final String idEstadoNegociacion; // id de EstadoItem (catálogo general de estados)
   final bool activo;
   final bool compartir;
-  final List<String> botones; // solo el texto de cada botón, sin tipos
+  final List<PlantillaBoton> botones; // texto + id de cada botón, sin tipos
 
   const Plantilla({
     required this.idPlantilla,

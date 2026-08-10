@@ -29,13 +29,22 @@ class PlantillaModel extends Plantilla {
     // por sepListas: campos¯botón¬botón¬botón.
     final secciones = raw.split(AppConstants.sepListas);
     final c = ParseUtils.campos(secciones[0], AppConstants.sepCampos);
+    // Cada botón viaja "idBoton¦texto" (id=0 = nuevo) — ver comentario en
+    // Plantilla.botones/CSV_PLANTILLA_CUD_APP.
     final botones = secciones.length > 1
         ? secciones[1]
               .split(AppConstants.sepRegistros)
               .map((b) => b.trim())
               .where((b) => b.isNotEmpty)
+              .map((b) {
+                final campos = b.split(AppConstants.sepCampos);
+                return PlantillaBoton(
+                  idBoton: int.tryParse(campos[0]) ?? 0,
+                  texto: campos.length > 1 ? campos[1] : '',
+                );
+              })
               .toList()
-        : const <String>[];
+        : const <PlantillaBoton>[];
 
     return PlantillaModel(
       idPlantilla: ParseUtils.toInt(c, 0),

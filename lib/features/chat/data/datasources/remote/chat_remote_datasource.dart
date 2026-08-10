@@ -287,10 +287,11 @@ class ChatRemoteDatasource {
   // Task 'U' — CRM.CSV_PLANTILLA_CUD_APP. Cabecera (@L_DATA, 14 campos):
   // idPlantilla¦nombre¦contenido¦idCampania¦idOportunidad¦idEstadoNegociacion¦
   // activo¦compartir¦archivoRuta¦archivoNombre¦archivoExt¦codUser¦ip¦coords.
-  // Botones van en una sección aparte (@L_DATA_BTN) — solo el texto de cada
-  // uno, separados por sepRegistros (el SP los reemplaza todos en cada
-  // guardado, no hace falta mandar ids). idMeta/estadoMeta no se mandan — los
-  // puebla la sincronización con Meta, no este formulario.
+  // Botones van en una sección aparte (@L_DATA_BTN) — cada uno manda
+  // "idBoton¦texto" (id=0 = nuevo), registros separados por sepRegistros; el
+  // SP actualiza en sitio el que ya trae id, en vez de borrar/reinsertar
+  // todos en cada guardado (ver chat/CLAUDE.md). idMeta/estadoMeta no se
+  // mandan — los puebla la sincronización con Meta, no este formulario.
   Future<CrudResult> guardarPlantilla(Plantilla plantilla) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
@@ -312,7 +313,9 @@ class ChatRemoteDatasource {
       coords,
     ].join(camp);
 
-    final botones = plantilla.botones.join(AppConstants.sepRegistros);
+    final botones = plantilla.botones
+        .map((b) => [b.idBoton, b.texto].join(camp))
+        .join(AppConstants.sepRegistros);
 
     final String body = [cabecera, 'U', botones].join(sep);
 

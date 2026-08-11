@@ -46,8 +46,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // ── MANEJADORES ─────────────────────────────────────────────
 
   /// Splash encontró sesión válida → marcar como autenticado
-  void _onSessionRestored(AuthSessionRestored event, Emitter<AuthState> emit) {
+  Future<void> _onSessionRestored(
+    AuthSessionRestored event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
+    // reset() antes de connect(): un logout previo en la misma sesión de la
+    // app deja SignalRService en manuallyClosed, estado que connect() nunca
+    // pasa por su guard (ver signalr_service.dart) — sin este reset, ni el
+    // socket ni el registro del token FCM del usuario nuevo vuelven a correr.
+    await SignalRService.instance.reset();
     SignalRService.instance.connect();
     // Para probar FCM aislado (sin SignalR), comentar la línea de arriba.
   }
@@ -63,8 +71,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   /// Login exitoso → marcar como autenticado
-  void _onLoginSuccess(AuthLoginSuccess event, Emitter<AuthState> emit) {
+  Future<void> _onLoginSuccess(
+    AuthLoginSuccess event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
+    // reset() antes de connect(): un logout previo en la misma sesión de la
+    // app deja SignalRService en manuallyClosed, estado que connect() nunca
+    // pasa por su guard (ver signalr_service.dart) — sin este reset, ni el
+    // socket ni el registro del token FCM del usuario nuevo vuelven a correr.
+    await SignalRService.instance.reset();
     SignalRService.instance.connect();
     // Para probar FCM aislado (sin SignalR), comentar la línea de arriba.
   }

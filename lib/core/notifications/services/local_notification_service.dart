@@ -283,15 +283,35 @@ class LocalNotificationService {
     );
   }
 
-  /// Notificación cuando el bot deriva una conversación nueva a un asesor.
-  /// Body fijo — no usa datos del cliente, solo avisa que hay algo pendiente.
+  /// Notificación cuando el bot deriva una conversación nueva. El backend le
+  /// manda esta misma trama tanto al asesor asignado (`codAsesor`) como a su
+  /// supervisor (`incluirSupervisores` en `FcmService.EnviarAsync`, ver
+  /// notifications/CLAUDE.md) — el texto cambia según quién la reciba.
+  /// Compara contra `cod_user` leído de SQLite (tabla `session`), no contra
+  /// `SessionService()`: este método corre igual desde el isolate de FCM en
+  /// background (app cerrada, `SessionService` vacío) que desde SignalR en
+  /// foreground, y ambos flujos deben mostrar exactamente el mismo texto.
   Future<void> showLeadNuevoBotNotification(WebSocketMessage parsed) async {
     final payload = NuevoLeadBotPayload.fromMessage(parsed);
     if (payload == null) return;
 
-    const titulo = 'Nuevo lead derivado por el bot';
-    const cuerpo =
-        'Una conversación te ha sido derivada, atiéndela lo más pronto posible.';
+    final codUserPropio = await _codUserPropio();
+    final esDestinatario =
+        codUserPropio.isNotEmpty && codUserPropio == payload.codAsesor;
+
+    // Nota: no tenemos el nombre del asesor asignado — NuevoLeadBotPayload
+    // (trama NUEVO_LEAD_BOT) solo trae `codAsesor` (código), y el catálogo
+    // de asesores no está persistido en SQLite para poder resolverlo en el
+    // isolate de FCM en background. Se muestra el código.
+    final String titulo;
+    final String cuerpo;
+    if (esDestinatario) {
+      titulo = 'Te asignaron una nueva conversación derivada por el bot';
+      cuerpo = 'Por favor, atiéndela a la brevedad.';
+    } else {
+      titulo = 'Se derivó una conversación al asesor ${payload.codAsesor}';
+      cuerpo = 'Podrás darle el seguimiento desde el detalle.';
+    }
 
     await flutterLocalNotificationsPlugin.show(
       id: payload.idLead,
@@ -333,6 +353,22 @@ class LocalNotificationService {
         },
       ).toPayloadString(),
     );
+  }
+
+  /// Código del usuario actual leído directo de SQLite (tabla `session`,
+  /// columna `cod_user`) — no de `SessionService()`, que vive en memoria y
+  /// está vacío en el isolate de FCM en background (app cerrada). Se
+  /// persiste en todo login (ver auth/CLAUDE.md → "cod_user"), así que está
+  /// disponible sin importar cómo llegó la notificación.
+  Future<String> _codUserPropio() async {
+    try {
+      final rows = await LocalDatabase().getAll('session');
+      if (rows.isEmpty) return '';
+      return (rows.first['cod_user'] as String?)?.trim() ?? '';
+    } catch (e) {
+      debugPrint('[LocalNotificationService] _codUserPropio falló: $e');
+      return '';
+    }
   }
 
   Future<void> showChatNotification(WebSocketMessage parsed) async {

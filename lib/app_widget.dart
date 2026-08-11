@@ -147,6 +147,33 @@ class AppWidget extends StatelessWidget {
                 title: 'GS1 Peru - CRM',
                 debugShowCheckedModeBanner: false,
 
+                // ── OVERLAY GLOBAL DE AUTH ───────────────────────
+                // AuthLoading solo se emite durante el logout (ver
+                // auth_state.dart) — sin esto no había ninguna señal visual
+                // de que se estaba cerrando sesión, la pantalla se quedaba
+                // "congelada" mientras corrían los await de limpiarTokenFCM/
+                // close/cancelAll/logoutUsecase.
+                builder: (context, child) {
+                  return Stack(
+                    children: [
+                      ?child,
+                      BlocBuilder<AuthBloc, AuthState>(
+                        buildWhen: (previous, current) =>
+                            previous is AuthLoading || current is AuthLoading,
+                        builder: (context, state) {
+                          if (state is! AuthLoading) {
+                            return const SizedBox.shrink();
+                          }
+                          return const AppProcessOverlay(
+                            status: AppProcessStatus.cargando,
+                            loadingMessage: 'Cerrando sesión...',
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+
                 // ── ROUTER ──────────────────────────────────────
                 // NavigatorKey permite navegar sin context (desde servicios, blocs, etc.)
                 navigatorKey: NavigationService.navigatorKey,

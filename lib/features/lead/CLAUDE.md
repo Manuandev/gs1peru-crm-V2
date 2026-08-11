@@ -20,6 +20,34 @@ Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propues
   (StatefulWidget con todo el estado local: combos de catálogo + listas dinámicas de
   `NumeroFormRow`/`CorreoFormRow`/`EmpresaFormRow`, ver `contacto_form_rows.dart`) → 4 secciones
   Stateless (`EditContactoDatosSection`/`CelularSection`/`CorreoSection`/`EmpresaSection`).
+  **Todos los campos son opcionales, agregado 2026-08-11** (pedido explícito de negocio) — se
+  quitaron los `validator` que exigían "Requerido" en Nombres (`edit_contacto_datos_section.dart`)
+  y Número de celular (`edit_contacto_celular_section.dart`); Correo (`edit_contacto_correo_
+  section.dart`) pasó de `v.emailValidator` (que marca "requerido" en vacío) a solo validar el
+  formato si el asesor sí escribió algo. Documento/Empresa nunca tuvieron validador de
+  obligatoriedad, sin cambios ahí.
+  **Mayúsculas en todo campo de texto libre, ampliado 2026-08-11** — Número de documento ahora
+  también lleva `isUpperCase: true` (antes solo Nombres/Apellidos/Dirección/Correo/Razón social),
+  relevante para CE/Pasaporte (únicos tipos que aceptan letras, ver `DocumentoValidationUtils.
+  soloDigitos`). Área/Cargo de Empresa (`CustomComboSearchField(allowFreeText: true)`, sin
+  equivalente a `isUpperCase`) se fuerzan a mayúscula recién en `_construirContacto()`
+  (`_mayus(r.area)`/`_mayus(r.cargo)`) — sin feedback visual mientras se tipea, a diferencia de
+  los `CustomTextField`. LinkedIn sigue **sin** forzar mayúsculas — decisión de negocio previa
+  (2026-07-23, URL sensible a mayúsculas/minúsculas), no se tocó.
+  **Botón Guardar deshabilitado hasta que haya un cambio real, agregado 2026-08-11** — antes
+  `FormSaveBar` no recibía `isEnabled` (quedaba siempre habilitado apenas cargaba, salvo
+  `isLoading`). Ahora `_EditContactoPortraitState` guarda un snapshot (`_snapshotInicial`,
+  `ContactoDetalle`) tomado al final de `_inicializarCombos()` — **no** contra `widget.contacto`
+  tal cual llega del backend, porque esa misma función ya aplica defaults (Nacionalidad/País →
+  Perú si venían vacíos) que no deben contar como "cambio del usuario". `_hayCambios` compara
+  `_construirContacto()` contra ese snapshot vía igualdad de `Equatable` (`ContactoDetalle` y sus
+  sub-entidades `NumeroContacto`/`CorreoContacto`/`EmpresaContacto` ya la implementaban, sin
+  tocarlas) — gatea tanto `FormSaveBar.isEnabled` como un guard temprano en `_guardar()`. Los
+  controllers de "Datos de contacto" (LinkedIn/N° documento/Nombres/Apellidos/Dirección) no
+  tenían `onChanged` propio en `EditContactoDatosSection` (a diferencia de los de las listas
+  dinámicas, que ya llamaban `setState` vía `onCambioNumero`/`onCambioCorreo`/`onCambioCampo`) —
+  se les agregó un listener (`_onCampoDatosChanged`) en `initState()` para que tipear ahí
+  reconstruya el formulario y `_hayCambios` se reevalúe en cada keystroke.
   **Backend — SPs reales, confirmados 2026-07-23**:
   `D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`
   (repo aparte, con su propio git — .sql en UTF-16LE con BOM, cualquier edición futura debe

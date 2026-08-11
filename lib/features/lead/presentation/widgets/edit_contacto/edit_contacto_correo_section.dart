@@ -97,7 +97,11 @@ class _CorreoRow extends StatelessWidget {
                   isUpperCase: true,
                   dense: true,
                   onChanged: (_) => onCambioCorreo(),
-                  validator: (v) => v.emailValidator,
+                  // Correo es opcional — solo valida el formato si el
+                  // asesor sí escribió algo (v.emailValidator marca "El
+                  // email es requerido" en vacío, lo cual ya no aplica).
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? null : v.emailValidator,
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),

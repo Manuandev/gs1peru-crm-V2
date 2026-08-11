@@ -126,6 +126,7 @@ class EditContactoDatosSection extends StatelessWidget {
             controller: numeroDocumentoCtrl,
             focusNode: numeroDocumentoFocus,
             enabled: !isLoading,
+            isUpperCase: true,
             keyboardType: DocumentoValidationUtils.keyboardType(
               tipoDocumento?.id ?? '',
               valoresDefecto,
@@ -164,7 +165,6 @@ class EditContactoDatosSection extends StatelessWidget {
           isUpperCase: true,
           prefixIcon: const Icon(AppIcons.user),
           dense: true,
-          validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: AppSpacing.sm),
 

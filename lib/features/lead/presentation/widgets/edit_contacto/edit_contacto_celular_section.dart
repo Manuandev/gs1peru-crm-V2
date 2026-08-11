@@ -145,8 +145,6 @@ class _CelularRow extends StatelessWidget {
                   keyboardType: TextInputType.phone,
                   dense: true,
                   onChanged: (_) => onCambioNumero(),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Requerido' : null,
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),

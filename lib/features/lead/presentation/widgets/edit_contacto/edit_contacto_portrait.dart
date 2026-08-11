@@ -58,6 +58,14 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
   bool _isLoading = false;
   bool _mostrandoExito = false;
 
+  // Snapshot del contacto tal como quedó armado justo después de que los
+  // combos terminan de inicializarse (con sus defaults ya aplicados — ej.
+  // Nacionalidad/País autocompletados a Perú, ver _inicializarCombos). Es la
+  // base contra la que se compara en _hayCambios — comparar contra
+  // widget.contacto directo marcaría "hay cambios" apenas se abre la
+  // pantalla, solo por los defaults que el propio formulario aplica.
+  ContactoDetalle? _snapshotInicial;
+
   // ── Autocompletado por documento (mismo patrón que solicitudes) ────────
   final _documentoService = DocumentoExternoService();
   late final FocusNode _numDocFocus;
@@ -77,6 +85,18 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
     _apellidoMaternoCtrl = TextEditingController(text: c.apellidoMaterno);
     _direccionCtrl = TextEditingController(text: c.direccion);
     _numDocFocus = FocusNode()..addListener(_onNumDocFocusChange);
+
+    // Estos controllers no tienen onChanged propio en
+    // EditContactoDatosSection (a diferencia de los de las listas
+    // dinámicas, que sí llaman setState vía onCambioNumero/onCambioCorreo/
+    // onCambioCampo) — sin este listener, tipear acá no reconstruye el
+    // formulario y _hayCambios nunca se vuelve a evaluar.
+    _linkedinCtrl.addListener(_onCampoDatosChanged);
+    _numeroDocumentoCtrl.addListener(_onCampoDatosChanged);
+    _nombreCtrl.addListener(_onCampoDatosChanged);
+    _apellidoPaternoCtrl.addListener(_onCampoDatosChanged);
+    _apellidoMaternoCtrl.addListener(_onCampoDatosChanged);
+    _direccionCtrl.addListener(_onCampoDatosChanged);
 
     for (final n in c.numeros) {
       _numeros.add(
@@ -225,10 +245,31 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
           )
           .firstOrNull;
     }
+
+    // Recién acá el formulario refleja los defaults que aplica esta misma
+    // función (Nacionalidad/País → Perú si venían vacíos, etc.) — este es
+    // el punto de partida real contra el que se mide "hay cambios", no
+    // widget.contacto tal como llegó del backend.
+    _snapshotInicial = _construirContacto();
+  }
+
+  void _onCampoDatosChanged() => setState(() {});
+
+  // ── Detección de cambios ────────────────────────────────────────────────
+
+  bool get _hayCambios {
+    if (_snapshotInicial == null) return false;
+    return _construirContacto() != _snapshotInicial;
   }
 
   @override
   void dispose() {
+    _linkedinCtrl.removeListener(_onCampoDatosChanged);
+    _numeroDocumentoCtrl.removeListener(_onCampoDatosChanged);
+    _nombreCtrl.removeListener(_onCampoDatosChanged);
+    _apellidoPaternoCtrl.removeListener(_onCampoDatosChanged);
+    _apellidoMaternoCtrl.removeListener(_onCampoDatosChanged);
+    _direccionCtrl.removeListener(_onCampoDatosChanged);
     _linkedinCtrl.dispose();
     _numeroDocumentoCtrl.dispose();
     _nombreCtrl.dispose();
@@ -460,7 +501,7 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
       prefijoContacto: _saludo ?? '',
       linkedin: _linkedinCtrl.text.trim(),
       idTipoDocumento: _tipoDocumento?.id ?? '',
-      numeroDocumento: _numeroDocumentoCtrl.text.trim(),
+      numeroDocumento: _mayus(_numeroDocumentoCtrl.text),
       idNacionalidad: _nacionalidad?.id ?? '',
       nombre: _mayus(_nombreCtrl.text),
       apellidoPaterno: _mayus(_apellidoPaternoCtrl.text),
@@ -501,8 +542,13 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
               ruc: r.rucCtrl.text.trim(),
               razonSocial: _mayus(r.razonSocialCtrl.text),
               direccion: _mayus(r.direccionCtrl.text),
-              area: r.area,
-              cargo: r.cargo,
+              // Área/Cargo son CustomComboSearchField (texto libre vía
+              // allowFreeText, ver contacto_form_rows.dart) — ese widget no
+              // tiene un equivalente a isUpperCase:true, así que acá se
+              // fuerza igual que el resto de texto libre, aunque no haya
+              // feedback visual mientras se tipea.
+              area: _mayus(r.area),
+              cargo: _mayus(r.cargo),
               idDepartamento: r.departamento?.dpto ?? '',
               idProvincia: r.provincia?.prov ?? '',
               idDistrito: r.distrito?.dis ?? '',
@@ -513,7 +559,7 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
   }
 
   Future<void> _guardar() async {
-    if (_isLoading) return;
+    if (_isLoading || !_hayCambios) return;
     setState(() => _autovalidar = true);
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -722,6 +768,7 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
               onCancelar: () => context.goBack(),
               onGuardar: _guardar,
               isLoading: _isLoading || _mostrandoExito,
+              isEnabled: _hayCambios,
               iconoGuardar: AppIcons.save,
               textoGuardar: 'Guardar cambios',
             ),

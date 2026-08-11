@@ -22,16 +22,21 @@ Backend → SignalR hub
 **Supresión foreground:**
 - `MENSAJE_WHATSAPP` se suprime si el usuario está en `AppRoutes.chats` o en el chat específico (`activeLeadId == leadId`, sigue siendo id de lead — no confundir con el `idNumero` que agrupa la notificación).
 - `NUEVO_LEAD` se suprime si el usuario está en `AppRoutes.seguimiento`.
-- `NUEVO_LEAD_BOT` nunca se suprime — siempre se muestra.
+- `NUEVO_LEAD_BOT` nunca se suprime por ruta activa — pero sí se filtra por destinatario, ver abajo.
 
-**Filtro por destinatario (`NotificationHandler._parseWhatsApp`, 2026-07-31):** `MENSAJE_WHATSAPP`
-solo se muestra si `codAsesor` (payload) coincide con `SessionService().codUser` — un asesor o
-supervisor con la app abierta nunca debe ver el push del chat de otro asesor. `NUEVO_LEAD_BOT` no
-tiene este filtro — sí debe llegarle tanto al asesor asignado como a su supervisor (el backend en
-`GS1Peru-SocketCore` ya replica esta misma regla del lado FCM con `incluirSupervisores`, ver
-`FcmService.EnviarAsync` — ese repo es el dueño real de a quién le llega el push cuando la app está
-cerrada; este filtro de acá cubre el caso con la app abierta, donde el broadcast de SignalR llega
-sin distinción de destinatario a todos los conectados).
+**Filtro por destinatario (`NotificationHandler._parseWhatsApp`/`_parseLeadBot`):**
+`MENSAJE_WHATSAPP` (2026-07-31) solo se muestra si `codAsesor` (payload) coincide con
+`SessionService().codUser` — un asesor o supervisor con la app abierta nunca debe ver el push del
+chat de otro asesor.
+`NUEVO_LEAD_BOT` (2026-08-11, bug real detectado en vivo — un asesor sin ninguna relación con el
+lead veía "Se derivó una conversación al asesor X" de otro asesor) también filtra ahora: solo se
+muestra si `payload.codAsesor == SessionService().codUser` (soy el asesor asignado) **o**
+`SessionService().isModerador` (soy supervisor). Antes no tenía ningún filtro acá porque se asumía
+que el backend (`GS1Peru-SocketCore`, `FcmService.EnviarAsync` con `incluirSupervisores`) ya
+restringía quién lo recibe — cierto para el push FCM con la app cerrada, pero el broadcast de
+SignalR en foreground llega sin distinción de destinatario a **todos** los conectados, no solo al
+asesor asignado y su supervisor. Este filtro de acá cubre justo ese caso (app abierta); el backend
+sigue siendo el dueño real del filtrado cuando la app está cerrada.
 
 ---
 

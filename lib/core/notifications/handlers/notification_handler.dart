@@ -85,6 +85,21 @@ class NotificationHandler {
   // ignore: unused_element — se dispara como side-effect; retorna null intencionalmente
   AppNotification? _parseLeadBot(WebSocketMessage message) {
     if (message.records.isEmpty) return null;
+
+    // A diferencia del push FCM (backend, incluirSupervisores en
+    // FcmService.EnviarAsync — filtra el destinatario del lado del
+    // servidor), este mensaje llega por el broadcast de SignalR SIN
+    // distinción de destinatario a todos los conectados. Sin este filtro,
+    // cualquier asesor con la app abierta veía la derivación de leads
+    // ajenos (bug real detectado en vivo 2026-08-11). Solo debe verla el
+    // asesor asignado o un moderador (supervisor).
+    final payload = NuevoLeadBotPayload.fromMessage(message);
+    if (payload != null &&
+        payload.codAsesor != SessionService().codUser &&
+        !SessionService().isModerador) {
+      return null;
+    }
+
     // fire-and-forget: showLeadNuevoBotNotification es async pero no necesitamos await aquí
     LocalNotificationService.instance.showLeadNuevoBotNotification(message);
     return null;

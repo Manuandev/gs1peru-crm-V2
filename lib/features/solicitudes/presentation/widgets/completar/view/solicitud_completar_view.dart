@@ -92,10 +92,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
   String _sexoId = '';
-  // Id del CargoItem elegido (catálogo real, CatalogsBloc.cargos) — nuevo
-  // 2026-07-30, ver DatosSolicitante.cargoId. El label sigue viviendo en
-  // _ctrlCargo (controller), como el resto de campos de texto de este paso.
-  String _cargoId = '';
 
   // Controladores — Datos del solicitante
   final _ctrlNumDoc = TextEditingController();
@@ -406,10 +402,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                             setState(() => _sexoId = item?.id ?? '');
                             _sincronizarCubit();
                           },
-                          onCargoChanged: (id) {
-                            setState(() => _cargoId = id);
-                            _sincronizarCubit();
-                          },
+                          onCargoChanged: _sincronizarCubit,
                           onBuscarDocumento: _buscarDocumentoSolicitante,
                         ),
                         if (tipoPersona == 'juridica') ...[

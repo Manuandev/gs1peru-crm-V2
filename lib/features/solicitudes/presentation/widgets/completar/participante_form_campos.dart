@@ -259,10 +259,11 @@ class CampoCargoParticipante extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Mismo catálogo/widget que Datos del solicitante (paso 1) y
-    // lead/EditContacto. Guarda id + descripción (el padre resuelve ambos
-    // desde el ComboItem). Texto libre (allowFreeText, 2026-08-04) — si el
-    // cargo no está en el catálogo, tipearlo y confirmar con el check del
-    // teclado lo guarda tal cual.
+    // lead/EditContacto — solo como sugerencia, siempre se guarda como texto
+    // libre (`item.descripcion`, nunca `item.id`). Texto libre (allowFreeText,
+    // 2026-08-04) — si el cargo no está en el catálogo, tipearlo lo guarda
+    // tal cual, sin necesidad de confirmar con el check del teclado
+    // (2026-08-12, ver core/CLAUDE.md → CustomComboSearchField).
     return CustomComboSearchField(
       data: cargos
           .map((c) => '${c.id}${AppConstants.sepCampos}${c.nombre}')

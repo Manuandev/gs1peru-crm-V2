@@ -14,11 +14,6 @@ class ParticipanteLocal extends Equatable {
   final String apellidoMaterno;
   final String correo;
   final String cargo;
-  // Id real del CargoItem elegido en el combo (CatalogsBloc.cargos) — nuevo
-  // 2026-07-30, mismo motivo/mismo patrón que DatosSolicitante.cargoId (ver
-  // solicitudes/CLAUDE.md). `cargo` sigue siendo la descripción para mostrar
-  // en las cards/Resumen sin resolver contra el catálogo en cada lugar.
-  final String cargoId;
   final String celular;
   final String celularCodigoTelefono;
   final String tipoParticipante;
@@ -40,7 +35,6 @@ class ParticipanteLocal extends Equatable {
     required this.apellidoMaterno,
     required this.correo,
     required this.cargo,
-    this.cargoId = '',
     required this.celular,
     this.celularCodigoTelefono = '',
     required this.tipoParticipante,
@@ -68,7 +62,6 @@ class ParticipanteLocal extends Equatable {
     String? apellidoMaterno,
     String? correo,
     String? cargo,
-    String? cargoId,
     String? celular,
     String? celularCodigoTelefono,
     String? tipoParticipante,
@@ -87,7 +80,6 @@ class ParticipanteLocal extends Equatable {
       apellidoMaterno: apellidoMaterno ?? this.apellidoMaterno,
       correo: correo ?? this.correo,
       cargo: cargo ?? this.cargo,
-      cargoId: cargoId ?? this.cargoId,
       celular: celular ?? this.celular,
       celularCodigoTelefono:
           celularCodigoTelefono ?? this.celularCodigoTelefono,
@@ -114,7 +106,6 @@ class ParticipanteLocal extends Equatable {
     apellidoMaterno,
     correo,
     cargo,
-    cargoId,
     celular,
     celularCodigoTelefono,
     tipoParticipante,

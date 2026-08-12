@@ -184,11 +184,10 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       final nacionalidad = nacionalidades
           .where((n) => n.id == detalle.nacionalidadId)
           .firstOrNull;
-      // Desde el 2026-07-30 detalle.cargo trae el id del CargoItem elegido
-      // (antes era texto libre) — si matchea, resuelve la descripción real;
-      // si no (solicitud vieja guardada antes de este cambio, o el
-      // prellenado desde negociación que nunca tuvo id), cae a mostrar el
-      // valor crudo tal cual, mismo fallback de siempre.
+      // Cargo vuelve a guardarse siempre como texto libre (2026-08-12) — este
+      // match por id solo cubre solicitudes guardadas entre el 2026-07-30 y
+      // ahora, cuando sí se guardaba el id del catálogo; si no matchea (texto
+      // libre, de antes o de ahora), cae a mostrar el valor crudo tal cual.
       final cargo = cargos.where((c) => c.id == detalle.cargo).firstOrNull;
       final cargoLabel = cargo?.nombre ?? detalle.cargo;
       final canal = detalle.canalId.isEmpty
@@ -230,7 +229,6 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       _ctrlNombres.text = detalle.nombres;
       _ctrlApellidoPaterno.text = detalle.apellidoPaterno;
       _ctrlApellidoMaterno.text = detalle.apellidoMaterno;
-      _cargoId = cargo?.id ?? '';
       _ctrlCargo.text = cargoLabel;
       _ctrlCelular.text = detalle.celular;
       _ctrlCorreo.text = detalle.correo;
@@ -249,7 +247,6 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
         apellidoPaterno: detalle.apellidoPaterno,
         apellidoMaterno: detalle.apellidoMaterno,
         cargo: cargoLabel,
-        cargoId: _cargoId,
         celular: detalle.celular,
         correo: detalle.correo,
         canalId: canal?.id,
@@ -365,9 +362,9 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
         final nacionalidadP = nacionalidades
             .where((n) => n.id == p.nacionalidadId)
             .firstOrNull;
-        // Mismo criterio que el cargo del solicitante (arriba) — p.cargo
-        // ahora trae el id del CargoItem (2026-07-30); si no matchea (dato
-        // viejo, texto libre), se muestra tal cual.
+        // Mismo criterio que el cargo del solicitante (arriba) — solo cubre
+        // participantes guardados entre el 2026-07-30 y ahora, cuando p.cargo
+        // sí traía el id del CargoItem; si no matchea, se muestra tal cual.
         final cargoP = cargos.where((c) => c.id == p.cargo).firstOrNull;
         return ParticipanteLocal(
           id: int.tryParse(p.id) ?? 0,
@@ -381,7 +378,6 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           apellidoMaterno: p.apellidoMaterno,
           correo: p.correo,
           cargo: cargoP?.nombre ?? p.cargo,
-          cargoId: cargoP?.id ?? '',
           celular: p.celular,
           tipoParticipante: p.tipoParticipante,
           importe: p.importe,

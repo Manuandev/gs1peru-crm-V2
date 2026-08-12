@@ -60,10 +60,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
   String? _nacionalidadInicialId;
-  // Id del CargoItem elegido (catálogo real) — nuevo 2026-07-30, ver
-  // ParticipanteLocal.cargoId. Sembrado desde el participante ya guardado
-  // (edición) en initState, igual que tipoDocId/nacionalidadId.
-  String _cargoId = '';
   late String _tipoParticipante;
   PaisItem? _paisSeleccionado;
 
@@ -94,7 +90,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     _nacionalidadInicialId = _nacionalidadId.isNotEmpty
         ? _nacionalidadId
         : null;
-    _cargoId = p?.cargoId ?? '';
 
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is CatalogsLoaded) {
@@ -225,7 +220,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
       // dart._mayus()/solicitud_facturacion_view.dart._mayus() (2026-08-04).
       correo: _correoCtrl.text.trim().toUpperCase(),
       cargo: _cargoCtrl.text.trim().toUpperCase(),
-      cargoId: _cargoId,
       celular: _celularCtrl.text.trim(),
       celularCodigoTelefono: _paisSeleccionado?.codigoTelefono ?? '',
       tipoParticipante: _tipoParticipante,
@@ -427,7 +421,6 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             cargos: cargos,
                             cargoInicialTexto: _cargoCtrl.text,
                             onCargoChanged: (item) => setState(() {
-                              _cargoId = item?.id ?? '';
                               _cargoCtrl.text = item?.descripcion ?? '';
                             }),
                           ),

@@ -669,6 +669,22 @@ su lugar (sin id no matcheado, con texto libre confirmado sí). Los usos existen
 así que no cambiaron de comportamiento — este ajuste solo importa para un combo con texto libre
 que además sea obligatorio.
 
+**`allowFreeText: true` sincroniza en vivo, no solo al confirmar (2026-08-12)** — antes,
+`widget.onChanged` solo se disparaba al tocar una sugerencia de la lista (`onSelected`) o al
+presionar el check ✓ del teclado (`onFieldSubmitted` → `_commitFreeText`). Bug real reportado en
+Cargo de `solicitudes/`: si el asesor seleccionaba una sugerencia y le agregaba una letra más sin
+presionar ese check (ej. tocando directo el botón "Siguiente"/"Guardar" del formulario), esa
+edición nunca llegaba al padre — el valor guardado seguía siendo el de la sugerencia original,
+sin la letra agregada. Corregido con un listener sobre el `TextEditingController` interno del
+`Autocomplete` (capturado una sola vez por instancia real de controller —
+`fieldViewBuilder` se reconstruye en cada build, hay que evitar engancharlo de nuevo cada vez) —
+`_syncFreeText(text)` corre en cada tecla, resolviendo match/texto libre igual que
+`_commitFreeText`, pero sin cerrar el teclado (eso sigue siendo exclusivo de confirmar con el
+check o tocar una sugerencia). Efecto: lo que esté escrito en el campo en el momento de
+guardar ya es lo que se manda, sin depender de que el asesor presione el check. Aplica a
+cualquier uso de `allowFreeText: true` — Cargo de `solicitudes/` y Área/Cargo de
+`lead/EditContacto` por igual, mismo widget.
+
 ### CustomComboMultiField
 Combo multi-selección con chips. Abre diálogo con checkboxes.
 ```dart

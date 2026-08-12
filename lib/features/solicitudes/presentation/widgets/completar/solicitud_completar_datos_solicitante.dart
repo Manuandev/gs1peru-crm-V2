@@ -24,17 +24,13 @@ class SeccionDatosSolicitante extends StatefulWidget {
   final String? tipoDocInicialId;
   final String? nacionalidadInicialId;
   final String? sexoInicialId;
-  // Combo de Cargo con texto libre (allowFreeText, 2026-08-04) — si el cargo
-  // buscado no está en el catálogo, tipearlo y confirmar con el check del
-  // teclado lo guarda tal cual (mismo patrón que Área/Cargo en
-  // lead/EditContacto, ver core/CLAUDE.md → CustomComboSearchField). El
-  // callback entrega el id del catálogo si matcheó, o '' si es texto libre —
-  // el padre guarda ese id (DatosSolicitante.cargoId) y escribe la
-  // descripción en widget.ctrlCargo por su cuenta.
   final ValueChanged<TipoDocumentoItem?>? onTipoDocChanged;
   final ValueChanged<NacionalidadItem?>? onNacionalidadChanged;
   final ValueChanged<SexoItem?>? onSexoChanged;
-  final ValueChanged<String>? onCargoChanged;
+  // Solo notifica que ctrlCargo.text cambió (ya escrito por este widget) —
+  // el padre lo usa para re-sincronizar el cubit, mismo patrón que el resto
+  // de campos de este paso.
+  final VoidCallback? onCargoChanged;
   // Autocompletado por documento (Clientes/BuscarDocumento) — se dispara al
   // perder foco o al presionar el check del teclado en Número documento. El
   // indicador de carga es un overlay de pantalla completa que arma el padre
@@ -260,11 +256,11 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Cargo — combo con búsqueda (CargoItem, DBO.SYSMCARGO01), mismo
-        // catálogo y mismo widget que ya usa lead/EditContacto (sección
-        // Empresa). Guarda id (DatosSolicitante.cargoId, 2026-07-30) +
-        // descripción (widget.ctrlCargo, para mostrar sin resolver contra
-        // el catálogo en Resumen/Detalle) — ver solicitudes/CLAUDE.md.
+        // Cargo — combo con búsqueda (CargoItem, DBO.SYSMCARGO01), solo como
+        // sugerencia — se guarda siempre como texto libre (nunca el id de
+        // catálogo, 2026-08-12), mismo criterio que Área/Cargo en
+        // lead/EditContacto. `allowFreeText` deja escribir cualquier cosa
+        // que no matchee el catálogo y confirmarla igual.
         CustomComboSearchField(
           data: cargos
               .map((c) => '${c.id}${AppConstants.sepCampos}${c.nombre}')
@@ -275,7 +271,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
           initialText: widget.ctrlCargo.text,
           onChanged: (item) {
             widget.ctrlCargo.text = item?.descripcion ?? '';
-            widget.onCargoChanged?.call(item?.id ?? '');
+            widget.onCargoChanged?.call();
           },
           validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
         ),

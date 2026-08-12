@@ -103,7 +103,6 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
       apellidoPaterno: _mayus(_ctrlApellidoPaterno.text),
       apellidoMaterno: _mayus(_ctrlApellidoMaterno.text),
       cargo: _mayus(_ctrlCargo.text),
-      cargoId: _cargoId,
       celular: _ctrlCelular.text,
       celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
       correo: _mayus(_ctrlCorreo.text),

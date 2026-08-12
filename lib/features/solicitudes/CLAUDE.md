@@ -1,5 +1,33 @@
 # Solicitudes Feature
 
+## Cargo vuelve a guardarse como texto libre — revierte el id de catálogo (2026-08-12)
+Pedido explícito del usuario: **revierte** "Cargo se guarda por id..." (2026-07-30, más abajo) —
+Cargo (Datos del solicitante paso 1 y Nuevo/Editar participante) ya no manda `cargoId` al
+backend, solo el texto (`DatosSolicitante.cargo`/`ParticipanteLocal.cargo`), sin importar si
+matcheó una opción real del catálogo (`CargoItem`) o es texto libre tipeado a mano.
+
+- **`cargoId` se eliminó por completo** — `DatosSolicitante.cargoId`/`ParticipanteLocal.cargoId`
+  (con sus `copyWith`/`props`), `_cargoId` (`solicitud_completar_view.dart`,
+  `participante_form_sheet.dart`), y el fallback `cargoId.isNotEmpty ? cargoId : cargo` en
+  `SolicitudRemoteDatasource.guardarSolicitud()` (`CARGO_SOL`/`CARGO` ahora mandan `cargo`
+  directo, siempre). `SeccionDatosSolicitante.onCargoChanged` pasó de `ValueChanged<String>`
+  (el id) a `VoidCallback` — el combo ya escribe la descripción en `widget.ctrlCargo` por su
+  cuenta, el callback solo avisa al padre que re-sincronice el cubit (`_sincronizarCubit`, mismo
+  patrón que el resto de campos del paso).
+- **Al releer una solicitud ya guardada** (`_cargarDetalle()`, `solicitud_completar_view_carga.
+  dart`), el match `cargos.where((c) => c.id == detalle.cargo)` **se mantiene, no se quitó** —
+  sigue siendo necesario como compatibilidad hacia atrás para solicitudes guardadas entre el
+  2026-07-30 y el 2026-08-12, que sí tienen el id de catálogo guardado en la columna; si matchea,
+  resuelve el nombre real, si no (texto libre, de antes o de ahora) muestra el valor crudo tal
+  cual — mismo fallback de siempre, no un caso nuevo.
+- **Motivo real, dado por el usuario**: el combo (`CustomComboSearchField(allowFreeText: true)`)
+  solo confirmaba el texto tipeado hacia el padre al presionar el check ✓ del teclado
+  (`onFieldSubmitted`) — si el asesor seleccionaba una sugerencia y le agregaba una letra más sin
+  presionar ese check (ej. tocando directo el botón "Siguiente"/"Guardar"), esa edición se
+  perdía silenciosamente. Corregido en el widget compartido — ver `core/CLAUDE.md` →
+  `CustomComboSearchField`, "sincroniza en vivo con `allowFreeText`" — beneficia también a
+  Área/Cargo de `lead/EditContacto`, mismo widget, mismo gap.
+
 ## Bug real — "Importe total" no calzaba con la suma literal de Inversión + IGV mostradas (2026-08-05)
 Encontrado por el usuario justo al probar el revert de arriba: con Inversión **7627.12** e IGV
 **1372.88** (ambos ya mostrados en pantalla), "Importe total" mostraba **9000.01** — un centavo

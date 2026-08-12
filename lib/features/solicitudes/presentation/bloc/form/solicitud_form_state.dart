@@ -13,15 +13,6 @@ class DatosSolicitante extends Equatable {
   final String apellidoPaterno;
   final String apellidoMaterno;
   final String cargo;
-  // Id real del CargoItem elegido en el combo (CatalogsBloc.cargos) — nuevo
-  // 2026-07-30, pedido de negocio ("que se guarde el ID"). `cargo` sigue
-  // siendo la descripción (label), se mantiene para mostrar en Resumen/
-  // Detalle sin tener que resolver el id contra el catálogo en cada lugar.
-  // Puede quedar vacío aunque `cargo` no lo esté (ej. prellenado desde la
-  // negociación de origen, que trae solo texto libre sin id de catálogo) —
-  // en ese caso el guardado cae a mandar `cargo` como antes, ver
-  // solicitud_remote_datasource.dart.
-  final String cargoId;
   final String celular;
   final String celularCodigoTelefono;
   final String correo;
@@ -45,7 +36,6 @@ class DatosSolicitante extends Equatable {
     required this.apellidoPaterno,
     required this.apellidoMaterno,
     required this.cargo,
-    this.cargoId = '',
     required this.celular,
     this.celularCodigoTelefono = '',
     required this.correo,
@@ -88,7 +78,6 @@ class DatosSolicitante extends Equatable {
     apellidoPaterno,
     apellidoMaterno,
     cargo,
-    cargoId,
     celular,
     celularCodigoTelefono,
     correo,

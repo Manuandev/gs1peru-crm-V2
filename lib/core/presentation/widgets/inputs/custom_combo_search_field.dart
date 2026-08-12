@@ -54,6 +54,11 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
   // y cerrar el teclado al tocar una coincidencia de la lista (2026-07-22).
   // Antes el foco se quedaba en el campo tras elegir una opción.
   FocusNode? _fieldFocusNode;
+  // Controller del TextFormField interno de Autocomplete, capturado para
+  // engancharle un listener una sola vez (2026-08-12, ver _syncFreeText) —
+  // fieldViewBuilder se vuelve a llamar en cada build, así que hay que evitar
+  // agregar un listener duplicado por cada rebuild.
+  TextEditingController? _boundController;
 
   @override
   void initState() {
@@ -77,7 +82,15 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
   // Confirma el texto tipeado como selección — matchea contra el catálogo
   // (sin distinguir mayúsculas) si existe, si no lo manda tal cual como
   // texto libre (id vacío). Solo se llama con [allowFreeText] activo.
-  void _commitFreeText(String text) {
+  //
+  // Se dispara en 2 momentos (2026-08-12): en vivo, con cada tecla (vía el
+  // listener de _boundController, ver fieldViewBuilder) — así lo que esté
+  // escrito en el campo en el momento de "Guardar"/"Siguiente" ya es lo que
+  // se guarda, sin depender de que el usuario presione el check del teclado
+  // (ej. seleccionó una sugerencia y le agregó una letra más sin confirmar) —
+  // y al confirmar con el check (onFieldSubmitted → _commitFreeText), que
+  // además cierra el teclado.
+  void _syncFreeText(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) {
       if (_selected != null) {
@@ -90,8 +103,15 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
         .where((e) => _display(e).toLowerCase() == trimmed.toLowerCase())
         .firstOrNull;
     final item = match ?? ComboItem(id: '', descripcion: trimmed);
+    final sinCambios =
+        _selected?.id == item.id && _selected?.descripcion == item.descripcion;
+    if (sinCambios) return;
     _selected = item;
     widget.onChanged?.call(item);
+  }
+
+  void _commitFreeText(String text) {
+    _syncFreeText(text);
     _fieldFocusNode?.unfocus();
   }
 
@@ -223,6 +243,10 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
       },
       fieldViewBuilder: (context, controller, focusNode, _) {
         _fieldFocusNode = focusNode;
+        if (widget.allowFreeText && _boundController != controller) {
+          _boundController = controller;
+          controller.addListener(() => _syncFreeText(controller.text));
+        }
         return TextFormField(
           controller: controller,
           focusNode: focusNode,

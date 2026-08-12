@@ -1,5 +1,62 @@
 # Solicitudes Feature
 
+## Bug real — "Siguiente" volvía a guardar aunque no se hubiera tocado nada al editar una solicitud existente (2026-08-12)
+Reportado por el usuario probando en vivo: entra a editar una solicitud ya guardada, presiona
+"Siguiente" en el paso 1 sin cambiar ningún campo, y el wizard igual dispara un guardado real
+(spinner de `AppProcessOverlay`, llamada al backend) — el mecanismo que debía evitar esto
+(`SolicitudFormState.huboCambios`, ver "'huboCambios' pasó de flag booleano a comparación real de
+contenido" más abajo) nunca detectaba "sin cambios".
+
+- **Causa**: `_cargarDetalle()` (`solicitud_completar_view_carga.dart`) armaba el snapshot
+  `solicitanteCargado` con un `DatosSolicitante(...)` construido **a mano**, en paralelo a
+  `_construirDatosSolicitante()` (la función real que arma el payload en cada "Siguiente",
+  `solicitud_completar_view_guardado.dart`) — dos caminos separados para el mismo objeto, que se
+  fueron desincronizando con el tiempo sin que nadie lo notara (no hay ningún check que obligue a
+  mantenerlos iguales). Dos gaps concretos encontrados:
+  1. **`celularCodigoTelefono` nunca se seteaba** en el snapshot cargado (quedaba en `''`, el
+     default del constructor) — pero `_construirDatosSolicitante(paisCelular)` **siempre** lo
+     resuelve desde `paisCelular?.codigoTelefono` (el `PaisItem` del selector de celular, que
+     cuando `_paisCelular` es `null` cae a un fallback que default a Perú, ver `build()`). El
+     backend (task `'DT'`) no trae este código para el solicitante en absoluto — no hay ningún
+     valor "real" que restaurar, así que la comparación estaba condenada a fallar siempre que
+     `_paisCelular` resolviera a algo no vacío (prácticamente siempre).
+  2. **Sin `_mayus()`** — el snapshot cargado usaba `detalle.nombres`/`apellidoPaterno`/
+     `apellidoMaterno`/`correo`/`razonSocial`/`cargoLabel` tal cual vienen del backend, mientras
+     `_construirDatosSolicitante()` les aplica `_mayus()` (mayúsculas + trim) a todos. Con datos
+     ya guardados en mayúsculas es un no-op (no se notaba en la práctica), pero cualquier dato
+     con espacios extra o casing mixto habría fallado la comparación igual.
+  - **Mismo gap exacto en Facturación** (`DatosFacturacion` armado en el mismo método,
+    `if (!detalle.sinFacturacion)`) y en **Participantes** (`ParticipanteLocal` armado en
+    `detalle.participantes.map(...)`, mismo archivo) — ninguno de los 3 snapseaba
+    `celularCodigoTelefono`, mismo motivo (el backend no lo trae para ninguno de los 3). El de
+    Facturación tiene el mismo efecto que el del solicitante (huboCambios siempre `true` al
+    editar); el de Participantes es más acotado — como `ParticipantesCubit.cargarParticipantes()`
+    siembra `participantes`/`participantesCargado` con la MISMA lista, el gap ahí solo se nota si
+    el asesor abre "Editar" sobre un participante ya guardado y presiona "Guardar" sin tocar nada
+    (`participante_form_sheet.dart._guardar()` sí resuelve `_paisSeleccionado` a Perú al construir
+    el resultado, quedando distinto del `''` cargado).
+- **Fix — solicitante**: en vez de seguir manteniendo 2 construcciones del mismo objeto, `_cargar
+  Detalle()` ahora llama **directo** a `_construirDatosSolicitante(_paisCelular)` (misma función
+  que usa "Siguiente") para armar el snapshot cargado — con todos los controllers/campos del
+  State ya sembrados en ese punto del método, es seguro reusarla, y de raíz ya no puede volver a
+  desincronizarse (una sola fuente de verdad). Antes de esta llamada se resuelve
+  `paisDefectoCelular` (`paises.where((p) => p.id == valoresDefecto.idPais).firstOrNull ?? paises.
+  first`, mismo fallback que ya usaba `build()`) y se siembra en `_paisCelular` — así el valor que
+  ve el selector de celular al entrar a editar y el que arma el snapshot son consistentes entre
+  sí, sin importar que el backend no traiga nada real que restaurar ahí.
+- **Fix — Facturación y Participantes**: no se pudo aplicar el mismo "reusar la función real"
+  (`_construirDatosFacturacion()` vive en el State de `SolicitudFacturacionView`, una pantalla
+  que puede no estar construida todavía cuando se carga el paso 1) — se agregó
+  `celularCodigoTelefono: paisDefectoCelular?.codigoTelefono ?? ''` directo en ambas
+  construcciones manuales, mismo valor que ya resuelve el solicitante. Para Facturación esto
+  además hace que `_SolicitudFacturacionViewState._restaurarPaso()` (que ya sabía leer
+  `datos.celularCodigoTelefono` para resolver `_paisCelular` — código que nunca se ejercía porque
+  nunca recibía un valor no vacío) empiece a funcionar de una vez, sin tocar ese archivo.
+- **No se tocó** el resto de `_cargarDetalle()` (resolución de catálogos, Ubigeo, archivos
+  existentes, `idLeadOrigen`) ni `_construirDatosSolicitante()`/`_construirDatosFacturacion()`
+  en sí — el bug era exclusivamente la segunda construcción manual desincronizada, no el cálculo
+  real que usan los botones.
+
 ## Bug real — el importe del participante-solicitante se re-pisaba en cada "Siguiente", rompiendo la suma exacta contra la negociación (2026-08-12)
 Reportado por el usuario con un caso real: negociación con `cantidadEsperada: 2` y
 `precioTotalLead: 6000` — con 1 participante el footer mostraba **3000.00** (correcto), pero al

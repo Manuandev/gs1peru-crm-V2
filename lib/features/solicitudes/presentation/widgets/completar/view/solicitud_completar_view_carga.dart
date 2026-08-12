@@ -254,6 +254,25 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           ? catalogState.valoresDefecto
           : const ValoresCRMItem();
 
+      // Código telefónico del celular — el backend (task 'DT') NO trae este
+      // dato ni para el solicitante ni para facturación (solo el número,
+      // `detalle.celular`/`facCelular`), así que no hay ningún valor "real"
+      // que restaurar — el mismo criterio de siempre (Perú por defecto,
+      // `valoresDefecto.idPais`) se resuelve acá, UNA sola vez, y se siembra
+      // en los 2 snapshots de abajo. Bug real corregido, 2026-08-12:
+      // antes este campo se dejaba sin setear en ambos snapshots (quedaba
+      // en '' por default del constructor) mientras que `_construirDatos
+      // Solicitante()`/`_construirDatosFacturacion()` (llamados en CADA
+      // "Siguiente") siempre lo resuelven a Perú vía el mismo fallback que
+      // ya usa build() — la comparación `solicitante != solicitanteCargado`/
+      // `facturacion != facturacionCargado` (`SolicitudFormState.huboCambios`)
+      // nunca daba igual, así que "Siguiente" disparaba un guardado real
+      // aunque el asesor no hubiera tocado nada.
+      final paisDefectoCelular =
+          paises.where((p) => p.id == valoresDefecto.idPais).firstOrNull ??
+          (paises.isEmpty ? null : paises.first);
+      _paisCelular = paisDefectoCelular;
+
       final tipoDoc = tiposDocumento
           .where((t) => t.id == detalle.tipoDocId)
           .firstOrNull;
@@ -324,28 +343,20 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       _ultimoRucBuscado = detalle.ruc;
       _ctrlRazonSocial.text = detalle.razonSocial;
 
-      final datosSolicitante = DatosSolicitante(
-        tipoDocId: detalle.tipoDocId,
-        tipoDocLabel: _tipoDocLabel,
-        numDoc: numDocSolicitante,
-        nacionalidadId: detalle.nacionalidadId,
-        nacionalidad: _nacionalidadLabel,
-        sexoId: detalle.sexoId,
-        nombres: detalle.nombres,
-        apellidoPaterno: detalle.apellidoPaterno,
-        apellidoMaterno: detalle.apellidoMaterno,
-        cargo: cargoLabel,
-        celular: detalle.celular,
-        correo: detalle.correo,
-        canalId: canal?.id,
-        canalNombre: detalle.canalNombre,
-        ruc: detalle.ruc,
-        razonSocial: detalle.razonSocial,
-        solicitanteEsParticipante: detalle.solicitanteEsParticipante,
-        facturarAlSolicitante: detalle.facturarAlSolicitante,
-        archivoVoucherNombre: _archivoVoucherExistente,
-        archivoOCNombre: _archivoOCExistente,
-      );
+      // Reusa la MISMA función que arma el payload en cada "Siguiente"
+      // (_construirDatosSolicitante, solicitud_completar_view_guardado.dart)
+      // en vez de reconstruir un DatosSolicitante aparte a mano — antes esta
+      // segunda copia se desincronizaba en silencio de la real (le faltaba
+      // `celularCodigoTelefono` por completo y no aplicaba `_mayus()` a
+      // nombres/apellidos/cargo/correo/razón social), así que el snapshot
+      // "cargado" nunca calzaba exacto contra lo que "Siguiente" volvía a
+      // construir — `SolicitudFormState.huboCambios` daba `true` SIEMPRE,
+      // aunque el asesor no tocara nada, disparando un guardado real en
+      // cada "Siguiente". Con una sola función fuente de verdad, este tipo
+      // de desincronización ya no puede volver a pasar (bug real,
+      // 2026-08-12). Todos los controllers/campos que lee ya están
+      // sembrados arriba en este mismo método.
+      final datosSolicitante = _construirDatosSolicitante(_paisCelular);
 
       if (!mounted) return;
       context.read<SolicitudFormCubit>().cambiarTipoPersona(
@@ -436,6 +447,16 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
             apellidoPaterno: esRuc ? '' : detalle.facApellidoPaterno,
             apellidoMaterno: esRuc ? '' : detalle.facApellidoMaterno,
             celular: detalle.facCelular,
+            // El backend tampoco trae este código para facturación (mismo
+            // gap que el solicitante, ver comentario de `paisDefectoCelular`
+            // más arriba) — sin esto, `_SolicitudFacturacionViewState.
+            // _restaurarPaso()` caía a `_paisCelular = null` (su condición
+            // `datos.celularCodigoTelefono.isNotEmpty` nunca se cumplía),
+            // mientras que `_construirDatosFacturacion()` en cada "Siguiente"
+            // del paso 3 sí lo resolvía a Perú — mismo bug real de
+            // "Siguiente sube cambios sin que el asesor toque nada",
+            // replicado acá.
+            celularCodigoTelefono: paisDefectoCelular?.codigoTelefono ?? '',
             correo: detalle.facCorreo,
             direccion: detalle.facDireccion,
             actividadEconomica: '',
@@ -480,6 +501,13 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           correo: p.correo,
           cargo: cargoP?.nombre ?? p.cargo,
           celular: p.celular,
+          // Mismo gap que el solicitante/facturación (arriba) — el backend
+          // tampoco trae este código para cada participante. Sin esto, si
+          // el asesor abre "Editar" sobre un participante ya guardado y
+          // presiona "Guardar" sin tocar nada, `participante_form_sheet.
+          // dart._guardar()` sí lo resuelve a Perú — quedaba distinto del
+          // participante cargado (`''`), marcando un cambio falso.
+          celularCodigoTelefono: paisDefectoCelular?.codigoTelefono ?? '',
           tipoParticipante: p.tipoParticipante,
           importe: p.importe,
           esSolicitante: p.id == detalle.idParticipanteSolicitante,

@@ -449,7 +449,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
             ],
           ),
           if (_buscandoDocSolicitante || _buscandoRuc)
-            const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+            const AppProcessOverlay(
+              status: AppProcessStatus.cargando,
+              loadingMessage: 'Buscando datos del documento...',
+            ),
           SolicitudProgresoOverlay(progreso: _progreso),
         ],
       ),

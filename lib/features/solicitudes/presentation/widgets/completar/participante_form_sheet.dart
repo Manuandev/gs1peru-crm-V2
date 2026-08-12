@@ -192,15 +192,11 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   }
 
   Future<void> _guardar() async {
-    // Red de seguridad — normalmente ya corrió por el blur/check del
-    // teclado en N° documento (ver _onNumDocFocusChange), pero si por lo
-    // que sea no llegó a dispararse (bug real reportado en vivo en
-    // Facturación, mismo patrón acá), "Guardar" terminaba validando con
-    // Nombres/Apellidos todavía vacíos. Idempotente — si el documento ya
-    // se buscó, no repite la llamada.
-    await _buscarDocumento();
-    if (!mounted) return;
-
+    // "Guardar" ya NO dispara _buscarDocumento() por su cuenta (revertido
+    // 2026-08-12, pedido explícito del usuario) — esa búsqueda es exclusiva
+    // del check del teclado / blur de N° documento (ver
+    // _onNumDocFocusChange). "Guardar" solo valida y guarda lo que ya esté
+    // en los controllers en ese momento.
     if (!_formKey.currentState!.validate()) return;
 
     final importe = double.tryParse(_importeCtrl.text.trim()) ?? 0.0;
@@ -452,7 +448,10 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
           ),
         ),
         if (_buscandoDocumento)
-          const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+          const AppProcessOverlay(
+            status: AppProcessStatus.cargando,
+            loadingMessage: 'Buscando datos del documento...',
+          ),
       ],
     );
   }

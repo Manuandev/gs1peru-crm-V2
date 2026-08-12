@@ -127,7 +127,6 @@ export 'presentation/widgets/navigation/exit_on_back_wrapper.dart';
 
 export 'presentation/widgets/app_error_view.dart';
 export 'presentation/widgets/app_loading_view.dart';
-export 'presentation/widgets/app_loading_overlay.dart';
 export 'presentation/widgets/app_process_overlay.dart';
 export 'presentation/widgets/app_empty_view.dart';
 export 'presentation/widgets/app_snackbar.dart';

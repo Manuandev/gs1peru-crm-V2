@@ -1,5 +1,55 @@
 # Solicitudes Feature
 
+## El overlay de "Buscando datos del documento/RUC..." pasó a `AppProcessOverlay` (2026-08-12)
+Pedido explícito del usuario: usar la misma pantalla de carga con marca GS1 (logo con resplandor
++ puntos animados, ya usada para guardar/subir archivos) en vez del spinner genérico que tenía la
+búsqueda de documento/RUC — "la misma en todos lados". Los 3 lugares con overlay propio
+(`solicitud_completar_view.dart` paso 1, `solicitud_facturacion_view.dart` paso 3,
+`participante_form_sheet.dart`) pasaron de `AppLoadingOverlay(message: ...)` a
+`AppProcessOverlay(status: AppProcessStatus.cargando, loadingMessage: ...)` — solo el estado
+"cargando", nunca transiciona a "éxito" (una búsqueda de autocompletado no tiene nada que
+confirmar con un check, a diferencia de un guardado). Mismo cambio aplicado de paso en `lead/`
+(`EditContacto`/`EditContactoSimple`, mismo patrón de búsqueda) para que sea consistente en toda
+la app, no solo acá — ver `core/CLAUDE.md` → `AppProcessOverlay`, sección "Búsquedas cortas...".
+`AppLoadingOverlay` quedó sin ningún uso real en el proyecto tras este cambio — se eliminó el
+widget (`core/presentation/widgets/app_loading_overlay.dart`) y su export en `index_core.dart`.
+Si se agrega una búsqueda nueva en este feature, usar `AppProcessOverlay` directo — no
+reintroducir `AppLoadingOverlay` ni un spinner propio.
+
+## Revert — "Siguiente"/"Guardar" ya no dispara la búsqueda de documento por su cuenta (2026-08-12)
+Pedido explícito del usuario, revierte el mecanismo de "red de seguridad" que agregó el
+2026-08-03 (ver "Bug real — 'Siguiente'/'Guardar' validaba antes de que terminara la búsqueda por
+documento" más abajo) en los 3 lugares que lo tenían: paso 1 (`_buscarDocumentoSolicitante()`/
+`_buscarRucComercial()`), Facturación paso 3 (`_buscarDocumento()`) y Nuevo/Editar participante
+(`_buscarDocumento()`). Motivo: el usuario confirmó que en la práctica esa búsqueda **solo**
+debe dispararse al presionar el check del teclado (o perder foco) del campo N° documento/RUC —
+"Siguiente"/"Guardar" tienen que limitarse a validar y guardar lo que ya esté en los
+controllers en ese momento, sin disparar ninguna llamada al backend por su cuenta.
+
+- **`_onContinuar()`** (`solicitud_completar_view_guardado.dart`, paso 1) y
+  **`_onContinuar()`** (`solicitud_facturacion_view.dart`, paso 3) — se quitó el
+  `await _buscarDocumentoSolicitante(); await _buscarRucComercial();`/`await _buscarDocumento();`
+  que corría antes de `setState(() => _autovalidar = true)`/`validate()`. **`_guardar()`**
+  (`participante_form_sheet.dart`) — mismo quite, antes de `_formKey.currentState!.validate()`.
+  Los 3 métodos siguen siendo `Future<void>` (no hizo falta revertir esa firma — `onPressed`
+  sigue aceptando `Future<void> Function()` donde se espera `VoidCallback`, sin cambios ahí).
+- **El mecanismo de búsqueda en sí no se tocó** — `_buscarDocumentoSolicitante()`/
+  `_buscarRucComercial()`/`_buscarDocumento()` (los 3 archivos) siguen exactamente igual,
+  disparados por el `FocusNode` (blur) + `onSubmitted` (check del teclado) de cada campo de
+  documento — solo se quitó el llamado extra que hacían "Siguiente"/"Guardar".
+- **Riesgo aceptado, el mismo que motivó el fix original que se revierte**: si por lo que sea el
+  blur/check del teclado no llega a disparar la búsqueda en algún dispositivo (la causa exacta
+  nunca se pudo diagnosticar, ver la sección de abajo), "Siguiente"/"Guardar" puede volver a
+  validar con Nombres/Apellidos/Razón social vacíos si el asesor nunca disparó la búsqueda a
+  mano. Aceptado explícitamente por el usuario — prefiere ese riesgo a que "Siguiente" dispare
+  una búsqueda no pedida.
+- **No se tocó** `_cargarDetalle()`/`_restaurarDesdeFacturacion()`/`initState()` (siembra de
+  `_ultimoDocSolicitanteBuscado`/`_ultimoRucBuscado`/`_ultimoDocBuscado` al cargar una solicitud
+  ya guardada, ver "'Buscando datos del documento...' aparecía al presionar 'Siguiente'/'Guardar'
+  sobre un documento que no había cambiado" más abajo) — sigue vigente, evita que el overlay de
+  búsqueda aparezca sin razón al revisar/editar una solicitud existente, aunque ya no aplique
+  para este mecanismo en particular (que dejó de llamarse desde "Siguiente"/"Guardar").
+
 ## Seguimiento — el fetch de negociación pasó de 'DT' a un task dedicado 'NEG' (2026-08-12)
 Mismo día, seguimiento del refactor de abajo. Al probarlo en vivo, Tipo/N° documento seguían sin
 llegar — investigando se confirmó (leyendo el `.sql` real de `CSV_LEADS_LST_APP`) que el fix de

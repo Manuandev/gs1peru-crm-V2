@@ -1,5 +1,6 @@
 // lib/core/presentation/widgets/inputs/custom_combo_search_field.dart
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
@@ -118,9 +119,28 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
   @override
   void didUpdateWidget(covariant CustomComboSearchField old) {
     super.didUpdateWidget(old);
-    if (old.data != widget.data || old.separator != widget.separator) {
+    // listEquals (por contenido) en vez de != (por referencia) — con
+    // allowFreeText, el caller típico arma `data` con un .map().toList()
+    // dentro de su propio build() (ej. Cargo en solicitudes/), así que
+    // llega una instancia nueva en CADA rebuild del padre aunque el
+    // contenido no haya cambiado. Comparar por referencia disparaba este
+    // bloque en cualquier rebuild ajeno (ej. el setState de "Siguiente"
+    // que activa _autovalidar justo antes de validate()) — ver más abajo
+    // por qué eso importaba (2026-08-12).
+    if (!listEquals(old.data, widget.data) ||
+        old.separator != widget.separator) {
       _allItems = ComboItem.fromList(widget.data, separator: widget.separator);
-      if (_selected != null && !_allItems.any((e) => e.id == _selected!.id)) {
+      // Solo resetea si `_selected` venía de un id REAL del catálogo que ya
+      // no está en la lista nueva. Con allowFreeText, una selección de
+      // texto libre confirmada tiene `id: ''` a propósito (ver
+      // _syncFreeText) — ningún ítem real del catálogo matchea un id
+      // vacío, así que sin este guard CUALQUIER rebuild del padre borraba
+      // el texto libre ya confirmado (`_selected = null`), y el validator
+      // volvía a marcar "Requerido" pese a que el campo seguía mostrando
+      // el texto tipeado (bug real, Cargo de solicitudes/, 2026-08-12).
+      if (_selected != null &&
+          _selected!.id.isNotEmpty &&
+          !_allItems.any((e) => e.id == _selected!.id)) {
         _selected = null;
       }
     }

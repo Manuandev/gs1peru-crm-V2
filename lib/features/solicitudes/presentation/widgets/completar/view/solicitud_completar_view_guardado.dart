@@ -283,16 +283,11 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
 
     if (_guardando) return;
 
-    // Red de seguridad — normalmente estas búsquedas ya corrieron por el
-    // blur/check del teclado de cada campo (ver FocusNode en
-    // SeccionDatosSolicitante/SeccionInfoComercial), pero si por lo que sea
-    // no llegaron a dispararse (bug real reportado en vivo en Facturación,
-    // mismo patrón acá), "Siguiente" terminaba validando con Nombres/
-    // Apellidos/Razón social todavía vacíos. Ambas son idempotentes — si el
-    // documento/RUC ya se buscó, no repiten la llamada.
-    await _buscarDocumentoSolicitante();
-    await _buscarRucComercial();
-    if (!mounted) return;
+    // "Siguiente" ya NO dispara la búsqueda de documento/RUC por su cuenta
+    // (revertido 2026-08-12, pedido explícito del usuario) — esa búsqueda es
+    // exclusiva del check del teclado / blur del campo (ver FocusNode en
+    // SeccionDatosSolicitante/SeccionInfoComercial). "Siguiente" solo valida
+    // y guarda lo que ya esté en los controllers en ese momento.
 
     // Recién acá se activa la validación en tiempo real (ver _autovalidar) —
     // antes de este primer click ningún campo se marca en rojo por solo

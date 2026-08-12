@@ -775,9 +775,15 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
           ],
         ),
         if (_buscandoDocumento)
-          const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+          const AppProcessOverlay(
+            status: AppProcessStatus.cargando,
+            loadingMessage: 'Buscando datos del documento...',
+          ),
         if (_buscandoRuc)
-          const AppLoadingOverlay(message: 'Buscando datos del RUC...'),
+          const AppProcessOverlay(
+            status: AppProcessStatus.cargando,
+            loadingMessage: 'Buscando datos del RUC...',
+          ),
         // Overlay único "Guardando... → check verde animado" (reusa
         // AppProcessOverlay, core — mismo patrón que EditLeadPortrait/
         // EditContactoSimplePortrait) — antes eran AppLoadingOverlay + un

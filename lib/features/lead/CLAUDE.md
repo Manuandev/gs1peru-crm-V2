@@ -900,9 +900,14 @@ transición visual entre "cargando" y "éxito", no controla temporizadores.
 tenían el patrón viejo `AppLoadingOverlay` + un `_ExitoOverlay`/`_ExitoOverlaySimple` propio,
 idéntico al que tenía `EditLeadPortrait`) — mismo `if (_isLoading || _mostrandoExito)
 AppProcessOverlay(...)`, mismos `_setGuardando()`/`guardandoNotifier` sin tocar. Los overlays de
-`_buscandoDocumento`/`_buscandoRuc` (autocompletado por documento/RUC, ver sección de arriba) NO
-se tocaron — siguen con `AppLoadingOverlay` normal, es un concepto distinto (spinner corto de
-una búsqueda, no el flujo de guardado de 2 pasos).
+`_buscandoDocumento`/`_buscandoRuc` (autocompletado por documento/RUC, ver sección de arriba) en
+ese momento se dejaron con `AppLoadingOverlay` (spinner corto, concepto distinto del flujo de
+guardado de 2 pasos) — **revertido el 2026-08-12**, ver `solicitudes/CLAUDE.md` → "El overlay de
+'Buscando datos del documento/RUC...' pasó a `AppProcessOverlay`": pedido explícito del usuario
+de usar un único overlay de carga (con marca GS1) en toda la app, sin importar el tipo de
+operación — `_buscandoDocumento`/`_buscandoRuc` de `EditContacto`/`EditContactoSimple` ahora
+también usan `AppProcessOverlay(status: AppProcessStatus.cargando, ...)`, sin transicionar nunca
+a `.exito`. `AppLoadingOverlay` se eliminó del proyecto (quedó sin ningún uso real).
 
 ### Causa real (Seguimiento) — InfoLeadCubit compartido se auto-interrumpía al crear
 

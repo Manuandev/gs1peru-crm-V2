@@ -559,9 +559,15 @@ class _EditContactoSimplePortraitState
           ],
         ),
         if (_buscandoDocumento)
-          const AppLoadingOverlay(message: 'Buscando datos del documento...'),
+          const AppProcessOverlay(
+            status: AppProcessStatus.cargando,
+            loadingMessage: 'Buscando datos del documento...',
+          ),
         if (_buscandoRuc)
-          const AppLoadingOverlay(message: 'Buscando datos del RUC...'),
+          const AppProcessOverlay(
+            status: AppProcessStatus.cargando,
+            loadingMessage: 'Buscando datos del RUC...',
+          ),
         // Overlay único "Guardando... → check verde animado" (reusa
         // AppProcessOverlay, core — mismo patrón que EditLeadPortrait) — antes
         // eran AppLoadingOverlay + un check estático propio (_ExitoOverlaySimple,

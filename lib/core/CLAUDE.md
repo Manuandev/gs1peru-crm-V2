@@ -532,33 +532,17 @@ Vista de carga centrada (spinner). Usar en estados de carga de BLoC.
 const AppLoadingView()
 ```
 
-### AppLoadingOverlay
-Overlay de pantalla completa que bloquea toda interacción mientras se espera una operación
-asíncrona (ej. autocompletado por documento) — no reemplaza el contenido como `AppLoadingView`,
-se superpone. Usar dentro de un `Stack`, como último hijo, solo cuando corresponda mostrarlo.
-```dart
-Stack(
-  children: [
-    MiFormulario(),
-    if (_buscando)
-      const AppLoadingOverlay(message: 'Buscando datos del documento...'),
-  ],
-)
-```
-El `Container` con color ya capta el hit-test por sí solo — no hace falta
-`AbsorbPointer`/`IgnorePointer` aparte. Usado en `solicitudes/` (Número documento del
-solicitante, RUC de Información comercial, N° documento del formulario de participante — ver
-`solicitudes/CLAUDE.md` → "Autocompletado por documento").
-
 ### AppProcessOverlay
-Overlay de pantalla completa para operaciones asíncronas de 2 pasos: "Guardando/Subiendo..."
-(anillo girando + logo de la app pulsando, `_LogoCargando`) → check verde animado (éxito), con
+Overlay de pantalla completa para operaciones asíncronas, con marca GS1 (logo con resplandor +
+puntos animados) — **único overlay de carga de toda la app, usar siempre este, nunca un
+`CircularProgressIndicator`/spinner genérico suelto**. Dos estados: `AppProcessStatus.cargando`
+("Guardando/Subiendo/Buscando..." — logo pulsando) y `.exito` (check verde animado), con
 transición animada entre ambos (`AnimatedSwitcher` + scale/fade). Generaliza el patrón "loading
 card → check card" que antes se repetía a mano por pantalla (ver `lead/CLAUDE.md` →
 `EditLeadPortrait`, primer caller real, agregado 2026-08-03) — pensado para cualquier flujo con
-el mismo patrón: guardar formularios, subir archivos/multimedia, etc. El estado "cargando" usa
-`AppImages.logoTheme(context)` pulsando (0.88↔1.0) en el centro del `CircularProgressIndicator`
-de siempre — mismo lenguaje visual que el logo pulsando de Splash
+el mismo patrón: guardar formularios, subir archivos/multimedia, buscar datos de un documento,
+etc. El estado "cargando" usa `AppImages.logoTheme(context)` pulsando (0.88↔1.0) en el centro del
+`CircularProgressIndicator` de siempre — mismo lenguaje visual que el logo pulsando de Splash
 (`auth/splash_portrait.dart._pulseController`) pero en tamaño compacto (72px, cabe en la
 tarjeta, no ocupa la pantalla como el splash). El check usa una animación propia (círculo
 `easeOutBack` + ícono `elasticOut` con delay, `_CheckAnimado` interno) en vez de un ícono
@@ -580,6 +564,32 @@ El caller decide cuándo mostrar `exito` (ej. tras confirmar el guardado) y cuá
 renderizar el overlay — el widget solo anima la transición entre sus 2 estados, no controla
 temporizadores de auto-cierre (eso sigue siendo responsabilidad del caller, ver
 `EditLeadPortrait._setGuardando()`/`_guardar()`).
+
+**Búsquedas cortas (autocompletado por documento/RUC) — solo el estado `cargando`, sin `exito`
+(2026-08-12).** Antes estas búsquedas usaban `AppLoadingOverlay` (spinner genérico + mensaje,
+widget aparte) — reemplazado por pedido explícito del usuario ("la misma pantalla de carga de
+GS1 en todos lados"), `AppLoadingOverlay` **se eliminó del proyecto** (quedó sin ningún uso real
+tras este cambio). Para una búsqueda corta que no tiene un paso de "éxito" que celebrar (el
+resultado simplemente rellena los campos, no hay nada que confirmar con un check), pasar solo
+`status: AppProcessStatus.cargando` y dejar de renderizar el overlay apenas termina la búsqueda —
+nunca transicionar a `.exito` para este caso, sería un paso extra sin motivo:
+```dart
+Stack(
+  children: [
+    MiFormulario(),
+    if (_buscando)
+      const AppProcessOverlay(
+        status: AppProcessStatus.cargando,
+        loadingMessage: 'Buscando datos del documento...',
+      ),
+  ],
+)
+```
+Usado así en `solicitudes/` (Número documento del solicitante, RUC de Información comercial,
+Facturación, N° documento del formulario de participante — ver `solicitudes/CLAUDE.md` →
+"Autocompletado por documento") y en `lead/` (`EditContacto`/`EditContactoSimple`, búsqueda de
+documento y de RUC). Si se agrega una búsqueda nueva en cualquier feature, seguir este mismo
+patrón — no reintroducir un spinner genérico ni un overlay propio por pantalla.
 
 ### AppEmptyView
 Vista de estado vacío con mensaje customizable.
@@ -684,6 +694,28 @@ check o tocar una sugerencia). Efecto: lo que esté escrito en el campo en el mo
 guardar ya es lo que se manda, sin depender de que el asesor presione el check. Aplica a
 cualquier uso de `allowFreeText: true` — Cargo de `solicitudes/` y Área/Cargo de
 `lead/EditContacto` por igual, mismo widget.
+
+**Bug real — `didUpdateWidget` borraba el texto libre confirmado en CUALQUIER rebuild del padre,
+mostrando "Requerido" pese a que el campo seguía con el texto tipeado (Cargo de `solicitudes/`,
+2026-08-12).** Repro exacto del usuario: paso 1 del wizard, Cargo con texto libre (no matchea el
+catálogo), presiona "Siguiente" → el campo se marca "Requerido" aunque el texto sigue visible.
+Causa, en `didUpdateWidget`: (1) `old.data != widget.data` compara **listas por referencia** —
+el caller típico arma `data` con `.map().toList()` dentro de su propio `build()` (ej.
+`SeccionDatosSolicitante`), así que llega una instancia nueva en CADA rebuild del padre aunque el
+contenido no cambió; (2) `_onContinuar()` (`solicitud_completar_view_guardado.dart`) hace
+`setState(() => _autovalidar = true)` **antes** de `_formKey.currentState?.validate()` — ese
+`setState` reconstruye todo el árbol, regenerando la lista `data` de Cargo, lo que dispara el
+`if` de arriba; (3) con texto libre confirmado, `_selected.id` es `''` a propósito (ver arriba) —
+ningún `CargoItem` real tiene id vacío, así que `_allItems.any((e) => e.id == _selected!.id)` da
+`false` y **`_selected` se pone en `null`** justo antes de que corra `validate()`. Corregido con
+2 cambios en `didUpdateWidget`: **(a)** `listEquals(old.data, widget.data)` (por contenido, de
+`package:flutter/foundation.dart`) en vez de `!=` (por referencia) — ya no dispara el bloque en
+cada rebuild ajeno sin cambios reales; **(b)** el reset de `_selected` ahora solo aplica si
+`_selected!.id.isNotEmpty` — una selección de texto libre (`id` vacío) nunca se borra solo porque
+la lista del catálogo se haya reconstruido, únicamente cuando `_selected` venía de un id real del
+catálogo que ya no está en la lista nueva (ese caso sí debe seguir reseteando, ej. el catálogo se
+recargó y el ítem elegido ya no existe). Afecta a cualquier uso de `allowFreeText: true` con
+`data` regenerado en cada build del padre — mismo widget que Cargo/Área de `lead/EditContacto`.
 
 ### CustomComboMultiField
 Combo multi-selección con chips. Abre diálogo con checkboxes.

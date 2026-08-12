@@ -86,6 +86,27 @@ class LeadRemoteDatasource {
     };
   }
 
+  // Task 'NEG' — datos mínimos para prellenar el paso 1 del wizard de
+  // "Generar solicitud" (solicitudes/) al crear desde una negociación —
+  // NO trae estado/canal/campaña/oportunidad/chat como 'DT'/'DN', solo lo
+  // que solicitudes/ necesita. Ver lead/CLAUDE.md.
+  Future<DatosPrellenadoSolicitudModel> getDatosPrellenadoSolicitud(
+    int idLead,
+  ) async {
+    final String body = '$idLead${sep}NEG';
+
+    final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) =>
+        DatosPrellenadoSolicitudModel.parse(data) ??
+            (throw const AppException('No se encontró el lead.')),
+      ApiEmpty() => throw const AppException('No se encontró el lead.'),
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   // Task 'DN' — mismo shape de columnas que 'DT', pero ancla en CONTACTO (el
   // lead más reciente de ese contacto). Usada por Seguimiento ("Ver
   // detalle"), que ahora navega por idContacto, no por idLead — 'DT' se

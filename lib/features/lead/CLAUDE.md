@@ -1,5 +1,32 @@
 ﻿# Lead Feature
 
+## Task 'NEG' — datos mínimos para prellenar el wizard de Solicitudes (2026-08-12)
+`CRM.CSV_LEADS_LST_APP`, task nuevo — reemplaza el uso de `GetLeadDetalleUseCase` (task `'DT'`)
+para el caso puntual de "traer una negociación para prellenar/recuperar datos en el wizard de
+`solicitudes/`". Motivo: `'DT'` trae ~40 campos (estado, canal, campaña, oportunidad, chat...)
+de los cuales `solicitudes/` solo usaba 16 — y de paso, revisando el `.sql` real para agregar
+`ID_TIP_DOC`/`NRO_DOC` (ver "Bug real — N° documento nunca llegaba..." en `solicitudes/CLAUDE.md`),
+se confirmó que ese fix documentado el 2026-08-04 **nunca se había desplegado realmente** — el
+`CONCAT` de `'DT'`/`'DN'` terminaba en el campo 40, sin esos 2 campos. En vez de solo agregarlos
+a `'DT'`, se optó por un task dedicado, más chico y con contrato propio para este caso de uso.
+
+- **Devuelve 17 campos posicionales, una sola fila** (no `STRING_AGG`, no hace falta — siempre
+  un lead puntual por `idLead`): `idLead, cantidad (IN_PARTICIPANTES), precioBase, descuento,
+  precio, idMoneda, nombres, apellidoPaterno, apellidoMaterno, nombreEmpresa, correo, celular
+  (número), celularCodigoTelefono (prefijo país), ruc, cargo (NOM_CARGO), tipoDocId (ID_TIP_DOC),
+  numDoc (NRO_DOC)`. Reusa los mismos `OUTER APPLY` ya probados de `'DT'` (número activo más
+  reciente, empresa+cargo, correo activo más reciente) — sin joins nuevos, bajo riesgo.
+- **Body**: `idLead¯NEG`. **Endpoint**: mismo `ApiConstants.urlLeadsLst` que el resto de tasks
+  de este SP (`'LS'`/`'DT'`/`'DN'`/`'LN'`/etc.).
+- **Flutter**: `DatosPrellenadoSolicitud` (entidad nueva, `domain/entities/`) +
+  `DatosPrellenadoSolicitudModel.fromRawString` (`data/models/`) + `LeadRepository.
+  getDatosPrellenadoSolicitud(idLead)` + `GetDatosPrellenadoSolicitudUseCase`. Usado en 2 lugares
+  de `solicitudes/` (`solicitud_completar_view_carga.dart`): `_sembrarDatosDeNegociacionOrigen()`
+  (crear desde negociación, usa los 17 campos) y el bloque de `idLeadOrigen` (recuperar al
+  EDITAR, solo usa 5 — `cantidad`/`precioBase`/`descuento`/`idMoneda`/`precio`, el resto se
+  descarta sin problema). `GetLeadDetalleUseCase`/`'DT'` **no se tocó** — sigue siendo el
+  correcto para todo lo demás (`InfoLeadCubit`, editar/ver una negociación completa).
+
 ## Propósito
 Gestiona la lista y detalle de leads en dos modos: Seguimientos (`PO`) y Propuestas (`PA`).
 

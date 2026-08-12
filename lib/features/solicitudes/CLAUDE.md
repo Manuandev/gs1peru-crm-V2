@@ -1,5 +1,17 @@
 # Solicitudes Feature
 
+## Seguimiento — el fetch de negociación pasó de 'DT' a un task dedicado 'NEG' (2026-08-12)
+Mismo día, seguimiento del refactor de abajo. Al probarlo en vivo, Tipo/N° documento seguían sin
+llegar — investigando se confirmó (leyendo el `.sql` real de `CSV_LEADS_LST_APP`) que el fix de
+"N° documento nunca llegaba..." (más abajo) **nunca se desplegó de verdad**, pese a estar
+documentado como hecho. En vez de solo agregar los 2 campos faltantes a `'DT'`, se creó un task
+nuevo y dedicado — `'NEG'`, ver `lead/CLAUDE.md` → "Task 'NEG'..." — con solo los 17 campos que
+este wizard necesita (en vez de los ~40 de `'DT'`, la mayoría estado/canal/campaña/oportunidad/
+chat, sin uso acá). `_sembrarDatosDeNegociacionOrigen()` y el bloque de `idLeadOrigen` (recuperar
+al editar) en `solicitud_completar_view_carga.dart` ahora llaman
+`GetDatosPrellenadoSolicitudUseCase` en vez de `GetLeadDetalleUseCase` — mismo patrón de
+try/catch silencioso + snackbar de aviso si falla, sin cambios ahí.
+
 ## Refactor — "Generar solicitud" ya no pasa ~16 parámetros de la negociación por navegación (2026-08-12)
 Motivado por un bug real: al crear desde `EditLeadPortrait` (auto-redirect a Ganada/05), Tipo/N°
 documento no llegaban aunque el resto de datos sí — investigando se confirmó que todo el wiring

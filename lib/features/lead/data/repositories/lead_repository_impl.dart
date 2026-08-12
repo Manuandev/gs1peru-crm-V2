@@ -16,6 +16,11 @@ class LeadRepositoryImpl implements LeadRepository {
       _remote.getLeadDetalle(idLead);
 
   @override
+  Future<DatosPrellenadoSolicitudModel> getDatosPrellenadoSolicitud(
+    int idLead,
+  ) => _remote.getDatosPrellenadoSolicitud(idLead);
+
+  @override
   Future<NegociacionModel> getLeadDetallePorContacto(int idContacto) =>
       _remote.getLeadDetallePorContacto(idContacto);
 

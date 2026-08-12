@@ -6,6 +6,10 @@ import 'package:app_crm/features/lead/index_lead.dart';
 abstract class LeadRepository {
   Future<List<ContactoNegociacion>> getLeads();
   Future<Negociacion> getLeadDetalle(int idLead);
+  // Task 'NEG' — datos mínimos para prellenar el paso 1 del wizard de
+  // "Generar solicitud" (solicitudes/) al crear desde una negociación. Ver
+  // DatosPrellenadoSolicitud/lead_remote_datasource.dart.
+  Future<DatosPrellenadoSolicitud> getDatosPrellenadoSolicitud(int idLead);
   // Task 'DN' — mismo detalle que getLeadDetalle, pero anclado en idContacto
   // (el lead más reciente de ese contacto). Usa Seguimiento ("Ver detalle").
   // 2026-08-03 — migrado de idNumero a idContacto: un lead siempre tiene

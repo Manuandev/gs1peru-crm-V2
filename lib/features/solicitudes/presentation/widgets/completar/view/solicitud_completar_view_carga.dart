@@ -48,13 +48,21 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
   // Al crear una solicitud desde una negociación (`solicitud.idLead` no
   // vacío — los 3 orígenes reales de "Generar solicitud" lo mandan, ver
   // solicitudes/CLAUDE.md), trae esa negociación fresca por idLead y siembra
-  // el cubit compartido — mismo GetLeadDetalleUseCase que ya usa el bloque
-  // de `idLeadOrigen` más abajo (recuperar la negociación al EDITAR), ahora
-  // reusado también para el caso de CREAR. Antes estos ~16 valores llegaban
-  // ya armados como parámetros de navegación (uno por dato) — se cambió
-  // porque cada vez que el SP agregaba un campo (RUC, Cargo, documento) era
-  // fácil olvidar threadearlo en los 3 orígenes + la ruta + la page; con un
-  // solo fetch acá, agregar un campo nuevo solo toca este método.
+  // el cubit compartido — mismo GetDatosPrellenadoSolicitudUseCase que
+  // también usa el bloque de `idLeadOrigen` más abajo (recuperar cantidad/
+  // precio/moneda al EDITAR). Antes estos ~16 valores llegaban ya armados
+  // como parámetros de navegación (uno por dato) — se cambió porque cada
+  // vez que el SP agregaba un campo (RUC, Cargo, documento) era fácil
+  // olvidar threadearlo en los 3 orígenes + la ruta + la page; con un solo
+  // fetch acá, agregar un campo nuevo solo toca este método.
+  //
+  // 2026-08-12 — pasó de GetLeadDetalleUseCase (task 'DT', trae ~40 campos
+  // de estado/canal/campaña/oportunidad/chat que este wizard no usa) a
+  // GetDatosPrellenadoSolicitudUseCase (task 'NEG' nuevo, dedicado — trae
+  // SOLO los 17 campos que sembrarDatosNegociacion necesita). Encontrado en
+  // el camino: 'DT' nunca trajo tipoDocId/numDoc en la base real (el fix
+  // documentado el 2026-08-04 nunca se desplegó) — 'NEG' sí los trae desde
+  // el vamos, confirmado contra el .sql real antes de escribirlo.
   //
   // Si falla (sin conexión, lead borrado) NO bloquea la creación — el
   // asesor puede seguir llenando el formulario a mano, solo pierde el
@@ -66,27 +74,27 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
     if (idLead == null || idLead <= 0) return;
 
     try {
-      final negociacion = await GetLeadDetalleUseCase(
+      final datos = await GetDatosPrellenadoSolicitudUseCase(
         context.read<LeadRepository>(),
       ).call(idLead);
       if (!mounted) return;
       context.read<SolicitudFormCubit>().sembrarDatosNegociacion(
-        cantidad: negociacion.cantidad,
-        precioBase: negociacion.precioBase,
-        descuento: negociacion.descuento,
-        idMoneda: negociacion.idMoneda,
-        precioTotal: negociacion.precio,
-        nombres: negociacion.nombres,
-        apellidoPaterno: negociacion.apellidoPaterno,
-        apellidoMaterno: negociacion.apellidoMaterno,
-        nombreEmpresa: negociacion.nombreEmpresa,
-        correo: negociacion.correo,
-        celular: negociacion.numero,
-        celularCodigoTelefono: negociacion.prefijoPais,
-        ruc: negociacion.ruc,
-        cargo: negociacion.cargo,
-        tipoDocId: negociacion.tipoDocId,
-        numDoc: negociacion.numDoc,
+        cantidad: datos.cantidad,
+        precioBase: datos.precioBase,
+        descuento: datos.descuento,
+        idMoneda: datos.idMoneda,
+        precioTotal: datos.precio,
+        nombres: datos.nombres,
+        apellidoPaterno: datos.apellidoPaterno,
+        apellidoMaterno: datos.apellidoMaterno,
+        nombreEmpresa: datos.nombreEmpresa,
+        correo: datos.correo,
+        celular: datos.celular,
+        celularCodigoTelefono: datos.celularCodigoTelefono,
+        ruc: datos.ruc,
+        cargo: datos.cargo,
+        tipoDocId: datos.tipoDocId,
+        numDoc: datos.numDoc,
       );
     } catch (_) {
       if (!mounted) return;
@@ -490,16 +498,20 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       final idLeadOrigen = int.tryParse(detalle.idLeadOrigen);
       if (idLeadOrigen != null && idLeadOrigen > 0) {
         try {
-          final negociacion = await GetLeadDetalleUseCase(
+          // 2026-08-12 — mismo cambio que _sembrarDatosDeNegociacionOrigen()
+          // (task 'NEG', dedicado) — acá solo se usan 5 de sus 17 campos
+          // (cantidad/precio/descuento/moneda), el resto de la respuesta se
+          // descarta sin problema, igual que antes con 'DT'.
+          final datos = await GetDatosPrellenadoSolicitudUseCase(
             context.read<LeadRepository>(),
           ).call(idLeadOrigen);
           if (!mounted) return;
           context.read<SolicitudFormCubit>().sembrarDatosNegociacion(
-            cantidad: negociacion.cantidad,
-            precioBase: negociacion.precioBase,
-            descuento: negociacion.descuento,
-            idMoneda: negociacion.idMoneda,
-            precioTotal: negociacion.precio,
+            cantidad: datos.cantidad,
+            precioBase: datos.precioBase,
+            descuento: datos.descuento,
+            idMoneda: datos.idMoneda,
+            precioTotal: datos.precio,
           );
         } catch (_) {
           // Sin negociación recuperable — el importe de "Nuevo

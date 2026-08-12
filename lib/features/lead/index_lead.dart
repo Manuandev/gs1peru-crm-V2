@@ -14,6 +14,7 @@ export 'data/models/correo_contacto_model.dart';
 export 'data/models/empresa_contacto_model.dart';
 export 'data/models/contacto_simple_model.dart';
 export 'data/models/lead_recordatorio_model.dart';
+export 'data/models/datos_prellenado_solicitud_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
 
@@ -29,6 +30,7 @@ export 'domain/entities/correo_contacto.dart';
 export 'domain/entities/empresa_contacto.dart';
 export 'domain/entities/contacto_simple.dart';
 export 'domain/entities/lead_recordatorio.dart';
+export 'domain/entities/datos_prellenado_solicitud.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
@@ -37,6 +39,7 @@ export 'domain/repositories/lead_repository.dart';
 
 export 'domain/usecases/get_leads_usecase.dart';
 export 'domain/usecases/get_lead_detalle_usecase.dart';
+export 'domain/usecases/get_datos_prellenado_solicitud_usecase.dart';
 export 'domain/usecases/get_lead_detalle_por_numero_usecase.dart';
 export 'domain/usecases/get_negociaciones_lead.dart';
 export 'domain/usecases/get_historial_seguimiento_por_numero.dart';

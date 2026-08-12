@@ -289,6 +289,18 @@ proyecto).
     nunca disparaba nada por estar siempre deshabilitado), ahora sí resuelve el `PaisItem` real
     por `codigoTelefono` y actualiza `_paisCelular` — mismo patrón que
     `edit_contacto_celular_section.dart` (pantalla completa).
+  - **Todos los campos opcionales + mayúsculas, agregado 2026-08-12** (mismo pedido de negocio
+    2026-08-11 que ya se había aplicado solo a `EditContacto`, pantalla completa — se había
+    quedado sin replicar acá). Se quitaron los `validator` de "Requerido" en Tipo documento/
+    Número documento/Nacionalidad/Nombres/Apellido paterno (`edit_contacto_simple_portrait.dart`)
+    y Correo pasó de `v.emailValidator` (marca "El email es requerido" en vacío) a solo validar
+    el formato si el asesor sí escribió algo — mismo criterio exacto que
+    `edit_contacto_correo_section.dart` (pantalla completa). Apellido materno/Celular/RUC/Razón
+    social/Cargo nunca tuvieron validador de obligatoriedad, sin cambios ahí. Correo también
+    ganó `isUpperCase: true` (antes solo Nombres/Apellidos/Razón social lo tenían acá) — el
+    forzado real a mayúscula ya ocurría de todos modos en `_construirContacto()` (`_mayus()`),
+    esto solo agrega el feedback visual mientras se tipea. N° de documento/RUC no llevan
+    mayúscula (numéricos, mismo criterio que la pantalla completa).
   - **2 bugs reales del SP corregidos en vivo — 2026-08-03**, encontrados al probar el flujo de
     arriba end-to-end con datos reales en SSMS (`CRM.CSV_CONTACTO_CUD_APP.sql`, repo aparte,
     `C:\DEV\BDNatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\` en esta máquina — el path que

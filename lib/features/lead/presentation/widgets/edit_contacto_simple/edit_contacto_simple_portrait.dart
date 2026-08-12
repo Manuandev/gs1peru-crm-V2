@@ -332,7 +332,7 @@ class _EditContactoSimplePortraitState
                       children: [
                         Expanded(
                           child: CustomComboField<TipoDocumentoItem>(
-                            label: 'Tipo documento *',
+                            label: 'Tipo documento',
                             data: tiposDocumento,
                             labelIndex: 2,
                             enabled: !_isLoading,
@@ -341,23 +341,18 @@ class _EditContactoSimplePortraitState
                               _tipoDocumento = item;
                               _numeroDocumentoCtrl.clear();
                             }),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Requerido' : null,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: CustomTextField(
-                            label: 'Número documento *',
+                            label: 'Número documento',
                             controller: _numeroDocumentoCtrl,
                             focusNode: _numDocFocus,
                             enabled: !_isLoading,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _buscarDocumento(),
-                            validator: (v) => v == null || v.trim().isEmpty
-                                ? 'Requerido'
-                                : null,
                           ),
                         ),
                       ],
@@ -370,7 +365,7 @@ class _EditContactoSimplePortraitState
                             data: catalogState.nacionalidades
                                 .map((n) => '${n.id}${AppConstants.sepCampos}${n.nombre}')
                                 .toList(),
-                            label: 'Nacionalidad *',
+                            label: 'Nacionalidad',
                             enabled: !_isLoading,
                             initialValue: _nacionalidad?.id,
                             onChanged: (item) => setState(() {
@@ -380,8 +375,6 @@ class _EditContactoSimplePortraitState
                                         .where((n) => n.id == item.id)
                                         .firstOrNull;
                             }),
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Requerido' : null,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -399,27 +392,22 @@ class _EditContactoSimplePortraitState
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     CustomTextField(
-                      label: 'Nombres *',
+                      label: 'Nombres',
                       controller: _nombreCtrl,
                       enabled: !_isLoading,
                       isUpperCase: true,
                       textCapitalization: TextCapitalization.words,
-                      validator: (v) =>
-                          v == null || v.trim().isEmpty ? 'Requerido' : null,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
                         Expanded(
                           child: CustomTextField(
-                            label: 'Apellido paterno *',
+                            label: 'Apellido paterno',
                             controller: _apellidoPaternoCtrl,
                             enabled: !_isLoading,
                             isUpperCase: true,
                             textCapitalization: TextCapitalization.words,
-                            validator: (v) => v == null || v.trim().isEmpty
-                                ? 'Requerido'
-                                : null,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -479,11 +467,16 @@ class _EditContactoSimplePortraitState
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     CustomTextField(
-                      label: 'Correo *',
+                      label: 'Correo',
                       controller: _correoCtrl,
                       enabled: !_isLoading,
+                      isUpperCase: true,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) => v.emailValidator,
+                      // Correo es opcional — solo valida el formato si el
+                      // asesor sí escribió algo (v.emailValidator marca "El
+                      // email es requerido" en vacío, lo cual ya no aplica).
+                      validator: (v) =>
+                          v == null || v.trim().isEmpty ? null : v.emailValidator,
                     ),
                     const SizedBox(height: AppSpacing.lg),
 

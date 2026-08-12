@@ -1,5 +1,41 @@
 # Solicitudes Feature
 
+## Bug real — el importe del participante-solicitante se re-pisaba en cada "Siguiente", rompiendo la suma exacta contra la negociación (2026-08-12)
+Reportado por el usuario con un caso real: negociación con `cantidadEsperada: 2` y
+`precioTotalLead: 6000` — con 1 participante el footer mostraba **3000.00** (correcto), pero al
+agregar el segundo (el participante-solicitante, vía el switch "El solicitante será
+participante") el footer mostraba **5999.99** en vez de **6000.00**. Ambos participantes
+terminaban con el mismo importe (2542.37) en vez de que el último absorbiera el centavo de
+redondeo (ver "Revert — el último participante vuelve a absorber el centavo de redondeo..." más
+abajo, el mecanismo que debía evitar justo esto).
+
+- **Causa**: `ParticipantesCubit.sincronizarSolicitante()` (`participantes_cubit.dart`) arma el
+  `importe` del registro con `importe: importeFijo ?? anterior?.importe ?? 0` — pero el propio
+  comentario del método ya documentaba (desde el fix de 2026-07-15, "Bug real —
+  importe/id del participante-solicitante se perdían...") que el importe debía preservarse en
+  re-sincronizaciones y `importeFijo` solo aplicar "la primera vez que se crea este registro". El
+  código nunca reflejó esa intención: `sincronizarSolicitante()` se llama en **cada** "Siguiente"
+  del paso 1 (`solicitud_completar_view_guardado.dart._onContinuar()`), y le pasa un
+  `_importeFijo()` recalculado desde cero en cada llamada — como ese valor casi siempre es
+  no-nulo (cualquier solicitud con negociación de origen), `importeFijo ?? ...` **siempre ganaba**,
+  el fallback a `anterior?.importe` era código muerto en la práctica. Secuencia real del bug: el
+  participante-solicitante se crea como el ÚLTIMO esperado → `_importeFijo()` en ese momento sí
+  usa la rama "lo que falta" (2542.38, para que la suma cierre en 6000.00) → el asesor vuelve a
+  presionar "Siguiente" en el paso 1 (volver atrás y avanzar de nuevo, o el flush antes de
+  guardar) → `sincronizarSolicitante()` se re-ejecuta con un `_importeFijo()` NUEVO, y como ahora
+  ya hay 2 participantes (`actuales.length != cantidadEsperada - 1`), cae a la división simple
+  (2542.37) — pisando el 2542.38 ya fijado. Con los 2 participantes en 2542.37: Inversión 5084.74,
+  IGV 915.25, Total **5999.99**.
+- **Fix**: se invirtió la prioridad — `importe: anterior?.importe ?? importeFijo ?? 0` — si ya
+  existe un registro previo (`anterior != null`, cualquier re-sincronización), su importe manda
+  siempre, aunque sea `0`; `importeFijo` solo se usa al crear el registro por primera vez
+  (`anterior == null`), igual que ya hace `id: anterior?.id ?? _nextId++` un poco más abajo en el
+  mismo método — mismo patrón, ahora aplicado también a `importe`.
+- **No se tocó** `_importeFijo()` (ni la copia de `solicitud_participantes_view.dart` ni la de
+  `solicitud_completar_view_guardado.dart`) — el cálculo en sí (incluida la rama "último
+  participante absorbe") ya era correcto; el bug era que se le daba prioridad sobre un valor que
+  debía preservarse.
+
 ## El overlay de "Buscando datos del documento/RUC..." pasó a `AppProcessOverlay` (2026-08-12)
 Pedido explícito del usuario: usar la misma pantalla de carga con marca GS1 (logo con resplandor
 + puntos animados, ya usada para guardar/subir archivos) en vez del spinner genérico que tenía la

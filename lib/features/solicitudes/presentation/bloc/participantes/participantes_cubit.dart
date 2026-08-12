@@ -136,7 +136,17 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       celular: datos.celular,
       celularCodigoTelefono: datos.celularCodigoTelefono,
       tipoParticipante: idTipoParticipantePagante,
-      importe: importeFijo ?? anterior?.importe ?? 0,
+      // anterior?.importe primero — importeFijo casi siempre llega no-nulo
+      // (cualquier "Siguiente" del paso 1 con negociación de origen), así
+      // que con el orden invertido (bug real, 2026-08-12) SIEMPRE ganaba y
+      // pisaba el importe ya fijado en una sincronización anterior — incluso
+      // el ajuste especial del "último participante" (ver _importeFijo(),
+      // solicitud_participantes_view.dart) se perdía apenas se volvía a
+      // presionar "Siguiente", rompiendo la suma exacta contra la
+      // negociación. Con este orden si `anterior` existe, su importe manda
+      // siempre (aunque sea 0) — importeFijo solo aplica al CREAR el
+      // registro por primera vez, tal como ya documentaba este método.
+      importe: anterior?.importe ?? importeFijo ?? 0,
       esSolicitante: true,
     );
 

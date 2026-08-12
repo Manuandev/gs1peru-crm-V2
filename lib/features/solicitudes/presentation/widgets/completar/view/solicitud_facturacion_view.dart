@@ -694,6 +694,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final numDocMaxLength = DocumentoValidationUtils.maxLength(
       _tipoDocId,
       tiposDocumentoTodos,
+      _valoresDefecto,
     );
     final numDocKeyboardType = DocumentoValidationUtils.keyboardType(
       _tipoDocId,

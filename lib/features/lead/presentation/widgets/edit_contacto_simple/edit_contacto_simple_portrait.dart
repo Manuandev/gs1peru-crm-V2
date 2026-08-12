@@ -94,6 +94,16 @@ class _EditContactoSimplePortraitState
     _tipoDocumento = state.tiposDocumento
         .where((t) => t.id == c.idTipoDocumento)
         .firstOrNull;
+    // Trunca un N° documento ya guardado que exceda el máximo real del tipo
+    // — este campo no tenía `DocumentoValidationUtils` hasta ahora (gap
+    // documentado en core/CLAUDE.md), así que pudo haberse guardado sin
+    // ningún tope de longitud. Ver DocumentoValidationUtils.limitarLongitud.
+    _numeroDocumentoCtrl.text = DocumentoValidationUtils.limitarLongitud(
+      _tipoDocumento?.id ?? '',
+      _numeroDocumentoCtrl.text,
+      state.tiposDocumento,
+      state.valoresDefecto,
+    );
     // Nacionalidad — default Peruano si el contacto todavía no tiene una,
     // mismo criterio que EditContacto (pedido de negocio 2026-07-23).
     _nacionalidad = c.idNacionalidad.isEmpty
@@ -235,7 +245,7 @@ class _EditContactoSimplePortraitState
   ContactoSimple _construirContacto() {
     return widget.contacto.copyWith(
       idTipoDocumento: _tipoDocumento?.id ?? '',
-      numeroDocumento: _numeroDocumentoCtrl.text.trim(),
+      numeroDocumento: _mayus(_numeroDocumentoCtrl.text),
       idNacionalidad: _nacionalidad?.id ?? '',
       prefijoContacto: _prefijoContacto ?? '',
       nombre: _mayus(_nombreCtrl.text),
@@ -350,7 +360,21 @@ class _EditContactoSimplePortraitState
                             controller: _numeroDocumentoCtrl,
                             focusNode: _numDocFocus,
                             enabled: !_isLoading,
-                            keyboardType: TextInputType.number,
+                            isUpperCase: true,
+                            keyboardType: DocumentoValidationUtils.keyboardType(
+                              _tipoDocumento?.id ?? '',
+                              catalogState.valoresDefecto,
+                            ),
+                            maxLength: DocumentoValidationUtils.maxLength(
+                              _tipoDocumento?.id ?? '',
+                              tiposDocumento,
+                              catalogState.valoresDefecto,
+                            ),
+                            inputFormatters:
+                                DocumentoValidationUtils.inputFormatters(
+                                  _tipoDocumento?.id ?? '',
+                                  catalogState.valoresDefecto,
+                                ),
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _buscarDocumento(),
                           ),

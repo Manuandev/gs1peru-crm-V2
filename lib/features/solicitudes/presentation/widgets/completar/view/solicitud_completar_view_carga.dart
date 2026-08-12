@@ -45,6 +45,58 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
     }
   }
 
+  // Al crear una solicitud desde una negociación (`solicitud.idLead` no
+  // vacío — los 3 orígenes reales de "Generar solicitud" lo mandan, ver
+  // solicitudes/CLAUDE.md), trae esa negociación fresca por idLead y siembra
+  // el cubit compartido — mismo GetLeadDetalleUseCase que ya usa el bloque
+  // de `idLeadOrigen` más abajo (recuperar la negociación al EDITAR), ahora
+  // reusado también para el caso de CREAR. Antes estos ~16 valores llegaban
+  // ya armados como parámetros de navegación (uno por dato) — se cambió
+  // porque cada vez que el SP agregaba un campo (RUC, Cargo, documento) era
+  // fácil olvidar threadearlo en los 3 orígenes + la ruta + la page; con un
+  // solo fetch acá, agregar un campo nuevo solo toca este método.
+  //
+  // Si falla (sin conexión, lead borrado) NO bloquea la creación — el
+  // asesor puede seguir llenando el formulario a mano, solo pierde el
+  // prellenado y los candados de cantidad/precio/moneda (cantidadEsperada
+  // queda null). Se avisa con un snackbar para que no piense que el
+  // formulario debía llegar prellenado y no lo hizo por otro motivo.
+  Future<void> _sembrarDatosDeNegociacionOrigen() async {
+    final idLead = int.tryParse(widget.solicitud.idLead);
+    if (idLead == null || idLead <= 0) return;
+
+    try {
+      final negociacion = await GetLeadDetalleUseCase(
+        context.read<LeadRepository>(),
+      ).call(idLead);
+      if (!mounted) return;
+      context.read<SolicitudFormCubit>().sembrarDatosNegociacion(
+        cantidad: negociacion.cantidad,
+        precioBase: negociacion.precioBase,
+        descuento: negociacion.descuento,
+        idMoneda: negociacion.idMoneda,
+        precioTotal: negociacion.precio,
+        nombres: negociacion.nombres,
+        apellidoPaterno: negociacion.apellidoPaterno,
+        apellidoMaterno: negociacion.apellidoMaterno,
+        nombreEmpresa: negociacion.nombreEmpresa,
+        correo: negociacion.correo,
+        celular: negociacion.numero,
+        celularCodigoTelefono: negociacion.prefijoPais,
+        ruc: negociacion.ruc,
+        cargo: negociacion.cargo,
+        tipoDocId: negociacion.tipoDocId,
+        numDoc: negociacion.numDoc,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      AppSnackBar.error(
+        context,
+        'No se pudo cargar la negociación de origen — complete los datos manualmente',
+      );
+    }
+  }
+
   // Al crear desde "Generar solicitud" (negociación con precio ya definido,
   // `cantidadEsperada != null`) — prellena Nombres/Apellidos/Correo/Celular/
   // Cargo/Razón social con los datos ya capturados en la negociación
@@ -89,14 +141,20 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
     // del resto de este método, que solo llena controllers) porque
     // _sembrarValoresPorDefecto() ya corrió antes en _cargarDetalle() y dejó
     // el default DNI — si el contacto real tiene otro tipo (Carnet de
-    // extranjería, etc.), ese default ya no aplica.
-    if (formState.numDocLead.isNotEmpty) {
-      _ctrlNumDoc.text = formState.numDocLead;
-    }
+    // extranjería, etc.), ese default ya no aplica. Se resuelve el tipo
+    // ANTES del número (orden importa, 2026-08-12) para poder truncar el
+    // número al máximo real de ese tipo — ver DocumentoValidationUtils.
+    // limitarLongitud, necesario porque un dato sucio del backend (ej. un
+    // N° documento guardado sin validación desde otra pantalla) no se
+    // trunca solo al asignarse directo al controller.
+    List<TipoDocumentoItem> tiposDocumento = const [];
+    ValoresCRMItem valoresDefecto = const ValoresCRMItem();
     if (formState.tipoDocIdLead.isNotEmpty) {
       final catalogState = context.read<CatalogsBloc>().state;
       if (catalogState is CatalogsLoaded) {
-        final tipoDoc = catalogState.tiposDocumento
+        tiposDocumento = catalogState.tiposDocumento;
+        valoresDefecto = catalogState.valoresDefecto;
+        final tipoDoc = tiposDocumento
             .where((t) => t.id == formState.tipoDocIdLead)
             .firstOrNull;
         if (tipoDoc != null) {
@@ -104,6 +162,14 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           _tipoDocLabel = tipoDoc.abreviatura;
         }
       }
+    }
+    if (formState.numDocLead.isNotEmpty) {
+      _ctrlNumDoc.text = DocumentoValidationUtils.limitarLongitud(
+        _tipoDocId,
+        formState.numDocLead,
+        tiposDocumento,
+        valoresDefecto,
+      );
     }
 
     if (formState.celularCodigoTelefonoLead.isNotEmpty) {
@@ -131,6 +197,8 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
 
     if (numSol.isEmpty) {
       _sembrarValoresPorDefecto();
+      await _sembrarDatosDeNegociacionOrigen();
+      if (!mounted) return;
       _prellenarDesdeNegociacion();
       setState(() => _cargando = false);
       // Creación nueva — `numSol` sigue vacío, así que
@@ -181,6 +249,18 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       final tipoDoc = tiposDocumento
           .where((t) => t.id == detalle.tipoDocId)
           .firstOrNull;
+      // Trunca al máximo real del tipo — dato ya guardado en el backend
+      // puede exceder el límite (guardado desde antes de que existiera esta
+      // validación, o desde otra pantalla sin el mismo candado). Se calcula
+      // acá y se reusa en todo el bloque (controller, tracker de búsqueda y
+      // el snapshot que se manda al cubit) para que los 3 queden
+      // consistentes entre sí — ver DocumentoValidationUtils.limitarLongitud.
+      final numDocSolicitante = DocumentoValidationUtils.limitarLongitud(
+        detalle.tipoDocId,
+        detalle.numDoc,
+        tiposDocumento,
+        valoresDefecto,
+      );
       final nacionalidad = nacionalidades
           .where((n) => n.id == detalle.nacionalidadId)
           .firstOrNull;
@@ -218,14 +298,14 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           : '';
       _solicitanteParticipante = detalle.solicitanteEsParticipante;
       _facturarAlSolicitante = detalle.facturarAlSolicitante;
-      _ctrlNumDoc.text = detalle.numDoc;
+      _ctrlNumDoc.text = numDocSolicitante;
       // Ya viene resuelto desde el backend — sembrar acá evita que
       // "Siguiente" dispare una búsqueda RENIEC/SUNAT (con su overlay
       // "Buscando datos del documento...") sobre un documento que no
       // cambió, solo porque se está validando/editando una solicitud ya
       // guardada sin haber tocado el campo. Bug real reportado en vivo,
       // 2026-08-04 — mismo criterio para el RUC comercial más abajo.
-      _ultimoDocSolicitanteBuscado = detalle.numDoc;
+      _ultimoDocSolicitanteBuscado = numDocSolicitante;
       _ctrlNombres.text = detalle.nombres;
       _ctrlApellidoPaterno.text = detalle.apellidoPaterno;
       _ctrlApellidoMaterno.text = detalle.apellidoMaterno;
@@ -239,7 +319,7 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       final datosSolicitante = DatosSolicitante(
         tipoDocId: detalle.tipoDocId,
         tipoDocLabel: _tipoDocLabel,
-        numDoc: detalle.numDoc,
+        numDoc: numDocSolicitante,
         nacionalidadId: detalle.nacionalidadId,
         nacionalidad: _nacionalidadLabel,
         sexoId: detalle.sexoId,
@@ -270,6 +350,14 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
         final facTipoDoc = tiposDocumento
             .where((t) => t.id == detalle.facTipoDocId)
             .firstOrNull;
+        // Trunca al máximo real del tipo — mismo criterio que numDocSolicitante
+        // más arriba (dato ya guardado en el backend puede exceder el límite).
+        final facNumDoc = DocumentoValidationUtils.limitarLongitud(
+          detalle.facTipoDocId,
+          detalle.facNumDoc,
+          tiposDocumento,
+          valoresDefecto,
+        );
         final facComprobante = comprobantes
             .where((c) => c.id == detalle.facComprobanteId)
             .firstOrNull;
@@ -335,7 +423,7 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
             tipoDocLabel: facTipoDoc?.abreviatura ?? '',
             nacionalidadId: detalle.facNacionalidadId,
             nacionalidad: facNacionalidad?.nombre ?? '',
-            numDoc: detalle.facNumDoc,
+            numDoc: facNumDoc,
             nombresRazon: esRuc ? detalle.facNomEmpre : detalle.facNombres,
             apellidoPaterno: esRuc ? '' : detalle.facApellidoPaterno,
             apellidoMaterno: esRuc ? '' : detalle.facApellidoMaterno,
@@ -370,7 +458,12 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           id: int.tryParse(p.id) ?? 0,
           tipoDocId: p.tipoDocId,
           tipoDoc: tipoDocP?.abreviatura ?? '',
-          numDoc: p.numDoc,
+          numDoc: DocumentoValidationUtils.limitarLongitud(
+            p.tipoDocId,
+            p.numDoc,
+            tiposDocumento,
+            valoresDefecto,
+          ),
           nacionalidadId: p.nacionalidadId,
           nacionalidad: nacionalidadP?.nombre ?? '',
           nombres: p.nombres,

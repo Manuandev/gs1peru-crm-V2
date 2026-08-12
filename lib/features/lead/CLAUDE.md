@@ -301,6 +301,32 @@ proyecto).
     forzado real a mayúscula ya ocurría de todos modos en `_construirContacto()` (`_mayus()`),
     esto solo agrega el feedback visual mientras se tipea. N° de documento/RUC no llevan
     mayúscula (numéricos, mismo criterio que la pantalla completa).
+    ⚠️ **Corrección — N° de documento SÍ debía llevar mayúscula, ver entrada 2026-08-12 más
+    abajo** ("`DocumentoValidationUtils` agregado..."). La nota de arriba comparaba mal contra la
+    pantalla completa: `EditContactoPortrait._construirContacto()` (`edit_contacto_portrait.dart:
+    504`) ya mandaba `numeroDocumento: _mayus(_numeroDocumentoCtrl.text)` desde antes de esta
+    sesión — Carnet de extranjería/Pasaporte pueden traer letras, mismo criterio que
+    `participante_form_sheet.dart` (`solicitudes/`). Esta pantalla (`EditContactoSimplePortrait`)
+    se había quedado con solo `.trim()`, sin mayúscula — inconsistente con la pantalla completa,
+    no un criterio distinto a propósito.
+
+  - **`DocumentoValidationUtils` agregado a Número documento — gap cerrado (2026-08-12)**
+    Encontrado al probar el fix del mismo día en `solicitudes/` (ver `solicitudes/CLAUDE.md` →
+    "Refactor — 'Generar solicitud'...") — el N° documento con 17 dígitos que aparecía sin
+    truncar en el wizard salía de un contacto real editado desde esta pantalla, que nunca tuvo
+    tope de longitud (`core/CLAUDE.md` ya documentaba este gap). Corregido:
+    - `CustomTextField` de Número documento ganó `keyboardType`/`maxLength`/`inputFormatters` vía
+      `DocumentoValidationUtils` (mismo patrón que `EditContacto`, paso 1 de `solicitudes/`, etc.)
+      + `isUpperCase: true` — antes tenía `keyboardType: TextInputType.number` fijo, sin
+      `maxLength` ni formatters, sin importar el tipo de documento elegido.
+    - `_construirContacto()` pasó de `numeroDocumento: _numeroDocumentoCtrl.text.trim()` a
+      `_mayus(_numeroDocumentoCtrl.text)` — cierra la inconsistencia de arriba.
+    - `_inicializarCombos()` trunca el N° documento ya guardado al máximo real del tipo resuelto
+      (`DocumentoValidationUtils.limitarLongitud`) — necesario porque un valor asignado directo
+      al controller (`TextEditingController(text: c.numeroDocumento)`, en `initState()`) no pasa
+      por `maxLength`/`inputFormatters`, esos solo limitan lo que el usuario tipea. Sin este
+      truncado, un contacto ya guardado con un N° documento demasiado largo (como el que
+      disparó este fix) se seguiría mostrando completo aunque el campo ya tuviera `maxLength`.
   - **2 bugs reales del SP corregidos en vivo — 2026-08-03**, encontrados al probar el flujo de
     arriba end-to-end con datos reales en SSMS (`CRM.CSV_CONTACTO_CUD_APP.sql`, repo aparte,
     `C:\DEV\BDNatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\` en esta máquina — el path que
@@ -688,7 +714,13 @@ ningún origen, edite o cree, venga o no de conversación.
   `_inicializarCombos()` (`if (_esNuevo)`) y el bloqueo en `build()`
   (`estadoBloqueado: _esNuevo`) — ninguno de los dos depende ya de `desdeConversacion` (ver flag
   abajo, que ahora solo controla Canal).
-- **Redirect automático a "Generar solicitud"** — en `_guardar()`: si el guardado deja la
+- **Redirect automático a "Generar solicitud"** — ⚠️ el detalle de los ~16 parámetros de
+  negociación que describe este punto (`nombresNegociacion`, `precioBaseNegociacion`,
+  `tipoDocIdNegociacion`, etc.) quedó **obsoleto el 2026-08-12** — `goToFichaCompletarSolicitud`
+  ya no los recibe; el wizard trae la negociación por su cuenta vía `idLead`. Ver
+  `solicitudes/CLAUDE.md` → "Refactor — 'Generar solicitud' ya no pasa ~16 parámetros...". El
+  resto de este punto (cuándo se dispara el redirect, `debeGenerarSolicitud`, etc.) sigue vigente
+  sin cambios — en `_guardar()`: si el guardado deja la
   negociación en sub-estado `'05'` bajo estado padre `'04'` (Ganada) **por primera vez** (no si ya
   estaba ahí antes de este guardado) y todavía no tiene solicitud (`negociacion.accionSolicitud ==
   SolicitudAccion.generar`), y el servidor confirmó el guardado (`InfoLeadCubit.updateLead` ahora

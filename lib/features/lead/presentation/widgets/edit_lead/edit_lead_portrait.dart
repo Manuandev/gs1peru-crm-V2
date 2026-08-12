@@ -520,22 +520,6 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
           idLead: idLeadFinal.toString(),
         ),
         modoEdicion: true,
-        cantidadNegociacion: int.tryParse(_cantidadCtrl.text),
-        precioBaseNegociacion: _precioBase,
-        descuentoNegociacion: _descuento,
-        idMonedaNegociacion: _monedaItem?.id,
-        precioTotalNegociacion: _costoFinal,
-        nombresNegociacion: n.nombres,
-        apellidoPaternoNegociacion: n.apellidoPaterno,
-        apellidoMaternoNegociacion: n.apellidoMaterno,
-        nombreEmpresaNegociacion: n.nombreEmpresa,
-        correoNegociacion: n.correo,
-        celularNegociacion: n.numero,
-        celularCodigoTelefonoNegociacion: n.prefijoPais,
-        rucNegociacion: n.ruc,
-        cargoNegociacion: n.cargo,
-        tipoDocIdNegociacion: n.tipoDocId,
-        numDocNegociacion: n.numDoc,
       );
       return;
     }

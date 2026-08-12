@@ -73,54 +73,19 @@ extension NavigationExtensions on BuildContext {
     arguments: {'solicitud': solicitud, 'origenValidar': origenValidar},
   );
 
+  // Los datos de la negociación de origen (contacto + cantidad/precio/
+  // descuento/moneda) ya NO viajan por navegación — el paso 1 del wizard
+  // los trae por su cuenta con GetLeadDetalleUseCase(solicitud.idLead)
+  // cuando `solicitud.idSolicitud` viene vacío (creación). Ver
+  // SolicitudCompletarView._cargarDetalle()/solicitudes/CLAUDE.md.
   Future<void> goToFichaCompletarSolicitud({
     required Solicitud solicitud,
     required bool modoEdicion,
-    // Datos de la negociación de origen — solo al crear una solicitud
-    // nueva ("Generar solicitud"). Ver SolicitudFormCubit.sembrarDatosNegociacion.
-    int? cantidadNegociacion,
-    double? precioBaseNegociacion,
-    double? descuentoNegociacion,
-    String? idMonedaNegociacion,
-    // Datos "de referencia" de la negociación — solo prellenan el paso 1,
-    // no bloquean nada (a diferencia de los 4 de arriba).
-    double? precioTotalNegociacion,
-    String? nombresNegociacion,
-    String? apellidoPaternoNegociacion,
-    String? apellidoMaternoNegociacion,
-    String? nombreEmpresaNegociacion,
-    String? correoNegociacion,
-    String? celularNegociacion,
-    String? celularCodigoTelefonoNegociacion,
-    String? rucNegociacion,
-    String? cargoNegociacion,
-    // Tipo/N° de documento del contacto (T_CONTACTO.ID_TIP_DOC/NRO_DOC) —
-    // 2026-08-04, mismo candado que los de arriba (solo prellenan, nunca
-    // bloquean). Antes no existían — el N° documento quedaba vacío al crear
-    // desde una negociación aunque el resto de datos sí se prellenara.
-    String? tipoDocIdNegociacion,
-    String? numDocNegociacion,
   }) => _push(
     AppRoutes.fichaCompletarSolicitud,
     arguments: {
       'solicitud': solicitud,
       'modoEdicion': modoEdicion,
-      'cantidadNegociacion': cantidadNegociacion,
-      'precioBaseNegociacion': precioBaseNegociacion,
-      'descuentoNegociacion': descuentoNegociacion,
-      'idMonedaNegociacion': idMonedaNegociacion,
-      'precioTotalNegociacion': precioTotalNegociacion,
-      'nombresNegociacion': nombresNegociacion,
-      'apellidoPaternoNegociacion': apellidoPaternoNegociacion,
-      'apellidoMaternoNegociacion': apellidoMaternoNegociacion,
-      'nombreEmpresaNegociacion': nombreEmpresaNegociacion,
-      'correoNegociacion': correoNegociacion,
-      'celularNegociacion': celularNegociacion,
-      'celularCodigoTelefonoNegociacion': celularCodigoTelefonoNegociacion,
-      'rucNegociacion': rucNegociacion,
-      'cargoNegociacion': cargoNegociacion,
-      'tipoDocIdNegociacion': tipoDocIdNegociacion,
-      'numDocNegociacion': numDocNegociacion,
     },
   );
 

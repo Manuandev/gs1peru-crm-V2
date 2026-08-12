@@ -128,25 +128,6 @@ class AppRouter {
         return SolicitudCompletarPage(
           solicitud: args['solicitud'] as Solicitud,
           modoEdicion: args['modoEdicion'] as bool,
-          cantidadNegociacion: args['cantidadNegociacion'] as int?,
-          precioBaseNegociacion: args['precioBaseNegociacion'] as double?,
-          descuentoNegociacion: args['descuentoNegociacion'] as double?,
-          idMonedaNegociacion: args['idMonedaNegociacion'] as String?,
-          precioTotalNegociacion: args['precioTotalNegociacion'] as double?,
-          nombresNegociacion: args['nombresNegociacion'] as String?,
-          apellidoPaternoNegociacion:
-              args['apellidoPaternoNegociacion'] as String?,
-          apellidoMaternoNegociacion:
-              args['apellidoMaternoNegociacion'] as String?,
-          nombreEmpresaNegociacion: args['nombreEmpresaNegociacion'] as String?,
-          correoNegociacion: args['correoNegociacion'] as String?,
-          celularNegociacion: args['celularNegociacion'] as String?,
-          celularCodigoTelefonoNegociacion:
-              args['celularCodigoTelefonoNegociacion'] as String?,
-          rucNegociacion: args['rucNegociacion'] as String?,
-          cargoNegociacion: args['cargoNegociacion'] as String?,
-          tipoDocIdNegociacion: args['tipoDocIdNegociacion'] as String?,
-          numDocNegociacion: args['numDocNegociacion'] as String?,
         );
       },
     ),

@@ -94,10 +94,6 @@ class _ListaNegociaciones extends StatefulWidget {
 class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   _FiltroNeg _filtro = _FiltroNeg.todas;
 
-  // true mientras se trae el detalle fresco de la negociación (task 'DT')
-  // antes de generar la solicitud — ver comentario de _generarSolicitud.
-  bool _generandoSolicitud = false;
-
   // "Ganada" = negociación cerrada (idEstadoPadre '04') en el sub-estado
   // '05' — códigos de negocio, no confundir con el catálogo de etapas
   // genérico de AppSocialUtils.
@@ -146,37 +142,12 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
 
   // Crea una solicitud NUEVA (NUMSOL vacío) para esta negociación — el
   // wizard arranca en blanco (Solicitud.idSolicitud == '') y solo manda
-  // idLead, que CSV_SOLICITUD_CUD_APP usa para vincular la solicitud al
-  // lead de origen en la rama de creación. Mismo patrón que
+  // idLead. El wizard (SolicitudCompletarView._cargarDetalle()) es quien
+  // trae la negociación fresca por idLead (GetLeadDetalleUseCase) y siembra
+  // los datos de contacto/cantidad/precio — este método ya no necesita
+  // hacerlo antes de navegar. Mismo patrón que
   // ContactoNegociacionCard._generarSolicitud() (Seguimiento).
-  //
-  // El `negociacion` que llega acá viene de `NegociacionesCubit` (task
-  // 'LN', historial) — ese task NO trae nombres/apellidos/empresa/correo/
-  // celular/RUC (solo lo trae 'DT'/'DN', ver negociacion_model.dart). Por
-  // eso, antes de navegar, se trae un detalle fresco por `idLead` (mismo
-  // 'DT' que ya usa `_irAEditar`/`InfoLeadCubit`) y se usa ESE objeto para
-  // todos los datos que siembran el wizard — no solo los de contacto, para
-  // no mezclar un dato fresco con uno potencialmente desactualizado del
-  // historial.
-  Future<void> _generarSolicitud(Negociacion negociacion) async {
-    if (_generandoSolicitud) return;
-    setState(() => _generandoSolicitud = true);
-
-    Negociacion detalle;
-    try {
-      detalle = await GetLeadDetalleUseCase(
-        context.read<LeadRepository>(),
-      ).call(negociacion.idLead);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _generandoSolicitud = false);
-      AppSnackBar.error(context, 'No se pudo cargar la negociación: $e');
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() => _generandoSolicitud = false);
-
+  void _generarSolicitud(Negociacion negociacion) {
     context.goToFichaCompletarSolicitud(
       solicitud: Solicitud(
         idSolicitud: '',
@@ -201,25 +172,9 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
         ibValidado: false,
         asesor: '',
         nombreAsesor: '',
-        idLead: detalle.idLead.toString(),
+        idLead: negociacion.idLead.toString(),
       ),
       modoEdicion: true,
-      cantidadNegociacion: detalle.cantidad,
-      precioBaseNegociacion: detalle.precioBase,
-      descuentoNegociacion: detalle.descuento,
-      idMonedaNegociacion: detalle.idMoneda,
-      precioTotalNegociacion: detalle.precio,
-      nombresNegociacion: detalle.nombres,
-      apellidoPaternoNegociacion: detalle.apellidoPaterno,
-      apellidoMaternoNegociacion: detalle.apellidoMaterno,
-      nombreEmpresaNegociacion: detalle.nombreEmpresa,
-      correoNegociacion: detalle.correo,
-      celularNegociacion: detalle.numero,
-      celularCodigoTelefonoNegociacion: detalle.prefijoPais,
-      rucNegociacion: detalle.ruc,
-      cargoNegociacion: detalle.cargo,
-      tipoDocIdNegociacion: detalle.tipoDocId,
-      numDocNegociacion: detalle.numDoc,
     );
   }
 
@@ -323,8 +278,6 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
             ),
           ],
         ),
-        if (_generandoSolicitud)
-          const AppLoadingOverlay(message: 'Cargando negociación...'),
       ],
     );
   }

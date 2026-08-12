@@ -110,6 +110,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
     final maxLenDoc = DocumentoValidationUtils.maxLength(
       _tipoDocId,
       tiposDocumento,
+      valoresDefecto,
     );
     final teclado = DocumentoValidationUtils.keyboardType(
       _tipoDocId,

@@ -314,6 +314,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     final maxLenDoc = DocumentoValidationUtils.maxLength(
       _tipoDocId,
       tiposDocumento,
+      valoresDefecto,
     );
     final tecladoDoc = DocumentoValidationUtils.keyboardType(
       _tipoDocId,

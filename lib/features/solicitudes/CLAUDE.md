@@ -1,5 +1,46 @@
 # Solicitudes Feature
 
+## Refactor — "Generar solicitud" ya no pasa ~16 parámetros de la negociación por navegación (2026-08-12)
+Motivado por un bug real: al crear desde `EditLeadPortrait` (auto-redirect a Ganada/05), Tipo/N°
+documento no llegaban aunque el resto de datos sí — investigando se confirmó que todo el wiring
+de Flutter estaba bien, el problema era el `.sql` de `CSV_LEADS_LST_APP` pendiente de desplegar
+(ver "Bug real — N° documento nunca llegaba..." más abajo). Al revisar el patrón de fondo con el
+usuario, se decidió eliminar la clase de bug entera en vez de solo corregir el síntoma: pasar 16
+parámetros sueltos por navegación (`cantidadNegociacion`, `precioBaseNegociacion`, ...,
+`tipoDocIdNegociacion`, `numDocNegociacion`) ya había causado exactamente este tipo de olvido 3
+veces antes (RUC, Cargo, documento) — cada campo nuevo del SP requería acordarse de threadearlo
+en 4 lugares (call site → `goToFichaCompletarSolicitud` → `SolicitudCompletarPage` → constructor
+del cubit).
+
+- **`goToFichaCompletarSolicitud`** (`navigation_extensions.dart`) quedó con solo `solicitud` +
+  `modoEdicion` — ya no recibe ningún dato de negociación. `app_router.dart` y
+  `SolicitudCompletarPage` (constructor) se simplificaron igual, sin los 16 campos espejo.
+- **El paso 1 del wizard trae la negociación por su cuenta** —
+  `_SolicitudCompletarCargaExt._sembrarDatosDeNegociacionOrigen()`
+  (`solicitud_completar_view_carga.dart`, nuevo método, llamado desde `_cargarDetalle()` solo
+  cuando `numSol.isEmpty`) llama `GetLeadDetalleUseCase(idLead)` — **mismo mecanismo que ya
+  usaba el bloque de `idLeadOrigen`** (recuperar la negociación al EDITAR, ver más abajo) — y con
+  el resultado llama `SolicitudFormCubit.sembrarDatosNegociacion(...)`, igual que antes. Se
+  ejecuta antes de `_prellenarDesdeNegociacion()` (que no cambió). Requiere `solicitud.idLead` no
+  vacío — los 3 orígenes reales ya lo mandaban desde antes, sin cambios ahí.
+- **Manejo de error — decisión explícita del usuario**: si el fetch falla (sin conexión, lead
+  borrado), **no bloquea la creación** — `catch` muestra `AppSnackBar.error` ("No se pudo cargar
+  la negociación de origen — complete los datos manualmente") y el wizard queda usable sin
+  prellenado ni candados de `cantidadEsperada`/precio/moneda. Antes (`NegociacionCard`/
+  `ContactoNegociacionCard`), un fetch fallido impedía entrar al wizard por completo (mostraba el
+  error y `return` sin navegar) — ese comportamiento estricto se relajó a propósito: con el fetch
+  ahora ocurriendo DENTRO del wizard (después de navegar), no hay forma simple de "cancelar la
+  navegación" sin más fricción, y el usuario prefirió dejar avanzar con aviso antes que bloquear.
+- **`NegociacionesTab._generarSolicitud()`/`ContactoNegociacionCard._generarSolicitud()`** ya no
+  hacen su propio `GetLeadDetalleUseCase` antes de navegar — solo arman el `Solicitud` en blanco
+  con `idLead` y navegan directo (pasaron de `Future<void>` async a `void` síncrono). Se eliminó
+  el flag `_generandoSolicitud`/`AppLoadingOverlay` de ambos (ya no hay espera antes de navegar).
+  `EditLeadPortrait` (redirect automático) también se simplificó igual — ya no arma los 14 campos
+  a mano desde `n` (la negociación en memoria).
+- **No se tocó**: el bloque de `idLeadOrigen` al EDITAR una solicitud ya guardada (sigue igual,
+  es el mecanismo que se reusó) ni `SolicitudFormCubit.sembrarDatosNegociacion` (misma firma de
+  16 campos — solo cambió quién la llama y con qué fuente).
+
 ## Cargo vuelve a guardarse como texto libre — revierte el id de catálogo (2026-08-12)
 Pedido explícito del usuario: **revierte** "Cargo se guarda por id..." (2026-07-30, más abajo) —
 Cargo (Datos del solicitante paso 1 y Nuevo/Editar participante) ya no manda `cargoId` al

@@ -1493,6 +1493,41 @@ null.emailValidator          // 'El email es requerido'
 'abc@mail.com'.emailValidator // null (válido)
 ```
 
+### ParseUtils — `utils/string/parse_utils.dart`
+
+Parser genérico de campos separados por `¦`/`¬`/`¯` (ver `AppConstants.sepCampos/sepRegistros/
+sepListas`) — usado por prácticamente todos los `*Model.fromRawString`/`fromFields` del proyecto.
+`str`/`toInt`/`toDouble`/`toBool`/`toBoolNAC`/`toBoolINT` nunca lanzan excepción por índice fuera
+de rango o valor no parseable — siempre caen a un default seguro (`''`/`0`/`0.0`/`false`).
+
+**`toInt` (2026-08-12) — ahora acepta decimales como fallback.** Bug real encontrado en vivo:
+`TipoDocumentoItem.canCaracteresMax` (`SYSTABEXTER02`, tabla genérica reusada por varios
+catálogos con distinto significado por columna — ver `MonedaItem.valor4`/`PaisItem.
+codigoTelefono`, mismo patrón) llega del SP como texto decimal (`"8.000"`, `"11.000"`...) aunque
+el valor en sí sea un entero — `int.tryParse("8.000")` falla (un int no acepta punto decimal) y
+caía en silencio al default `0`, sin ningún error visible. Efecto real: el límite de N°
+documento (`DocumentoValidationUtils.maxLength`) quedaba en `0` → sin tope → el campo aceptaba
+dígitos ilimitados, para CUALQUIER tipo de documento, en las 5 pantallas que usan ese utilitario
+(paso 1/Facturación/Nuevo participante de `solicitudes/`, `EditContacto`/`EditContactoSimple`).
+Corregido en la raíz, no campo por campo:
+```dart
+static int toInt(List<String> campos, int i) {
+  final s = str(campos, i);
+  return int.tryParse(s) ?? double.tryParse(s)?.toInt() ?? 0;
+}
+```
+`int.tryParse` sigue siendo el camino rápido para un entero plano (`"8"` → `8`, sin cambio de
+comportamiento) — el fallback a `double.tryParse(...).toInt()` solo entra si eso falla, cubriendo
+cualquier columna genérica que el backend mande con decimales. Trunca hacia `0` (`"8.9"` → `8`),
+no redondea — aceptable porque estos campos son conteos/ids/límites, nunca deberían traer una
+fracción real. **Efecto retroactivo**: cualquier otro `ParseUtils.toInt(...)` del proyecto (hay
+~90 usos, la mayoría ids reales de tablas de negocio — `T_LEAD`/`T_CONTACTO`/etc., poco
+riesgo real) queda protegido igual sin tocarlos uno por uno — si alguno resultaba en `0` por este
+mismo motivo, ahora se resuelve solo. `DocumentoValidationUtils.maxLength` también ganó un
+fallback aparte (valores fijos DNI=8/RUC=11/CE=9/Pasaporte=12, por `ValoresCRMItem`) como red de
+seguridad adicional si algún tipo puntual llegara sin el dato del catálogo — ver
+`DocumentoValidationUtils` abajo.
+
 ### DocumentoValidationUtils — `utils/documento_validation_utils.dart`
 
 Regla de longitud/teclado/formatters de un campo de N° documento según el tipo de documento
@@ -1528,8 +1563,33 @@ participante — y en `lead/EditContacto` (pantalla completa). Al cambiar el com
 en cualquiera de esos, limpiar el controller de N° documento (`ctrl.clear()`) — el texto ya
 tipeado puede no calzar con la nueva longitud/formato (ej. letras de Pasaporte al cambiar a DNI)
 y Flutter no lo trunca/filtra retroactivamente. **`EditContactoSimplePortrait`** (`lead/`,
-pantalla reducida) no usa este utilitario todavía — su campo Número documento sigue con teclado
-numérico fijo y sin `maxLength`, gap preexistente sin resolver.
+pantalla reducida) ya usa este utilitario desde el 2026-08-12 (ver `lead/CLAUDE.md` →
+"`DocumentoValidationUtils` agregado a Número documento") — antes su campo Número documento
+tenía teclado numérico fijo y sin `maxLength`, gap que quedó cerrado.
+
+**`limitarLongitud` (2026-08-12)** — nuevo, complementa a `maxLength`. `maxLength` del widget
+(`TextField`/`CustomTextField`) solo limita lo que el usuario **tipea** (vía
+`LengthLimitingTextInputFormatter`, que solo intercepta ediciones reales desde el teclado) — un
+valor asignado directo a `TextEditingController.text = valor` (prellenado desde backend,
+negociación, o el resultado de una búsqueda por documento) **no pasa por ese formatter**, así que
+Flutter no lo trunca solo. Encontrado en vivo en `solicitudes/` (`solicitudes/CLAUDE.md` →
+"Refactor — 'Generar solicitud'..."): un contacto con un N° documento de 17 dígitos guardado sin
+validación (dato sucio, probablemente originado en `EditContactoSimplePortrait`, ver arriba) se
+mostraba completo en "Datos del solicitante" pese a que Tipo documento era DNI (máximo 8).
+```dart
+final numDocSeguro = DocumentoValidationUtils.limitarLongitud(tipoDocId, numDoc, tiposDocumento);
+```
+Trunca (no valida/no avisa) al máximo real del tipo resuelto — usar en cualquier punto donde un
+N° documento se asigne por código (no por tipeo del usuario) antes de que llegue al controller o
+al modelo que lo acompaña (`DatosSolicitante`/`DatosFacturacion`/`ParticipanteLocal`). **Ojo con
+la consistencia**: si el valor también viaja a un modelo usado para comparar `huboCambios`
+(`solicitudSinCambiosPendientes`), truncar solo el controller y no el modelo (o viceversa) genera
+un falso positivo de "hay cambios sin guardar" apenas se carga la pantalla — truncar siempre en
+el punto de origen (antes de construir el modelo Y de asignar el controller), nunca en dos
+lugares por separado. Aplicado en `solicitud_completar_view_carga.dart` (Datos del solicitante al
+crear desde negociación y al editar, Facturación al editar, N° documento de cada participante al
+cargar una solicitud existente) — no en Nuevo participante ni Facturación al TIPEAR (ahí el
+usuario ya está limitado por `inputFormatters`, sin necesidad de truncar nada por código).
 
 ### LauncherUtils — `utils/launcher/launcher_utils.dart`
 

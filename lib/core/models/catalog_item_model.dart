@@ -400,6 +400,11 @@ class TipoDocumentoItemModel extends TipoDocumentoItem {
       nombre: ParseUtils.str(c, 1),
       abreviatura: ParseUtils.str(c, 2),
       esNacional: ParseUtils.toBoolNAC(c, 3),
+      // El SP manda este campo como decimal ("8.000", "11.000"...) — 2026-08-12,
+      // encontrado en vivo (límite de N° documento en 0 para todo tipo). Ya no
+      // hace falta un parseo especial acá — `ParseUtils.toInt` ahora resuelve
+      // decimales solo (ver comentario en parse_utils.dart), este era el caso
+      // real que motivó el fix.
       canCaracteresMax: ParseUtils.toInt(c, 4),
     );
   }

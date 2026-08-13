@@ -4,10 +4,14 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/home/index_home.dart';
 
 class NotificacionModel extends Notificacion {
-  // Solo se llenan en mensaje/derivación — se usan para reconstruir el texto
-  // cuando varios mensajes del mismo chat se agrupan en _agruparMensajes.
+  // Solo se llenan en mensaje/derivación — nombreCliente/codUserDestinatario
+  // se usan para reconstruir el texto cuando varios mensajes del mismo chat
+  // se agrupan en _agruparMensajes. oportunidad sí viaja en la entidad base
+  // (Notificacion) porque la UI la necesita para el chip.
   final String nombreCliente;
-  final String oportunidad;
+  // CODUSER crudo del destinatario (NT.ID_USUARIO tal cual, sin join a
+  // nombre) — vacío si el campo no vino en el CSV.
+  final String codUserDestinatario;
 
   const NotificacionModel({
     required super.id,
@@ -18,8 +22,9 @@ class NotificacionModel extends Notificacion {
     required super.fechaHora,
     required super.leido,
     super.idChatCab,
+    super.oportunidad,
     this.nombreCliente = '',
-    this.oportunidad = '',
+    this.codUserDestinatario = '',
   });
 
   // Campos del SP CSV_NOTIFICACIONES_LST_APP (separados por ¦):
@@ -30,20 +35,26 @@ class NotificacionModel extends Notificacion {
   // 4: DATOS                — armado desde el INSERT, usa ¦ como separador
   //                           interno también, así que puede traer más ¦ de
   //                           los que le tocan (ver reconstrucción abajo)
-  // ...: IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C — últimos 4 campos fijos
+  // ...: IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C, ID_USUARIO — últimos 5
+  //      campos fijos. El último (agregado 2026-08-13) es NT.ID_USUARIO tal
+  //      cual (CODUSER del destinatario, sin join a nombre — decisión del
+  //      usuario, ver nota en _parseDatosChat) — se compara contra el
+  //      CODUSER logueado para decidir si el texto usa "te" o nombra al
+  //      destinatario por su código.
   factory NotificacionModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     final n = c.length;
 
     // DATOS (campo 4) usa el mismo separador ¦ como interno, así que no se
     // puede tomar como un campo más — se reconstruye con todo lo que sobra
-    // entre los 4 campos fijos del inicio (0-3) y los 4 fijos del final
-    // (IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C).
-    final datosRaw = n > 8
-        ? c.sublist(4, n - 4).join(AppConstants.sepCampos)
+    // entre los 4 campos fijos del inicio (0-3) y los 5 fijos del final
+    // (IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C, ID_USUARIO).
+    final datosRaw = n > 9
+        ? c.sublist(4, n - 5).join(AppConstants.sepCampos)
         : ParseUtils.str(c, 4);
 
-    final tipo = _parseTipo(ParseUtils.str(c, n - 2));
+    final tipo = _parseTipo(ParseUtils.str(c, n - 3));
+    final codUserDestinatario = ParseUtils.str(c, n - 1);
 
     var descripcion = datosRaw;
     int? idChatCab;
@@ -52,7 +63,11 @@ class NotificacionModel extends Notificacion {
 
     if (tipo == TipoNotificacion.mensaje ||
         tipo == TipoNotificacion.derivacion) {
-      final (desc, chatCab, nombre, oport) = _parseDatosChat(tipo, datosRaw);
+      final (desc, chatCab, nombre, oport) = _parseDatosChat(
+        tipo,
+        datosRaw,
+        codUserDestinatario,
+      );
       descripcion = desc;
       idChatCab = chatCab;
       nombreCliente = nombre;
@@ -71,13 +86,20 @@ class NotificacionModel extends Notificacion {
       tipo: tipo,
       titulo: ParseUtils.str(c, 3),
       descripcion: descripcion,
-      fechaHora: ParseUtils.str(c, n - 1),
-      leido: ParseUtils.toBool(c, n - 4),
+      fechaHora: ParseUtils.str(c, n - 2),
+      leido: ParseUtils.toBool(c, n - 5),
       idChatCab: idChatCab,
-      nombreCliente: nombreCliente,
       oportunidad: oportunidad,
+      nombreCliente: nombreCliente,
+      codUserDestinatario: codUserDestinatario,
     );
   }
+
+  // true si el destinatario de la notificación es el usuario logueado —
+  // en ese caso el texto usa "te" en vez de nombrar el CODUSER destinatario.
+  static bool _esPropio(String codUserDestinatario) =>
+      codUserDestinatario.trim().toUpperCase() ==
+      SessionService().codUser.trim().toUpperCase();
 
   static List<Notificacion> parseList(String rawResponse) {
     final notificaciones = rawResponse
@@ -120,9 +142,10 @@ class NotificacionModel extends Notificacion {
       resultado.add(
         cantidad > 1
             ? n.copyWith(
-                descripcion:
-                    '${n.nombreCliente} te ha enviado $cantidad mensajes '
-                    'nuevos para la oportunidad ${n.oportunidad}.',
+                descripcion: _esPropio(n.codUserDestinatario)
+                    ? '${n.nombreCliente} te ha enviado $cantidad mensajes.'
+                    : '${n.nombreCliente} le ha enviado $cantidad mensajes '
+                          'a ${n.codUserDestinatario}.',
               )
             : n,
       );
@@ -148,21 +171,35 @@ class NotificacionModel extends Notificacion {
   // "Manuel Antonio Cardenas Valente¦Curso Digital Procurement¦Nuevo mensaje"
   //   0: nombre cliente  1: oportunidad  2: título
   //   3: idChatCab  4: idNumero — PENDIENTE de confirmar con un ejemplo que los traiga
-  // nombreCliente/oportunidad se devuelven también sin formatear porque
-  // _agruparMensajes los necesita para reconstruir el texto cuando colapsa
-  // varias notificaciones del mismo idChatCab en una sola.
+  // nombreCliente se devuelve también sin formatear porque _agruparMensajes
+  // lo necesita para reconstruir el texto cuando colapsa varias
+  // notificaciones del mismo idChatCab en una sola. oportunidad viaja en la
+  // entidad base — la muestra el chip inferior, ya no el texto.
+  //
+  // codUserDestinatario (2026-08-13) es el CODUSER crudo (sin resolver a
+  // nombre — decisión explícita del usuario: el SP ya no hace join a
+  // SYSMUSER01, manda el ID_USUARIO tal cual) — se compara contra el CODUSER
+  // logueado (_esPropio): si es el propio usuario el texto usa "te" como
+  // siempre; si es de otro asesor (vista de moderador viendo el equipo) el
+  // texto lo nombra por su CODUSER, ya que no hay nombre resuelto disponible.
   static (String, int?, String, String) _parseDatosChat(
     TipoNotificacion tipo,
     String datosRaw,
+    String codUserDestinatario,
   ) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
     final nombreCliente = ParseUtils.str(d, 0);
     final oportunidad = ParseUtils.str(d, 1);
     final idChatCab = int.tryParse(ParseUtils.str(d, 3));
 
+    final esPropio = _esPropio(codUserDestinatario);
     final descripcion = tipo == TipoNotificacion.mensaje
-        ? '$nombreCliente de la oportunidad $oportunidad te ha enviado un mensaje.'
-        : 'Se te ha derivado a $nombreCliente interesado en $oportunidad.';
+        ? (esPropio
+              ? '$nombreCliente te ha enviado un mensaje.'
+              : '$nombreCliente le ha enviado un mensaje a $codUserDestinatario.')
+        : (esPropio
+              ? 'Se te ha derivado $nombreCliente.'
+              : 'Se derivó a $nombreCliente hacia $codUserDestinatario.');
 
     return (descripcion, idChatCab, nombreCliente, oportunidad);
   }

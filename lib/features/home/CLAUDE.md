@@ -229,6 +229,44 @@ para ese chat, se muestra el texto individual de siempre sin tocar.
   con `Notificacion.copyWith` (definido en la clase base), no con el constructor de
   `NotificacionModel`.
 
+### Destinatario explícito (por CODUSER) + oportunidad en el chip, no en el texto (2026-08-13)
+
+Pedido de negocio: un moderador ve notificaciones de mensaje/derivación de todo su equipo (ver
+"Filtro por usuario" abajo), pero el texto decía siempre "te ha enviado..." sin indicar a qué
+asesor le llegó — ilegible para el moderador. El SP `CRM.CSV_NOTIFICACIONES_LST_APP` (tarea `LS`)
+suma un campo `09` al CSV general (antes terminaba en `08: FC_USUARIO_C`) con **`NT.ID_USUARIO`
+tal cual — el CODUSER crudo del destinatario, sin join a nombre** (decisión explícita del
+usuario: descartó una primera versión que hacía `LEFT JOIN dbo.SYSMUSER01` para resolver el
+nombre — el SP manda directo el código). `NotificacionModel.fromRawString` corrió sus índices de
+campos fijos finales de 4 a 5 (`IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C, ID_USUARIO`) — cualquier
+cambio futuro a esos campos fijos tiene que tocar `n - 5`...`n - 1` ahí, no solo el CONCAT del SP.
+
+- **`NotificacionModel._esPropio(codUserDestinatario)`** compara ese CODUSER (case-insensitive,
+  trim) contra `SessionService().codUser` (el usuario logueado) — decide el tono del texto:
+  - **Propio** (viendo sus propias notificaciones, o un moderador viendo las suyas dentro del
+    equipo) → texto de siempre con "te": `"{cliente} te ha enviado un mensaje."` /
+    `"{cliente} te ha enviado {N} mensajes."` / `"Se te ha derivado {cliente}."`.
+  - **Ajeno** (moderador viendo la notificación de otro asesor del equipo) → nombra al
+    destinatario por su CODUSER, único dato disponible (no hay nombre resuelto):
+    `"{cliente} le ha enviado un mensaje a {CODUSER}."` /
+    `"{cliente} le ha enviado {N} mensajes a {CODUSER}."` /
+    `"Se derivó a {cliente} hacia {CODUSER}."`.
+  - Aplica a mensaje Y derivación por igual (`_parseDatosChat`), a diferencia de la agrupación
+    (`_agruparMensajes`, ver abajo) que sigue siendo solo para mensaje.
+- **Chip inferior = oportunidad, no el tipo** — `Notificacion.etiquetaPrincipal`
+  (`domain/entities/notifications/notificacion.dart`) devuelve `oportunidad` para
+  `mensaje`/`derivacion` en vez de "Mensaje"/"Derivación" fijos, siempre que `oportunidad` no
+  esté vacía (si llega vacía, cae al label fijo de siempre). `oportunidad` se promovió de
+  `NotificacionModel` (donde vivía como campo solo-interno) a la entidad base `Notificacion`
+  porque la UI (`NotificacionTile`/`_ChipTipo`) la necesita después de que `_agruparMensajes` ya
+  colapsó varias filas en una — `nombreCliente`/`codUserDestinatario` siguen siendo solo-internos
+  de `NotificacionModel` (nunca los lee la UI directo, solo arman el texto).
+- **Filtro por usuario/equipo — sin cambios, a propósito.** El moderador sigue viendo siempre el
+  equipo completo en esta pantalla (`_session.isModerador ? 1 : 0` en
+  `HomeRemoteDatasource.getNotifications()`), sin atarlo al filtro "Mi equipo / Mis casos"
+  (`FiltroCubit`) que sí respeta el dashboard (`getData()`) — confirmado explícitamente por el
+  usuario, no tocar esto sin pedido nuevo.
+
 ---
 
 ## Recarga en tiempo real — "Prioridad ahora"

@@ -1,5 +1,47 @@
 # Solicitudes Feature
 
+## Plantilla de carga masiva — ya no queda escondida en la carpeta privada de la app (2026-08-13)
+Reportado por el usuario probando en vivo: al descargar la plantilla desde el paso 2 (carga
+masiva de participantes), el archivo no aparecía en Descargas/Archivos del celular — solo
+en la app que lo había abierto automáticamente vía "Abrir con...". Causa: se guardaba con
+`getApplicationDocumentsDirectory()` (`path_provider`), que en Android es la carpeta **privada**
+de la app (`/data/user/0/<paquete>/...`) — invisible para cualquier explorador de archivos
+normal, incluida la carpeta pública de Descargas.
+
+- **`_descargarPlantilla()`** (`solicitud_carga_masiva_view.dart`) ahora, la primera vez que
+  descarga bytes reales del backend, además de guardar la copia privada de siempre (necesaria
+  para el chequeo de "ya descargada" de abajo) llama `FileSaver.instance.saveAs(...)` (paquete
+  nuevo, `file_saver`, exportado en `index_dependencies.dart` junto a `file_picker`/`open_filex`/
+  `excel`) — dispara el selector nativo "Guardar como" de Android/iOS (`ACTION_CREATE_DOCUMENT`),
+  así el asesor elige dónde queda la copia visible (Descargas es la ubicación más común/rápida de
+  elegir ahí) sin pedir ningún permiso de almacenamiento nuevo. Si el asesor cancela ese diálogo
+  o falla por cualquier motivo, el `try/catch` interno no bloquea el resto del flujo — la copia
+  privada de siempre igual se abre con `OpenFilex.open()`.
+- **Se investigó y se descartó** guardar directo en la carpeta pública de Descargas sin diálogo
+  (`saveFile()` del mismo paquete) — en la versión instalada (`file_saver: 0.4.0`), ese método
+  en Android escribe en `getExternalFilesDir(null)` (carpeta *externa pero privada de la app*,
+  `Android/data/<paquete>/files`), que desde Android 11 tampoco es navegable por apps de
+  archivos normales — no resolvía el problema reportado, solo lo movía a otra carpeta igual de
+  invisible. `saveAs()` (el que sí se usó) es el único método del paquete que garantiza una
+  ubicación realmente visible, porque pasa por el selector nativo del sistema operativo en vez
+  de escribir directo a una ruta fija.
+- **"Ya descargada, no la vuelvas a pedir al backend"** — pedido explícito del usuario, en
+  paralelo al punto de arriba. `_descargarPlantilla()` primero revisa si ya existe la copia
+  privada (`getApplicationDocumentsDirectory()/Carga_Masiva_Participantes.xlsm`, path
+  determinístico — mismo nombre siempre) — si existe, ni llama al backend ni vuelve a mostrar el
+  diálogo "Guardar como", solo hace `OpenFilex.open()` sobre esa copia directo. El diálogo
+  "Guardar como" (visible en Descargas) por diseño **solo aparece la primera vez** que se
+  descarga en ese dispositivo — no hay forma reabrir después el archivo que el asesor guardó ahí
+  para volver a mostrarlo (el selector nativo devuelve un `content://` URI opaco, no un path de
+  archivo real — `OpenFilex.open()` **no** puede reabrir ese tipo de URI, solo paths de archivo
+  reales, confirmado leyendo su código nativo) — se aceptó ese trade-off en vez de agregar una
+  dependencia nueva (`shared_preferences`, que el proyecto no usa todavía) solo para recordar esa
+  ubicación entre sesiones.
+- **`.xlsm` con mimetype real** — `saveAs()` manda
+  `'application/vnd.ms-excel.sheet.macroEnabled.12'` (Excel con macros) como `customMimeType`,
+  no el genérico de `.xlsx` que trae el paquete por defecto (`MimeType.microsoftExcel`) — para
+  que el selector "Guardar como" identifique el archivo como lo que realmente es.
+
 ## Bug real — "Siguiente" volvía a guardar aunque no se hubiera tocado nada al editar una solicitud existente (2026-08-12)
 Reportado por el usuario probando en vivo: entra a editar una solicitud ya guardada, presiona
 "Siguiente" en el paso 1 sin cambiar ningún campo, y el wizard igual dispara un guardado real

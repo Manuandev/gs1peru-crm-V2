@@ -19,6 +19,9 @@ class Notificacion {
   final bool leido;
   // Solo presente en derivación/mensaje (viene dentro de DATOS) — null en actividad.
   final int? idChatCab;
+  // Solo presente en derivación/mensaje — reemplaza a etiquetaPrincipal en el
+  // chip inferior de la tarjeta (ver getter abajo). Vacío en el resto de tipos.
+  final String oportunidad;
 
   const Notificacion({
     required this.id,
@@ -29,6 +32,7 @@ class Notificacion {
     required this.fechaHora,
     required this.leido,
     this.idChatCab,
+    this.oportunidad = '',
   });
 
   Notificacion copyWith({
@@ -40,6 +44,7 @@ class Notificacion {
     String? fechaHora,
     bool? leido,
     int? idChatCab,
+    String? oportunidad,
   }) => Notificacion(
     id: id ?? this.id,
     idLead: idLead ?? this.idLead,
@@ -49,17 +54,26 @@ class Notificacion {
     fechaHora: fechaHora ?? this.fechaHora,
     leido: leido ?? this.leido,
     idChatCab: idChatCab ?? this.idChatCab,
+    oportunidad: oportunidad ?? this.oportunidad,
   );
 
-  // Etiqueta principal del chip según tipo
-  String get etiquetaPrincipal => switch (tipo) {
-    TipoNotificacion.actividad => 'Actividad',
-    TipoNotificacion.derivacion => 'Derivación',
-    TipoNotificacion.mensaje => 'Mensaje',
-    TipoNotificacion.recordatorio => 'Recordatorio',
-    TipoNotificacion.leadPorContactar => 'Por contactar',
-    TipoNotificacion.leadReasignado => 'Reasignado',
-  };
+  // Etiqueta principal del chip según tipo — mensaje/derivación muestran la
+  // oportunidad en vez del tipo (pedido de negocio, 2026-08-13).
+  String get etiquetaPrincipal {
+    if ((tipo == TipoNotificacion.mensaje ||
+            tipo == TipoNotificacion.derivacion) &&
+        oportunidad.isNotEmpty) {
+      return oportunidad;
+    }
+    return switch (tipo) {
+      TipoNotificacion.actividad => 'Actividad',
+      TipoNotificacion.derivacion => 'Derivación',
+      TipoNotificacion.mensaje => 'Mensaje',
+      TipoNotificacion.recordatorio => 'Recordatorio',
+      TipoNotificacion.leadPorContactar => 'Por contactar',
+      TipoNotificacion.leadReasignado => 'Reasignado',
+    };
+  }
 
   // Botón de acción: Derivación/Mensaje → Ver conversación | el resto → Ver seguimiento
   String get labelAccion => switch (tipo) {

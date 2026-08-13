@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_carga_masiva_view.dart
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -211,17 +212,52 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
     }
   }
 
+  // Nombre fijo — permite detectar "ya descargada" comparando contra un
+  // path determinístico, sin depender de ningún backend/almacenamiento
+  // adicional. La copia que abre "Adjuntar archivo" (paso 3) sigue viniendo
+  // del picker nativo, esto solo evita re-pedir la plantilla al backend.
+  static const _nombrePlantilla = 'Carga_Masiva_Participantes.xlsm';
+  static const _mimePlantilla =
+      'application/vnd.ms-excel.sheet.macroEnabled.12';
+
   Future<void> _descargarPlantilla() async {
     setState(() => _descargando = true);
+    final repository = context.read<SolicitudRepository>();
     try {
-      final useCase = DescargarPlantillaCargaMasivaUseCase(
-        context.read<SolicitudRepository>(),
-      );
-      final bytes = await useCase();
-
       final dir = await getApplicationDocumentsDirectory();
-      final savePath = '${dir.path}/Carga_Masiva_Participantes.xlsm';
-      await File(savePath).writeAsBytes(bytes);
+      final savePath = '${dir.path}/$_nombrePlantilla';
+      final archivoLocal = File(savePath);
+
+      // Ya se descargó antes en este dispositivo — no se vuelve a pedir al
+      // backend, solo se abre la copia ya guardada.
+      if (await archivoLocal.exists()) {
+        await OpenFilex.open(savePath);
+        return;
+      }
+
+      final useCase = DescargarPlantillaCargaMasivaUseCase(repository);
+      final bytes = await useCase();
+      await archivoLocal.writeAsBytes(bytes);
+
+      // Copia visible en Descargas/Archivos — el asesor elige dónde
+      // guardarla vía el selector nativo "Guardar como". Solo pasa la
+      // primera vez (mientras no exista la copia local de arriba); si el
+      // asesor cancela el diálogo, igual se abre la copia local abajo, no
+      // se bloquea el flujo por eso.
+      try {
+        await FileSaver.instance.saveAs(
+          name: _nombrePlantilla,
+          bytes: Uint8List.fromList(bytes),
+          fileExtension: '',
+          includeExtension: false,
+          mimeType: MimeType.custom,
+          customMimeType: _mimePlantilla,
+        );
+      } catch (_) {
+        // No bloquea el flujo — la copia local ya quedó guardada y se
+        // abre igual más abajo.
+      }
+
       await OpenFilex.open(savePath);
     } on AppException catch (e) {
       if (mounted) AppSnackBar.error(context, e.message);

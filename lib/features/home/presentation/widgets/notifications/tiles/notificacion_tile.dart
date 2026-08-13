@@ -212,6 +212,8 @@ class _ChipTipo extends StatelessWidget {
           color: color,
           fontWeight: AppTextStyles.weightMedium,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

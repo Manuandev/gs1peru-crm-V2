@@ -448,13 +448,99 @@ proyecto).
     conexión anterior desactivada pero no eliminada, sin este fix habría seguido devolviendo la
     empresa vieja en vez de la nueva). Mismo criterio "vínculo activo más reciente" que ya usan
     número/correo y la resolución de `@ID_CONTACTO` del propio SP. Task `'U'`/`'D'` (pantalla
-    completa) **no se tocaron** — tienen el mismo patrón de UPDATE-sin-comparar-RUC ahí también
-    (el flujo de lista de N empresas no tiene el mismo concepto de "conexión anterior" a
-    desactivar), pero esa pantalla no tiene caller hoy, así que no era el foco de este fix;
-    queda pendiente si se reactiva.
+    completa) **no se tocaron en esta pasada** — tenían el mismo patrón de UPDATE-sin-comparar-RUC
+    ahí también, pero esa pantalla no tenía caller en ese momento, así que no era el foco de este
+    fix. ⚠️ **Generalizado a task 'U' el 2026-08-14 — ver "Cargo sin Empresa definida + RUC decide
+    reusar empresa (task 'U')" más abajo** — esa nota quedó desactualizada.
     Los 3 archivos (`edit_contacto_simple_portrait.dart`, `CSV_CONTACTO_CUD_APP.sql`,
     `CSV_CONTACTO_LST_APP.sql`) siguen sin desplegarse a la base real, como el resto de cambios
     de `EditContactoSimple` documentados en este archivo.
+
+  - **Cargo sin Empresa definida — diseño final, 2026-08-14 (pasó por 2 intentos previos, ambos
+    reemplazados — ver historial abajo).** Pedido de negocio (vía coordinadora del usuario): un
+    asesor puede necesitar guardar el **Cargo** de un contacto sin tener todavía definida a qué
+    **Empresa** pertenece (ej. "está entre dos empresas") — completa la Empresa (RUC) más
+    adelante, en otra edición. Aplica a `'U'` (`EditContacto`, N empresas) y `'US'`
+    (`EditContactoSimple`, 1 sola — **el único de los dos con caller real hoy**, ver
+    "EditContactoSimple — migrado de idNumero a idContacto" más abajo).
+    - **`T_EMPRESA_CONTACTO.ID_EMPRESA` ahora puede ser `NULL`** — decisión explícita del usuario,
+      en vez de crear una `T_EMPRESA` "placeholder" (RUC/Nombre vacíos) por cada Cargo sin
+      empresa: "imagínate cinco, seis registros con RUC en cero — no se puede, es imposible".
+      ⚠️ **Requiere `ALTER TABLE` para permitir `NULL` en esa columna si hoy es `NOT NULL`** — no
+      hay acceso a la base para confirmar el tipo real; correr algo como
+      `ALTER TABLE CRM.T_EMPRESA_CONTACTO ALTER COLUMN ID_EMPRESA INT NULL;` antes de desplegar
+      el resto de este cambio (ajustar el tipo si no es `INT`).
+    - **Regla, igual en `'U'` y `'US'`** — por cada fila de empresa que llega:
+      1. Si `RUC` viene vacío → `ID_EMPRESA = NULL`. **`T_EMPRESA` nunca se toca ni se crea** para
+         esta fila — cero riesgo de acumular filas placeholder.
+      2. Si `RUC` no viene vacío → busca en `T_EMPRESA` una fila con ese RUC exacto: si existe,
+         reusa su `ID_EMPRESA` (nunca le pisa `NOMBRE`/etc. — fila compartida entre contactos);
+         si no existe, la crea y usa el `ID_EMPRESA` nuevo.
+      3. Con el `ID_EMPRESA` ya resuelto (`NULL` o real), arma la fila de `T_EMPRESA_CONTACTO`:
+         `ID_EMPRESA_CONTACTO = 0` → `INSERT` nuevo; con valor → **`UPDATE` en sitio de esa misma
+         fila** — nunca se crea una fila nueva ni se desactiva nada, sin importar si el
+         `ID_EMPRESA` cambia de `NULL` → real, de una empresa a otra, o se queda igual.
+      - Motivo de por qué el `UPDATE` en sitio siempre es seguro (a diferencia de `T_EMPRESA`):
+        `T_EMPRESA_CONTACTO` es la conexión de **este** contacto, no es una fila compartida entre
+        contactos — repuntar a qué `ID_EMPRESA` apunta nunca corrompe datos de nadie más. El
+        primer intento del mismo día (ver historial) copiaba sin cuestionar el mecanismo de
+        `'US'` de "desactivar conexión anterior + crear una nueva" — innecesariamente complejo,
+        esa protección solo hace falta para `T_EMPRESA` (sí compartida), nunca para
+        `T_EMPRESA_CONTACTO`.
+    - **`'U'`** — `@T_EMPRESAS_RESUELTAS_U` (tabla nueva, reemplaza a `@T_EMPRESAS_CAMBIO`/
+      `@T_EMPRESAS_CAMBIO_RESUELTAS` del primer intento) resuelve `ID_EMPRESA` fila por fila (N
+      empresas) vía `LEFT JOIN CRM.T_EMPRESA EM ON EM.RUC = T.RUC AND ISNULL(T.RUC,'') <> ''` —
+      el guard `RUC <> ''` es a propósito: si matcheara por `RUC=''` se fusionarían entre sí
+      todas las empresas placeholder de contactos distintos (ya no debería poder pasar de todos
+      modos, porque ahora nunca se crea una `T_EMPRESA` con RUC vacío — pero el guard se deja
+      igual, no cuesta nada y cierra la puerta del todo). Al final, un solo `UPDATE
+      T_EMPRESA_CONTACTO ... FROM @T_EMPRESAS_RESUELTAS_U` cubre las conexiones ya existentes.
+      `@T_EMPRESAS_GEN` (tabla vieja con `OUTPUT`, del código original antes de todos estos
+      cambios) quedó sin uso — no se borró su `DECLARE` (compartido antes de la rama `IF`),
+      inofensivo declarado-sin-usar en T-SQL.
+    - **`'US'`** — mismo criterio pero con variables escalares (`@RUC_US`/`@NOMBRE_US`/
+      `@NOM_CARGO_US`/`@ID_EMPRESA_RESUELTO_US`, no una tabla — la pantalla simple es siempre 1
+      sola fila). `@RUC_US IS NULL` (no `''`) es la señal de "el asesor no tocó Empresa/Cargo en
+      absoluto" (`@T_EMPRESAS` sin ninguna fila) — distinto de `@RUC_US = ''` (sí hay fila, pero
+      sin RUC).
+    - **Mayúsculas** — sin cambios, ya estaba resuelto: `_construirContacto()`
+      (`edit_contacto_portrait.dart`)/`edit_contacto_simple_portrait.dart` ya fuerzan `_mayus()`
+      en los campos de texto libre de empresa desde el 2026-07-23 (RUC queda sin forzar, es
+      numérico).
+    - **Pendiente explícito, a propósito no incluido en este pase** (pedido del usuario, "eso
+      déjalo para después"): validar caracteres especiales en Nombres/Apellidos.
+    - Como el resto de cambios a este `.sql`, queda pendiente el `ALTER PROCEDURE` (+ el `ALTER
+      TABLE` de arriba) en SSMS para desplegarlo a la base real.
+
+    **Historial del mismo día — 2 intentos previos, reemplazados por el diseño de arriba:**
+    1. Primer intento: igual criterio "RUC decide reusar vs. crear", pero creando una `T_EMPRESA`
+       placeholder (RUC/Nombre vacíos) para el caso "solo Cargo", y con `T_EMPRESA_CONTACTO`
+       usando el mecanismo "desactivar conexión anterior + crear una nueva" copiado de `'US'`
+       (2026-07-28) — solo se aplicó a `'U'`, `'US'` no se tocó todavía. **Descartado por el
+       usuario en la revisión**: no quería ninguna `T_EMPRESA` placeholder ("no se puede, es
+       imposible" tener varias con RUC en cero).
+    2. Al probarlo en vivo (contra el SP viejo, sin desplegar — ver más abajo), el usuario
+       reportó que el Cargo no se guardaba y `T_EMPRESA_CONTACTO` nunca se creaba. Investigando:
+       `EditContacto` (`'U'`) **no tiene ningún caller real en la app hoy** (los 2 que existían
+       se movieron a `EditContactoSimple`/`'US'`, ver "EditContactoSimple — migrado de idNumero a
+       idContacto" más abajo) — la prueba en vivo pasó necesariamente por `'US'`, que el primer
+       intento nunca tocó. Ahí el bug era más simple, en 2 capas: (a) Flutter
+       (`guardarContactoSimple()`) armaba `datosEmpresa` solo `if (razonSocial no vacía)` — con
+       Cargo lleno y Razón social vacía, la fila entera (Cargo incluido) nunca salía del
+       teléfono; (b) el propio SP task `'US'` tenía el mismo filtro
+       (`WHERE field3 IS NOT NULL AND field3 <> ''`, razón social) — la fila se descartaba ahí
+       también. Se corrigieron ambas capas para incluir la fila si RUC, razón social o Cargo
+       tienen contenido — este segundo intento sí llegó a funcionar de punta a punta, pero
+       todavía con el mecanismo de placeholder/desactivar-conexión del punto 1, que el usuario
+       pidió simplificar al diseño final de arriba en la misma sesión.
+    3. **Gap encontrado en la revisión final, antes de desplegar nada**: con `ID_EMPRESA` NULL-able,
+       el SP de **lectura** (`CSV_CONTACTO_LST_APP`, tasks `'D'`/`'DS'`) hacía
+       `INNER JOIN CRM.T_EMPRESA EM ON EM.ID_EMPRESA = EC.ID_EMPRESA` — un `T_EMPRESA_CONTACTO`
+       con `ID_EMPRESA=NULL` nunca habría vuelto a aparecer al reabrir la pantalla (el Cargo se
+       guardaba pero "desaparecía" al reabrir — el síntoma original, con una causa distinta a la
+       ya corregida). Cambiado a `LEFT JOIN` en los 2 tasks — `CONCAT()` en T-SQL ya convierte
+       `NULL` a `''` automáticamente, así que no hizo falta envolver ningún campo de `EM.*` en
+       `ISNULL()` adicional en el `SELECT`.
 
 ## BLoCs / Cubits
 - `LeadListBloc` (list/) → carga leads por tipo, filtra en memoria; conteos por filtro (usa `idEstadoPadre` para agrupar sub-estados bajo su padre)

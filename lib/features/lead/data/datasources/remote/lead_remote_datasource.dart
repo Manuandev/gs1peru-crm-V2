@@ -382,7 +382,14 @@ class LeadRemoteDatasource {
         ? ''
         : [contacto.idCorreo, contacto.correo].join(camp);
 
-    final datosEmpresa = contacto.razonSocial.trim().isEmpty
+    // Antes se mandaba solo si razonSocial no estaba vacía — pedido de
+    // negocio 2026-08-14: el asesor puede guardar el Cargo sin todavía
+    // tener definida la Empresa (RUC/Razón social), así que basta con que
+    // CUALQUIERA de los 3 tenga contenido para mandar la fila.
+    final datosEmpresa =
+        contacto.ruc.trim().isEmpty &&
+            contacto.razonSocial.trim().isEmpty &&
+            contacto.cargo.trim().isEmpty
         ? ''
         : [
             contacto.idEmpresaContacto,

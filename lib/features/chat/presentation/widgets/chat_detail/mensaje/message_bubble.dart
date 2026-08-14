@@ -357,7 +357,7 @@ class _BubbleTimeRow extends StatelessWidget {
 // _ImageContent — imagen inline con visor
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _ImageContent extends StatelessWidget {
+class _ImageContent extends StatefulWidget {
   final ChatMessage message;
   final int idNumero;
   final String nombre;
@@ -368,21 +368,41 @@ class _ImageContent extends StatelessWidget {
     required this.nombre,
   });
 
-  bool get _isLocal => _isLocalFileHelper(message);
+  @override
+  State<_ImageContent> createState() => _ImageContentState();
+}
+
+// El archivo de una plantilla ya está en el servidor desde que se creó la
+// plantilla (ver chat/CLAUDE.md) — si la primera carga falla es casi siempre
+// un hipo de red puntual, no que el archivo no exista. Un solo intento fallido
+// dejaba la burbuja pegada en "Imagen no disponible" para siempre (recién se
+// arreglaba si el usuario salía y volvía a entrar al chat, forzando una
+// burbuja/widget nuevo) — acá reintentamos solos una vez y dejamos la caja de
+// error tocable para reintentar más veces si hace falta, sin salir del chat.
+class _ImageContentState extends State<_ImageContent> {
+  int _retryCount = 0;
+  bool _autoRetried = false;
+
+  bool get _isLocal => _isLocalFileHelper(widget.message);
 
   void _openViewer(BuildContext context, String urlOrPath) {
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (_, _, _) => MediaViewerPage(
           url: urlOrPath,
-          fileName: '${message.nombreArchivo}${message.tipoArchivo}',
-          senderName: nombre,
-          sentAt: message.fechaHora,
+          fileName: '${widget.message.nombreArchivo}${widget.message.tipoArchivo}',
+          senderName: widget.nombre,
+          sentAt: widget.message.fechaHora,
         ),
         transitionsBuilder: (_, animation, _, child) =>
             FadeTransition(opacity: animation, child: child),
       ),
     );
+  }
+
+  void _retry() {
+    if (!mounted) return;
+    setState(() => _retryCount++);
   }
 
   @override
@@ -396,9 +416,9 @@ class _ImageContent extends StatelessWidget {
 
     if (_isLocal) {
       return GestureDetector(
-        onTap: () => _openViewer(context, message.contenido),
+        onTap: () => _openViewer(context, widget.message.contenido),
         child: Image.file(
-          File(message.contenido),
+          File(widget.message.contenido),
           width: size,
           height: size,
           fit: BoxFit.cover,
@@ -407,16 +427,29 @@ class _ImageContent extends StatelessWidget {
       );
     }
 
-    final url = MessageUrlHelper.buildFileUrl(message);
+    final url = MessageUrlHelper.buildFileUrl(widget.message);
     return GestureDetector(
       onTap: () => _openViewer(context, url),
       child: CachedNetworkImage(
+        // Cambia junto con _retryCount — fuerza a cached_network_image a
+        // tratarlo como una imagen nueva y pedirla de nuevo por red, en vez
+        // de reusar el error ya cacheado bajo la key original (url sola).
         imageUrl: url,
+        cacheKey: '$url#r$_retryCount',
         width: size,
         height: size,
         fit: BoxFit.cover,
         placeholder: (_, _) => _ImagePlaceholder(size: size),
-        errorWidget: (_, _, _) => _ImageErrorBox(size: size),
+        errorWidget: (_, _, _) {
+          if (!_autoRetried) {
+            _autoRetried = true;
+            Future.delayed(const Duration(seconds: 2), _retry);
+          }
+          return GestureDetector(
+            onTap: _retry,
+            child: _ImageErrorBox(size: size),
+          );
+        },
       ),
     );
   }

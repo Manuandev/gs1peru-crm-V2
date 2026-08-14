@@ -1,5 +1,63 @@
 # Solicitudes Feature
 
+## Carga masiva bloquea la importación si el excel supera el cupo, con modal de un solo botón (2026-08-14)
+Pedido del usuario — antes, si el excel traía más filas de las que el cupo disponible permitía
+(`cantidadEsperada - participantes ya agregados`), `_parsearArchivo()` recortaba en silencio a
+las primeras N filas y solo avisaba con un `AppSnackBar.warning` **después** de que el asesor ya
+había presionado "Subir participantes" — nunca se le pedía corregir el excel, simplemente se
+perdían las filas de más sin que quedara claro cuáles.
+
+- **`_parsearArchivo()`** (`solicitud_carga_masiva_view.dart`) ahora parsea primero **todas** las
+  filas con datos del excel (sin recortar), y recién después compara el total contra
+  `cupoRestante` (`cantidadEsperada - participantes ya agregados`, mismo cálculo de siempre). Si
+  el total supera el cupo, **bloquea la importación por completo** — limpia `_archivo`/
+  `_participantesParseados` (el asesor tiene que volver a seleccionar el archivo, ya corregido) y
+  muestra un modal (`context.showInfoDialog`, ver abajo) con el conteo real del excel y el cupo
+  disponible: *"Tienes N participantes en el excel. Edita tu excel — como máximo puedes tener M
+  participante(s), esa es la cantidad máxima."* — ya no se sube nada parcial ni hay que adivinar
+  qué filas faltaron.
+- **`BuildContext.showInfoDialog()`** (nuevo, `navigation_extensions.dart`, junto a
+  `showConfirmDialog`) — mismo diseño exacto (logo GS1 en el header, título + mensaje, esquinas
+  redondeadas) pero con **un solo botón** ("Entendido" por defecto, `buttonText` configurable) en
+  vez de Confirmar/Cancelar — para avisos que no piden una decisión Sí/No, solo "OK". Reusable
+  para cualquier otro aviso bloqueante del estilo en el resto de la app, no exclusivo de este
+  feature.
+- **No se tocó** el resto de la validación de carga masiva (campos obligatorios/formato por fila
+  sigue pendiente, ver "Carga masiva de participantes — ya funciona de punta a punta..." más
+  abajo) — este fix es solo sobre el tope de cantidad.
+
+## Carga masiva ahora sugiere el importe por participante — ya no entra todo en 0 (2026-08-14)
+Seguimiento del punto de arriba, mismo pedido del usuario. Antes **todo** participante importado
+por excel entraba con `importe: 0` (documentado a propósito como pendiente — "el asesor lo ajusta
+después") — la cartilla de la lista (`ParticipanteCard`) siempre mostraba "0.00" para
+participantes recién importados, aunque el formulario de editar sí mostraba una sugerencia
+(`_importeFijo()`, calculada del precio de la negociación) porque ese formulario cae al sugerido
+cuando el importe real guardado es 0 — la lista y el formulario mostraban números distintos para
+el mismo participante, confuso para el asesor.
+
+- **`_parsearArchivo()`** (`solicitud_carga_masiva_view.dart`) ahora calcula el importe sugerido
+  de cada fila con el **mismo cálculo** que "Nuevo participante" (`_importeFijo()`,
+  `solicitud_participantes_view.dart` — ver "Revert — el último participante vuelve a absorber
+  el centavo de redondeo..." más abajo para el detalle completo de la fórmula): división simple
+  del precio de la negociación sin IGV entre `cantidadEsperada`, salvo el **último** participante
+  esperado (considerando los que ya existían en el cubit **más** los que ya se llevan parseados
+  en este mismo lote), que absorbe lo que falte para que la suma calce exacto — mismo criterio de
+  "el último absorbe el redondeo" aplicado ahora también a un lote completo, no solo a
+  altas una por una. Sin negociación de origen (`cantidadEsperada == null`) o sin precio
+  (`precioTotalLead <= 0`), sigue entrando en `0` — mismo comportamiento de siempre en ese caso,
+  no hay nada que sugerir.
+- **`widget.precioTotalLead`** (nuevo, `double`, default `0`) — la vista de carga masiva no tenía
+  acceso a `SolicitudFormCubit` (es una ruta aparte, ver "'Carga masiva' (paso 2, Excel) sigue
+  siendo una ruta aparte" más abajo) — se threadeó el valor crudo (no el cubit completo, mismo
+  patrón ya usado para `cantidadEsperada` en esta misma ruta) de punta a punta:
+  `SolicitudParticipantesView` (`formState.precioTotalLead`) →
+  `context.goToCargaMasivaParticipantes(precioTotalLead:)` → argumento de ruta → 
+  `SolicitudCargaMasivaPage` → `SolicitudCargaMasivaView`.
+- **El tope de cupo (arriba) sigue evaluándose sobre el conteo de filas, no sobre el importe** —
+  ambos cambios son independientes: si el excel trae más filas de las que caben, igual se
+  bloquea con el modal antes de siquiera importar nada, sin importar qué importe se hubiera
+  calculado para esas filas.
+
 ## "Guardar" desde el wizard (editar/validar) ya no recarga el Detalle — `SolicitudUpdateNotifier` (2026-08-14)
 Pedido explícito del usuario: al entrar a "Editar ficha"/"Validar" desde `SolicitudDetalleView`
 (`goToFichaCompletarSolicitud`, `_push` normal — el Detalle queda vivo debajo en el stack, ver

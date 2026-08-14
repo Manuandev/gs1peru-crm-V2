@@ -100,9 +100,14 @@ extension NavigationExtensions on BuildContext {
   Future<void> goToCargaMasivaParticipantes({
     required ParticipantesCubit cubit,
     int? cantidadEsperada,
+    double precioTotalLead = 0,
   }) => _push(
     AppRoutes.cargaMasivaParticipantes,
-    arguments: {'cubit': cubit, 'cantidadEsperada': cantidadEsperada},
+    arguments: {
+      'cubit': cubit,
+      'cantidadEsperada': cantidadEsperada,
+      'precioTotalLead': precioTotalLead,
+    },
   );
 
   Future<void> goToDetalleCobranza({required String numSol}) =>
@@ -329,6 +334,101 @@ extension NavigationExtensions on BuildContext {
       },
     );
     return result ?? false;
+  }
+
+  // Mismo diseño que showConfirmDialog (logo GS1 + título + mensaje) pero
+  // con un solo botón — para avisos que solo requieren "entendido", sin
+  // decisión Sí/No del usuario.
+  Future<void> showInfoDialog({
+    required String title,
+    required String message,
+    String buttonText = 'Entendido',
+  }) {
+    return showDialog<void>(
+      context: this,
+      barrierDismissible: false,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 8,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: colorScheme.surface,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(AppImages.logoGs1Peru, height: 36),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                  child: Column(
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        message,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(
+                  color: colorScheme.outlineVariant,
+                  height: 24,
+                  indent: 24,
+                  endIndent: 24,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(buttonText),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> logoutWithConfirmation(BuildContext context) async {

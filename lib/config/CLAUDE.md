@@ -165,6 +165,13 @@ final confirmado = await context.showConfirmDialog(
 );
 // retorna bool
 
+// Diálogo de aviso con un solo botón (sin decisión Sí/No) — mismo diseño
+await context.showInfoDialog(
+  title: 'Aviso',
+  message: 'Algo que el usuario solo necesita confirmar que leyó.',
+  buttonText: 'Entendido', // default
+);
+
 // Logout con confirmación
 context.logoutWithConfirmation(context);
 // dispara AuthLogoutRequested si el usuario confirma

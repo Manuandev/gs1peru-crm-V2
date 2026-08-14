@@ -148,6 +148,7 @@ class AppRouter {
         return SolicitudCargaMasivaPage(
           cubit: args['cubit'] as ParticipantesCubit,
           cantidadEsperada: args['cantidadEsperada'] as int?,
+          precioTotalLead: args['precioTotalLead'] as double? ?? 0,
         );
       },
     ),

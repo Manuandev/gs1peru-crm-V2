@@ -16,8 +16,17 @@ class SolicitudCargaMasivaView extends StatefulWidget {
   // SolicitudFormState.cantidadEsperada). Cuando no es null, el import se
   // recorta a los cupos que todavía quedan libres.
   final int? cantidadEsperada;
+  // Precio total de la negociación de origen (SolicitudFormState.
+  // precioTotalLead, 0 si no viene de una negociación) — usado para
+  // sugerir el importe de cada participante importado, mismo cálculo que
+  // "Nuevo participante" (ver _importeSugerido más abajo).
+  final double precioTotalLead;
 
-  const SolicitudCargaMasivaView({super.key, this.cantidadEsperada});
+  const SolicitudCargaMasivaView({
+    super.key,
+    this.cantidadEsperada,
+    this.precioTotalLead = 0,
+  });
 
   @override
   State<SolicitudCargaMasivaView> createState() =>
@@ -86,7 +95,7 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
   // real (CatalogsBloc) para resolver los ids — si algo no matchea, el
   // participante igual se agrega con ese campo vacío (las validaciones de
   // campo quedan para una siguiente pasada, pedido explícito del usuario).
-  void _parsearArchivo(PlatformFile archivo) {
+  Future<void> _parsearArchivo(PlatformFile archivo) async {
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is! CatalogsLoaded) {
       setState(
@@ -112,22 +121,48 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
               ?.id ??
           '';
 
-      final cantidadEsperada = widget.cantidadEsperada;
-      final yaAgregados = context
-          .read<ParticipantesCubit>()
-          .state
-          .participantes
-          .length;
-      final cupoRestante = cantidadEsperada == null
-          ? null
-          : (cantidadEsperada - yaAgregados).clamp(0, cantidadEsperada);
-
       String celda(List<Data?> fila, int indice) => indice < fila.length
           ? (fila[indice]?.value?.toString().trim() ?? '')
           : '';
 
+      // Importe sugerido por participante — mismo cálculo que "Nuevo
+      // participante" (_importeFijo, ver solicitud_participantes_view.dart):
+      // división simple del precio de la negociación (sin IGV) entre
+      // cantidadEsperada, salvo el último participante esperado, que
+      // absorbe lo que falte para que la suma calce exacto. Sin negociación
+      // de origen (cantidadEsperada null o precioTotalLead 0) retorna 0 —
+      // mismo comportamiento de siempre en ese caso.
+      final participantesActuales = context
+          .read<ParticipantesCubit>()
+          .state
+          .participantes;
+      final cantidadEsperada = widget.cantidadEsperada;
+      final igvPorcentaje = catalogState.igvPorcentaje;
+      final totalSinIgv = widget.precioTotalLead / (1 + igvPorcentaje / 100);
+
+      // Primero se parsean TODAS las filas con datos, sin recortar por cupo
+      // todavía — el conteo real del excel es lo que necesita el aviso de
+      // abajo si supera el máximo disponible.
       final parseados = <ParticipanteLocal>[];
-      var filasIgnoradasPorCupo = 0;
+
+      double importeSugerido() {
+        if (cantidadEsperada == null ||
+            cantidadEsperada == 0 ||
+            widget.precioTotalLead <= 0) {
+          return 0;
+        }
+        final actualesCount = participantesActuales.length + parseados.length;
+        final double importe;
+        if (actualesCount == cantidadEsperada - 1) {
+          final sumaExistentes =
+              participantesActuales.fold(0.0, (s, p) => s + p.importe) +
+              parseados.fold(0.0, (s, p) => s + p.importe);
+          importe = totalSinIgv - sumaExistentes;
+        } else {
+          importe = totalSinIgv / cantidadEsperada;
+        }
+        return double.parse(importe.toStringAsFixed(2));
+      }
 
       for (var i = 1; i < filas.length; i++) {
         final fila = filas[i];
@@ -151,11 +186,6 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
           correo,
         ].every((v) => v.isEmpty);
         if (vacia) continue;
-
-        if (cupoRestante != null && parseados.length >= cupoRestante) {
-          filasIgnoradasPorCupo++;
-          continue;
-        }
 
         final tipoDocTextoNorm = tipoDocTexto.toUpperCase();
         final tipoDoc = catalogState.tiposDocumento
@@ -188,9 +218,38 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
             celular: nroCelular,
             celularCodigoTelefono: pais?.codigoTelefono ?? '',
             tipoParticipante: idTipoParticipantePagante,
-            importe: 0,
+            importe: importeSugerido(),
           ),
         );
+      }
+
+      // Tope de cupo — a diferencia de antes (recortaba en silencio y solo
+      // avisaba con un snackbar tras importar), ahora bloquea la
+      // importación completa: el asesor debe corregir el excel y volver a
+      // seleccionarlo, no se cargan participantes de más.
+      final cupoRestante = cantidadEsperada == null
+          ? null
+          : (cantidadEsperada - participantesActuales.length).clamp(
+              0,
+              cantidadEsperada,
+            );
+
+      if (cupoRestante != null && parseados.length > cupoRestante) {
+        setState(() {
+          _archivo = null;
+          _participantesParseados = [];
+          _errorParseo = null;
+        });
+        if (mounted) {
+          await context.showInfoDialog(
+            title: 'Máximo de participantes',
+            message:
+                'Tienes ${parseados.length} participantes en el excel. '
+                'Edita tu excel — como máximo puedes tener $cupoRestante '
+                'participante(s), esa es la cantidad máxima.',
+          );
+        }
+        return;
       }
 
       setState(() {
@@ -199,14 +258,6 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
             ? 'El archivo importado no tiene registros.'
             : null;
       });
-
-      if (filasIgnoradasPorCupo > 0 && mounted) {
-        AppSnackBar.warning(
-          context,
-          'Se alcanzó el máximo de $cantidadEsperada participante(s) — '
-          '$filasIgnoradasPorCupo fila(s) del Excel no se importaron.',
-        );
-      }
     } catch (_) {
       setState(() => _errorParseo = 'El archivo no cumple con el formato.');
     }

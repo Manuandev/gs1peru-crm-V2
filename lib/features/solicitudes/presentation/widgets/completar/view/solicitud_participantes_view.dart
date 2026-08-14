@@ -317,6 +317,7 @@ class _SolicitudParticipantesViewState
                               onTap: () => context.goToCargaMasivaParticipantes(
                                 cubit: context.read<ParticipantesCubit>(),
                                 cantidadEsperada: cantidadEsperada,
+                                precioTotalLead: formState.precioTotalLead,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.xs),

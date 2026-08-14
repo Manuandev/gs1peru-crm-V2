@@ -118,6 +118,27 @@ home.prospectos         // List<ProspectoHome>
 
 ---
 
+## `ProspectoHome.nombreMostrar` — fallback a teléfono (2026-08-14)
+
+Igual que `PrioridadHome.nombreMostrar`: si el contacto no tiene nombre registrado,
+`nombreMostrar` cae a `telefonoCompleto` (`"$prefijoTelefono $telefono"`). `ProspectoTileHome`
+usa `nombreMostrar` tanto en el avatar como en el texto principal, nunca `nombre` directo.
+
+El SP `CRM.CSV_HOME_LST_APP` (tarea `L`, sección Y de prospectos) no traía teléfono — se agregaron
+los campos `04 NUMERO` y `05 PREFIJO_PAIS` al CONCAT (después de `03 FC_ORDEN`, sin tocar los
+índices existentes). El join de teléfono pasó de `LEFT JOIN T_CONTACTO_NUMERO/T_NUMERO` directo
+(sin filtro, podía traer más de un número por contacto y duplicar filas) a `OUTER APPLY (SELECT
+TOP 1 ... WHERE IB_ACTIVO = 1 ORDER BY FC_USUARIO_C DESC)` — mismo patrón que ya usaba la sección
+de totales del mismo SP — para garantizar un solo número por lead.
+
+```dart
+// ProspectoHomeModel.fromRawString — índices nuevos
+telefono:        ParseUtils.str(fields, 4),
+prefijoTelefono: ParseUtils.str(fields, 5),
+```
+
+---
+
 ## Navegación desde Home
 
 ```dart

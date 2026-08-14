@@ -23,7 +23,7 @@ class ProspectoTileHome extends StatelessWidget {
         child: Row(
           children: [
             // ── AVATAR con ícono ──────────────────────────────────
-            _Avatar(nombre: prospecto.nombre),
+            _Avatar(nombre: prospecto.nombreMostrar),
             const SizedBox(width: AppSpacing.md),
 
             // ── NOMBRE + EMPRESA ──────────────────────────────────
@@ -33,7 +33,7 @@ class ProspectoTileHome extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    prospecto.nombre,
+                    prospecto.nombreMostrar,
                     style: AppTextStyles.titleSmall.copyWith(
                       fontWeight: AppTextStyles.weightBold,
                     ),

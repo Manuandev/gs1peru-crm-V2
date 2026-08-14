@@ -9,6 +9,8 @@ class ProspectoHomeModel extends ProspectoHome {
     required super.nombre,
     required super.nombreEmpresa,
     required super.fechaHora,
+    required super.telefono,
+    required super.prefijoTelefono,
   });
 
   factory ProspectoHomeModel.fromRawString(String raw) {
@@ -19,6 +21,8 @@ class ProspectoHomeModel extends ProspectoHome {
       nombre: ParseUtils.str(fields, 1),
       nombreEmpresa: ParseUtils.str(fields, 2),
       fechaHora: ParseUtils.str(fields, 3),
+      telefono: ParseUtils.str(fields, 4),
+      prefijoTelefono: ParseUtils.str(fields, 5),
     );
   }
 

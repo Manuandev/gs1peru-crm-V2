@@ -23,27 +23,65 @@ class ResumenInversion extends StatelessWidget {
   // de una negociación o el catálogo aún no la resuelve; en ese caso se
   // muestra el ícono genérico de siempre en vez del símbolo.
   final String? monedaSimbolo;
+  // Precio total pactado en la negociación de origen
+  // (`SolicitudFormCubit.state.precioTotalLead`) y la cantidad de
+  // participantes que esa negociación exige — null/0 si esta solicitud no
+  // viene de una negociación. Ver el porqué en el comentario de `build()`.
+  final double? precioTotalNegociacion;
+  final int? cantidadEsperada;
+  final int cantidadActual;
 
   const ResumenInversion({
     super.key,
     required this.total,
     required this.igvPorcentaje,
     this.monedaSimbolo,
+    this.precioTotalNegociacion,
+    this.cantidadEsperada,
+    this.cantidadActual = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final inversion = total;
-    // El IGV se redondea a 2 decimales ANTES de sumarlo — antes "Importe
-    // total" usaba el IGV crudo (sin redondear) mientras la fila "IGV" de
-    // arriba mostraba la versión redondeada, así que el total podía no
-    // calzar con la suma literal de las 2 filas de encima (ej. Inversión
-    // 7627.12 + IGV 1372.88 mostrando un total distinto de 9000.00) — bug
-    // real reportado por el usuario, 2026-08-05. Con el IGV ya redondeado,
-    // "Importe total" siempre es exactamente Inversión + IGV, los 2 números
-    // que el usuario ve arriba.
-    final igv = double.parse((inversion * igvPorcentaje / 100).toStringAsFixed(2));
-    final importeTotal = inversion + igv;
+    final completo =
+        cantidadEsperada != null &&
+        cantidadEsperada! > 0 &&
+        cantidadActual >= cantidadEsperada! &&
+        precioTotalNegociacion != null &&
+        precioTotalNegociacion! > 0;
+
+    double importeTotal;
+    if (completo) {
+      // Con la solicitud ya completa (todos los participantes esperados
+      // agregados) y viniendo de una negociación con precio ya pactado,
+      // "Importe total" se fija DIRECTO en ese precio — no se vuelve a
+      // calcular con `inversion * igv%` — así, mientras nadie edite un
+      // importe a mano, el total siempre calza exacto contra la
+      // negociación, sin depender de hacia qué lado cae el redondeo de
+      // `inversion × igv%` (con inversión 5084.75 e igv 18%, por ejemplo,
+      // ese cálculo cae justo en un empate de redondeo — 6000.005 — que
+      // según el punto flotante puede subir a 6000.01 en vez de calzar en
+      // los 6000.00 pactados). Bug real reportado por el usuario,
+      // 2026-08-14. El IGV que se muestra abajo sale de restarle la
+      // Inversión a este total ya fijo — el centavo de diferencia (por el
+      // redondeo de cada importe individual) se absorbe siempre ahí, nunca
+      // en la Inversión ni en el precio pactado — mismo criterio de
+      // negocio que ya usa `ParticipantesState.calcularIgvPorParticipante`
+      // para el IGV del último Pagante en el guardado al backend.
+      importeTotal = precioTotalNegociacion!;
+    } else {
+      // Todavía no está completa (o no viene de una negociación) — no hay
+      // un precio pactado contra el cual fijar el total; se sigue armando
+      // con el cálculo normal (Inversión + IGV redondeado sobre el total,
+      // no por separado — ver fix del 2026-08-14 más abajo en el CLAUDE.md
+      // del feature).
+      final igvSinRedondear = inversion * igvPorcentaje / 100;
+      importeTotal = double.parse(
+        (inversion + igvSinRedondear).toStringAsFixed(2),
+      );
+    }
+    final igv = double.parse((importeTotal - inversion).toStringAsFixed(2));
     final igvLabel = igvPorcentaje % 1 == 0
         ? igvPorcentaje.toInt().toString()
         : igvPorcentaje.toStringAsFixed(1);

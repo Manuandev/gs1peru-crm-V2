@@ -295,11 +295,19 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
 /// negociación se editó/desfasó después de fijar esos valores. Retorna
 /// `null` si no aplica (no vino de negociación) o si calza.
 ///
-/// Se evalúa **solo** al presionar "Generar solicitud" — nunca al entrar a
-/// la página ni al presionar "Guardar" (borrador, se puede editar después
-/// sin que nada bloquee ni avise) — decisión de negocio, 2026-07-17. Antes
-/// vivía en `solicitud_completar_view.dart._avisarSiPrecioTotalNoCalza()` y
-/// se disparaba automáticamente al prellenar el paso 1 desde la negociación.
+/// Se evalúa **solo** al presionar "Siguiente" en el paso 2 (Participantes),
+/// al avanzar a Facturación — nunca al entrar a la página, al presionar
+/// "Guardar" (borrador, se puede editar después sin que nada bloquee ni
+/// avise), ni al presionar "Guardar"/"Generar solicitud"/"Actualizar
+/// solicitud" en el Resumen (paso 4) — pedido de negocio, 2026-08-14: esos 3
+/// botones del Resumen se limitan a guardar/subir archivos, sin validar
+/// nada; el aviso vive en el paso donde tiene sentido revisar el precio
+/// (recién se conoce la cantidad real de participantes ahí), no al final
+/// del wizard. **Revierte** dónde se llamaba desde el 2026-07-17
+/// (`solicitud_resumen_view.dart._onGenerarSolicitud()`, antes de
+/// `generarSolicitudCompleta()`) — antes de eso vivía en
+/// `solicitud_completar_view.dart._avisarSiPrecioTotalNoCalza()` y se
+/// disparaba automáticamente al prellenar el paso 1 desde la negociación.
 String? avisoPrecioTotalNoCalza(SolicitudFormState formState) {
   if (formState.precioTotalLead <= 0) return null;
   final cantidad = formState.cantidadEsperada ?? 0;

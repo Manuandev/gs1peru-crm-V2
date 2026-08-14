@@ -171,6 +171,19 @@ class _SolicitudParticipantesViewState
           return;
         }
       }
+
+      // Aviso (no bloqueante) de que el precio base × cantidad − descuento
+      // de la negociación de origen ya no calza con su precio total — movido
+      // acá desde "Generar solicitud"/"Actualizar solicitud" (Resumen,
+      // 2026-08-14): el usuario pidió que ese botón se limite a guardar/subir
+      // archivos, sin validar nada — el momento correcto para avisar esto es
+      // al avanzar de Participantes a Facturación, no al final del wizard.
+      final avisoPrecio = avisoPrecioTotalNoCalza(
+        context.read<SolicitudFormCubit>().state,
+      );
+      if (avisoPrecio != null) {
+        AppSnackBar.warning(context, avisoPrecio);
+      }
     }
 
     final catalogState = context.read<CatalogsBloc>().state;
@@ -376,6 +389,9 @@ class _SolicitudParticipantesViewState
                     total: state.totalPagantes(tiposParticipante),
                     igvPorcentaje: igvPorcentaje,
                     monedaSimbolo: monedaSimbolo,
+                    precioTotalNegociacion: formState.precioTotalLead,
+                    cantidadEsperada: cantidadEsperada,
+                    cantidadActual: state.participantes.length,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),

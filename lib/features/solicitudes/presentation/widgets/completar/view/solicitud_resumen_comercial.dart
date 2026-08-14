@@ -25,20 +25,43 @@ class SeccionResumenComercial extends StatelessWidget {
     final tiposParticipante = catalogState is CatalogsLoaded
         ? catalogState.tiposParticipante
         : const <TipoParticipanteItem>[];
-    final inversion = context
-        .watch<ParticipantesCubit>()
-        .state
-        .totalPagantes(tiposParticipante);
+    final participantesState = context.watch<ParticipantesCubit>().state;
+    final inversion = participantesState.totalPagantes(tiposParticipante);
     final igvPorcentaje = catalogState is CatalogsLoaded
         ? catalogState.igvPorcentaje
         : 0.0;
-    // IGV redondeado a 2 decimales antes de sumar — mismo fix que
-    // ResumenInversion (solicitud_participantes_resumen.dart, paso 2,
-    // 2026-08-05): usar el IGV crudo acá hacía que "Importe total" no
-    // calzara con la suma literal de Inversión + IGV tal como se muestran
-    // arriba.
-    final igv = double.parse((inversion * igvPorcentaje / 100).toStringAsFixed(2));
-    final importeTotal = inversion + igv;
+    final formState = context.watch<SolicitudFormCubit>().state;
+    final cantidadEsperada = formState.cantidadEsperada;
+    final completo =
+        cantidadEsperada != null &&
+        cantidadEsperada > 0 &&
+        participantesState.participantes.length >= cantidadEsperada &&
+        formState.precioTotalLead > 0;
+
+    double importeTotal;
+    if (completo) {
+      // Solicitud completa (todos los participantes esperados agregados) y
+      // viniendo de una negociación con precio ya pactado — "Importe total"
+      // se fija DIRECTO en ese precio, no se recalcula con
+      // `inversion × igv%` — mismo fix que ResumenInversion
+      // (solicitud_participantes_resumen.dart, paso 2, 2026-08-14): ese
+      // cálculo puede caer justo en un empate de redondeo (ej. inversión
+      // 5084.75 al 18% cae en 6000.005 exacto) que según el punto flotante
+      // sube a 6000.01 en vez de calzar contra los 6000.00 pactados. El IGV
+      // de abajo sale de restarle la Inversión a este total ya fijo — el
+      // centavo de diferencia se absorbe siempre ahí, nunca en la
+      // Inversión ni en el precio pactado.
+      importeTotal = formState.precioTotalLead;
+    } else {
+      // Todavía no está completa (o no viene de una negociación) — sin un
+      // precio pactado contra el cual fijar el total, se arma con el
+      // cálculo normal: IGV redondeado sobre el total, no por separado.
+      final igvSinRedondear = inversion * igvPorcentaje / 100;
+      importeTotal = double.parse(
+        (inversion + igvSinRedondear).toStringAsFixed(2),
+      );
+    }
+    final igv = double.parse((importeTotal - inversion).toStringAsFixed(2));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

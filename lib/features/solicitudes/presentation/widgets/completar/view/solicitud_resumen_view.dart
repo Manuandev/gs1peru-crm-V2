@@ -135,13 +135,6 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
       return;
     }
 
-    final avisoPrecio = avisoPrecioTotalNoCalza(
-      context.read<SolicitudFormCubit>().state,
-    );
-    if (avisoPrecio != null) {
-      AppSnackBar.warning(context, avisoPrecio);
-    }
-
     setState(() => _generando = true);
 
     final result = await generarSolicitudCompleta(

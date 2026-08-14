@@ -1,5 +1,31 @@
 # Solicitudes Feature
 
+## Bug real — "Importe total" del footer/Resumen quedaba 1 centavo por encima del precio pactado (2026-08-14)
+Reportado por el usuario con un caso real: 2 participantes a 254.24 c/u (Inversión 508.48), IGV
+18% — el footer del paso 2 mostraba **IGV 91.53 / Importe total 600.01**, cuando el precio
+pactado (y el total sin redondear, 508.48 × 1.18 = 599.9984) es **600.00**. Pedido explícito del
+usuario, reforzando un criterio de negocio ya establecido hace un mes: cualquier centavo de
+diferencia por redondeo se absorbe en el **IGV**, nunca en la Inversión.
+
+- **Causa — doble redondeo.** `ResumenInversion`/`SeccionResumenComercial` (fix del 2026-08-05,
+  ver sección de abajo) redondeaban el IGV **por separado** (`round(508.48 × 0.18) = round
+  (91.5264) = 91.53`) y sumaban ese IGV ya redondeado a la Inversión — pero `round(a) + round(b)`
+  no siempre es igual a `round(a + b)`: el total sin redondear (599.9984) sí redondea a 600.00,
+  el problema nacía de redondear el IGV primero y sumar después.
+- **Fix, en ambos archivos** (`solicitud_participantes_resumen.dart` — `ResumenInversion`, paso
+  2 — y `solicitud_resumen_comercial.dart` — `SeccionResumenComercial`, Resumen paso 4): se
+  invirtió el orden — **"Importe total" se redondea PRIMERO** (`round(inversion + igvSinRedondear)`)
+  y el **IGV que se muestra sale de restarle la Inversión a ese total ya redondeado**
+  (`igv = round(importeTotal - inversion)`), no al revés. Con el mismo ejemplo: importeTotal =
+  round(599.9984) = 600.00, igv = 600.00 − 508.48 = **91.52** (no 91.53). "Importe total" sigue
+  siendo exactamente Inversión + IGV (invariante del fix de 2026-08-05, no se rompió) — el
+  centavo de diferencia terminó en el IGV, como pidió el usuario.
+- **No se tocó** `ParticipantesState.calcularIgvPorParticipante()` (el mecanismo que ajusta el
+  IGV de cada participante — no del agregado — al **guardar** en el backend, ver "Importe ya no
+  absorbe el redondeo..." más abajo) — coincide en criterio (el centavo va al IGV, no al
+  importe) pero es un cálculo aparte, sobre filas individuales, no sobre el agregado que muestra
+  este footer/Resumen.
+
 ## Resumen (paso 4) — "Generar solicitud" pasa a "Actualizar solicitud" si la solicitud ya existía al entrar (2026-08-13)
 Pedido de negocio (jefa del usuario): distinguir, en el botón/textos finales del wizard, entre
 generar una solicitud de verdad nueva (se entró por "Generar solicitud" desde una negociación,

@@ -42,6 +42,7 @@ class HomeLoaded extends HomeState {
   int get totLeadsNuevos => home.totLeadsNuevos;
   int get totLeadsDesarrollo => home.totLeadsDesarrollo;
   int get totNotificaciones => home.totNotificaciones;
+  int get totSolicitudesSinValidar => home.totSolicitudesSinValidar;
   List<PrioridadHome> get prioridades => home.prioridades;
   List<ProspectoHome> get prospectos => home.prospectos;
   List<AsesorHome> get asesores => home.asesores;

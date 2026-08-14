@@ -25,6 +25,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
         conversaciones: previous?.conversaciones ?? 0,
         seguimientos: previous?.seguimientos ?? 0,
         cobranzas: previous?.cobranzas ?? 0,
+        solicitudes: previous?.solicitudes ?? 0,
       ),
     );
   }
@@ -41,6 +42,7 @@ class DrawerBloc extends Bloc<DrawerEvent, DrawerState> {
         conversaciones: event.conversaciones,
         seguimientos: event.seguimientos,
         cobranzas: event.cobranza,
+        solicitudes: event.solicitudes,
       ),
     );
   }

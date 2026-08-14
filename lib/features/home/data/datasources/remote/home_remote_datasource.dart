@@ -30,6 +30,7 @@ class HomeRemoteDatasource {
         totCobranza: 0,
         totConversaciones: 0,
         totNotificaciones: 0,
+        totSolicitudesSinValidar: 0,
         prioridades: [],
         prospectos: [],
         asesores: [],

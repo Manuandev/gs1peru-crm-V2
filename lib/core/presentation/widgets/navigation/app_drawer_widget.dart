@@ -96,20 +96,24 @@ class _DrawerContent extends StatelessWidget {
                       //   isActive: rutaActual == AppRoutes.contactos,
                       // ),
                       _DrawerItem(
-                        item: const DrawerItemModel(
+                        item: DrawerItemModel(
                           id: AppRoutes.solicitudes,
                           icon: AppIcons.email,
                           label: 'Solicitudes',
                           route: AppRoutes.solicitudes,
+                          badge: state.solicitudes > 0
+                              ? state.solicitudes
+                              : null,
                         ),
                         isActive: rutaActual == AppRoutes.solicitudes,
                       ),
                       _DrawerItem(
-                        item: const DrawerItemModel(
+                        item: DrawerItemModel(
                           id: AppRoutes.cobranza,
                           icon: AppIcons.moneda,
                           label: 'Cobranza',
                           route: AppRoutes.cobranza,
+                          badge: state.cobranzas > 0 ? state.cobranzas : null,
                         ),
                         isActive: rutaActual == AppRoutes.cobranza,
                       ),

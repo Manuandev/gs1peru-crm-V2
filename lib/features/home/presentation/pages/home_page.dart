@@ -45,6 +45,7 @@ class HomePage extends StatelessWidget {
                 conversaciones: state.totConversaciones,
                 seguimientos: state.totSeguimientos,
                 cobranza: state.totCobranza,
+                solicitudes: state.totSolicitudesSinValidar,
               );
             }
           },

@@ -1469,12 +1469,14 @@ class _HomeState extends State<HomePage> with DoubleBackToExitMixin {
 
 ### BadgeExtension on BuildContext — `extensions/badge_extensions.dart`
 Actualiza los badges del drawer desde cualquier feature sin acceder directamente al BLoC.
+Parámetros reales (todos opcionales, `null` = no cambia el valor actual):
+`conversaciones` / `seguimientos` / `cobranza` / `solicitudes` (agregado 2026-08-14, ver
+`home/CLAUDE.md` → "Badges del drawer/dashboard").
 ```dart
 context.updateBadge(
   conversaciones: 3,
-  prospectos: 1,
-  propuestas: null,   // null = no cambia el valor actual
   cobranza: 0,
+  solicitudes: 2,
 )
 ```
 

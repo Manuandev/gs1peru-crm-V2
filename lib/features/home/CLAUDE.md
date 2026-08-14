@@ -44,23 +44,56 @@ static HomeModel parse(String rawResponse) {
 
 ## Parseo de totales
 
-```dart
-final campos = totalesRaw.split(AppConstants.sepCampos); // ¦
-int t(int i) {
-  if (i >= campos.length) return 0;
-  final v = campos[i].trim();
-  return v.isEmpty ? 0 : int.tryParse(v) ?? 0;
-}
+`HomeModel.parse` usa `ParseUtils.toInt(c, i)` sobre `totalesRaw.split(AppConstants.sepCampos)`.
+Índices reales (el orden documentado antes acá no coincidía con el código — corregido
+2026-08-14):
 
-// Índices:
-t(0) → totConversaciones
-t(1) → totProspectos
-t(2) → totPropuestas
-t(3) → totCobranza
-t(4) → totLeadsNuevos
-t(5) → totLeadsDesarrollo
-t(6) → totNotificaciones
 ```
+c(0) → totLeadsNuevos
+c(1) → totLeadsDesarrollo
+c(2) → totPropuestas
+c(3) → totSeguimientos            (= totLeadsNuevos + totLeadsDesarrollo + totPropuestas)
+c(4) → totCobranza
+c(5) → totConversaciones
+c(6) → totNotificaciones
+c(7) → totSolicitudesSinValidar
+```
+
+---
+
+## Badges del drawer/dashboard — qué cuenta cada total (2026-08-14)
+
+Pedido de negocio: los badges no debían contar "todo lo activo", sino solo lo que requiere
+acción del asesor. `CRM.CSV_HOME_LST_APP` (tarea `L`) filtra cada total en el propio SP:
+
+- **`totConversaciones`** — antes contaba cualquier conversación activa sin importar quién
+  mandó el último mensaje (con 3 negociaciones donde el asesor ya había respondido, igual
+  mostraba "3"). Ahora el `WHERE` de esa sección suma `AND CD.DIRECCION = 'CLI'` — solo cuenta
+  si el **último** mensaje (la fila que ya resolvía `MAX(ID_CONVERSACION_DET)`) lo mandó el
+  cliente. `DIRECCION` tiene 3 valores posibles (ver `CRM.CSV_WHATSAPP_CHAT_CUD_SP_V03.sql`):
+  `'CLI'` cliente, `'ASE'` asesor, `'AIA'` asistente IA.
+- **`totCobranza`** — antes contaba todo `EVT.T_TECMSOLINSCRIPCION01` con
+  `IB_TIPO_CRM = 1 AND IB_VALIDADO != 0`, sin filtrar por estado. Ahora suma
+  `AND CI.ID_ESTADO_GES = 0` — solo "Pend. de Documento" (mismo código que usa la tarjeta
+  "Pend. documento" de `CobranzaSummaryCards`, ver `cobranza/CLAUDE.md` → sección "Estado").
+- **`totSolicitudesSinValidar`** (nuevo, índice `c(7)`) — mismo patrón que `totCobranza` pero
+  con `CI.IB_VALIDADO = 0` (sin filtro de `ID_ESTADO_GES`) — cuenta solicitudes de
+  `EVT.T_TECMSOLINSCRIPCION01` (`IB_TIPO_CRM = 1`) que todavía no fueron validadas. Alimenta el
+  badge del ítem "Solicitudes" del drawer, que antes no tenía ningún contador.
+- **`totNotificaciones`** ya filtraba `NT.IB_LEIDO = 0` desde antes — no se tocó, solo se
+  confirmó que ya estaba bien (se muestra en la campanita del AppBar de Home, no en el drawer).
+
+En Flutter, el badge de "Conversaciones" del drawer tiene **dos escritores** — no alcanza con
+arreglar el SP solo: `HomePage` (`context.updateBadge(conversaciones: state.totConversaciones)`,
+al cargar/refrescar Home) y `ChatListPage` (`context.updateBadge(conversaciones:
+state.contadores.sinResponder)`, cada vez que `ChatListBloc` — que es global, ver
+`chat/CLAUDE.md` — emite `ChatListSuccess`). Antes `ChatListPage` mandaba
+`state.conversaciones.length`, el tamaño de la lista **ya filtrada** por el chip activo del Chat
+List (con el chip "Sin responder" daba el número correcto por casualidad, con cualquier otro
+chip mandaba un número distinto al que el usuario veía en el drawer) — se cambió a
+`state.contadores.sinResponder`, que `ChatListBloc._calcularContadores` siempre calcula sobre la
+lista completa sin importar qué chip esté activo, mismo criterio `direccionMensaje == 'CLI'` que
+ahora usa el SP.
 
 ---
 

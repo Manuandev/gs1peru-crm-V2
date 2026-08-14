@@ -10,12 +10,14 @@ extension BadgeExtension on BuildContext {
     int? conversaciones,
     int? seguimientos,
     int? cobranza,
+    int? solicitudes,
   }) {
     read<DrawerBloc>().add(
       DrawerBadgesUpdated(
         conversaciones: conversaciones,
         seguimientos: seguimientos,
         cobranza: cobranza,
+        solicitudes: solicitudes,
       ),
     );
   }

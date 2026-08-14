@@ -1,5 +1,58 @@
 # Cobranza Feature
 
+## Monto de la lista con símbolo de moneda real, no `'S/'` hardcodeado (2026-08-14)
+Pedido explícito del usuario ("¿esto está hardcodeado?" al ver `S/ 1200.00` en `CobranzaCard`).
+Confirmado: `_CobranzaDatos` (`widgets/lista/cobranza_card.dart`) tenía el símbolo `'S/ '` como
+literal fijo — y el SP de lista (`CSV_COBRANZAS_LST_APP`, task `'LS'`) **no traía moneda en
+absoluto** (solo el task `'DT'`/detalle la traía, vía join a `SYSTABEXTER02 MN`). Se agregó el
+mismo dato a `'LS'`, mismo criterio que `'DT'`:
+- **SP** (`CRM.CSV_COBRANZAS_LST_APP.sql`, task `'LS'`) — nuevo `LEFT JOIN SYSTABEXTER02 MN ON
+  TC.MONEDA = MN.codargu AND MN.CODTABLA = 'MON'` (ojo: en `'LS'`, a diferencia de `'DT'`, el
+  alias `TC` es la tabla de facturación `EVT.T_TECMSOLINSCRIPCION01_FACTURACION`, no
+  `SYSTABEXTER02` — no confundir los dos usos de `TC` entre tasks) y nuevo campo posicional
+  `21`, `MN.descorta`, agregado al final del `CONCAT` para no correr las posiciones 0-20 ya
+  consumidas por `CobranzaModel.fromRawString`. **Este archivo vive fuera del repo Flutter**
+  (`C:\DEV\BDNatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`) **y está en UTF-16LE** — nunca
+  editarlo con herramientas de texto plano que asuman UTF-8/ASCII (lo corrompen); convertir a
+  UTF-8 para editar y volver a guardar como UTF-16LE (`[System.IO.File]::WriteAllText(...,
+  [System.Text.Encoding]::Unicode)`).
+- **Flutter** — `Cobranza`/`CobranzaModel` ganaron el campo `moneda` (String, default `''`,
+  campo `21`). `CobranzaCard._CobranzaDatos` ahora arma el valor con
+  `resolverSimboloMoneda(context, cobranza.moneda)` (mismo resolver que ya usaba
+  `CobranzaPlanView`/`resolver_moneda.dart` — contra `CatalogsBloc.monedas`, cae al id crudo si
+  el catálogo no cargó o no matchea) en vez del literal `'S/ '`.
+- **Mismo literal encontrado y corregido en el resto del flujo** (el usuario pidió revisar más
+  allá de la lista): `CobranzaDetalleInfoCard` (`widgets/detalle/`, monto del detalle —
+  `detalle.moneda` ya existía ahí, venía del task `'DT'` desde antes, solo faltaba usarlo),
+  `CobranzaFacturaHeader` y `CobranzaResumenCard` (`widgets/factura/`, 6 montos: comprobante/
+  detracción/importe a crédito en el resumen de crédito, total curso/pago a cuenta/saldo en el
+  de contado) — todos usaban `'S/ '` fijo, ahora todos usan `resolverSimboloMoneda(context,
+  state.moneda)` (`CobranzaFacturaState.moneda` ya existía, viajaba desde `CobranzaDetalleView`
+  vía `goToFacturarCobranza`, solo no se usaba para pintar el monto).
+- **Sin espacio entre símbolo y monto** (`'S/1200.00'`, no `'S/ 1200.00'`) — pedido explícito
+  del usuario, "por el momento". Aplicado en los 4 archivos de arriba. **`CobranzaPlanView`
+  (`widgets/plan/`) y el resto del flujo de plan de crédito NO se tocaron** — ya usaban
+  `resolverSimboloMoneda` desde antes (no tenían el bug del literal) y mantienen su propio
+  `'$simbolo $monto'.trim()` con espacio; si más adelante se pide unificar el formato sin
+  espacio en todos lados, ahí quedan pendientes.
+- **Separador de miles** — los 4 archivos usaban `.toStringAsFixed(2)` (sin separador,
+  `1200.00` en vez de `1,200.00`). Se cambió a `NumberFormatUtils.formatMonto(valor)`
+  (`core/utils/number/number_format_utils.dart`) — nuevo método agregado ahí, hermano de
+  `formatMoneda(simbolo, valor)` (usado en `lead/`) pero **sin** el símbolo ni el espacio
+  incluidos, para poder componerlo pegado al símbolo resuelto acá
+  (`'${resolverSimboloMoneda(...)}${NumberFormatUtils.formatMonto(...)}'`) — reusa el mismo
+  `NumberFormat('#,##0.00', 'es_PE')` interno, no un formateador nuevo.
+- **El separador de miles también faltaba en todo el flujo de Plan de Crédito** (`widgets/plan/`,
+  encontrado en una segunda pasada pedida por el usuario — "revisa en el detalle de cobranza" +
+  "arréglalo todo junto") — 4 sitios más, todos con el mismo `.toStringAsFixed(2)` plano:
+  `cobranza_plan_view.dart` (footer "Total cuotas", ya tenía símbolo vía `resolverSimboloMoneda`,
+  solo le faltaba el separador), `cobranza_plan_resumen_card.dart` (los 3 campos de solo lectura
+  "Importe Comprobante"/"Detracción (12%)"/"Importe a Crédito menos Detracción" — estos **no**
+  llevan símbolo de moneda, a propósito no se les agregó acá, solo se corrigió el separador; si
+  se pide símbolo ahí también es un cambio aparte) y `cobranza_plan_cronograma_card.dart`
+  (footer "Total: X" del cronograma + el monto de cada fila de cuota, tampoco con símbolo). Los 4
+  ahora usan `NumberFormatUtils.formatMonto(...)`, mismo patrón que arriba.
+
 ## `CobranzaAsesorPickerModal` — recarga al abrir + desglose por estado (2026-08-14)
 Pedido explícito del usuario: el picker de asesor mostraba un total plano por asesor
 (`conteosPorAsesor`, `Map<String,int>`) calculado sobre lo que `CobranzaListBloc` ya tenía
@@ -298,9 +351,11 @@ idCondicion (`C`/`CR`) · `13` condicion (label) · `14` nomUser (→ `ejecutivo
 idOportunidad (→ `idEvento`) · `16` nombre de la oportunidad (→ `evento`) · `17` **idEstadoGes
 crudo** (→ `idEstado`, se guarda tal cual, sin traducir a código corto — ver nota abajo) · `18`
 descripción del estado (→ `estado`) · `19` `ibValidado` (bit, siempre `1` porque el SP ya filtra
-`IB_VALIDADO != 0`) · `20` `idUsuarioEjec` (→ `asignadoA`). Este SP **no** trae
-`fechaVencimiento`/`diasVencimiento` — quedan `null` en la lista (sí vienen en el detalle si el
-comprobante es a crédito, una vez conectado el plan).
+`IB_VALIDADO != 0`) · `20` `idUsuarioEjec` (→ `asignadoA`) · `21` `MN.descorta` (→ `moneda`,
+agregado 2026-08-14 junto con el join a `SYSTABEXTER02 MN` — ver sección "Monto de la lista con
+símbolo de moneda real" arriba). Este SP **no** trae `fechaVencimiento`/`diasVencimiento` —
+quedan `null` en la lista (sí vienen en el detalle si el comprobante es a crédito, una vez
+conectado el plan).
 
 ### Mapeo de campos — `CobranzaDetalleModel.parse` (`CSV_COBRANZAS_LST_APP`, task `'DT'`)
 Sección `[0]` (`sepCampos`, 0-indexada, 17 campos): `0` numSol · `1/2/3` nombres/apePaterno/

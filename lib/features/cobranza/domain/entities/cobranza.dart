@@ -39,6 +39,10 @@ class Cobranza {
 
   final String asignadoA;
 
+  // Id/descripción corta de moneda (SYSTABEXTER02.descorta) — resolver a
+  // símbolo con resolverSimboloMoneda antes de mostrarlo (ver cobranza/CLAUDE.md)
+  final String moneda;
+
   // Solo disponibles en el detalle (el SP de lista aún no los trae)
   final String? fechaVencimiento;
   final int? diasVencimiento;
@@ -67,6 +71,7 @@ class Cobranza {
     required this.estado,
     this.ibValidado = true,
     required this.asignadoA,
+    this.moneda = '',
     this.fechaVencimiento,
     this.diasVencimiento,
   });
@@ -92,6 +97,7 @@ class Cobranza {
     String? estado,
     bool? ibValidado,
     String? asignadoA,
+    String? moneda,
     String? fechaVencimiento,
     int? diasVencimiento,
   }) {
@@ -117,6 +123,7 @@ class Cobranza {
       estado: estado ?? this.estado,
       ibValidado: ibValidado ?? this.ibValidado,
       asignadoA: asignadoA ?? this.asignadoA,
+      moneda: moneda ?? this.moneda,
       fechaVencimiento: fechaVencimiento ?? this.fechaVencimiento,
       diasVencimiento: diasVencimiento ?? this.diasVencimiento,
     );

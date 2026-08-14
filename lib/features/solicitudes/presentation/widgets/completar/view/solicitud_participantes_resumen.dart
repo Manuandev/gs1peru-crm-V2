@@ -180,7 +180,7 @@ class _FilaMonto extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: estilo),
-          Text(monto.toStringAsFixed(2), style: estilo),
+          Text(NumberFormatUtils.formatMonto(monto), style: estilo),
         ],
       ),
     );

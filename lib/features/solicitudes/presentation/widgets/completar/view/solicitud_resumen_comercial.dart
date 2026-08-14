@@ -86,7 +86,7 @@ class SeccionResumenComercial extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    inversion.toStringAsFixed(2),
+                    NumberFormatUtils.formatMonto(inversion),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: AppTextStyles.weightSemiBold,
@@ -114,7 +114,7 @@ class SeccionResumenComercial extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    igv.toStringAsFixed(2),
+                    NumberFormatUtils.formatMonto(igv),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: AppTextStyles.weightSemiBold,
@@ -151,7 +151,7 @@ class SeccionResumenComercial extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      importeTotal.toStringAsFixed(2),
+                      NumberFormatUtils.formatMonto(importeTotal),
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: AppTextStyles.weightBold,

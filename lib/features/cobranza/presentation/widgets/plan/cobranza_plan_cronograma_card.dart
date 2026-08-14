@@ -122,7 +122,7 @@ class CobranzaPlanCronogramaCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Total: ${state.totalCuotas.toStringAsFixed(2)}',
+                  'Total: ${NumberFormatUtils.formatMonto(state.totalCuotas)}',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: AppColors.primary,
                     fontWeight: AppTextStyles.weightBold,
@@ -192,7 +192,7 @@ class _FilaCuota extends StatelessWidget {
                 ),
                 // Monto
                 Text(
-                  cuota.monto.toStringAsFixed(2),
+                  NumberFormatUtils.formatMonto(cuota.monto),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: AppTextStyles.weightMedium,

@@ -124,15 +124,18 @@ class _ResumenCredito extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _FilaResumen(
           label: 'Importe comprobante',
-          valor: 'S/ ${state.montoTotal.toStringAsFixed(2)}',
+          valor:
+              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
         ),
         _FilaResumen(
           label: 'Detracción 12%',
-          valor: 'S/ ${state.detraccion.toStringAsFixed(2)}',
+          valor:
+              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.detraccion)}',
         ),
         _FilaResumen(
           label: 'Importe a crédito',
-          valor: 'S/ ${state.importeCredito.toStringAsFixed(2)}',
+          valor:
+              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.importeCredito)}',
           destacado: true,
         ),
         _FilaResumen(label: 'N° cuotas', valor: '${state.numCuotas}'),
@@ -163,15 +166,18 @@ class _ResumenContado extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _FilaResumen(
           label: 'Total curso',
-          valor: 'S/ ${state.montoTotal.toStringAsFixed(2)}',
+          valor:
+              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
         ),
         _FilaResumen(
           label: 'Pago a cuenta',
-          valor: 'S/ ${state.pagoACuenta.toStringAsFixed(2)}',
+          valor:
+              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.pagoACuenta)}',
         ),
         _FilaResumen(
           label: 'Saldo',
-          valor: 'S/ ${state.saldo.toStringAsFixed(2)}',
+          valor:
+              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.saldo)}',
           destacado: true,
         ),
       ],

@@ -192,7 +192,7 @@ class _FooterPlan extends StatelessWidget {
                 ),
               ),
               Text(
-                '${resolverSimboloMoneda(context, state.moneda)} ${state.totalCuotas.toStringAsFixed(2)}'
+                '${resolverSimboloMoneda(context, state.moneda)} ${NumberFormatUtils.formatMonto(state.totalCuotas)}'
                     .trim(),
                 style: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.primary,

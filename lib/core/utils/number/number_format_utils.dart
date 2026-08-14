@@ -28,4 +28,8 @@ class NumberFormatUtils {
   /// Formatea un valor con símbolo de moneda: "S/ 1,234.50"
   static String formatMoneda(String simbolo, double valor) =>
       '$simbolo ${_moneyFmt.format(valor)}';
+
+  /// Solo el monto con separador de miles, sin símbolo: "1,234.50" — para
+  /// componer manualmente cuando el símbolo debe ir pegado (sin espacio).
+  static String formatMonto(double valor) => _moneyFmt.format(valor);
 }

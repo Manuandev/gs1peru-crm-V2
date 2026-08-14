@@ -26,6 +26,7 @@ class CobranzaModel extends Cobranza {
     required super.estado,
     super.ibValidado,
     required super.asignadoA,
+    super.moneda,
   });
 
   // idEstadoGes (crudo, [CRM].[CSV_COBRANZAS_LST_APP]) → código interno de la app.
@@ -58,6 +59,7 @@ class CobranzaModel extends Cobranza {
       estado: ParseUtils.str(fields,18),
       ibValidado: ParseUtils.toBool(fields,19),
       asignadoA: ParseUtils.str(fields,20),
+      moneda: ParseUtils.str(fields,21),
     );
   }
 

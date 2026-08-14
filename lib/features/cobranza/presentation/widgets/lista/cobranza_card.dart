@@ -203,7 +203,8 @@ class _CobranzaDatos extends StatelessWidget {
       children: [
         _DatoItem(
           label: 'Monto total',
-          valor: 'S/ ${cobranza.montoTotal.toStringAsFixed(2)}',
+          valor:
+              '${resolverSimboloMoneda(context, cobranza.moneda)}${NumberFormatUtils.formatMonto(cobranza.montoTotal)}',
           valorColor: AppColors.primary,
           valorBold: true,
         ),

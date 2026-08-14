@@ -60,7 +60,7 @@ class CobranzaPlanResumenCard extends StatelessWidget {
                   label: 'Importe Comprobante',
                   enabled: false,
                   controller: TextEditingController(
-                    text: state.montoTotal.toStringAsFixed(2),
+                    text: NumberFormatUtils.formatMonto(state.montoTotal),
                   ),
                 ),
               ),
@@ -70,7 +70,7 @@ class CobranzaPlanResumenCard extends StatelessWidget {
                   label: 'Detracción (12%)',
                   enabled: false,
                   controller: TextEditingController(
-                    text: state.detraccion.toStringAsFixed(2),
+                    text: NumberFormatUtils.formatMonto(state.detraccion),
                   ),
                 ),
               ),
@@ -84,7 +84,7 @@ class CobranzaPlanResumenCard extends StatelessWidget {
                   label: 'Importe a Crédito menos Detracción',
                   enabled: false,
                   controller: TextEditingController(
-                    text: state.importeCredito.toStringAsFixed(2),
+                    text: NumberFormatUtils.formatMonto(state.importeCredito),
                   ),
                 ),
               ),

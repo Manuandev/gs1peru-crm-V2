@@ -1,5 +1,38 @@
 # Solicitudes Feature
 
+## Montos de vista sin separador de miles — mismo pedido que en `cobranza/` (2026-08-14)
+Seguimiento del mismo pedido del usuario aplicado primero a `cobranza/` (ver su CLAUDE.md,
+"Monto de la lista con símbolo de moneda real..." y "Separador de miles"): auditar la capa de
+**vista** (no backend, no cálculos internos) de `cobranza/` y `solicitudes/` en busca de montos
+mostrados sin separador de miles (`1200.00` en vez de `1,200.00`). `solicitudes/` no usaba
+`NumberFormatUtils` (`core/utils/number/`) en absoluto — se corrigieron 3 sitios reales:
+
+- **`solicitud_participantes_resumen.dart`** (`_FilaMonto`, footer "Inversión/IGV/Importe total"
+  del paso 2) — `Text(monto.toStringAsFixed(2), ...)` → `NumberFormatUtils.formatMonto(monto)`.
+- **`solicitud_resumen_comercial.dart`** (`SeccionResumenComercial`, mismo footer pero en el
+  Resumen del paso 4) — los 3 `Text` de Inversión/IGV/Importe total, mismo cambio. **Los
+  cálculos internos de redondeo (`double.parse(...toStringAsFixed(2))`, líneas 61/64, ver
+  "Bug real — 'Importe total' del footer/Resumen quedaba 1 centavo..." más abajo) NO se
+  tocaron** — esos `toStringAsFixed(2)` son para forzar precisión de 2 decimales antes de sumar/
+  restar, no para mostrar nada; solo se envolvió el valor final en `formatMonto` al pintarlo.
+- **`ParticipanteLocal.importeFormateado`** (`participantes_state.dart`, getter — su único
+  consumidor en toda la base es el `Text` de importe en `ParticipanteCard`,
+  `solicitud_participantes_card.dart:77`) — pasó de `importe.toStringAsFixed(2)` a
+  `NumberFormatUtils.formatMonto(importe)`. Se corrigió en el getter (no en el widget) porque es
+  el único punto de formateo — cualquier consumidor futuro de `importeFormateado` hereda el
+  fix automáticamente.
+- **Ninguno de los 3 lleva símbolo de moneda** (a diferencia de `cobranza/`, que si lo tiene vía
+  `resolverSimboloMoneda`) — este feature no tiene ese mecanismo conectado en estos 3 lugares, y
+  el pedido del usuario era específicamente sobre el separador de miles, no sobre agregar
+  símbolo — no se tocó ese aspecto.
+- **Revisado y descartado (no son vista, o no muestran un monto sin formatear)**: los
+  `.toStringAsFixed(2)` de `solicitud_remote_datasource.dart` (payload al backend),
+  `participantes_state.dart` (cálculo interno de IGV por participante, `calcularIgvPorParticipante`),
+  `participante_form_sheet.dart` (prellenan el campo **editable** de Importe, no un display de
+  solo lectura), `solicitud_carga_masiva_view.dart` (redondeo interno al parsear el Excel) — ver
+  el resto de este archivo para el detalle de cada uno, ninguno es un `Text` de solo lectura sin
+  pasar por el formateador.
+
 ## Carga masiva bloquea la importación si el excel supera el cupo, con modal de un solo botón (2026-08-14)
 Pedido del usuario — antes, si el excel traía más filas de las que el cupo disponible permitía
 (`cantidadEsperada - participantes ya agregados`), `_parsearArchivo()` recortaba en silencio a

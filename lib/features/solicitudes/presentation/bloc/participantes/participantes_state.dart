@@ -48,7 +48,7 @@ class ParticipanteLocal extends Equatable {
     apellidoMaterno,
   ].where((s) => s.isNotEmpty).join(' ');
 
-  String get importeFormateado => importe.toStringAsFixed(2);
+  String get importeFormateado => NumberFormatUtils.formatMonto(importe);
 
   ParticipanteLocal copyWith({
     int? id,

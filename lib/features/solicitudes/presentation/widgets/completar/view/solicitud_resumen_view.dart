@@ -32,6 +32,19 @@ class SolicitudResumenView extends StatefulWidget {
 }
 
 class _SolicitudResumenViewState extends State<SolicitudResumenView> {
+  // true si la solicitud YA EXISTÍA (tenía NUMSOL real) al abrirse el
+  // wizard — se entró por "Validar"/"Editar ficha" desde la lista, no por
+  // "Generar solicitud" desde una negociación. `widget.solicitud` es el
+  // placeholder de navegación con el que se entró al wizard y NUNCA se
+  // actualiza durante la sesión (ver comentario en _onGenerarSolicitud) —
+  // por eso sigue reflejando el estado de ENTRADA aunque en el camino el
+  // paso 1 ya haya guardado un borrador y `SolicitudFormCubit.state.numSol`
+  // ya no esté vacío. Pedido de negocio 2026-08-13: si la solicitud ya
+  // existía al entrar, el botón/mensajes finales dicen "Actualizar", no
+  // "Generar" — sin importar que en el camino se haya guardado como
+  // borrador (eso no cambia esta distinción).
+  bool get _esSolicitudExistente => widget.solicitud.idSolicitud.isNotEmpty;
+
   // true mientras se guarda el borrador (botón "Guardar")
   bool _guardando = false;
   // true mientras se genera la solicitud final (botón "Generar solicitud")
@@ -134,6 +147,7 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     final result = await generarSolicitudCompleta(
       context,
       idLead: widget.solicitud.idLead,
+      esActualizacion: _esSolicitudExistente,
       progreso: _progreso,
     );
 
@@ -260,11 +274,14 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
                         ),
                         const SizedBox(height: 5),
 
-                        // Generar solicitud
+                        // Generar solicitud / Actualizar solicitud — ver
+                        // _esSolicitudExistente.
                         SizedBox(
                           width: double.infinity,
                           child: CustomSecondaryButton(
-                            text: 'Generar solicitud',
+                            text: _esSolicitudExistente
+                                ? 'Actualizar solicitud'
+                                : 'Generar solicitud',
                             icon: AppIcons.fileFactura,
                             isLoading: _generando,
                             onPressed: _onGenerarSolicitud,

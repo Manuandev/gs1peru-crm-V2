@@ -1,5 +1,35 @@
 # Solicitudes Feature
 
+## Resumen (paso 4) — "Generar solicitud" pasa a "Actualizar solicitud" si la solicitud ya existía al entrar (2026-08-13)
+Pedido de negocio (jefa del usuario): distinguir, en el botón/textos finales del wizard, entre
+generar una solicitud de verdad nueva (se entró por "Generar solicitud" desde una negociación,
+`Solicitud.idSolicitud` vacío al abrir el wizard) y terminar de completar una solicitud que **ya
+existía** al momento de abrir el wizard (se entró por "Validar"/"Editar ficha" desde la lista,
+con `idSolicitud` ya seteado al NUMSOL real) — aunque en el camino, dentro del wizard, el paso 1
+ya haya guardado un borrador y `SolicitudFormCubit.state.numSol` ya no esté vacío (eso pasa en
+ambos casos, no sirve para distinguir).
+
+- **`SolicitudResumenView._esSolicitudExistente`** (nuevo getter) = `widget.solicitud.idSolicitud
+  .isNotEmpty` — `widget.solicitud` es el placeholder de navegación con el que se abrió el wizard
+  y **nunca se actualiza durante la sesión** (ver comentario ya existente en
+  `_onGenerarSolicitud()`), así que sigue reflejando el estado de ENTRADA sin importar cuántos
+  "Siguiente"/"Guardar" haya habido en el camino — mismo criterio que ya usa
+  `SolicitudCompletarPage` (`solicitud.idSolicitud.isEmpty && cantidadNegociacion != null`) para
+  decidir si sembrar datos de negociación.
+- Con `_esSolicitudExistente == true`: el botón dice **"Actualizar solicitud"** (antes siempre
+  "Generar solicitud"), el overlay de progreso dice **"Actualizando solicitud..."** (antes
+  "Generando solicitud...") y el mensaje de éxito dice **"La solicitud se actualizó
+  correctamente"** (antes "...se generó..."). Con `false` (creación real desde negociación), los
+  3 textos se quedan igual que siempre.
+- **La lógica de guardado no cambió en nada** — sigue siendo siempre `IB_BORRADOR=0` (Generar,
+  nunca Guardar borrador) sin importar este flag; `esActualizacion` (nuevo parámetro, default
+  `false`, en `guardarSolicitudDesdeWizard()`/`generarSolicitudCompleta()`,
+  `solicitud_guardar_helper.dart`) solo cambia los 3 textos de arriba, threaded desde
+  `SolicitudResumenView._onGenerarSolicitud()`.
+- **No se tocó** `SolicitudGeneradaView` (la pantalla de confirmación post-generar, "Solicitud
+  lista"/"Tu solicitud ha sido generada...") — el pedido era específicamente sobre el botón y los
+  textos de progreso/éxito del paso 4, no sobre esa pantalla siguiente.
+
 ## Plantilla de carga masiva — ya no queda escondida en la carpeta privada de la app (2026-08-13)
 Reportado por el usuario probando en vivo: al descargar la plantilla desde el paso 2 (carga
 masiva de participantes), el archivo no aparecía en Descargas/Archivos del celular — solo

@@ -20,6 +20,16 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   // para registrar un seguimiento con un texto distinto por paso, ver
   // CSV_SOLICITUD_CUD_APP.sql.
   required String pasoOrigen,
+  // true si esta solicitud YA EXISTÍA (tenía NUMSOL real) al entrar al
+  // wizard — o sea, se entró por "Validar"/"Editar ficha" desde la lista,
+  // no por "Generar solicitud" desde una negociación. Solo cambia el texto
+  // que ve el asesor cuando `esBorrador == false` ("Actualizando..." en vez
+  // de "Generando...") — pedido de negocio 2026-08-13: para el asesor, si
+  // la solicitud ya existía antes de abrir el wizard, terminarla es
+  // "actualizar", no "generar", sin importar que haya quedado guardada como
+  // borrador en el camino (eso no cambia esta distinción, ver
+  // SolicitudResumenView._esSolicitudExistente).
+  bool esActualizacion = false,
   SolicitudProgreso? progreso,
 }) async {
   final formCubit = context.read<SolicitudFormCubit>();
@@ -32,7 +42,9 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   }
 
   progreso?.iniciarPaso(
-    esBorrador ? 'Guardando solicitud...' : 'Generando solicitud...',
+    esBorrador
+        ? 'Guardando solicitud...'
+        : (esActualizacion ? 'Actualizando solicitud...' : 'Generando solicitud...'),
   );
 
   final participantes = context.read<ParticipantesCubit>().state.participantes;
@@ -318,6 +330,10 @@ String? avisoPrecioTotalNoCalza(SolicitudFormState formState) {
 Future<CrudResult> generarSolicitudCompleta(
   BuildContext context, {
   required String idLead,
+  // Ver comentario en guardarSolicitudDesdeWizard — cambia únicamente los
+  // textos que ve el asesor (progreso + mensaje de éxito), nunca la lógica
+  // de guardado en sí (siempre IB_BORRADOR=0, sin importar este flag).
+  bool esActualizacion = false,
   SolicitudProgreso? progreso,
 }) async {
   final result = await guardarSolicitudDesdeWizard(
@@ -325,6 +341,7 @@ Future<CrudResult> generarSolicitudCompleta(
     idLead: idLead,
     esBorrador: false,
     pasoOrigen: '4',
+    esActualizacion: esActualizacion,
     progreso: progreso,
   );
   if (result is! CrudOk) return result;
@@ -348,7 +365,11 @@ Future<CrudResult> generarSolicitudCompleta(
   }
 
   if (progreso != null) {
-    progreso.mostrarExito('La solicitud se generó correctamente');
+    progreso.mostrarExito(
+      esActualizacion
+          ? 'La solicitud se actualizó correctamente'
+          : 'La solicitud se generó correctamente',
+    );
     await Future.delayed(const Duration(milliseconds: 1500));
   }
   return result;

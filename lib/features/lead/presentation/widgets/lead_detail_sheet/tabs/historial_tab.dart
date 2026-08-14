@@ -225,11 +225,13 @@ class _HistorialItem extends StatelessWidget {
 
   const _HistorialItem({required this.item});
 
-  static IconData _iconActor(TipoActor tipo) => switch (tipo) {
-    // TipoActor.sistema => AppIcons.settings,
-    TipoActor.botIA => AppIcons.ia,
-    TipoActor.cliente => AppIcons.user,
-    TipoActor.asesor => AppIcons.user,
+  // Ícono según el tipo de evento (TIPO_EVENTO del SP 'LHC'), no del actor —
+  // así se distingue de un vistazo si fue un recordatorio, un comentario o
+  // un paso de seguimiento.
+  static IconData _iconEvento(TipoEventoHistorial tipo) => switch (tipo) {
+    TipoEventoHistorial.recordatorio => AppIcons.recordatorio,
+    TipoEventoHistorial.comentario => AppIcons.chat,
+    TipoEventoHistorial.seguimiento => AppIcons.historial,
   };
 
   static Color _colorActor(TipoActor tipo) => switch (tipo) {
@@ -261,7 +263,7 @@ class _HistorialItem extends StatelessWidget {
               ),
             ),
             child: Icon(
-              _iconActor(item.tipoActor),
+              _iconEvento(item.tipoEvento),
               size: AppSizing.iconSm,
               color: colorActor,
             ),

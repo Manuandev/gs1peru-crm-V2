@@ -23,9 +23,9 @@ abstract class LeadRepository {
   // 2026-08-03 — migrado de idNumero a idContacto (mismo motivo que
   // getLeadDetallePorContacto arriba).
   Future<List<Negociacion>> obtenerNegociaciones(int idContacto);
-  // SP 'LHN' — historial de seguimiento de todos los leads activos del
-  // mismo CONTACTO. 2026-08-03 — migrado de idNumero a idContacto (mismo
-  // motivo que getLeadDetallePorContacto arriba).
+  // SP 'LHC' — historial unificado (seguimiento + comentario + recordatorio)
+  // de todos los leads activos del mismo CONTACTO. 2026-08-13 — reemplaza a
+  // 'LHN' (solo seguimiento), ver lead_remote_datasource.dart.
   Future<List<HistorialComentario>> obtenerHistorialSeguimientoPorContacto(
     int idContacto,
   );

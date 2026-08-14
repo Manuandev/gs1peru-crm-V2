@@ -493,21 +493,31 @@ proyecto).
 
 ## SPs que consume
 - `[CRM].[SP_LeadsLst]` → lista de leads por tipo ('PO' o 'PA') y agente/moderador
-- Task `'LHN'` (`obtenerHistorialSeguimientoPorContacto(idContacto)`) → seguimiento de **todos los
-  leads activos del mismo contacto** (`LD.ID_CONTACTO`, ver migración abajo — antes era
-  `T_NUMERO_LEAD`/`ID_NUMERO`). Es el único llamado que usa `HistorialTab`
-  (`presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart`, único parámetro `idContacto`,
-  requerido) — mismo call en `ContactoDetalleView` (`HistorialTab(idContacto: lead.idContacto)`,
-  Seguimiento) y en `ChatLeadPanel` (`HistorialTab(idContacto: widget.chat.idContacto)`,
-  Conversaciones). Unificado 2026-07-20 a pedido explícito de negocio: "ambos son lo mismo" — antes
-  Conversaciones usaba `'LH'` (por lead puntual) y Seguimiento pasó primero por `'LCG'` y luego por
-  `'LH'` también, hasta terminar acá los dos. `'LH'` (por lead) y `'LCG'` (por contacto, agrupando
-  `T_LEAD_COMENTARIO` con ícono/color de actividad y usuario nominal) se eliminaron por completo del
-  cliente — sin caller, no había motivo para mantenerlos. El SP real conserva ambos tasks (`'LH'` y
-  `'LCG'`) por si se vuelven a necesitar del lado del backend, pero el cliente Flutter ya no los
-  invoca.
-- `HistorialComentarioModel.parseListSeguimiento`/`fromRawStringSeguimiento` parsean la respuesta de
-  `'LHN'` (7 campos posicionales — ver comentario en el modelo).
+- Task `'LHC'` (`obtenerHistorialSeguimientoPorContacto(idContacto)`) → historial **unificado**
+  (seguimiento + comentario + recordatorio, columna `TIPO_EVENTO`: `'SEG'`/`'COM'`/`'REC'`) de
+  **todos los leads activos del mismo contacto** (`LD.ID_CONTACTO`). Es el único llamado que usa
+  `HistorialTab` (`presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart`, único
+  parámetro `idContacto`, requerido) — mismo call en `ContactoDetalleView`
+  (`HistorialTab(idContacto: lead.idContacto)`, Seguimiento) y en `ChatLeadPanel`
+  (`HistorialTab(idContacto: widget.chat.idContacto)`, Conversaciones).
+  **2026-08-13 — reemplaza a `'LHN'`** (solo traía `T_LEAD_SEGUIMIENTO`, sin distinguir tipo de
+  evento). `'LHC'` ya existía en el SP (task "LISTA DE HISTORIAL COMPLETO", UNION ALL de
+  `T_LEAD_SEGUIMIENTO`/`T_LEAD_COMENTARIO`/`T_LEAD_RECORDATORIO`) pero anclaba en `@ID_LEAD`
+  puntual, sin caller en Flutter — se adaptó para anclar en `@ID_CONTACTO` (mismo criterio que
+  `'LHN'`: `INNER JOIN CRM.T_LEAD LD ON ... WHERE LD.ID_CONTACTO = @ID_CONTACTO AND LD.IB_ACTIVO
+  = 1` en las 3 ramas del UNION) para no perder el alcance "todos los leads activos del contacto"
+  que ya tenían los 2 call sites de `HistorialTab`. `'LHN'` se deja intacta en el SP sin caller —
+  mismo criterio que `'LH'`/`'LCG'` (ver historial de esta sección: ambas se eliminaron del
+  cliente en 2026-07-20 cuando se unificó Conversaciones/Seguimiento en `'LHN'`, pero se
+  conservaron en el SP "por si se vuelven a necesitar").
+- `HistorialComentario.tipoEvento` (`TipoEventoHistorial`: `seguimiento`/`comentario`/
+  `recordatorio`) — nuevo campo, parseado del campo 1 (`TIPO_EVENTO`) de `'LHC'`. `HistorialTab`
+  usa este campo (no `tipoActor`) para elegir el ícono de cada fila:
+  `AppIcons.recordatorio` (campana) / `AppIcons.chat` (comentario) / `AppIcons.historial`
+  (seguimiento) — el color del círculo sigue viniendo de `tipoActor` (Bot IA verde, Asesor/Cliente
+  azul), sin cambios ahí.
+- `HistorialComentarioModel.parseListCompleto`/`fromRawStringCompleto` parsean la respuesta de
+  `'LHC'` (9 campos posicionales — ver comentario en el modelo).
 
 ## Migración de ancla ID_NUMERO → ID_CONTACTO (2026-08-03, completa)
 

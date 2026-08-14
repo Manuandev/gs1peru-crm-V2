@@ -9,9 +9,14 @@ import 'package:app_crm/index_dependencies.dart';
 // enum TipoActor { sistema, botIA, cliente, asesor }
 enum TipoActor { botIA, cliente, asesor }
 
-/// Evento del historial de seguimiento (CRM.T_LEAD_SEGUIMIENTO) — viene del
-/// SP 'LH' (por lead puntual) o 'LHN' (todos los leads activos del mismo
-/// número de contacto).
+/// Qué tipo de evento es (columna TIPO_EVENTO del SP, task 'LHC'):
+/// 'SEG' seguimiento (CRM.T_LEAD_SEGUIMIENTO) · 'COM' comentario
+/// (CRM.T_LEAD_COMENTARIO) · 'REC' recordatorio (CRM.T_LEAD_RECORDATORIO).
+enum TipoEventoHistorial { seguimiento, comentario, recordatorio }
+
+/// Evento del historial de un contacto — viene del SP task 'LHC' (todos los
+/// leads activos del mismo contacto: seguimiento + comentario +
+/// recordatorio, unidos y ordenados por fecha).
 class HistorialComentario extends Equatable {
   final int idLead;
   final int idComentario;
@@ -23,6 +28,7 @@ class HistorialComentario extends Equatable {
   final String idUsuarioC;
   final String fechaHora;
   final TipoActor tipoActor;
+  final TipoEventoHistorial tipoEvento;
 
   const HistorialComentario({
     required this.idLead,
@@ -35,6 +41,7 @@ class HistorialComentario extends Equatable {
     required this.idUsuarioC,
     required this.fechaHora,
     required this.tipoActor,
+    required this.tipoEvento,
   });
 
   /// Nombre a mostrar como actor: nombre real si existe, si no un label
@@ -61,5 +68,6 @@ class HistorialComentario extends Equatable {
     idUsuarioC,
     fechaHora,
     tipoActor,
+    tipoEvento,
   ];
 }

@@ -145,21 +145,22 @@ class LeadRemoteDatasource {
     };
   }
 
-  // Task 'LHN' — historial de seguimiento de todos los leads activos del
-  // mismo CONTACTO. Usado por el tab Historial en Seguimiento
-  // (ContactoDetalleView) y en Conversaciones (ChatLeadPanel) — mismo
-  // llamado en los dos. 2026-08-03 — migrado de idNumero a idContacto (mismo
-  // motivo que getLeadDetallePorContacto arriba).
+  // Task 'LHC' — historial unificado (seguimiento + comentario +
+  // recordatorio) de todos los leads activos del mismo CONTACTO. Usado por
+  // el tab Historial en Seguimiento (ContactoDetalleView) y en
+  // Conversaciones (ChatLeadPanel) — mismo llamado en los dos. 2026-08-13 —
+  // reemplaza a 'LHN' (solo traía seguimiento); 'LHN' se deja intacto en el
+  // SP sin caller, mismo criterio que 'LH'/'LCG'.
   Future<List<HistorialComentarioModel>> obtenerHistorialSeguimientoPorContacto(
     int idContacto,
   ) async {
-    final String body = '$idContacto${sep}LHN';
+    final String body = '$idContacto${sep}LHC';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
     return switch (result) {
       ApiSuccess(:final data) =>
-        HistorialComentarioModel.parseListSeguimiento(data),
+        HistorialComentarioModel.parseListCompleto(data),
       ApiEmpty() => [],
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),

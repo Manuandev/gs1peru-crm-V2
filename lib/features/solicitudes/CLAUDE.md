@@ -2196,9 +2196,36 @@ tiene su propio `_importeFijo()` (mismo cálculo duplicado a propósito, ya que
 `sincronizarSolicitante` genera su `ParticipanteLocal` sin pasar por el modal de participante) y
 lo pasa en ambas llamadas (`_onContinuar`/`_onGuardar`).
 
+## "Cancelar"/back del wizard solo confirma si hubo cambios sin guardar (2026-08-13)
+Pedido de negocio — antes "Cancelar" (paso 1) mostraba SIEMPRE el diálogo de confirmación al
+salir del wizard, aunque el asesor no hubiera tocado nada; y el back del AppBar/gesto físico en
+el paso 1 (`SolicitudWizardView._retroceder()`) ni siquiera preguntaba — salía directo con
+`context.goBack()`, inconsistente con el botón "Cancelar" de al lado.
+
+- **`huboCambiosSinGuardar(BuildContext)`** (nuevo, `solicitud_guardar_helper.dart`) — a
+  diferencia de `solicitudSinCambiosPendientes` (exige `numSol` ya exista, pensado para decidir
+  si vale la pena llamar al backend), este solo mira `SolicitudFormCubit.state.huboCambios ||
+  ParticipantesCubit.state.huboCambios` — aplica igual a una solicitud nueva en blanco (recién
+  abierta, sin guardar todavía) que a una ya guardada, porque `marcarSinCambios()` ya se llama al
+  terminar de cargar en ambos casos (`_cargarDetalle()`, incluidos los defaults/prellenado desde
+  negociación — esos no cuentan como "cambio del asesor", son el estado inicial).
+- **`SolicitudWizardView._confirmarSalir()`** (nuevo, único punto que decide esto) — si
+  `!huboCambiosSinGuardar(context)`, sale directo (`context.goBack()`) sin ningún diálogo; si
+  hubo cambios, muestra el mismo `showConfirmDialog` de siempre ("Cancelar solicitud" / "Tiene
+  cambios sin guardar. ¿Desea cancelar el proceso de solicitud? Los cambios se perderán." / "Sí,
+  cancelar" / "No") y solo sale si se confirma. Tanto `_retroceder()` (back del AppBar/gesto
+  físico, cuando `_pasoActual == 1`) como el `onCancelar` que recibe `SolicitudCompletarView`
+  (paso 1) pasan por acá — antes eran 2 caminos separados y solo uno confirmaba.
+  `SolicitudCompletarView._confirmarCancelar()` (el diálogo que antes vivía ahí, siempre
+  disparaba) se eliminó — el botón "Cancelar" del paso 1 ahora llama `widget.onCancelar`
+  directo, que ya es `_confirmarSalir`.
+- **Los pasos 2/3/4 no se tocaron** — su "Atrás" nunca sale del wizard (ver más abajo), así que
+  nunca arriesga perder datos, no necesita este chequeo.
+
 ## Botones "Atrás" vs "Cancelar" del wizard (2026-07-15)
 **Solo el paso 1 tiene un botón "Cancelar"** (`SolicitudCompletarView`, sale del wizard entero
-con confirmación — "¿Desea cancelar el proceso de solicitud?"). Los pasos 2, 3 y 4 **nunca**
+con confirmación condicional — ver "'Cancelar'/back del wizard solo confirma..." arriba, agregado
+2026-08-13). Los pasos 2, 3 y 4 **nunca**
 cancelan nada — solo retroceden un paso dentro del mismo wizard, sin perder datos (todo vive en
 los cubits compartidos, ver "Wizard de una sola page" más abajo) — por eso su botón dice
 **"Atrás"** (`AppIcons.back`, mismo `backgroundColor: AppColors.brandRaspberryAccessible` que

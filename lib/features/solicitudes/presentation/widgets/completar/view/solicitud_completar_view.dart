@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
@@ -17,8 +16,9 @@ class SolicitudCompletarView extends StatefulWidget {
   // Avanza al paso 2 (Participantes) dentro del mismo SolicitudWizardView —
   // ya no navega a una ruta aparte, ver CLAUDE.md "Wizard de una sola page".
   final VoidCallback onContinuar;
-  // Sale del wizard por completo (Cancelar, con confirmación) — pop de la
-  // page raíz del wizard, no un paso interno.
+  // Sale del wizard por completo — pop de la page raíz del wizard, no un
+  // paso interno. Quien arma este callback (SolicitudWizardView) decide si
+  // hace falta confirmar antes (solo si hubo cambios sin guardar).
   final VoidCallback onCancelar;
 
   const SolicitudCompletarView({
@@ -201,16 +201,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
       }
     }
     _sincronizarCubit();
-  }
-
-  Future<void> _confirmarCancelar() async {
-    final confirmado = await context.showConfirmDialog(
-      title: 'Cancelar solicitud',
-      message: '¿Desea cancelar el proceso de solicitud?',
-      confirmText: 'Sí, cancelar',
-      cancelText: 'No',
-    );
-    if (confirmado && mounted) widget.onCancelar();
   }
 
   @override
@@ -443,7 +433,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
               BotonesPasoSolicitante(
                 modoEdicion: widget.modoEdicion,
                 guardando: _guardando,
-                onCancelar: _confirmarCancelar,
+                onCancelar: widget.onCancelar,
                 onContinuar: () => _onContinuar(paisCelular),
               ),
             ],

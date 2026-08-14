@@ -51,13 +51,36 @@ class _SolicitudWizardViewState extends State<SolicitudWizardView> {
 
   // Mismo comportamiento que tenían las rutas separadas: el ícono de
   // regreso del AppBar (y el back físico/gesto, vía onPop) retrocede un
-  // paso dentro del wizard; en el paso 1 sale del wizard entero.
+  // paso dentro del wizard; en el paso 1 sale del wizard entero (con la
+  // misma confirmación condicional que el botón "Cancelar", ver
+  // _confirmarSalir).
   void _retroceder() {
     if (_pasoActual > 1) {
       _irAPaso(_pasoActual - 1);
     } else {
-      context.goBack();
+      _confirmarSalir();
     }
+  }
+
+  // Sale del wizard entero. Solo pide confirmación si de verdad hay algo
+  // que se perdería (huboCambiosSinGuardar) — abrir el wizard y salir sin
+  // tocar nada no debe interrumpir con ningún diálogo. Único punto que
+  // decide esto: tanto el botón "Cancelar" del paso 1 como el back del
+  // AppBar/gesto físico (_retroceder, arriba) pasan por acá.
+  Future<void> _confirmarSalir() async {
+    if (!huboCambiosSinGuardar(context)) {
+      context.goBack();
+      return;
+    }
+    final confirmado = await context.showConfirmDialog(
+      title: 'Cancelar solicitud',
+      message:
+          'Tiene cambios sin guardar. ¿Desea cancelar el proceso de '
+          'solicitud? Los cambios se perderán.',
+      confirmText: 'Sí, cancelar',
+      cancelText: 'No',
+    );
+    if (confirmado && mounted) context.goBack();
   }
 
   @override
@@ -89,7 +112,7 @@ class _SolicitudWizardViewState extends State<SolicitudWizardView> {
                     solicitud: widget.solicitud,
                     modoEdicion: widget.modoEdicion,
                     onContinuar: () => _irAPaso(2),
-                    onCancelar: () => context.goBack(),
+                    onCancelar: _confirmarSalir,
                   )
                 else
                   const SizedBox.shrink(),

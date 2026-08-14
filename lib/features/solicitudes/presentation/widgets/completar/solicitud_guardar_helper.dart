@@ -396,6 +396,17 @@ bool solicitudSinCambiosPendientes(BuildContext context) {
       !context.read<ParticipantesCubit>().state.huboCambios;
 }
 
+/// A diferencia de [solicitudSinCambiosPendientes] (que exige `numSol` ya
+/// exista, pensado para decidir si vale la pena guardar), esto solo
+/// pregunta "¿el asesor tocó algo desde que se cargó el wizard?" — aplica
+/// igual a una solicitud nueva en blanco que a una ya guardada. Usado para
+/// decidir si "Cancelar"/el back del wizard debe pedir confirmación o
+/// simplemente salir sin preguntar nada.
+bool huboCambiosSinGuardar(BuildContext context) {
+  return context.read<SolicitudFormCubit>().state.huboCambios ||
+      context.read<ParticipantesCubit>().state.huboCambios;
+}
+
 /// Flujo completo de "Guardar" (borrador, `IB_BORRADOR=1`): guarda el CUD y,
 /// si sale bien, sube voucher/O.C. pendientes — mismo patrón que
 /// [generarSolicitudCompleta], sin ninguna validación previa ("Guardar"

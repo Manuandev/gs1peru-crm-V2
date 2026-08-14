@@ -16,6 +16,8 @@ class HistorialComentarioModel extends HistorialComentario {
     required super.fechaHora,
     required super.tipoActor,
     required super.tipoEvento,
+    required super.idOportunidad,
+    required super.oportunidad,
   });
 
   /// Campo 8 (TIPO_USUARIO del SP task 'LHC'): 'ASE' asesor · 'SIS' sistema ·
@@ -63,6 +65,8 @@ class HistorialComentarioModel extends HistorialComentario {
       fechaHora: ParseUtils.str(fields, 7),
       tipoActor: _parseTipoActor(fields),
       tipoEvento: _parseTipoEvento(fields),
+      idOportunidad: ParseUtils.toInt(fields, 9),
+      oportunidad: ParseUtils.str(fields, 10),
     );
   }
 

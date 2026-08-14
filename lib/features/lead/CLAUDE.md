@@ -517,7 +517,13 @@ proyecto).
   (seguimiento) — el color del círculo sigue viniendo de `tipoActor` (Bot IA verde, Asesor/Cliente
   azul), sin cambios ahí.
 - `HistorialComentarioModel.parseListCompleto`/`fromRawStringCompleto` parsean la respuesta de
-  `'LHC'` (9 campos posicionales — ver comentario en el modelo).
+  `'LHC'` (11 campos posicionales — ver comentario en el modelo).
+- `HistorialComentario.idOportunidad`/`.oportunidad` — agregados 2026-08-13, campos 09/10 de
+  `'LHC'` (`OP.ID_OPORTUNIDAD`/`OP.NOMBRE`, `LEFT JOIN CRM.T_OPORTUNIDAD` contra
+  `T_LEAD.ID_OPORTUNIDAD` de la negociación dueña del evento, replicado en las 3 ramas del UNION).
+  `HistorialTab`/`_HistorialItem` muestra `oportunidad` como chip (`_ChipOportunidad`) debajo de
+  la descripción de cada fila, solo si no viene vacío — `maxLines: 1` + `TextOverflow.ellipsis`
+  (mismo patrón que `_ChipTipo` en `home/.../notificacion_tile.dart`).
 
 ## Migración de ancla ID_NUMERO → ID_CONTACTO (2026-08-03, completa)
 

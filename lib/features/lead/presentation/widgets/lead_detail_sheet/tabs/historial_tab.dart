@@ -247,62 +247,110 @@ class _HistorialItem extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Ícono circular del actor ─────────────────────────────────────
-          Container(
-            width: AppSizing.actorCircleSize,
-            height: AppSizing.actorCircleSize,
-            decoration: BoxDecoration(
-              color: colorActor.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: colorActor.withValues(alpha: 0.35),
-                width: AppSizing.actorCircleBorder,
-              ),
-            ),
-            child: Icon(
-              _iconEvento(item.tipoEvento),
-              size: AppSizing.iconSm,
-              color: colorActor,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-
-          // ── Descripción ─────────────────────────────────────────────────
-          Expanded(
-            child: Text(
-              item.notas,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-
-          // ── Fecha + Actor ────────────────────────────────────────────────
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                item.fechaHora.formatConDia(),
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+              // ── Ícono circular del actor ──────────────────────────────────
+              Container(
+                width: AppSizing.actorCircleSize,
+                height: AppSizing.actorCircleSize,
+                decoration: BoxDecoration(
+                  color: colorActor.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: colorActor.withValues(alpha: 0.35),
+                    width: AppSizing.actorCircleBorder,
+                  ),
+                ),
+                child: Icon(
+                  _iconEvento(item.tipoEvento),
+                  size: AppSizing.iconSm,
+                  color: colorActor,
                 ),
               ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                item.actorLabel,
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: colorActor,
-                  fontWeight: AppTextStyles.weightMedium,
+              const SizedBox(width: AppSpacing.sm),
+
+              // ── Descripción ────────────────────────────────────────────────
+              Expanded(
+                child: Text(
+                  item.notas,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                 ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+
+              // ── Fecha + Actor ──────────────────────────────────────────────
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    item.fechaHora.formatConDia(),
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    item.actorLabel,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: colorActor,
+                      fontWeight: AppTextStyles.weightMedium,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
+          // ── Oportunidad de la negociación (lead) del evento ────────────────
+          if (item.oportunidad.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSizing.actorCircleSize + AppSpacing.sm,
+              ),
+              child: _ChipOportunidad(label: item.oportunidad),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chip de oportunidad
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChipOportunidad extends StatelessWidget {
+  final String label;
+
+  const _ChipOportunidad({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.primary,
+          fontWeight: AppTextStyles.weightMedium,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

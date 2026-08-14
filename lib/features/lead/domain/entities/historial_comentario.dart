@@ -29,6 +29,8 @@ class HistorialComentario extends Equatable {
   final String fechaHora;
   final TipoActor tipoActor;
   final TipoEventoHistorial tipoEvento;
+  final int idOportunidad;
+  final String oportunidad;
 
   const HistorialComentario({
     required this.idLead,
@@ -42,6 +44,8 @@ class HistorialComentario extends Equatable {
     required this.fechaHora,
     required this.tipoActor,
     required this.tipoEvento,
+    required this.idOportunidad,
+    required this.oportunidad,
   });
 
   /// Nombre a mostrar como actor: nombre real si existe, si no un label
@@ -69,5 +73,7 @@ class HistorialComentario extends Equatable {
     fechaHora,
     tipoActor,
     tipoEvento,
+    idOportunidad,
+    oportunidad,
   ];
 }

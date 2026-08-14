@@ -25,10 +25,11 @@ class SolicitudListSuccess extends SolicitudListState {
   // Asesor elegido en SolicitudAsesorPickerModal (chip "Asesores")
   final String? asesorSeleccionado;
 
-  // Conteo de solicitudes por asesor (codUser), calculado sobre _allSolicitudes
-  // — alimenta SolicitudAsesorPickerModal (universo de asesores viene de
+  // Conteo de solicitudes por asesor (codUser) desglosado por ibValidado
+  // (false=sin validar, true=validado), calculado sobre _allSolicitudes —
+  // alimenta SolicitudAsesorPickerModal (universo de asesores viene de
   // CatalogsBloc, no de este mapa), no viene del backend
-  final Map<String, int> conteosPorAsesor;
+  final Map<String, Map<bool, int>> conteosPorAsesor;
 
   // Contadores para los indicadores del dashboard (calculados sobre el
   // total). Ambos se basan en `ibValidado` (false/true), no en `idEstado`.

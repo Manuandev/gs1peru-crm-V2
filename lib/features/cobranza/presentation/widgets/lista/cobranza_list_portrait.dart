@@ -11,7 +11,7 @@ class CobranzaListPortrait extends StatelessWidget {
   final CobranzaChipFiltro chipFiltro;
   final Set<int> estadosSeleccionados;
   final String? asesorSeleccionado;
-  final Map<String, int> conteosPorAsesor;
+  final Map<String, Map<int, int>> conteosPorAsesor;
 
   const CobranzaListPortrait({
     super.key,

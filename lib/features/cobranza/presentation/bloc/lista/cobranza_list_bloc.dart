@@ -167,13 +167,17 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     );
   }
 
-  // Conteo de cobranzas por asesor (codUser) sobre el total cargado —
-  // alimenta CobranzaAsesorPickerModal, no viene del backend
-  Map<String, int> _buildConteosPorAsesor() {
-    final conteos = <String, int>{};
+  // Conteo de cobranzas por asesor (codUser), desglosado por idEstado, sobre
+  // el total cargado — alimenta CobranzaAsesorPickerModal, no viene del
+  // backend. Antes era un total plano (Map<String,int>) — el usuario pidió
+  // ver también en qué estado está cada cobranza de ese asesor, no solo
+  // cuántas tiene.
+  Map<String, Map<int, int>> _buildConteosPorAsesor() {
+    final conteos = <String, Map<int, int>>{};
     for (final c in _allCobranzas) {
       if (c.asignadoA.isEmpty) continue;
-      conteos[c.asignadoA] = (conteos[c.asignadoA] ?? 0) + 1;
+      final porEstado = conteos.putIfAbsent(c.asignadoA, () => {});
+      porEstado[c.idEstado] = (porEstado[c.idEstado] ?? 0) + 1;
     }
     return conteos;
   }

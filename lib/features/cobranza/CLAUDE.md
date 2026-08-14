@@ -1,5 +1,31 @@
 # Cobranza Feature
 
+## `CobranzaAsesorPickerModal` — recarga al abrir + desglose por estado (2026-08-14)
+Pedido explícito del usuario: el picker de asesor mostraba un total plano por asesor
+(`conteosPorAsesor`, `Map<String,int>`) calculado sobre lo que `CobranzaListBloc` ya tenía
+cargado desde la última vez que se entró a la pantalla — y el universo de asesores
+(`CatalogsBloc.asesores`) solo se carga una vez al iniciar sesión, así que ambos podían estar
+desactualizados sin que el asesor lo notara (antes solo había un ícono de refrescar manual).
+
+- **Recarga automática al abrir** — `_CobranzaAsesorPickerModalState.initState()` dispara
+  `CatalogsLoadRequested()` **y** `CobranzaListRefresh()` apenas se monta el modal (el ícono
+  manual de refrescar sigue ahí, ahora dispara ambos eventos también, antes solo el de
+  catálogos). Como `CobranzaListBloc` es el mismo que ya usa la pantalla de lista (provisto por
+  `CobranzaListPage`, accesible desde el modal porque `showModalBottomSheet` inserta la ruta
+  dentro del mismo árbol de providers), refrescar acá también refresca la lista de fondo — no
+  es un side-effect no deseado, es justo lo que se pidió ("cada que abra eso, cargue la data").
+- **Reactivo de verdad, no solo al abrir** — el widget ya no recibe `conteosPorAsesor` como
+  snapshot fijo para pintar; `build()` hace `context.watch<CobranzaListBloc>().state` y usa ese
+  valor si es `CobranzaListSuccess` (cae al snapshot recibido por parámetro solo mientras el
+  refresh disparado en `initState` sigue en vuelo, para no mostrar la lista vacía un instante).
+- **Conteo desglosado por `idEstado`, no un total plano** — `CobranzaListBloc.
+  _buildConteosPorAsesor()` pasó de `Map<String,int>` a `Map<String, Map<int,int>>` (codUser →
+  {idEstado: cantidad}). `_AsesorTile` sigue mostrando el total en negrita a la derecha (mismo
+  lugar de siempre) y agrega una fila de chips chicos debajo del nombre/código — uno por estado
+  con cantidad > 0, ícono + color de `colorEstadoGes`/mismos íconos que
+  `CobranzaDetalleStepper` (`fileOutlined`/`receipt`/`time`/`checkCircle`), con el label
+  completo en un `Tooltip` (no hay espacio horizontal para texto largo en la fila).
+
 ## Color por estado unificado — `colorEstadoGes` (2026-08-14)
 Pedido explícito del usuario: los colores de las 4 tarjetas-filtro de la lista
 (`CobranzaSummaryCards`), el badge de cada registro (`CobranzaCard`) y el badge del detalle
@@ -208,10 +234,12 @@ Gestiona el flujo completo de facturación: lista de cobranzas, detalle, factura
 - `CobranzaFilterChips` (lista/) → chips de filtro horizontal (Todos/Asesores/Contado/Crédito);
   el chip "Asesores" solo se muestra si `SessionService().isModerador`
 - `CobranzaAsesorPickerModal` (lista/) → bottom sheet con buscador (nombre o `codUser`), reactivo
-  a `CatalogsBloc` (`BlocBuilder<CatalogsBloc, CatalogsState>`, no recibe la lista como snapshot
-  estático); cada fila muestra avatar (iniciales + color), nombre, código, punto verde si
-  `disponible` y el conteo de cobranzas (`conteosPorAsesor`, calculado en el bloc, no en el
-  backend). Ícono de refrescar en el header dispara `CatalogsLoadRequested`. Retorna el `codUser`
+  a `CatalogsBloc` Y a `CobranzaListBloc` (ninguno como snapshot estático — ver sección propia
+  arriba, "recarga al abrir + desglose por estado"); cada fila muestra avatar (iniciales +
+  color), nombre, código, punto verde si `disponible`, el total de cobranzas en negrita y una
+  fila de chips por estado (`conteosPorAsesor`, calculado en el bloc, no en el backend). Al
+  abrirse y con el ícono de refrescar dispara `CatalogsLoadRequested` + `CobranzaListRefresh`.
+  Retorna el `codUser`
   elegido o `null` — `CobranzaListPortrait` interpreta `null` como "volver a Todos"
 
 ## SPs que consume

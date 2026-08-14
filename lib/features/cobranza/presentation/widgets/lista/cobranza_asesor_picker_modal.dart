@@ -4,18 +4,24 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 /// Modal de búsqueda de asesor (por nombre o código) para el chip "Asesores"
 /// de la lista de Cobranzas. Retorna el `codUser` elegido, o `null` si se
 /// cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el llamador
 /// debe interpretar `null` como "volver al filtro Todos".
 ///
-/// Reactivo a [CatalogsBloc] (no recibe la lista de asesores como snapshot
-/// estático) — el ícono de refrescar en el header dispara
-/// `CatalogsLoadRequested`. El conteo por asesor ([conteosPorAsesor]) NO viene
-/// del backend, se calcula en [CobranzaListBloc] sobre las cobranzas cargadas.
+/// Reactivo a [CatalogsBloc] Y a [CobranzaListBloc] — al abrirse, dispara
+/// `CatalogsLoadRequested` + `CobranzaListRefresh` (además del ícono manual
+/// de refrescar) para que tanto el universo de asesores como el conteo por
+/// estado estén al día, no lo que quedó cargado en memoria desde que se
+/// entró a la pantalla. El conteo por asesor ([conteosPorAsesor], desglosado
+/// por `idEstado`) NO viene del backend, se calcula en [CobranzaListBloc]
+/// sobre las cobranzas cargadas — `widget.conteosPorAsesor` es solo el
+/// snapshot inicial (evita un parpadeo en blanco mientras llega el refresh);
+/// una vez que el bloc reemite, el modal se actualiza solo.
 class CobranzaAsesorPickerModal extends StatefulWidget {
-  final Map<String, int> conteosPorAsesor;
+  final Map<String, Map<int, int>> conteosPorAsesor;
   final String? seleccionadoActual;
 
   const CobranzaAsesorPickerModal({
@@ -26,7 +32,7 @@ class CobranzaAsesorPickerModal extends StatefulWidget {
 
   static Future<String?> show(
     BuildContext context, {
-    required Map<String, int> conteosPorAsesor,
+    required Map<String, Map<int, int>> conteosPorAsesor,
     String? seleccionadoActual,
   }) {
     return showModalBottomSheet<String>(
@@ -56,6 +62,16 @@ class _CobranzaAsesorPickerModalState
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+    // "Cada que abra esto, que cargue la data" — pedido explícito del
+    // usuario, no confiar en el catálogo (sesión) ni en la lista (última
+    // vez que se entró a la pantalla) que puedan estar desactualizados.
+    context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
+    context.read<CobranzaListBloc>().add(const CobranzaListRefresh());
+  }
+
+  @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
@@ -77,6 +93,14 @@ class _CobranzaAsesorPickerModalState
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenHeight = MediaQuery.sizeOf(context).height;
+
+    // Mientras llega el refresh disparado en initState, se muestra el
+    // snapshot con el que se abrió el modal (evita un parpadeo en blanco) —
+    // apenas CobranzaListBloc reemite con datos frescos, se usa ese.
+    final cobranzaListState = context.watch<CobranzaListBloc>().state;
+    final conteosPorAsesor = cobranzaListState is CobranzaListSuccess
+        ? cobranzaListState.conteosPorAsesor
+        : widget.conteosPorAsesor;
 
     return SizedBox(
       height: screenHeight * 0.75,
@@ -116,9 +140,14 @@ class _CobranzaAsesorPickerModalState
                   ),
                 ),
                 IconButton(
-                  onPressed: () => context.read<CatalogsBloc>().add(
-                    const CatalogsLoadRequested(),
-                  ),
+                  onPressed: () {
+                    context.read<CatalogsBloc>().add(
+                      const CatalogsLoadRequested(),
+                    );
+                    context.read<CobranzaListBloc>().add(
+                      const CobranzaListRefresh(),
+                    );
+                  },
                   icon: Icon(
                     AppIcons.refresh,
                     color: colorScheme.onSurfaceVariant,
@@ -189,7 +218,8 @@ class _CobranzaAsesorPickerModalState
                     final asesor = filtrados[i];
                     return _AsesorTile(
                       asesor: asesor,
-                      cantidad: widget.conteosPorAsesor[asesor.codUser] ?? 0,
+                      conteoPorEstado:
+                          conteosPorAsesor[asesor.codUser] ?? const {},
                       isSelected: asesor.codUser == widget.seleccionadoActual,
                       onTap: () => Navigator.of(context).pop(asesor.codUser),
                     );
@@ -206,20 +236,30 @@ class _CobranzaAsesorPickerModalState
 
 class _AsesorTile extends StatelessWidget {
   final AsesorItem asesor;
-  final int cantidad;
+  final Map<int, int> conteoPorEstado;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _AsesorTile({
     required this.asesor,
-    required this.cantidad,
+    required this.conteoPorEstado,
     required this.isSelected,
     required this.onTap,
   });
 
+  // Mismo orden/labels/íconos que CobranzaSummaryCards/CobranzaDetalleStepper
+  // — 0 Pend.deDocumento, 2 Facturar, 5 Pend.factura, 3 Cancelado.
+  static const _estados = [
+    (id: 0, label: 'Pend. documento', icon: AppIcons.fileOutlined),
+    (id: 2, label: 'Facturar', icon: AppIcons.receipt),
+    (id: 5, label: 'Pend. pago', icon: AppIcons.time),
+    (id: 3, label: 'Cancelado', icon: AppIcons.checkCircle),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final total = conteoPorEstado.values.fold(0, (a, b) => a + b);
 
     return GestureDetector(
       onTap: onTap,
@@ -239,6 +279,7 @@ class _AsesorTile extends StatelessWidget {
           ),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
@@ -292,6 +333,23 @@ class _AsesorTile extends StatelessWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (total > 0) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Wrap(
+                      spacing: AppSpacing.xxs,
+                      runSpacing: AppSpacing.xxs,
+                      children: [
+                        for (final e in _estados)
+                          if ((conteoPorEstado[e.id] ?? 0) > 0)
+                            _EstadoBadgeChico(
+                              icon: e.icon,
+                              label: e.label,
+                              color: colorEstadoGes(e.id),
+                              cantidad: conteoPorEstado[e.id]!,
+                            ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -305,11 +363,60 @@ class _AsesorTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
               ),
               child: Text(
-                '$cantidad',
+                '$total',
                 style: AppTextStyles.labelSmall.copyWith(
                   fontWeight: AppTextStyles.weightBold,
                   color: colorScheme.onSurfaceVariant,
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Chip chico: ícono + cantidad, coloreado por estado — mismo lenguaje visual
+// que CobranzaSummaryCards, en miniatura. El label completo va en el
+// Tooltip (accesible sin ocupar espacio horizontal en la fila).
+class _EstadoBadgeChico extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final int cantidad;
+
+  const _EstadoBadgeChico({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.cantidad,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxs,
+          vertical: 1,
+        ),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: AppSizing.iconInline, color: color),
+            const SizedBox(width: 2),
+            Text(
+              '$cantidad',
+              style: AppTextStyles.labelSmall.copyWith(
+                fontSize: AppTextStyles.sizeXs,
+                fontWeight: AppTextStyles.weightSemiBold,
+                color: color,
               ),
             ),
           ],

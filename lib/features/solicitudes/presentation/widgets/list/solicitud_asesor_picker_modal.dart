@@ -4,19 +4,25 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 /// Modal de búsqueda de asesor (por nombre o código) para el chip "Asesores"
 /// de la lista de Solicitudes. Retorna el `codUser` elegido, o `null` si se
 /// cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el llamador
 /// debe interpretar `null` como "volver al filtro Todas".
 ///
-/// Reactivo a [CatalogsBloc] (no recibe la lista de asesores como snapshot
-/// estático) — el ícono de refrescar en el header dispara
-/// `CatalogsLoadRequested`. El conteo por asesor ([conteosPorAsesor]) NO viene
-/// del backend, se calcula en [SolicitudListBloc] sobre las solicitudes
-/// cargadas. Mismo patrón que `CobranzaAsesorPickerModal`.
+/// Reactivo a [CatalogsBloc] Y a [SolicitudListBloc] — al abrirse, dispara
+/// `CatalogsLoadRequested` + `SolicitudListRefresh` (además del ícono manual
+/// de refrescar) para que tanto el universo de asesores como el conteo
+/// sin validar/validado estén al día, no lo que quedó cargado en memoria
+/// desde que se entró a la pantalla. El conteo por asesor
+/// ([conteosPorAsesor], desglosado por `ibValidado`) NO viene del backend,
+/// se calcula en [SolicitudListBloc] sobre las solicitudes cargadas —
+/// `widget.conteosPorAsesor` es solo el snapshot inicial (evita un parpadeo
+/// en blanco mientras llega el refresh); una vez que el bloc reemite, el
+/// modal se actualiza solo. Mismo patrón que `CobranzaAsesorPickerModal`.
 class SolicitudAsesorPickerModal extends StatefulWidget {
-  final Map<String, int> conteosPorAsesor;
+  final Map<String, Map<bool, int>> conteosPorAsesor;
   final String? seleccionadoActual;
 
   const SolicitudAsesorPickerModal({
@@ -27,7 +33,7 @@ class SolicitudAsesorPickerModal extends StatefulWidget {
 
   static Future<String?> show(
     BuildContext context, {
-    required Map<String, int> conteosPorAsesor,
+    required Map<String, Map<bool, int>> conteosPorAsesor,
     String? seleccionadoActual,
   }) {
     return showModalBottomSheet<String>(
@@ -57,6 +63,16 @@ class _SolicitudAsesorPickerModalState
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+    // "Cada que abra esto, que cargue la data" — pedido explícito del
+    // usuario, no confiar en el catálogo (sesión) ni en la lista (última
+    // vez que se entró a la pantalla) que puedan estar desactualizados.
+    context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
+    context.read<SolicitudListBloc>().add(const SolicitudListRefresh());
+  }
+
+  @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
@@ -78,6 +94,14 @@ class _SolicitudAsesorPickerModalState
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenHeight = MediaQuery.sizeOf(context).height;
+
+    // Mientras llega el refresh disparado en initState, se muestra el
+    // snapshot con el que se abrió el modal (evita un parpadeo en blanco) —
+    // apenas SolicitudListBloc reemite con datos frescos, se usa ese.
+    final solicitudListState = context.watch<SolicitudListBloc>().state;
+    final conteosPorAsesor = solicitudListState is SolicitudListSuccess
+        ? solicitudListState.conteosPorAsesor
+        : widget.conteosPorAsesor;
 
     return SizedBox(
       height: screenHeight * 0.75,
@@ -115,9 +139,14 @@ class _SolicitudAsesorPickerModalState
                   ),
                 ),
                 IconButton(
-                  onPressed: () => context.read<CatalogsBloc>().add(
-                    const CatalogsLoadRequested(),
-                  ),
+                  onPressed: () {
+                    context.read<CatalogsBloc>().add(
+                      const CatalogsLoadRequested(),
+                    );
+                    context.read<SolicitudListBloc>().add(
+                      const SolicitudListRefresh(),
+                    );
+                  },
                   icon: Icon(
                     AppIcons.refresh,
                     color: colorScheme.onSurfaceVariant,
@@ -188,7 +217,8 @@ class _SolicitudAsesorPickerModalState
                     final asesor = filtrados[i];
                     return _AsesorTile(
                       asesor: asesor,
-                      cantidad: widget.conteosPorAsesor[asesor.codUser] ?? 0,
+                      conteoPorValidado:
+                          conteosPorAsesor[asesor.codUser] ?? const {},
                       isSelected: asesor.codUser == widget.seleccionadoActual,
                       onTap: () => Navigator.of(context).pop(asesor.codUser),
                     );
@@ -205,13 +235,14 @@ class _SolicitudAsesorPickerModalState
 
 class _AsesorTile extends StatelessWidget {
   final AsesorItem asesor;
-  final int cantidad;
+  // false = sin validar, true = validado — mismo criterio que SolicitudFiltro.
+  final Map<bool, int> conteoPorValidado;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _AsesorTile({
     required this.asesor,
-    required this.cantidad,
+    required this.conteoPorValidado,
     required this.isSelected,
     required this.onTap,
   });
@@ -219,6 +250,9 @@ class _AsesorTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final sinValidar = conteoPorValidado[false] ?? 0;
+    final validados = conteoPorValidado[true] ?? 0;
+    final total = sinValidar + validados;
 
     return GestureDetector(
       onTap: onTap,
@@ -240,6 +274,7 @@ class _AsesorTile extends StatelessWidget {
           ),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
@@ -293,6 +328,29 @@ class _AsesorTile extends StatelessWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (total > 0) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Wrap(
+                      spacing: AppSpacing.xxs,
+                      runSpacing: AppSpacing.xxs,
+                      children: [
+                        if (sinValidar > 0)
+                          _EstadoBadgeChico(
+                            icon: AppIcons.time,
+                            label: 'Sin validar',
+                            color: AppColors.warning,
+                            cantidad: sinValidar,
+                          ),
+                        if (validados > 0)
+                          _EstadoBadgeChico(
+                            icon: AppIcons.checkCircle,
+                            label: 'Validado',
+                            color: AppColors.success,
+                            cantidad: validados,
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -306,11 +364,59 @@ class _AsesorTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
               ),
               child: Text(
-                '$cantidad',
+                '$total',
                 style: AppTextStyles.labelSmall.copyWith(
                   fontWeight: AppTextStyles.weightBold,
                   color: colorScheme.onSurfaceVariant,
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Chip chico: ícono + cantidad, coloreado por estado — mismo lenguaje visual
+// que CobranzaAsesorPickerModal._EstadoBadgeChico.
+class _EstadoBadgeChico extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final int cantidad;
+
+  const _EstadoBadgeChico({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.cantidad,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxs,
+          vertical: 1,
+        ),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: AppSizing.iconInline, color: color),
+            const SizedBox(width: 2),
+            Text(
+              '$cantidad',
+              style: AppTextStyles.labelSmall.copyWith(
+                fontSize: AppTextStyles.sizeXs,
+                fontWeight: AppTextStyles.weightSemiBold,
+                color: color,
               ),
             ),
           ],

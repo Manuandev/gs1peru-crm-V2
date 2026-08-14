@@ -31,9 +31,10 @@ class CobranzaListSuccess extends CobranzaListState {
   // Asesor elegido en CobranzaAsesorPickerModal (chip "Asesores")
   final String? asesorSeleccionado;
 
-  // Conteo de cobranzas por asesor (codUser), calculado sobre _allCobranzas
-  // — alimenta CobranzaAsesorPickerModal, no viene del backend
-  final Map<String, int> conteosPorAsesor;
+  // Conteo de cobranzas por asesor (codUser) desglosado por idEstado,
+  // calculado sobre _allCobranzas — alimenta CobranzaAsesorPickerModal, no
+  // viene del backend
+  final Map<String, Map<int, int>> conteosPorAsesor;
 
   // Pend. de documento (idEstado 0) sobre TODO lo cargado, sin filtro de
   // chip — alimenta el badge de Cobranza del drawer en tiempo real.

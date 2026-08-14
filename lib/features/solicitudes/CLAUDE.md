@@ -2949,11 +2949,14 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   `SessionService().isModerador` — mismo patrón que `CobranzaFilterChips`. Antes de este
   cambio el chip "Asesores" siempre estaba visible, incluso para un asesor no-moderador
 - `SolicitudAsesorPickerModal` (list/) → modal del chip "Asesores", mismo patrón que
-  `CobranzaAsesorPickerModal`: reactivo a `CatalogsBloc` (`BlocBuilder<CatalogsBloc,
-  CatalogsState>`, no un snapshot estático), ícono de refrescar dispara
-  `CatalogsLoadRequested`. Cada fila muestra avatar, nombre, código, punto verde si
-  `disponible` y el conteo (`SolicitudListSuccess.conteosPorAsesor`, calculado en el bloc
-  sobre las solicitudes cargadas — el backend no lo trae). Retorna el `codUser` elegido o
+  `CobranzaAsesorPickerModal` (ver `cobranza/CLAUDE.md` → "recarga al abrir + desglose por
+  estado", 2026-08-14): reactivo a `CatalogsBloc` **y** a `SolicitudListBloc` (ninguno como
+  snapshot estático) — al abrirse (`initState`) y con el ícono de refrescar dispara
+  `CatalogsLoadRequested` + `SolicitudListRefresh`. Cada fila muestra avatar, nombre, código,
+  punto verde si `disponible`, el total en negrita y una fila de chips ("Sin validar"/
+  "Validado", naranja/verde) — el conteo (`SolicitudListSuccess.conteosPorAsesor`, ahora
+  `Map<String, Map<bool,int>>` desglosado por `ibValidado`, antes un total plano) se calcula en
+  el bloc sobre las solicitudes cargadas, el backend no lo trae. Retorna el `codUser` elegido o
   `null` — `SolicitudListPortrait` interpreta `null` como "volver a Todas". **Antes** este
   modal armaba la lista de asesores agrupando las propias solicitudes cargadas
   (`AsesorResumen`, sin catálogo real) — se reemplazó porque para un asesor no-moderador el

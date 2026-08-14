@@ -110,13 +110,17 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     );
   }
 
-  // Conteo de solicitudes por asesor (codUser) sobre el total cargado —
-  // alimenta SolicitudAsesorPickerModal, no viene del backend
-  Map<String, int> _buildConteosPorAsesor() {
-    final conteos = <String, int>{};
+  // Conteo de solicitudes por asesor (codUser), desglosado por
+  // ibValidado (false=sin validar, true=validado), sobre el total cargado —
+  // alimenta SolicitudAsesorPickerModal, no viene del backend. Antes era un
+  // total plano (Map<String,int>) — el usuario pidió ver también en qué
+  // estado está cada solicitud de ese asesor, no solo cuántas tiene.
+  Map<String, Map<bool, int>> _buildConteosPorAsesor() {
+    final conteos = <String, Map<bool, int>>{};
     for (final s in _allSolicitudes) {
       if (s.asesor.isEmpty) continue;
-      conteos[s.asesor] = (conteos[s.asesor] ?? 0) + 1;
+      final porValidado = conteos.putIfAbsent(s.asesor, () => {});
+      porValidado[s.ibValidado] = (porValidado[s.ibValidado] ?? 0) + 1;
     }
     return conteos;
   }

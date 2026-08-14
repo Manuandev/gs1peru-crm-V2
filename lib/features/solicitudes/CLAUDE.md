@@ -1,5 +1,48 @@
 # Solicitudes Feature
 
+## "Guardar" desde el wizard (editar/validar) ya no recarga el Detalle — `SolicitudUpdateNotifier` (2026-08-14)
+Pedido explícito del usuario: al entrar a "Editar ficha"/"Validar" desde `SolicitudDetalleView`
+(`goToFichaCompletarSolicitud`, `_push` normal — el Detalle queda vivo debajo en el stack, ver
+`solicitud_detalle_page.dart`), completar el wizard y presionar "Guardar" en el Resumen, antes
+`SolicitudResumenView._onGuardar()` hacía `pop()` (sale del wizard) + `popUntil` (limpia
+cualquier Detalle que haya quedado debajo) + `context.goToDetalleSolicitud(...)` (**push** de
+un `SolicitudDetallePage` **nuevo** — bloc nuevo, 2 llamadas de red:
+`GetDetalleSolicitudUseCase` + `GetSolicitudesUseCase`) — aunque el Detalle de origen siguiera
+vivo justo debajo, siempre se descartaba y se pedía todo de nuevo al backend.
+
+- **Nuevo `SolicitudUpdateNotifier`** (`presentation/utils/solicitud_update_notifier.dart`,
+  exportado en `index_solicitudes.dart`) — mismo patrón que `LeadUpdateNotifier`/
+  `CobranzaUpdateNotifier` (`core/utils/`), pero vive **dentro** de `solicitudes/` (no en
+  `core/`) porque su payload (`SolicitudUpdate`) usa tipos propios del feature
+  (`DatosSolicitante`/`DatosFacturacion`, definidos en `solicitud_form_cubit.dart`) y hoy solo
+  se consume acá — meterlo en `core/` violaría la regla de que `core` no depende de
+  `features/*`.
+- **`SolicitudDetalleBloc`** se suscribe en el constructor, guarda el `numSol` que tiene abierto
+  (`_numSol`, seteado en `_onStarted`) y, si el aviso matchea, dispara
+  `SolicitudDetalleItemActualizado(update)` (`_onItemActualizado`) — parchea `SolicitudDetalle`
+  (nuevo `SolicitudDetalle.copyWith(...)`, la entidad no lo tenía) y `Solicitud` (ya tenía
+  `copyWith`) **en memoria, sin pasar por `SolicitudDetalleLoading` ni llamar al backend**.
+  Campos que sí se actualizan: tipo/número de documento, cargo, celular, correo del
+  participante; toda la sección de facturación (comprobante/razón social o nombres según
+  `facturacionEsRuc`/dirección); y del resumen (`Solicitud`) nombre/apellidos/empresa/cargo/
+  correo/teléfono/tipoPersona/monto. **No se tocan** `historial` (`SolicitudDetalle`) ni
+  estado/canal/asesor/oportunidad/fecha (`Solicitud`) — nada en este wizard los modifica, así
+  que no hay nada que reconstruir ahí.
+- **`SolicitudResumenView._onGuardar()`** — ahora revisa `_esSolicitudExistente` (ya existía en
+  este archivo, ver más abajo "'Generar solicitud' pasa a 'Actualizar solicitud'..."): si es
+  `true` (se entró por Validar/Editar ficha, hay un Detalle vivo debajo), calcula
+  `montoTotal`/`facturacionEsRuc` (mismo cálculo que `SeccionResumenComercial` —
+  Inversión+IGV redondeado, o el precio pactado si la solicitud quedó completa) y llama
+  `SolicitudUpdateNotifier.instance.notify(...)`, después un **`pop()` simple** (vuelve al
+  Detalle que ya estaba ahí, actualizado por el bloc). Si es `false` (creación nueva desde
+  "Generar solicitud"/primer "Guardar" sin Detalle debajo), se queda con el flujo viejo
+  (`popUntil` + push de un Detalle nuevo) — no hay nada que parchear porque es la primera vez
+  que se ve esa pantalla.
+- **No se agregó ningún paso de "check verde" antes de retroceder** (a diferencia del mismo
+  fix en `cobranza/CLAUDE.md`, "check antes de retroceder") — no fue parte de este pedido, el
+  flujo de progreso (`SolicitudProgreso`/`SolicitudProgresoOverlay`) sigue igual que antes
+  (`_progreso.reset()` inmediato tras `CrudOk`, sin paso de éxito).
+
 ## Bug real — "Importe total" del footer/Resumen quedaba 1 centavo por encima del precio pactado (2026-08-14)
 Reportado por el usuario con un caso real: 2 participantes a 254.24 c/u (Inversión 508.48), IGV
 18% — el footer del paso 2 mostraba **IGV 91.53 / Importe total 600.01**, cuando el precio

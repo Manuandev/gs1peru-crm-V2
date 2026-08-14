@@ -78,4 +78,39 @@ class SolicitudDetalle {
       '$facNombres $facApellidoPaterno $facApellidoMaterno'
           .replaceAll(RegExp(r'\s+'), ' ')
           .trim();
+
+  SolicitudDetalle copyWith({
+    String? tipoDocumentoId,
+    String? numDoc,
+    String? cargo,
+    String? celular,
+    String? correo,
+    String? facTipoComprobante,
+    String? facRazonSocial,
+    String? facRuc,
+    String? facDireccion,
+    String? facNumDoc,
+    String? facNombres,
+    String? facApellidoPaterno,
+    String? facApellidoMaterno,
+    List<HistorialSolicitud>? historial,
+  }) {
+    return SolicitudDetalle(
+      numSol: numSol,
+      tipoDocumentoId: tipoDocumentoId ?? this.tipoDocumentoId,
+      numDoc: numDoc ?? this.numDoc,
+      cargo: cargo ?? this.cargo,
+      celular: celular ?? this.celular,
+      correo: correo ?? this.correo,
+      facTipoComprobante: facTipoComprobante ?? this.facTipoComprobante,
+      facRazonSocial: facRazonSocial ?? this.facRazonSocial,
+      facRuc: facRuc ?? this.facRuc,
+      facDireccion: facDireccion ?? this.facDireccion,
+      facNumDoc: facNumDoc ?? this.facNumDoc,
+      facNombres: facNombres ?? this.facNombres,
+      facApellidoPaterno: facApellidoPaterno ?? this.facApellidoPaterno,
+      facApellidoMaterno: facApellidoMaterno ?? this.facApellidoMaterno,
+      historial: historial ?? this.historial,
+    );
+  }
 }

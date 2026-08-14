@@ -92,6 +92,63 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     }
 
     final numSol = context.read<SolicitudFormCubit>().state.numSol;
+
+    // Si se entró por "Validar"/"Editar ficha" (ya existía un
+    // SolicitudDetallePage vivo debajo del wizard, ver _esSolicitudExistente
+    // arriba), no hace falta pedirle nada al backend para volver a pintar el
+    // detalle — el wizard ya tiene en memoria exactamente lo que se acaba de
+    // guardar. Se avisa por SolicitudUpdateNotifier (mismo patrón que
+    // CobranzaUpdateNotifier, ver cobranza/CLAUDE.md) y se hace un pop
+    // simple, sin volver a llamar getSolicitudDetalle()/getSolicitudes().
+    if (_esSolicitudExistente && mounted) {
+      final formState = context.read<SolicitudFormCubit>().state;
+      final catalogState = context.read<CatalogsBloc>().state;
+      final tiposParticipante = catalogState is CatalogsLoaded
+          ? catalogState.tiposParticipante
+          : const <TipoParticipanteItem>[];
+      final idTipoDocRuc = catalogState is CatalogsLoaded
+          ? catalogState.valoresDefecto.idTipoDocRuc
+          : '';
+      final igvPorcentaje = catalogState is CatalogsLoaded
+          ? catalogState.igvPorcentaje
+          : 0.0;
+      final participantesState = context.read<ParticipantesCubit>().state;
+
+      // Mismo cálculo que SeccionResumenComercial — precio pactado si la
+      // solicitud está completa, si no Inversión + IGV redondeado.
+      final inversion = participantesState.totalPagantes(tiposParticipante);
+      final completo =
+          formState.cantidadEsperada != null &&
+          formState.cantidadEsperada! > 0 &&
+          participantesState.participantes.length >=
+              formState.cantidadEsperada! &&
+          formState.precioTotalLead > 0;
+      final montoTotal = completo
+          ? formState.precioTotalLead
+          : double.parse(
+              (inversion + (inversion * igvPorcentaje / 100)).toStringAsFixed(
+                2,
+              ),
+            );
+
+      if (formState.solicitante != null) {
+        SolicitudUpdateNotifier.instance.notify(
+          SolicitudUpdate(
+            numSol,
+            solicitante: formState.solicitante!,
+            facturacion: formState.facturacion,
+            facturacionEsRuc:
+                formState.facturacion?.tipoDocId == idTipoDocRuc,
+            tipoPersona: formState.tipoPersona,
+            montoTotal: montoTotal,
+          ),
+        );
+      }
+
+      Navigator.of(context).pop(); // sale del wizard, vuelve al Detalle vivo
+      return;
+    }
+
     Navigator.of(context).pop(); // sale del wizard
 
     // Bug real reportado por el usuario, 2026-07-30 — este método hacía
@@ -106,6 +163,11 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
     // solo evita que crezcan de acá en adelante) antes de empujar el
     // Detalle fresco — así la pila nunca crece más de un nivel de Detalle,
     // sin importar cuántas veces se repita el ciclo.
+    //
+    // Esta rama solo se alcanza cuando NO había un Detalle vivo debajo del
+    // wizard (creación nueva desde "Generar solicitud", ver
+    // _esSolicitudExistente arriba) — ahí sí hace falta el fetch, es la
+    // primera vez que se ve el detalle de esta solicitud.
     if (!mounted) return;
     Navigator.of(
       context,

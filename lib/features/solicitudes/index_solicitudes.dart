@@ -35,6 +35,7 @@ export 'presentation/bloc/detalle/solicitud_detalle_state.dart';
 
 export 'presentation/bloc/participantes/participantes_cubit.dart';
 export 'presentation/bloc/form/solicitud_form_cubit.dart';
+export 'presentation/utils/solicitud_update_notifier.dart';
 
 export 'presentation/pages/solicitud_list_page.dart';
 export 'presentation/pages/solicitud_detalle_page.dart';

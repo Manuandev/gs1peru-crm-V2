@@ -9,6 +9,21 @@ class CobranzaUpdate {
   const CobranzaUpdate(this.numSol, {required this.idEstado});
 }
 
+/// Label corto por `ID_ESTADO_GES` — mismo texto que ya usan las tarjetas de
+/// la lista (`CobranzaSummaryCards`) y el stepper del detalle
+/// (`CobranzaDetalleStepper`). Los suscriptores del notifier lo usan para
+/// parchear `Cobranza.estado`/`CobranzaDetalle.estado` en memoria junto con
+/// `idEstado` — sin esto, el color del badge avanza (deriva de `idEstado`)
+/// pero el texto se queda con la descripción vieja que trajo el backend.
+/// Vacío = estado no reconocido, el caller debe conservar el texto anterior.
+String cobranzaEstadoLabel(int idEstado) => switch (idEstado) {
+  0 => 'Pend. de Documento',
+  2 => 'Facturar',
+  5 => 'Pend. de Pago',
+  3 => 'Cancelado',
+  _ => '',
+};
+
 /// Bus de comunicación entre [CobranzaFacturaBloc] y los BLoCs de
 /// lista/detalle de cobranza — mismo patrón que [LeadUpdateNotifier].
 ///

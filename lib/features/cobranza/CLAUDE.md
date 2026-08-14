@@ -1,5 +1,33 @@
 # Cobranza Feature
 
+## Ajuste — check verde antes de retroceder + fix del texto de estado stale (2026-08-14)
+Dos correcciones sobre el mecanismo de arriba, mismo día, tras probarlo en vivo:
+
+- **Bug real — el badge de la lista quedaba en verde con el texto "Pendiente de Documento"
+  después de facturar.** `CobranzaListBloc._onItemActualizado` (ver abajo) solo parcheaba
+  `idEstado` (int) — pero tanto `_EstadoBadge` de `cobranza_card.dart` como el de
+  `cobranza_detalle_info_card.dart` pintan el **color** desde `idEstado` y el **texto** desde
+  `Cobranza.estado`/`CobranzaDetalle.estado` (`String`, separado, la descripción cruda que
+  manda el backend) — con `idEstado` ya en `2` (Facturar → verde en la lista, `AppColors.
+  success`) pero `estado` todavía en el texto viejo ("Pendiente de Documento"), quedaba el
+  color nuevo con el label viejo. Corregido con `cobranzaEstadoLabel(int idEstado)`
+  (`lib/core/utils/cobranza_update_notifier.dart`, mismo archivo del notifier) — mapea
+  `0/2/5/3` a los mismos labels cortos que ya usan `CobranzaSummaryCards`/
+  `CobranzaDetalleStepper` ("Pend. de Documento"/"Facturar"/"Pend. de Pago"/"Cancelado") —
+  ambos `_onItemActualizado` (lista y detalle) ahora patchean `estado` junto con `idEstado`
+  (si el id no matchea ninguno de los 4, `label` queda vacío y se conserva el texto anterior
+  vía `estado: label.isNotEmpty ? label : null`).
+- **`CobranzaFacturaBloc` ahora también muestra el check verde antes de retroceder** — antes
+  (ver "Overlay de carga al facturar", más abajo) el flujo saltaba directo de "Facturando..."
+  al pop, sin paso de éxito. Pedido explícito del usuario: mismo patrón de 2 pasos que
+  `EditLeadPortrait`/`TemplateFormView` (`core/CLAUDE.md` → `AppProcessOverlay`).
+  `CobranzaFacturaView` ahora también muestra el overlay (con `AppProcessStatus.exito` y
+  `successMessage: 'Factura generada correctamente'`) cuando `state.status ==
+  CobranzaFacturaStatus.facturadoOk` (antes solo durante `loading`); `CobranzaFacturaPage`
+  espera `Future.delayed(1500ms)` con ese status antes de `context.goBack()` — sin snackbar
+  redundante (el check + mensaje del overlay ya comunican el éxito, mismo criterio que
+  `EditLeadPortrait`, que tampoco snackbarea encima del check).
+
 ## Facturar ya no limpia el stack — pop + refresco en tiempo real vía `CobranzaUpdateNotifier` (2026-08-14)
 Pedido explícito del usuario: al facturar, ya no navegar con `context.goToCobranza()`
 (`clearAndPush`, reconstruye una `CobranzaListPage` nueva desde cero) — ahora
@@ -21,9 +49,14 @@ facturar), hacía falta un mecanismo explícito de aviso — igual patrón que
   `conteosPorEstado` (`CobranzaSummaryCards`) y el badge (ver abajo) quedan al día sin volver a
   pedir nada al backend.
 - **`CobranzaDetalleBloc`** también se suscribe — guarda el `numSol` que tiene abierto
-  (`_idCobranza`, seteado en `_onStarted`) y, si el aviso matchea, vuelve a disparar
-  `CobranzaDetalleStarted(numSol)` (recarga completa desde el backend — el detalle sí necesita
-  datos frescos de verdad, a diferencia de la lista que solo necesita el nuevo `idEstado`).
+  (`_idCobranza`, seteado en `_onStarted`) y, si el aviso matchea, dispara
+  `CobranzaDetalleItemActualizado(idEstado)` — parchea `idEstado`/`estado` del
+  `CobranzaDetalle` en memoria (mismo patrón que la lista, `CobranzaDetalle.copyWith`, nuevo)
+  **sin volver a pedir nada al backend ni pasar por `CobranzaDetalleLoading`** — pedido
+  explícito del usuario, no quería ver la pantalla de detalle "recargar" (flash de loading) al
+  volver de facturar. `_BottomActionButton`/`CobranzaDetalleStepper` ya reaccionan solos al
+  nuevo `idEstado` (ambos leen directo de `detalle.idEstado`, sin estado propio que
+  resincronizar).
 - **`goToFacturarCobranza`/`goToDetalleCobranza` no cambiaron** — siguen siendo `_push` normal
   (apilan), el fix fue solo cambiar `goToCobranza()` por `goBack()` en el listener de
   `CobranzaFacturaPage` y agregar el notifier para que lo que queda debajo en el stack se entere.

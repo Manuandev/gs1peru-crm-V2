@@ -49,8 +49,11 @@ class CobranzaFacturaPage extends StatelessWidget {
         listener: (context, state) async {
           switch (state.status) {
             case CobranzaFacturaStatus.facturadoOk:
-              AppSnackBar.success(context, 'Factura generada correctamente');
-              context.goBack();
+              // El check verde ya lo muestra el AppProcessOverlay de la vista
+              // (state.status == facturadoOk) — mismo timing que
+              // EditLeadPortrait/TemplateFormView, sin snackbar redundante.
+              await Future.delayed(const Duration(milliseconds: 1500));
+              if (context.mounted) context.goBack();
             case CobranzaFacturaStatus.continuarPlan:
               // Espera el resultado: null si el usuario volvió sin guardar
               // el plan, o fecha+cuotas si lo guardó localmente (el RC real

@@ -63,4 +63,29 @@ class CobranzaDetalle {
     this.archivos = const [],
     required this.historial,
   });
+
+  CobranzaDetalle copyWith({int? idEstado, String? estado}) {
+    return CobranzaDetalle(
+      idCobranza: idCobranza,
+      nombre: nombre,
+      apellido: apellido,
+      apellidoMaterno: apellidoMaterno,
+      idOportunidad: idOportunidad,
+      oportunidad: oportunidad,
+      ejecutivo: ejecutivo,
+      montoTotal: montoTotal,
+      idEstado: idEstado ?? this.idEstado,
+      estado: estado ?? this.estado,
+      idCondicion: idCondicion,
+      condicion: condicion,
+      fechaSolicitud: fechaSolicitud,
+      tipoComprobante: tipoComprobante,
+      moneda: moneda,
+      correo: correo,
+      celular: celular,
+      idChatCab: idChatCab,
+      archivos: archivos,
+      historial: historial,
+    );
+  }
 }

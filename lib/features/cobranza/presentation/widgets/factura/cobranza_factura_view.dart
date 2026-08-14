@@ -156,18 +156,23 @@ class _CobranzaFacturaViewState extends State<CobranzaFacturaView> {
                   ],
                 ),
               ),
-              // Mismo overlay de carga que EditLeadPortrait/TemplateFormView
+              // Mismo overlay de 2 pasos que EditLeadPortrait/TemplateFormView
               // (AppProcessOverlay, core/CLAUDE.md) — cubre las 2 llamadas
               // secuenciales de _onFacturarPressed en crédito (RC + UE; solo
-              // UE en contado). Al terminar, CobranzaFacturaPage ya maneja el
-              // snackbar + navegación (facturadoOk) o el error, así que acá
-              // solo hace falta el paso "cargando" — no un check de éxito.
-              if (state.status == CobranzaFacturaStatus.loading)
+              // UE en contado). El paso "éxito" (check verde) se muestra antes
+              // de retroceder — CobranzaFacturaPage espera ~1.5s con el status
+              // en facturadoOk antes de hacer pop, mismo timing que el resto
+              // de la app.
+              if (state.status == CobranzaFacturaStatus.loading ||
+                  state.status == CobranzaFacturaStatus.facturadoOk)
                 AppProcessOverlay(
-                  status: AppProcessStatus.cargando,
+                  status: state.status == CobranzaFacturaStatus.loading
+                      ? AppProcessStatus.cargando
+                      : AppProcessStatus.exito,
                   loadingMessage: state.esCredito
                       ? 'Guardando plan y facturando...'
                       : 'Facturando...',
+                  successMessage: 'Factura generada correctamente',
                 ),
             ],
           ),

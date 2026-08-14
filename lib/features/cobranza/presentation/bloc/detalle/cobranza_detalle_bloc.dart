@@ -16,10 +16,11 @@ class CobranzaDetalleBloc
   CobranzaDetalleBloc(this._getDetalleCobranzaUseCase)
       : super(const CobranzaDetalleInitial()) {
     on<CobranzaDetalleStarted>(_onStarted);
+    on<CobranzaDetalleItemActualizado>(_onItemActualizado);
 
     _updateSub = CobranzaUpdateNotifier.instance.stream.listen((update) {
       if (!isClosed && update.numSol == _idCobranza) {
-        add(CobranzaDetalleStarted(update.numSol));
+        add(CobranzaDetalleItemActualizado(update.idEstado));
       }
     });
   }
@@ -28,6 +29,24 @@ class CobranzaDetalleBloc
   Future<void> close() {
     _updateSub?.cancel();
     return super.close();
+  }
+
+  void _onItemActualizado(
+    CobranzaDetalleItemActualizado event,
+    Emitter<CobranzaDetalleState> emit,
+  ) {
+    final current = state;
+    if (current is! CobranzaDetalleSuccess) return;
+
+    final label = cobranzaEstadoLabel(event.idEstado);
+    emit(
+      CobranzaDetalleSuccess(
+        current.detalle.copyWith(
+          idEstado: event.idEstado,
+          estado: label.isNotEmpty ? label : null,
+        ),
+      ),
+    );
   }
 
   Future<void> _onStarted(

@@ -46,10 +46,14 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     CobranzaListItemActualizado event,
     Emitter<CobranzaListState> emit,
   ) {
+    final label = cobranzaEstadoLabel(event.idEstado);
     _allCobranzas = _allCobranzas
         .map(
           (c) => c.numSol == event.numSol
-              ? c.copyWith(idEstado: event.idEstado)
+              ? c.copyWith(
+                  idEstado: event.idEstado,
+                  estado: label.isNotEmpty ? label : null,
+                )
               : c,
         )
         .toList();

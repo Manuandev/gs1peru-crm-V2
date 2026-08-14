@@ -71,3 +71,4 @@ export 'presentation/widgets/detalle/cobranza_detalle_historial.dart';
 
 export 'presentation/utils/resolver_moneda.dart';
 export 'presentation/utils/fecha_corta_utils.dart';
+export 'presentation/utils/cobranza_estado_utils.dart';

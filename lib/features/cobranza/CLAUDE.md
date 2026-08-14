@@ -1,5 +1,24 @@
 # Cobranza Feature
 
+## Color por estado unificado — `colorEstadoGes` (2026-08-14)
+Pedido explícito del usuario: los colores de las 4 tarjetas-filtro de la lista
+(`CobranzaSummaryCards`), el badge de cada registro (`CobranzaCard`) y el badge del detalle
+(`CobranzaDetalleInfoCard`) no coincidían entre sí — cada uno tenía su propio `switch`
+duplicado y se habían ido desincronizando (ej. idEstado `3` Cancelado era verde en tarjetas/
+detalle pero naranja en la lista; idEstado `2` Facturar era azul en tarjetas/detalle pero
+verde en la lista — el mismo tipo de bug que ya había pasado con el texto del badge, ver
+sección de abajo). Unificado en `colorEstadoGes(int idEstado)`
+(`presentation/utils/cobranza_estado_utils.dart`, exportado en `index_cobranza.dart`) — único
+lugar con la tabla de colores, los 3 widgets la llaman en vez de tener su propio `switch`:
+`0`→`AppColors.warning` · `2`→`AppColors.primary` · `5`→`AppColors.secondary` ·
+`3`→`AppColors.success` · cualquier otro (`1` FreePass, `4` Anulado) → `AppColors.textDisabled`.
+`CobranzaSummaryCards._TarjetaDef` perdió su campo `color` (antes un literal `const` por
+tarjeta) — ahora es un getter (`Color get color => colorEstadoGes(idEstado)`), así ya no puede
+volver a desincronizarse solo. **No se tocó `CobranzaDetalleStepper`** — su color no es "el
+color del estado actual" sino un lenguaje visual de progreso (activo=warning,
+completado=primary, pendiente=gris/borde), un concepto distinto al de badge/tarjeta que no
+tiene sentido unificar con esta tabla.
+
 ## Ajuste — check verde antes de retroceder + fix del texto de estado stale (2026-08-14)
 Dos correcciones sobre el mecanismo de arriba, mismo día, tras probarlo en vivo:
 

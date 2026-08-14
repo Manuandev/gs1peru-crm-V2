@@ -191,7 +191,7 @@ class _EstadoBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _colorEstado(idEstado);
+    final color = colorEstadoGes(idEstado);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -209,22 +209,5 @@ class _EstadoBadge extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  // ID_ESTADO_GES crudo: 0=Pend.deDocumento 2=Facturar 5=Pend.factura
-  // 3=Cancelado (1=FreePass y 4=Anulado caen al color por defecto).
-  Color _colorEstado(int id) {
-    switch (id) {
-      case 2:
-        return AppColors.primary;
-      case 0:
-        return AppColors.warning;
-      case 5:
-        return AppColors.secondary;
-      case 3:
-        return AppColors.success;
-      default:
-        return AppColors.textDisabled;
-    }
   }
 }

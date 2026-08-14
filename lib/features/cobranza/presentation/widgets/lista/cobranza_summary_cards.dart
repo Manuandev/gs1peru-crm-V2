@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaSummaryCards extends StatelessWidget {
   final Map<int, int> conteosPorEstado;
@@ -16,32 +17,14 @@ class CobranzaSummaryCards extends StatelessWidget {
   });
 
   // ID_ESTADO_GES crudo (DBO.[edu.TIP_ESTADO_GES]): 0=Pend.deDocumento
-  // 2=Facturar 5=Pend.factura 3=Cancelado.
+  // 2=Facturar 5=Pend.factura 3=Cancelado. El color de cada tarjeta sale de
+  // colorEstadoGes (ver cobranza_estado_utils.dart) — mismo color que ya
+  // pintan CobranzaCard/CobranzaDetalleInfoCard para ese idEstado.
   static const _tarjetas = [
-    _TarjetaDef(
-      idEstado: 0,
-      label: 'Pend.\ndocumento',
-      icon: AppIcons.fileOutlined,
-      color: AppColors.warning,
-    ),
-    _TarjetaDef(
-      idEstado: 2,
-      label: 'Facturar',
-      icon: AppIcons.receipt,
-      color: AppColors.primary,
-    ),
-    _TarjetaDef(
-      idEstado: 5,
-      label: 'Pend. pago',
-      icon: AppIcons.time,
-      color: AppColors.secondary,
-    ),
-    _TarjetaDef(
-      idEstado: 3,
-      label: 'Cancelado',
-      icon: AppIcons.checkCircle,
-      color: AppColors.success,
-    ),
+    _TarjetaDef(idEstado: 0, label: 'Pend.\ndocumento', icon: AppIcons.fileOutlined),
+    _TarjetaDef(idEstado: 2, label: 'Facturar', icon: AppIcons.receipt),
+    _TarjetaDef(idEstado: 5, label: 'Pend. pago', icon: AppIcons.time),
+    _TarjetaDef(idEstado: 3, label: 'Cancelado', icon: AppIcons.checkCircle),
   ];
 
   @override
@@ -156,12 +139,12 @@ class _TarjetaDef {
   final int idEstado;
   final String label;
   final IconData icon;
-  final Color color;
 
   const _TarjetaDef({
     required this.idEstado,
     required this.label,
     required this.icon,
-    required this.color,
   });
+
+  Color get color => colorEstadoGes(idEstado);
 }

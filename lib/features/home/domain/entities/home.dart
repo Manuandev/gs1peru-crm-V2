@@ -10,6 +10,7 @@ class Home {
   final int totConversaciones;
   final int totNotificaciones;
   final int totSolicitudesSinValidar;
+  final int totSeguimientosActivos;
 
   final List<PrioridadHome> prioridades;
   final List<ProspectoHome> prospectos;
@@ -24,6 +25,7 @@ class Home {
     required this.totConversaciones,
     required this.totNotificaciones,
     required this.totSolicitudesSinValidar,
+    required this.totSeguimientosActivos,
     required this.prioridades,
     required this.prospectos,
     required this.asesores,
@@ -38,6 +40,7 @@ class Home {
     int? totConversaciones,
     int? totNotificaciones,
     int? totSolicitudesSinValidar,
+    int? totSeguimientosActivos,
     List<PrioridadHome>? prioridades,
     List<ProspectoHome>? prospectos,
     List<AsesorHome>? asesores,
@@ -52,6 +55,8 @@ class Home {
       totNotificaciones: totNotificaciones ?? this.totNotificaciones,
       totSolicitudesSinValidar:
           totSolicitudesSinValidar ?? this.totSolicitudesSinValidar,
+      totSeguimientosActivos:
+          totSeguimientosActivos ?? this.totSeguimientosActivos,
       prioridades: prioridades ?? this.prioridades,
       prospectos: prospectos ?? this.prospectos,
       asesores: asesores ?? this.asesores,

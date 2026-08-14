@@ -78,11 +78,14 @@ class _DrawerContent extends StatelessWidget {
                         isActive: rutaActual == AppRoutes.chats,
                       ),
                       _DrawerItem(
-                        item: const DrawerItemModel(
+                        item: DrawerItemModel(
                           id: AppRoutes.seguimiento,
                           icon: AppIcons.users,
                           label: 'Seguimiento',
                           route: AppRoutes.seguimiento,
+                          badge: state.seguimientos > 0
+                              ? state.seguimientos
+                              : null,
                         ),
                         isActive: rutaActual == AppRoutes.seguimiento,
                       ),

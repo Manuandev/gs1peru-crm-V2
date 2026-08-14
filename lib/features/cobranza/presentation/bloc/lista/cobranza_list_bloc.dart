@@ -1,6 +1,9 @@
 // lib/features/cobranza/presentation/bloc/lista/cobranza_list_bloc.dart
 
+import 'dart:async';
+
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
@@ -16,12 +19,41 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   // ID_ESTADO_GES crudo: 2=Facturar 0=Pend.deDocumento 5=Pend.factura 3=Cancelado
   static const _todosLosEstados = {2, 0, 5, 3};
 
+  StreamSubscription<CobranzaUpdate>? _updateSub;
+
   CobranzaListBloc(this._getCobranzasUseCase) : super(const CobranzaListInitial()) {
     on<CobranzaListStarted>(_onStarted);
     on<CobranzaListRefresh>(_onRefresh);
     on<CobranzaChipChanged>(_onChipChanged);
     on<CobranzaEstadoToggled>(_onEstadoToggled);
     on<CobranzaAsesorSeleccionado>(_onAsesorSeleccionado);
+    on<CobranzaListItemActualizado>(_onItemActualizado);
+
+    _updateSub = CobranzaUpdateNotifier.instance.stream.listen((update) {
+      if (!isClosed) {
+        add(CobranzaListItemActualizado(update.numSol, update.idEstado));
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _updateSub?.cancel();
+    return super.close();
+  }
+
+  void _onItemActualizado(
+    CobranzaListItemActualizado event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    _allCobranzas = _allCobranzas
+        .map(
+          (c) => c.numSol == event.numSol
+              ? c.copyWith(idEstado: event.idEstado)
+              : c,
+        )
+        .toList();
+    _emitFiltered(emit);
   }
 
   Future<void> _onStarted(
@@ -111,12 +143,20 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
       resultado = porChip.where((c) => _estadosSeleccionados.contains(c.idEstado)).toList();
     }
 
+    // Pend. de documento (idEstado 0) sobre TODO lo cargado, sin filtro de
+    // chip — alimenta el badge del drawer, que no debe variar según qué
+    // chip esté activo en esta pantalla (mismo criterio que TOT_COBRANZA
+    // del SP de home).
+    final pendientesDocumento =
+        _allCobranzas.where((c) => c.idEstado == 0).length;
+
     emit(
       CobranzaListSuccess(
         cobranzas: resultado,
         chipFiltro: _chipFiltro,
         estadosSeleccionados: Set.from(_estadosSeleccionados),
         conteosPorEstado: conteos,
+        pendientesDocumento: pendientesDocumento,
         asesorSeleccionado: _asesorSeleccionado,
         conteosPorAsesor: _buildConteosPorAsesor(),
       ),

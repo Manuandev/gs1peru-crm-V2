@@ -26,6 +26,8 @@ class LeadListPage extends StatelessWidget {
         listener: (context, state) {
           if (state is LeadListError) {
             AppSnackBar.error(context, state.message);
+          } else if (state is LeadListSuccess) {
+            context.updateBadge(seguimientos: state.activos);
           }
         },
         child: const LeadListView(),

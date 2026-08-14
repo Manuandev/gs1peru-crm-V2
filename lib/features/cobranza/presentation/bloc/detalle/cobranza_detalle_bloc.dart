@@ -1,6 +1,8 @@
 // lib/features/cobranza/presentation/bloc/detalle/cobranza_detalle_bloc.dart
 
-import 'package:app_crm/core/errors/app_exception.dart';
+import 'dart:async';
+
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
@@ -8,15 +10,31 @@ class CobranzaDetalleBloc
     extends Bloc<CobranzaDetalleEvent, CobranzaDetalleState> {
   final GetDetalleCobranzaUseCase _getDetalleCobranzaUseCase;
 
+  StreamSubscription<CobranzaUpdate>? _updateSub;
+  String? _idCobranza;
+
   CobranzaDetalleBloc(this._getDetalleCobranzaUseCase)
       : super(const CobranzaDetalleInitial()) {
     on<CobranzaDetalleStarted>(_onStarted);
+
+    _updateSub = CobranzaUpdateNotifier.instance.stream.listen((update) {
+      if (!isClosed && update.numSol == _idCobranza) {
+        add(CobranzaDetalleStarted(update.numSol));
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _updateSub?.cancel();
+    return super.close();
   }
 
   Future<void> _onStarted(
     CobranzaDetalleStarted event,
     Emitter<CobranzaDetalleState> emit,
   ) async {
+    _idCobranza = event.idCobranza;
     emit(const CobranzaDetalleLoading());
     try {
       final detalle = await _getDetalleCobranzaUseCase(event.idCobranza);

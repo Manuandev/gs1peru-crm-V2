@@ -57,6 +57,7 @@ c(4) → totCobranza
 c(5) → totConversaciones
 c(6) → totNotificaciones
 c(7) → totSolicitudesSinValidar
+c(8) → totSeguimientosActivos
 ```
 
 ---
@@ -94,6 +95,44 @@ chip mandaba un número distinto al que el usuario veía en el drawer) — se ca
 `state.contadores.sinResponder`, que `ChatListBloc._calcularContadores` siempre calcula sobre la
 lista completa sin importar qué chip esté activo, mismo criterio `direccionMensaje == 'CLI'` que
 ahora usa el SP.
+
+---
+
+## Badge "Seguimiento" del drawer — nuevo, "todos menos cerrados" (2026-08-14)
+
+El ítem "Seguimiento" del drawer no tenía badge hasta ahora. Se agregó usando
+`totSeguimientosActivos` (`c(8)` del SP, ver arriba) — cuenta **todas** las negociaciones del
+asesor (o del equipo si es moderador) salvo las que estén cerradas o cuyo estado padre esté
+cerrado: `LD.ID_ESTADO != '04' AND (LE.ID_ESTADO_PADRE != '04' OR LE.ID_ESTADO_PADRE IS NULL)`
+— mismo patrón que ya usaba este mismo SP para resolver "el lead activo" de un número
+(sección de prioridades). **Ojo, esto es distinto de `totSeguimientos`** (`c(3)`, sin tocar) —
+ese sigue siendo la suma de solo 3 buckets (Nuevo+EnDesarrollo+Propuesta, estados `00`/`01`/`02`)
+que alimenta las 3 tarjetas de `CardTotalesHome` (dashboard) — `totSeguimientos` nunca se usó
+para el badge del drawer en la práctica (`HomePage` ahora manda `totSeguimientosActivos` a
+`seguimientos:`, no `totSeguimientos`), así que redefinir su fuente no rompió ninguna UI.
+
+**Real-time mientras Seguimiento está en pantalla** — `LeadListBloc` (per-página, no global, ver
+`lead/CLAUDE.md`) calcula el mismo conteo del lado del cliente (`LeadListSuccess.activos`, sobre
+`_allLeads` completo, mismo criterio `idEstado != '04' && idEstadoPadre != '04'`) y
+`LeadListPage` lo empuja al badge en cada `LeadListSuccess` — incluye los casos en que
+`LeadListBloc._onLeadUpdated` parchea un lead en memoria vía `LeadUpdateNotifier` (ej. se cierra
+una negociación desde Conversaciones mientras Seguimiento sigue montado debajo). Fuera de esa
+pantalla, el badge solo se actualiza cuando Home vuelve a cargar/refrescar (no hay bloc global
+para Seguimiento, a diferencia de `ChatListBloc`).
+
+## Badge "Solicitudes" del drawer — `cntSinValidar`, con una limitación real
+
+Igual patrón: `SolicitudListPage` empuja `context.updateBadge(solicitudes:
+state.cntSinValidar)` en cada `SolicitudListSuccess` (`cntSinValidar` ya existía en el bloc,
+calculado sobre `_allSolicitudes` — ver `solicitudes/CLAUDE.md`). **Ojo — a diferencia de
+Cobranza, no hay ningún botón en Flutter que ponga `IB_VALIDADO = 1`** (confirmado revisando el
+feature completo — "Validar" en `SolicitudCard`/`BotonesDetalle` solo abre el wizard de edición,
+`CSV_SOLICITUD_CUD_APP` task `'U'` nunca toca esa columna). O sea: el badge sí se actualiza en
+tiempo real mientras el asesor está parado en la pantalla de Solicitudes (recarga/pull-to-
+refresh), pero no hay ningún evento de "se validó una solicitud" que lo dispare al instante como
+sí pasa con Cobranza (`CobranzaUpdateNotifier`) — si negocio confirma dónde/cómo se marca
+`IB_VALIDADO` de verdad (otro sistema, un proceso de backend aparte), recién ahí tendría sentido
+sumar un notifier equivalente acá.
 
 ---
 

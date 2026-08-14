@@ -18,6 +18,8 @@ class CobranzaListPage extends StatelessWidget {
         listener: (context, state) {
           if (state is CobranzaListError) {
             AppSnackBar.error(context, state.message);
+          } else if (state is CobranzaListSuccess) {
+            context.updateBadge(cobranza: state.pendientesDocumento);
           }
         },
         child: const CobranzaListView(),

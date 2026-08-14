@@ -23,11 +23,16 @@ class LeadListSuccess extends LeadListState {
   final List<ContactoNegociacion> contactos;
   final LeadListFiltro filtro;
   final Map<LeadListFiltro, int> conteos;
+  // Leads no cerrados (idEstado/idEstadoPadre != '04'), sobre la lista completa sin filtrar
+  // por chip — mismo criterio que CSV_HOME_LST_APP.TOT_SEGUIMIENTOS_ACTIVOS, alimenta el
+  // badge de "Seguimiento" del drawer en tiempo real mientras esta pantalla está montada.
+  final int activos;
 
   const LeadListSuccess({
     required this.contactos,
     this.filtro = LeadListFiltro.todos,
     this.conteos = const {},
+    this.activos = 0,
   });
 
   @override

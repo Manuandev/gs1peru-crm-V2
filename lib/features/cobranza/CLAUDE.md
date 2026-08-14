@@ -1,5 +1,42 @@
 # Cobranza Feature
 
+## Facturar ya no limpia el stack — pop + refresco en tiempo real vía `CobranzaUpdateNotifier` (2026-08-14)
+Pedido explícito del usuario: al facturar, ya no navegar con `context.goToCobranza()`
+(`clearAndPush`, reconstruye una `CobranzaListPage` nueva desde cero) — ahora
+`CobranzaFacturaPage` simplemente hace `context.goBack()` (pop normal, vuelve a
+`CobranzaDetallePage`, que sigue vivo debajo en el stack porque `goToFacturarCobranza` usa
+`_push` normal, no `clearAndPush`). Como ni `CobranzaListBloc` ni `CobranzaDetalleBloc` se
+recrean con un simple pop (ambos son per-página, siguen vivos con los datos de ANTES de
+facturar), hacía falta un mecanismo explícito de aviso — igual patrón que
+`LeadUpdateNotifier` (`lead/`, ver `core/CLAUDE.md`), nuevo `CobranzaUpdateNotifier`
+(`lib/core/utils/cobranza_update_notifier.dart`, exportado en `index_core.dart`):
+
+- **`CobranzaFacturaBloc._onFacturarPressed`** — en el caso `CrudOk()` de `_cambiarEstadoFacturar`
+  (task `'UE'`, `estado='2'`), antes de emitir `facturadoOk`, llama
+  `CobranzaUpdateNotifier.instance.notify(state.idCobranza, idEstado: 2)`.
+- **`CobranzaListBloc`** se suscribe en el constructor — al recibir el aviso, dispara el evento
+  nuevo `CobranzaListItemActualizado(numSol, idEstado)` (`_onItemActualizado`), que parchea el
+  `idEstado` de esa fila en `_allCobranzas` (mismo patrón `.map()` que
+  `LeadListBloc._onLeadUpdated`) y vuelve a emitir `_emitFiltered` — la tarjeta de la lista,
+  `conteosPorEstado` (`CobranzaSummaryCards`) y el badge (ver abajo) quedan al día sin volver a
+  pedir nada al backend.
+- **`CobranzaDetalleBloc`** también se suscribe — guarda el `numSol` que tiene abierto
+  (`_idCobranza`, seteado en `_onStarted`) y, si el aviso matchea, vuelve a disparar
+  `CobranzaDetalleStarted(numSol)` (recarga completa desde el backend — el detalle sí necesita
+  datos frescos de verdad, a diferencia de la lista que solo necesita el nuevo `idEstado`).
+- **`goToFacturarCobranza`/`goToDetalleCobranza` no cambiaron** — siguen siendo `_push` normal
+  (apilan), el fix fue solo cambiar `goToCobranza()` por `goBack()` en el listener de
+  `CobranzaFacturaPage` y agregar el notifier para que lo que queda debajo en el stack se entere.
+
+## Badge de Cobranza en el drawer — `pendientesDocumento`, no `conteosPorEstado[0]` (2026-08-14)
+`CobranzaListSuccess` ganó un campo dedicado, `pendientesDocumento` (idEstado 0, sobre
+`_allCobranzas` completo) — **no reusar `conteosPorEstado[0]`** para el badge, ese mapa se
+calcula sobre `porChip` (ya filtrado por Contado/Crédito/Asesores), así que el número cambiaría
+según qué chip esté activo en la pantalla — mismo bug que ya se corrigió en el badge de
+Conversaciones (`chat/`, ver `home/CLAUDE.md`). `CobranzaListPage` empuja
+`context.updateBadge(cobranza: state.pendientesDocumento)` en cada `CobranzaListSuccess` —
+mismo criterio que `TOT_COBRANZA` del SP de home (`ID_ESTADO_GES = 0`, ver `home/CLAUDE.md`).
+
 ## La última cuota del plan de crédito absorbe el centavo de redondeo (2026-08-05)
 Mismo pedido y mismo criterio que el revert de participantes de `solicitudes/` (ver
 `solicitudes/CLAUDE.md`, "Revert — el último participante vuelve a absorber el centavo de

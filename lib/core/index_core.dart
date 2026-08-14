@@ -154,6 +154,7 @@ export 'theme/theme_cubit.dart';
 export 'utils/responsive_helper.dart';
 export 'utils/elapsed_time_utils.dart';
 export 'utils/lead_update_notifier.dart';
+export 'utils/cobranza_update_notifier.dart';
 export 'utils/contacto_update_notifier.dart';
 export 'utils/documento_validation_utils.dart';
 export 'utils/version_utils.dart';

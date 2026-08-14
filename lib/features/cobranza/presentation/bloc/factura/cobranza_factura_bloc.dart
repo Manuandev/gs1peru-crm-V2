@@ -171,6 +171,7 @@ class CobranzaFacturaBloc
       );
       switch (result) {
         case CrudOk():
+          CobranzaUpdateNotifier.instance.notify(state.idCobranza, idEstado: 2);
           emit(state.copyWith(status: CobranzaFacturaStatus.facturadoOk));
         case CrudAlert(:final message):
           emit(state.copyWith(

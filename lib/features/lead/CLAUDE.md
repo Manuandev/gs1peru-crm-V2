@@ -542,6 +542,16 @@ proyecto).
        `NULL` a `''` automáticamente, así que no hizo falta envolver ningún campo de `EM.*` en
        `ISNULL()` adicional en el `SELECT`.
 
+## Badge "Seguimiento" del drawer — `LeadListSuccess.activos` (2026-08-14)
+`LeadListBloc._emitFiltered` calcula `activos` (leads con `idEstado != '04' && idEstadoPadre !=
+'04'`, sobre `_allLeads` completo, sin importar el chip activo) — `LeadListPage` lo empuja con
+`context.updateBadge(seguimientos: state.activos)` en cada `LeadListSuccess`, incluidos los
+parcheos en memoria de `_onLeadUpdated` (vía `LeadUpdateNotifier`, ej. cerrar una negociación
+desde Conversaciones con Seguimiento montado debajo). Mismo criterio que
+`TOT_SEGUIMIENTOS_ACTIVOS` del SP de home (ver `home/CLAUDE.md`) — el badge solo vive en tiempo
+real mientras esta pantalla está montada; `LeadListBloc` no es global, así que fuera de acá el
+badge solo se refresca cuando Home recarga.
+
 ## BLoCs / Cubits
 - `LeadListBloc` (list/) → carga leads por tipo, filtra en memoria; conteos por filtro (usa `idEstadoPadre` para agrupar sub-estados bajo su padre)
 - `LeadDetalleBloc` (detail/) → carga detalle + comentarios de un lead por `idLead`

@@ -18,6 +18,8 @@ class SolicitudListPage extends StatelessWidget {
         listener: (context, state) {
           if (state is SolicitudListError) {
             AppSnackBar.error(context, state.message);
+          } else if (state is SolicitudListSuccess) {
+            context.updateBadge(solicitudes: state.cntSinValidar);
           }
         },
         child: const SolicitudListView(),

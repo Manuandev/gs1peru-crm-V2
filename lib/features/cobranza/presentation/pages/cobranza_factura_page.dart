@@ -50,7 +50,7 @@ class CobranzaFacturaPage extends StatelessWidget {
           switch (state.status) {
             case CobranzaFacturaStatus.facturadoOk:
               AppSnackBar.success(context, 'Factura generada correctamente');
-              context.goToCobranza();
+              context.goBack();
             case CobranzaFacturaStatus.continuarPlan:
               // Espera el resultado: null si el usuario volvió sin guardar
               // el plan, o fecha+cuotas si lo guardó localmente (el RC real

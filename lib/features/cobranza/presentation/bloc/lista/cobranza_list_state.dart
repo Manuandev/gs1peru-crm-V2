@@ -35,6 +35,10 @@ class CobranzaListSuccess extends CobranzaListState {
   // — alimenta CobranzaAsesorPickerModal, no viene del backend
   final Map<String, int> conteosPorAsesor;
 
+  // Pend. de documento (idEstado 0) sobre TODO lo cargado, sin filtro de
+  // chip — alimenta el badge de Cobranza del drawer en tiempo real.
+  final int pendientesDocumento;
+
   const CobranzaListSuccess({
     required this.cobranzas,
     required this.chipFiltro,
@@ -42,6 +46,7 @@ class CobranzaListSuccess extends CobranzaListState {
     required this.conteosPorEstado,
     this.asesorSeleccionado,
     this.conteosPorAsesor = const {},
+    this.pendientesDocumento = 0,
   });
 
   @override

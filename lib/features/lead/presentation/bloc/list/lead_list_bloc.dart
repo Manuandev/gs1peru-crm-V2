@@ -114,11 +114,20 @@ class LeadListBloc extends Bloc<LeadListEvent, LeadListState> {
       resultado = resultado.where((c) => _perteneceEstado(c, '02')).toList();
     }
 
+    final activos = _allLeads
+        .where(
+          (c) =>
+              c.negociacion.idEstado != '04' &&
+              c.negociacion.idEstadoPadre != '04',
+        )
+        .length;
+
     emit(
       LeadListSuccess(
         contactos: resultado,
         filtro: _filtroActivo,
         conteos: conteos,
+        activos: activos,
       ),
     );
   }

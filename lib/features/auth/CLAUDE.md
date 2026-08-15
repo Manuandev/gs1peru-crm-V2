@@ -195,6 +195,31 @@ excepción (atrapa `DioException` en `postSafe`). Sesiones guardadas **antes** d
 tienen `cod_user` en su fila (columna nueva, queda `NULL`) — para esas, la invalidación remota
 se salta en silencio (`if (id.isEmpty) return`) hasta que el usuario vuelva a loguearse una vez.
 
+### Cambio de cuenta Google en dispositivos con varias cuentas sincronizadas (agregado 2026-08-14)
+
+**Bug real reportado por el usuario** — dispositivo con dos cuentas de Google sincronizadas
+(ej. Manuel y Antonio). Manuel tenía sesión guardada; al reiniciar la app y terminar entrando
+con Antonio (selector nativo, silencioso o con el botón "Iniciar con Google"), el login no
+avanzaba — sin ningún mensaje de error, la app simplemente no dejaba continuar.
+
+`AuthRepositoryImpl.loginWithGoogle()` ahora llama primero a
+`_cerrarSesionGoogleAnteriorSiCambiaDeCuenta(correo)`: lee la `SessionModel` guardada en SQLite,
+y si es de tipo Google y su `email` **difiere** del correo con el que se está entrando ahora,
+invalida el TOKEN de esa cuenta vieja en el backend (`AuthRemoteDatasource.logout(codUser:
+...)`) **antes** de llamar al login nuevo. A diferencia de `_invalidarTokenRemoto()` (usado en
+`tryRestoreSession()`, fire-and-forget/`unawaited`), acá se **espera** la respuesta a propósito
+— si no se esperara, el login de la cuenta nueva podría llegar al backend antes de que
+terminara de procesarse la desconexión de la vieja. Cubre tanto el re-login silencioso
+(`tryRestoreSession()` → `loginWithGoogle()`) como el botón explícito "Iniciar con Google" en
+Login (`LoginBloc._onLoginWithGoogleSubmitted` → mismo método), ya que ambos caminos pasan por
+el mismo `loginWithGoogle()`. Si `session.codUser` es `null` (sesión vieja de antes de la
+migración a esa columna, ver más abajo), el `logout()` remoto se salta en silencio (mismo
+comportamiento que `_invalidarTokenRemoto`).
+
+Solo aplica a cambio de cuenta **Google → Google** (alcance confirmado con el usuario) — no
+compara contra una sesión de credenciales (usuario/clave) al cambiar a Google ni viceversa, eso
+no se ha reportado como problema.
+
 ### Re-login de Google en silencio — ya no expira cada ~1h (agregado 2026-08-07)
 
 Antes, `tryRestoreSession()` reintentaba el login de Google reusando el `idToken` guardado en

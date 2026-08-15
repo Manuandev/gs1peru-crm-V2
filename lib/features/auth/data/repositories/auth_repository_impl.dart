@@ -63,6 +63,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required String accessToken,
     required String correo,
   }) async {
+    // Dispositivo con varias cuentas de Google sincronizadas — si ya había
+    // una sesión Google guardada de OTRA cuenta (ej. Manuel), avisa al
+    // backend que esa sesión vieja quedó desconectada ANTES de continuar
+    // con la nueva (Antonio). Awaited a propósito, ver método más abajo.
+    await _cerrarSesionGoogleAnteriorSiCambiaDeCuenta(correo);
+
     final user = await _remote.loginWithGoogle(
       accessToken: accessToken,
       correo: correo,
@@ -161,6 +167,23 @@ class AuthRepositoryImpl implements AuthRepository {
     ApiClient().clearToken();
     SessionService().clear();
     await _local.clearSession();
+  }
+
+  /// Si ya hay una sesión Google guardada en SQLite de OTRA cuenta —
+  /// dispositivo con varias cuentas sincronizadas, el usuario entra con una
+  /// distinta a la que tenía guardada (desde el selector nativo, silencioso
+  /// o vía el botón "Iniciar con Google") — invalida el TOKEN de la cuenta
+  /// vieja en el backend ANTES de intentar el login nuevo. A diferencia de
+  /// [_invalidarTokenRemoto] (fire-and-forget), acá se espera la respuesta a
+  /// propósito: si no se espera, el login de la cuenta nueva puede llegar al
+  /// backend antes de que termine de procesarse la desconexión de la vieja.
+  Future<void> _cerrarSesionGoogleAnteriorSiCambiaDeCuenta(
+    String correoNuevo,
+  ) async {
+    final session = await _local.getStoredSession();
+    if (session == null || session.loginType != LoginType.google) return;
+    if (session.email == null || session.email == correoNuevo) return;
+    await _remote.logout(codUser: session.codUser ?? '');
   }
 
   /// Pide un idToken de Google fresco SIN interacción del usuario —

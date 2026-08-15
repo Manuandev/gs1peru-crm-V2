@@ -22,6 +22,7 @@ class GuardarSolicitudUseCase {
     required String pasoOrigen,
     required List<TipoParticipanteItem> tiposParticipante,
     int? cantidadEsperada,
+    double precioTotalLead = 0,
   }) => _repository.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -35,5 +36,6 @@ class GuardarSolicitudUseCase {
     pasoOrigen: pasoOrigen,
     tiposParticipante: tiposParticipante,
     cantidadEsperada: cantidadEsperada,
+    precioTotalLead: precioTotalLead,
   );
 }

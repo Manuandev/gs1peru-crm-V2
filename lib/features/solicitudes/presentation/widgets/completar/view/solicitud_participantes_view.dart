@@ -59,16 +59,20 @@ class _SolicitudParticipantesViewState
   // siendo editable siempre (ver
   // participante_form_sheet.dart), esto es solo una sugerencia inicial.
   //
-  // El ÚLTIMO participante esperado (`cantidadEsperada`) vuelve a recibir
-  // "lo que falta" en vez de la división simple, para que la suma de
-  // importes calce exacto contra la negociación — revertido el 2026-08-05
-  // (pedido explícito del usuario, "que absorba"), volviendo al
-  // comportamiento previo al 2026-07-22. Ese cambio del 2026-07-22 lo había
-  // quitado porque un descuento manual en otro participante se empujaba
-  // sin querer hacia el sugerido de uno nuevo — riesgo que vuelve a existir
-  // con este revert, aceptado a cambio de que el total del footer/Resumen
-  // cierre exacto contra `precioTotalLead` en el caso común (nadie edita el
-  // importe sugerido a mano).
+  // Revert 2026-08-15 del revert del 2026-08-05 — ver
+  // solicitudes/CLAUDE.md. El último participante esperado YA NO recibe
+  // "lo que falta" en vez de la división simple: esa excepción existía para
+  // que la SUMA de importes calzara exacto contra `precioTotalLead`, pero
+  // desde el fix del 2026-08-14/15 (ResumenInversion/SeccionResumenComercial
+  // y ahora también SolicitudRemoteDatasource.guardarSolicitud) el Importe
+  // total ya no se calcula sumando Importe+IGV — se fija DIRECTO en
+  // `precioTotalLead` cuando la solicitud está completa, sin importar cómo
+  // sumen los importes individuales. Absorber el centavo en el Importe del
+  // último participante ya no es necesario y contradice la regla de negocio
+  // ya establecida en el resto del sistema ("el centavo se absorbe siempre
+  // en el IGV, nunca en el Importe/Inversión") — ahora los N participantes
+  // reciben la misma sugerencia, y cualquier centavo de diferencia lo
+  // absorbe el IGV (agregado y del último Pagante), no el Importe.
   double? _importeFijo(BuildContext context) {
     final formState = context.read<SolicitudFormCubit>().state;
     final cantidadEsperada = formState.cantidadEsperada;
@@ -80,13 +84,6 @@ class _SolicitudParticipantesViewState
         : 0.0;
 
     final totalSinIgv = formState.precioTotalLead / (1 + igvPorcentaje / 100);
-
-    final actuales = context.read<ParticipantesCubit>().state.participantes;
-    if (actuales.length == cantidadEsperada - 1) {
-      final sumaActual = actuales.fold(0.0, (sum, p) => sum + p.importe);
-      return totalSinIgv - sumaActual;
-    }
-
     return totalSinIgv / cantidadEsperada;
   }
 

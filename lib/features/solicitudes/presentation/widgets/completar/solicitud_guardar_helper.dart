@@ -73,6 +73,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         pasoOrigen: pasoOrigen,
         tiposParticipante: tiposParticipante,
         cantidadEsperada: formState.cantidadEsperada,
+        precioTotalLead: formState.precioTotalLead,
       );
 
   // La primera vez que se crea (numSol venía vacío), el backend genera el

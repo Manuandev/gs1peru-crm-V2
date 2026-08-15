@@ -137,6 +137,13 @@ class SolicitudRemoteDatasource {
     // valida nada acá, esa validación ya vive en
     // validarSolicitudParaGenerar.
     int? cantidadEsperada,
+    // Precio total pactado en la negociación de origen
+    // (SolicitudFormState.precioTotalLead) — 0 si esta solicitud no viene de
+    // una negociación. Usado solo para fijar DC_IMPORTE_TOTAL directo en ese
+    // precio cuando la solicitud ya está completa (mismo criterio que
+    // ResumenInversion/SeccionResumenComercial, ver más abajo) — nunca para
+    // validar ni bloquear nada acá.
+    double precioTotalLead = 0,
   }) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
@@ -166,8 +173,39 @@ class SolicitudRemoteDatasource {
     final dcImporte = participantes
         .where((p) => !esInvitado(p))
         .fold(0.0, (sum, p) => sum + p.importe);
-    final dcIgv = dcImporte * igvPorcentaje / 100;
-    final dcImporteTotal = dcImporte + dcIgv;
+
+    // Mismo criterio que ResumenInversion (paso 2)/SeccionResumenComercial
+    // (Resumen, paso 4) — fix 2026-08-14, ver solicitudes/CLAUDE.md: "lo que
+    // se guarda tiene que ser lo mismo que lo que se muestra". Antes acá se
+    // calculaba dcIgv = dcImporte × igv% (sin redondear) y dcImporteTotal =
+    // dcImporte + dcIgv (también sin redondear), redondeando los 3 campos
+    // por separado recién al armar el string — igual que el bug ya
+    // corregido en pantalla, `round(a) + round(b)` no siempre es igual a
+    // `round(a+b)`, así que lo guardado podía no calzar con lo mostrado.
+    //
+    // Ahora "Importe total" se fija PRIMERO (directo en el precio pactado
+    // de la negociación si la solicitud ya está completa, igual que en
+    // pantalla; si no, Importe + IGV redondeado sobre el total, no por
+    // separado) y el IGV de cabecera sale de restarle el Importe a ese
+    // total ya fijo/redondeado — el centavo de diferencia se absorbe
+    // siempre ahí, nunca en el Importe ni en el precio pactado.
+    final completo =
+        cantidadEsperada != null &&
+        cantidadEsperada > 0 &&
+        participantes.length >= cantidadEsperada &&
+        precioTotalLead > 0;
+    final double dcImporteTotal;
+    if (completo) {
+      dcImporteTotal = double.parse(precioTotalLead.toStringAsFixed(2));
+    } else {
+      final igvSinRedondear = dcImporte * igvPorcentaje / 100;
+      dcImporteTotal = double.parse(
+        (dcImporte + igvSinRedondear).toStringAsFixed(2),
+      );
+    }
+    final dcIgv = double.parse(
+      (dcImporteTotal - dcImporte).toStringAsFixed(2),
+    );
 
     final cabecera = <String>[
       idLead, // 1  ID_LEAD — solo se usa en la rama de creación (numSol vacío)
@@ -236,6 +274,7 @@ class SolicitudRemoteDatasource {
       tiposParticipante,
       igvPorcentaje,
       cantidadEsperada: cantidadEsperada,
+      igvObjetivoOverride: dcIgv,
     );
 
     final detalle = participantes

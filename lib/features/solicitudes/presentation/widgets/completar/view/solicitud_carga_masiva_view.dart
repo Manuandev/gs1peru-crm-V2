@@ -128,10 +128,11 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
       // Importe sugerido por participante — mismo cálculo que "Nuevo
       // participante" (_importeFijo, ver solicitud_participantes_view.dart):
       // división simple del precio de la negociación (sin IGV) entre
-      // cantidadEsperada, salvo el último participante esperado, que
-      // absorbe lo que falte para que la suma calce exacto. Sin negociación
-      // de origen (cantidadEsperada null o precioTotalLead 0) retorna 0 —
-      // mismo comportamiento de siempre en ese caso.
+      // cantidadEsperada, para TODOS los participantes por igual (desde el
+      // 2026-08-15 ya no hay excepción para el último — ver
+      // solicitudes/CLAUDE.md). Sin negociación de origen (cantidadEsperada
+      // null o precioTotalLead 0) retorna 0 — mismo comportamiento de
+      // siempre en ese caso.
       final participantesActuales = context
           .read<ParticipantesCubit>()
           .state
@@ -151,17 +152,9 @@ class _SolicitudCargaMasivaViewState extends State<SolicitudCargaMasivaView> {
             widget.precioTotalLead <= 0) {
           return 0;
         }
-        final actualesCount = participantesActuales.length + parseados.length;
-        final double importe;
-        if (actualesCount == cantidadEsperada - 1) {
-          final sumaExistentes =
-              participantesActuales.fold(0.0, (s, p) => s + p.importe) +
-              parseados.fold(0.0, (s, p) => s + p.importe);
-          importe = totalSinIgv - sumaExistentes;
-        } else {
-          importe = totalSinIgv / cantidadEsperada;
-        }
-        return double.parse(importe.toStringAsFixed(2));
+        return double.parse(
+          (totalSinIgv / cantidadEsperada).toStringAsFixed(2),
+        );
       }
 
       for (var i = 1; i < filas.length; i++) {

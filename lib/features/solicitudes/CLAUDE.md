@@ -1,5 +1,79 @@
 # Solicitudes Feature
 
+## El último participante ya no absorbe el centavo en el Importe — solo en el IGV (2026-08-15)
+Seguimiento directo del punto de abajo ("Bug real — el guardado real (`guardarSolicitud`) tenía
+el mismo bug de doble redondeo que ya se había corregido en pantalla"). El usuario mostró un caso
+real: 4 participantes esperados, precio pactado
+1,200.00, IGV 18% — 3 participantes sugerían 254.24 y el 4to (último esperado) sugería **254.23**,
+un centavo menos, sin razón aparente para el asesor ("porque están bien 3 y el último no").
+
+- **Causa**: `_importeFijo()` (duplicado en `solicitud_participantes_view.dart` y
+  `solicitud_completar_view_guardado.dart`, más su equivalente `importeSugerido()` en
+  `solicitud_carga_masiva_view.dart`) tenía una rama especial para el ÚLTIMO participante
+  esperado — en vez de la división simple (`totalSinIgv / cantidadEsperada`), le daba "lo que
+  falta" (`totalSinIgv - suma de los importes ya puestos`) para que la SUMA de importes calzara
+  exacto contra `precioTotalLead`. Esa rama se había restaurado el 2026-08-05 (ver "Revert — el
+  último participante vuelve a absorber el centavo de redondeo del importe" más abajo)
+  precisamente porque en ese momento el Importe total del footer/Resumen se calculaba sumando
+  Importe+IGV, y si los N participantes dividían parejo esa suma podía quedar 1 centavo desfasada
+  contra el precio pactado.
+- **Por qué ya no hace falta — y por qué contradice la regla de negocio**: desde el fix del
+  2026-08-14/15 (`ResumenInversion`/`SeccionResumenComercial` y ahora también
+  `SolicitudRemoteDatasource.guardarSolicitud`, ver arriba), el Importe total **ya no se calcula
+  sumando** Importe+IGV — se fija DIRECTO en `precioTotalLead` cuando la solicitud está completa,
+  sin importar cómo sumen los importes individuales. La rama "el último absorbe en el Importe"
+  quedó resolviendo un problema que ya no existe, y además contradice la regla de negocio ya
+  establecida en el resto del sistema: *"el centavo de redondeo se absorbe siempre en el IGV,
+  nunca en el Importe/Inversión"* (ver "Bug real — 'Importe total' del footer/Resumen quedaba 1
+  centavo..." más abajo).
+- **Fix, en los 3 lugares**: se eliminó la rama especial — ahora TODOS los participantes
+  (incluido el último) reciben la misma sugerencia (`totalSinIgv / cantidadEsperada`), sin
+  excepción. Con el ejemplo del usuario: los 4 participantes sugieren 254.24 c/u (Inversión
+  1,016.96 en vez de 1,016.95) — el Importe total sigue siendo exactamente 1,200.00 (sin cambio,
+  porque sigue fijándose directo a `precioTotalLead`), y el centavo de diferencia ahora aparece
+  en el IGV (183.04 en vez de 183.05) — tanto en el agregado de cabecera como en el IGV
+  individual del último Pagante (`ParticipantesState.calcularIgvPorParticipante`, sin cambios,
+  ya absorbía correctamente a nivel de IGV).
+- **Riesgo aceptado al quitar la rama — mismo que ya se había aceptado el 2026-07-22** (antes de
+  que el 2026-08-05 lo revirtiera): si el asesor edita a mano el importe de un participante ya
+  agregado (ej. un descuento manual) y después agrega el último, ese ajuste manual ya no se
+  "recupera" automáticamente en el sugerido del nuevo — el asesor puede seguir ajustando el
+  importe a mano libremente, el campo sigue siendo 100% editable.
+
+## Bug real — el guardado real (`guardarSolicitud`) tenía el mismo bug de doble redondeo que ya se había corregido en pantalla (2026-08-14)
+El usuario mostró una consulta SQL real sobre `EVT.T_TECMSOLINSCRIPCION01`: `DC_IMPORTE 508.48`,
+`DC_IGV 91.53`, pero `DC_IMPORTE_TOTAL 600.00` — sumando lo que muestran las 2 primeras columnas
+da 600.01, no 600.00. Es decir, lo que quedó **guardado en la base** no calzaba consigo mismo,
+aunque el footer/Resumen (que ya se había corregido, ver "Bug real — 'Importe total' del
+footer/Resumen quedaba 1 centavo..." más abajo) sí mostraba los 3 números consistentes en
+pantalla.
+
+- **Causa**: ese fix del 2026-08-14 solo se aplicó en `ResumenInversion`/`SeccionResumenComercial`
+  (los 2 widgets de pantalla) — nunca se tocó `SolicitudRemoteDatasource.guardarSolicitud()`, que
+  es el código que realmente arma `DC_IMPORTE`/`DC_IGV`/`DC_IMPORTE_TOTAL` para el SP. Ese método
+  seguía calculando `dcIgv = dcImporte × igv%` y `dcImporteTotal = dcImporte + dcIgv` **sin
+  redondear**, y recién redondeaba los 3 campos por separado al armar el string
+  (`toStringAsFixed(2)`) — el clásico `redondear(a) + redondear(b) ≠ redondear(a+b)`, mismo bug,
+  distinto lugar.
+- **Fix — mismo criterio que en pantalla, ahora también en el guardado**: `guardarSolicitud()`
+  ganó un parámetro nuevo, `precioTotalLead` (`double`, default `0`, threaded desde
+  `SolicitudFormState.precioTotalLead` — mismo patrón que `cantidadEsperada`, cadena completa:
+  `solicitud_guardar_helper.dart` → `GuardarSolicitudUseCase` → `SolicitudRepository`/`Impl` →
+  datasource). Con eso, `dcImporteTotal` se fija PRIMERO — directo en `precioTotalLead` si la
+  solicitud está completa (mismo `completo` que ya calculan los 2 widgets: cantidad de
+  participantes alcanzada + precio pactado > 0), o `Importe + IGV` redondeado como un solo número
+  si no — y `dcIgv` sale de restarle el Importe a ese total ya fijo/redondeado
+  (`dcImporteTotal - dcImporte`), nunca al revés. Así `DC_IMPORTE + DC_IGV = DC_IMPORTE_TOTAL`
+  siempre, en lo que se guarda, no solo en lo que se ve.
+- **`ParticipantesState.calcularIgvPorParticipante()`** ganó un parámetro opcional
+  `igvObjetivoOverride` — antes recalculaba su propio "IGV objetivo" agregado
+  (`round(totalImportePagantes × igv%)`) para saber cuánto debía absorber el IGV del último
+  Pagante, con su propio redondeo aparte del de `dcIgv` (mismo riesgo de desincronizarse). Ahora
+  `guardarSolicitud()` le pasa el `dcIgv` YA corregido de arriba como objetivo — la suma de los
+  IGV individuales de los Pagantes cierra siempre exacto contra el `DC_IGV` de cabecera que
+  realmente se guarda. Sin el override (cualquier otro caller futuro), el comportamiento viejo
+  se mantiene sin cambios.
+
 ## Montos de vista sin separador de miles — mismo pedido que en `cobranza/` (2026-08-14)
 Seguimiento del mismo pedido del usuario aplicado primero a `cobranza/` (ver su CLAUDE.md,
 "Monto de la lista con símbolo de moneda real..." y "Separador de miles"): auditar la capa de

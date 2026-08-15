@@ -201,22 +201,35 @@ class ParticipantesState {
     List<TipoParticipanteItem> tiposParticipante,
     double igvPorcentaje, {
     int? cantidadEsperada,
+    double? igvObjetivoOverride,
   }) => calcularIgvPorParticipante(
     participantes,
     tiposParticipante,
     igvPorcentaje,
     cantidadEsperada: cantidadEsperada,
+    igvObjetivoOverride: igvObjetivoOverride,
   );
 
   /// Versión estática de [igvPorParticipante] — la usa directamente
   /// `SolicitudRemoteDatasource.guardarSolicitud`, que no tiene una
   /// instancia de `ParticipantesState` armada, solo la lista cruda que le
   /// llega por parámetro.
+  ///
+  /// [igvObjetivoOverride] — la suma de IGV de los Pagantes debe cerrar
+  /// SIEMPRE contra el mismo IGV de cabecera que se guarda (`DC_IGV`), no
+  /// contra un `totalImportePagantes × igv%` recalculado por separado acá
+  /// (que puede redondear distinto — mismo problema de doble redondeo que
+  /// ya se corrigió en `ResumenInversion`/`SeccionResumenComercial`, ver
+  /// solicitudes/CLAUDE.md). Si se pasa, reemplaza el `igvObjetivo` interno;
+  /// si no, mantiene el cálculo de siempre (compatibilidad con cualquier
+  /// otro caller que solo quiera el IGV "normal" sin atarlo a un total ya
+  /// fijado).
   static Map<int, double> calcularIgvPorParticipante(
     List<ParticipanteLocal> participantes,
     List<TipoParticipanteItem> tiposParticipante,
     double igvPorcentaje, {
     int? cantidadEsperada,
+    double? igvObjetivoOverride,
   }) {
     bool esInvitado(ParticipanteLocal p) {
       final tipo = tiposParticipante
@@ -244,9 +257,11 @@ class ParticipantesState {
       0.0,
       (sum, p) => sum + p.importe,
     );
-    final igvObjetivo = double.parse(
-      (totalImportePagantes * igvPorcentaje / 100).toStringAsFixed(2),
-    );
+    final igvObjetivo =
+        igvObjetivoOverride ??
+        double.parse(
+          (totalImportePagantes * igvPorcentaje / 100).toStringAsFixed(2),
+        );
     final igvAcumulado = pagantes
         .where((p) => p.id != ultimo.id)
         .fold(0.0, (sum, p) => sum + (igvs[p.id] ?? 0));

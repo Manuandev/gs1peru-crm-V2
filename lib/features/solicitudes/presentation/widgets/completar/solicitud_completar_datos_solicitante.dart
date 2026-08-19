@@ -120,13 +120,6 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
       _tipoDocId,
       valoresDefecto,
     );
-    // N° documento solo es opcional cuando el Tipo documento elegido es
-    // "Sin documento" (2026-08-19) — con cualquier otro tipo (DNI/RUC/CE/
-    // Pasaporte) sigue siendo obligatorio, como antes.
-    final esSinDocumento =
-        valoresDefecto.idTipoDocSnd.isNotEmpty &&
-        _tipoDocId == valoresDefecto.idTipoDocSnd;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -174,16 +167,12 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                // key con esSinDocumento — al cambiar Tipo documento, el
-                // campo se limpia (abajo) y eso dispara una validación con
-                // el validator TODAVÍA viejo (el widget no se ha
-                // reconstruido aún) — el "Requerido" se quedaba pegado en
-                // pantalla aunque ya no aplicara. Forzar un nuevo
-                // FormFieldState limpio evita el mensaje fantasma.
-                key: ValueKey('num_doc_solicitante_$esSinDocumento'),
-                label: esSinDocumento
-                    ? 'Número documento'
-                    : 'Número documento *',
+                // Opcional siempre, sin importar el Tipo documento elegido
+                // (pedido de negocio 2026-08-19, revierte la regla anterior
+                // de esta misma sesión que solo lo dejaba opcional con "Sin
+                // documento" — ahora aplica con cualquier tipo). El resto de
+                // datos del solicitante sigue obligatorio, sin cambios.
+                label: 'Número documento',
                 controller: widget.ctrlNumDoc,
                 focusNode: _numDocFocus,
                 keyboardType: teclado,
@@ -192,11 +181,6 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 enabled: widget.habilitado,
                 maxLength: maxLenDoc,
                 inputFormatters: inputFormatters,
-                validator: esSinDocumento
-                    ? null
-                    : (v) => v == null || v.trim().isEmpty
-                          ? 'Requerido'
-                          : null,
               ),
             ),
           ],

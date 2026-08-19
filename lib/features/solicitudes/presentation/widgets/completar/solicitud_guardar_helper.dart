@@ -182,10 +182,6 @@ class SolicitudValidacion {
 SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
   final formState = context.read<SolicitudFormCubit>().state;
   final solicitante = formState.solicitante;
-  final catalogStateInicial = context.read<CatalogsBloc>().state;
-  final idTipoDocSnd = catalogStateInicial is CatalogsLoaded
-      ? catalogStateInicial.valoresDefecto.idTipoDocSnd
-      : '';
 
   // Mismos campos obligatorios (*) que exige el Form del paso 1 (ver
   // SeccionDatosSolicitante/SeccionInfoComercial en solicitudes/CLAUDE.md) —
@@ -194,11 +190,8 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
   final solicitanteCompleto =
       solicitante != null &&
       solicitante.tipoDocLabel.isNotEmpty &&
-      // N° documento del solicitante solo es opcional cuando el Tipo
-      // documento elegido es "Sin documento" (2026-08-19) — con cualquier
-      // otro tipo sigue siendo obligatorio.
-      (solicitante.numDoc.trim().isNotEmpty ||
-          (idTipoDocSnd.isNotEmpty && solicitante.tipoDocId == idTipoDocSnd)) &&
+      // N° documento del solicitante es opcional siempre, sin importar el
+      // Tipo documento elegido (2026-08-19).
       solicitante.nacionalidadId.isNotEmpty &&
       solicitante.sexoId.isNotEmpty &&
       solicitante.nombres.trim().isNotEmpty &&

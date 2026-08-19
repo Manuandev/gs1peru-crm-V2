@@ -1,5 +1,22 @@
 # Solicitudes Feature
 
+## Revert — N° documento del solicitante vuelve a ser opcional SIEMPRE, sin importar el Tipo documento (2026-08-19)
+Mismo día, revierte la sección de abajo ("N° documento del solicitante opcional + Facturación ya
+no permite 'Sin documento'") — el usuario aclaró que quería que fuera opcional **con cualquier**
+Tipo documento elegido ("tenga la opción que tenga, es opcional"), no solo con "Sin documento".
+
+- `SeccionDatosSolicitante` (`solicitud_completar_datos_solicitante.dart`) — se quitó el cálculo
+  `esSinDocumento` (y su `key`/label/validator condicionales, incluido el fix del "Requerido"
+  fantasma que ya no aplica porque el campo nunca vuelve a marcarse obligatorio) — el campo
+  queda simplemente sin `*` y sin `validator`, siempre.
+- `validarSolicitudParaGenerar()` (`solicitud_guardar_helper.dart`) — se quitó la comparación
+  contra `idTipoDocSnd`, ya no exige `numDoc` en ningún caso.
+- **Facturación (paso 3) no se tocó** — sigue excluyendo "Sin documento" (y "Sin RUC") de su
+  combo Tipo documento y sigue exigiendo N° documento no vacío, sin cambios (ver sección de
+  abajo) — este revert es exclusivo del paso 1.
+- Sigue sin haber riesgo de NULL en la base — mismo motivo de siempre (`numDoc` es `String` no
+  nullable en Dart, manda `''` si está vacío).
+
 ## "SIN RUC" (DOC.TRIB.NO.DOM.SIN.RUC) — catálogo nuevo, excluido de Facturación (2026-08-19)
 El usuario agregó un catálogo nuevo directamente en el SP
 (`CRM.CSV_LISTAS_LST_APP.sql`, `D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`)

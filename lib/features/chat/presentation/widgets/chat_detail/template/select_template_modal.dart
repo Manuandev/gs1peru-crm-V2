@@ -148,8 +148,8 @@ class _SelectTemplateModalState extends State<SelectTemplateModal> {
   // plantilla nueva/editada, en vez de recrear todo el modal desde cero.
   Future<void> _abrirFormulario(BuildContext context, {int? idPlantilla}) async {
     final bloc = context.read<SelectTemplateBloc>();
-    await context.goToTemplateForm(idPlantilla: idPlantilla);
-    if (!context.mounted) return;
+    final guardo = await context.goToTemplateForm(idPlantilla: idPlantilla);
+    if (!context.mounted || guardo != true) return;
     bloc.add(const SelectTemplateRefresh());
     if (idPlantilla != null) setState(() => _seleccionada = null);
   }
@@ -518,6 +518,12 @@ class _TemplateItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final tieneArchivo = plantilla.archivoNombre.isNotEmpty;
+    final contenidoFormateado = _formatear(
+      plantilla.contenido,
+      nombreCliente,
+      apellidoCliente,
+      nombreAsesor,
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -582,16 +588,21 @@ class _TemplateItem extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        _formatear(plantilla.contenido, nombreCliente, apellidoCliente, nombreAsesor),
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontWeight: AppTextStyles.weightRegular,
+                      // Sin contenido de texto no hay nada que mostrar acá —
+                      // una plantilla puede ser solo archivo/botones (regla
+                      // confirmada por el usuario).
+                      if (contenidoFormateado.trim().isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          contenidoFormateado,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: AppTextStyles.weightRegular,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -611,6 +622,12 @@ class _TemplateItem extends StatelessWidget {
                 nombre: plantilla.archivoNombre,
                 ext: plantilla.archivoExt,
               ),
+            ],
+
+            // ── Botones de la plantilla ───────────────────────
+            if (plantilla.botones.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xs),
+              _BotonesPreview(botones: plantilla.botones, compact: true),
             ],
           ],
         ),
@@ -669,6 +686,46 @@ class _TemplatePreview extends StatelessWidget {
     }
 
     final tieneArchivo = plantilla!.archivoNombre.isNotEmpty;
+    final contenidoFormateado = _formatear(
+      plantilla!.contenido,
+      nombreCliente,
+      apellidoCliente,
+      nombreAsesor,
+    );
+
+    // Bloques opcionales del preview — una plantilla puede no tener texto
+    // (solo archivo/botones, regla confirmada por el usuario), así que cada
+    // uno se arma solo si aplica y el espaciado entre ellos se intercala
+    // abajo, en vez de dejar huecos fijos por bloque ausente.
+    final bloques = <Widget>[
+      if (contenidoFormateado.trim().isNotEmpty)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.sm2),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(AppSizing.radiusMd),
+              topRight: Radius.circular(AppSizing.radiusMd),
+              bottomRight: Radius.circular(AppSizing.radiusMd),
+              bottomLeft: Radius.circular(AppSizing.radiusXs),
+            ),
+          ),
+          child: Text(
+            contenidoFormateado,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: colorScheme.onPrimaryContainer,
+            ),
+          ),
+        ),
+      if (tieneArchivo)
+        TemplateFileCard(
+          nombre: plantilla!.archivoNombre,
+          ext: plantilla!.archivoExt,
+        ),
+      if (plantilla!.botones.isNotEmpty)
+        _BotonesPreview(botones: plantilla!.botones),
+    ];
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.sm2),
@@ -688,34 +745,9 @@ class _TemplatePreview extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Burbuja de texto ──────────────────────
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpacing.sm2),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppSizing.radiusMd),
-                        topRight: Radius.circular(AppSizing.radiusMd),
-                        bottomRight: Radius.circular(AppSizing.radiusMd),
-                        bottomLeft: Radius.circular(AppSizing.radiusXs),
-                      ),
-                    ),
-                    child: Text(
-                      _formatear(plantilla!.contenido, nombreCliente, apellidoCliente, nombreAsesor),
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-
-                  // ── Card de archivo adjunto ─────────────────
-                  if (tieneArchivo) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    TemplateFileCard(
-                      nombre: plantilla!.archivoNombre,
-                      ext: plantilla!.archivoExt,
-                    ),
+                  for (var i = 0; i < bloques.length; i++) ...[
+                    if (i > 0) const SizedBox(height: AppSpacing.sm),
+                    bloques[i],
                   ],
 
                   // ── Editar plantilla ─────────────────────────
@@ -731,6 +763,67 @@ class _TemplatePreview extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Botones de la plantilla (WhatsApp) ───────────────────────────────────────
+
+/// Muestra los botones de una plantilla como chips — solo texto, sin tipos
+/// (quick-reply/URL/teléfono), mismo criterio que `TemplateFormBotonesSection`
+/// (`chat/CLAUDE.md`). `compact: true` achica ícono/texto/padding para la
+/// lista lateral angosta; el default (más grande) se usa en `_TemplatePreview`.
+class _BotonesPreview extends StatelessWidget {
+  final List<PlantillaBoton> botones;
+  final bool compact;
+
+  const _BotonesPreview({required this.botones, this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xxs,
+      children: [
+        for (final boton in botones)
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? AppSpacing.xs : AppSpacing.sm,
+              vertical: AppSpacing.xxs,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+              border: Border.all(
+                color: colorScheme.primary,
+                width: AppSizing.hairline,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  AppIcons.tap,
+                  size: compact ? AppSizing.iconInline : AppSizing.iconActionSm,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: AppSpacing.xxs),
+                Text(
+                  boton.texto,
+                  style:
+                      (compact
+                              ? AppTextStyles.labelSmall
+                              : AppTextStyles.labelMedium)
+                          .copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: AppTextStyles.weightMedium,
+                          ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

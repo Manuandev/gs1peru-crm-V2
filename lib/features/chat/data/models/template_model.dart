@@ -30,7 +30,15 @@ class PlantillaModel extends Plantilla {
     final secciones = raw.split(AppConstants.sepListas);
     final c = ParseUtils.campos(secciones[0], AppConstants.sepCampos);
     // Cada botón viaja "idBoton¦texto" (id=0 = nuevo) — ver comentario en
-    // Plantilla.botones/CSV_PLANTILLA_CUD_APP.
+    // Plantilla.botones/CSV_PLANTILLA_CUD_APP. Task 'LP' no manda id (de
+    // solo lectura, alcanza con el texto para mostrarlo en la lista/preview
+    // de SelectTemplateModal) — sus textos viajan en el campo 9, unidos por
+    // sepComodin en vez de una sección aparte (no puede reusar sepRegistros
+    // ahí: ese separador ya se usa para separar cada PLANTILLA dentro de la
+    // lista completa — ver CRM.CSV_PLANTILLA_LST_APP.sql, task 'LP'). El
+    // campo 9 de 'DP' es otra cosa (idCampania) — no chocan porque 'DP'
+    // siempre trae la sección de sepListas (secciones.length > 1) y 'LP'
+    // nunca la trae.
     final botones = secciones.length > 1
         ? secciones[1]
               .split(AppConstants.sepRegistros)
@@ -44,7 +52,14 @@ class PlantillaModel extends Plantilla {
                 );
               })
               .toList()
-        : const <PlantillaBoton>[];
+        : (c.length > 9 && c[9].isNotEmpty
+              ? c[9]
+                    .split(AppConstants.sepComodin)
+                    .map((t) => t.trim())
+                    .where((t) => t.isNotEmpty)
+                    .map((t) => PlantillaBoton(texto: t))
+                    .toList()
+              : const <PlantillaBoton>[]);
 
     return PlantillaModel(
       idPlantilla: ParseUtils.toInt(c, 0),

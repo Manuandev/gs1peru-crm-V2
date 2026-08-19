@@ -25,6 +25,11 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
   // tope de botones baja a 3 (ver template_form_view.dart), así que no se
   // debe permitir adjuntar si ese tope ya está superado.
   final bool puedeAdjuntar;
+  // false cuando ya hay texto escrito en la descripción — "no se puede
+  // enviar audio junto con texto" (regla confirmada por el usuario), así que
+  // la opción "Grabar audio" del bottom sheet queda deshabilitada mientras
+  // haya descripción (ver template_form_view.dart._puedeGrabarAudio).
+  final bool puedeGrabarAudio;
   // true mientras se guarda la plantilla completa (subida de archivo + CUD,
   // ver TemplateFormBloc.guardar) — bloquea el círculo de subir para que no
   // se cambie el adjunto a mitad de un guardado ya en curso.
@@ -39,6 +44,7 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
     required this.archivo,
     required this.grabando,
     required this.puedeAdjuntar,
+    required this.puedeGrabarAudio,
     this.subiendo = false,
     required this.onArchivoSeleccionado,
     required this.onQuitarArchivo,
@@ -84,7 +90,10 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
             ListTile(
               leading: const Icon(AppIcons.mic),
               title: const Text('Grabar audio'),
-              onTap: () => Navigator.of(ctx).pop('audio'),
+              enabled: puedeGrabarAudio,
+              onTap: puedeGrabarAudio
+                  ? () => Navigator.of(ctx).pop('audio')
+                  : null,
             ),
           ],
         ),
@@ -181,6 +190,16 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
               padding: const EdgeInsets.only(top: AppSpacing.xxs),
               child: Text(
                 'Con más de 3 botones no se puede adjuntar un archivo.',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          else if (!puedeGrabarAudio)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xxs),
+              child: Text(
+                'No se puede grabar audio con texto ya escrito en la descripción.',
                 style: AppTextStyles.labelSmall.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),

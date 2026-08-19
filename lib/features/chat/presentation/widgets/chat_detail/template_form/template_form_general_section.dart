@@ -52,18 +52,18 @@ class TemplateFormGeneralSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CustomTextField(label: 'Nombre plantilla', controller: nombreCtrl),
+        CustomTextField(label: 'Nombre plantilla (*)', controller: nombreCtrl),
         const SizedBox(height: AppSpacing.md),
         CustomComboField<CampaniaItem>(
           data: campanias,
-          label: 'Campaña',
+          label: 'Campaña (*)',
           initialValue: campania?.id.toString(),
           onChanged: onCampaniaChanged,
         ),
         const SizedBox(height: AppSpacing.md),
         CustomComboField<OportunidadItem>(
           data: oportunidadesFiltradas,
-          label: 'Oportunidad',
+          label: 'Oportunidad (*)',
           // OportunidadItem.fields = [id, idCampania, nombre] — sin
           // labelIndex:2 el combo muestra idCampania (labelIndex default 1)
           // en vez del nombre, mismo fix que ya usa

@@ -215,7 +215,9 @@ extension NavigationExtensions on BuildContext {
       _push<Plantilla>(AppRoutes.templates, arguments: {'lead': negociacion});
 
   /// Crear (`idPlantilla` null) o editar (`idPlantilla` con valor) una plantilla.
-  Future<void> goToTemplateForm({int? idPlantilla}) => _push(
+  /// Retorna `true` solo si se guardó de verdad — `false`/`null` si se
+  /// canceló o se retrocedió sin guardar.
+  Future<bool?> goToTemplateForm({int? idPlantilla}) => _push<bool>(
     AppRoutes.templateForm,
     arguments: {'idPlantilla': idPlantilla},
   );

@@ -7,22 +7,25 @@ import 'package:app_crm/core/index_core.dart';
 /// Sección "Descripción" — toolbar de negrita/cursiva/tachado (formato
 /// WhatsApp: envuelve la selección con *texto*/_texto_/~texto~, o si no hay
 /// selección inserta el par de marcadores con el cursor al medio, listo
-/// para escribir) + emojis + botón "+ Variable" que inserta las mismas 3
-/// variables que ya reemplaza `_formatear` en select_template_modal.dart.
+/// para escribir) + botón "+ Variable" que inserta las mismas 3 variables
+/// que ya reemplaza `_formatear` en select_template_modal.dart.
 class TemplateFormDescripcionSection extends StatelessWidget {
   final TextEditingController controller;
+  // false mientras se graba audio o ya hay un audio adjunto — "no se puede
+  // enviar audio junto con texto" (regla confirmada por el usuario, ver
+  // template_form_view.dart._bloqueadoPorAudio).
+  final bool enabled;
 
-  const TemplateFormDescripcionSection({super.key, required this.controller});
+  const TemplateFormDescripcionSection({
+    super.key,
+    required this.controller,
+    this.enabled = true,
+  });
 
   static const _variables = [
     ('{{nombre_cliente}}', 'nombre_cliente'),
     ('{{apellido_cliente}}', 'apellido_cliente'),
     ('{{nombre_asesor}}', 'nombre_asesor'),
-  ];
-
-  static const _emojis = [
-    '😀', '😄', '😁', '😂', '🙂', '😉', '😍', '👍', '👎', '🙏',
-    '🎉', '✅', '❌', '⭐', '❤️', '🔥', '📌', '📅', '⏰', '💬',
   ];
 
   void _insertarTexto(String texto) {
@@ -69,32 +72,6 @@ class TemplateFormDescripcionSection extends StatelessWidget {
     );
   }
 
-  Future<void> _abrirEmojis(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              for (final emoji in _emojis)
-                InkWell(
-                  onTap: () => _insertarTexto(emoji),
-                  borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -107,6 +84,7 @@ class TemplateFormDescripcionSection extends StatelessWidget {
             const Expanded(child: FormSectionTitle('Descripción')),
             PopupMenuButton<String>(
               tooltip: 'Insertar variable',
+              enabled: enabled,
               onSelected: _insertarTexto,
               itemBuilder: (_) => [
                 for (final v in _variables)
@@ -139,25 +117,19 @@ class TemplateFormDescripcionSection extends StatelessWidget {
               icon: const Icon(AppIcons.boldText),
               tooltip: 'Negrita',
               visualDensity: VisualDensity.compact,
-              onPressed: () => _envolverSeleccion('*'),
+              onPressed: enabled ? () => _envolverSeleccion('*') : null,
             ),
             IconButton(
               icon: const Icon(AppIcons.italicText),
               tooltip: 'Cursiva',
               visualDensity: VisualDensity.compact,
-              onPressed: () => _envolverSeleccion('_'),
+              onPressed: enabled ? () => _envolverSeleccion('_') : null,
             ),
             IconButton(
               icon: const Icon(AppIcons.strikethroughText),
               tooltip: 'Tachado',
               visualDensity: VisualDensity.compact,
-              onPressed: () => _envolverSeleccion('~'),
-            ),
-            IconButton(
-              icon: const Icon(AppIcons.emoji),
-              tooltip: 'Emojis',
-              visualDensity: VisualDensity.compact,
-              onPressed: () => _abrirEmojis(context),
+              onPressed: enabled ? () => _envolverSeleccion('~') : null,
             ),
           ],
         ),
@@ -166,7 +138,18 @@ class TemplateFormDescripcionSection extends StatelessWidget {
           hint: 'Escribe el contenido de la plantilla...',
           maxLines: 6,
           minLines: 4,
+          enabled: enabled,
         ),
+        if (!enabled)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xxs),
+            child: Text(
+              'No se puede escribir la descripción con un audio adjunto — quita el audio para editarla.',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
       ],
     );
   }

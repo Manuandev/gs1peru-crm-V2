@@ -291,8 +291,9 @@ debajo de la card.
 - Negrita/cursiva/tachado (`_envolverSeleccion`) también funcionan sin texto seleccionado:
   insertan el par de marcadores con el cursor al medio, listo para escribir — no solo envuelven
   una selección existente.
-- Toolbar de Descripción incluye emojis (`AppIcons.emoji`, picker propio en grid, sin dependencia
-  nueva) además de negrita/cursiva/tachado/variable.
+- Toolbar de Descripción: negrita/cursiva/tachado/variable — sin emojis (quitados a pedido del
+  usuario, 2026-08-18; el picker en grid y `AppIcons.emoji` que usaba ya no están en este
+  toolbar).
 
 **Alcance actual (actualizado 2026-07-29) — guardar, listar y cargar para editar ya son reales:**
 - `CRM.CSV_PLANTILLA_CUD_APP` (task `'U'`, repo `NC.SQLChangeLock`) crea o actualiza
@@ -301,19 +302,41 @@ debajo de la card.
   `TIPO_PLANTILLA`/`IB_EDITABLE` (columnas nullable de `T_PLANTILLA_WHATSAPP`) y `ID_META`/
   `ESTADO_META` no los toca el formulario — esos dos últimos los puebla la sincronización con Meta,
   no la app.
-- **Botones — update en sitio por id (2026-08-09), ya no borrar+reinsertar todos en cada
-  guardado.** `Plantilla.botones` es `List<PlantillaBoton>` (`idBoton` + `texto`, no
-  `List<String>`) — cada botón viaja `idBoton¦texto` (id `0` = nuevo, campo aparte del cuerpo
-  principal, registros separados por `sepRegistros`). `CSV_PLANTILLA_CUD_APP` (task `'U'`) ahora
-  hace `DELETE` solo de los que ya no vienen en la lista (se quitaron en el formulario), `UPDATE`
-  en sitio de los que traen id (texto/orden), e `INSERT` (PK manual `MAX+1`, no `IDENTITY`) solo
-  de los nuevos (id `0`) — antes borraba y reinsertaba TODOS con id nuevo en cada guardado,
-  aunque solo se hubiera tocado un carácter de un botón ya existente. De paso se cambió el split
-  de `STRING_SPLIT` a `fnSplitStringTable15` (mismo método que ya usa la cabecera del SP) — el
-  orden ya no depende de `STRING_SPLIT`, que no lo garantizaba (viejo TODO de esta misma nota,
-  ya resuelto). `CSV_PLANTILLA_LST_APP` (task `'DP'`) devuelve `@BOTONES` como
-  `idBoton¦texto¬idBoton¦texto...` (antes solo `texto¬texto...`) — necesario para que el
-  formulario sepa qué id mandar de vuelta al reabrir una plantilla para editar.
+- **Botones — update en sitio por id, corregido de verdad el 2026-08-18 (la entrada de abajo,
+  fechada "2026-08-09", describía este mismo diseño pero nunca había llegado a escribirse en el
+  `.sql` real — quedó como documentación de una intención, no de un hecho).** Bug real
+  reportado por el usuario: al ver una plantilla con botones en la lista de envío
+  (`SelectTemplateModal`) aparecía un solo botón con el texto "1"; al editarla, los campos de
+  texto de los botones mostraban "1"/"0" en vez del texto real ("Sí"/"No", etc.). Causa
+  encontrada al releer `CRM.CSV_PLANTILLA_CUD_APP.sql` completo: el bloque BOTONES del task
+  `'U'` todavía tenía la versión ingenua original — `STRING_SPLIT(@L_DATA_BTN, @sepRegistros)`
+  tratando cada botón como texto plano — pero Flutter (`ChatRemoteDatasource.guardarPlantilla`)
+  ya mandaba cada botón como `idBoton¦texto` (con el separador de campos embebido). El SP
+  guardaba ese string completo tal cual en la columna `TEXTO` (ej. `TEXTO = "0¦Sí"`) — al leerlo
+  de vuelta, `CONCAT(idReal, sepCampos, TEXTO)` quedaba con un `¦` de más, y el `.split(sepCampos)`
+  del lado Flutter (`PlantillaModel.fromRawString`) partía en 3 en vez de 2 — `texto` terminaba
+  siendo el `idBoton` embebido (`"0"`, `"1"`, etc.) en vez del texto real, que se perdía.
+  **Fix real, ahora sí escrito en el `.sql`**: el bloque BOTONES pasó a leer `@L_DATA_BTN` con
+  `[dbo].[Fnsplitstringtable15](..., @sepRegistros, @sepCampos)` (mismo splitter que ya usa la
+  cabecera) en vez de `STRING_SPLIT` — separa `idBoton` y `texto` de verdad antes de tocar la
+  tabla. Con eso: `DELETE` solo de los `ID_PLANTILLA_BOTON` que ya no vienen en la lista actual;
+  `UPDATE` en sitio (`TEXTO`/`ORDEN`) de los que traen id real (`≠0`); `INSERT` (PK manual
+  `MAX+1`, no `IDENTITY`) solo de los nuevos (`id=0`). El comentario de la declaración de
+  `@L_DATA_BTN` (que también describía el formato viejo, "sin tipos ni ids") se corrigió de
+  paso. **Cualquier plantilla guardada mientras el `.sql` viejo estaba desplegado quedó con
+  `TEXTO` corrupto** (el id embebido en vez del texto real) — ese dato ya guardado no se
+  corrige solo con este fix; si el usuario reporta plantillas viejas con botones "1"/"0", hay
+  que re-guardarlas desde el formulario una vez este `.sql` esté desplegado (el `UPDATE` en
+  sitio va a sobreescribir el `TEXTO` corrupto con el real que el asesor vea/confirme en el
+  formulario esa vez). Sigue pendiente el `ALTER PROCEDURE` en SSMS.
+
+  Estructura del lado Flutter (sin cambios en esta sesión, ya estaba lista desde antes —
+  solo el `.sql` le faltaba llegar a calzar con esto): `Plantilla.botones` es
+  `List<PlantillaBoton>` (`idBoton` + `texto`, no `List<String>`) — cada botón viaja
+  `idBoton¦texto` (id `0` = nuevo, campo aparte del cuerpo principal, registros separados por
+  `sepRegistros`). `CSV_PLANTILLA_LST_APP` (task `'DP'`) devuelve `@BOTONES` como
+  `idBoton¦texto¬idBoton¦texto...` (no solo `texto¬texto...`) — necesario para que el formulario
+  sepa qué id mandar de vuelta al reabrir una plantilla para editar.
   `_TemplateFormPortraitState` (`template_form_view.dart`) mantiene `_botonesIds` en paralelo a
   `_botonesCtrls` (mismo índice) — `_agregarBoton`/`_quitarBoton` mutan ambas listas juntas;
   `_guardar()` arma `PlantillaBoton(idBoton: _botonesIds[i], texto: ...)` por cada controller con
@@ -356,6 +379,83 @@ debajo de la card.
   los campos — compatible con `'LP'` (nunca trae `sepListas`, así que el split no le afecta).
   `TemplateFormBloc._onStarted` en modo editar ya llama `GetPlantillaUseCase` de verdad.
 - No define tipos de botón (quick-reply/URL/teléfono) — solo texto libre por botón.
+- **`SelectTemplateModal` (lista/preview de envío) — texto vacío se oculta + botones visibles
+  (2026-08-18).** `_TemplateItem` (lista lateral) y `_TemplatePreview` (panel derecho) ya no
+  muestran la burbuja/línea de texto si `plantilla.contenido` (formateado) queda vacío tras
+  `_formatear` — una plantilla puede ser solo archivo y/o botones, sin contenido de texto.
+  `_TemplatePreview` arma sus 3 bloques opcionales (texto/archivo/botones) en una lista y
+  intercala el espaciado solo entre los que sí aplican (`for (var i = 0; i < bloques.length;
+  i++)`), en vez de dejar huecos fijos cuando falta alguno.
+  Nuevo widget privado `_BotonesPreview` (chips con `AppIcons.tap` + texto, borde
+  `colorScheme.primary`) — muestra `plantilla.botones` en ambos lugares (`compact: true` en la
+  lista, tamaño normal en el preview), mismo criterio "solo texto, sin tipos" que
+  `TemplateFormBotonesSection`.
+  **`Plantilla.botones` ahora también llega en la lista (task `'LP'`), no solo al editar
+  (`'DP'`)** — antes `getTemplates()` solo traía `tieneBoton` (bool). `CRM.CSV_PLANTILLA_LST_APP`
+  (`NC.SQLChangeLock`, repo aparte — `.sql` UTF-16LE con BOM, cualquier edición debe preservar la
+  codificación) ganó un campo 09 con los textos de los botones unidos por `sepComodin` (`¨`, "uso
+  libre") — no puede reusar `sepRegistros`/`sepListas` como hace `'DP'` porque `sepRegistros` ya
+  separa cada PLANTILLA dentro de la lista completa (`STRING_AGG(..., @sepRegistro)`); usar ese
+  mismo separador para una lista anidada de botones rompería el split de nivel superior. El campo
+  08 (`tieneBoton`) pasó de comparar `TOP 1 ID_PLANTILLA` a derivarse del mismo `STRING_AGG` de
+  botones (`CASE WHEN BT.BOTONES IS NOT NULL THEN 1 ELSE 0 END`) — una sola `OUTER APPLY`, sin
+  necesidad de 2 subconsultas. `PlantillaModel.fromRawString` distingue el campo 9 de 'LP'
+  (comodin-joined, sin id) del campo 9 de 'DP' (`idCampania`, sin relación) por
+  `secciones.length > 1` — 'DP' siempre trae la sección de `sepListas` (aunque el `@BOTONES` de
+  esa rama venga vacío), 'LP' nunca la trae, así que no hay ambigüedad real entre ambos formatos.
+  Botones parseados desde 'LP' llevan `idBoton: 0` (de solo lectura, no hace falta id para
+  mostrarlos acá) — no confundir con los de 'DP', que sí lo necesitan para el guardado en sitio
+  del formulario. Pendiente correr el `ALTER PROCEDURE` en SSMS para desplegar el `.sql` a la
+  base real.
+- **La lista ya no se refresca al solo entrar/salir del formulario sin guardar + confirma
+  salir con cambios sin guardar (2026-08-18).** Dos bugs reportados juntos por el usuario:
+  1. `SelectTemplateModal._abrirFormulario()` llamaba `SelectTemplateRefresh()` siempre al
+     volver de `TemplateFormPage`, sin importar si el usuario guardó algo o solo canceló/
+     retrocedió — la lista de plantillas se recargaba del backend en cada entrada al
+     formulario, aunque no hubiera pasado nada. Fix: `goToTemplateForm()`
+     (`navigation_extensions.dart`) pasó de `Future<void>` a `Future<bool?>` —
+     `RouteDefinition<bool>` en `app_router.dart` — y `_TemplateFormPortraitState._guardar()`
+     hace `context.goBack(true)` solo en el caso `CrudOk()`; Cancelar/retroceder siguen
+     usando `context.goBack()` sin argumento (`null`). `_abrirFormulario()` ahora solo agrega
+     `SelectTemplateRefresh()` si `guardo == true`.
+  2. Al cambiar cualquier valor del formulario (crear o editar) y presionar Cancelar o
+     retroceder (AppBar/gesto físico), ahora sale un diálogo de confirmación — antes salía
+     directo sin avisar, perdiendo lo tipeado en silencio. Mismo patrón que
+     `SolicitudWizardView._confirmarSalir` (`solicitudes/CLAUDE.md`): snapshot inicial
+     (`_snapshotInicial`, armado al final de `initState()` con `_construirPlantilla()` — método
+     nuevo, extraído de lo que antes armaba `_guardar()` inline) comparado por `Equatable`
+     (`Plantilla` ya lo era) contra el formulario actual (`_hayCambios`, getter). Sin cambios,
+     `_confirmarSalir()` sale directo; con cambios, muestra `context.showConfirmDialog(...)` y
+     solo sale si se confirma. Conectado en 2 puntos: `FormSaveBar.onCancelar` (llamada
+     directa — un `Navigator.pop()` explícito no pasa por `PopScope`) y un `PopScope`
+     (`canPop: !_hayCambios`) envolviendo el `Stack` raíz de `build()` (cubre el back del AppBar
+     y el gesto/botón físico, ambos vía `Navigator.maybePop`, que sí respeta `PopScope`).
+- **Nombre, Campaña y Oportunidad obligatorios; Estado NO (2026-08-18).** Mismo criterio que
+  `EditLeadPortrait._camposObligatoriosCompletos`/`_puedeGuardar` (`lead/CLAUDE.md`): labels con
+  sufijo `(*)` en `TemplateFormGeneralSection` (Nombre plantilla/Campaña/Oportunidad — Estado se
+  queda sin `(*)`) + getter derivado `_camposObligatoriosCompletos` en
+  `_TemplateFormPortraitState` que gatea `FormSaveBar.isEnabled` y un guard temprano en
+  `_guardar()`. `_nombreCtrl` ganó el mismo listener `_onFormChanged` que ya tenían
+  `_contenidoCtrl`/`_botonesCtrls` para que el botón Guardar reaccione en vivo mientras se
+  tipea el nombre, no solo al perder foco.
+- **Exclusión mutua audio/texto/botones (2026-08-18).** Reglas de negocio confirmadas por el
+  usuario, implementadas en `_TemplateFormPortraitState` (`template_form_view.dart`) con 3
+  getters derivados (`_hayDescripcion`, `_archivoEsAudio`, `_bloqueadoPorAudio =
+  _grabandoAudio || _archivoEsAudio`) que las 3 secciones hijas reciben como props:
+  - Con texto ya escrito en la descripción, la opción "Grabar audio" del bottom sheet de
+    adjuntos queda deshabilitada (`TemplateFormAdjuntosSection.puedeGrabarAudio`) — no se puede
+    enviar audio junto con texto.
+  - Mientras se graba audio o ya hay uno adjunto (`_bloqueadoPorAudio`), el campo Descripción
+    queda de solo lectura (`TemplateFormDescripcionSection.enabled`) y la sección Botones entera
+    se bloquea — inputs existentes deshabilitados y "Agregar botón" deshabilitado
+    (`TemplateFormBotonesSection.bloqueadoPorAudio`).
+  - Un botón nuevo solo se puede agregar si hay descripción escrita
+    (`TemplateFormBotonesSection.hayDescripcion`) y ningún botón ya agregado quedó con el texto
+    vacío — evita crear un botón en blanco antes de completar el anterior.
+  - `_contenidoCtrl` y cada controller de `_botonesCtrls` llevan un listener
+    (`_onFormChanged` → `setState(() {})`) para que estas reglas reaccionen en vivo mientras se
+    tipea, no solo al perder foco — antes ningún controller de este formulario tenía listener
+    propio, la UI no reaccionaba a cambios de texto en tiempo real.
 - **Overlay de guardado — `AppProcessOverlay` (2026-08-09).** `_TemplateFormPortraitState` en
   `template_form_view.dart` replica el mismo patrón de 2 pasos que `EditLeadPortrait` (ver
   `core/CLAUDE.md` → `AppProcessOverlay` y `lead/CLAUDE.md` → "Overlay de guardado/éxito"):

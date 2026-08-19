@@ -298,7 +298,9 @@ class AppRouter {
         return SelectTemplatePage(negociacion: args['lead'] as Negociacion);
       },
     ),
-    AppRoutes.templateForm: RouteDefinition(
+    AppRoutes.templateForm: RouteDefinition<bool>(
+      // T = bool: true solo si se guardó de verdad — SelectTemplateModal usa
+      // esto para no refrescar la lista si el usuario solo canceló/retrocedió.
       transition: TransitionType.slideRight,
       builder: (context) {
         final args = _requireArgs<Map<String, dynamic>>(context);

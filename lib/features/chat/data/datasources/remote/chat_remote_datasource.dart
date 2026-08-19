@@ -252,7 +252,8 @@ class ChatRemoteDatasource {
   }
 
   Future<List<PlantillaModel>> getTemplates() async {
-    final String body = '${sep}LP';
+    final String body =
+        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LP';
 
     final result = await _api.postSafe(ApiConstants.urlPlantillasLst, body);
 

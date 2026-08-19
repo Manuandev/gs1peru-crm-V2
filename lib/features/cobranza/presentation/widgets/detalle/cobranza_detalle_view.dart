@@ -127,6 +127,7 @@ class _BottomActionButton extends StatelessWidget {
             moneda: detalle.moneda,
             idCondicion: detalle.idCondicion,
             condicion: detalle.condicion,
+            tipoComprobante: detalle.tipoComprobante,
           ),
           icon: Icon(AppIcons.receipt, size: AppSizing.iconMd),
           label: Text('Continuar facturación', style: AppTextStyles.button),

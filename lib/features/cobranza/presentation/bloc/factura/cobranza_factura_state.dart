@@ -38,6 +38,17 @@ class CobranzaFacturaState {
   final String oportunidad;
   final double montoTotal;
   final String moneda;
+  // Tipo de comprobante ya decidido en la Facturación de la Solicitud de
+  // origen (Boleta/Factura, texto tal cual lo manda el backend) — este
+  // formulario no lo vuelve a elegir, solo lo necesita para la regla de
+  // detracción (ver el getter más abajo).
+  final String tipoComprobante;
+  // Monto ya convertido a soles (con el tipo de cambio "venta" si la moneda
+  // es USD, resuelto por CobranzaFacturaPage contra CatalogsBloc) — usado
+  // SOLO para decidir si el monto supera el umbral de detracción (S/700),
+  // nunca para ningún cálculo de importe/cuotas (esos siguen usando
+  // montoTotal, en la moneda original).
+  final double montoTotalEnSoles;
 
   // Formulario
   final String idCondicion;
@@ -56,8 +67,14 @@ class CobranzaFacturaState {
   final String? mensajeError;
 
   // ── Calculados para el resumen ──────────────────────────────
-  // Detracción 12% sobre el importe del comprobante (confirmado: 460.20*0.12=55.22)
-  double get detraccion => montoTotal * 0.12;
+  // Regla de negocio (2026-08-19): la detracción SOLO aplica con
+  // comprobante Factura (nunca Boleta) y solo si el monto, convertido a
+  // soles si la moneda es USD (montoTotalEnSoles, ver arriba), es >= 700 —
+  // debajo de ese umbral no hay detracción aunque sea Factura. Si no aplica,
+  // detraccion es 0 e importeCredito == montoTotal.
+  bool get esFactura => tipoComprobante.trim().toUpperCase().contains('FACTURA');
+  bool get aplicaDetraccion => esFactura && montoTotalEnSoles >= 700;
+  double get detraccion => aplicaDetraccion ? montoTotal * 0.12 : 0.0;
   double get importeCredito => montoTotal - detraccion;
   int get numCuotas => cuotasCredito.isEmpty ? 1 : cuotasCredito.length;
   double get pagoACuenta => 0.0;
@@ -73,6 +90,8 @@ class CobranzaFacturaState {
     this.moneda = '',
     required this.idCondicion,
     required this.condicion,
+    this.tipoComprobante = '',
+    this.montoTotalEnSoles = 0,
     this.fechaVencimiento = '',
     this.oc = '',
     this.descripcion = '',

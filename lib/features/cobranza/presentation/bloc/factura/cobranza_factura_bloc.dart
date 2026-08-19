@@ -17,6 +17,8 @@ class CobranzaFacturaBloc
     required String moneda,
     required String idCondicion,
     required String condicion,
+    required String tipoComprobante,
+    required double montoTotalEnSoles,
     required CambiarEstadoFacturarUseCase cambiarEstadoFacturarUseCase,
     required GuardarPlanCreditoUseCase guardarPlanCreditoUseCase,
   })  : _cambiarEstadoFacturar = cambiarEstadoFacturarUseCase,
@@ -30,6 +32,8 @@ class CobranzaFacturaBloc
             moneda: moneda,
             idCondicion: idCondicion,
             condicion: condicion,
+            tipoComprobante: tipoComprobante,
+            montoTotalEnSoles: montoTotalEnSoles,
             fechaVencimiento: idCondicion == 'CR' ? _hoy() : '',
           ),
         ) {

@@ -182,6 +182,7 @@ class AppRouter {
           moneda: args['moneda'] as String,
           idCondicion: args['idCondicion'] as String,
           condicion: args['condicion'] as String,
+          tipoComprobante: args['tipoComprobante'] as String,
         );
       },
     ),

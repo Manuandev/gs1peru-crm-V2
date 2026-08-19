@@ -15,3 +15,14 @@ String resolverSimboloMoneda(BuildContext context, String idMoneda) {
   final item = state.monedas.where((m) => m.id == idMoneda).firstOrNull;
   return item?.simbolo ?? idMoneda;
 }
+
+// Mismo criterio de resolución que resolverSimboloMoneda (match por
+// MonedaItem.id, no hardcodear ningún id de moneda) — usado para saber si
+// hay que convertir un monto a soles con el tipo de cambio antes de aplicar
+// la regla de detracción (ver cobranza/CLAUDE.md). `false` si el catálogo no
+// cargó o el id no matchea ningún registro (asume soles, sin conversión).
+bool esMonedaDolares(List<MonedaItem> monedas, String idMoneda) {
+  if (idMoneda.isEmpty) return false;
+  final item = monedas.where((m) => m.id == idMoneda).firstOrNull;
+  return item?.codigo == 'USD';
+}

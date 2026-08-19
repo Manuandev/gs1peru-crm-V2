@@ -121,6 +121,7 @@ extension NavigationExtensions on BuildContext {
     required String moneda,
     required String idCondicion,
     required String condicion,
+    required String tipoComprobante,
   }) => _push(
     AppRoutes.facturarCobranza,
     arguments: {
@@ -131,6 +132,7 @@ extension NavigationExtensions on BuildContext {
       'moneda': moneda,
       'idCondicion': idCondicion,
       'condicion': condicion,
+      'tipoComprobante': tipoComprobante,
     },
   );
 

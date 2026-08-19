@@ -1,5 +1,59 @@
 # Cobranza Feature
 
+## Regla de negocio — la detracción solo aplica con Factura y monto ≥ S/700 (2026-08-19)
+Pedido de negocio: la detracción (12%) ya no se calcula siempre — ahora depende de 2 condiciones,
+ambas deben cumplirse:
+1. El comprobante de la Solicitud de origen debe ser **Factura** (nunca Boleta).
+2. El monto, **convertido a soles si la moneda es USD**, debe ser **≥ 700**.
+
+- **Catálogo nuevo — `TipoCambioItem`** (`core/models/catalog_item.dart`/`catalog_item_model.dart`,
+  parte [21] del SP `lstListas`, `DBO.SYSMTC01` filtrado a `FECHA = hoy`) — fila única (`venta`/
+  `compra`, ambos `double`), agregado directo por el usuario al SP
+  (`CRM.CSV_LISTAS_LST_APP.sql`, repo aparte). `CatalogsLoaded.tipoCambio` expone el getter (ver
+  core/CLAUDE.md). **Se usa el tipo `venta`, nunca `compra`**, para convertir USD→PEN.
+- **`tipoComprobante` ahora viaja hasta el formulario de facturar** — antes `CobranzaFacturaState`
+  no lo tenía en absoluto (el tipo de comprobante se decide en la Facturación de la Solicitud de
+  origen, no se re-elige acá). Threaded de punta a punta: `CobranzaDetalle.tipoComprobante` →
+  `goToFacturarCobranza(tipoComprobante:)` → argumento de ruta → `CobranzaFacturaPage` →
+  `CobranzaFacturaBloc`/`CobranzaFacturaState.tipoComprobante`.
+- **`CobranzaFacturaState`** ganó `tipoComprobante` (String) y `montoTotalEnSoles` (double, ya
+  convertido) — este último se resuelve **una sola vez**, en `CobranzaFacturaPage.build()`,
+  contra `CatalogsBloc` (`esMonedaDolares(monedas, moneda)` — nuevo helper en
+  `resolver_moneda.dart`, mismo criterio de match por `MonedaItem.id` que ya usa
+  `resolverSimboloMoneda` — y `tipoCambio.venta` si aplica). `detraccion` ahora es
+  `aplicaDetraccion ? montoTotal * 0.12 : 0.0`, con `aplicaDetraccion = esFactura &&
+  montoTotalEnSoles >= 700` (`esFactura` = `tipoComprobante` contiene "FACTURA", sin distinguir
+  mayúsculas). `importeCredito = montoTotal - detraccion` sin cambios (si no aplica detracción,
+  importeCredito == montoTotal). **`montoTotalEnSoles` solo se usa para este chequeo del
+  umbral** — nunca para ningún importe/cuota real, esos siguen en la moneda original
+  (`montoTotal`).
+- **Refresca el catálogo y bloquea si falta el tipo de cambio, solo al entrar a "Validar plan de
+  crédito"** — pedido explícito del usuario: antes de navegar a `CobranzaPlanPage`,
+  `CobranzaFacturaPage` dispara `CatalogsLoadRequested()` y espera (`stream.firstWhere`) a que
+  termine, para traer un tipo de cambio recién registrado HOY que el caché de sesión (cargado
+  una sola vez al iniciar sesión) todavía no tenía. Si la moneda es USD y el `tipoCambio.venta`
+  sigue en 0 después del refresh, se corta con `AppSnackBar.error` ("No hay tipo de cambio
+  registrado para hoy...") y **no navega** — el asesor puede reintentar presionando "Validar plan
+  de crédito" de nuevo en cualquier momento (cada intento repite el refresh), sin necesidad de
+  salir de la pantalla de Facturar. Con moneda PEN, este chequeo ni se evalúa (el tipo de cambio
+  nunca hace falta). **Ojo — este refresh trae el catálogo COMPLETO** (~21 partes: campañas,
+  oportunidades, estados, asesores, monedas, etc., todo en un solo SP/llamada) — no hay forma de
+  pedir solo el tipo de cambio por separado, es el mismo mecanismo ya usado en
+  `CobranzaAsesorPickerModal`/`SolicitudAsesorPickerModal` (ver sección de abajo).
+- **Si el refresh de catálogo falla** (`CatalogsError`, sin conexión) — no bloquea, deja navegar
+  con los datos ya cacheados (best-effort, mismo criterio que el resto de fallos de catálogo en
+  la app) — el bloqueo es específicamente por "no hay tipo de cambio", no por "no se pudo
+  refrescar".
+- **No se tocó** `_onFacturarPressed`/`guardarPlanCredito` — la detracción sigue siendo un valor
+  derivado (getter), nunca se manda como columna propia al backend; lo que sí cambia
+  indirectamente es `importeCredito` (usado para calcular las cuotas del plan), que ahora puede
+  coincidir con `montoTotal` si la detracción no aplica.
+- **Pendiente, fuera de alcance de esta sesión (falta de tiempo)** — el usuario mencionó un
+  problema relacionado en `lead/` (EditLead/editar negociación): el catálogo cacheado al login no
+  siempre trae oportunidades/campañas recién creadas. Pidió evaluar refrescar `CatalogsBloc`
+  también al entrar a Editar lead — **no implementado todavía**, needs su propia sesión enfocada
+  en `lead/`, no se tocó nada de esa feature acá.
+
 ## 3 bugs reales en el Plan de crédito — cronograma con base incorrecta, Fecha no sincronizaba Días, cuota 1 sin validar contra la 2 (2026-08-19)
 Reportado por el usuario con un caso real (screenshot): Importe Comprobante 600, Detracción
 (12%) 72, Importe a Crédito menos Detracción 528 — con la cuota única por defecto (antes de

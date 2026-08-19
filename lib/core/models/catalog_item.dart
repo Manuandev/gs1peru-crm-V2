@@ -42,6 +42,10 @@ class ListasGenericas {
   final List<CargoItem> cargos;
   // Parte [20] del SP lstListas — hardcodeado, saludos de contacto
   final List<PrefijoContactoItem> prefijosContacto;
+  // Parte [21] del SP lstListas — DBO.SYSMTC01, tipo de cambio del día
+  // (USD→PEN, venta/compra). Fila única (sin @sepRegistro), filtrada a la
+  // fecha de hoy en el SP.
+  final TipoCambioItem tipoCambio;
 
   const ListasGenericas({
     required this.campanias,
@@ -65,6 +69,7 @@ class ListasGenericas {
     this.areas = const [],
     this.cargos = const [],
     this.prefijosContacto = const [],
+    this.tipoCambio = const TipoCambioItem(),
   });
 }
 
@@ -414,4 +419,17 @@ class PrefijoContactoItem with Comboable {
 
   @override
   List<dynamic> get fields => [valor, valor];
+}
+
+// SP lstListas parte [21]: venta ¦ compra — DBO.SYSMTC01, tipo de cambio del
+// día (USD→PEN), filtrado por el SP a FECHA = hoy. No implementa Comboable:
+// no es un ítem de lista/dropdown, es un solo bloque de valores fijos, mismo
+// criterio que ValoresCRMItem. Usado para convertir un monto en dólares a
+// soles con el tipo de cambio "venta" — ver cobranza/CLAUDE.md, regla de
+// detracción.
+class TipoCambioItem {
+  final double venta;
+  final double compra;
+
+  const TipoCambioItem({this.venta = 0, this.compra = 0});
 }

@@ -25,6 +25,7 @@ class ListasGenericasModel extends ListasGenericas {
     super.areas,
     super.cargos,
     super.prefijosContacto,
+    super.tipoCambio,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -50,6 +51,7 @@ class ListasGenericasModel extends ListasGenericas {
     final areasRaw = partes.length > 18 ? partes[18] : '';
     final cargosRaw = partes.length > 19 ? partes[19] : '';
     final prefijosContactoRaw = partes.length > 20 ? partes[20] : '';
+    final tipoCambioRaw = partes.length > 21 ? partes[21] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -133,6 +135,10 @@ class ListasGenericasModel extends ListasGenericas {
         ? <PrefijoContactoItemModel>[]
         : PrefijoContactoItemModel.parseList(prefijosContactoRaw);
 
+    final tipoCambio = tipoCambioRaw.trim().isEmpty
+        ? const TipoCambioItem()
+        : TipoCambioItemModel.fromRawString(tipoCambioRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -155,6 +161,7 @@ class ListasGenericasModel extends ListasGenericas {
       areas: areas,
       cargos: cargos,
       prefijosContacto: prefijosContacto,
+      tipoCambio: tipoCambio,
     );
   }
 }
@@ -648,5 +655,18 @@ class PrefijoContactoItemModel extends PrefijoContactoItem {
         .where((r) => r.trim().isNotEmpty)
         .map((r) => PrefijoContactoItemModel(valor: r.trim()))
         .toList();
+  }
+}
+
+// SP lstListas parte [21]: fila única, sin @sepRegistro — ver TipoCambioItem.
+class TipoCambioItemModel extends TipoCambioItem {
+  const TipoCambioItemModel({required super.venta, required super.compra});
+
+  factory TipoCambioItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return TipoCambioItemModel(
+      venta: ParseUtils.toDouble(c, 0),
+      compra: ParseUtils.toDouble(c, 1),
+    );
   }
 }

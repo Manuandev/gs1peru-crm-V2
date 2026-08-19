@@ -130,10 +130,56 @@ bool sendWhatsAppTemplateMessage({
   required bool isExpirado,   // si true → VAR07 = '1' (reabre conversación)
   required bool isCerrado,    // si true → VAR07 = '1'
 })
-// 16 variables (VAR01–VAR16) separadas por camp, encabezadas por token + sep + ... + sep + CA
+// 17 variables (VAR01–VAR17) separadas por camp, encabezadas por token + sep + ... + sep + CA
 ```
 
 **VAR07** controla si la conversación está expirada/cerrada — siempre verificar ambas flags.
+
+**VAR17 — botones de la plantilla, agregado 2026-08-18** (antes el envío por socket se quedaba
+en VAR16, sin mandar los botones en sí). Formato `id¬texto¬id¬texto...` — **todo** unido por
+`sepRegistros` (`¬`), nunca por `sepCampos` (`¦`). Vacío si `plantilla.botones` está vacío.
+- **Bug real corregido el mismo día, detectado en vivo por el usuario con un log real del
+  socket**: la primera versión unía cada par `idBoton¦texto` con `camp` (`¦`) — copiando el
+  patrón de `guardarPlantilla()`, donde ese formato SÍ es seguro porque vive dentro de su propia
+  sección `¯` aparte. Acá NO — VAR17 es un campo más dentro de la MISMA lista plana
+  `VAR01..VAR17` que se une con `camp` un nivel más arriba, así que cualquier `¦` embebido
+  adentro de VAR17 corre todos los VAR posteriores un campo. Repro real: un botón con
+  `idBoton=0` y texto `"3"` se mandó como `"...¦1¦0¦3¯CA"` — el `0¦3` (id y texto del botón)
+  quedó indistinguible de dos VAR sueltos, y el lado que lee el mensaje terminó viendo solo
+  `"3"` donde esperaba el bloque de botones completo. Corregido uniendo id y texto de cada
+  botón (aplanado, sin distinguir "dentro de un botón" de "entre botones") con `sepRegistros`
+  en vez de `camp` — coincide con la notación `id¬texto¬id¬texto...` que ya traía la tabla del
+  contrato, que en su momento se leyó mal como "separador `¬` entre pares `id¦texto`" en vez de
+  "separador `¬` para todo, sin `¦` en ningún lado de VAR17".
+Confirmado contra la tabla real del contrato `Gs1WebSocket` que compartió el usuario:
+
+| Var | Campo | Notas |
+|---|---|---|
+| VAR01 | idConversacion | |
+| VAR02 | nombrePlantilla | |
+| VAR03 | codasesor | |
+| VAR04 | mensaje (ya con `{{}}` sustituidas) | esto es lo que realmente se envía como texto |
+| VAR05 | `template` | fijo para este flujo |
+| VAR06 | celular destino | |
+| VAR07 | 0/1 | ⚠️ ver nota abajo |
+| VAR08 | — | vacío, no usado |
+| VAR09 | idChatCabecera | |
+| VAR10 | — | vacío, no usado |
+| VAR11 | nombreLead | |
+| VAR12 | apellidoLead | |
+| VAR13 | nombre asesor | |
+| VAR14 | contenido crudo de la plantilla (con `{{}}`) | solo referencia/registro |
+| VAR15 | archivo adjunto | vacío si no tiene |
+| VAR16 | 1 si tiene botones | |
+| VAR17 | botones `id¬texto¬id¬texto...` | separador `¬` para todo, no `¯` ni `¦` |
+
+**VAR07 — confirmado con el usuario (2026-08-18), sin cambios de código.** La duda que dejó la
+tabla del contrato (*"debe ser 0 — si es 1 (chat cerrado), Gs1WebSocket rechaza el envío"*) se
+resolvió: VAR07 debe reflejar el estado REAL del chat (abierto/cerrado) — el código actual
+(`isExpirado || isCerrado ? '1' : '0'`) ya hace exactamente eso, es el comportamiento correcto.
+La nota de la tabla no era "siempre manda 0" sino la advertencia por defecto para el caso normal
+(chat abierto); cuando el chat sí está cerrado/expirado, `'1'` es el valor correcto — es
+justamente lo que le permite al socket reabrirlo al enviar una plantilla.
 
 ---
 

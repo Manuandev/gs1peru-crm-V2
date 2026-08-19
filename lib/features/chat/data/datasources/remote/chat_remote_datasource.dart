@@ -114,6 +114,20 @@ class ChatRemoteDatasource {
     final user = _session.user;
     if (user == null) return false;
 
+    // VAR17 — botones de la plantilla: "id¬texto¬id¬texto..." — TODO unido
+    // por sepRegistros (¬), nunca por camp (¦). A diferencia de
+    // guardarPlantilla()/CSV_PLANTILLA_LST_APP (donde "idBoton¦texto" vive
+    // dentro de su propia sección ¯), acá VAR17 es UN campo más dentro de la
+    // misma lista plana VAR01..VAR17 que ya se une con camp más abajo — si
+    // el id/texto de un botón usara camp también, ese ¦ de más correría
+    // todos los VAR posteriores un campo (bug real detectado en vivo por el
+    // usuario: un botón con id=0 se mandó como "0¦texto", partiendo VAR17 en
+    // dos tokens y dejando "solo el valor 3" del lado del SP). Vacío si la
+    // plantilla no tiene botones.
+    final botones = plantilla.botones
+        .expand((b) => [b.idBoton.toString(), b.texto])
+        .join(AppConstants.sepRegistros);
+
     final vars = [
       idChatCab, // VAR01
       plantilla.nombre, // VAR02
@@ -131,6 +145,7 @@ class ChatRemoteDatasource {
       plantilla.contenido, // VAR14
       '${plantilla.archivoNombre}${plantilla.archivoExt}', // VAR15
       plantilla.tieneBoton ? '1' : '0', // VAR16
+      botones, // VAR17
     ].join(camp);
 
     final String body = '${user.token}$sep$vars${sep}CA';

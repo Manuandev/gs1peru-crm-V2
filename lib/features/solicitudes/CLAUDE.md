@@ -1,5 +1,23 @@
 # Solicitudes Feature
 
+## "SIN RUC" (DOC.TRIB.NO.DOM.SIN.RUC) — catálogo nuevo, excluido de Facturación (2026-08-19)
+El usuario agregó un catálogo nuevo directamente en el SP
+(`CRM.CSV_LISTAS_LST_APP.sql`, `D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`)
+— `@ID_TIP_DOC_SNR` (id `'0'`, "DOC.TRIB.NO.DOM.SIN.RUC"), agregado al final del `CONCAT` de la
+parte [13] (Valores por defecto), después de `@ID_TIP_DOC_OTR`. Es otro tipo de documento
+"catch-all sin documento real", mismo espíritu que "Sin documento" (`idTipoDocSnd`).
+
+- **`ValoresCRMItem`/`ValoresCRMItemModel`** (`core/models/catalog_item.dart`/
+  `catalog_item_model.dart`) ganaron el campo `idTipDocSnr` (`String`, default `''`),
+  parseado en el índice 15 del raw (el 16° campo de la parte [13], después de `idTipDocOtr` en
+  el 14) — ver `core/CLAUDE.md` → `ValoresCRMItem`.
+- **Facturación (paso 3) también lo excluye del combo Tipo documento**, mismo criterio que
+  "Sin documento" (ver arriba, "N° documento del solicitante opcional...") — `tiposDocumentoNacional`
+  (`solicitud_facturacion_view.dart`) ahora filtra `t.id != _valoresDefecto.idTipDocSnd &&
+  t.id != _valoresDefecto.idTipDocSnr`. **No se tocó** el paso 1 (Datos del solicitante) ni
+  Nuevo participante — "Sin RUC" sigue disponible ahí como cualquier otro tipo de documento del
+  catálogo completo, igual que "Sin documento".
+
 ## N° documento del solicitante opcional + Facturación ya no permite "Sin documento" (2026-08-19)
 Dos pedidos de negocio en la misma sesión, ambos en Tipo/N° documento pero en pasos distintos:
 

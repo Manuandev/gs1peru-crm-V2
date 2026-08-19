@@ -262,8 +262,10 @@ class NacionalidadItem with Comboable {
 // defecto que usa el CRM para preseleccionar combos — idCanalWsp ¦ idPais ¦
 // idNacionalidad ¦ idEstadoNuevo ¦ idEstadoGanado ¦ idTipoBoleta ¦
 // idTipoFactura ¦ idTipoDocRuc ¦ idTipoDocSnd ¦ idTipoDocDni ¦ idTipoDocCde ¦
-// idTipoDocPas. No implementa Comboable: no es un ítem de lista/dropdown,
-// es un solo bloque de valores fijos.
+// idTipoDocPas ¦ idEstadoEnDesarrollo ¦ idEstadoConPropuesta ¦ idTipDocOtr ¦
+// idTipDocSnr (agregado 2026-08-19, "DOC.TRIB.NO.DOM.SIN.RUC"/"SIN RUC").
+// No implementa Comboable: no es un ítem de lista/dropdown, es un solo
+// bloque de valores fijos.
 class ValoresCRMItem {
   final int idCanalWsp;
   final String idPais;
@@ -280,6 +282,10 @@ class ValoresCRMItem {
   final String idEstadoEnDesarrollo;
   final String idEstadoConPropuesta;
   final String idTipDocOtr;
+  // "DOC.TRIB.NO.DOM.SIN.RUC" ("SIN RUC" en el combo) — agregado al SP
+  // 2026-08-19, campo nuevo al final del CONCAT (índice 15), después de
+  // idTipDocOtr.
+  final String idTipDocSnr;
 
   const ValoresCRMItem({
     this.idCanalWsp = 0,
@@ -297,6 +303,7 @@ class ValoresCRMItem {
     this.idEstadoEnDesarrollo = '',
     this.idEstadoConPropuesta = '',
     this.idTipDocOtr = '',
+    this.idTipDocSnr = '',
   });
 }
 

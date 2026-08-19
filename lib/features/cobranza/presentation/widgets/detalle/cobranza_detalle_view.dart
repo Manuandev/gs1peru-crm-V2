@@ -125,6 +125,7 @@ class _BottomActionButton extends StatelessWidget {
             oportunidad: detalle.oportunidad,
             montoTotal: detalle.montoTotal,
             moneda: detalle.moneda,
+            monedaId: detalle.monedaId,
             idCondicion: detalle.idCondicion,
             condicion: detalle.condicion,
             tipoComprobante: detalle.tipoComprobante,

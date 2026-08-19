@@ -180,6 +180,7 @@ class AppRouter {
           oportunidad: args['oportunidad'] as String,
           montoTotal: args['montoTotal'] as double,
           moneda: args['moneda'] as String,
+          monedaId: args['monedaId'] as String,
           idCondicion: args['idCondicion'] as String,
           condicion: args['condicion'] as String,
           tipoComprobante: args['tipoComprobante'] as String,
@@ -197,6 +198,7 @@ class AppRouter {
           oportunidad: args['oportunidad'] as String,
           montoTotal: args['montoTotal'] as double,
           moneda: args['moneda'] as String,
+          monedaId: args['monedaId'] as String,
           detraccion: args['detraccion'] as double,
           importeCredito: args['importeCredito'] as double,
           cuotasIniciales:

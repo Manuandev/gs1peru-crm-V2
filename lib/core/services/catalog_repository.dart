@@ -4,4 +4,5 @@ import 'package:app_crm/core/index_core.dart';
 
 abstract class CatalogsRepository {
   Future<ListasGenericas> getListas();
+  Future<TipoCambioItem> getTipoCambio();
 }

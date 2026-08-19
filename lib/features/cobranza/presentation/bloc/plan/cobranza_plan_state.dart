@@ -15,6 +15,7 @@ class CobranzaPlanState {
   final String oportunidad;
   final double montoTotal;
   final String moneda;
+  final String monedaId;
   final double detraccion;
 
   double get importeCredito => montoTotal - detraccion;
@@ -60,6 +61,7 @@ class CobranzaPlanState {
     required this.oportunidad,
     required this.montoTotal,
     required this.moneda,
+    this.monedaId = '',
     required this.detraccion,
     required this.cuotas,
     required this.numCuotasDeseadas,
@@ -85,6 +87,7 @@ class CobranzaPlanState {
       oportunidad: oportunidad,
       montoTotal: montoTotal,
       moneda: moneda,
+      monedaId: monedaId,
       detraccion: detraccion,
       cuotas: cuotas ?? this.cuotas,
       numCuotasDeseadas: numCuotasDeseadas ?? this.numCuotasDeseadas,

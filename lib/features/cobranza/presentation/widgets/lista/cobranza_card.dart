@@ -204,7 +204,7 @@ class _CobranzaDatos extends StatelessWidget {
         _DatoItem(
           label: 'Monto total',
           valor:
-              '${resolverSimboloMoneda(context, cobranza.moneda)}${NumberFormatUtils.formatMonto(cobranza.montoTotal)}',
+              '${resolverSimboloMoneda(context, cobranza.monedaId)}${NumberFormatUtils.formatMonto(cobranza.montoTotal)}',
           valorColor: AppColors.primary,
           valorBold: true,
         ),

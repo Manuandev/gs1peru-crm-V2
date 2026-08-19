@@ -84,7 +84,7 @@ class CobranzaFacturaHeader extends StatelessWidget {
                 ),
               ),
               Text(
-                '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
+                '${resolverSimboloMoneda(context, state.monedaId)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
                 style: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: AppTextStyles.weightSemiBold,

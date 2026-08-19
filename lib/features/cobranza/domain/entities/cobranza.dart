@@ -39,9 +39,16 @@ class Cobranza {
 
   final String asignadoA;
 
-  // Id/descripción corta de moneda (SYSTABEXTER02.descorta) — resolver a
-  // símbolo con resolverSimboloMoneda antes de mostrarlo (ver cobranza/CLAUDE.md)
+  // Descripción corta de moneda (SYSTABEXTER02.descorta, ej. "S/"/"$.") —
+  // resolver a símbolo con resolverSimboloMoneda antes de mostrarlo (ver
+  // cobranza/CLAUDE.md). NUNCA usar este campo para decidir si es
+  // dólares/soles — usar monedaId (abajo), el id real del catálogo.
   final String moneda;
+  // Id real de moneda (SYSTABEXTER02.codargu) — agregado 2026-08-19, campo
+  // nuevo al final del SP. Usar SIEMPRE este campo (nunca moneda/descorta)
+  // para comparar contra MonedaItem.id o decidir si la moneda es USD (ver
+  // esMonedaDolares, resolver_moneda.dart).
+  final String monedaId;
 
   // Solo disponibles en el detalle (el SP de lista aún no los trae)
   final String? fechaVencimiento;
@@ -72,6 +79,7 @@ class Cobranza {
     this.ibValidado = true,
     required this.asignadoA,
     this.moneda = '',
+    this.monedaId = '',
     this.fechaVencimiento,
     this.diasVencimiento,
   });
@@ -98,6 +106,7 @@ class Cobranza {
     bool? ibValidado,
     String? asignadoA,
     String? moneda,
+    String? monedaId,
     String? fechaVencimiento,
     int? diasVencimiento,
   }) {
@@ -124,6 +133,7 @@ class Cobranza {
       ibValidado: ibValidado ?? this.ibValidado,
       asignadoA: asignadoA ?? this.asignadoA,
       moneda: moneda ?? this.moneda,
+      monedaId: monedaId ?? this.monedaId,
       fechaVencimiento: fechaVencimiento ?? this.fechaVencimiento,
       diasVencimiento: diasVencimiento ?? this.diasVencimiento,
     );

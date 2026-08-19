@@ -9,4 +9,7 @@ class CatalogsRepositoryImpl implements CatalogsRepository {
 
   @override
   Future<ListasGenericas> getListas() => _remote.getListas();
+
+  @override
+  Future<TipoCambioItem> getTipoCambio() => _remote.getTipoCambio();
 }

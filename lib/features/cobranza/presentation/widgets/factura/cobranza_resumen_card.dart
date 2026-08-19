@@ -125,17 +125,17 @@ class _ResumenCredito extends StatelessWidget {
         _FilaResumen(
           label: 'Importe comprobante',
           valor:
-              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
+              '${resolverSimboloMoneda(context, state.monedaId)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
         ),
         _FilaResumen(
           label: 'Detracción 12%',
           valor:
-              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.detraccion)}',
+              '${resolverSimboloMoneda(context, state.monedaId)}${NumberFormatUtils.formatMonto(state.detraccion)}',
         ),
         _FilaResumen(
           label: 'Importe a crédito',
           valor:
-              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.importeCredito)}',
+              '${resolverSimboloMoneda(context, state.monedaId)}${NumberFormatUtils.formatMonto(state.importeCredito)}',
           destacado: true,
         ),
         _FilaResumen(label: 'N° cuotas', valor: '${state.numCuotas}'),
@@ -167,17 +167,17 @@ class _ResumenContado extends StatelessWidget {
         _FilaResumen(
           label: 'Total curso',
           valor:
-              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
+              '${resolverSimboloMoneda(context, state.monedaId)}${NumberFormatUtils.formatMonto(state.montoTotal)}',
         ),
         _FilaResumen(
           label: 'Pago a cuenta',
           valor:
-              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.pagoACuenta)}',
+              '${resolverSimboloMoneda(context, state.monedaId)}${NumberFormatUtils.formatMonto(state.pagoACuenta)}',
         ),
         _FilaResumen(
           label: 'Saldo',
           valor:
-              '${resolverSimboloMoneda(context, state.moneda)}${NumberFormatUtils.formatMonto(state.saldo)}',
+              '${resolverSimboloMoneda(context, state.monedaId)}${NumberFormatUtils.formatMonto(state.saldo)}',
           destacado: true,
         ),
       ],

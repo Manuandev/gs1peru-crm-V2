@@ -87,7 +87,7 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xxs),
               Text(
-                '${resolverSimboloMoneda(context, detalle.moneda)}${NumberFormatUtils.formatMonto(detalle.montoTotal)}',
+                '${resolverSimboloMoneda(context, detalle.monedaId)}${NumberFormatUtils.formatMonto(detalle.montoTotal)}',
                 style: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: AppTextStyles.weightBold,

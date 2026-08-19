@@ -22,7 +22,11 @@ class CobranzaDetalle {
   final String condicion;
   final String fechaSolicitud;
   final String tipoComprobante;
+  // Descripción corta de moneda (SYSTABEXTER02.descorta) — NUNCA usar para
+  // decidir dólares/soles, solo para mostrar el símbolo. Usar monedaId.
   final String moneda;
+  // Id real de moneda (SYSTABEXTER02.codargu) — agregado 2026-08-19.
+  final String monedaId;
   final String correo;
   final String celular;
   final int idChatCab;
@@ -57,6 +61,7 @@ class CobranzaDetalle {
     required this.fechaSolicitud,
     required this.tipoComprobante,
     this.moneda = '',
+    this.monedaId = '',
     this.correo = '',
     this.celular = '',
     this.idChatCab = 0,
@@ -86,6 +91,7 @@ class CobranzaDetalle {
       fechaSolicitud: fechaSolicitud,
       tipoComprobante: tipoComprobante,
       moneda: moneda,
+      monedaId: monedaId,
       correo: correo,
       celular: celular,
       idChatCab: idChatCab,

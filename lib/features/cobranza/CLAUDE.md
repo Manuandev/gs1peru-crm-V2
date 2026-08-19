@@ -1,5 +1,43 @@
 # Cobranza Feature
 
+## Bug real — comparación de moneda usaba el símbolo en vez del id + campo `monedaId` nuevo en el SP (2026-08-19)
+Reportado por el usuario probando en vivo: facturando una cobranza real en dólares (Factura,
+monto > S/700), la detracción salía **0,00** en el Plan de crédito — la regla de arriba nunca se
+activaba para dólares. El usuario mandó una captura real de `SYSTABEXTER02 CODTABLA='MON'`:
+`codargu` **'01'/'02'**, `descorta` **'S/'/'$.'** — confirmando que `CSV_COBRANZAS_LST_APP` (tasks
+`'LS'`/`'DT'`) nunca mandaba el id real del catálogo para moneda, solo `MN.descorta` (el símbolo
+corto). Primer intento del fix comparó por símbolo (`m.simbolo == moneda`) — **corregido de
+inmediato por pedido explícito del usuario: "compara por ID siempre... jamás hagas por alguna
+descripción"** — la solución real es agregar el id de verdad al SP, no comparar por texto.
+
+- **`MN.codargu` agregado como campo nuevo** (`monedaId`) al final del `CONCAT` de ambos tasks —
+  `'LS'` campo `/*16*/` (después de `/*15*/ MN.descorta`) y `'DT'` campo `/*18*/` (después de
+  `/*17*/ CC.ID_CONVERSACION_CAB`) — mismo criterio "nunca correr los índices existentes" del
+  resto del feature. **Pendiente de desplegar** — igual que el task `'TC'` (ver más abajo), el
+  `.sql` real vive en `CRM.CSV_COBRANZAS_LST_APP.sql` (repo aparte) y el clasificador de
+  seguridad bloqueó la escritura directa ahí — bloque entregado al usuario por archivo aparte
+  para pegar y correr `ALTER PROCEDURE`.
+- **Flutter**: `Cobranza`/`CobranzaModel` ganaron `monedaId` (campo 22, después de `moneda` en
+  21); `CobranzaDetalle`/`CobranzaDetalleModel` ganaron `monedaId` (campo 18, después de
+  `idChatCab` en 17). `moneda` (descorta/símbolo) se queda igual, **solo para mostrar** — el
+  comentario en ambas entidades ahora advierte "NUNCA usar moneda para decidir dólares/soles,
+  usar monedaId".
+- **`resolverSimboloMoneda`/`esMonedaDolares` (`resolver_moneda.dart`) vuelven a comparar por
+  `m.id ==` (nunca por texto/símbolo/descripción)** — ahora reciben `monedaId`, no `moneda`. Todos
+  los call sites que antes pasaban `.moneda` (`cobranza_card.dart`, `cobranza_resumen_card.dart`
+  ×6, `cobranza_factura_header.dart`, `cobranza_plan_view.dart`, `cobranza_detalle_info_card.dart`)
+  pasan `.monedaId` ahora.
+- **`monedaId` threaded de punta a punta** igual que `tipoComprobante` (ver sección de abajo) —
+  `CobranzaDetalle.monedaId` → `goToFacturarCobranza(monedaId:)` → `CobranzaFacturaPage` →
+  `CobranzaFacturaBloc`/`CobranzaFacturaState.monedaId` → (en la validación de "Validar plan de
+  crédito") → `goToPlanCredito(monedaId:)` → `CobranzaPlanPage` → `CobranzaPlanBloc`/
+  `CobranzaPlanState.monedaId`. `esMonedaDolares` en `CobranzaFacturaPage` (tanto en `build()`
+  como en el listener de `continuarPlan`) usa `monedaId`, nunca `moneda`.
+- **Hasta que se despliegue el SP**, `monedaId` llega vacío (`''`) para TODAS las cobranzas
+  (campo nuevo, el SP viejo no lo trae) — `esMonedaDolares('')` retorna `false` siempre, así que
+  el comportamiento por ahora es "tratar todo como si no fuera dólares" (no bloquea, no convierte)
+  hasta que el usuario despliegue el `.sql` — ver "Qué falta desplegar" más abajo.
+
 ## Regla de negocio — la detracción solo aplica con Factura y monto ≥ S/700 (2026-08-19)
 Pedido de negocio: la detracción (12%) ya no se calcula siempre — ahora depende de 2 condiciones,
 ambas deben cumplirse:
@@ -27,23 +65,40 @@ ambas deben cumplirse:
   importeCredito == montoTotal). **`montoTotalEnSoles` solo se usa para este chequeo del
   umbral** — nunca para ningún importe/cuota real, esos siguen en la moneda original
   (`montoTotal`).
-- **Refresca el catálogo y bloquea si falta el tipo de cambio, solo al entrar a "Validar plan de
-  crédito"** — pedido explícito del usuario: antes de navegar a `CobranzaPlanPage`,
-  `CobranzaFacturaPage` dispara `CatalogsLoadRequested()` y espera (`stream.firstWhere`) a que
-  termine, para traer un tipo de cambio recién registrado HOY que el caché de sesión (cargado
-  una sola vez al iniciar sesión) todavía no tenía. Si la moneda es USD y el `tipoCambio.venta`
-  sigue en 0 después del refresh, se corta con `AppSnackBar.error` ("No hay tipo de cambio
-  registrado para hoy...") y **no navega** — el asesor puede reintentar presionando "Validar plan
-  de crédito" de nuevo en cualquier momento (cada intento repite el refresh), sin necesidad de
-  salir de la pantalla de Facturar. Con moneda PEN, este chequeo ni se evalúa (el tipo de cambio
-  nunca hace falta). **Ojo — este refresh trae el catálogo COMPLETO** (~21 partes: campañas,
-  oportunidades, estados, asesores, monedas, etc., todo en un solo SP/llamada) — no hay forma de
-  pedir solo el tipo de cambio por separado, es el mismo mecanismo ya usado en
-  `CobranzaAsesorPickerModal`/`SolicitudAsesorPickerModal` (ver sección de abajo).
-- **Si el refresh de catálogo falla** (`CatalogsError`, sin conexión) — no bloquea, deja navegar
-  con los datos ya cacheados (best-effort, mismo criterio que el resto de fallos de catálogo en
-  la app) — el bloqueo es específicamente por "no hay tipo de cambio", no por "no se pudo
-  refrescar".
+- **Task dedicado `'TC'`, no el catálogo completo — consulta el tipo de cambio del día al entrar
+  a "Validar plan de crédito", solo si la moneda es USD.** Seguimiento del mismo día: el primer
+  intento reusaba `CatalogsLoadRequested()` (recarga el catálogo COMPLETO, ~21 partes) — el
+  usuario pidió, siguiendo el mismo criterio que ya se usó para `solicitudes/` (task `'NEG'`, ver
+  su CLAUDE.md — un task angosto en vez de reusar uno grande), un task nuevo en el SP que traiga
+  **solo** venta/compra. Se agregó `'TC'` a `CRM.CSV_LISTAS_LST_APP.sql` (repo aparte, mismo
+  `SELECT` que ya usaba la parte [21], sin el resto del catálogo) — **pendiente de desplegar**,
+  el `.sql` real vive fuera de este repo y el clasificador de seguridad bloqueó la escritura
+  directa ahí (fuera del working directory) — el bloque se entregó al usuario por chat/archivo
+  aparte para que lo pegue y corra `ALTER PROCEDURE` él mismo.
+  - **Flutter**: `CatalogsRemoteDatasource.getTipoCambio()` (body `¯TC`, mismo endpoint
+    `urlListasLst` que el catálogo general) → `CatalogsRepository`/`CatalogsRepositoryImpl.
+    getTipoCambio()` → `TipoCambioItem`. `CobranzaFacturaPage` (listener de `continuarPlan`) lo
+    llama directo **solo si `esMonedaDolares(monedas, state.moneda)`** — con moneda PEN ni se
+    consulta, el tipo de cambio nunca hace falta. `monedas` (para saber si es USD) sigue
+    leyéndose del `CatalogsBloc` ya cacheado (ese catálogo casi nunca cambia, no hace falta
+    refrescarlo).
+  - Si sigue sin haber tipo de cambio (`venta <= 0`) después de la consulta, se corta con
+    `AppSnackBar.error` ("No hay tipo de cambio registrado para hoy...") y **no navega** — el
+    asesor puede reintentar presionando "Validar plan de crédito" de nuevo en cualquier momento
+    (cada intento repite la consulta), sin salir de la pantalla de Facturar.
+  - **`detraccion`/`importeCredito` que se le pasan a `CobranzaPlanPage` se recalculan con el
+    tipo de cambio recién consultado** (`detraccionFresca`/`importeCreditoFresco`, calculados
+    inline en el listener) — no `state.detraccion`/`state.importeCredito` (esos usan el valor
+    cacheado al armar la página, que puede haber quedado desactualizado si el tipo de cambio se
+    registró recién).
+  - **Si la consulta falla** (`AppException`, sin conexión) — no bloquea, cae al `tipoCambio` ya
+    cacheado en `CatalogsBloc` (best-effort, mismo criterio que el resto de fallos de catálogo en
+    la app) — el bloqueo es específicamente por "no hay tipo de cambio", no por "no se pudo
+    consultar".
+  - **Pendiente, fuera de alcance por falta de tiempo** — el usuario también pidió un task
+    dedicado para "Editar lead"/negociación (traer solo lo que esa pantalla usa, en vez del
+    catálogo completo al entrar) — no investigado ni tocado en esta sesión, queda para una
+    sesión aparte enfocada en `lead/`.
 - **No se tocó** `_onFacturarPressed`/`guardarPlanCredito` — la detracción sigue siendo un valor
   derivado (getter), nunca se manda como columna propia al backend; lo que sí cambia
   indirectamente es `importeCredito` (usado para calcular las cuotas del plan), que ahora puede

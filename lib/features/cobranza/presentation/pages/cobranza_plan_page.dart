@@ -12,6 +12,7 @@ class CobranzaPlanPage extends StatelessWidget {
   final String oportunidad;
   final double montoTotal;
   final String moneda;
+  final String monedaId;
   final double detraccion;
   final double importeCredito;
   final List<CuotaPlan> cuotasIniciales;
@@ -23,6 +24,7 @@ class CobranzaPlanPage extends StatelessWidget {
     required this.oportunidad,
     required this.montoTotal,
     required this.moneda,
+    required this.monedaId,
     required this.detraccion,
     required this.importeCredito,
     this.cuotasIniciales = const [],
@@ -37,6 +39,7 @@ class CobranzaPlanPage extends StatelessWidget {
         oportunidad: oportunidad,
         montoTotal: montoTotal,
         moneda: moneda,
+        monedaId: monedaId,
         detraccion: detraccion,
         importeCredito: importeCredito,
         cuotasIniciales: cuotasIniciales,

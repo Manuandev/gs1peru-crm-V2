@@ -37,7 +37,11 @@ class CobranzaFacturaState {
   final String nombre;
   final String oportunidad;
   final double montoTotal;
+  // Descripción corta de moneda (símbolo) — NUNCA usar para decidir
+  // dólares/soles, solo mostrar. Usar monedaId.
   final String moneda;
+  // Id real de moneda (MonedaItem.id) — usar SIEMPRE para esMonedaDolares.
+  final String monedaId;
   // Tipo de comprobante ya decidido en la Facturación de la Solicitud de
   // origen (Boleta/Factura, texto tal cual lo manda el backend) — este
   // formulario no lo vuelve a elegir, solo lo necesita para la regla de
@@ -88,6 +92,7 @@ class CobranzaFacturaState {
     required this.oportunidad,
     required this.montoTotal,
     this.moneda = '',
+    this.monedaId = '',
     required this.idCondicion,
     required this.condicion,
     this.tipoComprobante = '',

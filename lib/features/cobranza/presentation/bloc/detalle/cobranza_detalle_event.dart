@@ -10,8 +10,14 @@ class CobranzaDetalleStarted extends CobranzaDetalleEvent {
 }
 
 // Llega desde CobranzaUpdateNotifier tras facturar — parchea idEstado/estado
-// en memoria, sin volver a pedir el detalle al backend.
+// y condición de pago en memoria, sin volver a pedir el detalle al backend.
 class CobranzaDetalleItemActualizado extends CobranzaDetalleEvent {
   final int idEstado;
-  const CobranzaDetalleItemActualizado(this.idEstado);
+  final String idCondicion;
+  final String condicion;
+  const CobranzaDetalleItemActualizado(
+    this.idEstado,
+    this.idCondicion,
+    this.condicion,
+  );
 }

@@ -20,7 +20,13 @@ class CobranzaDetalleBloc
 
     _updateSub = CobranzaUpdateNotifier.instance.stream.listen((update) {
       if (!isClosed && update.numSol == _idCobranza) {
-        add(CobranzaDetalleItemActualizado(update.idEstado));
+        add(
+          CobranzaDetalleItemActualizado(
+            update.idEstado,
+            update.idCondicion,
+            update.condicion,
+          ),
+        );
       }
     });
   }
@@ -44,6 +50,8 @@ class CobranzaDetalleBloc
         current.detalle.copyWith(
           idEstado: event.idEstado,
           estado: label.isNotEmpty ? label : null,
+          idCondicion: event.idCondicion,
+          condicion: event.condicion,
         ),
       ),
     );

@@ -64,7 +64,12 @@ class CobranzaDetalle {
     required this.historial,
   });
 
-  CobranzaDetalle copyWith({int? idEstado, String? estado}) {
+  CobranzaDetalle copyWith({
+    int? idEstado,
+    String? estado,
+    String? idCondicion,
+    String? condicion,
+  }) {
     return CobranzaDetalle(
       idCobranza: idCobranza,
       nombre: nombre,
@@ -76,8 +81,8 @@ class CobranzaDetalle {
       montoTotal: montoTotal,
       idEstado: idEstado ?? this.idEstado,
       estado: estado ?? this.estado,
-      idCondicion: idCondicion,
-      condicion: condicion,
+      idCondicion: idCondicion ?? this.idCondicion,
+      condicion: condicion ?? this.condicion,
       fechaSolicitud: fechaSolicitud,
       tipoComprobante: tipoComprobante,
       moneda: moneda,

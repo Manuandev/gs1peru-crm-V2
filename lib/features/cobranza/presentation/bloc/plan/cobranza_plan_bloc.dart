@@ -83,36 +83,47 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     emit(state.copyWith(numCuotasDeseadas: event.valor));
   }
 
-  // Regenera todo el cronograma: numCuotasDeseadas cuotas, monto = importe
-  // comprobante / N cada una, días por defecto 7*i (i=1..N) — el único dato
-  // confirmado es que la cuota única por defecto es 7 días; ajustable a mano
-  // después vía "Modificar" en cada cuota.
+  // Regenera todo el cronograma: numCuotasDeseadas cuotas, monto = importe A
+  // CRÉDITO (montoTotal - detracción) / N cada una — NUNCA el importe
+  // comprobante completo, la detracción se retiene aparte y no se financia
+  // en cuotas (mismo criterio que ya usaba la cuota única por defecto en
+  // `_estadoInicial`, ver `importeCredito` más abajo). Días por defecto
+  // 7*i (i=1..N) — el único dato confirmado es que la cuota única por
+  // defecto es 7 días; ajustable a mano después vía "Modificar" en cada
+  // cuota.
+  //
+  // Bug real reportado por el usuario (2026-08-19) — antes esta división
+  // usaba `state.montoTotal` (Importe Comprobante) en vez de
+  // `state.importeCredito` (Importe a Crédito menos Detracción): con 1 sola
+  // cuota (el estado inicial, antes de tocar "Vista previa") el total
+  // mostraba 528 (importeCredito, correcto) pero al presionar "Vista previa"
+  // con cualquier N el total saltaba a 600 (montoTotal, incorrecto) — el
+  // cronograma nunca cerraba contra el mismo número dos veces seguidas.
   //
   // La ÚLTIMA cuota absorbe el centavo de redondeo (mismo criterio que
   // `_importeFijo()` del último participante en `solicitudes/`, ver
-  // cobranza/CLAUDE.md, 2026-08-05) — `montoTotal / n` rara vez cae en un
-  // número exacto de 2 decimales; si las N cuotas usaran esa división tal
+  // cobranza/CLAUDE.md, 2026-08-05) — `importeCredito / n` rara vez cae en
+  // un número exacto de 2 decimales; si las N cuotas usaran esa división tal
   // cual, la SUMA de las cuotas (cada una redondeada a 2 decimales al
   // mostrarse/guardarse, ver `toStringAsFixed(2)` en
   // `cobranza_plan_cronograma_card.dart`/`guardarPlanCredito`) quedaría por
-  // debajo o por encima de `montoTotal`. Las primeras `n-1` cuotas usan la
-  // división simple redondeada; la última recibe `montoTotal - suma de las
-  // anteriores`, para que el cronograma cierre exacto contra el total del
-  // comprobante.
+  // debajo o por encima de `importeCredito`. Las primeras `n-1` cuotas usan
+  // la división simple redondeada; la última recibe
+  // `importeCredito - suma de las anteriores`, para que el cronograma
+  // cierre exacto contra el importe a crédito, siempre, sin importar N.
   void _onVistaPrevia(
     VistaPreviaPressed event,
     Emitter<CobranzaPlanState> emit,
   ) {
     final n = state.numCuotasDeseadas;
-    final montoPorCuota = double.parse(
-      (state.montoTotal / n).toStringAsFixed(2),
-    );
+    final base = state.importeCredito;
+    final montoPorCuota = double.parse((base / n).toStringAsFixed(2));
 
     final cuotas = List<CuotaPlan>.generate(n, (i) {
       final esUltima = i == n - 1;
       final monto = esUltima
           ? double.parse(
-              (state.montoTotal - montoPorCuota * (n - 1)).toStringAsFixed(2),
+              (base - montoPorCuota * (n - 1)).toStringAsFixed(2),
             )
           : montoPorCuota;
       return CuotaPlan(
@@ -161,15 +172,28 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     emit(state.copyWith(formDias: event.dias, formFecha: _fechaMasDias(event.dias)));
   }
 
+  // Bug real reportado por el usuario (2026-08-19) — cambiar Días ya
+  // recalculaba Fecha (ver _onDiasChanged arriba), pero cambiar Fecha (date
+  // picker) no recalculaba Días de vuelta — quedaban desincronizados entre
+  // sí. Ahora ambos campos se mantienen sincronizados sin importar cuál se
+  // edite primero.
   void _onFechaChanged(
     FechaCuotaChanged event,
     Emitter<CobranzaPlanState> emit,
   ) {
-    emit(state.copyWith(formFecha: event.fecha));
+    emit(state.copyWith(
+      formFecha: event.fecha,
+      formDias: diasDesdeHoy(event.fecha),
+    ));
   }
 
   // Aplica Días/Fecha del formulario a la cuota seleccionada. Regla de
-  // negocio: una cuota no puede vencer antes que la cuota anterior.
+  // negocio: el cronograma tiene que quedar en orden cronológico estricto —
+  // una cuota no puede vencer antes que la anterior NI después que la
+  // siguiente. Antes solo se validaba contra la anterior — reportado por el
+  // usuario (2026-08-19): modificar la cuota 1 no comparaba contra la cuota
+  // 2 (no tiene "anterior", `anterior` da null), así que se podía dejar la
+  // cuota 1 con una fecha más tardía que la cuota 2 sin ningún aviso.
   void _onModificarCuota(
     ModificarCuotaPressed event,
     Emitter<CobranzaPlanState> emit,
@@ -187,15 +211,30 @@ class CobranzaPlanBloc extends Bloc<CobranzaPlanEvent, CobranzaPlanState> {
     final idx = lista.indexWhere((c) => c.numeroCuota == state.formNumeroCuota);
     if (idx < 0) return;
 
+    final fechaNueva = parseFechaCorta(state.formFecha);
+
     final anterior = lista.where((c) => c.numeroCuota == state.formNumeroCuota - 1).firstOrNull;
     if (anterior != null) {
-      final fechaNueva = parseFechaCorta(state.formFecha);
       final fechaAnterior = parseFechaCorta(anterior.fechaVencimiento);
       if (fechaNueva != null && fechaAnterior != null && fechaNueva.isBefore(fechaAnterior)) {
         emit(state.copyWith(
           status: CobranzaPlanStatus.error,
           mensajeError:
               'La cuota ${state.formNumeroCuota} no puede vencer antes que la cuota ${anterior.numeroCuota}.',
+        ));
+        emit(state.copyWith(status: CobranzaPlanStatus.idle));
+        return;
+      }
+    }
+
+    final siguiente = lista.where((c) => c.numeroCuota == state.formNumeroCuota + 1).firstOrNull;
+    if (siguiente != null) {
+      final fechaSiguiente = parseFechaCorta(siguiente.fechaVencimiento);
+      if (fechaNueva != null && fechaSiguiente != null && fechaNueva.isAfter(fechaSiguiente)) {
+        emit(state.copyWith(
+          status: CobranzaPlanStatus.error,
+          mensajeError:
+              'La cuota ${state.formNumeroCuota} no puede vencer después que la cuota ${siguiente.numeroCuota}.',
         ));
         emit(state.copyWith(status: CobranzaPlanStatus.idle));
         return;

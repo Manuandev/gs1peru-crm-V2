@@ -31,7 +31,14 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
 
     _updateSub = CobranzaUpdateNotifier.instance.stream.listen((update) {
       if (!isClosed) {
-        add(CobranzaListItemActualizado(update.numSol, update.idEstado));
+        add(
+          CobranzaListItemActualizado(
+            update.numSol,
+            update.idEstado,
+            update.idCondicion,
+            update.condicion,
+          ),
+        );
       }
     });
   }
@@ -53,6 +60,8 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
               ? c.copyWith(
                   idEstado: event.idEstado,
                   estado: label.isNotEmpty ? label : null,
+                  idCondicion: event.idCondicion,
+                  condicion: event.condicion,
                 )
               : c,
         )

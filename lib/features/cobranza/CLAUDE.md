@@ -1,5 +1,72 @@
 # Cobranza Feature
 
+## 3 bugs reales en el Plan de crédito — cronograma con base incorrecta, Fecha no sincronizaba Días, cuota 1 sin validar contra la 2 (2026-08-19)
+Reportado por el usuario con un caso real (screenshot): Importe Comprobante 600, Detracción
+(12%) 72, Importe a Crédito menos Detracción 528 — con la cuota única por defecto (antes de
+tocar "Vista previa") el cronograma mostraba correctamente Total: 528, pero preguntó por qué
+"si pongo 3 cuotas, ahí recién se pone bien" (dando a entender que el total cambiaba según N).
+Los 3 campos de arriba **sí son datos reales**, no hardcodeados —
+`CobranzaFacturaState.detraccion` = `montoTotal * 0.12`, `.importeCredito` = `montoTotal -
+detraccion` (confirmado ya desde el 2026-08-09, "Overlay de carga al facturar" documenta el fix
+de `detraccion` de 0 hardcodeado a real) — el problema no era esos 3 campos, era el cronograma.
+
+- **Bug 1 — `_onVistaPrevia` (`cobranza_plan_bloc.dart`) dividía el importe INCORRECTO entre las
+  N cuotas.** Usaba `state.montoTotal` (Importe Comprobante, 600) en vez de
+  `state.importeCredito` (Importe a Crédito menos Detracción, 528) — la detracción se retiene
+  aparte, nunca se financia en cuotas, así que el cronograma SIEMPRE debe sumar `importeCredito`,
+  sin importar N. La cuota única por defecto (`_estadoInicial`) ya usaba el valor correcto
+  (`importeCredito`, pasado directo como parámetro) — por eso al entrar a la pantalla (N=1
+  implícito, sin tocar "Vista previa") se veía bien, pero apenas se presionaba "Vista previa"
+  con cualquier N, el total saltaba a basarse en 600 en vez de 528. Corregido: `_onVistaPrevia`
+  ahora divide `state.importeCredito` entre N (misma reconciliación de la última cuota
+  absorbiendo el centavo de redondeo, sin cambios en ese mecanismo — ver "La última cuota del
+  plan de crédito absorbe el centavo..." más abajo, solo cambió la base).
+- **Bug 2 — cambiar "Fecha vencimiento" no recalculaba "Días" de vuelta.** `_onDiasChanged` (Días
+  → Fecha) ya funcionaba bien (`formFecha = hoy + días`); `_onFechaChanged` (Fecha → Días) solo
+  actualizaba `formFecha`, dejando `formDias` desincronizado con la fecha realmente elegida en el
+  date picker. Corregido: `_onFechaChanged` ahora también recalcula `formDias` con
+  `diasDesdeHoy(event.fecha)` (mismo helper que ya usa `_onCuotaSeleccionada`) — ambos campos se
+  mantienen sincronizados sin importar cuál edite el asesor primero.
+- **Bug 3 — la cuota 1 podía vencer después que la cuota 2, sin ningún aviso.** `_onModificarCuota`
+  solo validaba contra la cuota ANTERIOR (`numeroCuota - 1`) — para la cuota 1, esa búsqueda
+  siempre da `null` (no existe cuota `0`), así que nunca se validaba nada al modificarla,
+  permitiendo dejarla con una fecha posterior a la cuota 2 (cronograma fuera de orden). Corregido
+  agregando el chequeo simétrico contra la cuota SIGUIENTE (`numeroCuota + 1`) — si la fecha
+  nueva cae después que la cuota siguiente, se rechaza con el mismo tipo de mensaje que ya existía
+  para "antes que la anterior". Ahora el cronograma queda garantizado en orden cronológico
+  estricto sin importar qué cuota se edite.
+
+## Bug real — la condición de pago quedaba vacía en lista/detalle tras facturar (2026-08-19)
+Reportado por el usuario con un caso real: factura al contado, retrocede hasta la lista, y la
+cobranza recién facturada aparece sin condición de pago (ni "Contado" ni "Crédito") — mismo
+problema para crédito. Causa: `CobranzaUpdateNotifier`/`_onItemActualizado` (ver "Facturar ya no
+limpia el stack..." más abajo, el mecanismo de parcheo en memoria sin recargar del backend) solo
+parcheaba `idEstado`/`estado` — nunca `idCondicion`/`condicion`. Antes de facturar, esos 2 campos
+están vacíos de verdad en la base (`CONDICION_PAGO` recién se fija al facturar, ver `'UE'` más
+abajo), así que la cobranza cargada la primera vez ya tenía `idCondicion: ''` — al facturar, el
+backend sí la guarda, pero como nada la parcheaba en memoria, la lista/detalle se quedaban con el
+`''` viejo hasta la próxima recarga real. Esto no era solo cosmético — `CobranzaListBloc` filtra
+los chips Contado/Crédito comparando `c.idCondicion == 'C'`/`'CR'` (ver "Notas importantes" más
+abajo), así que una cobranza recién facturada tampoco aparecía en ninguno de los 2 chips hasta
+recargar.
+
+- **`CobranzaUpdate`/`CobranzaUpdateNotifier.notify()`** (`core/utils/cobranza_update_notifier.dart`)
+  ganaron `idCondicion`/`condicion` (`String`, requeridos) — `CobranzaFacturaBloc._onFacturarPressed`
+  ahora los manda (`state.idCondicion`/`state.condicion`, la convención interna 'C'/'CR' + label,
+  ya resuelta en el formulario) junto con `idEstado: 2` en el único `notify()` que existe (el de
+  `CrudOk()` tras `_cambiarEstadoFacturar`).
+- **`CobranzaListItemActualizado`/`CobranzaDetalleItemActualizado`** (eventos de lista/detalle)
+  ganaron los mismos 2 campos, threaded desde el listener del stream hasta `_onItemActualizado`
+  de cada bloc — ambos ahora pasan `idCondicion`/`condicion` al `copyWith(...)` de
+  `Cobranza`/`CobranzaDetalle` junto con `idEstado`/`estado`, mismo patrón exacto ya usado para el
+  estado. `CobranzaDetalle.copyWith()` no tenía parámetros para esto — solo aceptaba `idEstado`/
+  `estado` — se amplió recién en este fix.
+- **Aplica igual a contado y crédito** — el `notify()` vive después de que ambos caminos
+  convergen en `_cambiarEstadoFacturar` (crédito primero guarda el plan vía `'RC'`, ver
+  "Flujo real" más abajo, y solo si sale bien continúa con `'UE'`) — no hizo falta ningún cambio
+  en `CobranzaPlanPage`/`CobranzaPlanBloc` (la vista especial del plan de crédito), ese flujo ya
+  terminaba en el mismo punto de guardado que contado.
+
 ## Monto de la lista con símbolo de moneda real, no `'S/'` hardcodeado (2026-08-14)
 Pedido explícito del usuario ("¿esto está hardcodeado?" al ver `S/ 1200.00` en `CobranzaCard`).
 Confirmado: `_CobranzaDatos` (`widgets/lista/cobranza_card.dart`) tenía el símbolo `'S/ '` como

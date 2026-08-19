@@ -3,10 +3,24 @@
 import 'dart:async';
 
 /// Payload que viaja por el notifier cada vez que se factura una cobranza.
+/// [idCondicion]/[condicion] — condición de pago recién fijada al facturar
+/// ('C'/'CR', convención interna de la app, mismo valor que
+/// `CobranzaFacturaState.idCondicion`/`.condicion`) — antes de facturar esta
+/// cobranza no tenía condición asignada, así que sin parcheártela acá
+/// también, la lista/detalle se quedaban mostrándola vacía (y el chip
+/// Contado/Crédito de la lista no la contaba en ningún filtro) hasta la
+/// próxima recarga real desde el backend.
 class CobranzaUpdate {
   final String numSol;
   final int idEstado;
-  const CobranzaUpdate(this.numSol, {required this.idEstado});
+  final String idCondicion;
+  final String condicion;
+  const CobranzaUpdate(
+    this.numSol, {
+    required this.idEstado,
+    required this.idCondicion,
+    required this.condicion,
+  });
 }
 
 /// Label corto por `ID_ESTADO_GES` — mismo texto que ya usan las tarjetas de
@@ -38,9 +52,21 @@ class CobranzaUpdateNotifier {
   final _controller = StreamController<CobranzaUpdate>.broadcast();
   Stream<CobranzaUpdate> get stream => _controller.stream;
 
-  void notify(String numSol, {required int idEstado}) {
+  void notify(
+    String numSol, {
+    required int idEstado,
+    required String idCondicion,
+    required String condicion,
+  }) {
     if (!_controller.isClosed) {
-      _controller.add(CobranzaUpdate(numSol, idEstado: idEstado));
+      _controller.add(
+        CobranzaUpdate(
+          numSol,
+          idEstado: idEstado,
+          idCondicion: idCondicion,
+          condicion: condicion,
+        ),
+      );
     }
   }
 }

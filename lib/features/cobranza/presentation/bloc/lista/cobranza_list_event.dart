@@ -45,13 +45,21 @@ class CobranzaEstadoToggled extends CobranzaListEvent {
   List<Object?> get props => [idEstado];
 }
 
-// Llega desde CobranzaUpdateNotifier tras facturar — parchea el idEstado
-// de esa cobranza en memoria sin recargar toda la lista del backend.
+// Llega desde CobranzaUpdateNotifier tras facturar — parchea idEstado y
+// condición de pago de esa cobranza en memoria sin recargar toda la lista
+// del backend.
 class CobranzaListItemActualizado extends CobranzaListEvent {
   final String numSol;
   final int idEstado;
-  const CobranzaListItemActualizado(this.numSol, this.idEstado);
+  final String idCondicion;
+  final String condicion;
+  const CobranzaListItemActualizado(
+    this.numSol,
+    this.idEstado,
+    this.idCondicion,
+    this.condicion,
+  );
 
   @override
-  List<Object?> get props => [numSol, idEstado];
+  List<Object?> get props => [numSol, idEstado, idCondicion, condicion];
 }

@@ -1,5 +1,67 @@
 # Solicitudes Feature
 
+## N° documento del solicitante opcional + Facturación ya no permite "Sin documento" (2026-08-19)
+Dos pedidos de negocio en la misma sesión, ambos en Tipo/N° documento pero en pasos distintos:
+
+- **Paso 1 (Datos del solicitante) — N° documento pasó a opcional, pero solo cuando el Tipo
+  documento elegido es "Sin documento".** Con cualquier otro tipo (DNI/RUC/CE/Pasaporte) sigue
+  siendo obligatorio, igual que antes — no es un cambio incondicional (primer intento de esta
+  sesión, corregido tras aclaración del usuario: "solamente es opcional cuando yo escoja sin
+  número de documento"). El resto de campos (Tipo documento, Nacionalidad, Sexo, Nombres,
+  Apellido paterno, Cargo, Celular, Correo) sigue obligatorio sin cambios.
+  `SeccionDatosSolicitante` (`solicitud_completar_datos_solicitante.dart`) calcula
+  `esSinDocumento = _tipoDocId == valoresDefecto.idTipoDocSnd` (`ValoresCRMItem`, nunca
+  hardcodeado) — con eso en `true`, el label pierde el `*` y el `validator` pasa a `null`; con
+  cualquier otro tipo, label y `validator` de `Requerido` siguen como siempre.
+  `validarSolicitudParaGenerar()` (`solicitud_guardar_helper.dart`, gate de "Generar solicitud")
+  aplica la misma regla: exige `numDoc` no vacío salvo que `solicitante.tipoDocId ==
+  idTipoDocSnd`.
+  **Bug real encontrado en vivo por el usuario al probar esto** — con "Sin documento"
+  seleccionado, el campo seguía mostrando `*` y "Requerido" en rojo (screenshot real). Causa:
+  el `onChanged` del combo hace `setState(() { _tipoDocId = item?.id; widget.ctrlNumDoc.clear();
+  })` — el `.clear()` dispara la validación del campo Número documento **antes** de que el
+  widget se reconstruya con el `validator` nuevo (el `esSinDocumento` de ese render todavía
+  refleja el tipo ANTERIOR), dejando el mensaje "Requerido" pegado en pantalla aunque la regla
+  ya no aplicara. Corregido dándole al `CustomTextField` un `key: ValueKey('num_doc_solicitante_
+  $esSinDocumento')` — al cambiar esa condición, Flutter descarta el `FormFieldState` viejo (con
+  su error fantasma) y arma uno limpio con el validator ya correcto, sin mensaje pegado.
+  **No hay riesgo de NULL en la base** cuando sí queda vacío —
+  `DatosSolicitante.numDoc` es un `String` no-nullable en Dart, así que manda `''` (cadena
+  vacía) como `field5`/`@NUM_DOC_SOL` al SP
+  (`CSV_SOLICITUD_CUD_APP.sql`, `D:\Proyectos\NatCodee\NC.SQLChangeLock\DBEAN\StoredProcedures\`)
+  — nunca `NULL` real. Revisado el `.sql`: `@NUM_DOC_SOL` solo se asigna directo a la columna
+  `NRO_DOCUMENTO` (`INSERT`/`UPDATE`, líneas 238/345), sin ningún `IF EXISTS`/validación de
+  unicidad que dependa de que tenga un valor (a diferencia del RUC de facturación, que sí valida
+  contra `dbo.CTAMEXTER01` — ver "Bug real — 'RUC ya existe'..." más abajo, caso no relacionado).
+  Una cadena vacía en una columna `VARCHAR` es un valor válido sea la columna `NULL` o
+  `NOT NULL` — no hizo falta ningún cambio en el SP ni ningún `ALTER TABLE`.
+- **Paso 3 (Facturación) — el combo Tipo documento ya no ofrece "Sin documento" como opción.**
+  Facturación siempre debe tener un documento real (RUC u otro tipo) — nunca "sin documento",
+  a diferencia del solicitante/participante donde esa opción sí es válida. `tiposDocumentoNacional`
+  (`solicitud_facturacion_view.dart`, calculado en `build()`) ahora excluye el id de
+  `CatalogsBloc.valoresDefecto.idTipoDocSnd` (`ValoresCRMItem`, nunca hardcodeado) además del
+  filtro `esNacional` que ya tenía — solo afecta esta lista (la que alimenta el combo cuando el
+  país es Perú y el comprobante no es Factura); `tiposDocumentoExtranjero` y el resto del wizard
+  (paso 1, Nuevo participante) no se tocaron, siguen permitiendo "Sin documento" donde ya lo
+  permitían. El `validator` de N° documento de Facturación (`numDoc.trim().isNotEmpty`, en
+  `validarSolicitudParaGenerar()`) ya exigía un documento no vacío desde antes — sin cambios ahí,
+  esa regla ya cubría "siempre debe tener documento", este fix solo saca la opción del combo
+  para que el asesor no pueda elegirla en primer lugar.
+
+## "Precio por cantidad" — la alerta del paso 2 al avanzar a Facturación (respuesta, no cambio)
+El usuario preguntó por qué le sale una alerta de precio/cantidad al presionar "Siguiente" en
+Participantes — no es un bug, es `avisoPrecioTotalNoCalza()` (`solicitud_guardar_helper.dart`),
+movida a este punto exacto el 2026-08-14 (pedido explícito de esa sesión: "Generar
+solicitud"/"Actualizar solicitud" debe limitarse a guardar/subir archivos, sin validar nada — el
+momento correcto para este aviso es al avanzar de Participantes a Facturación, ver el comentario
+en `solicitud_participantes_view.dart._onContinuar()`). Es **no bloqueante** (`AppSnackBar.
+warning`, dentro de un cálculo `precioBaseLead × cantidadEsperada − descuentoLead` vs
+`precioTotalLead` de la negociación de origen, tolerancia `0.01`) — solo avisa que los montos de
+la negociación quedaron inconsistentes entre sí (ej. el precio total se editó a mano después de
+fijar precio base/cantidad/descuento), no impide seguir. Solo aparece si la solicitud viene de
+una negociación con precio ya definido (`formState.precioTotalLead > 0`) — una solicitud sin
+negociación de origen nunca la dispara.
+
 ## El último participante ya no absorbe el centavo en el Importe — solo en el IGV (2026-08-15)
 Seguimiento directo del punto de abajo ("Bug real — el guardado real (`guardarSolicitud`) tenía
 el mismo bug de doble redondeo que ya se había corregido en pantalla"). El usuario mostró un caso

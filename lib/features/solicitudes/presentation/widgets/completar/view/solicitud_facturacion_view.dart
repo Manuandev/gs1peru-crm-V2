@@ -647,8 +647,12 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     final tiposDocumentoExtranjero = tiposDocumentoTodos
         .where((t) => !t.esNacional)
         .toList();
+    // "Sin documento" queda excluido acá — pedido de negocio 2026-08-19,
+    // Facturación siempre debe tener un documento real (RUC u otro), nunca
+    // "sin documento". No se toca en el resto del wizard (paso 1/participante
+    // sí lo permiten).
     final tiposDocumentoNacional = tiposDocumentoTodos
-        .where((t) => t.esNacional)
+        .where((t) => t.esNacional && t.id != _valoresDefecto.idTipoDocSnd)
         .toList();
 
     // Solo Factura/Boleta se muestran en este combo (aunque el catálogo

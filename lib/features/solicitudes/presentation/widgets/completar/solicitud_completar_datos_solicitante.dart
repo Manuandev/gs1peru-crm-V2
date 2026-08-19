@@ -120,6 +120,12 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
       _tipoDocId,
       valoresDefecto,
     );
+    // N° documento solo es opcional cuando el Tipo documento elegido es
+    // "Sin documento" (2026-08-19) — con cualquier otro tipo (DNI/RUC/CE/
+    // Pasaporte) sigue siendo obligatorio, como antes.
+    final esSinDocumento =
+        valoresDefecto.idTipoDocSnd.isNotEmpty &&
+        _tipoDocId == valoresDefecto.idTipoDocSnd;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +174,16 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: 'Número documento *',
+                // key con esSinDocumento — al cambiar Tipo documento, el
+                // campo se limpia (abajo) y eso dispara una validación con
+                // el validator TODAVÍA viejo (el widget no se ha
+                // reconstruido aún) — el "Requerido" se quedaba pegado en
+                // pantalla aunque ya no aplicara. Forzar un nuevo
+                // FormFieldState limpio evita el mensaje fantasma.
+                key: ValueKey('num_doc_solicitante_$esSinDocumento'),
+                label: esSinDocumento
+                    ? 'Número documento'
+                    : 'Número documento *',
                 controller: widget.ctrlNumDoc,
                 focusNode: _numDocFocus,
                 keyboardType: teclado,
@@ -177,9 +192,11 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 enabled: widget.habilitado,
                 maxLength: maxLenDoc,
                 inputFormatters: inputFormatters,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Requerido'
-                    : null,
+                validator: esSinDocumento
+                    ? null
+                    : (v) => v == null || v.trim().isEmpty
+                          ? 'Requerido'
+                          : null,
               ),
             ),
           ],

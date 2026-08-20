@@ -291,9 +291,6 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (state is! ChatDetailSuccess) return;
 
     final tempId = const Uuid().v4();
-    // Nombre con ms para matching único
-    final uniqueName =
-        '${event.fileName}_${DateTime.now().millisecondsSinceEpoch}';
 
     final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
@@ -307,7 +304,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       estadoEntrega: 'wait',
       rutaArchivo: '',
       tipoArchivo: event.fileExt,
-      nombreArchivo: uniqueName,
+      nombreArchivo: event.fileName,
     );
 
     emit(
@@ -319,7 +316,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (_currentChatCab != null) {
       final success = await _sendFileMessage(
         filePath: event.filePath,
-        fileName: '$uniqueName${event.fileExt}',
+        fileName: '${event.fileName}${event.fileExt}',
         tipo: event.tipo,
         idNumero: _currentChatCab.toString(),
         numero: event.numero,
@@ -343,18 +340,14 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
 
     // 1. Crear mensajes optimistas
     final tempIds = <String>[];
-    final uniqueNames = <String>[];
     final currentMessages = List<ChatMessage>.from(
       (state as ChatDetailSuccess).messages,
     );
 
     for (final file in event.files) {
       final tempId = const Uuid().v4();
-      final uniqueName =
-          '${file.nameWithoutExt}_${DateTime.now().millisecondsSinceEpoch + tempIds.length}';
 
       tempIds.add(tempId);
-      uniqueNames.add(uniqueName);
 
       currentMessages.add(
         ChatMessage(
@@ -368,7 +361,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           estadoEntrega: 'wait',
           rutaArchivo: '',
           tipoArchivo: file.ext,
-          nombreArchivo: uniqueName,
+          nombreArchivo: file.nameWithoutExt,
         ),
       );
     }
@@ -382,7 +375,7 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       final file = event.files[i];
       final success = await _sendFileMessage(
         filePath: file.path,
-        fileName: '${uniqueNames[i]}${file.ext}',
+        fileName: '${file.nameWithoutExt}${file.ext}',
         tipo: file.tipo,
         idNumero: _currentChatCab.toString(),
         numero: event.numero,
@@ -628,11 +621,15 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       caseSensitive: false,
     );
 
-    return messages.lastIndexWhere((m) {
+    // indexWhere (no lastIndexWhere) — sin sufijo único en nombreArchivo, dos
+    // pendientes con el mismo nombre deben resolver FIFO: la primera
+    // confirmación que llega matchea con el primero que se mandó, no el último.
+    return messages.indexWhere((m) {
       // Solo mensajes optimistas pendientes enviados por el asesor o IA
       if (m.estadoEntrega != 'wait') return false;
-      if (m.direccionMensaje != 'ASE' && m.direccionMensaje != 'AIA')
+      if (m.direccionMensaje != 'ASE' && m.direccionMensaje != 'AIA') {
         return false;
+      }
       // Solo los que aún tienen tempId (UUID) — no los ya confirmados
       if (!uuidRegex.hasMatch(m.idTokenMeta)) return false;
       // Mismo tipo — las plantillas se guardan localmente como 'text' o tipo de

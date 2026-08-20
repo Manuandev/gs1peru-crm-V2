@@ -26,6 +26,10 @@ class AttachmentPickerWidget extends StatefulWidget {
 class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
   static const _imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
   static const _videoExts = ['mp4', 'mov', 'avi', 'mkv', '3gp', 'webm'];
+  // Únicos tipos de "documento" que la API de WhatsApp acepta enviar — un
+  // archivo con otra extensión (ej. .xlsm, .zip) llega rechazado o mal
+  // etiquetado del otro lado, ver chat/CLAUDE.md.
+  static const _docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
   static const _maxBytes = 16 * 1024 * 1024; // 16 MB
 
   final List<StagedFile> _staged = [];
@@ -96,7 +100,8 @@ class _AttachmentPickerWidgetState extends State<AttachmentPickerWidget> {
   // ── Selección de archivos (multi) ───────────────────────────────────────
   Future<void> _pickDocument() async {
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
+      type: FileType.custom,
+      allowedExtensions: _docExts,
       allowMultiple: true,
     );
     if (result == null || result.files.isEmpty) return;

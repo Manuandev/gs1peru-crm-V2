@@ -19,6 +19,11 @@ import 'package:app_crm/features/chat/index_chat.dart';
 /// (`TemplateFormBloc.guardar`, no acá), así que no hace falta ningún estado
 /// de carga propio de este picker.
 class TemplateFormAdjuntosSection extends StatelessWidget {
+  // Únicos tipos de "documento" que la API de WhatsApp acepta enviar — mismo
+  // criterio que AttachmentPickerWidget (envío de archivos en el chat), ver
+  // chat/CLAUDE.md.
+  static const _docExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+
   final StagedFile? archivo;
   final bool grabando;
   // false cuando ya hay más de 3 botones agregados — con archivo adjunto el
@@ -107,7 +112,10 @@ class TemplateFormAdjuntosSection extends StatelessWidget {
         final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
         if (picked != null) _emitirArchivo(picked.path, 'image');
       case 'documento':
-        final result = await FilePicker.platform.pickFiles(type: FileType.any);
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: _docExts,
+        );
         final path = result?.files.single.path;
         if (path != null) _emitirArchivo(path, 'document');
       case 'audio':

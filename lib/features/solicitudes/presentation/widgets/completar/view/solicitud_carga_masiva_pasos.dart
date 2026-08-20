@@ -108,6 +108,7 @@ class ContenidoPaso1 extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.primary,
             side: const BorderSide(color: AppColors.primary),
+            minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
@@ -281,6 +282,11 @@ class ContenidoPaso3 extends StatelessWidget {
   }
 }
 
+// Mismo tamaño/estilo que el botón de "Descargar plantilla Excel" (paso 1) —
+// pedido explícito de negocio, el área de carga anterior (caja punteada
+// grande) quedaba demasiado grande frente a ese botón. Con archivo
+// seleccionado, el mismo botón muestra el nombre + un ícono de eliminar al
+// lado, en vez de un bloque aparte.
 class _AreaCarga extends StatelessWidget {
   final PlatformFile? archivo;
   final VoidCallback onSeleccionar;
@@ -295,134 +301,64 @@ class _AreaCarga extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tieneArchivo = archivo != null;
+    final color = tieneArchivo ? AppColors.success : AppColors.primary;
 
-    return CustomPaint(
-      painter: _DashedBorderPainter(
-        color: AppColors.primary,
-        borderRadius: AppSizing.radiusMd,
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.lg,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.primaryWithOpacity(0.04),
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              tieneArchivo ? AppIcons.fileExcel : AppIcons.upload,
-              size: AppSizing.iconXl,
-              color: tieneArchivo ? AppColors.success : AppColors.primary,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              tieneArchivo
-                  ? archivo!.name
-                  : 'Arrastra y suelta el archivo aquí',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.titleSmall.copyWith(
-                color: tieneArchivo ? AppColors.success : AppColors.primary,
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-            if (!tieneArchivo) ...[
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                'o selecciona el archivo desde tu dispositivo',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.md),
-            OutlinedButton.icon(
-              onPressed: tieneArchivo ? onQuitar : onSeleccionar,
-              icon: Icon(
-                tieneArchivo ? AppIcons.close : AppIcons.attach,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: tieneArchivo ? null : onSeleccionar,
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        child: Container(
+          width: double.infinity,
+          height: AppSizing.buttonHeight,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          decoration: BoxDecoration(
+            border: Border.all(color: color),
+            borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                tieneArchivo ? AppIcons.fileExcel : AppIcons.attach,
                 size: AppSizing.iconActionSm,
+                color: color,
               ),
-              label: Text(
-                tieneArchivo ? 'Quitar archivo' : 'Adjuntar archivo Excel',
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: tieneArchivo
-                    ? AppColors.error
-                    : AppColors.primary,
-                side: BorderSide(
-                  color: tieneArchivo ? AppColors.error : AppColors.primary,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                ),
-                textStyle: AppTextStyles.labelSmall.copyWith(
-                  fontWeight: AppTextStyles.weightSemiBold,
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  tieneArchivo
+                      ? archivo!.name
+                      : 'Selecciona el archivo Excel aquí',
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: color,
+                    fontWeight: AppTextStyles.weightSemiBold,
+                  ),
                 ),
               ),
-            ),
-          ],
+              if (tieneArchivo) ...[
+                const SizedBox(width: AppSpacing.xs),
+                InkWell(
+                  onTap: onQuitar,
+                  borderRadius: BorderRadius.circular(
+                    AppSizing.radiusCircular,
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(AppSpacing.xxs),
+                    child: Icon(
+                      AppIcons.delete,
+                      size: AppSizing.iconActionSm,
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
-}
-
-// ── Borde a trazos para el área de carga ─────────────────────────────────────
-
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double borderRadius;
-
-  const _DashedBorderPainter({required this.color, required this.borderRadius});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0.75, 0.75, size.width - 1.5, size.height - 1.5),
-      Radius.circular(borderRadius),
-    );
-
-    final path = Path()..addRRect(rrect);
-    canvas.drawPath(_buildDashPath(path, 6.0, 4.0), paint);
-  }
-
-  Path _buildDashPath(Path source, double dashLen, double gapLen) {
-    final result = Path();
-    for (final metric in source.computeMetrics()) {
-      double d = 0;
-      bool draw = true;
-      while (d < metric.length) {
-        final step = draw ? dashLen : gapLen;
-        final end = d + step;
-        if (draw) {
-          result.addPath(
-            metric.extractPath(d, end < metric.length ? end : metric.length),
-            Offset.zero,
-          );
-        }
-        d += step;
-        draw = !draw;
-      }
-    }
-    return result;
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter old) =>
-      old.color != color || old.borderRadius != borderRadius;
 }
 
 // ── Celda genérica de tabla ───────────────────────────────────────────────────

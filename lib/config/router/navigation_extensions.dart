@@ -89,10 +89,16 @@ extension NavigationExtensions on BuildContext {
     },
   );
 
+  // clearAndPush (no _push) — esta pantalla es terminal (sin botón atrás,
+  // onPop siempre manda a la lista), así que limpia el wizard completo (4
+  // pasos + cubits + la pantalla que lo lanzó) al LLEGAR acá. Antes quedaba
+  // apilada encima de todo eso sin cerrarlo, y recién se destruía de golpe
+  // al presionar "Volver a solicitudes"/"Enviar a cobranzas" — eso disparaba
+  // una excepción durante el dispose masivo que el debugger atrapaba.
   Future<void> goToSolicitudGenerada({
     required Solicitud solicitud,
     String comprobante = '',
-  }) => _push(
+  }) => clearAndPush(
     AppRoutes.solicitudGenerada,
     arguments: {'solicitud': solicitud, 'comprobante': comprobante},
   );

@@ -119,6 +119,7 @@ class BotonesFooter extends StatelessWidget {
               text: 'Enviar a cobranzas',
               icon: Icons.send,
               backgroundColor: AppColors.purple,
+              height: AppSizing.buttonHeight,
               onPressed: () async {
                 final confirmado = await context.showConfirmDialog(
                   title: 'Enviar a cobranzas',

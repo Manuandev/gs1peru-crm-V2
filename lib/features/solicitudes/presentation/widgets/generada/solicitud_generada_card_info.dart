@@ -104,6 +104,33 @@ class CardInfoSolicitud extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _FilaInfoCard(
+                          icono: AppIcons.receipt,
+                          label: 'N° de Solicitud',
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.xs,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(
+                                AppSizing.radiusCircular,
+                              ),
+                            ),
+                            child: Text(
+                              solicitud.idSolicitud.isEmpty
+                                  ? '—'
+                                  : solicitud.idSolicitud,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: AppTextStyles.weightBold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        _FilaInfoCard(
                           icono: AppIcons.listAlt,
                           label: 'Oportunidad / Curso',
                           child: Text(

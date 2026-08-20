@@ -645,9 +645,14 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
           return m.contenido == payload.mensaje;
 
         case 'template':
-          if (m.contenido != payload.mensaje) return false;
+          // trim/lowercase — un espacio de más en la plantilla o una
+          // extensión que vuelve con distinto casing rompía la comparación
+          // exacta: no matcheaba con el mensaje optimista y quedaba
+          // duplicado (uno con "wait" y otro "sent" para el mismo envío).
+          if (m.contenido.trim() != payload.mensaje.trim()) return false;
           if (payload.nomArchivo.isNotEmpty && m.tipoArchivo.isNotEmpty) {
-            return m.tipoArchivo == _extractExt(payload.nomArchivo);
+            return m.tipoArchivo.trim().toLowerCase() ==
+                _extractExt(payload.nomArchivo).trim().toLowerCase();
           }
           return true;
 

@@ -9,7 +9,7 @@
 class AppConstants {
   AppConstants._();
 
-  static const version = '1.0.11';
+  static const version = '1.0.12';
   static const nombreApp = 'GS1 CRM';
 
   // Separador para serialización de sesión en cadena

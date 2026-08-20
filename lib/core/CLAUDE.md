@@ -1172,9 +1172,27 @@ await client.postMultipart(url: ..., fields: ..., fileFieldName: ..., fileBytes:
 
 **Interceptores integrados (en orden de ejecución):**
 1. `TokenBodyInterceptor` — prepende `token¯` al body antes de enviar
-2. `CleanResponseInterceptor` — quita comillas extra que agrega ASP.NET
+2. `CleanResponseInterceptor` — deshace el JSON-string-literal que ASP.NET envuelve alrededor de la respuesta (comillas + escapes `\r`/`\n`/`\"`) — ver detalle abajo
 3. `ErrorInterceptor` — convierte DioException en AppException
 4. `LogInterceptor` — solo en debug mode
+
+**`CleanResponseInterceptor` (`network/interceptors/clean_response_interceptor.dart`) — bug real de raíz (2026-08-20).**
+El backend devuelve el resultado del SP como string C#, y el formatter JSON de ASP.NET lo envuelve
+entre comillas y escapa saltos de línea/comillas internas (`\r`→`\r` literal, `\n`→`\n` literal,
+`"`→`\"`) como cualquier JSON string — Dio nunca lo decodifica porque pedimos
+`ResponseType.plain`. La versión vieja de este interceptor solo hacía
+`replaceAll('"', '').trim()` — borraba comillas sueltas pero **no desescapaba nada**, así que
+cualquier salto de línea real dentro del contenido (ej. la descripción multilínea de una
+plantilla de WhatsApp) volvía como texto literal `"\n"`/`"\r"` visible en pantalla, y una comilla
+real dentro del texto se borraba en silencio en vez de solo desescaparse. Esto se manifestó primero
+como el bug de `\n` en `chat/` (parcheado a mano en `select_template_modal.dart._formatear()`, ver
+`chat/CLAUDE.md`) y después como el mismo problema con `\r` en la lista de plantillas — **la causa
+real nunca fue `chat/`, es este interceptor, y afecta a cualquier feature que reciba texto con
+saltos de línea o comillas del backend**. Corregido usando `jsonDecode(raw)` (el body ya es un JSON
+string literal válido) en vez de un replace manual — con fallback al comportamiento viejo solo si
+el body no es JSON-string válido (no debería pasar nunca, red de seguridad). Los parches locales en
+`chat/` (`_formatear()`) quedan como no-op inofensivo para datos ya corregidos, no hace falta
+quitarlos.
 
 ### ApiResult\<T\> — `network/api_result.dart`
 Resultado sealed de una llamada REST. Nunca usar `null` ni excepciones raw.

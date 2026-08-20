@@ -66,7 +66,17 @@ class PlantillaModel extends Plantilla {
                     .map((t) => t.trim())
                     .where((t) => t.isNotEmpty)
                     .map((t) {
-                      final campos = t.split(AppConstants.sepCampos);
+                      // Bug real (2026-08-20) — 'LP' usaba sepCampos ('¦')
+                      // también DENTRO de cada botón (id¦texto), pero ese
+                      // mismo separador ya divide los CAMPOS del registro
+                      // completo (c[9] viene de un split por sepCampos sobre
+                      // toda la fila) — el '¦' interno cortaba el campo de
+                      // botones en pedazos, dejando solo el id del primer
+                      // botón como si fuera el texto completo. sepComodin2
+                      // ('±') no choca con nada usado en 'LP' (sepCampos =
+                      // campos del registro, sepRegistro = separa cada
+                      // PLANTILLA, sepComodin = separa botones entre sí).
+                      final campos = t.split(AppConstants.sepComodin2);
                       return PlantillaBoton(
                         idBoton: campos.length > 1
                             ? (int.tryParse(campos[0]) ?? 0)

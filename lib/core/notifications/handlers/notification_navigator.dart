@@ -32,7 +32,7 @@ class NotificationNavigator {
       case 'abrir_conversacion':
         _goChat(notif);
       case 'ver_negociacion_bot':
-        _goLead(notif);
+        _goSeguimiento(notif);
         break;
       case 'abrir_conversacion_bot':
         _goChat(notif);
@@ -90,6 +90,29 @@ class NotificationNavigator {
     state.pushNamed(
       AppRoutes.detalleSeguimiento,
       arguments: {'idLead': idLead},
+    );
+  }
+
+  void _goSeguimiento(AppNotification notif) {
+    if (!SessionService().hasSession) return _go(AppRoutes.login);
+
+    // idContacto, no idNumero — AppRoutes.detalleContacto exige esa key
+    // (args['idContacto'] as int, cast estricto). NUEVO_LEAD_BOT solo trae
+    // idContacto real desde el campo [6] agregado 2026-08-20 — antes de eso
+    // no había forma de armar esta ruta sin reventar, ver
+    // notifications/CLAUDE.md.
+    final idContacto = int.tryParse(notif.payload?['idContacto'] ?? '') ?? 0;
+    final state = NavigationService.navigatorKey.currentState;
+    if (state == null) return;
+
+    if (idContacto == 0) {
+      state.pushNamedAndRemoveUntil(AppRoutes.seguimiento, (r) => false);
+      return;
+    }
+    state.pushNamedAndRemoveUntil(AppRoutes.seguimiento, (r) => false);
+    state.pushNamed(
+      AppRoutes.detalleContacto,
+      arguments: {'idContacto': idContacto},
     );
   }
 

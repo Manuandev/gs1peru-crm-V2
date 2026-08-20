@@ -349,6 +349,11 @@ class LocalNotificationService {
       payload: AppNotification(
         title: titulo,
         body: cuerpo,
+        // Tap en el cuerpo (sin botón de acción) → Conversaciones, mismo
+        // destino que el botón "Abrir conversación" — pedido de negocio.
+        // navigate() en NotificationNavigator resuelve esto a _goChat con el
+        // idChatCab de abajo.
+        route: AppRoutes.chats,
         payload: {
           'idLead': payload.idLead.toString(),
           'codAsesor': payload.codAsesor,
@@ -356,6 +361,7 @@ class LocalNotificationService {
           'numero': payload.numero,
           'idChatCab': payload.idChatCab.toString(),
           'idNumero': payload.idNumero.toString(),
+          'idContacto': payload.idContacto.toString(),
         },
       ).toPayloadString(),
     );

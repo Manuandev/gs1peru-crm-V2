@@ -137,6 +137,14 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     // perder el foco (no en cada tecla), para no pelear con el usuario
     // mientras borra el campo para tipear un valor nuevo.
     _cantidadFocus = FocusNode()..addListener(_onCantidadFocusChange);
+
+    // Refresco de fondo al entrar — pedido de negocio: Estados/Campañas/
+    // Oportunidades/Canales/Interés/Moneda pueden haber cambiado desde que
+    // se cargó el catálogo al inicio de sesión. Solo actualiza las LISTAS
+    // que alimentan los combos (ver BlocListener en build()) — nunca vuelve
+    // a tocar _campania/_oportunidad/etc. (lo ya seleccionado), así que no
+    // hay riesgo de pisar una elección en curso del usuario.
+    context.read<CatalogsBloc>().add(const CatalogsNegociacionRefreshed());
   }
 
   void _onCantidadChanged() {
@@ -568,7 +576,16 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
             ),
           );
 
-    return Stack(
+    // Reconstruye la pantalla cuando llega el refresh de CatalogsNegociacion
+    // Refreshed (ver initState) — solo repinta con las listas ya frescas
+    // (leídas de nuevo arriba, catalogState), sin llamar _inicializarCombos
+    // de nuevo, así que lo ya seleccionado por el usuario no se pierde.
+    return BlocListener<CatalogsBloc, CatalogsState>(
+      listenWhen: (previous, current) => current is CatalogsLoaded,
+      listener: (context, state) {
+        if (mounted) setState(() {});
+      },
+      child: Stack(
       children: [
         Column(
           children: [
@@ -661,6 +678,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                 : 'La negociación se editó correctamente',
           ),
       ],
+      ),
     );
   }
 }

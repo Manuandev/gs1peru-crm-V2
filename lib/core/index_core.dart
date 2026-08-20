@@ -19,6 +19,7 @@ export 'database/local_database.dart';
 
 export 'domain/enums/enums_core.dart';
 export 'domain/usecases/get_catalogs_usecase.dart';
+export 'domain/usecases/get_catalogos_editar_negociacion_usecase.dart';
 
 // #region configuracion
 export 'domain/entities/app_configuracion.dart';

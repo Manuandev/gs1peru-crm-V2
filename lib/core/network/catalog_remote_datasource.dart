@@ -45,4 +45,41 @@ class CatalogsRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  // Task 'EN' — SOLO estados/campañas/oportunidades/canales/intereses/monedas,
+  // sin traer el catálogo completo. Usado al entrar a "Editar negociación"
+  // (lead/EditLeadPortrait) para refrescar esos catálogos, ver lead/CLAUDE.md.
+  Future<
+    ({
+      List<EstadoItem> estados,
+      List<CampaniaItem> campanias,
+      List<OportunidadItem> oportunidades,
+      List<CanalItem> canales,
+      List<InteresItem> intereses,
+      List<MonedaItem> monedas,
+    })
+  >
+  getCatalogosEditarNegociacion() async {
+    final String body = '${sep}EN';
+
+    final result = await _api.postSafe(ApiConstants.urlListasLst, body);
+
+    const vacio = (
+      estados: <EstadoItem>[],
+      campanias: <CampaniaItem>[],
+      oportunidades: <OportunidadItem>[],
+      canales: <CanalItem>[],
+      intereses: <InteresItem>[],
+      monedas: <MonedaItem>[],
+    );
+
+    return switch (result) {
+      ApiSuccess(:final data) => data.trim().isEmpty
+          ? vacio
+          : ListasGenericasModel.parseEditarNegociacion(data),
+      ApiEmpty() => vacio,
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
 }

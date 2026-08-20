@@ -1,10 +1,11 @@
-// lib/core/services/catalog_repository.dart
+// lib/core/domain/usecases/get_catalogos_editar_negociacion_usecase.dart
 
 import 'package:app_crm/core/index_core.dart';
 
-abstract class CatalogsRepository {
-  Future<ListasGenericas> getListas();
-  Future<TipoCambioItem> getTipoCambio();
+class GetCatalogosEditarNegociacionUseCase {
+  final CatalogsRepository repository;
+  const GetCatalogosEditarNegociacionUseCase(this.repository);
+
   Future<
     ({
       List<EstadoItem> estados,
@@ -15,5 +16,5 @@ abstract class CatalogsRepository {
       List<MonedaItem> monedas,
     })
   >
-  getCatalogosEditarNegociacion();
+  call() => repository.getCatalogosEditarNegociacion();
 }

@@ -109,6 +109,9 @@ class AppWidget extends StatelessWidget {
           BlocProvider<CatalogsBloc>(
             create: (context) => CatalogsBloc(
               getData: GetCatalogsUseCase(context.read<CatalogsRepository>()),
+              getEditarNegociacion: GetCatalogosEditarNegociacionUseCase(
+                context.read<CatalogsRepository>(),
+              ),
             ),
           ),
           BlocProvider<ChatListBloc>(

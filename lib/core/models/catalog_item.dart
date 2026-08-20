@@ -71,6 +71,43 @@ class ListasGenericas {
     this.prefijosContacto = const [],
     this.tipoCambio = const TipoCambioItem(),
   });
+
+  // Usado por el refresh parcial de "Editar negociación" (task 'EN') — solo
+  // reemplaza las 6 listas que esa pantalla necesita, dejando el resto del
+  // catálogo (paises, tiposDocumento, ubigeo, etc.) intacto.
+  ListasGenericas copyWith({
+    List<CampaniaItem>? campanias,
+    List<OportunidadItem>? oportunidades,
+    List<CanalItem>? canales,
+    List<InteresItem>? intereses,
+    List<EstadoItem>? estados,
+    List<MonedaItem>? monedas,
+  }) {
+    return ListasGenericas(
+      campanias: campanias ?? this.campanias,
+      oportunidades: oportunidades ?? this.oportunidades,
+      canales: canales ?? this.canales,
+      intereses: intereses ?? this.intereses,
+      estados: estados ?? this.estados,
+      asesores: asesores,
+      estadosGestion: estadosGestion,
+      monedas: monedas ?? this.monedas,
+      igvPorcentaje: igvPorcentaje,
+      paises: paises,
+      tiposDocumento: tiposDocumento,
+      comprobantes: comprobantes,
+      nacionalidades: nacionalidades,
+      valoresDefecto: valoresDefecto,
+      sexos: sexos,
+      tiposParticipante: tiposParticipante,
+      ubigeo: ubigeo,
+      canalesExpo: canalesExpo,
+      areas: areas,
+      cargos: cargos,
+      prefijosContacto: prefijosContacto,
+      tipoCambio: tipoCambio,
+    );
+  }
 }
 
 class CampaniaItem with Comboable {

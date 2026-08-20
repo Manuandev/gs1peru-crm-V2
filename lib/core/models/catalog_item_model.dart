@@ -164,6 +164,49 @@ class ListasGenericasModel extends ListasGenericas {
       tipoCambio: tipoCambio,
     );
   }
+
+  // Parsea la respuesta del task 'EN' (CSV_LISTAS_LST_APP) — solo las 6
+  // listas que "Editar negociación" necesita, en este orden: estados,
+  // campanias, oportunidades, canales, intereses, monedas. Usado para
+  // refrescarlas al entrar a esa pantalla, sin traer el catálogo completo.
+  static ({
+    List<EstadoItem> estados,
+    List<CampaniaItem> campanias,
+    List<OportunidadItem> oportunidades,
+    List<CanalItem> canales,
+    List<InteresItem> intereses,
+    List<MonedaItem> monedas,
+  })
+  parseEditarNegociacion(String rawResponse) {
+    final partes = rawResponse.split(AppConstants.sepListas);
+    final estadosRaw = partes.isNotEmpty ? partes[0] : '';
+    final campaniasRaw = partes.length > 1 ? partes[1] : '';
+    final oportunidadesRaw = partes.length > 2 ? partes[2] : '';
+    final canalesRaw = partes.length > 3 ? partes[3] : '';
+    final interesesRaw = partes.length > 4 ? partes[4] : '';
+    final monedasRaw = partes.length > 5 ? partes[5] : '';
+
+    return (
+      estados: estadosRaw.trim().isEmpty
+          ? <EstadoItem>[]
+          : EstadoItemModel.parseList(estadosRaw),
+      campanias: campaniasRaw.trim().isEmpty
+          ? <CampaniaItem>[]
+          : CampaniaItemModel.parseList(campaniasRaw),
+      oportunidades: oportunidadesRaw.trim().isEmpty
+          ? <OportunidadItem>[]
+          : OportunidadItemModel.parseList(oportunidadesRaw),
+      canales: canalesRaw.trim().isEmpty
+          ? <CanalItem>[]
+          : CanalItemModel.parseList(canalesRaw),
+      intereses: interesesRaw.trim().isEmpty
+          ? <InteresItem>[]
+          : InteresItemModel.parseList(interesesRaw),
+      monedas: monedasRaw.trim().isEmpty
+          ? <MonedaItem>[]
+          : MonedaItemModel.parseList(monedasRaw),
+    );
+  }
 }
 
 class CampaniaItemModel extends CampaniaItem {

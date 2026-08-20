@@ -12,4 +12,17 @@ class CatalogsRepositoryImpl implements CatalogsRepository {
 
   @override
   Future<TipoCambioItem> getTipoCambio() => _remote.getTipoCambio();
+
+  @override
+  Future<
+    ({
+      List<EstadoItem> estados,
+      List<CampaniaItem> campanias,
+      List<OportunidadItem> oportunidades,
+      List<CanalItem> canales,
+      List<InteresItem> intereses,
+      List<MonedaItem> monedas,
+    })
+  >
+  getCatalogosEditarNegociacion() => _remote.getCatalogosEditarNegociacion();
 }

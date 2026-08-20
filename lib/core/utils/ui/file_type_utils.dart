@@ -29,7 +29,7 @@ IconData fileIcon(String mensaje) {
   switch (ext) {
     case 'pdf':              return AppIcons.pdf;
     case 'doc': case 'docx': return AppIcons.fileWord;
-    case 'xls': case 'xlsx': return AppIcons.fileExcel;
+    case 'xls': case 'xlsx': case 'xlsm': return AppIcons.fileExcel;
     case 'ppt': case 'pptx': return AppIcons.filePowerpoint;
     default:                 return AppIcons.fileGeneric;
   }
@@ -42,7 +42,7 @@ String fileLabel(String mensaje) {
   switch (ext) {
     case 'pdf':              return 'PDF';
     case 'doc': case 'docx': return 'Word';
-    case 'xls': case 'xlsx': return 'Excel';
+    case 'xls': case 'xlsx': case 'xlsm': return 'Excel';
     case 'ppt': case 'pptx': return 'PowerPoint';
     default:                 return 'Archivo';
   }
@@ -64,7 +64,7 @@ Color fileColor(String mensaje) {
   switch (ext) {
     case 'pdf':              return AppColors.errorLight;
     case 'doc': case 'docx': return AppColors.info;
-    case 'xls': case 'xlsx': return AppColors.fileColorExcel;
+    case 'xls': case 'xlsx': case 'xlsm': return AppColors.fileColorExcel;
     case 'ppt': case 'pptx': return AppColors.fileColorPowerpoint;
     default:                 return AppColors.grey500;
   }

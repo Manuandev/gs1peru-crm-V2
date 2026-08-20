@@ -753,7 +753,7 @@ class _DocumentContentState extends State<_DocumentContent> {
   IconData _iconForExt(String ext) {
     final e = ext.toLowerCase().replaceAll('.', '');
     if (e == 'pdf') return AppIcons.pdf;
-    if (['xls', 'xlsx'].contains(e)) return AppIcons.fileExcel;
+    if (['xls', 'xlsx', 'xlsm'].contains(e)) return AppIcons.fileExcel;
     if (['doc', 'docx'].contains(e)) return AppIcons.fileWord;
     if (['ppt', 'pptx'].contains(e)) return AppIcons.filePowerpoint;
     if (['zip', 'rar'].contains(e)) return AppIcons.fileZip;
@@ -763,7 +763,7 @@ class _DocumentContentState extends State<_DocumentContent> {
   Color _colorForExt(String ext) {
     final e = ext.toLowerCase().replaceAll('.', '');
     if (e == 'pdf') return AppColors.error;
-    if (['xls', 'xlsx'].contains(e)) return AppColors.success;
+    if (['xls', 'xlsx', 'xlsm'].contains(e)) return AppColors.success;
     if (['doc', 'docx'].contains(e)) return AppColors.info;
     if (['ppt', 'pptx'].contains(e)) return AppColors.secondary;
     if (['zip', 'rar'].contains(e)) return AppColors.warning;

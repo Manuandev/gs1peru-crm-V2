@@ -3,6 +3,38 @@
 Gestiona conversaciones WhatsApp, envío de mensajes, multimedia, templates y edición de leads.
 Es el feature más complejo de la app — leer completo antes de tocar cualquier archivo.
 
+## 3 bugs reales de plantillas, reportados en vivo el mismo día (2026-08-20)
+
+- **`idBoton` siempre viajaba en 0 al reenviar una plantilla por WhatsApp** — reportado con
+  datos reales de `T_PLANTILLA_WHATSAPP_BOTON` (ids 1-4 no nulos) contra el log de
+  `ENVIAR_WHATSAPP` mostrando `0¬SI¬0¬NO`. Causa: el task `'LP'` de `CSV_PLANTILLA_LST_APP`
+  (lista, usado por `SelectTemplateModal` — la pantalla de ENVIAR una plantilla, no de editarla)
+  solo mandaba el texto de cada botón (`STRING_AGG(TEXTO, @sepComodin)`), nunca su id real — a
+  diferencia del task `'DP'` (editar), que sí manda `"idBoton¦texto"` desde siempre. Corregido en
+  ambos lados: SP (`'LP'` ahora manda `CONCAT(ID_PLANTILLA_BOTON, @sepCampos, TEXTO)` por botón,
+  unido por `@sepComodin`) y `PlantillaModel.fromRawString` (`template_model.dart`, rama
+  `secciones.length <= 1` — parsea cada entrada del campo 9 como `id¦texto` en vez de texto
+  plano). **Retrocompatible** — si el SP desplegado todavía manda solo texto (sin `¦`), el split
+  da un solo token y cae a `idBoton=0`/`texto=ese token`, mismo comportamiento de antes.
+- **Plantillas con audio ya guardado seguían permitiendo escribir descripción y agregar
+  botones al editarlas** — la regla de exclusión mutua audio/texto/botones (ver más abajo,
+  "Exclusión mutua...") ya estaba bien implementada, pero solo se activaba grabando audio NUEVO
+  en la misma sesión. Causa: `_TemplateFormPortraitState.initState()` (`template_form_view.dart`)
+  siempre inicializaba el `StagedFile` de un archivo ya guardado con `tipo: 'document'`
+  hardcodeado — `Plantilla` no guarda el tipo real, solo ruta/nombre/ext. Corregido: el audio
+  grabado siempre tiene extensión `.m4a` (única fuente de audio de este formulario, no hay
+  "subir audio" como archivo suelto) — se usa esa extensión para resolver `tipo: 'audio'` vs
+  `'document'` al cargar una plantilla existente.
+- **Salto de línea (`\n`) se veía como texto literal en la vista previa de "Enviar plantilla"**
+  — el contenido guardado trae el salto como texto literal (`\n`, a veces doble-escapado
+  `\\n`), no como salto real. `select_template_modal.dart._formatear()` solo sustituía
+  variables (`{{nombre_cliente}}`, etc.), nunca des-escapaba el salto — a diferencia de
+  `message_parser.dart` (chat_detail/mensaje/), que ya hace este mismo unescape para los mensajes
+  del chat. Se agregó el mismo `.replaceAll(r'\\n', '\n').replaceAll(r'\n', '\n')` a
+  `_formatear()` (sin el resto del parseo de `message_parser.dart` — este preview es texto
+  plano, no necesita negrita/URLs) — cubre tanto la card de la lista como el panel de vista
+  previa, ambos llaman la misma función.
+
 ## Archivos clave
 
 | Archivo | Qué hace |

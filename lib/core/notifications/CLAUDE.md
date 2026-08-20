@@ -102,7 +102,7 @@ logout y volver a loguear sin cerrar la app).
 |---|---|
 | `'ver_lead'` | `AppRoutes.seguimiento` → push `AppRoutes.detalleSeguimiento` con `{idLead: int}` |
 | `'abrir_conversacion'` | `AppRoutes.chats` → push `AppRoutes.detalleChat` con `{idChatCab: int}` (mismo helper `_goChat` que `'abrir_conversacion_bot'`) |
-| `'ver_negociacion_bot'` | `_goSeguimiento` → `AppRoutes.detalleContacto` con `{idNumero: int}` — el backend agregó `idNumero` como campo [5] de `NUEVO_LEAD_BOT` (confirmado en producción 2026-07-16) |
+| `'ver_negociacion_bot'` | `_goLead` → `AppRoutes.detalleSeguimiento` con `{idLead: int}` — **corregido 2026-08-20**, antes usaba `_goSeguimiento` → `AppRoutes.detalleContacto` con `{idNumero: int}`, pero esa ruta pasó a exigir `idContacto` (ver `lead/CLAUDE.md` → "Migración de ancla ID_NUMERO → ID_CONTACTO") y `NUEVO_LEAD_BOT` nunca trae ese campo — el cast `args['idContacto'] as int` reventaba con `null`, pantalla en blanco reportada en vivo. `idLead` sí es un campo confiable del payload (índice [0]) y ya tiene una ruta funcionando (`_goLead`, el mismo destino que "Ver lead") — se reusa ese en vez de esperar un campo nuevo del backend. `_goSeguimiento` se eliminó por completo, quedó sin ningún uso |
 | `'abrir_conversacion_bot'` | `AppRoutes.chats` → push `AppRoutes.detalleChat` con `{idChatCab: int}` |
 | `null` (tap en body) | `navigate(notif)` — ruta según `notif.route` |
 

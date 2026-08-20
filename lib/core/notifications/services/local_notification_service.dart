@@ -326,7 +326,13 @@ class LocalNotificationService {
           priority: Priority.high,
           playSound: true,
           actions: const [
-            // 'Ver lead' → AppRoutes.detalleContacto con idNumero.
+            // 'Ver negociación' → AppRoutes.detalleSeguimiento con idLead
+            // (mismo destino que 'ver_lead' — ver notification_navigator.dart,
+            // bug real corregido 2026-08-20: antes mandaba a
+            // AppRoutes.detalleContacto con idNumero, pero esa ruta ya
+            // requiere idContacto desde la migración documentada en
+            // lead/CLAUDE.md — el payload de NUEVO_LEAD_BOT nunca trajo
+            // idContacto, así que siempre reventaba con pantalla en blanco).
             AndroidNotificationAction(
               'ver_negociacion_bot',
               'Ver negociación',

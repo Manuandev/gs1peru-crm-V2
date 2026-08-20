@@ -30,15 +30,23 @@ class PlantillaModel extends Plantilla {
     final secciones = raw.split(AppConstants.sepListas);
     final c = ParseUtils.campos(secciones[0], AppConstants.sepCampos);
     // Cada botón viaja "idBoton¦texto" (id=0 = nuevo) — ver comentario en
-    // Plantilla.botones/CSV_PLANTILLA_CUD_APP. Task 'LP' no manda id (de
-    // solo lectura, alcanza con el texto para mostrarlo en la lista/preview
-    // de SelectTemplateModal) — sus textos viajan en el campo 9, unidos por
-    // sepComodin en vez de una sección aparte (no puede reusar sepRegistros
-    // ahí: ese separador ya se usa para separar cada PLANTILLA dentro de la
-    // lista completa — ver CRM.CSV_PLANTILLA_LST_APP.sql, task 'LP'). El
-    // campo 9 de 'DP' es otra cosa (idCampania) — no chocan porque 'DP'
-    // siempre trae la sección de sepListas (secciones.length > 1) y 'LP'
-    // nunca la trae.
+    // Plantilla.botones/CSV_PLANTILLA_CUD_APP. Task 'LP' (lista, usada por
+    // SelectTemplateModal para ENVIAR una plantilla) también manda ahora
+    // "idBoton¦texto" por botón, unidos por sepComodin en el campo 9 (no
+    // puede reusar sepRegistros ahí: ese separador ya se usa para separar
+    // cada PLANTILLA dentro de la lista completa — ver
+    // CRM.CSV_PLANTILLA_LST_APP.sql, task 'LP'). El campo 9 de 'DP' es otra
+    // cosa (idCampania) — no chocan porque 'DP' siempre trae la sección de
+    // sepListas (secciones.length > 1) y 'LP' nunca la trae.
+    //
+    // Bug real (2026-08-20) — antes 'LP' solo mandaba el texto (sin id), así
+    // que cualquier botón cargado por esta vía siempre quedaba con
+    // idBoton=0 al reenviarlo por WhatsApp (ENVIAR_WHATSAPP, VAR17) — el
+    // backend recibía "0¬SI¬0¬NO" en vez de los ids reales de
+    // T_PLANTILLA_WHATSAPP_BOTON. Retrocompatible: si el SP desplegado
+    // todavía no manda el id (formato viejo, solo texto sin '¦'), el split
+    // por sepCampos da un solo token y cae a idBoton=0/texto=ese token,
+    // mismo comportamiento que antes.
     final botones = secciones.length > 1
         ? secciones[1]
               .split(AppConstants.sepRegistros)
@@ -57,7 +65,15 @@ class PlantillaModel extends Plantilla {
                     .split(AppConstants.sepComodin)
                     .map((t) => t.trim())
                     .where((t) => t.isNotEmpty)
-                    .map((t) => PlantillaBoton(texto: t))
+                    .map((t) {
+                      final campos = t.split(AppConstants.sepCampos);
+                      return PlantillaBoton(
+                        idBoton: campos.length > 1
+                            ? (int.tryParse(campos[0]) ?? 0)
+                            : 0,
+                        texto: campos.length > 1 ? campos[1] : campos[0],
+                      );
+                    })
                     .toList()
               : const <PlantillaBoton>[]);
 

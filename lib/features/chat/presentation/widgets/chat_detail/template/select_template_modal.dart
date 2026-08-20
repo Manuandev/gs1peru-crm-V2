@@ -69,6 +69,14 @@ String _formatear(
   String nombreAsesor,
 ) {
   return contenido
+      // Bug real — el contenido guardado trae el salto de línea como texto
+      // literal ('\n', a veces doble-escapado '\\n'), no como salto real —
+      // sin esto se veía el "\n" tal cual en la vista previa. Mismo
+      // unescape que ya usa message_parser.dart (chat_detail/mensaje/) para
+      // los mensajes del chat — acá no hace falta el resto del parseo
+      // (negrita/URLs), este preview es texto plano.
+      .replaceAll(r'\\n', '\n')
+      .replaceAll(r'\n', '\n')
       .replaceAll('{{nombre_cliente}}', nombreCliente)
       .replaceAll('{{apellido_cliente}}', apellidoCliente)
       .replaceAll('{{nombre_asesor}}', nombreAsesor);

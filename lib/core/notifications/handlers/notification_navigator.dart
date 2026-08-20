@@ -32,7 +32,7 @@ class NotificationNavigator {
       case 'abrir_conversacion':
         _goChat(notif);
       case 'ver_negociacion_bot':
-        _goSeguimiento(notif);
+        _goLead(notif);
         break;
       case 'abrir_conversacion_bot':
         _goChat(notif);
@@ -90,24 +90,6 @@ class NotificationNavigator {
     state.pushNamed(
       AppRoutes.detalleSeguimiento,
       arguments: {'idLead': idLead},
-    );
-  }
-
-  void _goSeguimiento(AppNotification notif) {
-    if (!SessionService().hasSession) return _go(AppRoutes.login);
-
-    final idNumero = int.tryParse(notif.payload?['idNumero'] ?? '') ?? 0;
-    final state = NavigationService.navigatorKey.currentState;
-    if (state == null) return;
-
-    if (idNumero == 0) {
-      state.pushNamedAndRemoveUntil(AppRoutes.seguimiento, (r) => false);
-      return;
-    }
-    state.pushNamedAndRemoveUntil(AppRoutes.seguimiento, (r) => false);
-    state.pushNamed(
-      AppRoutes.detalleContacto,
-      arguments: {'idNumero': idNumero},
     );
   }
 

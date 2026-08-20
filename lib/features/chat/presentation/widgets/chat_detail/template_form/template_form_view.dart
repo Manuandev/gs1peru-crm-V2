@@ -101,11 +101,21 @@ class _TemplateFormPortraitState extends State<_TemplateFormPortrait> {
     _compartir = p.compartir;
 
     if (p.archivoNombre.isNotEmpty) {
+      // Bug real — al editar una plantilla que ya tenía audio, este `tipo`
+      // se dejaba siempre en 'document' (la entidad Plantilla no guarda el
+      // tipo, solo ruta/nombre/ext) — con eso `_archivoEsAudio`/
+      // `_bloqueadoPorAudio` (más abajo) daban `false` y la regla de
+      // exclusión mutua audio/texto/botones no se aplicaba al reabrir una
+      // plantilla de audio ya guardada, solo al grabar una nueva en la
+      // misma sesión. El audio se graba SIEMPRE con `.m4a`
+      // (`AudioRecorderWidget`) y es la única fuente de audio de este
+      // formulario (no hay "subir audio" como archivo suelto) — esa
+      // extensión identifica el tipo real de forma confiable.
       _archivo = StagedFile(
         path: p.archivoRuta,
         nameWithoutExt: p.archivoNombre,
         ext: p.archivoExt,
-        tipo: 'document',
+        tipo: p.archivoExt.toLowerCase() == '.m4a' ? 'audio' : 'document',
         sizeBytes: 0,
       );
     }

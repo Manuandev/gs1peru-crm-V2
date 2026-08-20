@@ -17,6 +17,12 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   String _lastSearchQuery = '';
   ChatListFiltro _filtroActivo = ChatListFiltro.todos;
 
+  // idChatCab en proceso de inserción (WS + BD en camino, aún no en _allChats).
+  // Sin esto, dos eventos del mismo chatCab que llegan mientras el primero
+  // todavía está esperando la BD pasan el check "¿ya está en _allChats?" los
+  // dos, porque ninguno terminó de insertar todavía — se duplica la tarjeta.
+  final Set<int> _chatCabsEnInsercion = {};
+
   // Filtros avanzados del panel lateral
   String _filtroNombre = '';
   String _filtroEmpresa = '';
@@ -429,7 +435,6 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   ) async {
     final payload = NuevoLeadBotPayload.fromMessage(message);
     if (payload == null) return;
-    if (_allChats.any((c) => c.idChatCab == payload.idChatCab)) return;
 
     await _insertChatFromDbIfMissing(payload.idChatCab, emit);
   }
@@ -441,13 +446,21 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     int idChatCab,
     Emitter<ChatListState> emit,
   ) async {
+    // Ya está en la lista o ya hay otra inserción en camino para este mismo
+    // chatCab — no hacer nada más, evita la tarjeta duplicada.
+    if (_allChats.any((c) => c.idChatCab == idChatCab)) return;
+    if (!_chatCabsEnInsercion.add(idChatCab)) return;
+
     try {
       final nuevoChat = await _getChatByIdChatCab(idChatCab);
       if (nuevoChat == null || isClosed) return;
+      if (_allChats.any((c) => c.idChatCab == idChatCab)) return;
       _allChats = [nuevoChat, ..._allChats];
       _emitFiltered(emit);
     } catch (_) {
       // Falla silenciosa — el chat seguirá faltando hasta el próximo refresh
+    } finally {
+      _chatCabsEnInsercion.remove(idChatCab);
     }
   }
 

@@ -38,6 +38,14 @@ class SolicitudListView extends StatelessWidget {
                 );
               },
               child: BlocBuilder<SolicitudListBloc, SolicitudListState>(
+                // Un refresh silencioso (ej. el picker de "Asesores" dispara
+                // SolicitudListRefresh al abrirse, ver solicitud_asesor_picker_
+                // modal.dart) no debe tapar la lista ya cargada con el
+                // skeleton — eso solo tiene sentido en la primera carga real,
+                // antes de que exista ningún dato en pantalla.
+                buildWhen: (previous, current) =>
+                    current is! SolicitudListLoading ||
+                    previous is SolicitudListInitial,
                 builder: (context, state) {
                   if (state is SolicitudListLoading ||
                       state is SolicitudListInitial) {

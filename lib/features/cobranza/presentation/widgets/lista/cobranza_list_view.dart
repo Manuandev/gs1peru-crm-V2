@@ -28,6 +28,14 @@ class CobranzaListView extends StatelessWidget {
           );
         },
         child: BlocBuilder<CobranzaListBloc, CobranzaListState>(
+          // Un refresh silencioso (ej. el picker de "Asesores" dispara
+          // CobranzaListRefresh al abrirse, ver cobranza_asesor_picker_modal.
+          // dart) no debe tapar la lista ya cargada con el loading — eso
+          // solo tiene sentido en la primera carga real, antes de que exista
+          // ningún dato en pantalla.
+          buildWhen: (previous, current) =>
+              current is! CobranzaListLoading ||
+              previous is CobranzaListInitial,
           builder: (context, state) {
             if (state is CobranzaListLoading || state is CobranzaListInitial) {
               return const AppLoadingView();

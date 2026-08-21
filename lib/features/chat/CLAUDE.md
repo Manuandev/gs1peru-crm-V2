@@ -3,6 +3,45 @@
 Gestiona conversaciones WhatsApp, envío de mensajes, multimedia, templates y edición de leads.
 Es el feature más complejo de la app — leer completo antes de tocar cualquier archivo.
 
+## Negrita/cursiva/tachado en la lista de plantillas (2026-08-20)
+
+Reportado por el usuario: un texto de plantilla con `*palabra*` se veía con los asteriscos
+literales en `SelectTemplateModal` (tanto en `_TemplateItem`, la fila de la lista, como en
+`_TemplatePreview`, el panel de vista previa), mientras que ese mismo texto sí se renderiza en
+negrita real dentro del cuadrado de mensaje del chat. Causa: `_formatear()` (el helper local de
+este archivo) siempre fue solo sustitución de variables (`{{nombre_cliente}}`, etc.) +
+des-escape de `\n` — a propósito nunca hizo el parseo de formato WhatsApp, eso vivía únicamente
+en `message_parser.dart` (`parseMensaje`), consumido solo por `message_bubble.dart`. Corregido
+reusando `parseMensaje` en vez de duplicar su lógica: ganó un parámetro opcional `baseStyle`
+(`TextStyle?`, default `AppTextStyles.bodyMedium` — mismo comportamiento de siempre para el
+chat) para poder aplicarlo con el tamaño de texto que corresponda en cada lugar
+(`labelSmall`/`bodySmall` en la lista de plantillas, en vez del `bodyMedium` fijo que traía
+antes). Los dos `Text(contenidoFormateado, ...)` de `select_template_modal.dart` (`_TemplateItem`
+y `_TemplatePreview`) pasaron a `Text.rich(TextSpan(children: parseMensaje(...)))` — `_formatear()`
+sigue corriendo primero (variables + `\n`), su resultado ahora entra a `parseMensaje` en vez de
+mostrarse como texto plano. Como beneficio adicional, las URLs dentro del texto de una plantilla
+también quedan clicables en la vista previa, mismo comportamiento que ya tenía el chat.
+
+## Nombre de archivo saneado antes de subir (2026-08-20)
+
+Reportado por el usuario: una plantilla con un PDF adjunto llamado
+`..._PLANTAS-NUTRICIO´N-EXPERIMENTO.pdf` (acento suelto/mal codificado antes de la N, no una
+`Ñ`/`Ó` real) se guardaba bien en base de datos pero **la API de WhatsApp no entregaba el
+documento al cliente**, sin error visible. Causa: el `fileName` viaja tal cual dentro del header
+`Content-Disposition` del multipart (`ApiClient.postMultipart` → `MultipartFile.fromBytes(...,
+filename: fileName)`, sin ningún tratamiento de codificación) y también como campo de texto en la
+cabecera (`fileName`/`fileExt` unidos por `camp`) — un carácter fuera de ASCII seguro, sobre todo
+uno ya roto (símbolo de acento sin letra), es la causa más común de que Meta rechace el mensaje en
+silencio. Corregido en el único choque de ambos flujos: `ChatRemoteDatasource
+.uploadAndSendFileMessage()` (envío de archivo suelto en el chat) y `.subirArchivoPlantilla()`
+(adjunto de plantilla) — ambos sanean `fileName` con `sanitizarNombreArchivo`
+(`core/utils/string/string_utils.dart`, ver `core/CLAUDE.md`) apenas entran al método, antes de
+calcular `fileExt`/`cabecera` o pasarlo a `postMultipart`. La lista blanca es letras sin tilde,
+números, `.`, `_`, `-` — cualquier otro carácter se elimina (no se reemplaza), sin importar si
+viene de un acento normal, un acento roto, o un símbolo cualquiera. No se tocó el nombre en el
+picker (`attachment_picker_widget.dart`/`template_form`) ni en base de datos — el saneo ocurre
+solo en el punto de subida, así el usuario sigue viendo su nombre original en la UI de staging.
+
 ## 3 bugs reales de plantillas, reportados en vivo el mismo día (2026-08-20)
 
 - **`idBoton` siempre viajaba en 0 al reenviar una plantilla por WhatsApp** — reportado con

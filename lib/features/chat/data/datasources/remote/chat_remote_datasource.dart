@@ -164,6 +164,8 @@ class ChatRemoteDatasource {
     final user = _session.user;
     if (user == null) return false;
 
+    fileName = fileName.sanitizarNombreArchivo;
+
     try {
       final file = File(filePath);
       final fileBytes = await file.readAsBytes();
@@ -358,6 +360,8 @@ class ChatRemoteDatasource {
   }) async {
     final user = _session.user;
     if (user == null) return null;
+
+    fileName = fileName.sanitizarNombreArchivo;
 
     try {
       final file = File(filePath);

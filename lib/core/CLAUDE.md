@@ -1540,6 +1540,9 @@ AvatarUtils.color('Juan Pérez')      // Color consistente por nombre
 '+51 999 888 777'.limpiarTelefono   // '+51999888777' — quita espacios y guiones
 'hola'.convertToHex                 // representación hexadecimal del string
 
+// Nombre de archivo seguro para WhatsApp — solo A-Z a-z 0-9 . _ -
+'PLANTAS-NUTRICIO´N.pdf'.sanitizarNombreArchivo  // 'PLANTAS-NUTRICION.pdf'
+
 // Validador de email (para usar en validators de formularios)
 null.emailValidator          // 'El email es requerido'
 'abc@'.emailValidator        // 'Ingresa un email válido'

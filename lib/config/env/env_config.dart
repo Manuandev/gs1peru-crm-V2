@@ -4,7 +4,7 @@ enum Environment { dev, qa, prod }
 
 class EnvConfig {
   // Entorno actual (cámbialo según necesites)
-  static const Environment current = Environment.qa;
+  static const Environment current = Environment.prod;
 
   // Configuración según entorno
   static String get baseUrl {
@@ -37,7 +37,7 @@ class EnvConfig {
       case Environment.qa:
         return 'https://natcodee.net:9002/socket/'; // URL DE QA
       case Environment.prod:
-        return ''; // URL DE PRODUCCION
+        return 'https://intranet.gs1pe.org.pe:9005/socket/'; // URL DE PRODUCCION
     }
   }
 
@@ -52,6 +52,18 @@ class EnvConfig {
         return 'assets/certs/natcodee_intermedio.crt';
       case Environment.prod:
         return 'assets/certs/prod_intermedio.crt';
+    }
+  }
+
+  // URL del archivo estático que consulta AppUpdateService — host aparte del
+  // backend del CRM, nunca compone con baseUrl (ver ApiConstants.urlVersionCheck).
+  static String get urlVersionCheck {
+    switch (current) {
+      case Environment.dev:
+      case Environment.qa:
+        return 'https://natcodee.net:40805/gs1pe_crm/update/version.json';
+      case Environment.prod:
+        return 'https://intranet.gs1pe.org.pe/update/version.json';
     }
   }
 

@@ -7,8 +7,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <!-- Ubicación aproximada -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <!-- Solo si algún día usas ubicación en background -->
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <!-- ========================= -->
     <!-- RED Y WIFI -->
     <!-- ========================= -->
@@ -41,7 +39,6 @@
         android:label="GS1 CRM"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true"
         android:largeHeap="true"
         android:allowBackup="false">
         <activity

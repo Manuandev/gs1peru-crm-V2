@@ -158,6 +158,5 @@ class ApiConstants {
   // Host completamente distinto al backend del CRM (EnvConfig.baseUrl) — es
   // el servidor de archivos donde se publica el .apk de cada release, no
   // compone con baseUrl. Ver AppUpdateService / auth/CLAUDE.md.
-  static const String urlVersionCheck =
-      'https://natcodee.net:40805/gs1pe_crm/update/version.json';
+  static String get urlVersionCheck => EnvConfig.urlVersionCheck;
 }

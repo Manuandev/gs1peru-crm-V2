@@ -11,15 +11,18 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 /// cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el llamador
 /// debe interpretar `null` como "volver al filtro Todos".
 ///
-/// Reactivo a [CatalogsBloc] Y a [CobranzaListBloc] — al abrirse, dispara
-/// `CatalogsLoadRequested` + `CobranzaListRefresh` (además del ícono manual
-/// de refrescar) para que tanto el universo de asesores como el conteo por
-/// estado estén al día, no lo que quedó cargado en memoria desde que se
-/// entró a la pantalla. El conteo por asesor ([conteosPorAsesor], desglosado
-/// por `idEstado`) NO viene del backend, se calcula en [CobranzaListBloc]
-/// sobre las cobranzas cargadas — `widget.conteosPorAsesor` es solo el
-/// snapshot inicial (evita un parpadeo en blanco mientras llega el refresh);
-/// una vez que el bloc reemite, el modal se actualiza solo.
+/// No dispara ninguna recarga al abrirse (revertido 2026-08-21, pedido
+/// explícito del usuario) — usa directo el universo de asesores ya cargado
+/// en [CatalogsBloc] (global, cargado una vez al iniciar sesión) y
+/// [conteosPorAsesor], el snapshot que ya calculó `CobranzaListBloc` sobre
+/// la lista pintada en pantalla. Antes recargaba ambos al abrir
+/// (`CatalogsLoadRequested` + `CobranzaListRefresh`) y quedaba reactivo a
+/// `CobranzaListBloc` — se quitó porque el modal puede abrirse desde un
+/// `BuildContext` sin `Provider<CobranzaListBloc>` en su árbol (crash
+/// reportado en vivo: "Could not find the correct `Provider<CobranzaListBloc>`
+/// above this CobranzaAsesorPickerModal Widget") y porque el usuario
+/// prefiere que solo muestre lo que ya está cargado, sin ninguna llamada de
+/// red extra al abrir el picker.
 class CobranzaAsesorPickerModal extends StatefulWidget {
   final Map<String, Map<int, int>> conteosPorAsesor;
   final String? seleccionadoActual;
@@ -62,16 +65,6 @@ class _CobranzaAsesorPickerModalState
   String _query = '';
 
   @override
-  void initState() {
-    super.initState();
-    // "Cada que abra esto, que cargue la data" — pedido explícito del
-    // usuario, no confiar en el catálogo (sesión) ni en la lista (última
-    // vez que se entró a la pantalla) que puedan estar desactualizados.
-    context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
-    context.read<CobranzaListBloc>().add(const CobranzaListRefresh());
-  }
-
-  @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
@@ -94,13 +87,7 @@ class _CobranzaAsesorPickerModalState
     final colorScheme = Theme.of(context).colorScheme;
     final screenHeight = MediaQuery.sizeOf(context).height;
 
-    // Mientras llega el refresh disparado en initState, se muestra el
-    // snapshot con el que se abrió el modal (evita un parpadeo en blanco) —
-    // apenas CobranzaListBloc reemite con datos frescos, se usa ese.
-    final cobranzaListState = context.watch<CobranzaListBloc>().state;
-    final conteosPorAsesor = cobranzaListState is CobranzaListSuccess
-        ? cobranzaListState.conteosPorAsesor
-        : widget.conteosPorAsesor;
+    final conteosPorAsesor = widget.conteosPorAsesor;
 
     return SizedBox(
       height: screenHeight * 0.75,
@@ -138,21 +125,6 @@ class _CobranzaAsesorPickerModalState
                       color: colorScheme.onSurface,
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    context.read<CatalogsBloc>().add(
-                      const CatalogsLoadRequested(),
-                    );
-                    context.read<CobranzaListBloc>().add(
-                      const CobranzaListRefresh(),
-                    );
-                  },
-                  icon: Icon(
-                    AppIcons.refresh,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  visualDensity: VisualDensity.compact,
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),

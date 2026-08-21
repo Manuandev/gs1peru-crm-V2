@@ -4,23 +4,23 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 /// Modal de búsqueda de asesor (por nombre o código) para el chip "Asesores"
 /// de la lista de Solicitudes. Retorna el `codUser` elegido, o `null` si se
 /// cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el llamador
 /// debe interpretar `null` como "volver al filtro Todas".
 ///
-/// Reactivo a [CatalogsBloc] Y a [SolicitudListBloc] — al abrirse, dispara
-/// `CatalogsLoadRequested` + `SolicitudListRefresh` (además del ícono manual
-/// de refrescar) para que tanto el universo de asesores como el conteo
-/// sin validar/validado estén al día, no lo que quedó cargado en memoria
-/// desde que se entró a la pantalla. El conteo por asesor
-/// ([conteosPorAsesor], desglosado por `ibValidado`) NO viene del backend,
-/// se calcula en [SolicitudListBloc] sobre las solicitudes cargadas —
-/// `widget.conteosPorAsesor` es solo el snapshot inicial (evita un parpadeo
-/// en blanco mientras llega el refresh); una vez que el bloc reemite, el
-/// modal se actualiza solo. Mismo patrón que `CobranzaAsesorPickerModal`.
+/// No dispara ninguna recarga al abrirse (revertido 2026-08-21, pedido
+/// explícito del usuario, mismo cambio que `CobranzaAsesorPickerModal`) —
+/// usa directo el universo de asesores ya cargado en [CatalogsBloc] (global,
+/// cargado una vez al iniciar sesión) y [conteosPorAsesor], el snapshot que
+/// ya calculó `SolicitudListBloc` sobre la lista pintada en pantalla. Antes
+/// recargaba ambos al abrir (`CatalogsLoadRequested` + `SolicitudListRefresh`)
+/// y quedaba reactivo a `SolicitudListBloc` — se quitó por el mismo motivo
+/// que en Cobranza: riesgo de que el modal se abra desde un `BuildContext`
+/// sin `Provider<SolicitudListBloc>` en su árbol, y porque el usuario
+/// prefiere que solo muestre lo que ya está cargado, sin ninguna llamada de
+/// red extra al abrir el picker.
 class SolicitudAsesorPickerModal extends StatefulWidget {
   final Map<String, Map<bool, int>> conteosPorAsesor;
   final String? seleccionadoActual;
@@ -63,16 +63,6 @@ class _SolicitudAsesorPickerModalState
   String _query = '';
 
   @override
-  void initState() {
-    super.initState();
-    // "Cada que abra esto, que cargue la data" — pedido explícito del
-    // usuario, no confiar en el catálogo (sesión) ni en la lista (última
-    // vez que se entró a la pantalla) que puedan estar desactualizados.
-    context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
-    context.read<SolicitudListBloc>().add(const SolicitudListRefresh());
-  }
-
-  @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
@@ -95,13 +85,7 @@ class _SolicitudAsesorPickerModalState
     final colorScheme = Theme.of(context).colorScheme;
     final screenHeight = MediaQuery.sizeOf(context).height;
 
-    // Mientras llega el refresh disparado en initState, se muestra el
-    // snapshot con el que se abrió el modal (evita un parpadeo en blanco) —
-    // apenas SolicitudListBloc reemite con datos frescos, se usa ese.
-    final solicitudListState = context.watch<SolicitudListBloc>().state;
-    final conteosPorAsesor = solicitudListState is SolicitudListSuccess
-        ? solicitudListState.conteosPorAsesor
-        : widget.conteosPorAsesor;
+    final conteosPorAsesor = widget.conteosPorAsesor;
 
     return SizedBox(
       height: screenHeight * 0.75,
@@ -137,21 +121,6 @@ class _SolicitudAsesorPickerModalState
                       color: colorScheme.onSurface,
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    context.read<CatalogsBloc>().add(
-                      const CatalogsLoadRequested(),
-                    );
-                    context.read<SolicitudListBloc>().add(
-                      const SolicitudListRefresh(),
-                    );
-                  },
-                  icon: Icon(
-                    AppIcons.refresh,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  visualDensity: VisualDensity.compact,
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),

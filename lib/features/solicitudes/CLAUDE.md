@@ -1,5 +1,18 @@
 # Solicitudes Feature
 
+## `SolicitudAsesorPickerModal` — refresco angosto de asesores + tarjetas de estado rediseñadas (2026-08-21)
+Mismo día, mismo pedido y mismo cambio que `CobranzaAsesorPickerModal` (ver `cobranza/CLAUDE.md`
+para el detalle completo — task nuevo `'ASE'` en `CRM.CSV_LISTAS_LST_APP`,
+`CatalogsRepository.getAsesores()`, ver `core/CLAUDE.md` → `AsesorItem`). Acá:
+
+- `_SolicitudAsesorPickerModalState.initState()` llama `getAsesores()` (best-effort) y guarda el
+  resultado en `_asesoresFrescos` — cae a `CatalogsBloc.state.asesores` mientras no llega o si
+  falla.
+- Los 2 chips (Sin validar/Validado, antes `_EstadoBadgeChico`, ahora `_EstadoBadgeGrande`) ya no
+  se ocultan en cero — siempre se pintan, más grandes, en una `Column` a la derecha de la fila
+  (reemplaza el pill de "total" que había ahí, la suma de los 2 ya lo comunica) — activo (color
+  del estado) o gris (en cero), mismo criterio que Cobranza.
+
 ## Revert — `SolicitudAsesorPickerModal` ya no recarga nada al abrir (2026-08-21)
 **Revierte por completo** la recarga al abrir de este picker — pedido explícito del usuario tras
 un crash real en vivo en el mismo picker de `cobranza/` (`Could not find the correct

@@ -14,6 +14,9 @@ class CatalogsRepositoryImpl implements CatalogsRepository {
   Future<TipoCambioItem> getTipoCambio() => _remote.getTipoCambio();
 
   @override
+  Future<List<AsesorItem>> getAsesores() => _remote.getAsesores();
+
+  @override
   Future<
     ({
       List<EstadoItem> estados,

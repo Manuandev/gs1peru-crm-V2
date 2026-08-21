@@ -1,5 +1,32 @@
 # Cobranza Feature
 
+## `CobranzaAsesorPickerModal` — refresco angosto de asesores + tarjetas de estado rediseñadas (2026-08-21)
+Dos pedidos del usuario el mismo día, seguimiento directo del revert de abajo:
+
+- **Refresco angosto, no manual** — el revert de abajo dejó el picker sin ninguna recarga (ideal
+  para el crash, pero significaba que si a un asesor le asignaban un lead/cobranza nuevo, no se
+  reflejaba en el picker hasta reingresar a la app). En vez de volver a disparar
+  `CatalogsLoadRequested()` (recarga el catálogo COMPLETO, ~21 partes — el problema original que
+  motivó el revert), se agregó un task angosto nuevo, `'ASE'`, al SP `CRM.CSV_LISTAS_LST_APP`
+  (mismo criterio que `'TC'`/`'EN'`, ver `core/CLAUDE.md` → `AsesorItem`/`getAsesores()`) — trae
+  **solo** el universo de asesores, mismo `SELECT` que ya usa la parte [5] del catálogo completo.
+  `_CobranzaAsesorPickerModalState.initState()` llama `CatalogsRepository.getAsesores()`
+  (best-effort, `try/catch` silencioso) y guarda el resultado en `_asesoresFrescos` — mientras no
+  llega (o si falla), la lista sigue mostrando `CatalogsBloc.state.asesores` (el snapshot cacheado
+  desde el login), sin bloquear ni mostrar loading.
+- **Tarjetas de estado (`_EstadoBadgeGrande`, antes `_EstadoBadgeChico`) — siempre visibles, más
+  grandes, a la derecha.** Antes cada chip de estado (Pend. documento/Facturar/Pend. pago/
+  Cancelado) solo se renderizaba si su cantidad era > 0, chico, debajo del nombre — con un asesor
+  que solo tenía cobranzas en "Facturar", el resto de estados ni aparecía (reportado por el
+  usuario como si faltaran datos, cuando en realidad era la condición `if (cantidad > 0)` la que
+  los ocultaba). Ahora los 4 siempre se pintan, en un `Wrap` a la derecha de la fila (donde antes
+  vivía el pill de "total", que se quitó — la suma de las 4 tarjetas ya lo comunica), con ícono +
+  número más grandes (`AppSizing.iconSm`/`AppTextStyles.labelMedium`, antes `iconInline`/
+  `sizeXs`) y color de fondo/contenido según si está activo (`cantidad > 0` → color del estado,
+  `colorEstadoGes`) o inactivo (`cantidad == 0` → gris, `surfaceContainerHighest`/
+  `onSurfaceVariant`) — mismo lenguaje "activo en color, en cero en gris" en los dos pickers
+  (mismo cambio en `SolicitudAsesorPickerModal`, ver `solicitudes/CLAUDE.md`).
+
 ## Revert — `CobranzaAsesorPickerModal` ya no recarga nada al abrir (2026-08-21)
 **Revierte por completo** "`CobranzaAsesorPickerModal` — recarga al abrir + desglose por
 estado" (2026-08-14, más abajo) — pedido explícito del usuario tras un crash real en vivo:

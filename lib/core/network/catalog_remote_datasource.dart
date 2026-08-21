@@ -46,6 +46,24 @@ class CatalogsRemoteDatasource {
     };
   }
 
+  // Task 'ASE' — SOLO el universo de asesores (mismo dataset que la parte [5]
+  // del catálogo completo), sin traer el resto. Usado para refrescar el
+  // picker de Asesores (cobranza/solicitudes) sin recargar todo el catálogo.
+  Future<List<AsesorItem>> getAsesores() async {
+    final String body = '${sep}ASE';
+
+    final result = await _api.postSafe(ApiConstants.urlListasLst, body);
+
+    return switch (result) {
+      ApiSuccess(:final data) => data.trim().isEmpty
+          ? const <AsesorItem>[]
+          : AsesorItemModel.parseList(data),
+      ApiEmpty() => const <AsesorItem>[],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   // Task 'EN' — SOLO estados/campañas/oportunidades/canales/intereses/monedas,
   // sin traer el catálogo completo. Usado al entrar a "Editar negociación"
   // (lead/EditLeadPortrait) para refrescar esos catálogos, ver lead/CLAUDE.md.

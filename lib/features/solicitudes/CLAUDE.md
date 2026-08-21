@@ -1,5 +1,26 @@
 # Solicitudes Feature
 
+## Bug real — la lista se tapaba con el skeleton gris al abrir el picker de "Asesores" (2026-08-20)
+Reportado por el usuario: "al apretar Asesores sale en gris" — regresión desde
+`f1408d6` (2026-08-14, "Selector de asesor: recarga al abrir..."), que hizo que
+`SolicitudAsesorPickerModal.initState()` dispare `SolicitudListRefresh()` cada vez que se abre el
+modal (antes de ese commit, abrir el picker nunca tocaba el bloc de lista). Ese refresh emite
+`SolicitudListLoading` — y el `BlocBuilder<SolicitudListBloc, SolicitudListState>` de
+`solicitud_list_view.dart` (el que arma el body completo: indicadores + chips + lista) no tenía
+`buildWhen`, así que reconstruía a `SolicitudListSkeleton()` (gris, `SkeletonBox` de siempre) en
+cada `Loading` — el modal es un bottom sheet al 75% de la pantalla, así que el 25% superior
+(donde están los chips, incluido "Asesores") quedaba visible mostrando el skeleton gris mientras
+el refresh silencioso corría, aunque el usuario no pidió ningún refresh.
+- **Fix**: `buildWhen: (previous, current) => current is! SolicitudListLoading || previous is SolicitudListInitial`
+  — un refresh en segundo plano (`Success`/`Error` → `Loading`) ya no reconstruye nada, se queda
+  mostrando lo último cargado; solo la carga inicial real (`Initial` → `Loading`) sigue mostrando
+  el skeleton. Mismo fix aplicado en `cobranza/` (ver su CLAUDE.md) — mismo patrón exacto en
+  `cobranza_list_view.dart`, mismo picker con el mismo `initState()`.
+- **No se tocó** `SolicitudFilterChips` (ya tenía `buildWhen: curr is SolicitudListSuccess`, no
+  era el problema) ni `SolicitudAsesorPickerModal` (la recarga al abrir sigue siendo el
+  comportamiento pedido — el bug era que se filtraba hacia la pantalla de atrás, no que
+  existiera).
+
 ## Revert — N° documento del solicitante vuelve a ser opcional SIEMPRE, sin importar el Tipo documento (2026-08-19)
 Mismo día, revierte la sección de abajo ("N° documento del solicitante opcional + Facturación ya
 no permite 'Sin documento'") — el usuario aclaró que quería que fuera opcional **con cualquier**

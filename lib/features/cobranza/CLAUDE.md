@@ -1,5 +1,16 @@
 # Cobranza Feature
 
+## Bug real — la lista se tapaba con loading gris al abrir el picker de "Asesores" (2026-08-20)
+Mismo bug, mismo fix que en `solicitudes/` (ver su CLAUDE.md para el detalle completo) —
+regresión desde `f1408d6` (2026-08-14): `CobranzaAsesorPickerModal.initState()` dispara
+`CobranzaListRefresh()` al abrirse, y el `BlocBuilder<CobranzaListBloc, CobranzaListState>` de
+`cobranza_list_view.dart` (sin `buildWhen`) reconstruía a `AppLoadingView()` en cada `Loading` —
+el picker es un bottom sheet parcial, así que la parte superior de la lista (chips incluidos)
+quedaba visible mostrando el loading mientras corría el refresh silencioso. Fix:
+`buildWhen: (previous, current) => current is! CobranzaListLoading || previous is CobranzaListInitial`
+— un refresh en segundo plano ya no tapa la lista ya cargada, solo la primera carga real
+(`Initial` → `Loading`) sigue mostrando `AppLoadingView`.
+
 ## Bug real — comparación de moneda usaba el símbolo en vez del id + campo `monedaId` nuevo en el SP (2026-08-19)
 Reportado por el usuario probando en vivo: facturando una cobranza real en dólares (Factura,
 monto > S/700), la detracción salía **0,00** en el Plan de crédito — la regla de arriba nunca se

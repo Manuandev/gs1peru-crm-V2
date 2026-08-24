@@ -270,16 +270,32 @@ futuros) sigue cayendo en `actividad` como fallback.
   `domain/entities/notifications/notificacion.dart`) — ícono/color/`etiquetaPrincipal`/
   `labelAccion` por tipo: `recordatorio` → `AppIcons.time` + `AppColors.warning` ("Recordatorio"),
   `leadPorContactar` → `AppIcons.phone` + `AppColors.info` ("Por contactar"), `leadReasignado` →
-  `AppIcons.reasignar` + `AppColors.brandRaspberryAccessible` ("Reasignado"). Los 3 muestran el
-  botón de acción ("Ver seguimiento") igual que `actividad` — ninguno de los 4 tiene todavía un id
-  de destino propio para navegar (mismo pendiente que ya tenía `actividad`, ver
-  `notifications_portrait.dart._onAccion`).
-- **Pendiente, no tocado**: los chips de filtro de `notifications_portrait.dart`
-  (`_Filtro.todas/actividades/derivaciones/mensajes`, `NotificationsLoaded.actividades/
-  derivaciones/mensajes`) siguen sin un chip dedicado para estos 3 tipos nuevos — aparecen en
-  "Todas" pero ya no caen bajo el chip "Actividades" (antes sí, porque todo lo no-AIA/CHAT caía
-  ahí). Si negocio pide un chip propio para Recordatorios/Por contactar/Reasignados, agregar el
-  getter correspondiente a `NotificationsLoaded` y su `_FiltroChip` en `notifications_portrait.dart`.
+  `AppIcons.reasignar` + `AppColors.brandRaspberryAccessible` ("Reasignado").
+
+### Chip "Actividades" + navegación a detalle de contacto (2026-08-24)
+
+Pedido de negocio explícito: el chip "Actividades" agrupa todo lo que no es derivación (bot) ni
+mensaje — `actividad` (genérico), `recordatorio`, `leadPorContactar`, `leadReasignado` — y el
+botón "Ver seguimiento" de `leadPorContactar`/`leadReasignado` navega a detalle de contacto.
+
+- **`NotificationsLoaded.actividades`** (`presentation/bloc/notifications/notifications_state.dart`)
+  ahora filtra los 4 tipos de arriba, no solo `actividad` — antes recordatorio/por-contactar/
+  reasignado solo aparecían en el chip "Todas". `derivaciones` (`AIA`) y `mensajes` (`CHAT`) sin
+  cambios, cada uno sigue siendo su propio chip exclusivo.
+- **`Notificacion.idContacto`** (nuevo campo `int?`, default `null`) — se parsea desde el índice
+  `8` de DATOS (`ID_CONTACTO`, confirmado real con un CSV en vivo) en `_parseDatosLeadPorContactar`
+  y `_parseDatosLeadReasignado` (`data/models/notifications/notificacion_model.dart`), ambos
+  método pasaron de devolver `String` a `(String, int?)`. `null` en el resto de tipos.
+- **`notifications_portrait.dart._onAccion`** — antes solo navegaba si `idChatCab != null`
+  (mensaje/derivación) y no hacía nada para el resto. Ahora, si no hay `idChatCab`, cae a
+  `context.goToDetalleContacto(idContacto:)` cuando `idContacto != null` (leadPorContactar/
+  leadReasignado).
+- **`recordatorio` y `actividad` genérica siguen sin navegar** — el SP `CSV_NOTIFICACIONES_LST_APP`
+  no manda `ID_CONTACTO` en el DATOS de `RECORDATORIO` (solo `NOM_CONTACTO`/`TELEFONO`, ver
+  `_parseDatosRecordatorio`) ni tiene parseo de DATOS definido para el fallback `actividad`
+  (`GESTION_DE_CODIGO`/`GESTION_DE_PAGO`/`INSCRIPCION_DE_EMPRESAS`). Si negocio pide que estos 2
+  también naveguen, hay que sumar `ID_CONTACTO` al DATOS de esos tasks en el SP primero — no hay
+  forma de armarlo del lado de Flutter con los datos que llegan hoy.
 
 ### Marcar como leídas — automático y masivo (no selectivo)
 

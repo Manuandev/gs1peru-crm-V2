@@ -69,7 +69,7 @@ class ChatTile extends StatelessWidget {
                           ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      chat.fechaHora.formatDate(AppDateFormat.hourMinute),
+                      chat.fechaHora.formatConDia(),
                       style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -329,7 +329,7 @@ class _InfoDerechaState extends State<_InfoDerecha> {
       children: [
         if (elapsedPrimero != null)
           Text(
-            ElapsedTimeUtils.formatHyM(elapsedPrimero),
+            ElapsedTimeUtils.formatDoHoMoS(elapsedPrimero),
             style: AppTextStyles.labelMedium.copyWith(
               color: ElapsedTimeUtils.colorFromElapsed(elapsedPrimero),
               fontWeight: AppTextStyles.weightBold,
@@ -339,7 +339,7 @@ class _InfoDerechaState extends State<_InfoDerecha> {
         // if (clienteEsUltimo && elapsedSinRespuesta != null) ...[
         const SizedBox(height: AppSpacing.xxs),
         Text(
-          ElapsedTimeUtils.formatHoMoS(elapsedSinRespuesta!),
+          ElapsedTimeUtils.formatDoHoMoS(elapsedSinRespuesta!),
           style: AppTextStyles.labelMedium.copyWith(
             color: ElapsedTimeUtils.colorFromElapsed(elapsedSinRespuesta),
             fontWeight: AppTextStyles.weightBold,

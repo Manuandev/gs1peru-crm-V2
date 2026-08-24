@@ -17,6 +17,22 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+} else {
+    // Sin esto, un build de release en una máquina sin el keystore real cae en
+    // silencio a la firma debug (ver buildTypes.release más abajo) y termina
+    // "bien" sin ningún aviso — el riesgo real es subir ESE apk a producción
+    // pensando que quedó firmado igual que siempre. Este banner es la única
+    // señal de que pasó, así que se imprime fuerte y feo a propósito.
+    println("")
+    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    println("!!  ADVERTENCIA: no se encontro android/key.properties (keystore de release real).   !!")
+    println("!!  Cualquier build de release en ESTA maquina va a quedar firmado con la llave       !!")
+    println("!!  DEBUG (distinta en cada maquina) -- NO subir ese APK/AAB a produccion, va a        !!")
+    println("!!  romper la actualizacion de los usuarios que ya tienen la app instalada             !!")
+    println("!!  ('conflicto de paquete'). Compila el release en la maquina que SI tiene el         !!")
+    println("!!  keystore real, o copia key.properties + el .jks a esta antes de subir nada.        !!")
+    println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    println("")
 }
 
 android {

@@ -4,7 +4,22 @@ enum Environment { dev, qa, prod }
 
 class EnvConfig {
   // Entorno actual (cámbialo según necesites)
-  static const Environment current = Environment.prod;
+  static const Environment current = Environment.qa;
+
+  // Versión mostrada en footer/drawer y comparada contra AppUpdateService —
+  // antes vivía en AppConstants.version como constante suelta, sin relación
+  // con el entorno; había que acordarse de cambiarla a mano junto con
+  // `current` antes de cada build (fuente real del bug: quedaban
+  // desincronizadas). Ahora es un solo interruptor (`current`) para ambas.
+  static String get version {
+    switch (current) {
+      case Environment.dev:
+      case Environment.qa:
+        return '1.0.13';
+      case Environment.prod:
+        return '1.0.0.1';
+    }
+  }
 
   // Configuración según entorno
   static String get baseUrl {

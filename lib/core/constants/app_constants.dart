@@ -1,5 +1,7 @@
 // lib/core/constants/app_constants.dart
 
+import 'package:app_crm/config/index_config.dart';
+
 /// Constantes usadas en el proyecto
 ///
 /// PROPÓSITO:
@@ -9,7 +11,10 @@
 class AppConstants {
   AppConstants._();
 
-  static const version = '1.0.0.1';
+  // Delegado a EnvConfig — la versión ahora depende de EnvConfig.current,
+  // igual que baseUrl/urlArchivos, para no tener que sincronizarla a mano
+  // por separado antes de cada build (ver EnvConfig.version).
+  static String get version => EnvConfig.version;
   static const nombreApp = 'GS1 CRM';
 
   // Separador para serialización de sesión en cadena

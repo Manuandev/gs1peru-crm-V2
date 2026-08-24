@@ -75,7 +75,9 @@ class NotificacionModel extends Notificacion {
       nombreCliente = nombre;
       oportunidad = oport;
     } else if (tipo == TipoNotificacion.recordatorio) {
-      descripcion = _parseDatosRecordatorio(datosRaw);
+      final (desc, contacto) = _parseDatosRecordatorio(datosRaw);
+      descripcion = desc;
+      idContacto = contacto;
     } else if (tipo == TipoNotificacion.leadPorContactar) {
       final (desc, contacto) = _parseDatosLeadPorContactar(datosRaw);
       descripcion = desc;
@@ -219,13 +221,21 @@ class NotificacionModel extends Notificacion {
   //   4: NOM_AVISO            5: MODALIDAD
   //   6: FECHA_HORA_AVISO     7: COMENTARIO
   //   8: NOM_CONTACTO         9: TELEFONO
-  static String _parseDatosRecordatorio(String datosRaw) {
+  //   10: ID_CONTACTO
+  // idContacto (índice 10, agregado 2026-08-24) se devuelve además del texto
+  // — lo usa "Ver seguimiento" (_onAccion en notifications_portrait.dart)
+  // para navegar a detalle de contacto, mismo mecanismo que
+  // leadPorContactar/leadReasignado.
+  static (String, int?) _parseDatosRecordatorio(String datosRaw) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
     final hora = ParseUtils.str(d, 2);
     final accion = ParseUtils.str(d, 3);
     final modalidad = ParseUtils.str(d, 5);
+    final idContacto = int.tryParse(ParseUtils.str(d, 10));
 
-    return 'Tienes un recordatorio a las $hora: $accion. Modalidad: $modalidad';
+    final descripcion =
+        'Tienes un recordatorio a las $hora: $accion. Modalidad: $modalidad';
+    return (descripcion, idContacto);
   }
 
   // DATOS para LEADS POR CONTACTAR:

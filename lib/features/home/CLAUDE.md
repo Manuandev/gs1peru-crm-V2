@@ -248,10 +248,12 @@ futuros) sigue cayendo en `actividad` como fallback.
 
 - **`RECORDATORIO`** (`_parseDatosRecordatorio`) — campos DATOS: `0 ID_RECORDATORIO`,
   `1 ASESOR_ASIGNADO`, `2 HORA_RECORDATORIO`, `3 NOM_ACCION`, `4 NOM_AVISO`, `5 MODALIDAD`,
-  `6 FECHA_HORA_AVISO`, `7 COMENTARIO`, `8 NOM_CONTACTO`, `9 TELEFONO`. Descripción:
-  `"Tienes un recordatorio a las {hora}: {nom_accion}. Modalidad: {modalidad}"` — solo usa hora/
-  acción/modalidad, `NOM_AVISO`/`COMENTARIO`/`NOM_CONTACTO`/`TELEFONO` quedan sin mostrar (pedido
-  de negocio, texto exacto confirmado por el usuario).
+  `6 FECHA_HORA_AVISO`, `7 COMENTARIO`, `8 NOM_CONTACTO`, `9 TELEFONO`, `10 ID_CONTACTO`
+  (agregado al SP 2026-08-24, cierra el gap que documentaba esta sección — ver más abajo).
+  Descripción: `"Tienes un recordatorio a las {hora}: {nom_accion}. Modalidad: {modalidad}"` —
+  solo usa hora/acción/modalidad, `NOM_AVISO`/`COMENTARIO`/`NOM_CONTACTO`/`TELEFONO` quedan sin
+  mostrar (pedido de negocio, texto exacto confirmado por el usuario). `idContacto` (índice 10)
+  sí se extrae y alimenta "Ver seguimiento" igual que `LEAD_POR_CONTACTAR`/`LEAD_REASIGNADO`.
 - **`LEAD_POR_CONTACTAR`** (`_parseDatosLeadPorContactar`) — campos DATOS: `0
   ASESOR_ASIGNADO_COD`, `1-5 DIA_SEMANA/DIA/MES/ANIO/HORA`, `6 NRO_DOCUMENTO`, `7 ID_LEAD`,
   `8 ID_CONTACTO`, `9 NOM_CONTACTO`, `10 DESC_CANAL`, `11 NOM_EMPRESA`, `12 TELEFONO`,
@@ -288,14 +290,13 @@ botón "Ver seguimiento" de `leadPorContactar`/`leadReasignado` navega a detalle
   método pasaron de devolver `String` a `(String, int?)`. `null` en el resto de tipos.
 - **`notifications_portrait.dart._onAccion`** — antes solo navegaba si `idChatCab != null`
   (mensaje/derivación) y no hacía nada para el resto. Ahora, si no hay `idChatCab`, cae a
-  `context.goToDetalleContacto(idContacto:)` cuando `idContacto != null` (leadPorContactar/
-  leadReasignado).
-- **`recordatorio` y `actividad` genérica siguen sin navegar** — el SP `CSV_NOTIFICACIONES_LST_APP`
-  no manda `ID_CONTACTO` en el DATOS de `RECORDATORIO` (solo `NOM_CONTACTO`/`TELEFONO`, ver
-  `_parseDatosRecordatorio`) ni tiene parseo de DATOS definido para el fallback `actividad`
-  (`GESTION_DE_CODIGO`/`GESTION_DE_PAGO`/`INSCRIPCION_DE_EMPRESAS`). Si negocio pide que estos 2
-  también naveguen, hay que sumar `ID_CONTACTO` al DATOS de esos tasks en el SP primero — no hay
-  forma de armarlo del lado de Flutter con los datos que llegan hoy.
+  `context.goToDetalleContacto(idContacto:)` cuando `idContacto != null` (recordatorio/
+  leadPorContactar/leadReasignado — `RECORDATORIO` sumó `ID_CONTACTO` al DATOS el mismo día,
+  ver arriba, cerrando el gap que esta sección documentaba originalmente).
+- **Solo `actividad` genérica sigue sin navegar** — el fallback (`GESTION_DE_CODIGO`/
+  `GESTION_DE_PAGO`/`INSCRIPCION_DE_EMPRESAS`) no tiene parseo de DATOS definido en absoluto
+  (se muestra crudo, sin formatear) ni trae ningún id de destino. Si negocio pide que también
+  navegue, hay que definir su shape de DATOS en el SP primero.
 
 ### Marcar como leídas — automático y masivo (no selectivo)
 

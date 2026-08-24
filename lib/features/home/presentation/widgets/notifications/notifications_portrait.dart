@@ -143,10 +143,10 @@ class _NotificationsPortraitState extends State<NotificationsPortrait> {
     );
   }
 
-  // Mensaje/derivación → chat de la conversación. Lead por contactar/
-  // reasignado → detalle de contacto (idContacto viene en DATOS, ver
-  // notificacion_model.dart). Recordatorio/actividad genérica → sin acción
-  // todavía, el SP no manda ID_CONTACTO para esos 2 tipos (ver home/CLAUDE.md).
+  // Mensaje/derivación → chat de la conversación. Recordatorio/lead por
+  // contactar/reasignado → detalle de contacto (idContacto viene en DATOS,
+  // ver notificacion_model.dart). Actividad genérica → sin acción todavía,
+  // el SP no manda ID_CONTACTO para ese tipo (ver home/CLAUDE.md).
   void _onAccion(Notificacion notificacion) {
     if (notificacion.idChatCab != null) {
       context.goToDetalleChatDesdeHome(idChatCab: notificacion.idChatCab!);

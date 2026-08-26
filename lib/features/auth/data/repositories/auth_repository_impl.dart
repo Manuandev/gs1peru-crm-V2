@@ -77,16 +77,17 @@ class AuthRepositoryImpl implements AuthRepository {
     ApiClient().setToken(user.token);
     SessionService().setUser(user);
 
-    // Google persiste email + idToken en SQLite — el email se usa para
-    // verificar la cuenta al restaurar sesión en el Splash (ver
-    // _reautenticarGoogleSilenciosamente()); el idToken en sí ya no se
-    // reutiliza para eso (dura ~1h, casi siempre está vencido al volver a
-    // abrir la app), solo queda guardado por si hiciera falta a futuro.
+    // Google persiste email + idToken en SQLite. OJO: acá se guarda
+    // `user.token` (lo que el backend confirmó como TOKEN activo en
+    // TOKEN_GOOGLE), NO el `accessToken` crudo que emitió Google — es lo que
+    // permite a `tryRestoreSession()` reenviarlo tal cual en el próximo
+    // arranque y que el SP lo reconozca por igualdad exacta (ver
+    // `_intentarReusarTokenGoogle()` más abajo).
     await _local.saveSession(
       SessionModel(
         loginType: LoginType.google,
         email:     correo,
-        idToken:   accessToken,
+        idToken:   user.token,
         codUser:   user.codUser,
         expiresAt: DateTime.now().add(const Duration(days: 30)),
       ),
@@ -119,11 +120,18 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // Detecta el tipo y re-autentica con el método correcto
     if (entity.isGoogle) {
-      // El idToken guardado en SQLite dura ~1h (lo emite Google, no
-      // nosotros) — reusarlo tal cual después de esa hora siempre falla.
-      // En vez de eso, se pide uno FRESCO en silencio contra la sesión
-      // nativa de Google del dispositivo (sin mostrar ningún diálogo) —
-      // ver _reautenticarGoogleSilenciosamente() y auth/CLAUDE.md.
+      // 1er intento — reusar el TOKEN ya activo en el backend (guardado en
+      // `entity.idToken`, ver loginWithGoogle()) en vez de pedirle a Google
+      // un idToken fresco en cada apertura. El SP valida que siga activo
+      // (CSV_SYSMUSER01_LOGIN_GOOGLE_APP, rama @L_TOKEN != '') y no genera
+      // una fila nueva — evita depender del SDK nativo de Google Sign-In.
+      final reusado = await _intentarReusarTokenGoogle(entity);
+      if (reusado != null) return reusado;
+
+      // 2do intento (fallback) — el token guardado no sirvió (no había, el
+      // backend lo cerró/rechazó) → pide uno FRESCO en silencio contra la
+      // sesión nativa de Google del dispositivo (sin mostrar ningún
+      // diálogo) — ver _reautenticarGoogleSilenciosamente() y auth/CLAUDE.md.
       final cuenta = await _reautenticarGoogleSilenciosamente(entity.email);
       if (cuenta == null) {
         _invalidarTokenRemoto(entity);
@@ -184,6 +192,29 @@ class AuthRepositoryImpl implements AuthRepository {
     if (session == null || session.loginType != LoginType.google) return;
     if (session.email == null || session.email == correoNuevo) return;
     await _remote.logout(codUser: session.codUser ?? '');
+  }
+
+  /// Reintenta la sesión reenviando el TOKEN que el backend ya tiene como
+  /// activo (`entity.idToken`, ver loginWithGoogle()) — `ApiClient` lo
+  /// prepende al body como `@L_TOKEN` (`TokenBodyInterceptor`), y el SP lo
+  /// busca en `TOKEN_GOOGLE` en vez de crear una fila nueva. Devuelve `null`
+  /// si no hay nada guardado o el backend lo rechaza (token no encontrado,
+  /// o `TOKEN_ACT = 0` por un cierre remoto) — el caller cae al flujo de
+  /// siempre (`_reautenticarGoogleSilenciosamente`).
+  Future<UserModel?> _intentarReusarTokenGoogle(SessionEntity entity) async {
+    if (entity.idToken == null || entity.idToken!.isEmpty || entity.email == null) {
+      return null;
+    }
+    try {
+      ApiClient().setToken(entity.idToken!);
+      return await loginWithGoogle(
+        accessToken: entity.idToken!,
+        correo:      entity.email!,
+      );
+    } on AppException {
+      ApiClient().clearToken();
+      return null;
+    }
   }
 
   /// Pide un idToken de Google fresco SIN interacción del usuario —

@@ -64,6 +64,16 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         return;
       }
 
+      // Olvida cualquier cuenta cacheada por el SDK ANTES de abrir el
+      // selector — si ya había una sesión ligera activa (ej. Manuel) y el
+      // usuario elige una cuenta distinta, el SDK puede chocar con ese
+      // estado cacheado y reportar todo el intento como "cancelado" (sin
+      // aviso, sin llegar nunca a loginWithGoogle()) aunque sí se haya
+      // elegido una cuenta — bug real reportado 2026-08-26, ver
+      // auth/CLAUDE.md → "Cambio de cuenta Google...". Sin costo si es el
+      // primer login (no hay nada que olvidar).
+      await GoogleSignIn.instance.signOut();
+
       if (kDebugMode) debugPrint('[GoogleSignIn] abriendo selector nativo...');
       // Abre el selector nativo de cuentas Google
       final cuenta = await GoogleSignIn.instance.authenticate();

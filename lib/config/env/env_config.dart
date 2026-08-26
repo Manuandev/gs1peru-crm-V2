@@ -4,7 +4,7 @@ enum Environment { dev, qa, prod }
 
 class EnvConfig {
   // Entorno actual (cámbialo según necesites)
-  static const Environment current = Environment.prod;
+  static const Environment current = Environment.qa;
 
   // Versión mostrada en footer/drawer y comparada contra AppUpdateService —
   // antes vivía en AppConstants.version como constante suelta, sin relación

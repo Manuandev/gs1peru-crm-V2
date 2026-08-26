@@ -38,6 +38,11 @@ Nunca importar archivos individuales si existe un `index_*.dart` que los re-expo
 | `lib/config/` | Rutas, navegación, transiciones, extensions |
 | `lib/features/` | Patrones BLoC, UseCase, Repository, DataSource, modelos, ApiResult, CrudResult |
 
+Si al generar el APK aparece un **"error de paquetes"** (conflicto de firma
+al instalar) o algo relacionado a versiones de Flutter/Gradle, revisar
+primero [NOTAS_BUILD_APK.md](NOTAS_BUILD_APK.md) — explica la causa raíz
+(keystore de release fuera de git) y el checklist antes de reportarlo como bug.
+
 ---
 
 ## Convención de estructura por feature

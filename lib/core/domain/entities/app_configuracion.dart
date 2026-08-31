@@ -33,12 +33,13 @@ class AppConfiguracion extends Equatable {
   }
 
   // ── TLA — Tipo de login habilitado en la app ───────────────
-  /// La opción marcada como activa (VALOR_5 == '1'); credenciales por defecto.
+  /// La opción marcada como activa (VALOR_5 == '1'); si el grupo TLA no trae
+  /// ninguna opción activa, el default es solo Google (pedido de negocio).
   TipoLoginApp get tipoLogin {
     final activa = _opciones(ConfiguracionKeys.tipoLogin)
         .where((c) => c.valor5 == '1')
         .firstOrNull;
-    return TipoLoginApp.fromId(activa?.id ?? ConfiguracionKeys.idLoginAmbos);
+    return TipoLoginApp.fromId(activa?.id ?? ConfiguracionKeys.idLoginGoogle);
   }
 
   @override

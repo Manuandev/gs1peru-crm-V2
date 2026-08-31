@@ -595,6 +595,27 @@ vacíos en la respuesta) — gap preexistente, independiente de este cambio.
 
 ---
 
+## Método de login mostrado (grupo TLA)
+
+`LoginView` decide qué mostrar (solo Google / solo credenciales / ambos) según
+`ConfiguracionService().tipoLogin`, que sale del grupo `TLA` de `T_CONFIGURACION`
+(cargado en `SplashBloc`, task `'CA'`).
+
+**Default = solo Google** en los 3 puntos donde puede faltar el dato (pedido de
+negocio, 2026-08-31 — la cuenta corporativa es el camino principal):
+
+| Caso | Archivo | Fallback |
+|---|---|---|
+| Config nunca cargó (`_config == null` — backend sin respuesta) | `core/services/configuracion_service.dart` | `TipoLoginApp.google` |
+| Config cargó pero TLA sin opción activa (`valor5 == '1'`) | `core/domain/entities/app_configuracion.dart` | `ConfiguracionKeys.idLoginGoogle` |
+| Id de login desconocido | `core/models/configuracion_item.dart` (`TipoLoginApp.fromId`) | `TipoLoginApp.google` |
+
+Antes de este cambio el fallback era `credenciales`/`ambos` — el riesgo asumido
+es que si Google no está disponible en el dispositivo **y** el backend no
+responde, ese usuario no tiene forma de entrar hasta que la config cargue bien.
+
+---
+
 ## Páginas
 
 | Página | Ruta | Transición |

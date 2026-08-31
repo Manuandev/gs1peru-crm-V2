@@ -81,9 +81,11 @@ enum TipoLoginApp {
   final int id;
   const TipoLoginApp(this.id);
 
+  // Ante un id desconocido, el default es solo Google (pedido de negocio —
+  // mismo criterio que ConfiguracionService.tipoLogin y AppConfiguracion.tipoLogin).
   static TipoLoginApp fromId(int id) => TipoLoginApp.values.firstWhere(
     (e) => e.id == id,
-    orElse: () => TipoLoginApp.credenciales,
+    orElse: () => TipoLoginApp.google,
   );
 
   bool get mostrarGoogle => this == google || this == ambos;

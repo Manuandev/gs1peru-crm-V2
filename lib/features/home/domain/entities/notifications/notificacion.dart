@@ -19,6 +19,10 @@ class Notificacion {
   final bool leido;
   // Solo presente en derivación/mensaje (viene dentro de DATOS) — null en actividad.
   final int? idChatCab;
+  // Solo presente en leadPorContactar/leadReasignado (viene dentro de DATOS,
+  // ver notificacion_model.dart) — null en el resto de tipos. Usado por
+  // "Ver seguimiento" para ir a detalle de contacto (T_LEAD.ID_CONTACTO).
+  final int? idContacto;
   // Solo presente en derivación/mensaje — reemplaza a etiquetaPrincipal en el
   // chip inferior de la tarjeta (ver getter abajo). Vacío en el resto de tipos.
   final String oportunidad;
@@ -32,6 +36,7 @@ class Notificacion {
     required this.fechaHora,
     required this.leido,
     this.idChatCab,
+    this.idContacto,
     this.oportunidad = '',
   });
 
@@ -44,6 +49,7 @@ class Notificacion {
     String? fechaHora,
     bool? leido,
     int? idChatCab,
+    int? idContacto,
     String? oportunidad,
   }) => Notificacion(
     id: id ?? this.id,
@@ -54,6 +60,7 @@ class Notificacion {
     fechaHora: fechaHora ?? this.fechaHora,
     leido: leido ?? this.leido,
     idChatCab: idChatCab ?? this.idChatCab,
+    idContacto: idContacto ?? this.idContacto,
     oportunidad: oportunidad ?? this.oportunidad,
   );
 

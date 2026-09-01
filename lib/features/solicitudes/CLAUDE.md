@@ -1,5 +1,32 @@
 # Solicitudes Feature
 
+## `SolicitudAsesorPickerModal` — refresco angosto de asesores + tarjetas de estado rediseñadas (2026-08-21)
+Mismo día, mismo pedido y mismo cambio que `CobranzaAsesorPickerModal` (ver `cobranza/CLAUDE.md`
+para el detalle completo — task nuevo `'ASE'` en `CRM.CSV_LISTAS_LST_APP`,
+`CatalogsRepository.getAsesores()`, ver `core/CLAUDE.md` → `AsesorItem`). Acá:
+
+- `_SolicitudAsesorPickerModalState.initState()` llama `getAsesores()` (best-effort) y guarda el
+  resultado en `_asesoresFrescos` — cae a `CatalogsBloc.state.asesores` mientras no llega o si
+  falla.
+- Los 2 chips (Sin validar/Validado, antes `_EstadoBadgeChico`, ahora `_EstadoBadgeGrande`) ya no
+  se ocultan en cero — siempre se pintan, más grandes, en una `Column` a la derecha de la fila
+  (reemplaza el pill de "total" que había ahí, la suma de los 2 ya lo comunica) — activo (color
+  del estado) o gris (en cero), mismo criterio que Cobranza.
+
+## Revert — `SolicitudAsesorPickerModal` ya no recarga nada al abrir (2026-08-21)
+**Revierte por completo** la recarga al abrir de este picker — pedido explícito del usuario tras
+un crash real en vivo en el mismo picker de `cobranza/` (`Could not find the correct
+Provider<CobranzaListBloc> above this CobranzaAsesorPickerModal Widget`), aplicado acá también
+por ser el mismo patrón exacto. Ya no dispara `CatalogsLoadRequested`/`SolicitudListRefresh` ni
+al abrirse (`initState`) ni por el ícono manual de refrescar (**se eliminó el ícono**) — usa
+directo `CatalogsBloc.state` (global, cargado una vez al iniciar sesión) y
+`widget.conteosPorAsesor` tal cual llega por parámetro (snapshot que `SolicitudListBloc` ya
+calculó sobre la lista pintada, sin `context.watch` reactivo). Ver `cobranza/CLAUDE.md` → "Revert
+— `CobranzaAsesorPickerModal` ya no recarga nada al abrir" para el detalle completo — mismo
+cambio, mismo motivo, en los dos pickers. La nota vieja de este archivo ("`SolicitudAsesorPickerModal`
+— la recarga al abrir sigue siendo el comportamiento pedido", en la entrada de abajo sobre el
+skeleton gris) queda obsoleta.
+
 ## Bug real — la lista se tapaba con el skeleton gris al abrir el picker de "Asesores" (2026-08-20)
 Reportado por el usuario: "al apretar Asesores sale en gris" — regresión desde
 `f1408d6` (2026-08-14, "Selector de asesor: recarga al abrir..."), que hizo que
@@ -3232,10 +3259,10 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
   `SessionService().isModerador` — mismo patrón que `CobranzaFilterChips`. Antes de este
   cambio el chip "Asesores" siempre estaba visible, incluso para un asesor no-moderador
 - `SolicitudAsesorPickerModal` (list/) → modal del chip "Asesores", mismo patrón que
-  `CobranzaAsesorPickerModal` (ver `cobranza/CLAUDE.md` → "recarga al abrir + desglose por
-  estado", 2026-08-14): reactivo a `CatalogsBloc` **y** a `SolicitudListBloc` (ninguno como
-  snapshot estático) — al abrirse (`initState`) y con el ícono de refrescar dispara
-  `CatalogsLoadRequested` + `SolicitudListRefresh`. Cada fila muestra avatar, nombre, código,
+  `CobranzaAsesorPickerModal` (ver `cobranza/CLAUDE.md` → "Revert — ya no recarga nada al
+  abrir", 2026-08-21): snapshot estático, no dispara ninguna recarga al abrirse — usa
+  `CatalogsBloc.state` tal cual y `widget.conteosPorAsesor` tal cual llega por parámetro. Cada
+  fila muestra avatar, nombre, código,
   punto verde si `disponible`, el total en negrita y una fila de chips ("Sin validar"/
   "Validado", naranja/verde) — el conteo (`SolicitudListSuccess.conteosPorAsesor`, ahora
   `Map<String, Map<bool,int>>` desglosado por `ibValidado`, antes un total plano) se calcula en

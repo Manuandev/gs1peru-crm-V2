@@ -11,15 +11,18 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 /// cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el llamador
 /// debe interpretar `null` como "volver al filtro Todos".
 ///
-/// Reactivo a [CatalogsBloc] Y a [CobranzaListBloc] — al abrirse, dispara
-/// `CatalogsLoadRequested` + `CobranzaListRefresh` (además del ícono manual
-/// de refrescar) para que tanto el universo de asesores como el conteo por
-/// estado estén al día, no lo que quedó cargado en memoria desde que se
-/// entró a la pantalla. El conteo por asesor ([conteosPorAsesor], desglosado
-/// por `idEstado`) NO viene del backend, se calcula en [CobranzaListBloc]
-/// sobre las cobranzas cargadas — `widget.conteosPorAsesor` es solo el
-/// snapshot inicial (evita un parpadeo en blanco mientras llega el refresh);
-/// una vez que el bloc reemite, el modal se actualiza solo.
+/// No dispara ninguna recarga al abrirse (revertido 2026-08-21, pedido
+/// explícito del usuario) — usa directo el universo de asesores ya cargado
+/// en [CatalogsBloc] (global, cargado una vez al iniciar sesión) y
+/// [conteosPorAsesor], el snapshot que ya calculó `CobranzaListBloc` sobre
+/// la lista pintada en pantalla. Antes recargaba ambos al abrir
+/// (`CatalogsLoadRequested` + `CobranzaListRefresh`) y quedaba reactivo a
+/// `CobranzaListBloc` — se quitó porque el modal puede abrirse desde un
+/// `BuildContext` sin `Provider<CobranzaListBloc>` en su árbol (crash
+/// reportado en vivo: "Could not find the correct `Provider<CobranzaListBloc>`
+/// above this CobranzaAsesorPickerModal Widget") y porque el usuario
+/// prefiere que solo muestre lo que ya está cargado, sin ninguna llamada de
+/// red extra al abrir el picker.
 class CobranzaAsesorPickerModal extends StatefulWidget {
   final Map<String, Map<int, int>> conteosPorAsesor;
   final String? seleccionadoActual;
@@ -61,14 +64,29 @@ class _CobranzaAsesorPickerModalState
   final _searchCtrl = TextEditingController();
   String _query = '';
 
+  // Universo de asesores refrescado con el task angosto 'ASE' (solo
+  // asesores, sin el catálogo completo) — null mientras no llega o si falla
+  // (best-effort), cae al snapshot de CatalogsBloc.state en ese caso. Mismo
+  // criterio que CatalogsRemoteDatasource.getTipoCambio()/getAsesores(), ver
+  // core/CLAUDE.md — evita recargar el catálogo entero (campañas,
+  // oportunidades, etc.) solo para poner al día si de la nada asignaron un
+  // asesor nuevo.
+  List<AsesorItem>? _asesoresFrescos;
+
   @override
   void initState() {
     super.initState();
-    // "Cada que abra esto, que cargue la data" — pedido explícito del
-    // usuario, no confiar en el catálogo (sesión) ni en la lista (última
-    // vez que se entró a la pantalla) que puedan estar desactualizados.
-    context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
-    context.read<CobranzaListBloc>().add(const CobranzaListRefresh());
+    _cargarAsesoresFrescos();
+  }
+
+  Future<void> _cargarAsesoresFrescos() async {
+    try {
+      final asesores = await context.read<CatalogsRepository>().getAsesores();
+      if (mounted) setState(() => _asesoresFrescos = asesores);
+    } catch (_) {
+      // Best-effort — si falla, el picker sigue usable con el snapshot de
+      // CatalogsBloc (catálogo cacheado desde el login).
+    }
   }
 
   @override
@@ -94,13 +112,7 @@ class _CobranzaAsesorPickerModalState
     final colorScheme = Theme.of(context).colorScheme;
     final screenHeight = MediaQuery.sizeOf(context).height;
 
-    // Mientras llega el refresh disparado en initState, se muestra el
-    // snapshot con el que se abrió el modal (evita un parpadeo en blanco) —
-    // apenas CobranzaListBloc reemite con datos frescos, se usa ese.
-    final cobranzaListState = context.watch<CobranzaListBloc>().state;
-    final conteosPorAsesor = cobranzaListState is CobranzaListSuccess
-        ? cobranzaListState.conteosPorAsesor
-        : widget.conteosPorAsesor;
+    final conteosPorAsesor = widget.conteosPorAsesor;
 
     return SizedBox(
       height: screenHeight * 0.75,
@@ -140,21 +152,6 @@ class _CobranzaAsesorPickerModalState
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    context.read<CatalogsBloc>().add(
-                      const CatalogsLoadRequested(),
-                    );
-                    context.read<CobranzaListBloc>().add(
-                      const CobranzaListRefresh(),
-                    );
-                  },
-                  icon: Icon(
-                    AppIcons.refresh,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                ),
-                IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: Icon(
                     AppIcons.close,
@@ -190,7 +187,8 @@ class _CobranzaAsesorPickerModalState
                   );
                 }
 
-                final asesores = (state as CatalogsLoaded).asesores;
+                final asesores =
+                    _asesoresFrescos ?? (state as CatalogsLoaded).asesores;
                 final filtrados = _filtrar(asesores);
 
                 if (asesores.isEmpty) {
@@ -259,7 +257,6 @@ class _AsesorTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final total = conteoPorEstado.values.fold(0, (a, b) => a + b);
 
     return GestureDetector(
       onTap: onTap,
@@ -279,7 +276,7 @@ class _AsesorTile extends StatelessWidget {
           ),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Stack(
               children: [
@@ -317,6 +314,7 @@ class _AsesorTile extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     asesor.nombre,
@@ -333,41 +331,30 @@ class _AsesorTile extends StatelessWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  if (total > 0) ...[
-                    const SizedBox(height: AppSpacing.xxs),
-                    Wrap(
-                      spacing: AppSpacing.xxs,
-                      runSpacing: AppSpacing.xxs,
-                      children: [
-                        for (final e in _estados)
-                          if ((conteoPorEstado[e.id] ?? 0) > 0)
-                            _EstadoBadgeChico(
-                              icon: e.icon,
-                              label: e.label,
-                              color: colorEstadoGes(e.id),
-                              cantidad: conteoPorEstado[e.id]!,
-                            ),
-                      ],
-                    ),
-                  ],
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xxs,
-              ),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-              ),
-              child: Text(
-                '$total',
-                style: AppTextStyles.labelSmall.copyWith(
-                  fontWeight: AppTextStyles.weightBold,
-                  color: colorScheme.onSurfaceVariant,
-                ),
+            const SizedBox(width: AppSpacing.sm),
+            // Siempre visibles los 4 estados (activo=color, en 0=gris) — antes
+            // solo aparecía el estado con cantidad > 0, chico, debajo del
+            // nombre; pedido explícito del usuario: más grande, a la derecha,
+            // y siempre los 4 aunque estén en cero (con datos reales donde
+            // solo "Facturar" tenía cantidad, el resto ni aparecía).
+            SizedBox(
+              width: 96,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: AppSpacing.xxs,
+                runSpacing: AppSpacing.xxs,
+                children: [
+                  for (final e in _estados)
+                    _EstadoBadgeGrande(
+                      icon: e.icon,
+                      color: colorEstadoGes(e.id),
+                      cantidad: conteoPorEstado[e.id] ?? 0,
+                      tooltip: e.label,
+                    ),
+                ],
               ),
             ),
           ],
@@ -377,46 +364,60 @@ class _AsesorTile extends StatelessWidget {
   }
 }
 
-// Chip chico: ícono + cantidad, coloreado por estado — mismo lenguaje visual
-// que CobranzaSummaryCards, en miniatura. El label completo va en el
-// Tooltip (accesible sin ocupar espacio horizontal en la fila).
-class _EstadoBadgeChico extends StatelessWidget {
+// Badge grande: ícono + cantidad, coloreado por estado si tiene cantidad > 0,
+// gris si está en 0 — a diferencia del chico de antes, siempre se renderiza
+// (nunca se oculta por estar en cero). Mismo lenguaje visual que
+// SolicitudAsesorPickerModal._EstadoBadgeGrande.
+class _EstadoBadgeGrande extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Color color;
   final int cantidad;
+  final String tooltip;
 
-  const _EstadoBadgeChico({
+  const _EstadoBadgeGrande({
     required this.icon,
-    required this.label,
     required this.color,
     required this.cantidad,
+    required this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Cada estado conserva SIEMPRE su propio color (icono/texto/borde) esté
+    // en 0 o no — igual que CobranzaSummaryCards, donde "Pend. pago"/
+    // "Cancelado" en 0 se ven en su color (rojo/verde), nunca gris (fix real
+    // 2026-08-21: la primera versión ponía gris genérico en 0, "faltan los
+    // colores" reportado por el usuario). Relleno sólido (activo) vs. solo
+    // borde (en 0) ya basta para distinguir "tiene registros" de "no tiene".
+    final activo = cantidad > 0;
+    final colorContenido = activo ? AppColors.textOnDark : color;
+
     return Tooltip(
-      message: label,
+      message: tooltip,
       child: Container(
+        constraints: const BoxConstraints(
+          minWidth: AppSizing.badgeEstadoMinWidth,
+        ),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xxs,
-          vertical: 1,
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs,
         ),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          color: activo ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+          border: activo ? null : Border.all(color: color),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: AppSizing.iconInline, color: color),
-            const SizedBox(width: 2),
+            Icon(icon, size: AppSizing.iconSm, color: colorContenido),
+            const SizedBox(width: AppSpacing.xxs),
             Text(
               '$cantidad',
-              style: AppTextStyles.labelSmall.copyWith(
-                fontSize: AppTextStyles.sizeXs,
-                fontWeight: AppTextStyles.weightSemiBold,
-                color: color,
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: AppTextStyles.weightBold,
+                color: colorContenido,
               ),
             ),
           ],

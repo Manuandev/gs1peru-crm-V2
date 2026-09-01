@@ -594,5 +594,6 @@ class AppIcons {
   static const FaIconData etapaPerdido = FontAwesomeIcons.faceSadTear;
   static const FaIconData etapaProximoPeriodo = FontAwesomeIcons.calendarDays;
   static const FaIconData etapaSinWhatsapp = FontAwesomeIcons.phoneSlash;
-  static const FaIconData etapaFichaInscripcion = FontAwesomeIcons.clipboardList;
+  static const FaIconData etapaFichaInscripcion =
+      FontAwesomeIcons.clipboardList;
 }

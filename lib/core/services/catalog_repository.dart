@@ -5,6 +5,7 @@ import 'package:app_crm/core/index_core.dart';
 abstract class CatalogsRepository {
   Future<ListasGenericas> getListas();
   Future<TipoCambioItem> getTipoCambio();
+  Future<List<AsesorItem>> getAsesores();
   Future<
     ({
       List<EstadoItem> estados,

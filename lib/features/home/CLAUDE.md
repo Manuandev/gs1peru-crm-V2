@@ -248,10 +248,12 @@ futuros) sigue cayendo en `actividad` como fallback.
 
 - **`RECORDATORIO`** (`_parseDatosRecordatorio`) — campos DATOS: `0 ID_RECORDATORIO`,
   `1 ASESOR_ASIGNADO`, `2 HORA_RECORDATORIO`, `3 NOM_ACCION`, `4 NOM_AVISO`, `5 MODALIDAD`,
-  `6 FECHA_HORA_AVISO`, `7 COMENTARIO`, `8 NOM_CONTACTO`, `9 TELEFONO`. Descripción:
-  `"Tienes un recordatorio a las {hora}: {nom_accion}. Modalidad: {modalidad}"` — solo usa hora/
-  acción/modalidad, `NOM_AVISO`/`COMENTARIO`/`NOM_CONTACTO`/`TELEFONO` quedan sin mostrar (pedido
-  de negocio, texto exacto confirmado por el usuario).
+  `6 FECHA_HORA_AVISO`, `7 COMENTARIO`, `8 NOM_CONTACTO`, `9 TELEFONO`, `10 ID_CONTACTO`
+  (agregado al SP 2026-08-24, cierra el gap que documentaba esta sección — ver más abajo).
+  Descripción: `"Tienes un recordatorio a las {hora}: {nom_accion}. Modalidad: {modalidad}"` —
+  solo usa hora/acción/modalidad, `NOM_AVISO`/`COMENTARIO`/`NOM_CONTACTO`/`TELEFONO` quedan sin
+  mostrar (pedido de negocio, texto exacto confirmado por el usuario). `idContacto` (índice 10)
+  sí se extrae y alimenta "Ver seguimiento" igual que `LEAD_POR_CONTACTAR`/`LEAD_REASIGNADO`.
 - **`LEAD_POR_CONTACTAR`** (`_parseDatosLeadPorContactar`) — campos DATOS: `0
   ASESOR_ASIGNADO_COD`, `1-5 DIA_SEMANA/DIA/MES/ANIO/HORA`, `6 NRO_DOCUMENTO`, `7 ID_LEAD`,
   `8 ID_CONTACTO`, `9 NOM_CONTACTO`, `10 DESC_CANAL`, `11 NOM_EMPRESA`, `12 TELEFONO`,
@@ -270,16 +272,31 @@ futuros) sigue cayendo en `actividad` como fallback.
   `domain/entities/notifications/notificacion.dart`) — ícono/color/`etiquetaPrincipal`/
   `labelAccion` por tipo: `recordatorio` → `AppIcons.time` + `AppColors.warning` ("Recordatorio"),
   `leadPorContactar` → `AppIcons.phone` + `AppColors.info` ("Por contactar"), `leadReasignado` →
-  `AppIcons.reasignar` + `AppColors.brandRaspberryAccessible` ("Reasignado"). Los 3 muestran el
-  botón de acción ("Ver seguimiento") igual que `actividad` — ninguno de los 4 tiene todavía un id
-  de destino propio para navegar (mismo pendiente que ya tenía `actividad`, ver
-  `notifications_portrait.dart._onAccion`).
-- **Pendiente, no tocado**: los chips de filtro de `notifications_portrait.dart`
-  (`_Filtro.todas/actividades/derivaciones/mensajes`, `NotificationsLoaded.actividades/
-  derivaciones/mensajes`) siguen sin un chip dedicado para estos 3 tipos nuevos — aparecen en
-  "Todas" pero ya no caen bajo el chip "Actividades" (antes sí, porque todo lo no-AIA/CHAT caía
-  ahí). Si negocio pide un chip propio para Recordatorios/Por contactar/Reasignados, agregar el
-  getter correspondiente a `NotificationsLoaded` y su `_FiltroChip` en `notifications_portrait.dart`.
+  `AppIcons.reasignar` + `AppColors.brandRaspberryAccessible` ("Reasignado").
+
+### Chip "Actividades" + navegación a detalle de contacto (2026-08-24)
+
+Pedido de negocio explícito: el chip "Actividades" agrupa todo lo que no es derivación (bot) ni
+mensaje — `actividad` (genérico), `recordatorio`, `leadPorContactar`, `leadReasignado` — y el
+botón "Ver seguimiento" de `leadPorContactar`/`leadReasignado` navega a detalle de contacto.
+
+- **`NotificationsLoaded.actividades`** (`presentation/bloc/notifications/notifications_state.dart`)
+  ahora filtra los 4 tipos de arriba, no solo `actividad` — antes recordatorio/por-contactar/
+  reasignado solo aparecían en el chip "Todas". `derivaciones` (`AIA`) y `mensajes` (`CHAT`) sin
+  cambios, cada uno sigue siendo su propio chip exclusivo.
+- **`Notificacion.idContacto`** (nuevo campo `int?`, default `null`) — se parsea desde el índice
+  `8` de DATOS (`ID_CONTACTO`, confirmado real con un CSV en vivo) en `_parseDatosLeadPorContactar`
+  y `_parseDatosLeadReasignado` (`data/models/notifications/notificacion_model.dart`), ambos
+  método pasaron de devolver `String` a `(String, int?)`. `null` en el resto de tipos.
+- **`notifications_portrait.dart._onAccion`** — antes solo navegaba si `idChatCab != null`
+  (mensaje/derivación) y no hacía nada para el resto. Ahora, si no hay `idChatCab`, cae a
+  `context.goToDetalleContacto(idContacto:)` cuando `idContacto != null` (recordatorio/
+  leadPorContactar/leadReasignado — `RECORDATORIO` sumó `ID_CONTACTO` al DATOS el mismo día,
+  ver arriba, cerrando el gap que esta sección documentaba originalmente).
+- **Solo `actividad` genérica sigue sin navegar** — el fallback (`GESTION_DE_CODIGO`/
+  `GESTION_DE_PAGO`/`INSCRIPCION_DE_EMPRESAS`) no tiene parseo de DATOS definido en absoluto
+  (se muestra crudo, sin formatear) ni trae ningún id de destino. Si negocio pide que también
+  navegue, hay que definir su shape de DATOS en el SP primero.
 
 ### Marcar como leídas — automático y masivo (no selectivo)
 

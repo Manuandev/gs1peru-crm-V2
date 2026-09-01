@@ -353,7 +353,10 @@ AppImages.logoFromBrightness(brightness)   // sin context, para ViewModels
 ## AppConstants — `constants/app_constants.dart`
 
 ```dart
-AppConstants.version    // '1.0'
+// Getter delegado a EnvConfig.version (2026-08-24) — antes era una constante
+// suelta sin relación al entorno, había que sincronizarla a mano junto con
+// EnvConfig.current antes de cada build; ahora depende de un solo interruptor.
+AppConstants.version    // String, ver EnvConfig.version — '1.0.13' dev/qa, '1.0.0.1' prod
 AppConstants.nombreApp  // 'GS1 Perú - CRM'
 
 // Separadores para body del backend — nunca usar literales de estos caracteres
@@ -1045,8 +1048,20 @@ usadas por `ListasGenericasModel.parse`) en `catalog_item_model.dart`. Ambos se 
 
 Todas implementan `Comboable` excepto `ValoresCRMItem`/`TipoCambioItem` (fila única, no son un ítem de lista/dropdown).
 Parsear con `ListasGenericasModel.parse(rawResponse)`.
-`AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`) y en `CobranzaAsesorPickerModal` —
-el conteo por asesor NO viene del backend, se calcula en el cliente sobre los registros ya cargados.
+`AsesorItem` se usa en el picker de `lead/` (`LeadAsesorPickerModal`), `CobranzaAsesorPickerModal` y
+`SolicitudAsesorPickerModal` — el conteo por asesor NO viene del backend, se calcula en el cliente
+sobre los registros ya cargados. **También disponible por separado, sin traer el catálogo
+completo** (agregado 2026-08-21, mismo criterio que `getTipoCambio()`/`'TC'` arriba) —
+`CatalogsRepository.getAsesores()` (`core/services/catalog_repository.dart`/`_impl.dart` →
+`CatalogsRemoteDatasource.getAsesores()`, task `'ASE'` del mismo SP `CRM.CSV_LISTAS_LST_APP`,
+`urlListasLst`) — mismo `SELECT` que ya usa la parte [5] del catálogo completo
+(`CRM.T_CONTACTO.ASESOR_PRINCIPAL` distinct → `DBO.SYSMUSER01`/`SYSMUSER01_EXT`), como `SELECT`
+aislado en vez de parte de un `CONCAT` grande. `CobranzaAsesorPickerModal`/
+`SolicitudAsesorPickerModal` lo llaman en `initState()` (best-effort, sin bloquear si falla) para
+refrescar el universo de asesores al abrir el picker sin recargar campañas/oportunidades/etc. —
+si de la nada le asignan un lead/solicitud/cobranza nuevo a un asesor, no hace falta volver a
+entrar a la app para que aparezca en el picker. Mientras la respuesta no llega (o si falla), cae
+al snapshot ya cacheado en `CatalogsBloc.state`.
 `EstadoGestionItem` es solo de referencia/etiqueta — `cobranza/` traduce el `ID_ESTADO_GES` crudo a
 sus 6 códigos internos (`PD`/`FP`/`F`/`CA`/`AN`/`PP`) con una tabla fija en `CobranzaModel`, no
 consultando este catálogo en tiempo de ejecución (ver `cobranza/CLAUDE.md`).
@@ -1539,6 +1554,9 @@ AvatarUtils.color('Juan Pérez')      // Color consistente por nombre
 ```dart
 '+51 999 888 777'.limpiarTelefono   // '+51999888777' — quita espacios y guiones
 'hola'.convertToHex                 // representación hexadecimal del string
+
+// Nombre de archivo seguro para WhatsApp — solo A-Z a-z 0-9 . _ -
+'PLANTAS-NUTRICIO´N.pdf'.sanitizarNombreArchivo  // 'PLANTAS-NUTRICION.pdf'
 
 // Validador de email (para usar en validators de formularios)
 null.emailValidator          // 'El email es requerido'

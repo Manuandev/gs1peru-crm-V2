@@ -11,20 +11,34 @@ import 'package:app_crm/core/index_core.dart';
 
 /// Parsea un mensaje con formato WhatsApp:
 /// *bold*, _italic_, ~tachado~, `mono`, URLs clicables y saltos de línea.
-List<InlineSpan> parseMensaje(String mensaje, Color textColor) {
+///
+/// [baseStyle] es el estilo de texto plano sobre el que se aplican
+/// negrita/cursiva/tachado/mono — default `AppTextStyles.bodyMedium` (el
+/// usado por el cuadrado de mensaje del chat). Pasar un estilo propio para
+/// reusar este mismo parseo en otro tamaño de texto (ej. la lista/preview de
+/// plantillas, que usa `labelSmall`/`bodySmall`).
+List<InlineSpan> parseMensaje(
+  String mensaje,
+  Color textColor, {
+  TextStyle? baseStyle,
+}) {
   // Normaliza saltos de línea
   final normalized = mensaje
       .replaceAll(r'\\n', '\n')
       .replaceAll(r'\n', '\n');
 
   final tokens = _splitByUrls(normalized);
+  final base = (baseStyle ?? AppTextStyles.bodyMedium).copyWith(
+    color: textColor,
+    height: baseStyle?.height ?? AppTextStyles.lineHeightBody,
+  );
 
   final List<InlineSpan> spans = [];
   for (final token in tokens) {
     if (_isUrl(token)) {
       spans.add(_urlSpan(token));
     } else {
-      spans.addAll(_parseFormatted(token, textColor));
+      spans.addAll(_parseFormatted(token, base));
     }
   }
   return spans;
@@ -80,14 +94,9 @@ final _formatRegex = RegExp(
   r'\*([^*\n]+)\*|_([^_\n]+)_|~([^~\n]+)~|`([^`\n]+)`',
 );
 
-List<InlineSpan> _parseFormatted(String text, Color textColor) {
+List<InlineSpan> _parseFormatted(String text, TextStyle base) {
   final List<InlineSpan> spans = [];
   int last = 0;
-
-  final base = AppTextStyles.bodyMedium.copyWith(
-    color: textColor,
-    height: AppTextStyles.lineHeightBody,
-  );
 
   for (final match in _formatRegex.allMatches(text)) {
     if (match.start > last) {
@@ -114,7 +123,7 @@ List<InlineSpan> _parseFormatted(String text, Color textColor) {
         text: match.group(4),
         style: base.copyWith(
           fontFamily: AppTextStyles.fontMono,
-          backgroundColor: textColor.withValues(alpha: AppColors.opacityCodeBackground),
+          backgroundColor: base.color!.withValues(alpha: AppColors.opacityCodeBackground),
           letterSpacing: AppTextStyles.letterSpacingCode,
         ),
       ));

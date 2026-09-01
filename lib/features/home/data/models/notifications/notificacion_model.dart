@@ -22,6 +22,7 @@ class NotificacionModel extends Notificacion {
     required super.fechaHora,
     required super.leido,
     super.idChatCab,
+    super.idContacto,
     super.oportunidad,
     this.nombreCliente = '',
     this.codUserDestinatario = '',
@@ -58,6 +59,7 @@ class NotificacionModel extends Notificacion {
 
     var descripcion = datosRaw;
     int? idChatCab;
+    int? idContacto;
     var nombreCliente = '';
     var oportunidad = '';
 
@@ -73,11 +75,17 @@ class NotificacionModel extends Notificacion {
       nombreCliente = nombre;
       oportunidad = oport;
     } else if (tipo == TipoNotificacion.recordatorio) {
-      descripcion = _parseDatosRecordatorio(datosRaw);
+      final (desc, contacto) = _parseDatosRecordatorio(datosRaw);
+      descripcion = desc;
+      idContacto = contacto;
     } else if (tipo == TipoNotificacion.leadPorContactar) {
-      descripcion = _parseDatosLeadPorContactar(datosRaw);
+      final (desc, contacto) = _parseDatosLeadPorContactar(datosRaw);
+      descripcion = desc;
+      idContacto = contacto;
     } else if (tipo == TipoNotificacion.leadReasignado) {
-      descripcion = _parseDatosLeadReasignado(datosRaw);
+      final (desc, contacto) = _parseDatosLeadReasignado(datosRaw);
+      descripcion = desc;
+      idContacto = contacto;
     }
 
     return NotificacionModel(
@@ -89,6 +97,7 @@ class NotificacionModel extends Notificacion {
       fechaHora: ParseUtils.str(c, n - 2),
       leido: ParseUtils.toBool(c, n - 5),
       idChatCab: idChatCab,
+      idContacto: idContacto,
       oportunidad: oportunidad,
       nombreCliente: nombreCliente,
       codUserDestinatario: codUserDestinatario,
@@ -212,13 +221,21 @@ class NotificacionModel extends Notificacion {
   //   4: NOM_AVISO            5: MODALIDAD
   //   6: FECHA_HORA_AVISO     7: COMENTARIO
   //   8: NOM_CONTACTO         9: TELEFONO
-  static String _parseDatosRecordatorio(String datosRaw) {
+  //   10: ID_CONTACTO
+  // idContacto (índice 10, agregado 2026-08-24) se devuelve además del texto
+  // — lo usa "Ver seguimiento" (_onAccion en notifications_portrait.dart)
+  // para navegar a detalle de contacto, mismo mecanismo que
+  // leadPorContactar/leadReasignado.
+  static (String, int?) _parseDatosRecordatorio(String datosRaw) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
     final hora = ParseUtils.str(d, 2);
     final accion = ParseUtils.str(d, 3);
     final modalidad = ParseUtils.str(d, 5);
+    final idContacto = int.tryParse(ParseUtils.str(d, 10));
 
-    return 'Tienes un recordatorio a las $hora: $accion. Modalidad: $modalidad';
+    final descripcion =
+        'Tienes un recordatorio a las $hora: $accion. Modalidad: $modalidad';
+    return (descripcion, idContacto);
   }
 
   // DATOS para LEADS POR CONTACTAR:
@@ -228,14 +245,20 @@ class NotificacionModel extends Notificacion {
   //   10: DESC_CANAL          11: NOM_EMPRESA
   //   12: TELEFONO            13: NOM_OPORTUNIDAD
   //   14: NOM_ASESOR
-  static String _parseDatosLeadPorContactar(String datosRaw) {
+  // idContacto (índice 8) se devuelve además del texto — lo usa "Ver
+  // seguimiento" (_onAccion en notifications_portrait.dart) para navegar a
+  // detalle de contacto (T_LEAD.ID_CONTACTO), pedido de negocio 2026-08-24.
+  static (String, int?) _parseDatosLeadPorContactar(String datosRaw) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
+    final idContacto = int.tryParse(ParseUtils.str(d, 8));
     final nombreContacto = ParseUtils.str(d, 9);
     final canal = ParseUtils.str(d, 10);
     final oportunidad = ParseUtils.str(d, 13);
 
-    return 'Tienes una negociación por contactar con $nombreContacto '
+    final descripcion =
+        'Tienes una negociación por contactar con $nombreContacto '
         'sobre $oportunidad, vía $canal.';
+    return (descripcion, idContacto);
   }
 
   // DATOS para LEADS REASIGNADOS — mismo shape que "por contactar" pero con
@@ -248,13 +271,17 @@ class NotificacionModel extends Notificacion {
   //   12: TELEFONO            13: NOM_OPORTUNIDAD
   //   14: NOM_ASESOR_NUEVO    15: DESC_CANAL
   //   16: NOM_ASESOR_REASIGNO
-  static String _parseDatosLeadReasignado(String datosRaw) {
+
+  // MVILLEGAS¦Lunes¦24¦Agosto¦2026¦11:05¦¦76755¦46902¦MVILLEGAS¦BILL ALARCON ¦¦953992444¦MIGRACIÓN BITRIX¦Manuel Villegas¦¦Cristell Vinces¦12794
+  static (String, int?) _parseDatosLeadReasignado(String datosRaw) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
+    final idContacto = int.tryParse(ParseUtils.str(d, 8));
     final nombreContacto = ParseUtils.str(d, 10);
     final oportunidad = ParseUtils.str(d, 13);
     final canal = ParseUtils.str(d, 15);
 
-    return 'Tienes una negociación reasignada con $nombreContacto '
+    final descripcion = 'Tienes una negociación reasignada con $nombreContacto '
         'sobre $oportunidad, vía $canal.';
+    return (descripcion, idContacto);
   }
 }

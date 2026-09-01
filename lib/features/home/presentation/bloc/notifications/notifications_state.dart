@@ -26,8 +26,18 @@ class NotificationsLoaded extends NotificationsState {
 
   List<Notificacion> get notificaciones => notificationes;
 
+  // Chip "Actividades" agrupa todo lo que no es derivación (bot) ni mensaje:
+  // recordatorios, leads por contactar, leads reasignados y la actividad
+  // genérica (códigos sin tipo dedicado, ej. GESTION_DE_CODIGO) — pedido de
+  // negocio 2026-08-24, ver home/CLAUDE.md.
   List<Notificacion> get actividades => notificaciones
-      .where((n) => n.tipo == TipoNotificacion.actividad)
+      .where(
+        (n) =>
+            n.tipo == TipoNotificacion.actividad ||
+            n.tipo == TipoNotificacion.recordatorio ||
+            n.tipo == TipoNotificacion.leadPorContactar ||
+            n.tipo == TipoNotificacion.leadReasignado,
+      )
       .toList();
 
   List<Notificacion> get derivaciones => notificaciones

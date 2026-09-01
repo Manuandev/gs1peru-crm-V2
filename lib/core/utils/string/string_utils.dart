@@ -10,6 +10,14 @@ extension StringExtensions on String {
   String get convertToHex {
     return codeUnits.map((c) => c.toRadixString(16).padLeft(2, '0')).join();
   }
+
+  // Nombre de archivo seguro para la API de WhatsApp — solo letras sin tilde,
+  // números, guion, guion bajo y punto. Acentos/eñe/símbolos (incluyendo un
+  // acento "suelto" mal codificado, ej. "NUTRICIO´N") hacen que Meta rechace
+  // el envío del documento en silencio aunque el archivo ya esté guardado.
+  String get sanitizarNombreArchivo {
+    return replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '');
+  }
 }
 
 extension NullableStringExtensions on String? {

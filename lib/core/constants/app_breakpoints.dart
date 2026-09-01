@@ -139,6 +139,12 @@ class AppSizing {
   /// Punto indicador de no leído en tiles de notificación: 8px
   static const double dotIndicatorSize = 8.0;
 
+  /// Ancho mínimo de un badge de estado (ícono + dígito), 64px — usado en
+  /// CobranzaAsesorPickerModal/SolicitudAsesorPickerModal para que los
+  /// badges con la misma cantidad de dígitos se vean del mismo ancho entre
+  /// sí, sin que el ícono de cada estado los desalinee.
+  static const double badgeEstadoMinWidth = 64.0;
+
   /// Ícono pequeño: 16px — iconos dentro de labels o chips
   static const double iconSm = 16.0;
 

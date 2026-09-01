@@ -1,5 +1,47 @@
 # Cobranza Feature
 
+## `CobranzaAsesorPickerModal` — refresco angosto de asesores + tarjetas de estado rediseñadas (2026-08-21)
+Dos pedidos del usuario el mismo día, seguimiento directo del revert de abajo:
+
+- **Refresco angosto, no manual** — el revert de abajo dejó el picker sin ninguna recarga (ideal
+  para el crash, pero significaba que si a un asesor le asignaban un lead/cobranza nuevo, no se
+  reflejaba en el picker hasta reingresar a la app). En vez de volver a disparar
+  `CatalogsLoadRequested()` (recarga el catálogo COMPLETO, ~21 partes — el problema original que
+  motivó el revert), se agregó un task angosto nuevo, `'ASE'`, al SP `CRM.CSV_LISTAS_LST_APP`
+  (mismo criterio que `'TC'`/`'EN'`, ver `core/CLAUDE.md` → `AsesorItem`/`getAsesores()`) — trae
+  **solo** el universo de asesores, mismo `SELECT` que ya usa la parte [5] del catálogo completo.
+  `_CobranzaAsesorPickerModalState.initState()` llama `CatalogsRepository.getAsesores()`
+  (best-effort, `try/catch` silencioso) y guarda el resultado en `_asesoresFrescos` — mientras no
+  llega (o si falla), la lista sigue mostrando `CatalogsBloc.state.asesores` (el snapshot cacheado
+  desde el login), sin bloquear ni mostrar loading.
+- **Tarjetas de estado (`_EstadoBadgeGrande`, antes `_EstadoBadgeChico`) — siempre visibles, más
+  grandes, a la derecha.** Antes cada chip de estado (Pend. documento/Facturar/Pend. pago/
+  Cancelado) solo se renderizaba si su cantidad era > 0, chico, debajo del nombre — con un asesor
+  que solo tenía cobranzas en "Facturar", el resto de estados ni aparecía (reportado por el
+  usuario como si faltaran datos, cuando en realidad era la condición `if (cantidad > 0)` la que
+  los ocultaba). Ahora los 4 siempre se pintan, en un `Wrap` a la derecha de la fila (donde antes
+  vivía el pill de "total", que se quitó — la suma de las 4 tarjetas ya lo comunica), con ícono +
+  número más grandes (`AppSizing.iconSm`/`AppTextStyles.labelMedium`, antes `iconInline`/
+  `sizeXs`) y color de fondo/contenido según si está activo (`cantidad > 0` → color del estado,
+  `colorEstadoGes`) o inactivo (`cantidad == 0` → gris, `surfaceContainerHighest`/
+  `onSurfaceVariant`) — mismo lenguaje "activo en color, en cero en gris" en los dos pickers
+  (mismo cambio en `SolicitudAsesorPickerModal`, ver `solicitudes/CLAUDE.md`).
+
+## Revert — `CobranzaAsesorPickerModal` ya no recarga nada al abrir (2026-08-21)
+**Revierte por completo** "`CobranzaAsesorPickerModal` — recarga al abrir + desglose por
+estado" (2026-08-14, más abajo) — pedido explícito del usuario tras un crash real en vivo:
+`Could not find the correct Provider<CobranzaListBloc> above this CobranzaAsesorPickerModal
+Widget`. El modal ya no dispara `CatalogsLoadRequested`/`CobranzaListRefresh` ni al abrirse
+(`initState`) ni por el ícono manual de refrescar (**se eliminó el ícono**, ya no tiene nada que
+disparar) — usa directo `CatalogsBloc.state` (global, cargado una vez al iniciar sesión, sin
+recarga) y `widget.conteosPorAsesor` tal cual llega por parámetro (el snapshot que
+`CobranzaListBloc` ya calculó sobre la lista pintada en pantalla, sin `context.watch` reactivo).
+Motivo, en palabras del usuario: "no debería por qué cargar nuevamente los asesores... que
+muestre la data que está pintada en la lista". El desglose por `idEstado` (chips chicos en cada
+fila, `_AsesorTile`) **no se tocó** — sigue viniendo de `conteosPorAsesor`, solo cambió de dónde
+sale ese mapa (snapshot fijo en vez de reactivo). Mismo cambio aplicado en `solicitudes/`
+(`SolicitudAsesorPickerModal`, ver su CLAUDE.md) — mismo bug, mismo picker, mismo fix.
+
 ## Bug real — la lista se tapaba con loading gris al abrir el picker de "Asesores" (2026-08-20)
 Mismo bug, mismo fix que en `solicitudes/` (ver su CLAUDE.md para el detalle completo) —
 regresión desde `f1408d6` (2026-08-14): `CobranzaAsesorPickerModal.initState()` dispara
@@ -241,6 +283,10 @@ mismo dato a `'LS'`, mismo criterio que `'DT'`:
   ahora usan `NumberFormatUtils.formatMonto(...)`, mismo patrón que arriba.
 
 ## `CobranzaAsesorPickerModal` — recarga al abrir + desglose por estado (2026-08-14)
+**⚠️ La recarga al abrir se revirtió por completo el 2026-08-21 — ver "Revert —
+`CobranzaAsesorPickerModal` ya no recarga nada al abrir" arriba.** El desglose por `idEstado`
+(la otra mitad de esta entrada) sigue vigente sin cambios.
+
 Pedido explícito del usuario: el picker de asesor mostraba un total plano por asesor
 (`conteosPorAsesor`, `Map<String,int>`) calculado sobre lo que `CobranzaListBloc` ya tenía
 cargado desde la última vez que se entró a la pantalla — y el universo de asesores
@@ -473,13 +519,13 @@ Gestiona el flujo completo de facturación: lista de cobranzas, detalle, factura
   `CrossAxisAlignment.stretch`, igual que `LeadListStatsRow`)
 - `CobranzaFilterChips` (lista/) → chips de filtro horizontal (Todos/Asesores/Contado/Crédito);
   el chip "Asesores" solo se muestra si `SessionService().isModerador`
-- `CobranzaAsesorPickerModal` (lista/) → bottom sheet con buscador (nombre o `codUser`), reactivo
-  a `CatalogsBloc` Y a `CobranzaListBloc` (ninguno como snapshot estático — ver sección propia
-  arriba, "recarga al abrir + desglose por estado"); cada fila muestra avatar (iniciales +
+- `CobranzaAsesorPickerModal` (lista/) → bottom sheet con buscador (nombre o `codUser`), snapshot
+  estático — no recarga nada al abrirse (revertido 2026-08-21, ver sección propia arriba,
+  "Revert — ya no recarga nada al abrir"); usa `CatalogsBloc.state` tal cual y
+  `widget.conteosPorAsesor` tal cual llega por parámetro. Cada fila muestra avatar (iniciales +
   color), nombre, código, punto verde si `disponible`, el total de cobranzas en negrita y una
-  fila de chips por estado (`conteosPorAsesor`, calculado en el bloc, no en el backend). Al
-  abrirse y con el ícono de refrescar dispara `CatalogsLoadRequested` + `CobranzaListRefresh`.
-  Retorna el `codUser`
+  fila de chips por estado (`conteosPorAsesor`, calculado en `CobranzaListBloc` sobre la lista
+  pintada, no en el backend). Retorna el `codUser`
   elegido o `null` — `CobranzaListPortrait` interpreta `null` como "volver a Todos"
 
 ## SPs que consume

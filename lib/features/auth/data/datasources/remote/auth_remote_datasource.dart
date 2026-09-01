@@ -37,17 +37,19 @@ class AuthRemoteDatasource {
     required String correo,
   }) async {
     final info = await DeviceInfoService.getInfoConTimeout();
-    final fecha = DateTime.now();
 
     final body = [
       accessToken,
       correo,
       info['ip_local'],
       info['coordenadas'],
+      info['so'],
+      info['modelo'],
+      info['so_version'],
       info['pais_codigo'],
       info['region'],
       info['ciudad'],
-      fecha,
+      AppConstants.version,
     ].join(AppConstants.sepCampos);
 
     final resultado = await _api.postSafe(ApiConstants.urlLoginGoogle, body);

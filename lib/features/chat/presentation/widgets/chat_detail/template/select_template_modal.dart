@@ -601,11 +601,15 @@ class _TemplateItem extends StatelessWidget {
                       // confirmada por el usuario).
                       if (contenidoFormateado.trim().isNotEmpty) ...[
                         const SizedBox(height: AppSpacing.xxs),
-                        Text(
-                          contenidoFormateado,
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: AppTextStyles.weightRegular,
+                        Text.rich(
+                          TextSpan(
+                            children: parseMensaje(
+                              contenidoFormateado,
+                              colorScheme.onSurfaceVariant,
+                              baseStyle: AppTextStyles.labelSmall.copyWith(
+                                fontWeight: AppTextStyles.weightRegular,
+                              ),
+                            ),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -719,10 +723,13 @@ class _TemplatePreview extends StatelessWidget {
               bottomLeft: Radius.circular(AppSizing.radiusXs),
             ),
           ),
-          child: Text(
-            contenidoFormateado,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: colorScheme.onPrimaryContainer,
+          child: Text.rich(
+            TextSpan(
+              children: parseMensaje(
+                contenidoFormateado,
+                colorScheme.onPrimaryContainer,
+                baseStyle: AppTextStyles.bodySmall,
+              ),
             ),
           ),
         ),

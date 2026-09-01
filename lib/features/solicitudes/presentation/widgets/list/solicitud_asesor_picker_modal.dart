@@ -4,23 +4,23 @@ import 'package:flutter/material.dart';
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
 /// Modal de búsqueda de asesor (por nombre o código) para el chip "Asesores"
 /// de la lista de Solicitudes. Retorna el `codUser` elegido, o `null` si se
 /// cierra sin seleccionar (back, tap fuera, o botón de cerrar) — el llamador
 /// debe interpretar `null` como "volver al filtro Todas".
 ///
-/// Reactivo a [CatalogsBloc] Y a [SolicitudListBloc] — al abrirse, dispara
-/// `CatalogsLoadRequested` + `SolicitudListRefresh` (además del ícono manual
-/// de refrescar) para que tanto el universo de asesores como el conteo
-/// sin validar/validado estén al día, no lo que quedó cargado en memoria
-/// desde que se entró a la pantalla. El conteo por asesor
-/// ([conteosPorAsesor], desglosado por `ibValidado`) NO viene del backend,
-/// se calcula en [SolicitudListBloc] sobre las solicitudes cargadas —
-/// `widget.conteosPorAsesor` es solo el snapshot inicial (evita un parpadeo
-/// en blanco mientras llega el refresh); una vez que el bloc reemite, el
-/// modal se actualiza solo. Mismo patrón que `CobranzaAsesorPickerModal`.
+/// No dispara ninguna recarga al abrirse (revertido 2026-08-21, pedido
+/// explícito del usuario, mismo cambio que `CobranzaAsesorPickerModal`) —
+/// usa directo el universo de asesores ya cargado en [CatalogsBloc] (global,
+/// cargado una vez al iniciar sesión) y [conteosPorAsesor], el snapshot que
+/// ya calculó `SolicitudListBloc` sobre la lista pintada en pantalla. Antes
+/// recargaba ambos al abrir (`CatalogsLoadRequested` + `SolicitudListRefresh`)
+/// y quedaba reactivo a `SolicitudListBloc` — se quitó por el mismo motivo
+/// que en Cobranza: riesgo de que el modal se abra desde un `BuildContext`
+/// sin `Provider<SolicitudListBloc>` en su árbol, y porque el usuario
+/// prefiere que solo muestre lo que ya está cargado, sin ninguna llamada de
+/// red extra al abrir el picker.
 class SolicitudAsesorPickerModal extends StatefulWidget {
   final Map<String, Map<bool, int>> conteosPorAsesor;
   final String? seleccionadoActual;
@@ -62,14 +62,26 @@ class _SolicitudAsesorPickerModalState
   final _searchCtrl = TextEditingController();
   String _query = '';
 
+  // Universo de asesores refrescado con el task angosto 'ASE' (solo
+  // asesores, sin el catálogo completo) — null mientras no llega o si falla
+  // (best-effort), cae al snapshot de CatalogsBloc.state en ese caso. Mismo
+  // criterio que CobranzaAsesorPickerModal, ver core/CLAUDE.md.
+  List<AsesorItem>? _asesoresFrescos;
+
   @override
   void initState() {
     super.initState();
-    // "Cada que abra esto, que cargue la data" — pedido explícito del
-    // usuario, no confiar en el catálogo (sesión) ni en la lista (última
-    // vez que se entró a la pantalla) que puedan estar desactualizados.
-    context.read<CatalogsBloc>().add(const CatalogsLoadRequested());
-    context.read<SolicitudListBloc>().add(const SolicitudListRefresh());
+    _cargarAsesoresFrescos();
+  }
+
+  Future<void> _cargarAsesoresFrescos() async {
+    try {
+      final asesores = await context.read<CatalogsRepository>().getAsesores();
+      if (mounted) setState(() => _asesoresFrescos = asesores);
+    } catch (_) {
+      // Best-effort — si falla, el picker sigue usable con el snapshot de
+      // CatalogsBloc (catálogo cacheado desde el login).
+    }
   }
 
   @override
@@ -95,13 +107,7 @@ class _SolicitudAsesorPickerModalState
     final colorScheme = Theme.of(context).colorScheme;
     final screenHeight = MediaQuery.sizeOf(context).height;
 
-    // Mientras llega el refresh disparado en initState, se muestra el
-    // snapshot con el que se abrió el modal (evita un parpadeo en blanco) —
-    // apenas SolicitudListBloc reemite con datos frescos, se usa ese.
-    final solicitudListState = context.watch<SolicitudListBloc>().state;
-    final conteosPorAsesor = solicitudListState is SolicitudListSuccess
-        ? solicitudListState.conteosPorAsesor
-        : widget.conteosPorAsesor;
+    final conteosPorAsesor = widget.conteosPorAsesor;
 
     return SizedBox(
       height: screenHeight * 0.75,
@@ -139,21 +145,6 @@ class _SolicitudAsesorPickerModalState
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    context.read<CatalogsBloc>().add(
-                      const CatalogsLoadRequested(),
-                    );
-                    context.read<SolicitudListBloc>().add(
-                      const SolicitudListRefresh(),
-                    );
-                  },
-                  icon: Icon(
-                    AppIcons.refresh,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                ),
-                IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: Icon(
                     AppIcons.close,
@@ -189,7 +180,8 @@ class _SolicitudAsesorPickerModalState
                   );
                 }
 
-                final asesores = (state as CatalogsLoaded).asesores;
+                final asesores =
+                    _asesoresFrescos ?? (state as CatalogsLoaded).asesores;
                 final filtrados = _filtrar(asesores);
 
                 if (asesores.isEmpty) {
@@ -252,7 +244,6 @@ class _AsesorTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final sinValidar = conteoPorValidado[false] ?? 0;
     final validados = conteoPorValidado[true] ?? 0;
-    final total = sinValidar + validados;
 
     return GestureDetector(
       onTap: onTap,
@@ -274,7 +265,7 @@ class _AsesorTile extends StatelessWidget {
           ),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Stack(
               children: [
@@ -312,6 +303,7 @@ class _AsesorTile extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     asesor.nombre,
@@ -328,48 +320,32 @@ class _AsesorTile extends StatelessWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  if (total > 0) ...[
-                    const SizedBox(height: AppSpacing.xxs),
-                    Wrap(
-                      spacing: AppSpacing.xxs,
-                      runSpacing: AppSpacing.xxs,
-                      children: [
-                        if (sinValidar > 0)
-                          _EstadoBadgeChico(
-                            icon: AppIcons.time,
-                            label: 'Sin validar',
-                            color: AppColors.warning,
-                            cantidad: sinValidar,
-                          ),
-                        if (validados > 0)
-                          _EstadoBadgeChico(
-                            icon: AppIcons.checkCircle,
-                            label: 'Validado',
-                            color: AppColors.success,
-                            cantidad: validados,
-                          ),
-                      ],
-                    ),
-                  ],
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xxs,
-              ),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-              ),
-              child: Text(
-                '$total',
-                style: AppTextStyles.labelSmall.copyWith(
-                  fontWeight: AppTextStyles.weightBold,
-                  color: colorScheme.onSurfaceVariant,
+            const SizedBox(width: AppSpacing.sm),
+            // Siempre visibles los 2 estados (activo=color, en 0=gris) — antes
+            // solo aparecía el estado con cantidad > 0, chico, debajo del
+            // nombre; pedido explícito del usuario: más grande, a la derecha,
+            // y siempre los 2 aunque estén en cero.
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _EstadoBadgeGrande(
+                  icon: AppIcons.time,
+                  color: AppColors.warning,
+                  cantidad: sinValidar,
+                  tooltip: 'Sin validar',
                 ),
-              ),
+                const SizedBox(height: AppSpacing.xxs),
+                _EstadoBadgeGrande(
+                  icon: AppIcons.checkCircle,
+                  color: AppColors.success,
+                  cantidad: validados,
+                  tooltip: 'Validado',
+                ),
+              ],
             ),
           ],
         ),
@@ -378,45 +354,59 @@ class _AsesorTile extends StatelessWidget {
   }
 }
 
-// Chip chico: ícono + cantidad, coloreado por estado — mismo lenguaje visual
-// que CobranzaAsesorPickerModal._EstadoBadgeChico.
-class _EstadoBadgeChico extends StatelessWidget {
+// Badge grande: ícono + cantidad, coloreado por estado si tiene cantidad > 0,
+// gris si está en 0 — a diferencia del chico de antes, siempre se renderiza
+// (nunca se oculta por estar en cero). Mismo lenguaje visual que
+// CobranzaAsesorPickerModal._EstadoBadgeGrande.
+class _EstadoBadgeGrande extends StatelessWidget {
   final IconData icon;
-  final String label;
   final Color color;
   final int cantidad;
+  final String tooltip;
 
-  const _EstadoBadgeChico({
+  const _EstadoBadgeGrande({
     required this.icon,
-    required this.label,
     required this.color,
     required this.cantidad,
+    required this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Cada estado conserva SIEMPRE su propio color (icono/texto/borde) esté
+    // en 0 o no — mismo criterio que CobranzaAsesorPickerModal (fix real
+    // 2026-08-21: la primera versión ponía gris genérico en 0, "faltan los
+    // colores" reportado por el usuario). Relleno sólido (activo) vs. solo
+    // borde (en 0) ya basta para distinguir "tiene registros" de "no tiene".
+    final activo = cantidad > 0;
+    final colorContenido = activo ? AppColors.textOnDark : color;
+
     return Tooltip(
-      message: label,
+      message: tooltip,
       child: Container(
+        constraints: const BoxConstraints(
+          minWidth: AppSizing.badgeEstadoMinWidth,
+        ),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xxs,
-          vertical: 1,
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xxs,
         ),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          color: activo ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+          border: activo ? null : Border.all(color: color),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: AppSizing.iconInline, color: color),
-            const SizedBox(width: 2),
+            Icon(icon, size: AppSizing.iconSm, color: colorContenido),
+            const SizedBox(width: AppSpacing.xxs),
             Text(
               '$cantidad',
-              style: AppTextStyles.labelSmall.copyWith(
-                fontSize: AppTextStyles.sizeXs,
-                fontWeight: AppTextStyles.weightSemiBold,
-                color: color,
+              style: AppTextStyles.labelMedium.copyWith(
+                fontWeight: AppTextStyles.weightBold,
+                color: colorContenido,
               ),
             ),
           ],
@@ -425,3 +415,4 @@ class _EstadoBadgeChico extends StatelessWidget {
     );
   }
 }
+

@@ -99,7 +99,9 @@ class AppRouter {
       builder: (context) {
         final args =
             ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-        return LeadListPage(
+        // SeguimientoPage = versión con paginado real (task 'LSP').
+        // LeadListPage (task 'LS', sin paginado) queda intacta sin caller.
+        return SeguimientoPage(
           filtroInicial: args?['filtroInicial'] as LeadListFiltro?,
         );
       },

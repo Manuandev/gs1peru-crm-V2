@@ -1,6 +1,7 @@
 // lib/features/lead/index_lead.dart
 
 export 'data/datasources/remote/lead_remote_datasource.dart';
+export 'data/datasources/remote/seguimiento_remote_datasource.dart';
 
 export 'data/models/negociacion_model.dart';
 export 'data/models/comentario_lead_model.dart';
@@ -15,8 +16,10 @@ export 'data/models/empresa_contacto_model.dart';
 export 'data/models/contacto_simple_model.dart';
 export 'data/models/lead_recordatorio_model.dart';
 export 'data/models/datos_prellenado_solicitud_model.dart';
+export 'data/models/seguimiento_pagina_model.dart';
 
 export 'data/repositories/lead_repository_impl.dart';
+export 'data/repositories/seguimiento_repository_impl.dart';
 
 export 'domain/entities/contacto.dart';
 export 'domain/entities/numero.dart';
@@ -31,13 +34,16 @@ export 'domain/entities/empresa_contacto.dart';
 export 'domain/entities/contacto_simple.dart';
 export 'domain/entities/lead_recordatorio.dart';
 export 'domain/entities/datos_prellenado_solicitud.dart';
+export 'domain/entities/seguimiento_pagina.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
 
 export 'domain/repositories/lead_repository.dart';
+export 'domain/repositories/seguimiento_repository.dart';
 
 export 'domain/usecases/get_leads_usecase.dart';
+export 'domain/usecases/get_seguimiento_pagina_usecase.dart';
 export 'domain/usecases/get_lead_detalle_usecase.dart';
 export 'domain/usecases/get_datos_prellenado_solicitud_usecase.dart';
 export 'domain/usecases/get_lead_detalle_por_numero_usecase.dart';
@@ -49,7 +55,12 @@ export 'presentation/bloc/list/lead_list_bloc.dart';
 export 'presentation/bloc/list/lead_list_event.dart';
 export 'presentation/bloc/list/lead_list_state.dart';
 
+export 'presentation/bloc/seguimiento/seguimiento_bloc.dart';
+export 'presentation/bloc/seguimiento/seguimiento_event.dart';
+export 'presentation/bloc/seguimiento/seguimiento_state.dart';
+
 export 'presentation/pages/lead_list_page.dart';
+export 'presentation/pages/seguimiento_page.dart';
 export 'presentation/pages/contacto_detalle_page.dart';
 
 export 'presentation/widgets/contacto_detalle/contacto_detalle_skeleton.dart';
@@ -72,6 +83,10 @@ export 'presentation/widgets/list/lead_card_actions.dart';
 export 'presentation/widgets/list/lead_card.dart';
 export 'presentation/widgets/list/lead_list_filter_chips.dart';
 export 'presentation/widgets/list/lead_list_stats_row.dart';
+
+export 'presentation/widgets/seguimiento/seguimiento_view.dart';
+export 'presentation/widgets/seguimiento/seguimiento_portrait.dart';
+export 'presentation/widgets/seguimiento/seguimiento_footer.dart';
 
 // Blocs + cubit movidos de chat → lead (ver CLAUDE.md del feature lead)
 export 'presentation/bloc/edit_lead/edit_lead_bloc.dart';

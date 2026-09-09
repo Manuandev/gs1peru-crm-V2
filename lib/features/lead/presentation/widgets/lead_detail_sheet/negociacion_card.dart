@@ -110,9 +110,17 @@ class NegociacionCard extends StatelessWidget {
                             maxLines: 1,
                           ),
                         const SizedBox(height: AppSpacing.xxs),
+                        // Mostrar el estado REAL (padre si hay sub-estado) para
+                        // que cuadre con "Datos" — salvo el caso ganada real
+                        // (estado '04' + sub '05'), que sí muestra "Cerrado
+                        // ganado". Antes mostraba el sub-estado crudo
+                        // (descripcionEstado), así una negociación en estado
+                        // "Nuevo" con sub '05' salía como "Cerrado ganado".
                         AppSocialUtils.chipEstado(
-                          negociacion.idEstado,
-                          label: negociacion.descripcionEstado,
+                          negociacion.idEstadoEfectivo,
+                          label: _esGanada
+                              ? negociacion.descripcionEstado
+                              : negociacion.estadoEfectivo,
                           fontSize: 9,
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.xs,

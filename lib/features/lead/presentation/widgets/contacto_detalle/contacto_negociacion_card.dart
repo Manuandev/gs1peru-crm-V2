@@ -151,9 +151,15 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.xs),
+                                // Estado real (padre si hay sub-estado), salvo
+                                // ganada real ('04' + '05') que muestra "Cerrado
+                                // ganado". Coherente con NegociacionCard y con
+                                // "Datos".
                                 AppSocialUtils.chipEstado(
                                   negociacion.idEstadoEfectivo,
-                                  label: negociacion.estadoEfectivo,
+                                  label: _esGanada
+                                      ? negociacion.descripcionEstado
+                                      : negociacion.estadoEfectivo,
                                   fontSize: AppTextStyles.sizeXs,
                                 ),
                                 const SizedBox(width: AppSpacing.xxs),

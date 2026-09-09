@@ -20,6 +20,30 @@ class SolicitudListView extends StatelessWidget {
       onSearch: (query) {
         context.read<SolicitudListBloc>().add(SolicitudListSearched(query));
       },
+      appBarTrailingButtons: [
+        BlocBuilder<SolicitudListBloc, SolicitudListState>(
+          buildWhen: (prev, curr) {
+            final p = prev is SolicitudListSuccess && prev.tieneFiltroAvanzado;
+            final c = curr is SolicitudListSuccess && curr.tieneFiltroAvanzado;
+            return p != c;
+          },
+          builder: (context, state) {
+            final tiene =
+                state is SolicitudListSuccess && state.tieneFiltroAvanzado;
+            return Builder(
+              builder: (ctx) => IconButton(
+                tooltip: 'Filtrar',
+                icon: Icon(
+                  AppIcons.filter,
+                  color: tiene ? AppColors.secondary : AppColors.textOnDark,
+                ),
+                onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+              ),
+            );
+          },
+        ),
+      ],
+      endDrawerWidget: const SolicitudFiltroDrawer(),
       body: Column(
         children: [
           // ── Header azul — siempre visible, no espera datos ────
@@ -38,14 +62,6 @@ class SolicitudListView extends StatelessWidget {
                 );
               },
               child: BlocBuilder<SolicitudListBloc, SolicitudListState>(
-                // Un refresh silencioso (ej. el picker de "Asesores" dispara
-                // SolicitudListRefresh al abrirse, ver solicitud_asesor_picker_
-                // modal.dart) no debe tapar la lista ya cargada con el
-                // skeleton — eso solo tiene sentido en la primera carga real,
-                // antes de que exista ningún dato en pantalla.
-                buildWhen: (previous, current) =>
-                    current is! SolicitudListLoading ||
-                    previous is SolicitudListInitial,
                 builder: (context, state) {
                   if (state is SolicitudListLoading ||
                       state is SolicitudListInitial) {
@@ -75,14 +91,11 @@ class SolicitudListView extends StatelessWidget {
                           ),
                         ),
 
-                        // ── Tabs de filtro + lista ──────────────
+                        // ── Chips de filtro + lista paginada ────
                         Expanded(
                           child: Transform.translate(
                             offset: const Offset(0, -AppSpacing.md),
-                            child: SolicitudListPortrait(
-                              solicitudes: state.solicitudes,
-                              filtro: state.filtro,
-                            ),
+                            child: SolicitudListPortrait(estado: state),
                           ),
                         ),
                       ],

@@ -5,11 +5,14 @@ export 'data/datasources/remote/solicitud_remote_datasource.dart';
 export 'data/models/solicitud_model.dart';
 export 'data/models/solicitud_detalle_model.dart';
 export 'data/models/solicitud_detalle_real_model.dart';
+export 'data/models/solicitud_pagina_model.dart';
 
 export 'data/repositories/solicitud_repository_impl.dart';
 
 export 'domain/entities/solicitud.dart';
 export 'domain/entities/solicitud_detalle.dart';
+export 'domain/entities/solicitud_pagina.dart';
+export 'domain/entities/solicitud_filtro_avanzado.dart';
 
 export 'domain/enums/solicitud_filtro.dart';
 export 'domain/enums/solicitud_accion_tipo.dart';
@@ -18,6 +21,7 @@ export 'domain/constants/solicitud_extensiones.dart';
 export 'domain/repositories/solicitud_repository.dart';
 
 export 'domain/usecases/get_solicitudes_usecase.dart';
+export 'domain/usecases/get_solicitud_pagina_usecase.dart';
 export 'domain/usecases/get_solicitud_detalle_usecase.dart';
 export 'domain/usecases/get_detalle_solicitud_usecase.dart';
 export 'domain/usecases/guardar_solicitud_usecase.dart';
@@ -87,3 +91,5 @@ export 'presentation/widgets/list/solicitud_list_portrait.dart';
 export 'presentation/widgets/list/solicitud_card.dart';
 export 'presentation/widgets/list/solicitud_list_skeleton.dart';
 export 'presentation/widgets/list/solicitud_asesor_picker_modal.dart';
+export 'presentation/widgets/list/solicitud_filtro_drawer.dart';
+export 'presentation/widgets/list/solicitud_footer.dart';

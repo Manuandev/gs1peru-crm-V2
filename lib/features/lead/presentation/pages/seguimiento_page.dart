@@ -10,10 +10,22 @@ import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
-class SeguimientoPage extends StatelessWidget {
+class SeguimientoPage extends StatefulWidget {
   final LeadListFiltro? filtroInicial;
 
   const SeguimientoPage({super.key, this.filtroInicial});
+
+  @override
+  State<SeguimientoPage> createState() => _SeguimientoPageState();
+}
+
+class _SeguimientoPageState extends State<SeguimientoPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Mantiene frescos los combos del filtro avanzado (campañas + oportunidades).
+    context.read<CatalogsBloc>().add(const CatalogsFiltrosRefreshed());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +34,7 @@ class SeguimientoPage extends StatelessWidget {
         GetSeguimientoPaginaUseCase(
           SeguimientoRepositoryImpl(SeguimientoRemoteDatasource()),
         ),
-        filtroInicial: filtroInicial,
+        filtroInicial: widget.filtroInicial,
       )..add(const SeguimientoIniciado()),
       child: BlocListener<SeguimientoBloc, SeguimientoEstado>(
         listenWhen: (prev, curr) =>

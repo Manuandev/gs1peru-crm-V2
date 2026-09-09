@@ -1,5 +1,41 @@
 # Solicitudes Feature
 
+## Lista paginada (keyset) + panel de filtros Desde/Hasta/Campaña/Evento (2026-09-09)
+
+`SolicitudListPage` / `SolicitudListBloc` pasaron a **paginado real** (task `'LSP'` de
+`CRM.CSV_SOLICITUD_LST_APP`, mismo patrón que Seguimiento) — antes `getSolicitudes()` (task
+`'LS'`) traía TODO y filtraba en memoria. `'LS'` + `SolicitudModel` + `GetSolicitudesUseCase`
+**siguen existiendo** (los usa `SolicitudDetalleBloc`).
+
+**Panel lateral (`SolicitudFiltroDrawer`, `endDrawerWidget` + botón en el AppBar):**
+- **Desde / Hasta**, cada uno con checkbox. Solo se manda al SP el activo (Desde → 00:00:00,
+  Hasta → 23:59:59). Filtra `FC_ULTIMA = ISNULL(CI.FC_USUARIO_M, CI.FC_USUARIO_C)`.
+  **Por defecto**: del 1 del mes actual a hoy, ambos activos (igual que la web "Solicitud
+  registro ficha"). "Limpiar" vuelve a eso. Botón naranja solo si difiere del default.
+- **Campaña → Evento en cascada** (`EventoItem`, `CatalogsBloc.eventos`, parte [22] del SP
+  `CSV_LISTAS_LST_APP`). Sin campaña → todos los eventos; con campaña → solo los de esa campaña
+  (`Ev.ID_CAMPANIA`). El `ID_OPORTUNIDAD` del evento no se usa.
+- `SolicitudFiltroAvanzado` (entidad) + eventos `SolicitudFiltroAvanzadoAplicado`/`Limpiado`.
+
+**Contrato `@L_DATA` del `'LSP'` (`fnSplitStringTable15`):**
+`codUser¦mod¦chip('' /SV/VA)¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idEvento`.
+El chip "Asesores" manda `idAsesor` (server filtra por `CI.ID_USUARIO_EJEC`); los demás mandan
+`chip`. Contadores **Sin validar / Validados** (los 2 `_IndicadoresRow`) vienen de BD en la 1ª
+página y **aplican fecha+campaña+evento**, no el chip. Fila 0-22 idéntica a `'LS'` + `23 idCampania
+¦ 24 idEvento ¦ 25 nombreEvento`. La suma pesada (`SUM(DC_IMPORTE)+SUM(DC_IGV)`) pasó a
+`OUTER APPLY` → solo sobre las filas de la página.
+
+**Búsqueda de texto** (AppBar) sigue en cliente, ahora sobre las páginas ya cargadas.
+**`conteosPorAsesor`** (picker de Asesores) se calcula best-effort sobre las páginas cargadas.
+**Skeleton** rehecho (`SolicitudListSkeleton` = indicadores + chips + cards; `SolicitudCardSkeletonList`
+para la recarga parcial al cambiar chip / aplicar filtro, dejando indicadores y chips montados).
+**Al entrar** a `SolicitudListPage` se dispara `CatalogsFiltrosRefreshed` (task `'FIL'`) para
+refrescar campañas + eventos. Conversaciones y Seguimiento hacen lo mismo con campañas +
+oportunidades (ver `core/CLAUDE.md` → task `'FIL'`).
+
+⚠️ Pendiente `ALTER PROCEDURE` de `CSV_SOLICITUD_LST_APP` y `CSV_LISTAS_LST_APP` en SSMS.
+
+
 ## `SolicitudAsesorPickerModal` — refresco angosto de asesores + tarjetas de estado rediseñadas (2026-08-21)
 Mismo día, mismo pedido y mismo cambio que `CobranzaAsesorPickerModal` (ver `cobranza/CLAUDE.md`
 para el detalle completo — task nuevo `'ASE'` en `CRM.CSV_LISTAS_LST_APP`,

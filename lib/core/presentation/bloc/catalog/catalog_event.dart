@@ -20,3 +20,11 @@ class CatalogsLoadRequested extends CatalogsEvent {
 class CatalogsNegociacionRefreshed extends CatalogsEvent {
   const CatalogsNegociacionRefreshed();
 }
+
+// Refresca solo campañas + oportunidades + eventos (task 'FIL') — usado al
+// entrar a Conversaciones/Seguimiento (leen campañas+oportunidades) y a
+// Solicitudes (lee campañas+eventos) para mantener los combos de filtro
+// frescos. Falla en silencio; si el catálogo todavía no cargó, no hace nada.
+class CatalogsFiltrosRefreshed extends CatalogsEvent {
+  const CatalogsFiltrosRefreshed();
+}

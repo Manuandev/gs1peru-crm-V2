@@ -6,15 +6,19 @@ import 'package:app_crm/index_dependencies.dart';
 class CatalogsBloc extends Bloc<CatalogsEvent, CatalogsState> {
   final GetCatalogsUseCase _getData;
   final GetCatalogosEditarNegociacionUseCase _getEditarNegociacion;
+  final GetCatalogosFiltrosUseCase _getFiltros;
 
   CatalogsBloc({
     required GetCatalogsUseCase getData,
     required GetCatalogosEditarNegociacionUseCase getEditarNegociacion,
+    required GetCatalogosFiltrosUseCase getFiltros,
   }) : _getData = getData,
        _getEditarNegociacion = getEditarNegociacion,
+       _getFiltros = getFiltros,
        super(const CatalogsInitial()) {
     on<CatalogsLoadRequested>(_onLoad);
     on<CatalogsNegociacionRefreshed>(_onNegociacionRefresh);
+    on<CatalogsFiltrosRefreshed>(_onFiltrosRefresh);
   }
 
   Future<void> _onLoad(
@@ -54,6 +58,30 @@ class CatalogsBloc extends Bloc<CatalogsEvent, CatalogsState> {
             canales: datos.canales,
             intereses: datos.intereses,
             monedas: datos.monedas,
+          ),
+        ),
+      );
+    } catch (_) {}
+  }
+
+  // Refresco de fondo de campañas + oportunidades + eventos al entrar a
+  // Conversaciones/Seguimiento/Solicitudes. Falla en silencio, igual que el
+  // refresh de "Editar negociación".
+  Future<void> _onFiltrosRefresh(
+    CatalogsFiltrosRefreshed event,
+    Emitter<CatalogsState> emit,
+  ) async {
+    final current = state;
+    if (current is! CatalogsLoaded) return;
+
+    try {
+      final datos = await _getFiltros.call();
+      emit(
+        CatalogsLoaded(
+          listas: current.listas.copyWith(
+            campanias: datos.campanias,
+            oportunidades: datos.oportunidades,
+            eventos: datos.eventos,
           ),
         ),
       );

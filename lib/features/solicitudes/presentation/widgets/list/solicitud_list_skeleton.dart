@@ -1,4 +1,8 @@
 // lib/features/solicitudes/presentation/widgets/list/solicitud_list_skeleton.dart
+//
+// Skeleton COMPLETO de Solicitudes — fila de indicadores + chips + cards.
+// Solo en la primera carga (SolicitudListLoading). El cambio de chip / filtro
+// reusa solo [SolicitudCardSkeletonList] dejando chips e indicadores reales.
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -6,36 +10,40 @@ import 'package:app_crm/core/index_core.dart';
 class SolicitudListSkeleton extends StatelessWidget {
   const SolicitudListSkeleton({super.key});
 
-  static const int _cantidadCards = 5;
-
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
-        // ── Skeleton de indicadores ────────────────────────────
-        const _IndicadoresSkeleton(),
-
-        // ── Skeleton de tabs ───────────────────────────────────
-        const _TabsSkeleton(),
-
-        // ── Skeleton de cards ──────────────────────────────────
-        Expanded(
-          child: ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            itemCount: _cantidadCards,
-            itemBuilder: (_, _) => const Padding(
-              padding: EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _SolicitudCardSkeleton(),
-            ),
-          ),
-        ),
+        _IndicadoresSkeleton(),
+        _ChipsSkeleton(),
+        SizedBox(height: AppSpacing.xs),
+        Expanded(child: SolicitudCardSkeletonList()),
       ],
     );
   }
 }
 
-// ─── Indicadores skeleton ─────────────────────────────────────────────────────
+/// Solo la lista de cards placeholder — para la recarga parcial.
+class SolicitudCardSkeletonList extends StatelessWidget {
+  const SolicitudCardSkeletonList({super.key, this.cantidad = 5});
+
+  final int cantidad;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      itemCount: cantidad,
+      itemBuilder: (_, _) => const Padding(
+        padding: EdgeInsets.only(bottom: AppSpacing.sm),
+        child: _SolicitudCardSkeleton(),
+      ),
+    );
+  }
+}
+
+// ─── Indicadores (2 tarjetas, espeja _IndicadoresRow) ─────────────────────────
 
 class _IndicadoresSkeleton extends StatelessWidget {
   const _IndicadoresSkeleton();
@@ -53,11 +61,7 @@ class _IndicadoresSkeleton extends StatelessWidget {
       child: const Row(
         children: [
           Expanded(child: _IndicadorItemSkeleton()),
-          _VerticalDivider(),
-          Expanded(child: _IndicadorItemSkeleton()),
-          _VerticalDivider(),
-          Expanded(child: _IndicadorItemSkeleton()),
-          _VerticalDivider(),
+          _VDivider(),
           Expanded(child: _IndicadorItemSkeleton()),
         ],
       ),
@@ -70,36 +74,41 @@ class _IndicadorItemSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SkeletonBox(
-          width: AppSizing.iconXl,
-          height: AppSizing.iconXl,
+          width: AppSizing.iconLg,
+          height: AppSizing.iconLg,
           borderRadius: AppSizing.radiusCircular,
         ),
-        SizedBox(height: AppSpacing.xs),
-        SkeletonBox(width: 48, height: AppSizing.skeletonLineHeight),
-        SizedBox(height: AppSpacing.xxs),
-        SkeletonBox(width: 24, height: AppSizing.skeletonTitleHeight),
+        SizedBox(width: AppSpacing.sm),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonBox(width: 56, height: AppSizing.skeletonLineHeight),
+            SizedBox(height: AppSpacing.xxs),
+            SkeletonBox(width: 28, height: AppSizing.skeletonTitleHeight),
+          ],
+        ),
       ],
     );
   }
 }
 
-class _VerticalDivider extends StatelessWidget {
-  const _VerticalDivider();
+class _VDivider extends StatelessWidget {
+  const _VDivider();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(width: 1, height: 72, color: AppColors.border);
-  }
+  Widget build(BuildContext context) =>
+      Container(width: 1, height: 48, color: AppColors.border);
 }
 
-// ─── Tabs skeleton ────────────────────────────────────────────────────────────
+// ─── Chips ───────────────────────────────────────────────────────────────────
 
-class _TabsSkeleton extends StatelessWidget {
-  const _TabsSkeleton();
+class _ChipsSkeleton extends StatelessWidget {
+  const _ChipsSkeleton();
 
   @override
   Widget build(BuildContext context) {
@@ -111,20 +120,18 @@ class _TabsSkeleton extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          SkeletonBox(width: 44, height: AppSizing.skeletonChipHeight),
+          SkeletonBox(width: 48, height: AppSizing.skeletonChipHeight),
           SizedBox(width: AppSpacing.md),
-          SkeletonBox(width: 64, height: AppSizing.skeletonChipHeight),
+          SkeletonBox(width: 72, height: AppSizing.skeletonChipHeight),
           SizedBox(width: AppSpacing.md),
-          SkeletonBox(width: 76, height: AppSizing.skeletonChipHeight),
-          SizedBox(width: AppSpacing.md),
-          SkeletonBox(width: 120, height: AppSizing.skeletonChipHeight),
+          SkeletonBox(width: 88, height: AppSizing.skeletonChipHeight),
         ],
       ),
     );
   }
 }
 
-// ─── Card skeleton ────────────────────────────────────────────────────────────
+// ─── Card ────────────────────────────────────────────────────────────────────
 
 class _SolicitudCardSkeleton extends StatelessWidget {
   const _SolicitudCardSkeleton();
@@ -152,18 +159,18 @@ class _SolicitudCardSkeleton extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SkeletonBox(
-                width: AppSizing.avatarMd,
-                height: AppSizing.avatarMd,
+                width: AppSizing.avatarSm,
+                height: AppSizing.avatarSm,
                 borderRadius: AppSizing.radiusCircular,
               ),
-              SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SkeletonBox(
                       width: AppSizing.skeletonNameWidth,
-                      height: AppSizing.skeletonTitleHeight,
+                      height: AppSizing.skeletonLineHeight,
                     ),
                     SizedBox(height: AppSpacing.xxs),
                     SkeletonBox(
@@ -186,15 +193,17 @@ class _SolicitudCardSkeleton extends StatelessWidget {
           ),
           SizedBox(height: AppSpacing.sm),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SkeletonBox(
-                width: AppSizing.skeletonNameWidth,
-                height: AppSizing.skeletonLineHeight,
+                width: AppSizing.miniActionButton,
+                height: AppSizing.miniActionButton,
+                borderRadius: AppSizing.radiusMd,
               ),
+              SizedBox(width: AppSpacing.xs),
               SkeletonBox(
                 width: AppSizing.skeletonChipWidthSm,
-                height: AppSizing.skeletonLineHeight,
+                height: AppSizing.miniActionButton,
+                borderRadius: AppSizing.radiusMd,
               ),
             ],
           ),

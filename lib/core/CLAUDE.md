@@ -1044,6 +1044,7 @@ usadas por `ListasGenericasModel.parse`) en `catalog_item_model.dart`. Ambos se 
 | `UbigeoItem` | dpto(String), prov(String), dis(String), nombre(String), `codigo` (getter = `dpto+prov+dis`) — parte [16] del SP, `DBO.SYSTABUBIGEO01`. Jerárquico: filtrar por `dpto` (departamento), `dpto`+`prov` (provincia), `codigo` completo identifica un distrito. Patrón ubigeo estándar para saber el nivel de una fila: `prov=='00' && dis=='00'` → departamento; `prov!='00' && dis=='00'` → provincia; `prov!='00' && dis!='00'` → distrito |
 | `AreaItem` | id(String=codargu), nombre(String=deslarga) — parte [18] del SP, `SYSTABEXTER02 CODTABLA='AOF'`, agregada 2026-07-23. Área de empresa — usada en `lead/` (`EditContacto`, sección Empresa) **solo como sugerencia** del combo (`CustomComboSearchField(allowFreeText: true)`) — el valor guardado es texto libre (`T_EMPRESA_CONTACTO.NOM_AREA`), nunca el id, ver lead/CLAUDE.md |
 | `CargoItem` | id(String=codCargo), nombre(String=desCargo) — parte [19] del SP, `DBO.SYSMCARGO01`, agregada 2026-07-23. Cargo de empresa — usada en `lead/` (`EditContacto`/`EditContactoSimple`) **solo como sugerencia**, mismo criterio que `AreaItem` (`NOM_CARGO`, texto libre). ⚠️ `T_EMPRESA_CONTACTO.ID_AREA`/`ID_CARGO` (columnas `INT`) existen pero están sin uso — no escribir ahí, la fuente de verdad es `NOM_AREA`/`NOM_CARGO` (VARCHAR) |
+| `EventoItem` | id(int), idCampania(int), nombre — parte [22] del SP, `EVT.T_EVENTO` activos. Para el filtro de Solicitudes (cascada Campaña→Evento por `idCampania`). El `idOportunidad` del evento no se usa. También lo devuelve el task `'FIL'` |
 | `TipoCambioItem` | venta(double), compra(double) — parte [21] del SP, `DBO.SYSMTC01` filtrado a `FECHA = hoy`, agregada 2026-08-19. **Fila única, no implementa `Comboable`** (mismo criterio que `ValoresCRMItem`). Tipo de cambio del día USD→PEN — usado en `cobranza/` para convertir a soles un monto en dólares antes de aplicar la regla de detracción (con el tipo `venta`, nunca `compra`), ver `cobranza/CLAUDE.md`. **También disponible por separado, sin traer el catálogo completo** — `CatalogsRepository.getTipoCambio()` (`core/services/catalog_repository.dart`/`_impl.dart` → `CatalogsRemoteDatasource.getTipoCambio()`, task `'TC'` del mismo SP, `urlListasLst`) — usado en `cobranza/` al validar el plan de crédito, mismo criterio que el task `'NEG'` de `solicitudes/` (un task angosto en vez de recargar `CatalogsBloc` entero). Parte [20] (saludos de contacto, `PrefijoContactoItem`) no tiene entrada propia en esta tabla todavía — gap preexistente, no de esta sesión |
 
 Todas implementan `Comboable` excepto `ValoresCRMItem`/`TipoCambioItem` (fila única, no son un ítem de lista/dropdown).
@@ -1397,7 +1398,12 @@ context.updateBadge(conversaciones: 3, propuestas: 1);
 ### CatalogsBloc — `presentation/bloc/catalog/`
 Carga las listas genéricas del backend una sola vez al inicio de sesión.
 
-**Evento:** `CatalogsLoadRequested`
+**Eventos:** `CatalogsLoadRequested` (carga completa, login) · `CatalogsNegociacionRefreshed`
+(task `'EN'`, al entrar a "Editar negociación") · `CatalogsFiltrosRefreshed` (task `'FIL'` —
+campañas + oportunidades + eventos; al entrar a Conversaciones/Seguimiento se usan
+campañas+oportunidades, a Solicitudes campañas+eventos, para mantener los combos de filtro
+frescos sin recargar todo). Los 2 refrescos fallan en silencio y no hacen nada si el catálogo
+todavía no cargó.
 
 **Estados:** `CatalogsInitial` → `CatalogsLoading` → `CatalogsLoaded` | `CatalogsError`
 

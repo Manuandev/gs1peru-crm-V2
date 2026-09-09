@@ -23,6 +23,8 @@ class _ChatListPageState extends State<ChatListPage> {
     // vez que se reingresa, a diferencia de Seguimiento/Solicitudes/Cobranza (cuyo
     // bloc se crea de cero en cada entrada a la page).
     context.read<ChatListBloc>().add(const ChatListRefreshed());
+    // Mantiene frescos los combos del filtro avanzado (campañas + oportunidades).
+    context.read<CatalogsBloc>().add(const CatalogsFiltrosRefreshed());
   }
 
   @override

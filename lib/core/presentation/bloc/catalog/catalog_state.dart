@@ -45,6 +45,7 @@ class CatalogsLoaded extends CatalogsState {
   List<CargoItem> get cargos => listas.cargos;
   List<PrefijoContactoItem> get prefijosContacto => listas.prefijosContacto;
   TipoCambioItem get tipoCambio => listas.tipoCambio;
+  List<EventoItem> get eventos => listas.eventos;
 
   @override
   List<Object?> get props => [
@@ -70,6 +71,7 @@ class CatalogsLoaded extends CatalogsState {
     cargos,
     prefijosContacto,
     tipoCambio,
+    eventos,
   ];
 }
 

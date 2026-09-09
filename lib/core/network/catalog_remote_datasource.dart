@@ -64,6 +64,38 @@ class CatalogsRemoteDatasource {
     };
   }
 
+  // Task 'FIL' — SOLO campañas + oportunidades + eventos, para refrescar los
+  // combos de filtro al entrar a Conversaciones/Seguimiento (usan
+  // campañas+oportunidades) y Solicitudes (usa campañas+eventos) sin recargar
+  // el catálogo completo. Mismo criterio que 'EN'/'ASE'/'TC'.
+  Future<
+    ({
+      List<CampaniaItem> campanias,
+      List<OportunidadItem> oportunidades,
+      List<EventoItem> eventos,
+    })
+  >
+  getFiltros() async {
+    final String body = '${sep}FIL';
+
+    final result = await _api.postSafe(ApiConstants.urlListasLst, body);
+
+    const vacio = (
+      campanias: <CampaniaItem>[],
+      oportunidades: <OportunidadItem>[],
+      eventos: <EventoItem>[],
+    );
+
+    return switch (result) {
+      ApiSuccess(:final data) => data.trim().isEmpty
+          ? vacio
+          : ListasGenericasModel.parseFiltros(data),
+      ApiEmpty() => vacio,
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   // Task 'EN' — SOLO estados/campañas/oportunidades/canales/intereses/monedas,
   // sin traer el catálogo completo. Usado al entrar a "Editar negociación"
   // (lead/EditLeadPortrait) para refrescar esos catálogos, ver lead/CLAUDE.md.

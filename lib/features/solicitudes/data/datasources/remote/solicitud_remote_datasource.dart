@@ -30,6 +30,58 @@ class SolicitudRemoteDatasource {
     };
   }
 
+  static const int tamanioPrimera = 50;
+  static const int tamanioSiguiente = 50;
+
+  // Task 'LSP' — lista paginada (keyset) con filtro Desde/Hasta/Campaña/Evento.
+  // Body: token ¯ codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idEvento ¯ LSP
+  //   chip: '' = todas ; 'SV' = sin validar ; 'VA' = validados
+  //   idAsesor: solo con el chip "Asesores" (filtra por ese codUser); si no, ''
+  //   fcDesde/fcHasta: ISO 126 (yyyy-MM-ddTHH:mm:ss), '' = no aplica
+  Future<SolicitudPagina> traerPagina({
+    String chip = '',
+    String? idAsesor,
+    String? cursorFecha,
+    String? cursorNumsol,
+    required int tamanio,
+    DateTime? fcDesde,
+    DateTime? fcHasta,
+    int? idCampania,
+    int? idEvento,
+  }) async {
+    final camp = AppConstants.sepCampos;
+    final sep = AppConstants.sepListas;
+
+    final data = [
+      _session.codUser,
+      _session.isModerador ? 1 : 0,
+      chip,
+      idAsesor ?? '',
+      cursorFecha ?? '',
+      cursorNumsol ?? '',
+      tamanio,
+      _fmtFecha(fcDesde),
+      _fmtFecha(fcHasta),
+      idCampania ?? '',
+      idEvento ?? '',
+    ].join(camp);
+
+    final result = await _api.postSafe(
+      ApiConstants.urlSolicitudesLst,
+      '$data${sep}LSP',
+    );
+
+    return switch (result) {
+      ApiSuccess(:final data) => SolicitudPaginaModel.parse(data),
+      ApiEmpty() => SolicitudPagina.vacia,
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  String _fmtFecha(DateTime? d) =>
+      d == null ? '' : d.toIso8601String().split('.').first;
+
   // Endpoint 'Generic/DescargarArchivoPlantilla' (WebServiceIEC) — lee el
   // archivo del FileServer compartido, mismo contrato que ya usa
   // GS1Peru.AppWeb para su propia carga masiva (fase¦folderFiles¦archivo).

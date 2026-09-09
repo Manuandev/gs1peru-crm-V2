@@ -5,6 +5,7 @@ import 'package:app_crm/features/solicitudes/data/datasources/remote/solicitud_r
 import 'package:app_crm/features/solicitudes/data/models/solicitud_detalle_model.dart';
 import 'package:app_crm/features/solicitudes/data/models/solicitud_model.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud_detalle.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/solicitud_pagina.dart';
 import 'package:app_crm/features/solicitudes/domain/repositories/solicitud_repository.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
@@ -16,6 +17,29 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
 
   @override
   Future<List<SolicitudModel>> getSolicitudes() => _remote.getSolicitudes();
+
+  @override
+  Future<SolicitudPagina> traerPagina({
+    String chip = '',
+    String? idAsesor,
+    String? cursorFecha,
+    String? cursorNumsol,
+    required int tamanio,
+    DateTime? fcDesde,
+    DateTime? fcHasta,
+    int? idCampania,
+    int? idEvento,
+  }) => _remote.traerPagina(
+    chip: chip,
+    idAsesor: idAsesor,
+    cursorFecha: cursorFecha,
+    cursorNumsol: cursorNumsol,
+    tamanio: tamanio,
+    fcDesde: fcDesde,
+    fcHasta: fcHasta,
+    idCampania: idCampania,
+    idEvento: idEvento,
+  );
 
   @override
   Future<SolicitudDetalleModel> getSolicitudDetalle(String numSol) =>

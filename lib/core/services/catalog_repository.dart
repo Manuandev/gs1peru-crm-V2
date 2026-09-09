@@ -8,6 +8,14 @@ abstract class CatalogsRepository {
   Future<List<AsesorItem>> getAsesores();
   Future<
     ({
+      List<CampaniaItem> campanias,
+      List<OportunidadItem> oportunidades,
+      List<EventoItem> eventos,
+    })
+  >
+  getFiltros();
+  Future<
+    ({
       List<EstadoItem> estados,
       List<CampaniaItem> campanias,
       List<OportunidadItem> oportunidades,

@@ -26,6 +26,7 @@ class ListasGenericasModel extends ListasGenericas {
     super.cargos,
     super.prefijosContacto,
     super.tipoCambio,
+    super.eventos,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -52,6 +53,7 @@ class ListasGenericasModel extends ListasGenericas {
     final cargosRaw = partes.length > 19 ? partes[19] : '';
     final prefijosContactoRaw = partes.length > 20 ? partes[20] : '';
     final tipoCambioRaw = partes.length > 21 ? partes[21] : '';
+    final eventosRaw = partes.length > 22 ? partes[22] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -139,6 +141,10 @@ class ListasGenericasModel extends ListasGenericas {
         ? const TipoCambioItem()
         : TipoCambioItemModel.fromRawString(tipoCambioRaw);
 
+    final eventos = eventosRaw.trim().isEmpty
+        ? <EventoItemModel>[]
+        : EventoItemModel.parseList(eventosRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -162,6 +168,35 @@ class ListasGenericasModel extends ListasGenericas {
       cargos: cargos,
       prefijosContacto: prefijosContacto,
       tipoCambio: tipoCambio,
+      eventos: eventos,
+    );
+  }
+
+  // Parsea la respuesta del task 'FIL' (CSV_LISTAS_LST_APP) — solo campañas,
+  // oportunidades y eventos, en ese orden. Se llama al entrar a Conversaciones/
+  // Seguimiento (usan campañas+oportunidades) y a Solicitudes (usa
+  // campañas+eventos) para refrescar los combos de filtro sin recargar todo.
+  static ({
+    List<CampaniaItem> campanias,
+    List<OportunidadItem> oportunidades,
+    List<EventoItem> eventos,
+  })
+  parseFiltros(String rawResponse) {
+    final partes = rawResponse.split(AppConstants.sepListas);
+    final campaniasRaw = partes.isNotEmpty ? partes[0] : '';
+    final oportunidadesRaw = partes.length > 1 ? partes[1] : '';
+    final eventosRaw = partes.length > 2 ? partes[2] : '';
+
+    return (
+      campanias: campaniasRaw.trim().isEmpty
+          ? <CampaniaItem>[]
+          : CampaniaItemModel.parseList(campaniasRaw),
+      oportunidades: oportunidadesRaw.trim().isEmpty
+          ? <OportunidadItem>[]
+          : OportunidadItemModel.parseList(oportunidadesRaw),
+      eventos: eventosRaw.trim().isEmpty
+          ? <EventoItem>[]
+          : EventoItemModel.parseList(eventosRaw),
     );
   }
 
@@ -728,5 +763,31 @@ class TipoCambioItemModel extends TipoCambioItem {
       venta: ParseUtils.toDouble(c, 0),
       compra: ParseUtils.toDouble(c, 1),
     );
+  }
+}
+
+// SP lstListas parte [22]: idEvento ¦ idCampania ¦ nombre — EVT.T_EVENTO.
+class EventoItemModel extends EventoItem {
+  const EventoItemModel({
+    required super.id,
+    required super.idCampania,
+    required super.nombre,
+  });
+
+  factory EventoItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return EventoItemModel(
+      id: ParseUtils.toInt(c, 0),
+      idCampania: ParseUtils.toInt(c, 1),
+      nombre: ParseUtils.str(c, 2),
+    );
+  }
+
+  static List<EventoItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => EventoItemModel.fromRawString(r))
+        .toList();
   }
 }

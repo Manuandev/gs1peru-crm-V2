@@ -112,6 +112,9 @@ class AppWidget extends StatelessWidget {
               getEditarNegociacion: GetCatalogosEditarNegociacionUseCase(
                 context.read<CatalogsRepository>(),
               ),
+              getFiltros: GetCatalogosFiltrosUseCase(
+                context.read<CatalogsRepository>(),
+              ),
             ),
           ),
           BlocProvider<ChatListBloc>(

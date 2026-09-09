@@ -19,6 +19,16 @@ class CatalogsRepositoryImpl implements CatalogsRepository {
   @override
   Future<
     ({
+      List<CampaniaItem> campanias,
+      List<OportunidadItem> oportunidades,
+      List<EventoItem> eventos,
+    })
+  >
+  getFiltros() => _remote.getFiltros();
+
+  @override
+  Future<
+    ({
       List<EstadoItem> estados,
       List<CampaniaItem> campanias,
       List<OportunidadItem> oportunidades,

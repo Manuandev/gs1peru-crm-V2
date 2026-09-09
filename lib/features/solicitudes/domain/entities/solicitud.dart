@@ -16,6 +16,11 @@ class Solicitud {
   final String fechaCreacion;
   final int idOportunidad;
   final String oportunidad;
+  // Campaña + evento — solo los trae el task 'LSP' (paginado), para el filtro
+  // del panel lateral. En una Solicitud que venga de 'LS'/'DT' quedan en 0/''.
+  final int idCampania;
+  final int idEvento;
+  final String nombreEvento;
   final int idCanal;
   final String canal;
   final int idEstado;
@@ -58,6 +63,9 @@ class Solicitud {
     required this.fechaCreacion,
     required this.idOportunidad,
     required this.oportunidad,
+    this.idCampania = 0,
+    this.idEvento = 0,
+    this.nombreEvento = '',
     required this.idCanal,
     required this.canal,
     required this.idEstado,
@@ -84,6 +92,9 @@ class Solicitud {
     String? fechaCreacion,
     int? idOportunidad,
     String? oportunidad,
+    int? idCampania,
+    int? idEvento,
+    String? nombreEvento,
     int? idCanal,
     String? canal,
     int? idEstado,
@@ -109,6 +120,9 @@ class Solicitud {
       fechaCreacion: fechaCreacion ?? this.fechaCreacion,
       idOportunidad: idOportunidad ?? this.idOportunidad,
       oportunidad: oportunidad ?? this.oportunidad,
+      idCampania: idCampania ?? this.idCampania,
+      idEvento: idEvento ?? this.idEvento,
+      nombreEvento: nombreEvento ?? this.nombreEvento,
       idCanal: idCanal ?? this.idCanal,
       canal: canal ?? this.canal,
       idEstado: idEstado ?? this.idEstado,

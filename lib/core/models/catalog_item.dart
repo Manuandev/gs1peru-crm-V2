@@ -46,6 +46,11 @@ class ListasGenericas {
   // (USD→PEN, venta/compra). Fila única (sin @sepRegistro), filtrada a la
   // fecha de hoy en el SP.
   final TipoCambioItem tipoCambio;
+  // Parte [22] del SP lstListas — EVT.T_EVENTO activos. Para el filtro de
+  // Solicitudes (cascada Campaña→Evento por idCampania). El task 'FIL' también
+  // la devuelve (campañas + oportunidades + eventos) para refrescar los combos
+  // de filtro al entrar a cada pantalla.
+  final List<EventoItem> eventos;
 
   const ListasGenericas({
     required this.campanias,
@@ -70,6 +75,7 @@ class ListasGenericas {
     this.cargos = const [],
     this.prefijosContacto = const [],
     this.tipoCambio = const TipoCambioItem(),
+    this.eventos = const [],
   });
 
   // Usado por el refresh parcial de "Editar negociación" (task 'EN') — solo
@@ -82,6 +88,7 @@ class ListasGenericas {
     List<InteresItem>? intereses,
     List<EstadoItem>? estados,
     List<MonedaItem>? monedas,
+    List<EventoItem>? eventos,
   }) {
     return ListasGenericas(
       campanias: campanias ?? this.campanias,
@@ -106,6 +113,7 @@ class ListasGenericas {
       cargos: cargos,
       prefijosContacto: prefijosContacto,
       tipoCambio: tipoCambio,
+      eventos: eventos ?? this.eventos,
     );
   }
 }
@@ -510,4 +518,24 @@ class TipoCambioItem {
   final double compra;
 
   const TipoCambioItem({this.venta = 0, this.compra = 0});
+}
+
+// SP lstListas parte [22] (y task 'FIL' sección [2]): idEvento ¦ idCampania ¦
+// nombre — EVT.T_EVENTO activos. El evento en este CRM es una oportunidad con
+// un EVT.T_EVENTO vinculado; para el filtro de Solicitudes solo importan
+// idEvento y idCampania (la cascada Campaña→Evento va por idCampania). El
+// idOportunidad del evento no se usa por ahora.
+class EventoItem with Comboable {
+  final int id;
+  final int idCampania;
+  final String nombre;
+
+  const EventoItem({
+    required this.id,
+    required this.idCampania,
+    required this.nombre,
+  });
+
+  @override
+  List<dynamic> get fields => [id, idCampania, nombre];
 }

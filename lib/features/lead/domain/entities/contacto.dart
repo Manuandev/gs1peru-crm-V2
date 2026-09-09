@@ -5,6 +5,7 @@
 // lead. El composite [ContactoNegociacion] junta los tres para el listado.
 
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/core/utils/string/string_utils.dart';
 
 class Contacto extends Equatable {
   final int idContacto;
@@ -28,7 +29,7 @@ class Contacto extends Equatable {
     nombre,
     apellidoPaterno,
     apellidoMaterno,
-  ].where((parte) => parte.trim().isNotEmpty).join(' ');
+  ].where((parte) => parte.trim().isNotEmpty).join(' ').aTitulo;
 
   const Contacto({
     required this.idContacto,

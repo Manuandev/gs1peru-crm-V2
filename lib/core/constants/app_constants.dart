@@ -26,8 +26,8 @@ class AppConstants {
   static const String sepComodin2 = '±';
   static const String sepComodin3 = '¶';
 
-  // Límites de caracteres en ChatTile
-  static const int maxCharsNombreChat = 15;
+  // Límites de caracteres en ChatTile (nombre/número ya no se recortan —
+  // se muestran completos, ver chat_tile.dart)
   static const int maxCharsLineaMensaje = 25;
   static const int maxCharsMensajeChat = 50;
 }

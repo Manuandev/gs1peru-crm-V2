@@ -1,5 +1,7 @@
 // lib/features/solicitudes/domain/entities/solicitud.dart
 
+import 'package:app_crm/core/utils/string/string_utils.dart';
+
 class Solicitud {
   final String idSolicitud;
   final String nombre;
@@ -37,9 +39,9 @@ class Solicitud {
   final String idLead;
 
   String get nombreCompleto =>
-      '$nombre $apellidoPaterno $apellidoMaterno'.trim();
+      '$nombre $apellidoPaterno $apellidoMaterno'.trim().aTitulo;
 
-  String get apellidos => '$apellidoPaterno $apellidoMaterno'.trim();
+  String get apellidos => '$apellidoPaterno $apellidoMaterno'.trim().aTitulo;
 
   /// Editable solo mientras está "Por Completar" (`idEstado == 0`) —
   /// independiente de `ibValidado` (validar y completar son dimensiones

@@ -34,6 +34,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     : super(const ChatListInitial()) {
     on<ChatListStarted>(_onStarted);
     on<ChatListRefreshed>(_onRefreshed);
+    on<ChatListReset>(_onReset);
     on<ChatListSilentRefreshed>(_onSilentRefreshed);
     on<ChatListSearched>(_onSearched);
     on<ChatListFiltered>(_onFiltered);
@@ -75,6 +76,25 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     ChatListRefreshed event,
     Emitter<ChatListState> emit,
   ) async {
+    emit(const ChatListLoading());
+    await _loadData(emit);
+  }
+
+  /// Reingreso desde el menú: limpia chip + búsqueda + filtros del panel
+  /// avanzado y recarga. El bloc es global, así que estos campos sobreviven
+  /// al salir de la pantalla — sin esto, el filtro (ej. "En cobranza") seguía
+  /// activo al volver a Conversaciones desde otra sección.
+  Future<void> _onReset(
+    ChatListReset event,
+    Emitter<ChatListState> emit,
+  ) async {
+    _filtroActivo = ChatListFiltro.todos;
+    _lastSearchQuery = '';
+    _filtroNombre = '';
+    _filtroEmpresa = '';
+    _filtroNumero = '';
+    _filtroCampaniaId = '';
+    _filtroOportunidadId = '';
     emit(const ChatListLoading());
     await _loadData(emit);
   }
@@ -190,13 +210,17 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     // lista y el lead recién guardado.
     _allChats = _allChats.map((c) {
       if (c.idNumero != lead.idNumero) return c;
+      // Negociacion todavía usa el encoding viejo (idEstado = leaf,
+      // idEstadoPadre = padre cuando hay subestado); Chat ya los tiene
+      // separados, así que se traduce acá.
+      final haySub = lead.idEstadoPadre.isNotEmpty;
       return c.copyWith(
         idLead: lead.idLead,
         modalidad: lead.modalidad,
-        idEstado: lead.idEstado,
-        descEstado: lead.descripcionEstado,
-        idEstadoPadre: lead.idEstadoPadre,
-        descEstadoPadre: lead.descripcionEstadoPadre,
+        idEstado: lead.idEstadoEfectivo,
+        descEstado: lead.estadoEfectivo,
+        idSubestado: haySub ? lead.idEstado : '',
+        descSubestado: haySub ? lead.descripcionEstado : '',
         idCampania: lead.idCampania,
         nombreCampania: lead.nombreCampania,
         idOportunidad: lead.idOportunidad,
@@ -239,12 +263,20 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     );
   }
 
+  /// "En cobranza" = negociación cerrada ganada: estado '04' + subestado '05'.
+  /// Ahora que el SP trae estado y subestado por separado, la validación es
+  /// directa. Antes se comparaba solo `idEstado == '05'` (el "leaf"), que
+  /// dejaba pasar subestados '05' de otros padres — por eso salían chats con
+  /// el chip "Nuevo" dentro de Cobranza.
+  static bool _esEnCobranza(Chat c) =>
+      c.idEstado == '04' && c.idSubestado == '05';
+
   ContadoresChat _calcularContadores(List<Chat> chats) {
     return ContadoresChat(
       sinResponder: chats.where((c) => c.direccionMensaje == 'CLI').length,
       derivadasPorIA: chats.where((c) => c.isDerivadoIA).length,
-      conPropuesta: chats.where((c) => c.idEstadoEfectivo == '02').length,
-      enCobranza: chats.where((c) => c.idEstado == '05').length,
+      conPropuesta: chats.where((c) => c.idEstado == '02').length,
+      enCobranza: chats.where(_esEnCobranza).length,
     );
   }
 
@@ -262,9 +294,9 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
         return ahora.difference(fecha).inHours < 72;
       }).length,
       ChatListFiltro.conPropuesta: chats
-          .where((c) => c.idEstadoEfectivo == '02')
+          .where((c) => c.idEstado == '02')
           .length,
-      ChatListFiltro.enCobranza: chats.where((c) => c.idEstado == '05').length,
+      ChatListFiltro.enCobranza: chats.where(_esEnCobranza).length,
     };
   }
 
@@ -281,9 +313,8 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
         return ahora.difference(fecha).inHours < 72;
       }).toList(),
       ChatListFiltro.conPropuesta =>
-        chats.where((c) => c.idEstadoEfectivo == '02').toList(),
-      ChatListFiltro.enCobranza =>
-        chats.where((c) => c.idEstado == '05').toList(),
+        chats.where((c) => c.idEstado == '02').toList(),
+      ChatListFiltro.enCobranza => chats.where(_esEnCobranza).toList(),
     };
   }
 

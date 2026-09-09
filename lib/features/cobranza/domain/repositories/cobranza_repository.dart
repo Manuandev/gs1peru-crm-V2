@@ -5,6 +5,20 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 abstract class CobranzaRepository {
   Future<List<Cobranza>> getCobranzas();
+
+  Future<CobranzaPagina> traerPagina({
+    CobranzaChipFiltro chip,
+    String? codAsesor,
+    String? cursorFecha,
+    String? cursorNumSol,
+    required int tamanio,
+    DateTime? fcDesde,
+    DateTime? fcHasta,
+    int? idCampania,
+    int? idOportunidad,
+    Set<int> estados,
+  });
+
   Future<CobranzaDetalle?> getDetalleCobranza(String numSol);
 
   Future<CrudResult> cambiarEstadoFacturar({

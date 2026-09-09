@@ -59,7 +59,9 @@ class ContactoInfoTab extends StatelessWidget {
                 derecha: _CampoInfo(
                   icono: AppIcons.business,
                   etiqueta: 'Empresa',
-                  valor: lead.nombreEmpresa.isEmpty ? '—' : lead.nombreEmpresa,
+                  valor: lead.nombreEmpresa.isEmpty
+                      ? '—'
+                      : lead.nombreEmpresa.aTitulo,
                 ),
               ),
               _FilaCampos(
@@ -75,7 +77,7 @@ class ContactoInfoTab extends StatelessWidget {
                   etiqueta: 'Oportunidad',
                   valor: lead.nombreOportunidad.isEmpty
                       ? '—'
-                      : lead.nombreOportunidad,
+                      : lead.nombreOportunidad.aTitulo,
                 ),
               ),
               _FilaCampos(

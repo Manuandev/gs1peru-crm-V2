@@ -314,7 +314,7 @@ class _HistorialItem extends StatelessWidget {
               padding: const EdgeInsets.only(
                 left: AppSizing.actorCircleSize + AppSpacing.sm,
               ),
-              child: _ChipOportunidad(label: item.oportunidad),
+              child: _ChipOportunidad(label: item.oportunidad.aTitulo),
             ),
           ],
         ],

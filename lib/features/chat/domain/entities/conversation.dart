@@ -1,6 +1,7 @@
 // lib/features/chat/domain/entities/conversation.dart
 
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/core/utils/string/string_utils.dart';
 
 class Chat extends Equatable {
   // Contacto
@@ -25,11 +26,14 @@ class Chat extends Equatable {
   final int idLead;
   // No viene en el SP de lista — pendiente del SP de detalle de chat.
   final String modalidad;
-  // Info estado
+  // Info estado — estado y subestado SEPARADOS (T_LEAD ya los guarda en
+  // columnas distintas). idEstado = estado real (ej. '04'); idSubestado =
+  // subestado o '' (ej. '05'). Antes venían mezclados: idEstado traía el
+  // "leaf" (el subestado cuando había) e idEstadoPadre traía el padre.
   final String idEstado;
   final String descEstado;
-  final String idEstadoPadre;
-  final String descEstadoPadre;
+  final String idSubestado;
+  final String descSubestado;
   // Info campaña
   final int idCampania;
   final String nombreCampania;
@@ -71,13 +75,13 @@ class Chat extends Equatable {
 
   final String fcUltimoMensajeCliente;
 
-  /// Retorna el id del estado a mostrar en UI: padre si existe, directo si no.
-  String get idEstadoEfectivo =>
-      idEstadoPadre.isNotEmpty ? idEstadoPadre : idEstado;
+  /// Estado a mostrar/agrupar en UI. Con estado y subestado ya separados es
+  /// directamente [idEstado] — se conserva el getter para no tocar los
+  /// call sites que ya lo usaban.
+  String get idEstadoEfectivo => idEstado;
 
-  /// Retorna la descripción del estado efectivo.
-  String get descEstadoEfectiva =>
-      idEstadoPadre.isNotEmpty ? descEstadoPadre : descEstado;
+  /// Descripción del estado efectivo — ver [idEstadoEfectivo].
+  String get descEstadoEfectiva => descEstado;
 
   /// Nombre completo del contacto. Si no tiene nombre/apellidos registrados,
   /// muestra el número de teléfono como identificador.
@@ -87,7 +91,7 @@ class Chat extends Equatable {
       apellidoPaterno ?? '',
       apellidoMaterno ?? '',
     ].where((parte) => parte.trim().isNotEmpty).join(' ');
-    return partes.isNotEmpty ? partes : '$prefijoPais $numero';
+    return partes.isNotEmpty ? partes.aTitulo : '$prefijoPais $numero';
   }
 
   const Chat({
@@ -114,8 +118,8 @@ class Chat extends Equatable {
     // Info estado
     required this.idEstado,
     required this.descEstado,
-    required this.idEstadoPadre,
-    required this.descEstadoPadre,
+    required this.idSubestado,
+    required this.descSubestado,
     // Info campaña
     required this.idCampania,
     required this.nombreCampania,
@@ -181,8 +185,8 @@ class Chat extends Equatable {
     // Info estado
     idEstado,
     descEstado,
-    idEstadoPadre,
-    descEstadoPadre,
+    idSubestado,
+    descSubestado,
     // Info campaña
     idCampania,
     nombreCampania,
@@ -231,8 +235,8 @@ class Chat extends Equatable {
     // Info estado
     String? idEstado,
     String? descEstado,
-    String? idEstadoPadre,
-    String? descEstadoPadre,
+    String? idSubestado,
+    String? descSubestado,
     // Info campaña
     int? idCampania,
     String? nombreCampania,
@@ -295,8 +299,8 @@ class Chat extends Equatable {
       //Info Estado
       idEstado: idEstado ?? this.idEstado,
       descEstado: descEstado ?? this.descEstado,
-      idEstadoPadre: idEstadoPadre ?? this.idEstadoPadre,
-      descEstadoPadre: descEstadoPadre ?? this.descEstadoPadre,
+      idSubestado: idSubestado ?? this.idSubestado,
+      descSubestado: descSubestado ?? this.descSubestado,
       // Info Campaña
       idCampania: idCampania ?? this.idCampania,
       nombreCampania: nombreCampania ?? this.nombreCampania,

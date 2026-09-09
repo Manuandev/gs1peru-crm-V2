@@ -22,7 +22,10 @@ class _ChatListPageState extends State<ChatListPage> {
     // el usuario esté en otra pantalla — por eso hace falta refrescar a mano cada
     // vez que se reingresa, a diferencia de Seguimiento/Solicitudes/Cobranza (cuyo
     // bloc se crea de cero en cada entrada a la page).
-    context.read<ChatListBloc>().add(const ChatListRefreshed());
+    // ChatListReset (no ChatListRefreshed): al reingresar desde el menú la
+    // pantalla arranca "desde cero" — sin chip/búsqueda/panel avanzado activos
+    // que hayan quedado de una visita anterior (el bloc global los conserva).
+    context.read<ChatListBloc>().add(const ChatListReset());
     // Mantiene frescos los combos del filtro avanzado (campañas + oportunidades).
     context.read<CatalogsBloc>().add(const CatalogsFiltrosRefreshed());
   }

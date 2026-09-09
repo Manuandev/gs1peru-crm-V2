@@ -73,7 +73,7 @@ class CardInfoSolicitud extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        solicitud.nombreEmpresa,
+                        solicitud.nombreEmpresa.aTitulo,
                         style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.textSecondary,
                           fontSize: 10,
@@ -134,7 +134,7 @@ class CardInfoSolicitud extends StatelessWidget {
                           icono: AppIcons.listAlt,
                           label: 'Oportunidad / Curso',
                           child: Text(
-                            solicitud.oportunidad,
+                            solicitud.oportunidad.aTitulo,
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: AppTextStyles.weightRegular,
@@ -226,7 +226,7 @@ class CardInfoSolicitud extends StatelessWidget {
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
                               child: Text(
-                                solicitud.nombreAsesor,
+                                solicitud.nombreAsesor.aTitulo,
                                 style: AppTextStyles.labelSmall.copyWith(
                                   color: AppColors.textPrimary,
                                   fontWeight: AppTextStyles.weightSemiBold,

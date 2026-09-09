@@ -12,6 +12,31 @@ class CobranzaRepositoryImpl implements CobranzaRepository {
   Future<List<Cobranza>> getCobranzas() => _remote.getCobranzas();
 
   @override
+  Future<CobranzaPagina> traerPagina({
+    CobranzaChipFiltro chip = CobranzaChipFiltro.todos,
+    String? codAsesor,
+    String? cursorFecha,
+    String? cursorNumSol,
+    required int tamanio,
+    DateTime? fcDesde,
+    DateTime? fcHasta,
+    int? idCampania,
+    int? idOportunidad,
+    Set<int> estados = const {},
+  }) => _remote.traerPagina(
+    chip: chip,
+    codAsesor: codAsesor,
+    cursorFecha: cursorFecha,
+    cursorNumSol: cursorNumSol,
+    tamanio: tamanio,
+    fcDesde: fcDesde,
+    fcHasta: fcHasta,
+    idCampania: idCampania,
+    idOportunidad: idOportunidad,
+    estados: estados,
+  );
+
+  @override
   Future<CobranzaDetalle?> getDetalleCobranza(String numSol) =>
       _remote.getDetalleCobranza(numSol);
 

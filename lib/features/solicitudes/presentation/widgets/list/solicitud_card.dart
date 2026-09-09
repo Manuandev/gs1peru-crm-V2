@@ -66,17 +66,19 @@ class SolicitudCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Avatar — solo ícono de persona sobre círculo de color,
-                    // mismo estilo compacto que LeadCard (sin iniciales)
+                    // Círculo con "N°" (representa el número de solicitud) —
+                    // pedido de negocio, en vez del ícono de persona.
                     CircleAvatar(
                       radius: AppSizing.avatarRadiusSm,
                       backgroundColor: AvatarUtils.color(
                         solicitud.nombreCompleto,
                       ),
-                      child: Icon(
-                        AppIcons.user,
-                        size: AppSizing.iconSm,
-                        color: AppColors.textOnDark,
+                      child: Text(
+                        'N°',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: AppTextStyles.weightBold,
+                          color: AppColors.textOnDark,
+                        ),
                       ),
                     ),
 
@@ -97,7 +99,7 @@ class SolicitudCard extends StatelessWidget {
                           ),
                           const SizedBox(height: AppSpacing.xxs),
                           Text(
-                            solicitud.nombreEmpresa,
+                            solicitud.nombreEmpresa.aTitulo,
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -149,7 +151,7 @@ class SolicitudCard extends StatelessWidget {
                               const SizedBox(width: AppSpacing.xs),
                               Expanded(
                                 child: Text(
-                                  solicitud.oportunidad,
+                                  solicitud.oportunidad.aTitulo,
                                   style: AppTextStyles.labelSmall.copyWith(
                                     fontWeight: AppTextStyles.weightMedium,
                                     color: AppColors.textPrimary,
@@ -162,7 +164,7 @@ class SolicitudCard extends StatelessWidget {
                           ),
                           const SizedBox(height: AppSpacing.xs),
                           Text(
-                            'Num. Solicitud: ${solicitud.idSolicitud}',
+                            'N° solicitud: ${solicitud.idSolicitud}',
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -217,7 +219,7 @@ class SolicitudCard extends StatelessWidget {
                               const SizedBox(width: AppSpacing.xs),
                               Expanded(
                                 child: Text(
-                                  solicitud.nombreAsesor,
+                                  solicitud.nombreAsesor.aTitulo,
                                   style: AppTextStyles.labelSmall.copyWith(
                                     fontWeight: AppTextStyles.weightMedium,
                                     color: AppColors.textPrimary,

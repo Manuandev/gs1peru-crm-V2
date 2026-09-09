@@ -21,6 +21,15 @@ class ChatListRefreshed extends ChatListEvent {
   const ChatListRefreshed();
 }
 
+/// Reingreso a la pantalla desde el menú: recarga la lista y devuelve TODOS
+/// los filtros (chip, búsqueda y panel avanzado) a su estado inicial.
+/// A diferencia de [ChatListRefreshed] (pull-to-refresh / reintento), que solo
+/// recarga datos y conserva el filtro activo — necesario porque `ChatListBloc`
+/// es global y no muere al salir de la pantalla.
+class ChatListReset extends ChatListEvent {
+  const ChatListReset();
+}
+
 /// Recarga la lista desde la API sin emitir estado de carga (sin flash).
 /// Usar al regresar del detalle de chat.
 class ChatListSilentRefreshed extends ChatListEvent {

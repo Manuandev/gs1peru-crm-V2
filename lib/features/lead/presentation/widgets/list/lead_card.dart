@@ -191,8 +191,9 @@ class _LeadAvatar extends StatelessWidget {
   }
 }
 
-/// Nombre (negrita) + oportunidad (negrita, gris medio) + empresa (gris claro,
-/// sin negrita) — mitad izquierda de la card.
+/// Nombre (negrita) → badge "N negociaciones" → oportunidad (negrita, gris
+/// medio) → empresa (gris claro, sin negrita), uno debajo del otro — mitad
+/// izquierda de la card.
 class _LeadClientInfo extends StatelessWidget {
   final ContactoNegociacion lead;
 
@@ -204,31 +205,26 @@ class _LeadClientInfo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Text(
-                lead.nombreCompleto,
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: AppTextStyles.weightSemiBold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            // totalLeads en 0 → el backend todavía no manda CL.CT_LEADS
-            // (SP viejo desplegado); no mostramos el badge para no mentir.
-            if (lead.totalLeads > 0) ...[
-              const SizedBox(width: AppSpacing.xxs),
-              _CasosBadge(count: lead.totalLeads),
-            ],
-          ],
+        // Nombre en su propia línea — el badge de negociaciones bajó abajo
+        // (antes iba al lado y le comía espacio al nombre).
+        Text(
+          lead.nombreCompleto,
+          style: AppTextStyles.bodySmall.copyWith(
+            fontWeight: AppTextStyles.weightSemiBold,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
+        // totalLeads en 0 → el backend todavía no manda CL.CT_LEADS
+        // (SP viejo desplegado); no mostramos el badge para no mentir.
+        if (lead.totalLeads > 0) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          _CasosBadge(count: lead.totalLeads),
+        ],
         if (lead.negociacion.nombreOportunidad.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            lead.negociacion.nombreOportunidad,
+            lead.negociacion.nombreOportunidad.aTitulo,
             style: AppTextStyles.labelSmall.copyWith(
               fontWeight: AppTextStyles.weightBold,
               color: AppColors.textSecondary,
@@ -240,7 +236,7 @@ class _LeadClientInfo extends StatelessWidget {
         if (lead.contacto.nombreEmpresa.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            lead.contacto.nombreEmpresa,
+            lead.contacto.nombreEmpresa.aTitulo,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textDisabled,
             ),
@@ -376,8 +372,8 @@ class _SinNegociacionChip extends StatelessWidget {
   }
 }
 
-/// Badge "N casos" — cuántos leads activos tiene el número de este contacto
-/// (CL.CT_LEADS). Junto al nombre, en `_LeadClientInfo`.
+/// Badge "N negociaciones" — cuántas negociaciones tiene el contacto
+/// (CL.CT_LEADS). Debajo del nombre, en `_LeadClientInfo`.
 class _CasosBadge extends StatelessWidget {
   final int count;
 

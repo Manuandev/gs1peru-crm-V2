@@ -3,6 +3,7 @@
 export 'data/datasources/remote/cobranza_remote_datasource.dart';
 
 export 'data/models/cobranza_model.dart';
+export 'data/models/cobranza_pagina_model.dart';
 export 'data/models/detalle_cobranza_model.dart';
 export 'data/models/historial_cobranza_model.dart';
 export 'data/models/archivo_cobranza_model.dart';
@@ -10,6 +11,8 @@ export 'data/models/archivo_cobranza_model.dart';
 export 'data/repositories/cobranza_repository_impl.dart';
 
 export 'domain/entities/cobranza.dart';
+export 'domain/entities/cobranza_filtro_avanzado.dart';
+export 'domain/entities/cobranza_pagina.dart';
 export 'domain/entities/cobranza_detalle.dart';
 export 'domain/entities/historial_cobranza.dart';
 export 'domain/entities/archivo_cobranza.dart';
@@ -21,6 +24,7 @@ export 'domain/enums/cobranza_chip_filtro.dart';
 export 'domain/repositories/cobranza_repository.dart';
 
 export 'domain/usecases/get_cobranzas_usecase.dart';
+export 'domain/usecases/get_cobranza_pagina_usecase.dart';
 export 'domain/usecases/get_detalle_cobranza_usecase.dart';
 export 'domain/usecases/cambiar_estado_facturar_usecase.dart';
 export 'domain/usecases/guardar_plan_credito_usecase.dart';
@@ -49,6 +53,7 @@ export 'presentation/pages/cobranza_plan_page.dart';
 export 'presentation/widgets/lista/cobranza_asesor_picker_modal.dart';
 export 'presentation/widgets/lista/cobranza_card.dart';
 export 'presentation/widgets/lista/cobranza_filter_chips.dart';
+export 'presentation/widgets/lista/cobranza_filtro_drawer.dart';
 export 'presentation/widgets/lista/cobranza_list_portrait.dart';
 export 'presentation/widgets/lista/cobranza_list_view.dart';
 export 'presentation/widgets/lista/cobranza_summary_cards.dart';

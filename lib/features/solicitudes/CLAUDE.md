@@ -1,5 +1,14 @@
 # Solicitudes Feature
 
+## `SolicitudCard` — círculo con "N°" + "N° solicitud:" (2026-09-09)
+
+Pedido de negocio, `solicitud_card.dart`:
+- El `CircleAvatar` del header ya **no** muestra el ícono de persona (`AppIcons.user`) — muestra
+  el texto **"N°"** (`AppTextStyles.bodySmall` bold, `AppColors.textOnDark`). El
+  `backgroundColor` sigue siendo `AvatarUtils.color(nombreCompleto)` (color por nombre, sin
+  cambio). El ícono de persona sigue usándose en la fila "Ejecutivo" más abajo, no se tocó.
+- La línea `Num. Solicitud: <id>` → **`N° solicitud: <id>`** (s minúscula).
+
 ## Lista paginada (keyset) + panel de filtros Desde/Hasta/Campaña/Evento (2026-09-09)
 
 `SolicitudListPage` / `SolicitudListBloc` pasaron a **paginado real** (task `'LSP'` de
@@ -34,6 +43,50 @@ refrescar campañas + eventos. Conversaciones y Seguimiento hacen lo mismo con c
 oportunidades (ver `core/CLAUDE.md` → task `'FIL'`).
 
 ⚠️ Pendiente `ALTER PROCEDURE` de `CSV_SOLICITUD_LST_APP` y `CSV_LISTAS_LST_APP` en SSMS.
+
+### Bug real — la lista se cortaba a ~1 página con "Fin de la lista" pese a 900+ registros (2026-09-09)
+
+Reportado por el usuario: contadores en ~990, pero al bajar la lista se corta a ~50 con "Fin
+de la lista". Causa: el **keyset perdía precisión de milisegundos**. El SP emite el cursor como
+`CONVERT(VARCHAR(33), FC_ULTIMA, 126)` (incluye `.mmm...`), pero `@SLP_CUR_FECHA` estaba
+declarado `DATETIME` y `#SLP_BASE.FC_ULTIMA` salía del `ISNULL(CI.FC_USUARIO_M, CI.FC_USUARIO_C)`
+crudo (columnas `datetime2`). Al volver: `TRY_CONVERT(DATETIME, cursor, 126)` **redondea** los
+sub-milisegundos, así que `FC_ULTIMA = @SLP_CUR_FECHA` (la rama de desempate del keyset) **nunca
+matcheaba** y `FC_ULTIMA < @SLP_CUR_FECHA` tampoco (el valor real era `>` el cursor redondeado).
+Con muchas filas en el mismo segundo (carga/validación masiva → los "990 validados"), la página
+2 volvía **vacía** → `finLista`.
+- **Fix**: `#SLP_BASE.FC_ULTIMA = CONVERT(DATETIME2(3), ISNULL(...))` y
+  `@SLP_CUR_FECHA / @SLP_DESDE / @SLP_HASTA` → `DATETIME2(3) = TRY_CONVERT(DATETIME2(3), ...)`.
+  Con 3 dígitos fijos en ambos lados, el round-trip por `VARCHAR(...,126)` es exacto y el
+  desempate matchea.
+- **Mismo bug y mismo fix aplicados a los otros 2 `'LSP'`** (mismo patrón de código):
+  `CRM.CSV_LEADS_LST_APP` (Seguimiento) y `CRM.CSV_COBRANZAS_LST_APP` (Cobranza — ahí además el
+  cursor era `VARCHAR(19)`, sin milisegundos del todo). Los 3 pendientes de `ALTER PROCEDURE`.
+  Flutter no cambió (el parser ya trata el cursor como string).
+
+### Bug real — 2ª causa del mismo síntoma: `INNER JOIN` DESPUÉS del `TOP` descartaba filas (2026-09-09)
+
+Reportado de nuevo tras desplegar el fix de precisión: contador `90 sin validar / 914 validados`
+(= 1004) pero la lista se corta a ~30. Causa distinta, en el mismo `'LSP'`: el `SELECT` final
+hacía `#SLP_PG` (que ya es `TOP (@TAM)` sobre `#SLP_BASE`) `INNER JOIN
+EVT.T_TECMSOLINSCRIPCION01_FACTURACION` **e** `INNER JOIN DBO.[edu.TIP_ESTADO_GES]`. Una solicitud
+a medio completar (no llegó al paso 3 del wizard, o saltó Facturación por ser todo invitados)
+**no tiene fila en `..._FACTURACION`** → cuenta en `#SLP_BASE`/contadores pero se cae del
+`SELECT`. Como las solicitudes más nuevas (1ª página, fecha DESC) son justo las que están
+incompletas, de las 50 de la página 1 sobrevivían ~30 → Flutter ve `30 < 50` → `finLista = true`
+→ paginación detenida. Regla general del keyset: **cualquier join que pueda descartar filas tiene
+que estar en `#SLP_BASE` (antes del `TOP`), nunca en el `SELECT` que arma la página** — si no,
+`#PG` viene incompleto y el conteo no cuadra.
+- **Fix** (pedido de negocio: los borradores SÍ deben verse — la pantalla es "pendientes por
+  **completar** y validar"): los 2 `INNER JOIN` del `SELECT` final de `'LSP'` pasaron a
+  `LEFT JOIN`. Todos los campos ya venían envueltos en `ISNULL(...)`/`CASE ISNULL(...)`, así que
+  una solicitud sin facturación sale con condición de pago vacía y monto = `SUM` de participantes
+  (o 0). El contador 1004 no cambia y ahora sí cuadra con la lista. `#SLP_BASE` y los contadores
+  no se tocaron (ya eran el universo completo sin el join a facturación).
+- Flutter no cambió. Pendiente `ALTER PROCEDURE` en SSMS.
+- **`'LS'`** (task viejo, solo lo usa `SolicitudDetalleBloc` para el header) mantiene sus
+  `INNER JOIN` a facturación/estado — no se tocó; si un borrador sin facturación abre su detalle,
+  el header cae al `Solicitud` de navegación (comportamiento previo, no bloquea).
 
 
 ## `SolicitudAsesorPickerModal` — refresco angosto de asesores + tarjetas de estado rediseñadas (2026-08-21)

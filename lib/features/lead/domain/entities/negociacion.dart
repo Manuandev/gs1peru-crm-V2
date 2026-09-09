@@ -1,6 +1,7 @@
 // lib/features/lead/domain/entities/negociacion_lead.dart
 
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/core/utils/string/string_utils.dart';
 
 /// Acción disponible en el botón de solicitud de una negociación — ver
 /// [Negociacion.accionSolicitud].
@@ -142,7 +143,7 @@ class Negociacion extends Equatable {
     nombres,
     apellidoPaterno,
     apellidoMaterno,
-  ].where((p) => p.trim().isNotEmpty).join(' ');
+  ].where((p) => p.trim().isNotEmpty).join(' ').aTitulo;
 
   /// Teléfono con prefijo — vacío si no hay número registrado.
   String get telefonoCompleto => '$prefijoPais $numero'.trim();

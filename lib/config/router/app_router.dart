@@ -103,6 +103,7 @@ class AppRouter {
         // LeadListPage (task 'LS', sin paginado) queda intacta sin caller.
         return SeguimientoPage(
           filtroInicial: args?['filtroInicial'] as LeadListFiltro?,
+          sinRangoFecha: args?['sinRangoFecha'] as bool? ?? false,
         );
       },
     ),
@@ -163,7 +164,13 @@ class AppRouter {
       builder: (_) => const UnderConstructionPage(routeName: 'Equipo'),
     ),
     AppRoutes.cobranza: RouteDefinition(
-      builder: (_) => const CobranzaListPage(),
+      builder: (context) {
+        final args =
+            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        return CobranzaListPage(
+          sinRangoFecha: args?['sinRangoFecha'] as bool? ?? false,
+        );
+      },
     ),
     AppRoutes.detalleCobranza: RouteDefinition(
       transition: TransitionType.slideRight,

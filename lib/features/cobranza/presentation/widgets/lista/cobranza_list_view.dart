@@ -17,6 +17,34 @@ class CobranzaListView extends StatelessWidget {
       title: 'Cobranzas',
       drawerSide: DrawerSide.left,
       showBottomNav: true,
+      // Botón de filtro avanzado (abre el endDrawer derecho) — naranja solo si
+      // el asesor cambió el filtro respecto al default (mes actual → hoy).
+      appBarTrailingButtons: [
+        BlocBuilder<CobranzaListBloc, CobranzaListState>(
+          buildWhen: (prev, curr) {
+            final p = prev is CobranzaListCargado && prev.tieneFiltroAvanzado;
+            final c = curr is CobranzaListCargado && curr.tieneFiltroAvanzado;
+            return p != c;
+          },
+          builder: (context, state) {
+            final tieneAvanzado =
+                state is CobranzaListCargado && state.tieneFiltroAvanzado;
+            return Builder(
+              builder: (ctx) => IconButton(
+                tooltip: 'Filtrar',
+                icon: Icon(
+                  AppIcons.filter,
+                  color: tieneAvanzado
+                      ? AppColors.secondary
+                      : AppColors.textOnDark,
+                ),
+                onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+              ),
+            );
+          },
+        ),
+      ],
+      endDrawerWidget: const CobranzaFiltroDrawer(),
       body: RefreshIndicator(
         color: AppColors.primary,
         backgroundColor: AppColors.surface,
@@ -24,56 +52,22 @@ class CobranzaListView extends StatelessWidget {
           final bloc = context.read<CobranzaListBloc>();
           bloc.add(const CobranzaListRefresh());
           await bloc.stream.firstWhere(
-            (s) => s is CobranzaListSuccess || s is CobranzaListError,
+            (s) => s is CobranzaListCargado || s is CobranzaListErrorInicial,
           );
         },
         child: BlocBuilder<CobranzaListBloc, CobranzaListState>(
-          // Un refresh silencioso (ej. el picker de "Asesores" dispara
-          // CobranzaListRefresh al abrirse, ver cobranza_asesor_picker_modal.
-          // dart) no debe tapar la lista ya cargada con el loading — eso
-          // solo tiene sentido en la primera carga real, antes de que exista
-          // ningún dato en pantalla.
-          buildWhen: (previous, current) =>
-              current is! CobranzaListLoading ||
-              previous is CobranzaListInitial,
           builder: (context, state) {
-            if (state is CobranzaListLoading || state is CobranzaListInitial) {
-              return const AppLoadingView();
-            }
-
-            if (state is CobranzaListError) {
-              return AppErrorView(
-                message: state.message,
+            return switch (state) {
+              CobranzaListInitial() ||
+              CobranzaListCargando() => const AppLoadingView(),
+              CobranzaListErrorInicial(:final mensaje) => AppErrorView(
+                message: mensaje,
                 onRetry: () => context.read<CobranzaListBloc>().add(
                   const CobranzaListRefresh(),
                 ),
-              );
-            }
-
-            if (state is CobranzaListSuccess) {
-              return Column(
-                children: [
-                  CobranzaSummaryCards(
-                    conteosPorEstado: state.conteosPorEstado,
-                    estadosSeleccionados: state.estadosSeleccionados,
-                    onEstadoTap: (idEstado) => context
-                        .read<CobranzaListBloc>()
-                        .add(CobranzaEstadoToggled(idEstado)),
-                  ),
-                  Expanded(
-                    child: CobranzaListPortrait(
-                      cobranzas: state.cobranzas,
-                      chipFiltro: state.chipFiltro,
-                      estadosSeleccionados: state.estadosSeleccionados,
-                      asesorSeleccionado: state.asesorSeleccionado,
-                      conteosPorAsesor: state.conteosPorAsesor,
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            return const SizedBox.shrink();
+              ),
+              CobranzaListCargado() => CobranzaListPortrait(estado: state),
+            };
           },
         ),
       ),

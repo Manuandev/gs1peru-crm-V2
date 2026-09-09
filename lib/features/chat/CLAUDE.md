@@ -3,6 +3,94 @@
 Gestiona conversaciones WhatsApp, envío de mensajes, multimedia, templates y edición de leads.
 Es el feature más complejo de la app — leer completo antes de tocar cualquier archivo.
 
+## `CRM.CSV_WHATSAPP_LST_APP` task `'LS'` — reescrito con tablas temporales + fin de duplicados (2026-09-09)
+
+SP de la lista de chats (`NC.SQLChangeLock`, repo aparte — `.sql` UTF-16LE con BOM, preservar
+la codificación). Antes el `FROM` arrancaba en `T_CONVERSACION_CAB` → **una fila por
+conversación_cab**; como un número puede tener **más de una** conversación_cab (no debería pasar,
+pero pasa), el mismo número salía **duplicado** en la lista.
+
+- **`T_NUMERO` es ahora la jerarquía** (una fila por número). La conversación_cab se resuelve a
+  **una sola**: la más reciente por número (`#ConversacionReciente`, `ROW_NUMBER() ... ORDER BY
+  ID_CONVERSACION_CAB DESC`) — es la que viaja en el campo 34 (`ID_CONVERSACION_CAB`, el
+  `idChatCab` que usa la app para abrir/enviar). `INNER JOIN #UltMsj` en el `SELECT` final
+  descarta números sin **ningún** mensaje en ninguna de sus conversación_cab (equivale al
+  `INNER JOIN` al último mensaje que tenía la versión vieja).
+- **Los contadores/íconos de mensajes miran TODO el historial del número** — todas sus
+  conversación_cab, no solo la reciente (pedido explícito de negocio): último mensaje (dir+fecha,
+  campos 24/25 — antes salían solo de la conversación_cab del `FROM`), primer mensaje del cliente
+  (27), derivado por IA (26), tipo/contenido/fecha del último mensaje del cliente (28/29/37),
+  fecha del último mensaje IA (33) y cantidad de mensajes atendidos por la IA (32). Base común:
+  `#DetNumero` (todos los `T_CONVERSACION_DET` de todas las conversación_cab de los números en
+  scope) → 6 tablas derivadas con `ROW_NUMBER`/`GROUP BY`.
+- **Estilo:** mismo patrón que `CRM.CSV_LEADS_LST_APP` task `'LS'` (tablas `#temp` +
+  `CREATE UNIQUE CLUSTERED INDEX` + `ROW_NUMBER()`), en vez de ~10 `OUTER APPLY`/subqueries
+  correlacionados por fila.
+- **Contrato de salida:** mismos 38 campos y orden. Los campos **12-15 cambiaron de significado**
+  (ver punto siguiente); el resto igual. `WITHIN GROUP (ORDER BY <último mensaje> DESC)` sin
+  cambio.
+- Tasks `'DT'`, `'LP'` **no se tocaron**. `'LU'` **sí** — ver los 2 puntos de abajo (mismos
+  campos 12-15 + desempate del contacto). Pendiente el `ALTER PROCEDURE` en SSMS para desplegar.
+
+### Estado y subestado SEPARADOS en `'LS'` + `'LU'` (2026-09-09)
+
+`T_LEAD` ya guarda `ID_ESTADO` (estado real) e `ID_SUBESTADO` en columnas distintas. Antes el SP
+los mezclaba: campo 12 = `ISNULL(SE.ID_ESTADO, LE.ID_ESTADO)` (el "leaf" — el subestado cuando
+había), campo 14 = `IIF(sub, LE.ID_ESTADO, NULL)` (el padre). Ahora salen limpios:
+
+| Campo | Antes | Ahora |
+|---|---|---|
+| 12 | leaf id (`ISNULL(SE.ID_ESTADO, LE.ID_ESTADO)`) | `LD.ID_ESTADO` — estado real (ej. `'04'`) |
+| 13 | leaf desc | `LE.DESCRIPCION` — desc del estado |
+| 14 | padre id (solo si hay sub) | `LD.ID_SUBESTADO` — subestado o `''` (ej. `'05'`) |
+| 15 | padre desc | `SE.DESCRIPCION` — desc del subestado o `''` |
+
+**Flutter en cadena:** `Chat.idEstadoPadre`/`descEstadoPadre` → **`idSubestado`/`descSubestado`**
+(entidad + `ChatModel` + `copyWith` + `props`). `idEstado`/`descEstado` ahora son el estado real.
+Los getters `idEstadoEfectivo`/`descEstadoEfectiva` se conservan como alias directos de
+`idEstado`/`descEstado` (los call sites de `chat_tile.dart` no se tocaron). `_onLeadUpdated`
+(`ChatListBloc`) traduce del `Negociacion` (que **sigue** con el encoding viejo leaf/padre) al
+nuevo: `idEstado = lead.idEstadoEfectivo`, `idSubestado = haySub ? lead.idEstado : ''`.
+
+### `'LS'` y `'LU'` resolvían un contacto distinto para el mismo número (2026-09-09)
+
+Bug reportado: en la lista salía un nombre y al entrar al detalle salía otro. Ambos tasks
+resuelven el contacto del número por "vínculo activo más reciente" en `T_CONTACTO_NUMERO`, pero
+el `ORDER BY NC2.FC_USUARIO_C DESC` **no tenía desempate** — si el número tenía >1 contacto
+activo con la misma fecha, `TOP 1` / `ROW_NUMBER()` devolvía uno distinto entre `'LS'` (lista) y
+`'LU'` (detalle, `ChatDetailPage` lo re-resuelve por `idChatCab`). Corregido agregando
+`, NC2.ID_CONTACTO_NUMERO DESC` como 2º criterio en ambos (mismo patrón que ya usan
+`CSV_T_CONTACTO_LST` y otros SPs del repo).
+
+## Lista de Conversaciones — retoques de UI (2026-09-09)
+
+- **Título** (`chat_list_view.dart`): "Mis conversaciones" → **"Conversaciones"** (igual que el
+  ítem del menú). El subtítulo "Ordenadas por última interacción" se mantiene.
+- **Chip del bot** (`chat_tile.dart`, fila de acciones): el segundo `_ChipInfo` pasó de
+  `label: 'Bot atendió N mensajes'` a `label: '$cantidadMensajesIA'` — solo el ícono del bot
+  (`AppIcons.ia`) + el número. El chip ✨ "Derivado por IA" (`AppIcons.sparkle`, sin label) se
+  deja como estaba.
+- **"sin respuesta" movido a etiqueta abajo + nombre/número completos (`chat_tile.dart`).**
+  El bloque `_InfoDerecha` de la fila principal no tenía ancho fijo: cuando el texto era
+  "Esperando respuesta" (más largo que "sin respuesta") le robaba ancho al nombre y al número y
+  los cortaba con "…". Cambios:
+  - `_InfoDerecha` ahora **solo** muestra el tiempo desde el PRIMER mensaje del cliente
+    (`fcPrimerMensajeCliente`). Se le quitó el 2º timer (`fechaHora`) y el texto
+    "sin respuesta"/"Esperando respuesta".
+  - Widget nuevo `_ChipSinRespuesta` (StatefulWidget, ticker de 1s como `_InfoDerecha`) — reusa
+    `_ChipInfo` con `icon: AppIcons.accessTime`, `label: '<elapsed> sin respuesta'` /
+    `'<elapsed> esperando respuesta'` (según `direccionMensaje == 'CLI'`), `fgColor` por
+    `ElapsedTimeUtils.colorFromElapsed`, **fondo blanco (`AppColors.surface`) + borde suave
+    (`AppColors.border`)** — a diferencia de los chips de IA que van sin borde y con fondo
+    tintado. `_ChipInfo` ganó un `borderColor` opcional (null = sin borde, comportamiento previo).
+    Se agrega al `Wrap` de la fila de acciones, después de los chips de IA (sale **siempre** que
+    haya `fechaHora`, con o sin IA — por eso el `Wrap` ya no está envuelto en
+    `if (chat.isDerivadoIA)`, los chips de IA pasaron a `if` internos).
+  - `_InfoChat`: se quitó el recorte manual del nombre (`AppConstants.maxCharsNombreChat`,
+    constante **eliminada** de `app_constants.dart` — solo se usaba acá) y el `Text` del nombre
+    pasó de `maxLines: 1` a `maxLines: 2`. Con el ancho que liberó `_InfoDerecha`, nombre y
+    número (fallback `'$prefijoPais $numero'`) se ven completos.
+
 ## Filtro avanzado de conversaciones — Campaña + Oportunidad en cascada (2026-09-08)
 
 `FiltroChatDrawer` (`presentation/widgets/chat_list/filtro_chat_drawer.dart`) tiene combos
@@ -137,11 +225,27 @@ fresca la lista en memoria y el badge del drawer (`context.updateBadge`) en tiem
   (`StatelessWidget` sin `initState`) nunca volvía a pedir datos al reentrar — a diferencia
   de Seguimiento/Solicitudes/Cobranza, que sí recargan siempre porque su Page crea un Bloc
   nuevo (`BlocProvider(create: ...)`) en cada entrada. Corregido convirtiendo `ChatListPage`
-  a `StatefulWidget` — su `initState()` dispara `ChatListRefreshed()` a mano en cada entrada,
+  a `StatefulWidget` — su `initState()` dispara un evento de recarga a mano en cada entrada,
   simulando el mismo efecto de "recarga completa al entrar" sin tener que sacrificar el bloc
   global (que sigue vivo para el WebSocket/badge). Si se agrega otra pantalla con un bloc
   global por el mismo motivo (necesita seguir escuchando algo fuera de su propia página),
   replicar este patrón — `initState()` + evento de refresh — en vez de dejarla sin recarga.
+- **Filtros "desde cero" al reingresar (2026-09-09)**: como el bloc es global, sus campos de
+  filtro (`_filtroActivo` del chip, `_lastSearchQuery`, y los 5 del panel avanzado) sobrevivían
+  al salir de la pantalla — el usuario ponía "En cobranza", iba a Inicio, volvía y el chip
+  seguía activo. `initState()` ahora dispara **`ChatListReset`** (evento nuevo) en vez de
+  `ChatListRefreshed`: `_onReset` limpia chip + búsqueda + panel avanzado a su valor inicial y
+  recién ahí recarga. `ChatListRefreshed` se mantiene tal cual para pull-to-refresh y el botón
+  de reintento del error — esos **sí** conservan el filtro activo.
+- **"En cobranza" = cerrada ganada, no cualquier subestado '05' (2026-09-09)**: el chip/contador
+  "En cobranza" filtraba `c.idEstado == '05'` — pero con el encoding viejo `idEstado` era el
+  "leaf" (el subestado cuando existía), así que una negociación de cualquier padre con un
+  subestado de id '05' pasaba el filtro (se veían chats con el chip "Nuevo" dentro de Cobranza).
+  Con estado y subestado ya separados (ver arriba, "Estado y subestado SEPARADOS"), el helper
+  `ChatListBloc._esEnCobranza(c)` quedó en **`c.idEstado == '04' && c.idSubestado == '05'`**,
+  usado en los 3 lugares (`_calcularContadores`, `_calcularConteos`, `_aplicarFiltroChip`) para
+  que no vuelvan a divergir. `conPropuesta` en esos mismos 3 lugares pasó de
+  `idEstadoEfectivo == '02'` a `idEstado == '02'` (ahora `idEstado` ya es el estado real).
 
 ---
 

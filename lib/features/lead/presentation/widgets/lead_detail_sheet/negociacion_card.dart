@@ -96,7 +96,7 @@ class NegociacionCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          negociacion.nombreOportunidad,
+                          negociacion.nombreOportunidad.aTitulo,
                           style: AppTextStyles.labelSmall.copyWith(
                             fontWeight: AppTextStyles.weightSemiBold,
                           ),

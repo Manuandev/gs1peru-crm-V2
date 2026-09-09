@@ -87,31 +87,38 @@ class ChatTile extends StatelessWidget {
             // ── Fila de acciones ──────────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (chat.isDerivadoIA)
-                  Expanded(
-                    child: Wrap(
-                      spacing: AppSpacing.xs,
-                      runSpacing: AppSpacing.xxs,
-                      children: [
+                Expanded(
+                  child: Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xxs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (chat.isDerivadoIA)
                         _ChipInfo(
                           icon: AppIcons.sparkle,
                           bgColor: AppColors.datoSubestadobg,
                           fgColor: AppColors.datoSubestadoFg,
                           label: null,
                         ),
+                      if (chat.isDerivadoIA)
                         _ChipInfo(
                           icon: AppIcons.ia,
-                          label:
-                              'Bot atendió ${chat.cantidadMensajesIA} mensajes',
+                          // Solo ícono del bot + cantidad de mensajes (pedido
+                          // de negocio) — sin el texto "Bot atendió N mensajes".
+                          label: '${chat.cantidadMensajesIA}',
                           bgColor: AppColors.datoEstadoBg,
                           fgColor: AppColors.datoEstadoFg,
                         ),
-                      ],
-                    ),
-                  )
-                else
-                  const SizedBox.shrink(),
+                      // Tiempo "sin respuesta" / "esperando respuesta" como
+                      // etiqueta acá (antes ocupaba ancho en la fila principal
+                      // y recortaba el nombre/número).
+                      _ChipSinRespuesta(chat: chat),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -179,9 +186,10 @@ class _InfoChat extends StatelessWidget {
   Widget build(BuildContext context) {
     final preview = buildClientMessagePreview(chat);
     final tieneCanal = chat.idCanal > 0;
-    final nombre = chat.nombreCompleto.length > AppConstants.maxCharsNombreChat
-        ? '${chat.nombreCompleto.substring(0, AppConstants.maxCharsNombreChat)}...'
-        : chat.nombreCompleto;
+    // Nombre/número completos, sin recorte manual — el bloque de la derecha
+    // ("sin respuesta"/"esperando respuesta") se movió a una etiqueta abajo,
+    // así que ya hay ancho para mostrarlo entero (hasta 2 líneas).
+    final nombre = chat.nombreCompleto;
     final mensajeRaw = preview.label;
     final mensajeTrunc = mensajeRaw.length > AppConstants.maxCharsMensajeChat
         ? '${mensajeRaw.substring(0, AppConstants.maxCharsMensajeChat)}...'
@@ -201,10 +209,10 @@ class _InfoChat extends StatelessWidget {
               child: Text(
                 nombre,
                 style: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTextStyles.weightBold,
                 ),
                 overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+                maxLines: 2,
               ),
             ),
             if (tieneCanal) ...[
@@ -221,7 +229,7 @@ class _InfoChat extends StatelessWidget {
         if (chat.nombreOportunidad.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            chat.nombreOportunidad,
+            chat.nombreOportunidad.aTitulo,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
               fontWeight: AppTextStyles.weightBold,
@@ -235,7 +243,7 @@ class _InfoChat extends StatelessWidget {
         if (chat.nombreEmpresa.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xxs),
           Text(
-            chat.nombreEmpresa,
+            chat.nombreEmpresa.aTitulo,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -275,7 +283,8 @@ class _InfoChat extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Info derecha: tiempo sin respuesta + badge estado + hora del último mensaje
+// Info derecha: solo el tiempo desde el PRIMER mensaje del cliente (el de
+// "sin respuesta" se movió a la etiqueta _ChipSinRespuesta de la fila de abajo)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _InfoDerecha extends StatefulWidget {
@@ -307,62 +316,83 @@ class _InfoDerechaState extends State<_InfoDerecha> {
 
   @override
   Widget build(BuildContext context) {
-    final ahora = DateTime.now();
-
-    // Tiempo desde el primer mensaje del cliente
+    // Tiempo desde el primer mensaje del cliente — "eso se entiende" (pedido
+    // de negocio), se queda acá. El de "sin respuesta" ahora es _ChipSinRespuesta.
     final fechaPrimerMensaje = DateFormatter.parseDate(
       chat.fcPrimerMensajeCliente,
     );
-    final elapsedPrimero = fechaPrimerMensaje != null
-        ? ahora.difference(fechaPrimerMensaje)
-        : null;
+    if (fechaPrimerMensaje == null) return const SizedBox.shrink();
+    final elapsedPrimero = DateTime.now().difference(fechaPrimerMensaje);
 
-    // "Sin respuesta" — solo visible si el cliente mandó el último mensaje
-    final clienteEsUltimo = chat.direccionMensaje == 'CLI';
+    return Text(
+      ElapsedTimeUtils.formatDoHoMoS(elapsedPrimero),
+      style: AppTextStyles.labelMedium.copyWith(
+        color: ElapsedTimeUtils.colorFromElapsed(elapsedPrimero),
+        fontWeight: AppTextStyles.weightBold,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Etiqueta "Xd sin respuesta" / "Xh esperando respuesta" — al lado de los chips
+// del bot. Sale siempre que haya un último mensaje. StatefulWidget con ticker
+// de 1s para que el tiempo avance solo, igual que _InfoDerecha.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChipSinRespuesta extends StatefulWidget {
+  final Chat chat;
+  const _ChipSinRespuesta({required this.chat});
+
+  @override
+  State<_ChipSinRespuesta> createState() => _ChipSinRespuestaState();
+}
+
+class _ChipSinRespuestaState extends State<_ChipSinRespuesta> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chat = widget.chat;
     final fechaUltimoMensaje = DateFormatter.parseDate(chat.fechaHora);
-    final elapsedSinRespuesta = fechaUltimoMensaje != null
-        ? ahora.difference(fechaUltimoMensaje)
-        : null;
+    if (fechaUltimoMensaje == null) return const SizedBox.shrink();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (elapsedPrimero != null)
-          Text(
-            ElapsedTimeUtils.formatDoHoMoS(elapsedPrimero),
-            style: AppTextStyles.labelMedium.copyWith(
-              color: ElapsedTimeUtils.colorFromElapsed(elapsedPrimero),
-              fontWeight: AppTextStyles.weightBold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        // if (clienteEsUltimo && elapsedSinRespuesta != null) ...[
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          ElapsedTimeUtils.formatDoHoMoS(elapsedSinRespuesta!),
-          style: AppTextStyles.labelMedium.copyWith(
-            color: ElapsedTimeUtils.colorFromElapsed(elapsedSinRespuesta),
-            fontWeight: AppTextStyles.weightBold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          clienteEsUltimo ? 'sin respuesta' : 'Esperando respuesta',
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-          textAlign: TextAlign.start,
-        ),
-        // ],
-      ],
+    final elapsed = DateTime.now().difference(fechaUltimoMensaje);
+    // Cliente mandó el último mensaje → falta que respondamos ("sin respuesta").
+    // Nosotros/el bot mandamos el último → esperamos al cliente.
+    final clienteEsUltimo = chat.direccionMensaje == 'CLI';
+
+    return _ChipInfo(
+      icon: AppIcons.accessTime,
+      label:
+          '${ElapsedTimeUtils.formatDoHoMoS(elapsed)} '
+          '${clienteEsUltimo ? 'sin respuesta' : 'esperando respuesta'}',
+      // Fondo blanco + borde suave (pedido de negocio).
+      bgColor: AppColors.surface,
+      borderColor: AppColors.border,
+      fgColor: ElapsedTimeUtils.colorFromElapsed(elapsed),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Chip informativo pequeño: ícono + texto con fondo de color suave
-// Usado para "Derivado por IA" y "Bot atendió N mensajes"
+// Usado para "Derivado por IA" (solo ícono) y el ícono del bot + N mensajes
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ChipInfo extends StatelessWidget {
@@ -370,12 +400,16 @@ class _ChipInfo extends StatelessWidget {
   final String? label;
   final Color bgColor;
   final Color fgColor;
+  // Borde opcional — los chips de IA no lo llevan; la etiqueta de "sin
+  // respuesta" sí (fondo blanco + borde suave).
+  final Color? borderColor;
 
   const _ChipInfo({
     required this.icon,
     required this.label,
     required this.bgColor,
     required this.fgColor,
+    this.borderColor,
   });
 
   @override
@@ -388,6 +422,9 @@ class _ChipInfo extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppSizing.radiusXs),
+        border: borderColor == null
+            ? null
+            : Border.all(color: borderColor!, width: AppSizing.hairline),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

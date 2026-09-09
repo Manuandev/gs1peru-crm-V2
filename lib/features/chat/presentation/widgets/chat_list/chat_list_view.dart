@@ -19,7 +19,7 @@ class ChatListView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Mis conversaciones',
+            'Conversaciones',
             style: AppTextStyles.titleMedium.copyWith(
               color: AppColors.textOnDark,
               fontWeight: AppTextStyles.weightSemiBold,

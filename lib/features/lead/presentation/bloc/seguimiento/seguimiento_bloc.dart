@@ -28,8 +28,9 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
   LeadListFiltro _filtro;
   // Al entrar, Seguimiento arranca con el filtro por defecto (mes actual → hoy,
   // ambos activos), igual que la web. "Limpiar" vuelve a esto, no a vacío.
-  SeguimientoFiltroAvanzado _filtroAvanzado =
-      SeguimientoFiltroAvanzado.porDefecto();
+  // Excepción: entrando desde el embudo de Home (sinRangoFecha:true) arranca
+  // SIN rango de fechas, para que la lista cuadre con los totales de Home.
+  SeguimientoFiltroAvanzado _filtroAvanzado;
   int _epoca = 0;
   bool _cargandoPagina = false;
   StreamSubscription<LeadUpdate>? _updateSub;
@@ -37,7 +38,11 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
   SeguimientoBloc(
     this._getPagina, {
     LeadListFiltro? filtroInicial,
+    bool sinRangoFecha = false,
   }) : _filtro = filtroInicial ?? LeadListFiltro.todos,
+       _filtroAvanzado = sinRangoFecha
+           ? SeguimientoFiltroAvanzado.sinRango()
+           : SeguimientoFiltroAvanzado.porDefecto(),
        super(const SeguimientoInicial()) {
     on<SeguimientoIniciado>(_onIniciado);
     on<SeguimientoRefrescado>(_onRefrescado);

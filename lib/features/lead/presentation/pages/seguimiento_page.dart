@@ -12,8 +12,15 @@ import 'package:app_crm/features/lead/index_lead.dart';
 
 class SeguimientoPage extends StatefulWidget {
   final LeadListFiltro? filtroInicial;
+  // true → arranca con el rango de fechas del filtro avanzado APAGADO (trae
+  // todo el histórico). Lo manda el embudo de Home; el Drawer entra en false.
+  final bool sinRangoFecha;
 
-  const SeguimientoPage({super.key, this.filtroInicial});
+  const SeguimientoPage({
+    super.key,
+    this.filtroInicial,
+    this.sinRangoFecha = false,
+  });
 
   @override
   State<SeguimientoPage> createState() => _SeguimientoPageState();
@@ -35,6 +42,7 @@ class _SeguimientoPageState extends State<SeguimientoPage> {
           SeguimientoRepositoryImpl(SeguimientoRemoteDatasource()),
         ),
         filtroInicial: widget.filtroInicial,
+        sinRangoFecha: widget.sinRangoFecha,
       )..add(const SeguimientoIniciado()),
       child: BlocListener<SeguimientoBloc, SeguimientoEstado>(
         listenWhen: (prev, curr) =>

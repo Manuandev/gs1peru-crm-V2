@@ -60,7 +60,7 @@ class CobranzaFacturaHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  state.oportunidad,
+                  state.oportunidad.aTitulo,
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textSecondary,
                   ),

@@ -94,6 +94,7 @@ class CardTotalesHome extends StatelessWidget {
                     titulo: 'Nuevos',
                     onTap: () => context.goToSeguimiento(
                       filtroInicial: LeadListFiltro.nuevos,
+                      sinRangoFecha: true,
                     ),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
@@ -104,6 +105,7 @@ class CardTotalesHome extends StatelessWidget {
                     titulo: 'En desarrollo',
                     onTap: () => context.goToSeguimiento(
                       filtroInicial: LeadListFiltro.enDesarrollo,
+                      sinRangoFecha: true,
                     ),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
@@ -114,6 +116,7 @@ class CardTotalesHome extends StatelessWidget {
                     titulo: 'Propuestas',
                     onTap: () => context.goToSeguimiento(
                       filtroInicial: LeadListFiltro.propuesta,
+                      sinRangoFecha: true,
                     ),
                   ),
                   _VerticalDivider(color: colorScheme.outlineVariant),
@@ -122,7 +125,7 @@ class CardTotalesHome extends StatelessWidget {
                     iconColor: AppSocialUtils.colorEstado(catalogState.valoresDefecto.idEstadoGanado),
                     cantidad: state.totCobranza,
                     titulo: 'Cobranza',
-                    onTap: () => context.goToCobranza(),
+                    onTap: () => context.goToCobranza(sinRangoFecha: true),
                   ),
                 ],
               ),

@@ -23,8 +23,8 @@ class ChatListLoading extends ChatListState {
 class ContadoresChat extends Equatable {
   final int sinResponder;   // direccionMensaje == 'CLI'
   final int derivadasPorIA; // isDerivadoIA == true
-  final int conPropuesta;   // idEstadoEfectivo == '02'
-  final int enCobranza;     // idEstado == '05'
+  final int conPropuesta;   // idEstado == '02'
+  final int enCobranza;     // idEstado == '04' && idSubestado == '05'
 
   const ContadoresChat({
     this.sinResponder = 0,

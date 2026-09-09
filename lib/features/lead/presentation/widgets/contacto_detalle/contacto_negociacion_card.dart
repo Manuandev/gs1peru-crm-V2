@@ -142,7 +142,7 @@ class _ContactoNegociacionCardState extends State<ContactoNegociacionCard> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    negociacion.nombreOportunidad,
+                                    negociacion.nombreOportunidad.aTitulo,
                                     style: AppTextStyles.bodyMedium.copyWith(
                                       fontWeight: AppTextStyles.weightBold,
                                     ),

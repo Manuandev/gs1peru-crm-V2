@@ -1,5 +1,7 @@
 // lib/features/cobranza/domain/entities/cobranza.dart
 
+import 'package:app_crm/core/utils/string/string_utils.dart';
+
 class Cobranza {
   final String numSol;
 
@@ -54,7 +56,7 @@ class Cobranza {
   final String? fechaVencimiento;
   final int? diasVencimiento;
 
-  String get nombreCompleto => '$nombre $apellido'.trim();
+  String get nombreCompleto => '$nombre $apellido'.trim().aTitulo;
 
   const Cobranza({
     required this.numSol,

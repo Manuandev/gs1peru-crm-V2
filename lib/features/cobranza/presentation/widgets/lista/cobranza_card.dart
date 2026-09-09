@@ -116,7 +116,7 @@ class _CobranzaNombre extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xxs),
         Text(
-          cobranza.evento,
+          cobranza.evento.aTitulo,
           style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.textSecondary,
           ),
@@ -209,7 +209,7 @@ class _CobranzaDatos extends StatelessWidget {
           valorBold: true,
         ),
         const SizedBox(width: AppSpacing.sm),
-        _DatoItem(label: 'Ejecutivo', valor: cobranza.ejecutivo),
+        _DatoItem(label: 'Ejecutivo', valor: cobranza.ejecutivo.aTitulo),
         const SizedBox(width: AppSpacing.sm),
         _DatoItem(label: 'Condición', valor: cobranza.condicion),
       ],

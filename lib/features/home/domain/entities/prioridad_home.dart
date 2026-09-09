@@ -1,4 +1,7 @@
 // lib/features/home/domain/entities/prioridad_home.dart
+
+import 'package:app_crm/core/utils/string/string_utils.dart';
+
 class PrioridadHome {
   final int idNumero;
   final int idLead;
@@ -31,7 +34,7 @@ class PrioridadHome {
   /// Nombre a mostrar en UI. Si el contacto no tiene nombre registrado,
   /// muestra el número de teléfono como identificador.
   String get nombreMostrar =>
-      nombre.trim().isNotEmpty ? nombre : telefonoCompleto;
+      nombre.trim().isNotEmpty ? nombre.aTitulo : telefonoCompleto;
 
   List<Object?> get props => [
     idNumero,

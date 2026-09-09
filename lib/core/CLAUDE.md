@@ -1561,6 +1561,25 @@ AvatarUtils.color('Juan Pérez')      // Color consistente por nombre
 '+51 999 888 777'.limpiarTelefono   // '+51999888777' — quita espacios y guiones
 'hola'.convertToHex                 // representación hexadecimal del string
 
+// Formato Título para mostrar nombres/apellidos/empresa/ejecutivo — pedido de
+// negocio 2026-09-09: la base tiene datos mezclados (unos en MAYÚSCULAS, otros
+// ya en Título); este helper los empareja SOLO al mostrarlos (lo guardado
+// sigue en MAYÚSCULAS). Baja los conectores (de/la/del/y...) salvo el primero,
+// respeta guiones. Se aplica en los getters `nombreCompleto`/`apellidos` de
+// las entidades de display (Chat/Cobranza/Solicitud/Negociacion/Contacto/
+// CobranzaDetalle) y, para empresa/ejecutivo (campos sin getter), inline en
+// los widgets de card/detalle. También (2026-09-09) en el nombre de
+// oportunidad/evento en todos sus sitios de display: solicitud_card,
+// solicitud_generada_card_info, cobranza_card, cobranza_detalle_info_card,
+// cobranza_factura_header, lead_card, historial_tab, negociacion_card,
+// contacto_negociacion_card, datos_tab, contacto_info_tab, chat_tile,
+// chat_detail_datos_lead, y Notificacion.etiquetaPrincipal (solo la rama que
+// devuelve la oportunidad, no los labels fijos). "EXPOGESTIÓN DE ENERO" →
+// "Expogestión de Enero". NO se toca en los combos de formulario (crear/
+// editar negociación, plantillas, filtros) — ahí se elige, no se muestra.
+'MANUEL ANTONIO CARDENAS'.aTitulo   // 'Manuel Antonio Cardenas'
+'maría DE la cruz'.aTitulo          // 'María de la Cruz'
+
 // Nombre de archivo seguro para WhatsApp — solo A-Z a-z 0-9 . _ -
 'PLANTAS-NUTRICIO´N.pdf'.sanitizarNombreArchivo  // 'PLANTAS-NUTRICION.pdf'
 

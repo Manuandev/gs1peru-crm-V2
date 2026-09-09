@@ -73,7 +73,9 @@ class DatosTab extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                   etiqueta: 'Empresa',
-                  valor: chat.nombreEmpresa.isEmpty ? '—' : chat.nombreEmpresa,
+                  valor: chat.nombreEmpresa.isEmpty
+                      ? '—'
+                      : chat.nombreEmpresa.aTitulo,
                 ),
                 derecha: _CampoDato(
                   icono: Icon(
@@ -126,7 +128,7 @@ class DatosTab extends StatelessWidget {
                   etiqueta: 'Curso / Evento',
                   valor: negociacion.nombreOportunidad.isEmpty
                       ? '—'
-                      : negociacion.nombreOportunidad,
+                      : negociacion.nombreOportunidad.aTitulo,
                 ),
               ),
               _ParFila(

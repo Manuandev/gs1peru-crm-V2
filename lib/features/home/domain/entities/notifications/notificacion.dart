@@ -1,5 +1,7 @@
 // lib/features/home/domain/entities/notifications/notificacion.dart
 
+import 'package:app_crm/core/utils/string/string_utils.dart';
+
 enum TipoNotificacion {
   actividad,
   derivacion,
@@ -70,7 +72,7 @@ class Notificacion {
     if ((tipo == TipoNotificacion.mensaje ||
             tipo == TipoNotificacion.derivacion) &&
         oportunidad.isNotEmpty) {
-      return oportunidad;
+      return oportunidad.aTitulo;
     }
     return switch (tipo) {
       TipoNotificacion.actividad => 'Actividad',

@@ -89,6 +89,12 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   late final TextEditingController _costoFinalCtrl;
   // Cantidad nunca puede quedar por debajo de 1 — ver _onCantidadFocusChange.
   late final FocusNode _cantidadFocus;
+  // Último texto real de Cantidad ya procesado por _onCantidadChanged. El
+  // listener de un TextEditingController también se dispara cuando solo cambia
+  // la selección/cursor (ej. al hacer foco/tap en el campo, sin escribir nada)
+  // — sin este guard, ese simple tap recalculaba Costo final = precioBase ×
+  // cantidad y borraba el Costo final que el usuario había puesto a mano.
+  late String _ultimaCantidadTexto;
 
   bool _isLoading = false;
   bool _combosInicializados = false;
@@ -132,6 +138,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     // final manual quedaba "congelado" mientras el subtotal (precioBase ×
     // cantidad) crecía, y Descuento (subtotal - costoFinal) se inflaba solo
     // por subir la cantidad, no porque hubiera un descuento real.
+    _ultimaCantidadTexto = _cantidadCtrl.text;
     _cantidadCtrl.addListener(_onCantidadChanged);
     // Cantidad no puede quedar por debajo de 1 — se corrige recién al
     // perder el foco (no en cada tecla), para no pelear con el usuario
@@ -148,6 +155,11 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
   }
 
   void _onCantidadChanged() {
+    // Solo reacciona a un cambio REAL del texto — no al foco/tap ni a un
+    // reposicionamiento del cursor (que también notifican al listener).
+    if (_cantidadCtrl.text == _ultimaCantidadTexto) return;
+    _ultimaCantidadTexto = _cantidadCtrl.text;
+
     final nuevoCostoFinal = NumberFormatUtils.fmtDecimal(
       _precioBase * _cantidad,
     );

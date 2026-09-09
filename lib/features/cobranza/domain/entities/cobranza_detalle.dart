@@ -1,5 +1,6 @@
 // lib/features/cobranza/domain/entities/cobranza_detalle.dart
 
+import 'package:app_crm/core/utils/string/string_utils.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaDetalle {
@@ -33,8 +34,10 @@ class CobranzaDetalle {
   final List<ArchivoCobranza> archivos;
   final List<HistorialCobranza> historial;
 
-  String get nombreCompleto =>
-      [nombre, apellido, apellidoMaterno].where((p) => p.isNotEmpty).join(' ');
+  String get nombreCompleto => [nombre, apellido, apellidoMaterno]
+      .where((p) => p.isNotEmpty)
+      .join(' ')
+      .aTitulo;
 
   // true si el join de facturación no trajo ningún dato (registro vacío/sin
   // completar todavía) — usado para mostrar un mensaje en vez de una fila

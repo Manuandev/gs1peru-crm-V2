@@ -15,6 +15,20 @@ que `FiltroChatDrawer`):**
   ambos activos — igual que la web (`SeguimientoFiltroAvanzado.porDefecto()`). Para ver todo el
   histórico el asesor destilda los checkboxes a mano. El botón de filtro del AppBar se pinta
   naranja solo si el filtro difiere del default (`esDistintoDelDefecto`).
+  **Excepción — entrando desde el embudo de Home (2026-09-09):** los 3 totales de
+  `CardTotalesHome` (Nuevos / En desarrollo / Propuestas) llaman
+  `goToSeguimiento(filtroInicial:, sinRangoFecha: true)`. Ese flag viaja por `arguments` →
+  `SeguimientoPage.sinRangoFecha` → `SeguimientoBloc(sinRangoFecha:)`, que inicializa
+  `_filtroAvanzado` en **`SeguimientoFiltroAvanzado.sinRango()`** en vez de `.porDefecto()`.
+  `.sinRango()` = las MISMAS fechas del default (1 del mes actual / hoy) **ya cargadas**, pero
+  con los dos checkboxes **apagados** — así trae todo el histórico y, si el asesor tilda un
+  checkbox en el panel, la fecha ya está puesta (pedido explícito del usuario: "la fecha igual
+  tiene que estar llenada, solo desactivada"). Motivo del flag: los totales de Home cuentan
+  **todas** las negociaciones sin filtro de fecha; sin él la lista solo mostraba el mes actual y
+  no cuadraba con el número. Como `sinRango() != porDefecto()`, el botón de filtro del AppBar
+  arranca naranja (correcto: el rango no es el default). Entrando por el Drawer o por "Ver
+  detalle" → sigue en `.porDefecto()`. "Limpiar" siempre vuelve a `.porDefecto()`, no a como se
+  entró.
 - **Campaña → Oportunidad en cascada** (sin campaña → todas; con campaña → solo las de esa
   campaña; al cambiar campaña se limpia la oportunidad si ya no aplica; `ValueKey` en el combo
   de Oportunidad para resetear el texto visible).
@@ -628,6 +642,14 @@ badge solo se refresca cuando Home recarga.
   `ElapsedTimeUtils.colorFromElapsed`) precede al texto "Hace X" — insinúa que
   la card es tappable, sin agregar un gesto propio (la card completa ya
   navega a detalle con `onTap`).
+  **Badge "N negociaciones" (`_CasosBadge`) — debajo del nombre, no al lado
+  (2026-09-09)**: pedido de negocio — al lado del nombre le comía espacio y lo
+  cortaba con "…". `_LeadClientInfo` (`lead_card.dart`) pasó de `Row(Expanded(Text
+  nombre), _CasosBadge)` a un `Column` plano: nombre → badge → oportunidad →
+  empresa, uno debajo del otro. El badge solo sale si `lead.totalLeads > 0`
+  (`CL.CT_LEADS`; en 0 el SP viejo aún no lo manda). El texto largo de
+  `_SinNegociacionChip` ("Sin negociación activa") sigue igual — pendiente de
+  revisar el balance izquierda/derecha de la card por separado.
 - `LeadCardActions` (list/) → 2 botones chicos en fila (`AppSizing.miniActionButton` = 32dp): WhatsApp cuadrado (ícono only) + "Ver detalle" con borde y texto en `colorScheme.primary`. El menú "⋯" (favorito / abrir chat) se quitó — `ToggleFavoritoPressed` sigue viva en `LeadListBloc` pero sin trigger de UI en la lista por ahora.
   **Botón WhatsApp — 3 estados, calculados en `_LeadDateAndActions._tiempoChatAbiertoVencido()` (`lead_card.dart`) y pasados como props (`mostrarWhatsApp`/`whatsAppVencido`):**
   - Oculto (`mostrarWhatsApp: false`) si `lead.numero.idChatCab == 0` — el número nunca tuvo conversación, no solo deshabilitado, no se renderiza.
@@ -808,7 +830,8 @@ enum LeadListFiltro { todos, asesores, nuevos, enDesarrollo, propuesta }
 - `context.goToSeguimiento(filtroInicial: LeadListFiltro.nuevos)` → abre Seguimiento con un chip
   preseleccionado. Usado por `CardTotalesHome` (dashboard de Home): Nuevos → `nuevos`,
   En gestión → `enDesarrollo`, Propuestas → `propuesta`. Sin `filtroInicial` (ej. desde el
-  Drawer) el filtro por defecto es `todos`.
+  Drawer) el filtro por defecto es `todos`. Los 3 totales de Home además mandan
+  `sinRangoFecha: true` (ver "Excepción — entrando desde el embudo de Home" arriba).
 - Botón WhatsApp de `LeadCard` → `context.goToDetalleChat(idChatCab: lead.idChatCab)` (apila)
 
 ### Campos principales de Lead
@@ -887,6 +910,15 @@ ningún origen, edite o cree, venga o no de conversación.
   dispara por cambios del usuario en el campo (el valor inicial cargado desde la negociación, con
   su descuento real ya guardado, no se toca — el listener se registra después de setear el texto
   inicial en `initState()`).
+  **Guard contra notificaciones de solo-selección, agregado 2026-09-09** — un
+  `TextEditingController` también notifica a su listener cuando solo cambia la selección/cursor,
+  no el texto (ej. al hacer foco/tap en Cantidad sin escribir nada). Bug real reportado en vivo:
+  ese simple tap disparaba `_onCantidadChanged` y recalculaba Costo final = `precioBase ×
+  cantidad`, borrando el Costo final que el asesor había puesto a mano. Fix: `_onCantidadChanged`
+  compara `_cantidadCtrl.text` contra `_ultimaCantidadTexto` (campo nuevo, seteado al texto
+  inicial en `initState()` justo antes del `addListener`) y retorna temprano si el texto real no
+  cambió — así el recálculo (y cualquier validación futura sobre Cantidad) solo corre ante una
+  edición real, nunca al enfocar el campo.
 - El combo de Moneda sigue actualizando su **valor visible** cuando cambia `_monedaItem` (aunque
   esté deshabilitado) gracias al fix de `CustomComboField.didUpdateWidget` en `core/CLAUDE.md` —
   sin ese fix, un combo con `enabled:false` y `initialValue` cambiante quedaría visualmente

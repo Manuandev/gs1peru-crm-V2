@@ -49,7 +49,7 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
-                        detalle.nombreCompleto.toUpperCase(),
+                        detalle.nombreCompleto,
                         style: AppTextStyles.bodySmall.copyWith(
                           fontWeight: AppTextStyles.weightBold,
                         ),
@@ -61,13 +61,13 @@ class CobranzaDetalleInfoCard extends StatelessWidget {
                 _InfoFila(
                   icono: AppIcons.interes,
                   label: 'Oportunidad',
-                  valor: detalle.oportunidad,
+                  valor: detalle.oportunidad.aTitulo,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 _InfoFila(
                   icono: AppIcons.user,
                   label: 'Ejecutivo',
-                  valor: detalle.ejecutivo,
+                  valor: detalle.ejecutivo.aTitulo,
                 ),
               ],
             ),

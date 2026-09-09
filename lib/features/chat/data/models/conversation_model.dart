@@ -24,8 +24,8 @@ class ChatModel extends Chat {
     // Info estado
     required super.idEstado,
     required super.descEstado,
-    required super.idEstadoPadre,
-    required super.descEstadoPadre,
+    required super.idSubestado,
+    required super.descSubestado,
     // Info campaña
     required super.idCampania,
     required super.nombreCampania,
@@ -82,10 +82,10 @@ class ChatModel extends Chat {
   //  9  NM.IB_FAVORITO       27  PRM_MSG_CLI.FC_USUARIO_C
   // 10  NM.IB_BLOQUEADO      28  CD_CLI.TIPO
   // 11  LD.ID_LEAD           29  CD_CLI.CONTENIDO
-  // 12  LE.ID_ESTADO         30  CO_CLI.ARCHIVO_NOMBRE
+  // 12  LD.ID_ESTADO         30  CO_CLI.ARCHIVO_NOMBRE  (estado real)
   // 13  LE.DESCRIPCION       31  CO_CLI.ARCHIVO_TIPO
-  // 14  EP.ID_ESTADO         32  QT_IA.QT_MENSAJES_IA
-  // 15  EP.DESCRIPCION       33  FC_IA_LAST.FC_USUARIO_C
+  // 14  LD.ID_SUBESTADO      32  QT_IA.QT_MENSAJES_IA   (subestado o '')
+  // 15  SE.DESCRIPCION       33  FC_IA_LAST.FC_USUARIO_C
   // 16  CP.ID_CAMPANIA       34  CC.ID_CONVERSACION_CAB
   // 17  CP.NOMBRE            35  CE.NOM_CARGO (T_EMPRESA_CONTACTO, texto
   //                              libre — 2026-08-03, verificado; el cargo
@@ -112,11 +112,12 @@ class ChatModel extends Chat {
       isBloqueado: ParseUtils.toBool(fields, 10),
       // Lead más reciente de ese número
       idLead: ParseUtils.toInt(fields, 11),
-      // Info estado
+      // Info estado — 12/14 son estado y subestado por separado (T_LEAD ya
+      // los guarda en columnas distintas); 13/15 sus descripciones.
       idEstado: ParseUtils.str(fields, 12),
       descEstado: ParseUtils.str(fields, 13),
-      idEstadoPadre: ParseUtils.str(fields, 14),
-      descEstadoPadre: ParseUtils.str(fields, 15),
+      idSubestado: ParseUtils.str(fields, 14),
+      descSubestado: ParseUtils.str(fields, 15),
       // Info campaña
       idCampania: ParseUtils.toInt(fields, 16),
       nombreCampania: ParseUtils.str(fields, 17),

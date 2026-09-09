@@ -152,6 +152,10 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
   // cantidad/precioBase/descuento/precio/fechaHoraCreacion (Chat no los
   // trae); se completan al enriquecer con el detalle real (task 'DT').
   Negociacion _negociacionDesdeChat(Chat chat) {
+    // Chat ya trae estado y subestado separados; Negociacion sigue con el
+    // encoding viejo (idEstado = "leaf" — el subestado cuando hay uno —,
+    // idEstadoPadre = el estado real solo cuando hay subestado).
+    final haySub = chat.idSubestado.isNotEmpty;
     return Negociacion(
       idLead: chat.idLead,
       nombre: chat.nombres,
@@ -162,10 +166,10 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       precio: 0,
       fechaHoraInteraccion: chat.fechaHora,
       fechaHoraCreacion: chat.fechaHora,
-      idEstado: chat.idEstado,
-      descripcionEstado: chat.descEstado,
-      idEstadoPadre: chat.idEstadoPadre,
-      descripcionEstadoPadre: chat.descEstadoPadre,
+      idEstado: haySub ? chat.idSubestado : chat.idEstado,
+      descripcionEstado: haySub ? chat.descSubestado : chat.descEstado,
+      idEstadoPadre: haySub ? chat.idEstado : '',
+      descripcionEstadoPadre: haySub ? chat.descEstado : '',
       idCampania: chat.idCampania,
       nombreCampania: chat.nombreCampania,
       idOportunidad: chat.idOportunidad,

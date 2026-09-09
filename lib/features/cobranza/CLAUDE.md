@@ -1,5 +1,64 @@
 # Cobranza Feature
 
+## Lista paginada (keyset) + panel de filtros Desde/Hasta/Campaña/Oportunidad (2026-09-09)
+
+`CobranzaListPage` / `CobranzaListBloc` pasaron a **paginado real** (task `'LSP'` de
+`CRM.CSV_COBRANZAS_LST_APP`, mismo patrón que Seguimiento y Solicitudes) — antes `getCobranzas()`
+(task `'LS'`) traía TODO (~500 filas y creciendo) con ~10 subconsultas pesadas (`SUM` sobre
+`T_TECMSOLINSCRIPCION02`, `ROW_NUMBER`, scan completo de `dbo.Comprobante`, etc.) y filtraba en
+memoria. `'LS'` + `CobranzaModel` + `GetCobranzasUseCase` **siguen existiendo** (sin caller hoy,
+se conservan).
+
+**SP — task `'LSP'` nuevo** (`'LS'` y `'DT'` intactos):
+- `#Base` filtrada PRIMERO (asesor + fecha + campaña `OP.ID_CAMPANIA` +
+  oportunidad + chip contado/crédito), `SELECT DISTINCT`. Keyset por `FC_ULTIMA DESC, NUMSOL
+  DESC`. `#Pagina` = `TOP (@TAM)` NUMSOL con el filtro de **estado** (las 4 tarjetas) aplicado
+  acá. Los `SUM`/joins de importe/moneda/ejecutivo/estado se resuelven **solo sobre `#Pagina`**
+  (los joins muertos de `'LS'` — HL/F/CO/G/CU/FC/EV — se descartaron).
+- **Fecha = `FC_ULTIMA = ISNULL(CI.FC_USUARIO_M, CI.FC_USUARIO_C)`** (2026-09-09) — última
+  modificación de `EVT.T_TECMSOLINSCRIPCION01`, y si es NULL, la creación. Mismo criterio que el
+  `'LSP'` de Solicitudes/Seguimiento. Antes el `'LSP'` de Cobranza usaba `CI.FC_USUARIO_C` puro
+  (creación) — se cambió en los 6 puntos: expresión de `#Base` (alias renombrado
+  `FC_USUARIO_C`→`FC_ULTIMA`), índice `IX_BASE`, filtro Desde/Hasta, keyset `B.FC_ULTIMA
+  </=@CUR_FECHA`, `ORDER BY` de `#Pagina`, campo 10 mostrado, campo 23 cursor y el `WITHIN GROUP`
+  del `STRING_AGG` final. Flutter no cambió (el modelo ya trataba el campo como opaco). El `'LS'`
+  viejo **no** se tocó (sigue con `FC_USUARIO_C`). Pendiente `ALTER PROCEDURE`.
+- **Contadores** (solo 1ª página, bloque `¯` al inicio): `total¦facturar(2)¦pendDoc(0)¦pendPago(5)
+  ¦cancelado(3)¦pendGlobal`. Los 4 de tarjeta aplican fecha/campaña/oportunidad + chip (NO el
+  filtro de tarjeta). `pendGlobal` = Pend. de documento **sin ningún filtro del panel** → alimenta
+  el badge "Cobranza" del drawer (mismo criterio que `TOT_COBRANZA` del SP de home).
+- **Contrato de fila:** mismos 23 campos (0..22) que `'LS'` → se reusa `CobranzaModel.fromRawString`
+  sin cambios. Campo **23** nuevo = `CONVERT(VARCHAR(23), CONVERT(DATETIME2(3), ISNULL(CI.FC_USUARIO_M,
+  CI.FC_USUARIO_C)), 126)` = cursor (junto al NUMSOL, campo 0, de la última fila). El `DATETIME2(3)`
+  fijo en ambos lados (acá y `@CUR_FECHA/@FC_DESDE/@FC_HASTA`) evita el bug de precisión de ms que
+  cortaba la lista a ~1 página (ver `solicitudes/CLAUDE.md` → "keyset perdía precisión").
+- **Body `'LSP'`:** `codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tam¦fcDesde¦fcHasta¦idCampania¦
+  idOportunidad¦estados`. `chip` `''`/`C`/`CR`; `estados` = ID_ESTADO_GES separados por coma (ej.
+  `2,5`), `''` = las 4.
+
+**Flutter:**
+- `CobranzaFiltroAvanzado` (entidad, `porDefecto()` = 1 del mes actual → hoy, ambos activos) +
+  eventos `CobranzaFiltroAvanzadoAplicado`/`Limpiado`. `CobranzaFiltroDrawer` (nuevo,
+  `endDrawerWidget` + botón de filtro en el AppBar, naranja si `esDistintoDelDefecto`) — Campaña
+  → Oportunidad en cascada, mismo widget que Seguimiento.
+- `CobranzaListBloc` reescrito paginado: `_epoca` (restartable para chip/tarjeta/filtro/refresh),
+  `_cargandoPagina` (droppable para página siguiente). Cambiar chip / tocar una tarjeta de estado
+  / aplicar el filtro → **recarga desde cero** (todos van al SP). Estados nuevos:
+  `CobranzaListCargando` (skeleton 1ª carga) / `CobranzaListErrorInicial` / `CobranzaListCargado`
+  (con `recargandoLista`, `finLista`, `cargandoMas`, `loadMoreError`, cursor). `CobranzaListSuccess`
+  /`Loading`/`Error` (viejos) eliminados.
+- `CobranzaListPortrait` → `StatefulWidget` con scroll infinito al 80% + pie (`_CobranzaFooter`:
+  spinner / "Reintentar" / "Fin de la lista"). Tamaños de página: 40 / 20.
+- `CobranzaListPage` dispara `CatalogsFiltrosRefreshed` al entrar (campañas + oportunidades).
+- `goToCobranza({sinRangoFecha})` + el total "Cobranza" de `CardTotalesHome` manda
+  `sinRangoFecha: true` → `CobranzaFiltroAvanzado.sinRango()`: las MISMAS fechas del default
+  (1 del mes actual / hoy) **ya cargadas** pero con los checkboxes **apagados** (trae todo; si
+  el asesor tilda un checkbox, la fecha ya está puesta). Igual que el embudo → Seguimiento.
+  Drawer/menú → `.porDefecto()`.
+- `conteosPorAsesor` (picker de Asesores) se calcula best-effort sobre las páginas cargadas.
+
+⚠️ Pendiente `ALTER PROCEDURE` de `CRM.CSV_COBRANZAS_LST_APP` en SSMS.
+
 ## `CobranzaAsesorPickerModal` — refresco angosto de asesores + tarjetas de estado rediseñadas (2026-08-21)
 Dos pedidos del usuario el mismo día, seguimiento directo del revert de abajo:
 

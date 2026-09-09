@@ -1,4 +1,14 @@
 // lib/features/cobranza/presentation/bloc/lista/cobranza_list_bloc.dart
+//
+// BLoC de Cobranzas PAGINADO (task 'LSP' de CRM.CSV_COBRANZAS_LST_APP). Mismo
+// patrón que SeguimientoBloc / SolicitudListBloc:
+//   - "restartable" (chip / tarjeta de estado / filtro del panel / refresh):
+//     contador [_epoca]; la respuesta que vuelve con una época vieja se descarta.
+//   - "droppable" (página siguiente): flag síncrono [_cargandoPagina].
+// Cambio de chip / tarjeta / filtro NO tumban la pantalla: si ya hay
+// CobranzaListCargado se emite con recargandoLista:true (tarjetas + chips
+// montados, solo la lista muestra loading). El skeleton completo
+// (CobranzaListCargando) es solo la primera carga.
 
 import 'dart:async';
 
@@ -7,26 +17,37 @@ import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
-  final GetCobranzasUseCase _getCobranzasUseCase;
+  final GetCobranzaPaginaUseCase _getPagina;
 
-  List<Cobranza> _allCobranzas = [];
-  CobranzaChipFiltro _chipFiltro = CobranzaChipFiltro.todos;
+  CobranzaChipFiltro _chip = CobranzaChipFiltro.todos;
   String? _asesorSeleccionado;
 
-  // Set vacío = todos los estados activos (ninguna tarjeta filtrada)
-  Set<int> _estadosSeleccionados = {};
-
-  // ID_ESTADO_GES crudo: 2=Facturar 0=Pend.deDocumento 5=Pend.factura 3=Cancelado
+  // Set vacío = las 4 tarjetas activas (sin filtro de estado).
+  Set<int> _estados = {};
   static const _todosLosEstados = {2, 0, 5, 3};
 
+  // Filtro del panel lateral. Al entrar arranca en el default (mes actual → hoy);
+  // excepción: desde el embudo de Home (sinRangoFecha:true) arranca SIN fecha.
+  CobranzaFiltroAvanzado _filtroAvanzado;
+
+  int _epoca = 0;
+  bool _cargandoPagina = false;
   StreamSubscription<CobranzaUpdate>? _updateSub;
 
-  CobranzaListBloc(this._getCobranzasUseCase) : super(const CobranzaListInitial()) {
+  CobranzaListBloc(this._getPagina, {bool sinRangoFecha = false})
+    : _filtroAvanzado = sinRangoFecha
+          ? CobranzaFiltroAvanzado.sinRango()
+          : CobranzaFiltroAvanzado.porDefecto(),
+      super(const CobranzaListInitial()) {
     on<CobranzaListStarted>(_onStarted);
     on<CobranzaListRefresh>(_onRefresh);
     on<CobranzaChipChanged>(_onChipChanged);
-    on<CobranzaEstadoToggled>(_onEstadoToggled);
     on<CobranzaAsesorSeleccionado>(_onAsesorSeleccionado);
+    on<CobranzaEstadoToggled>(_onEstadoToggled);
+    on<CobranzaFiltroAvanzadoAplicado>(_onFiltroAvanzadoAplicado);
+    on<CobranzaFiltroAvanzadoLimpiado>(_onFiltroAvanzadoLimpiado);
+    on<CobranzaPaginaSolicitada>(_onPaginaSolicitada);
+    on<CobranzaReintentarPagina>(_onReintentarPagina);
     on<CobranzaListItemActualizado>(_onItemActualizado);
 
     _updateSub = CobranzaUpdateNotifier.instance.stream.listen((update) {
@@ -49,12 +70,206 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     return super.close();
   }
 
+  // ── Carga desde cero ───────────────────────────────────────────────────────
+
+  Future<void> _onStarted(
+    CobranzaListStarted event,
+    Emitter<CobranzaListState> emit,
+  ) => _cargarDesdeCero(emit);
+
+  Future<void> _onRefresh(
+    CobranzaListRefresh event,
+    Emitter<CobranzaListState> emit,
+  ) => _cargarDesdeCero(emit);
+
+  Future<void> _onChipChanged(
+    CobranzaChipChanged event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    if (event.filtro == _chip && state is CobranzaListCargado) {
+      return Future.value();
+    }
+    _chip = event.filtro;
+    if (_chip != CobranzaChipFiltro.asesores) _asesorSeleccionado = null;
+    return _cargarDesdeCero(emit);
+  }
+
+  Future<void> _onAsesorSeleccionado(
+    CobranzaAsesorSeleccionado event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    _asesorSeleccionado = event.codAsesor;
+    _chip = CobranzaChipFiltro.asesores;
+    return _cargarDesdeCero(emit);
+  }
+
+  Future<void> _onEstadoToggled(
+    CobranzaEstadoToggled event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    final id = event.idEstado;
+    final actuales = Set<int>.from(
+      _estados.isEmpty ? _todosLosEstados : _estados,
+    );
+    if (actuales.contains(id)) {
+      if (actuales.length == 1) return Future.value(); // no dejar 0 activos
+      actuales.remove(id);
+    } else {
+      actuales.add(id);
+    }
+    // Si están las 4 → set vacío (= sin filtro de estado).
+    _estados = actuales.length == _todosLosEstados.length ? {} : actuales;
+    return _cargarDesdeCero(emit);
+  }
+
+  Future<void> _onFiltroAvanzadoAplicado(
+    CobranzaFiltroAvanzadoAplicado event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    _filtroAvanzado = event.filtro;
+    return _cargarDesdeCero(emit);
+  }
+
+  Future<void> _onFiltroAvanzadoLimpiado(
+    CobranzaFiltroAvanzadoLimpiado event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    final defecto = CobranzaFiltroAvanzado.porDefecto();
+    if (_filtroAvanzado == defecto && state is CobranzaListCargado) {
+      return Future.value();
+    }
+    _filtroAvanzado = defecto;
+    return _cargarDesdeCero(emit);
+  }
+
+  Future<void> _cargarDesdeCero(Emitter<CobranzaListState> emit) async {
+    final epoca = ++_epoca;
+    _cargandoPagina = false;
+
+    final actual = state;
+    if (actual is CobranzaListCargado) {
+      emit(actual.copyWith(recargandoLista: true, limpiarLoadMoreError: true));
+    } else {
+      emit(const CobranzaListCargando());
+    }
+
+    try {
+      final pagina = await _getPagina(
+        chip: _chip,
+        codAsesor: _asesorSeleccionado,
+        cursorFecha: null,
+        cursorNumSol: null,
+        tamanio: CobranzaRemoteDatasource.tamanioPrimera,
+        fcDesde: _filtroAvanzado.desdeEfectivo,
+        fcHasta: _filtroAvanzado.hastaEfectivo,
+        idCampania: _filtroAvanzado.idCampania,
+        idOportunidad: _filtroAvanzado.idOportunidad,
+        estados: _estados,
+      );
+      if (epoca != _epoca || emit.isDone) return;
+
+      final items = pagina.items;
+      emit(
+        CobranzaListCargado(
+          items: items,
+          chipFiltro: _chip,
+          asesorSeleccionado: _asesorSeleccionado,
+          estadosSeleccionados: Set.from(_estados),
+          conteos: pagina.conteos ?? const CobranzaConteos(),
+          filtroAvanzado: _filtroAvanzado,
+          conteosPorAsesor: _conteosPorAsesor(items),
+          recargandoLista: false,
+          finLista: items.length < CobranzaRemoteDatasource.tamanioPrimera,
+          cursorFecha: pagina.cursorFecha,
+          cursorNumSol: pagina.cursorNumSol,
+        ),
+      );
+    } catch (e) {
+      if (epoca != _epoca || emit.isDone) return;
+      emit(CobranzaListErrorInicial(_mensajeError(e)));
+    }
+  }
+
+  // ── Página siguiente ───────────────────────────────────────────────────────
+
+  Future<void> _onPaginaSolicitada(
+    CobranzaPaginaSolicitada event,
+    Emitter<CobranzaListState> emit,
+  ) async {
+    final s = state;
+    if (s is! CobranzaListCargado) return;
+    if (s.recargandoLista || s.loadMoreError != null || !s.puedePaginar) return;
+    await _traerSiguiente(emit, s);
+  }
+
+  Future<void> _onReintentarPagina(
+    CobranzaReintentarPagina event,
+    Emitter<CobranzaListState> emit,
+  ) async {
+    final s = state;
+    if (s is! CobranzaListCargado || s.cargandoMas || s.finLista) return;
+    if (s.cursorFecha == null || s.cursorNumSol == null) return;
+    await _traerSiguiente(emit, s.copyWith(limpiarLoadMoreError: true));
+  }
+
+  Future<void> _traerSiguiente(
+    Emitter<CobranzaListState> emit,
+    CobranzaListCargado s,
+  ) async {
+    if (_cargandoPagina) return;
+    _cargandoPagina = true;
+    final epoca = _epoca;
+    emit(s.copyWith(cargandoMas: true, limpiarLoadMoreError: true));
+
+    try {
+      final pagina = await _getPagina(
+        chip: s.chipFiltro,
+        codAsesor: s.asesorSeleccionado,
+        cursorFecha: s.cursorFecha,
+        cursorNumSol: s.cursorNumSol,
+        tamanio: CobranzaRemoteDatasource.tamanioSiguiente,
+        fcDesde: _filtroAvanzado.desdeEfectivo,
+        fcHasta: _filtroAvanzado.hastaEfectivo,
+        idCampania: _filtroAvanzado.idCampania,
+        idOportunidad: _filtroAvanzado.idOportunidad,
+        estados: _estados,
+      );
+      if (epoca != _epoca || emit.isDone) return;
+
+      final yaCargados = s.items.map((c) => c.numSol).toSet();
+      final nuevos =
+          pagina.items.where((c) => !yaCargados.contains(c.numSol)).toList();
+      final items = [...s.items, ...nuevos];
+
+      emit(
+        s.copyWith(
+          items: items,
+          conteosPorAsesor: _conteosPorAsesor(items),
+          cargandoMas: false,
+          finLista: pagina.items.length <
+              CobranzaRemoteDatasource.tamanioSiguiente,
+          cursorFecha: pagina.cursorFecha ?? s.cursorFecha,
+          cursorNumSol: pagina.cursorNumSol ?? s.cursorNumSol,
+        ),
+      );
+    } catch (e) {
+      if (epoca != _epoca || emit.isDone) return;
+      emit(s.copyWith(cargandoMas: false, loadMoreError: _mensajeError(e)));
+    } finally {
+      _cargandoPagina = false;
+    }
+  }
+
+  // ── Parche por edición local (facturar) ────────────────────────────────────
+
   void _onItemActualizado(
     CobranzaListItemActualizado event,
     Emitter<CobranzaListState> emit,
   ) {
+    final s = state;
+    if (s is! CobranzaListCargado) return;
     final label = cobranzaEstadoLabel(event.idEstado);
-    _allCobranzas = _allCobranzas
+    final items = s.items
         .map(
           (c) => c.numSol == event.numSol
               ? c.copyWith(
@@ -66,128 +281,21 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
               : c,
         )
         .toList();
-    _emitFiltered(emit);
+    emit(s.copyWith(items: items, conteosPorAsesor: _conteosPorAsesor(items)));
   }
 
-  Future<void> _onStarted(
-    CobranzaListStarted event,
-    Emitter<CobranzaListState> emit,
-  ) async {
-    emit(const CobranzaListLoading());
-    await _loadData(emit);
-  }
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-  Future<void> _onRefresh(
-    CobranzaListRefresh event,
-    Emitter<CobranzaListState> emit,
-  ) async {
-    emit(const CobranzaListLoading());
-    await _loadData(emit);
-  }
-
-  Future<void> _loadData(Emitter<CobranzaListState> emit) async {
-    try {
-      _allCobranzas = await _getCobranzasUseCase();
-      _emitFiltered(emit);
-    } catch (e, stackTrace) {
-      addError(e, stackTrace);
-      emit(CobranzaListError(e.toString()));
-    }
-  }
-
-  void _onChipChanged(CobranzaChipChanged event, Emitter<CobranzaListState> emit) {
-    _chipFiltro = event.filtro;
-    if (_chipFiltro != CobranzaChipFiltro.asesores) _asesorSeleccionado = null;
-    _emitFiltered(emit);
-  }
-
-  void _onAsesorSeleccionado(
-    CobranzaAsesorSeleccionado event,
-    Emitter<CobranzaListState> emit,
-  ) {
-    _asesorSeleccionado = event.codAsesor;
-    _chipFiltro = CobranzaChipFiltro.asesores;
-    _emitFiltered(emit);
-  }
-
-  void _onEstadoToggled(CobranzaEstadoToggled event, Emitter<CobranzaListState> emit) {
-    final id = event.idEstado;
-    final actuales = Set<int>.from(
-      _estadosSeleccionados.isEmpty ? _todosLosEstados : _estadosSeleccionados,
-    );
-
-    if (actuales.contains(id)) {
-      // No permitir deseleccionar el último estado activo
-      if (actuales.length == 1) return;
-      actuales.remove(id);
-    } else {
-      actuales.add(id);
-    }
-
-    // Si están todos activos, volvemos a set vacío (= sin filtro de estado)
-    _estadosSeleccionados =
-        actuales.length == _todosLosEstados.length ? {} : actuales;
-
-    _emitFiltered(emit);
-  }
-
-  void _emitFiltered(Emitter<CobranzaListState> emit) {
-    // 1. Aplicar filtro de chip
-    var porChip = List<Cobranza>.from(_allCobranzas);
-    if (_chipFiltro == CobranzaChipFiltro.asesores) {
-      porChip = porChip.where((c) => c.asignadoA == _asesorSeleccionado).toList();
-    } else if (_chipFiltro == CobranzaChipFiltro.contado) {
-      porChip = porChip.where((c) => c.idCondicion == 'C').toList();
-    } else if (_chipFiltro == CobranzaChipFiltro.credito) {
-      porChip = porChip.where((c) => c.idCondicion == 'CR').toList();
-    }
-
-    // 2. Conteos por estado sobre lista ya filtrada por chip (antes del filtro de tarjetas)
-    final conteos = <int, int>{
-      2: porChip.where((c) => c.idEstado == 2).length,
-      0: porChip.where((c) => c.idEstado == 0).length,
-      5: porChip.where((c) => c.idEstado == 5).length,
-      3: porChip.where((c) => c.idEstado == 3).length,
-    };
-
-    // 3. Aplicar filtro de estados (tarjetas)
-    var resultado = porChip;
-    if (_estadosSeleccionados.isNotEmpty) {
-      resultado = porChip.where((c) => _estadosSeleccionados.contains(c.idEstado)).toList();
-    }
-
-    // Pend. de documento (idEstado 0) sobre TODO lo cargado, sin filtro de
-    // chip — alimenta el badge del drawer, que no debe variar según qué
-    // chip esté activo en esta pantalla (mismo criterio que TOT_COBRANZA
-    // del SP de home).
-    final pendientesDocumento =
-        _allCobranzas.where((c) => c.idEstado == 0).length;
-
-    emit(
-      CobranzaListSuccess(
-        cobranzas: resultado,
-        chipFiltro: _chipFiltro,
-        estadosSeleccionados: Set.from(_estadosSeleccionados),
-        conteosPorEstado: conteos,
-        pendientesDocumento: pendientesDocumento,
-        asesorSeleccionado: _asesorSeleccionado,
-        conteosPorAsesor: _buildConteosPorAsesor(),
-      ),
-    );
-  }
-
-  // Conteo de cobranzas por asesor (codUser), desglosado por idEstado, sobre
-  // el total cargado — alimenta CobranzaAsesorPickerModal, no viene del
-  // backend. Antes era un total plano (Map<String,int>) — el usuario pidió
-  // ver también en qué estado está cada cobranza de ese asesor, no solo
-  // cuántas tiene.
-  Map<String, Map<int, int>> _buildConteosPorAsesor() {
+  Map<String, Map<int, int>> _conteosPorAsesor(List<Cobranza> items) {
     final conteos = <String, Map<int, int>>{};
-    for (final c in _allCobranzas) {
+    for (final c in items) {
       if (c.asignadoA.isEmpty) continue;
       final porEstado = conteos.putIfAbsent(c.asignadoA, () => {});
       porEstado[c.idEstado] = (porEstado[c.idEstado] ?? 0) + 1;
     }
     return conteos;
   }
+
+  String _mensajeError(Object e) =>
+      e is AppException ? e.message : 'No se pudieron cargar las cobranzas.';
 }

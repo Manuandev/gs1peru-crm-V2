@@ -68,7 +68,7 @@ class _AsesorCard extends StatelessWidget {
         ? AppColors.success
         : AppColors.textSecondary;
     final labelEstado = asesor.enLinea ? 'En línea' : 'Ausente';
-    final nombreCorto = asesor.nombre.split(' ').take(2).join(' ');
+    final nombreCorto = asesor.nombre.split(' ').take(2).join(' ').aTitulo;
 
     return Container(
       width: anchoFijo,

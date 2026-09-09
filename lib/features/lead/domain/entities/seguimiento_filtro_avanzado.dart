@@ -50,6 +50,13 @@ class SeguimientoFiltroAvanzado extends Equatable {
     );
   }
 
+  /// Entrando desde el embudo de Home: las MISMAS fechas del default (1 del mes
+  /// actual / hoy) ya cargadas, pero con los checkboxes APAGADOS — trae todo el
+  /// histórico y, si el asesor tilda un checkbox, la fecha ya está puesta.
+  factory SeguimientoFiltroAvanzado.sinRango([DateTime? ahora]) =>
+      SeguimientoFiltroAvanzado.porDefecto(ahora)
+          .copyWith(desdeActivo: false, hastaActivo: false);
+
   /// true si hay al menos un filtro que efectivamente recorta la lista.
   bool get activo => desdeEfectivo != null || hastaEfectivo != null || idCampania != null || idOportunidad != null;
 

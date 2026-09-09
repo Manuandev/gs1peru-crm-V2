@@ -8,6 +8,10 @@ class CobranzaRemoteDatasource {
   final _session = SessionService();
   final _deviceInfo = DeviceInfoService();
 
+  // Tamaños de página del task 'LSP' (el SP los acota a 1..100).
+  static const int tamanioPrimera = 40;
+  static const int tamanioSiguiente = 20;
+
   Future<List<CobranzaModel>> getCobranzas() async {
     final String body =
         '${[_session.codUser, _session.isModerador ? 1 : 0].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
@@ -21,6 +25,66 @@ class CobranzaRemoteDatasource {
       ApiError(:final message) => throw AppException(message),
     };
   }
+
+  // Task 'LSP' — lista paginada (keyset). Body:
+  //   codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tam¦fcDesde¦fcHasta¦
+  //   idCampania¦idOportunidad¦estados
+  //   chip     '' = todos ; 'C' = contado ; 'CR' = crédito
+  //   idAsesor '' = no aplica (solo lo manda el chip "Asesores")
+  //   cur*     '' = primera página
+  //   fc*      ISO 126 ('yyyy-MM-ddTHH:mm:ss'), '' = no aplica
+  //   estados  ID_ESTADO_GES separados por coma (ej. '2,5'), '' = los 4
+  Future<CobranzaPagina> traerPagina({
+    CobranzaChipFiltro chip = CobranzaChipFiltro.todos,
+    String? codAsesor,
+    String? cursorFecha,
+    String? cursorNumSol,
+    required int tamanio,
+    DateTime? fcDesde,
+    DateTime? fcHasta,
+    int? idCampania,
+    int? idOportunidad,
+    Set<int> estados = const {},
+  }) async {
+    final camp = AppConstants.sepCampos;
+    final sep = AppConstants.sepListas;
+
+    final data = [
+      _session.codUser,
+      _session.isModerador ? 1 : 0,
+      _codigoChip(chip),
+      chip == CobranzaChipFiltro.asesores ? (codAsesor ?? '') : '',
+      cursorFecha ?? '',
+      cursorNumSol ?? '',
+      tamanio,
+      _fmtFecha(fcDesde),
+      _fmtFecha(fcHasta),
+      idCampania ?? '',
+      idOportunidad ?? '',
+      (estados.toList()..sort()).join(','),
+    ].join(camp);
+
+    final result = await _api.postSafe(
+      ApiConstants.urlCobranzasLst,
+      '$data${sep}LSP',
+    );
+
+    return switch (result) {
+      ApiSuccess(:final data) => CobranzaPaginaModel.parse(data),
+      ApiEmpty() => CobranzaPagina.vacia,
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
+  String _fmtFecha(DateTime? d) =>
+      d == null ? '' : d.toIso8601String().split('.').first;
+
+  String _codigoChip(CobranzaChipFiltro chip) => switch (chip) {
+    CobranzaChipFiltro.contado => 'C',
+    CobranzaChipFiltro.credito => 'CR',
+    CobranzaChipFiltro.todos || CobranzaChipFiltro.asesores => '',
+  };
 
   // Task 'DT' — mismo endpoint urlCobranzasLst, body numSol¯DT (mismo patrón
   // que SolicitudRemoteDatasource.getSolicitudDetalle()).

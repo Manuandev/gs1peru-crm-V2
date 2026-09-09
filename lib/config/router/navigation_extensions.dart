@@ -51,16 +51,33 @@ extension NavigationExtensions on BuildContext {
 
   // ── Módulos principales ────────────────────────────────────
 
-  Future<void> goToSeguimiento({LeadListFiltro? filtroInicial}) => clearAndPush(
+  /// [sinRangoFecha]: entra a Seguimiento con los checkbox de rango de fechas
+  /// APAGADOS (trae todo el histórico, no solo el mes actual). Lo usa el embudo
+  /// de Home para que la lista cuadre con los totales de ahí (que son sin fecha).
+  Future<void> goToSeguimiento({
+    LeadListFiltro? filtroInicial,
+    bool sinRangoFecha = false,
+  }) => clearAndPush(
     AppRoutes.seguimiento,
-    arguments: filtroInicial != null ? {'filtroInicial': filtroInicial} : null,
+    arguments: (filtroInicial == null && !sinRangoFecha)
+        ? null
+        : {
+            'filtroInicial': ?filtroInicial,
+            if (sinRangoFecha) 'sinRangoFecha': true,
+          },
   );
   Future<void> goToContactos() => clearAndPush(AppRoutes.contactos);
   Future<void> goToSolicitudes() => clearAndPush(AppRoutes.solicitudes);
   Future<void> goToMisCasos() => clearAndPush(AppRoutes.misCasos);
   Future<void> goToEquipo() => clearAndPush(AppRoutes.equipo);
   Future<void> goToChats() => clearAndPush(AppRoutes.chats);
-  Future<void> goToCobranza() => clearAndPush(AppRoutes.cobranza);
+  /// [sinRangoFecha]: entra a Cobranzas con los checkbox de rango de fechas
+  /// APAGADOS (trae todo el histórico). Lo usa el embudo de Home para que la
+  /// lista cuadre con el total de ahí (que es sin fecha).
+  Future<void> goToCobranza({bool sinRangoFecha = false}) => clearAndPush(
+    AppRoutes.cobranza,
+    arguments: sinRangoFecha ? {'sinRangoFecha': true} : null,
+  );
   // origenValidar: true cuando se navega desde el botón "Validar" de la
   // card (SolicitudAccionTipo.sinValidar) — el detalle muestra "Validar" en
   // vez de "Editar ficha" en ese caso (mismo mecanismo, otro texto). Ver

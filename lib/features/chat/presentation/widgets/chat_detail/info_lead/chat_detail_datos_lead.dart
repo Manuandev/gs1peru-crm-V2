@@ -123,7 +123,7 @@ class _DatosLeadContenido extends StatelessWidget {
               _DatoItem(
                 icon: AppIcons.calendar,
                 label: 'Evento',
-                valor: lead.nombreOportunidad,
+                valor: lead.nombreOportunidad.aTitulo,
                 iconColor: AppColors.datoEventoFg,
                 iconBackground: AppColors.datoEventoBg,
               ),

@@ -16,17 +16,22 @@
 import 'package:app_crm/features/lead/index_lead.dart';
 
 /// Contadores de la cabecera de Seguimiento — calculados 100% en la base
-/// (task 'LSP'), nunca en el cliente. Son totales del universo del asesor SIN
-/// aplicar el chip activo (aunque estés viendo "Propuesta", "Nuevos" muestra su
-/// total real). Unidad = contacto por su estado representativo (más reciente).
+/// (task 'LSP'), nunca en el cliente. NO aplican el chip activo (aunque estés
+/// viendo "Propuesta", "Nuevos" muestra su total). SÍ aplican el filtro del
+/// panel lateral (fecha/campaña/oportunidad): `total`/`nuevos`/`enDesarrollo`/
+/// `propuesta` se mueven con el filtro. `activos` es la EXCEPCIÓN: número global
+/// (contactos con ≥1 negociación no cerrada), sin el filtro del panel — alimenta
+/// el badge del drawer. Con filtro del panel activo, `total` ≠ `activos`.
+/// `total` ahora incluye también contactos SIN ninguna negociación.
 class SeguimientoConteos {
   final int total;
   final int nuevos;
   final int enDesarrollo;
   final int propuesta;
 
-  /// No cerrados. Con 'LSP' == [total] (el SP ya excluye estado '04'); se
-  /// mantiene explícito porque alimenta el badge "Seguimiento" del drawer.
+  /// Contactos con ≥1 negociación no cerrada — número GLOBAL, sin el filtro del
+  /// panel lateral. Alimenta el badge "Seguimiento" del drawer. Ya no es igual a
+  /// [total] cuando hay filtro del panel activo o hay contactos sin negociación.
   final int activos;
 
   const SeguimientoConteos({

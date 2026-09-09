@@ -14,8 +14,10 @@ class SeguimientoInicial extends SeguimientoEstado {
   const SeguimientoInicial();
 }
 
-/// Primera carga / cambio de chip / refresh — la lista arranca de cero
-/// (skeleton). NO se usa para "cargando más" (eso va dentro de [SeguimientoCargado]).
+/// SOLO la primera carga de la pantalla (aún no hay chips ni contadores que
+/// mostrar) → skeleton completo. El cambio de chip / aplicar filtro / refresh
+/// NO pasan por acá: se resuelven con [SeguimientoCargado.recargandoLista] para
+/// no desmontar chips y contadores.
 class SeguimientoCargando extends SeguimientoEstado {
   const SeguimientoCargando();
 }
@@ -34,6 +36,13 @@ class SeguimientoCargado extends SeguimientoEstado {
   final List<ContactoNegociacion> items;
   final LeadListFiltro filtro;
   final SeguimientoConteos conteos;
+  final SeguimientoFiltroAvanzado filtroAvanzado;
+
+  /// Recarga desde cero en curso (cambio de chip / aplicar filtro del panel /
+  /// refresh) manteniendo chips y contadores montados — solo el área de la
+  /// lista muestra el skeleton. Distinto de [SeguimientoCargando] (pantalla
+  /// completa, primera carga).
+  final bool recargandoLista;
 
   /// true cuando la última página vino con menos filas que el tamaño pedido.
   final bool finLista;
@@ -53,6 +62,8 @@ class SeguimientoCargado extends SeguimientoEstado {
     required this.items,
     required this.filtro,
     required this.conteos,
+    this.filtroAvanzado = SeguimientoFiltroAvanzado.vacio,
+    this.recargandoLista = false,
     this.finLista = false,
     this.cargandoMas = false,
     this.loadMoreError,
@@ -60,8 +71,13 @@ class SeguimientoCargado extends SeguimientoEstado {
     this.cursorIdContacto,
   });
 
-  /// No cerrados — alimenta el badge "Seguimiento" del drawer.
+  /// No cerrados — alimenta el badge "Seguimiento" del drawer. Número global
+  /// (el SP lo calcula sin aplicar el filtro del panel).
   int get activos => conteos.activos;
+
+  /// El botón de filtro del AppBar se pinta naranja solo si el asesor cambió el
+  /// filtro respecto al default (mes actual → hoy) — no por el default en sí.
+  bool get tieneFiltroAvanzado => filtroAvanzado.esDistintoDelDefecto;
 
   bool get puedePaginar =>
       !finLista && !cargandoMas && loadMoreError == null && cursorFecha != null;
@@ -70,6 +86,8 @@ class SeguimientoCargado extends SeguimientoEstado {
     List<ContactoNegociacion>? items,
     LeadListFiltro? filtro,
     SeguimientoConteos? conteos,
+    SeguimientoFiltroAvanzado? filtroAvanzado,
+    bool? recargandoLista,
     bool? finLista,
     bool? cargandoMas,
     String? cursorFecha,
@@ -81,6 +99,8 @@ class SeguimientoCargado extends SeguimientoEstado {
       items: items ?? this.items,
       filtro: filtro ?? this.filtro,
       conteos: conteos ?? this.conteos,
+      filtroAvanzado: filtroAvanzado ?? this.filtroAvanzado,
+      recargandoLista: recargandoLista ?? this.recargandoLista,
       finLista: finLista ?? this.finLista,
       cargandoMas: cargandoMas ?? this.cargandoMas,
       loadMoreError: limpiarLoadMoreError
@@ -96,6 +116,9 @@ class SeguimientoCargado extends SeguimientoEstado {
     items,
     filtro,
     conteos.comoMapa,
+    conteos.activos,
+    filtroAvanzado,
+    recargandoLista,
     finLista,
     cargandoMas,
     loadMoreError,

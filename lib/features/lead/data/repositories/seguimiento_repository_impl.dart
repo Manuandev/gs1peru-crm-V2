@@ -13,10 +13,18 @@ class SeguimientoRepositoryImpl implements SeguimientoRepository {
     String? cursorFecha,
     int? cursorIdContacto,
     required int tamanio,
+    DateTime? fcDesde,
+    DateTime? fcHasta,
+    int? idCampania,
+    int? idOportunidad,
   }) => _remote.traerPagina(
     filtro: filtro,
     cursorFecha: cursorFecha,
     cursorIdContacto: cursorIdContacto,
     tamanio: tamanio,
+    fcDesde: fcDesde,
+    fcHasta: fcHasta,
+    idCampania: idCampania,
+    idOportunidad: idOportunidad,
   );
 }

@@ -47,12 +47,14 @@ class ChatListSuccess extends ChatListState {
   final String filtroNombre;
   final String filtroEmpresa;
   final String filtroNumero;
+  final String filtroCampaniaId;
   final String filtroOportunidadId;
 
   bool get tieneFiltroAvanzado =>
       filtroNombre.isNotEmpty ||
       filtroEmpresa.isNotEmpty ||
       filtroNumero.isNotEmpty ||
+      filtroCampaniaId.isNotEmpty ||
       filtroOportunidadId.isNotEmpty;
 
   const ChatListSuccess({
@@ -63,6 +65,7 @@ class ChatListSuccess extends ChatListState {
     this.filtroNombre = '',
     this.filtroEmpresa = '',
     this.filtroNumero = '',
+    this.filtroCampaniaId = '',
     this.filtroOportunidadId = '',
   });
 
@@ -75,6 +78,7 @@ class ChatListSuccess extends ChatListState {
     filtroNombre,
     filtroEmpresa,
     filtroNumero,
+    filtroCampaniaId,
     filtroOportunidadId,
   ];
 }

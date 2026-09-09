@@ -6,6 +6,9 @@ import 'package:app_crm/core/index_core.dart';
 class EditLeadNegociacionSection extends StatelessWidget {
   final CatalogsLoaded catalogState;
   final CampaniaItem? campania;
+  // Campañas ya filtradas por el padre — al crear excluye las vencidas, al
+  // editar/ver las trae todas (ver edit_lead_portrait._campaniasParaCombo).
+  final List<CampaniaItem> campaniasFiltradas;
   final OportunidadItem? oportunidad;
   final List<OportunidadItem> oportunidadesFiltradas;
   final CanalItem? canal;
@@ -40,6 +43,7 @@ class EditLeadNegociacionSection extends StatelessWidget {
     super.key,
     required this.catalogState,
     required this.campania,
+    required this.campaniasFiltradas,
     required this.oportunidad,
     required this.oportunidadesFiltradas,
     required this.canal,
@@ -82,7 +86,7 @@ class EditLeadNegociacionSection extends StatelessWidget {
         FormFieldRow(
           izquierdo: CustomComboField<CampaniaItem>(
             enabled: !isLoading && !campaniaOportunidadBloqueada,
-            data: catalogState.campanias,
+            data: campaniasFiltradas,
             label: 'Campaña (*)',
             initialValue: campania?.id.toString(),
             onChanged: onCampaniaChanged,

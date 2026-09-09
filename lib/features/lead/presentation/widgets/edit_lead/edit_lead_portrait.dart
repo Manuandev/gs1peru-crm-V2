@@ -204,9 +204,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
     _campania = state.campanias.where((e) => e.id == n.idCampania).firstOrNull;
     _oportunidadesFiltradas = _campania == null
         ? []
-        : state.oportunidades
-              .where((e) => e.idCampania == _campania!.id)
-              .toList();
+        : _oportunidadesDeCampania(state.oportunidades, _campania!.id);
     _oportunidad = _oportunidadesFiltradas
         .where((e) => e.id == n.idOportunidad)
         .firstOrNull;
@@ -382,6 +380,29 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
 
   // ── Callbacks de combos ───────────────────────────────────────────────────
 
+  // Campañas para alimentar el combo. Al CREAR (`_esNuevo`) se excluyen las
+  // vencidas; al EDITAR se listan todas, para que el combo (bloqueado) pueda
+  // mostrar la campaña ya guardada aunque haya vencido. El SP dejó de filtrar
+  // por vigencia (ver core/CLAUDE.md → CampaniaItem.vencida).
+  List<CampaniaItem> _campaniasParaCombo(List<CampaniaItem> todas) {
+    return todas.where((c) => !_esNuevo || !c.vencida).toList();
+  }
+
+  // Oportunidades de una campaña para alimentar el combo. Al CREAR (`_esNuevo`)
+  // se excluyen las vencidas (fecha final + días de extensión ya pasada) — sólo
+  // se puede abrir una negociación nueva sobre una oportunidad vigente. Al
+  // EDITAR se listan todas, para que el combo (bloqueado) pueda mostrar la
+  // oportunidad ya guardada aunque haya vencido. El SP dejó de filtrar por
+  // vigencia (ver core/CLAUDE.md → OportunidadItem.vencida).
+  List<OportunidadItem> _oportunidadesDeCampania(
+    List<OportunidadItem> todas,
+    int idCampania,
+  ) {
+    return todas
+        .where((o) => o.idCampania == idCampania && (!_esNuevo || !o.vencida))
+        .toList();
+  }
+
   void _onCampaniaChanged(CampaniaItem? item) {
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is! CatalogsLoaded) return;
@@ -390,9 +411,7 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
       _oportunidad = null;
       _oportunidadesFiltradas = item == null
           ? []
-          : catalogState.oportunidades
-                .where((e) => e.idCampania == item.id)
-                .toList();
+          : _oportunidadesDeCampania(catalogState.oportunidades, item.id);
     });
   }
 
@@ -599,6 +618,9 @@ class _EditLeadPortraitState extends State<EditLeadPortrait> {
                   EditLeadNegociacionSection(
                     catalogState: catalogState,
                     campania: _campania,
+                    campaniasFiltradas: _campaniasParaCombo(
+                      catalogState.campanias,
+                    ),
                     oportunidad: _oportunidad,
                     oportunidadesFiltradas: _oportunidadesFiltradas,
                     canal: _canal,

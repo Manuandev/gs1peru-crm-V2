@@ -83,9 +83,18 @@ class _LeadCardState extends State<LeadCard> {
   @override
   Widget build(BuildContext context) {
     final l = widget.lead;
-    final colorBorde = AppSocialUtils.colorEstado(
-      l.negociacion.idEstadoEfectivo,
-    );
+    // Task 'LSP' trae con idLead 0 y sin estado a los contactos sin negociación
+    // ACTIVA (el SP excluye estado '04'). Dos sub-casos, según totalLeads
+    // (CL.CT_LEADS = todas las negociaciones del contacto, cerradas incluidas):
+    //   totalLeads == 0 → nunca tuvo negociación   → "Sin negociación"
+    //   totalLeads  > 0 → todas cerradas/perdidas  → "Sin negociación activa"
+    final sinNegociacionActiva = l.negociacion.idLead == 0;
+    final soloCerradas = sinNegociacionActiva && l.totalLeads > 0;
+    final colorBorde = soloCerradas
+        ? AppSocialUtils.colorEstado('04')
+        : sinNegociacionActiva
+        ? AppColors.border
+        : AppSocialUtils.colorEstado(l.negociacion.idEstadoEfectivo);
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -291,11 +300,13 @@ class _LeadDateAndActions extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Flexible(
-              child: AppSocialUtils.chipEstado(
-                lead.negociacion.idEstadoEfectivo,
-                label: lead.negociacion.estadoEfectivo,
-                fontSize: AppTextStyles.sizeXs,
-              ),
+              child: lead.negociacion.idLead == 0
+                  ? _SinNegociacionChip(soloCerradas: lead.totalLeads > 0)
+                  : AppSocialUtils.chipEstado(
+                      lead.negociacion.idEstadoEfectivo,
+                      label: lead.negociacion.estadoEfectivo,
+                      fontSize: AppTextStyles.sizeXs,
+                    ),
             ),
           ],
         ),
@@ -322,6 +333,46 @@ class _LeadDateAndActions extends StatelessWidget {
     final transcurrido = DateTime.now().difference(fechaPrimerMensaje);
     final limite = ConfiguracionService().tiempoChatAbierto;
     return transcurrido.inMinutes >= limite * 60;
+  }
+}
+
+/// Chip que reemplaza al de estado cuando el contacto no tiene negociación
+/// ACTIVA (`idLead == 0`). [soloCerradas] distingue:
+///   false → nunca tuvo negociación        → "Sin negociación" (neutro)
+///   true  → tuvo, todas cerradas/perdidas  → "Sin negociación activa" (tono Cerrado)
+class _SinNegociacionChip extends StatelessWidget {
+  final bool soloCerradas;
+
+  const _SinNegociacionChip({required this.soloCerradas});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = soloCerradas
+        ? AppSocialUtils.colorEstado('04')
+        : AppColors.textSecondary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: soloCerradas
+            ? color.withValues(alpha: 0.12)
+            : AppColors.surfaceLightVariant,
+        borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
+      ),
+      child: Text(
+        soloCerradas ? 'Sin negociación activa' : 'Sin negociación',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: color,
+          fontWeight: AppTextStyles.weightSemiBold,
+          fontSize: AppTextStyles.sizeXs,
+        ),
+      ),
+    );
   }
 }
 

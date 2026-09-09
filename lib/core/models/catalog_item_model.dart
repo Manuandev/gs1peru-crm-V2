@@ -210,13 +210,22 @@ class ListasGenericasModel extends ListasGenericas {
 }
 
 class CampaniaItemModel extends CampaniaItem {
-  const CampaniaItemModel({required super.id, required super.nombre});
+  const CampaniaItemModel({
+    required super.id,
+    required super.nombre,
+    super.fcFinal,
+  });
 
   factory CampaniaItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     return CampaniaItemModel(
       id: ParseUtils.toInt(c, 0),
       nombre: ParseUtils.str(c, 1),
+      // Campo 2 = idMoneda (sin parsear). Campo 3 = fcFinal, agregado al SP
+      // para calcular la vigencia en la app (getter CampaniaItem.vencida).
+      // Si el SP desplegado aún no lo manda → '' → nunca vencida → se listan
+      // todas.
+      fcFinal: ParseUtils.str(c, 3),
     );
   }
 
@@ -237,6 +246,8 @@ class OportunidadItemModel extends OportunidadItem {
     required super.idMoneda,
     required super.importeGeneral,
     required super.importeAsociado,
+    super.fcFinal,
+    super.diasExtension,
   });
 
   factory OportunidadItemModel.fromRawString(String raw) {
@@ -248,6 +259,12 @@ class OportunidadItemModel extends OportunidadItem {
       idMoneda: ParseUtils.str(c, 3),
       importeGeneral: ParseUtils.toDouble(c, 4),
       importeAsociado: ParseUtils.toDouble(c, 5),
+      // Campos 6-7 agregados al SP para que la app calcule la vigencia
+      // (getter OportunidadItem.vencida). Si el SP desplegado todavía no los
+      // manda, quedan en ''/0 → nunca vencida → se listan todas (comportamiento
+      // esperado para editar/ver/filtrar).
+      fcFinal: ParseUtils.str(c, 6),
+      diasExtension: ParseUtils.toInt(c, 7),
     );
   }
 

@@ -29,6 +29,21 @@ class SeguimientoFiltroCambiado extends SeguimientoEvento {
   List<Object?> get props => [filtro];
 }
 
+/// "Buscar" del panel lateral: aplica fecha/campaña/oportunidad y recarga desde
+/// cero (mantiene el chip activo). Contadores y lista se recalculan en el SP.
+class SeguimientoFiltroAvanzadoAplicado extends SeguimientoEvento {
+  final SeguimientoFiltroAvanzado filtro;
+  const SeguimientoFiltroAvanzadoAplicado(this.filtro);
+
+  @override
+  List<Object?> get props => [filtro];
+}
+
+/// "Limpiar" del panel lateral: quita todos los filtros avanzados y recarga.
+class SeguimientoFiltroAvanzadoLimpiado extends SeguimientoEvento {
+  const SeguimientoFiltroAvanzadoLimpiado();
+}
+
 /// El scroll llegó al umbral (80%) — pedir la página siguiente. Se ignora si ya
 /// hay una en vuelo, si se llegó al final, o si el pie está mostrando un error
 /// (ahí solo dispara [SeguimientoReintentarPagina]).

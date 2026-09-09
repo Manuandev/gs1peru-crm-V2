@@ -4,17 +4,17 @@
 // LeadListBloc (que queda intacto, sin caller).
 //
 // Concurrencia SIN el paquete bloc_concurrency (para no tocar pubspec):
-//   - "restartable" (cambio de chip / refresh): contador [_epoca]. Cada carga
-//     desde cero lo incrementa; la respuesta que vuelve con una época vieja se
-//     descarta antes de emitir. flutter_bloc procesa eventos concurrentemente
-//     por defecto, así que el handler nuevo sí corre mientras el viejo espera.
-//   - "droppable" (página siguiente): flag síncrono [_cargandoPagina]. Un
-//     segundo evento de scroll mientras hay una página en vuelo se ignora.
+//   - "restartable" (cambio de chip / refresh / filtro del panel): contador
+//     [_epoca]. Cada carga desde cero lo incrementa; la respuesta que vuelve con
+//     una época vieja se descarta antes de emitir.
+//   - "droppable" (página siguiente): flag síncrono [_cargandoPagina].
 //
-// SignalR: solo llega [LeadUpdateNotifier] por ediciones de la PROPIA app
-// (confirmado: no hay push por cambios de otros usuarios). Se parchea la fila
-// en memoria; el estado que ya no matchea el chip activo queda hasta el
-// próximo refresh (fuera de alcance de v1).
+// Cambio de chip / aplicar filtro NO tumban la pantalla: si ya hay
+// SeguimientoCargado, se emite con recargandoLista:true (chips + contadores
+// quedan montados, solo la lista muestra skeleton). El skeleton completo
+// (SeguimientoCargando) es solo la primera carga.
+//
+// SignalR: solo llega [LeadUpdateNotifier] por ediciones de la PROPIA app.
 
 import 'dart:async';
 
@@ -26,6 +26,10 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
   final GetSeguimientoPaginaUseCase _getPagina;
 
   LeadListFiltro _filtro;
+  // Al entrar, Seguimiento arranca con el filtro por defecto (mes actual → hoy,
+  // ambos activos), igual que la web. "Limpiar" vuelve a esto, no a vacío.
+  SeguimientoFiltroAvanzado _filtroAvanzado =
+      SeguimientoFiltroAvanzado.porDefecto();
   int _epoca = 0;
   bool _cargandoPagina = false;
   StreamSubscription<LeadUpdate>? _updateSub;
@@ -38,6 +42,8 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     on<SeguimientoIniciado>(_onIniciado);
     on<SeguimientoRefrescado>(_onRefrescado);
     on<SeguimientoFiltroCambiado>(_onFiltroCambiado);
+    on<SeguimientoFiltroAvanzadoAplicado>(_onFiltroAvanzadoAplicado);
+    on<SeguimientoFiltroAvanzadoLimpiado>(_onFiltroAvanzadoLimpiado);
     on<SeguimientoPaginaSolicitada>(_onPaginaSolicitada);
     on<SeguimientoReintentarPagina>(_onReintentarPagina);
     on<SeguimientoLeadActualizado>(_onLeadActualizado);
@@ -56,7 +62,7 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     return super.close();
   }
 
-  // ── Carga desde cero (primera vez / refresh / cambio de chip) ───────────────
+  // ── Carga desde cero (primera vez / refresh / cambio de chip / filtro) ──────
 
   Future<void> _onIniciado(
     SeguimientoIniciado event,
@@ -72,15 +78,47 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     SeguimientoFiltroCambiado event,
     Emitter<SeguimientoEstado> emit,
   ) {
-    if (event.filtro == _filtro && state is SeguimientoCargado) return Future.value();
+    if (event.filtro == _filtro && state is SeguimientoCargado) {
+      return Future.value();
+    }
     _filtro = event.filtro;
+    return _cargarDesdeCero(emit);
+  }
+
+  Future<void> _onFiltroAvanzadoAplicado(
+    SeguimientoFiltroAvanzadoAplicado event,
+    Emitter<SeguimientoEstado> emit,
+  ) {
+    _filtroAvanzado = event.filtro;
+    return _cargarDesdeCero(emit);
+  }
+
+  Future<void> _onFiltroAvanzadoLimpiado(
+    SeguimientoFiltroAvanzadoLimpiado event,
+    Emitter<SeguimientoEstado> emit,
+  ) {
+    // "Limpiar" vuelve al filtro por defecto (mes actual → hoy), no a vacío.
+    // Para ver todo el histórico, el asesor destilda los checkboxes a mano.
+    final defecto = SeguimientoFiltroAvanzado.porDefecto();
+    if (_filtroAvanzado == defecto && state is SeguimientoCargado) {
+      return Future.value();
+    }
+    _filtroAvanzado = defecto;
     return _cargarDesdeCero(emit);
   }
 
   Future<void> _cargarDesdeCero(Emitter<SeguimientoEstado> emit) async {
     final epoca = ++_epoca;
     _cargandoPagina = false;
-    emit(const SeguimientoCargando());
+
+    final actual = state;
+    if (actual is SeguimientoCargado) {
+      // Cambio de chip / filtro / refresh con lista ya visible → solo la lista
+      // muestra skeleton; chips y contadores se quedan.
+      emit(actual.copyWith(recargandoLista: true, limpiarLoadMoreError: true));
+    } else {
+      emit(const SeguimientoCargando());
+    }
 
     try {
       final pagina = await _getPagina(
@@ -88,6 +126,10 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
         cursorFecha: null,
         cursorIdContacto: null,
         tamanio: SeguimientoRemoteDatasource.tamanioPrimera,
+        fcDesde: _filtroAvanzado.desdeEfectivo,
+        fcHasta: _filtroAvanzado.hastaEfectivo,
+        idCampania: _filtroAvanzado.idCampania,
+        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       if (epoca != _epoca || emit.isDone) return;
 
@@ -96,6 +138,8 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
           items: pagina.items,
           filtro: _filtro,
           conteos: pagina.conteos ?? const SeguimientoConteos(),
+          filtroAvanzado: _filtroAvanzado,
+          recargandoLista: false,
           finLista:
               pagina.items.length < SeguimientoRemoteDatasource.tamanioPrimera,
           cursorFecha: pagina.cursorFecha,
@@ -116,8 +160,7 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
   ) async {
     final s = state;
     if (s is! SeguimientoCargado) return;
-    // Con el pie en error, el scroll NO vuelve a disparar solo — hay que tocar
-    // "Reintentar" (SeguimientoReintentarPagina).
+    if (s.recargandoLista) return;
     if (s.loadMoreError != null || !s.puedePaginar) return;
     await _traerSiguiente(emit, s);
   }
@@ -147,8 +190,12 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
         cursorFecha: s.cursorFecha,
         cursorIdContacto: s.cursorIdContacto,
         tamanio: SeguimientoRemoteDatasource.tamanioSiguiente,
+        fcDesde: _filtroAvanzado.desdeEfectivo,
+        fcHasta: _filtroAvanzado.hastaEfectivo,
+        idCampania: _filtroAvanzado.idCampania,
+        idOportunidad: _filtroAvanzado.idOportunidad,
       );
-      // El chip cambió mientras cargaba → descartar esta respuesta.
+      // El chip / filtro cambió mientras cargaba → descartar esta respuesta.
       if (epoca != _epoca || emit.isDone) return;
 
       // Deduplicar por ID_CONTACTO: el keyset no repite por paginación, pero un

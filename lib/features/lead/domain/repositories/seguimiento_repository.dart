@@ -12,5 +12,9 @@ abstract class SeguimientoRepository {
     String? cursorFecha,
     int? cursorIdContacto,
     required int tamanio,
+    DateTime? fcDesde,
+    DateTime? fcHasta,
+    int? idCampania,
+    int? idOportunidad,
   });
 }

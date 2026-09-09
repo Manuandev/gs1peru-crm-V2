@@ -3,43 +3,55 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 
-/// Cuerpo skeleton de la pantalla de lista de leads.
-/// Se usa dentro del BlocBuilder de LeadListView mientras el estado es
-/// LeadListInitial o LeadListLoading.
-/// Espeja el layout de LeadListPortrait: fila de chips + lista de cards.
+/// Skeleton COMPLETO de Seguimiento — espeja `SeguimientoPortrait`:
+/// fila de chips + fila de contadores (3 tarjetas) + lista de cards.
+/// Solo se usa en la PRIMERA carga (`SeguimientoCargando`). El cambio de chip /
+/// aplicar filtro reusa solo [LeadCardSkeletonList] dejando chips y contadores
+/// reales montados.
 class LeadListSkeleton extends StatelessWidget {
   const LeadListSkeleton({super.key});
 
-  static const int _cantidadCards = 7;
-
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
-        const _FiltrosSkeleton(),
-        Expanded(
-          child: ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            itemCount: _cantidadCards,
-            itemBuilder: (_, _) => const Padding(
-              padding: EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _LeadCardSkeleton(),
-            ),
-          ),
-        ),
+        _ChipsSkeleton(),
+        SizedBox(height: AppSpacing.xs),
+        _StatsSkeleton(),
+        SizedBox(height: AppSpacing.sm),
+        Expanded(child: LeadCardSkeletonList()),
       ],
     );
   }
 }
 
+/// Solo la lista de cards placeholder — para la recarga parcial (cambio de chip
+/// / filtro) sin tocar chips ni contadores.
+class LeadCardSkeletonList extends StatelessWidget {
+  const LeadCardSkeletonList({super.key, this.cantidad = 7});
+
+  final int cantidad;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      itemCount: cantidad,
+      itemBuilder: (_, _) => const Padding(
+        padding: EdgeInsets.only(bottom: AppSpacing.sm),
+        child: _LeadCardSkeleton(),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Chips de filtro
+// Chips de filtro — mismos padding/scroll que LeadListFilterChips (4 chips).
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Placeholder de los chips de filtro: mismos padding y scroll que LeadListFilterChips.
-class _FiltrosSkeleton extends StatelessWidget {
-  const _FiltrosSkeleton();
+class _ChipsSkeleton extends StatelessWidget {
+  const _ChipsSkeleton();
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +60,14 @@ class _FiltrosSkeleton extends StatelessWidget {
       child: const SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
         child: Row(
           children: [
-            _ChipSkeleton(ancho: AppSizing.skeletonChipWidthMd),
+            _ChipSkeleton(ancho: AppSizing.skeletonChipWidthSm),
             SizedBox(width: AppSpacing.sm),
             _ChipSkeleton(ancho: AppSizing.skeletonChipWidthSm),
+            SizedBox(width: AppSpacing.sm),
+            _ChipSkeleton(ancho: AppSizing.skeletonChipWidthMd),
             SizedBox(width: AppSpacing.sm),
             _ChipSkeleton(ancho: AppSizing.skeletonChipWidthMd),
           ],
@@ -79,10 +93,76 @@ class _ChipSkeleton extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Card de lead
+// Fila de contadores — espeja LeadListStatsRow (3 tarjetas Expanded).
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Espeja exactamente el layout de LeadCard: avatar + info central + timestamp + actions.
+class _StatsSkeleton extends StatelessWidget {
+  const _StatsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Row(
+        children: [
+          Expanded(child: _StatCardSkeleton()),
+          SizedBox(width: AppSpacing.sm),
+          Expanded(child: _StatCardSkeleton()),
+          SizedBox(width: AppSpacing.sm),
+          Expanded(child: _StatCardSkeleton()),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCardSkeleton extends StatelessWidget {
+  const _StatCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        children: [
+          SkeletonBox(
+            width: AppSizing.avatarXs,
+            height: AppSizing.avatarXs,
+            borderRadius: AppSizing.radiusCircular,
+          ),
+          SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SkeletonBox(
+                  width: AppSizing.infoLabelWidth,
+                  height: AppSizing.skeletonLineHeight,
+                ),
+                SizedBox(height: AppSpacing.xxs),
+                SkeletonBox(
+                  width: AppSizing.skeletonChipWidthSm,
+                  height: AppSizing.skeletonLineHeight,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card de lead — espeja el layout de LeadCard.
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _LeadCardSkeleton extends StatelessWidget {
   const _LeadCardSkeleton();
 
@@ -108,7 +188,6 @@ class _LeadCardSkeleton extends StatelessWidget {
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar chico + info (nombre/fecha, oportunidad/hace-X/estado, empresa)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -122,7 +201,6 @@ class _LeadCardSkeleton extends StatelessWidget {
             ],
           ),
           SizedBox(height: AppSpacing.xs),
-          // Botones de acción, en fila
           _AccionesSkeleton(),
         ],
       ),
@@ -130,7 +208,6 @@ class _LeadCardSkeleton extends StatelessWidget {
   }
 }
 
-// Info skeleton: espejo de _LeadInfo (nombre+fecha, oportunidad+hace-X+estado, empresa).
 class _InfoSkeleton extends StatelessWidget {
   const _InfoSkeleton();
 
@@ -158,7 +235,6 @@ class _InfoSkeleton extends StatelessWidget {
   }
 }
 
-// Botones de acción skeleton: espejo de LeadCardActions (WhatsApp chico + Ver detalle chico, en fila).
 class _AccionesSkeleton extends StatelessWidget {
   const _AccionesSkeleton();
 

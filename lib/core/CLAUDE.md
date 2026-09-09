@@ -1025,8 +1025,8 @@ usadas por `ListasGenericasModel.parse`) en `catalog_item_model.dart`. Ambos se 
 | Clase | Campos |
 |---|---|
 | `ListasGenericas` | campanias, oportunidades, canales, intereses, estados, asesores, estadosGestion, monedas, igvPorcentaje, paises, tiposDocumento, comprobantes, nacionalidades, valoresDefecto |
-| `CampaniaItem` | id(int), nombre |
-| `OportunidadItem` | idEvento(int), idCampania(int), nombre |
+| `CampaniaItem` | id(int), nombre, fcFinal(String) — partes [0] del task `'L'` y [1] del task `'EN'`, `CRM.T_CAMPANIA`. **El SP dejó de filtrar por vigencia de fecha (2026-09-08)** — trae TODAS las activas; `fcFinal` (`CONVERT(VARCHAR(19), FC_FINAL, 120)`, vacío si no tiene) alimenta el getter `vencida` (`DateTime.now().isAfter(fcFinal)` — sin días de extensión, a diferencia de la oportunidad). Al **crear** una negociación el combo excluye las vencidas (`edit_lead_portrait.dart._campaniasParaCombo`, sólo cuando `_esNuevo`); al **editar/ver/filtrar** se listan todas. El campo 2 del SP (`ID_MONEDA`) se sigue sin parsear |
+| `OportunidadItem` | id(int), idCampania(int), nombre, idMoneda(String), importeGeneral(double), importeAsociado(double), fcFinal(String), diasExtension(int) — partes [1] del task `'L'` y [2] del task `'EN'`, `CRM.T_OPORTUNIDAD`. **El SP dejó de filtrar por vigencia de fecha (2026-09-08)** — trae TODAS las activas (`IB_ACTIVO=1`); `fcFinal` (`CONVERT(VARCHAR(19), FC_FINAL, 120)`, vacío si no tiene) + `diasExtension` (`IN_DIAS_EXTENSION`) alimentan el getter `vencida` (`DateTime.now().isAfter(fcFinal + diasExtension)`). Al **crear** una negociación el combo excluye las vencidas (`edit_lead_portrait.dart._oportunidadesDeCampania`, sólo cuando `_esNuevo`); al **editar/ver/filtrar** se listan todas. Fallback: si el SP desplegado aún no manda los campos 6-7, quedan en `''`/`0` → `vencida` siempre `false` → se listan todas |
 | `CanalItem` | id(int), nombre |
 | `InteresItem` | id(int), nombre |
 | `EstadoItem` | id(String), nombre, idPadre(String?) — parte [4] del SP, estados de `lead/` (jerárquico) |

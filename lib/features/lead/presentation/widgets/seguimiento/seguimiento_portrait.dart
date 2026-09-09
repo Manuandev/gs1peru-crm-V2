@@ -61,7 +61,7 @@ class _SeguimientoPortraitState extends State<SeguimientoPortrait> {
   void _rellenarSiNoScrollea() {
     if (!mounted || !_scroll.hasClients) return;
     final e = widget.estado;
-    if (e.items.isEmpty || !e.puedePaginar) return;
+    if (e.recargandoLista || e.items.isEmpty || !e.puedePaginar) return;
     if (_scroll.position.maxScrollExtent <= 0) {
       context.read<SeguimientoBloc>().add(const SeguimientoPaginaSolicitada());
     }
@@ -84,7 +84,9 @@ class _SeguimientoPortraitState extends State<SeguimientoPortrait> {
         LeadListStatsRow(conteos: e.conteos.comoMapa),
         const SizedBox(height: AppSpacing.sm),
         Expanded(
-          child: e.items.isEmpty
+          child: e.recargandoLista
+              ? const LeadCardSkeletonList()
+              : e.items.isEmpty
               ? _VistaVacia(estado: e)
               : ListView.builder(
                   controller: _scroll,

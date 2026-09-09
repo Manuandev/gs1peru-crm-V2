@@ -110,15 +110,41 @@ class ListasGenericas {
   }
 }
 
+// SP lstListas parte [0] (y task 'EN' parte [1]): idCampania ¦ nombre ¦
+// idMoneda ¦ fcFinal (yyyy-MM-dd HH:mm:ss, vacío si no tiene). Igual que las
+// oportunidades, el SP dejó de filtrar por vigencia de fecha (2026-09-08) —
+// trae TODAS las activas; `vencida` se evalúa acá.
 class CampaniaItem with Comboable {
   final int id;
   final String nombre;
-  const CampaniaItem({required this.id, required this.nombre});
+  final String fcFinal;
+  const CampaniaItem({
+    required this.id,
+    required this.nombre,
+    this.fcFinal = '',
+  });
+
+  /// `true` si la campaña ya pasó su fecha final. Sin fecha (`fcFinal` vacío o
+  /// no parseable) nunca vence — mismo criterio que el filtro que antes vivía
+  /// en el SP: `FC_FINAL IS NULL OR FC_FINAL >= GETDATE()` para incluirla.
+  /// A diferencia de la oportunidad, la campaña no tiene días de extensión.
+  bool get vencida {
+    final base = DateTime.tryParse(fcFinal);
+    if (base == null) return false;
+    return DateTime.now().isAfter(base);
+  }
 
   @override
   List<dynamic> get fields => [id, nombre];
 }
 
+// SP lstListas parte [1] (y task 'EN' parte [2]): idOportunidad ¦ idCampania ¦
+// nombre ¦ idMoneda ¦ importeGeneral ¦ importeAsociado ¦ fcFinal
+// (yyyy-MM-dd HH:mm:ss, vacío si la oportunidad no tiene fecha final) ¦
+// diasExtension. El SP ahora trae TODAS las oportunidades activas — la vigencia
+// por fecha se evalúa acá (getter [vencida]), no en el SP. Al CREAR una
+// negociación solo se ofrecen las no vencidas; al editar/ver/filtrar se
+// listan todas (ver edit_lead_portrait.dart y core/CLAUDE.md).
 class OportunidadItem with Comboable {
   final int id;
   final int idCampania;
@@ -126,6 +152,8 @@ class OportunidadItem with Comboable {
   final String idMoneda;
   final double importeGeneral;
   final double importeAsociado;
+  final String fcFinal;
+  final int diasExtension;
 
   const OportunidadItem({
     required this.id,
@@ -134,7 +162,20 @@ class OportunidadItem with Comboable {
     required this.idMoneda,
     required this.importeGeneral,
     required this.importeAsociado,
+    this.fcFinal = '',
+    this.diasExtension = 0,
   });
+
+  /// `true` si la oportunidad ya pasó su fecha final + días de extensión.
+  /// Sin fecha final (`fcFinal` vacío o no parseable) nunca vence — mismo
+  /// criterio que el filtro que antes vivía en el SP:
+  /// `DATEADD(DAY, IN_DIAS_EXTENSION, FC_FINAL) >= GETDATE()` para incluirla.
+  bool get vencida {
+    final base = DateTime.tryParse(fcFinal);
+    if (base == null) return false;
+    final limite = base.add(Duration(days: diasExtension));
+    return DateTime.now().isAfter(limite);
+  }
 
   @override
   List<dynamic> get fields => [id, idCampania, nombre];

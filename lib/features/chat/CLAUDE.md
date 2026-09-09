@@ -3,6 +3,29 @@
 Gestiona conversaciones WhatsApp, envío de mensajes, multimedia, templates y edición de leads.
 Es el feature más complejo de la app — leer completo antes de tocar cualquier archivo.
 
+## Filtro avanzado de conversaciones — Campaña + Oportunidad en cascada (2026-09-08)
+
+`FiltroChatDrawer` (`presentation/widgets/chat_list/filtro_chat_drawer.dart`) tiene combos
+**Campaña** y **Oportunidad** en **cascada**, mismo criterio que "Editar negociación":
+- Sin campaña elegida, el combo Oportunidad lista **todo** el catálogo
+  (`CatalogsBloc.oportunidades`); con campaña elegida, solo las oportunidades de esa campaña
+  (`o.idCampania.toString() == _campaniaId`).
+- Al cambiar de campaña, si la oportunidad ya elegida no pertenece a la nueva campaña, se
+  limpia (`_oportunidadId = ''`). El combo Oportunidad lleva `key: ValueKey('filtro-oportunidad-$_campaniaId')`
+  para recrearse y resetear su texto visible (el `Autocomplete` interno de `CustomComboSearchField`
+  no resincroniza su texto solo al cambiar `data`/`initialValue`).
+- El catálogo completo lo garantiza el SP `CRM.CSV_LISTAS_LST_APP` (dejó de filtrar por vigencia
+  de fecha — ver `lead/CLAUDE.md` y `core/CLAUDE.md`).
+
+El filtrado de la lista es en memoria y **acumulativo (AND)**:
+`ChatListBloc._aplicarFiltrosAvanzados` aplica primero campaña
+(`Chat.idCampania.toString() == _filtroCampaniaId`) y luego oportunidad
+(`Chat.idOportunidad.toString() == _filtroOportunidadId`) — campos 16/18 de `ConversationModel`.
+El evento `ChatListFiltroAvanzadoAplicado` y `ChatListSuccess` llevan ambos ids
+(`campaniaId`/`filtroCampaniaId`); `tieneFiltroAvanzado` los incluye. Si se agrega otro campo al
+filtro, seguir el mismo patrón (evento → campo privado en el bloc → `_aplicarFiltrosAvanzados` →
+estado).
+
 ## Negrita/cursiva/tachado en la lista de plantillas (2026-08-20)
 
 Reportado por el usuario: un texto de plantilla con `*palabra*` se veía con los asteriscos

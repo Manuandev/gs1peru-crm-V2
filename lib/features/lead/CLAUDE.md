@@ -1,5 +1,64 @@
 ﻿# Lead Feature
 
+## Seguimiento — panel de filtros avanzado + contactos sin negociación (2026-09-08)
+
+Pantalla `SeguimientoPage` / `SeguimientoBloc` (task `'LSP'` de `CRM.CSV_LEADS_LST_APP`,
+paginado por keyset). A diferencia del filtro de Conversaciones (en memoria), acá el filtro
+**va al SP** porque la lista es paginada.
+
+**Panel lateral (`SeguimientoFiltroDrawer`, `endDrawerWidget` + botón en el AppBar, mismo patrón
+que `FiltroChatDrawer`):**
+- **Rango de fechas**, cada extremo con su checkbox. Solo se manda al SP el que esté activo:
+  Desde → `00:00:00`, Hasta → `23:59:59` (día completo). Filtra `FC_ULTIMA` = última interacción
+  (`FC_USUARIO_M`, o `FC_USUARIO_C`) de la negociación, o del propio contacto si no tiene ninguna.
+  **Por defecto** (al entrar y a lo que vuelve "Limpiar"): del **1 del mes actual** a **hoy**,
+  ambos activos — igual que la web (`SeguimientoFiltroAvanzado.porDefecto()`). Para ver todo el
+  histórico el asesor destilda los checkboxes a mano. El botón de filtro del AppBar se pinta
+  naranja solo si el filtro difiere del default (`esDistintoDelDefecto`).
+- **Campaña → Oportunidad en cascada** (sin campaña → todas; con campaña → solo las de esa
+  campaña; al cambiar campaña se limpia la oportunidad si ya no aplica; `ValueKey` en el combo
+  de Oportunidad para resetear el texto visible).
+- **Estado / Subestado — RESERVADOS**: el SP ya parsea `idEstadoAdv`/`idSubestadoAdv` (campos
+  11-12) pero su `WHERE` está **comentado** — hoy el estado lo maneja el chip de arriba. Para
+  activarlos: agregar los campos a `SeguimientoFiltroAvanzado` + datasource, descomentar el
+  `WHERE` en el SP, y armar los combos (Estado = `estados.where(esPadre)` → Subestado = hijos).
+- `SeguimientoFiltroAvanzado` (entidad) lleva `desde`/`desdeActivo`/`hasta`/`hastaActivo`/
+  `idCampania`/`idOportunidad` + getters `desdeEfectivo`/`hastaEfectivo` (con hora) y `activo`.
+- Eventos `SeguimientoFiltroAvanzadoAplicado` / `...Limpiado`. El bloc guarda `_filtroAvanzado` y
+  lo pasa tanto a la primera página como a `_traerSiguiente` (las páginas siguientes mantienen
+  el filtro). El chip (`_filtro`) sigue mandando `idEstado` aparte y se combinan (AND en el SP).
+
+**Contadores (se mueven con el filtro):** `total`/`nuevos`/`enDesarrollo`/`propuesta` reflejan
+el subconjunto filtrado (fecha+campaña+oportunidad, no el chip). `activos` es la **excepción**:
+número global (contactos con ≥1 negociación no cerrada, sin el filtro del panel) — alimenta el
+badge del drawer. Ya **no** es igual a `total` (ver `SeguimientoConteos`).
+
+**Contactos sin negociación ACTIVA:** el SP pasó su `INNER JOIN` a `T_LEAD` a `LEFT JOIN` (con
+`LD.ID_ESTADO <> '04'` en el `ON`) — un contacto sin negociación activa igual aparece (task
+`'LSP'`, `#LSP_REPR`), ordenado por su propia fecha de contacto. Reglas: solo salen en el chip
+**"Todos"** (no tienen estado); si hay filtro de campaña/oportunidad se excluyen (no pueden
+matchear); el filtro de fecha sí los toca. La fila llega con `idLead == 0` y estado vacío.
+`LeadCard` usa `totalLeads` (campo 34 = `CL.CT_LEADS`, cuenta **todas** las negociaciones del
+contacto, cerradas incluidas) para distinguir 2 sub-casos, sin tocar el SP:
+- `idLead == 0 && totalLeads == 0` → nunca tuvo negociación → chip **"Sin negociación"** (borde
+  neutro).
+- `idLead == 0 && totalLeads > 0` → tuvo, todas cerradas/perdidas → chip **"Sin negociación
+  activa"** (borde y chip con el color de "Cerrado", `AppSocialUtils.colorEstado('04')`).
+
+En ambos: sin línea de oportunidad/precio; tap → detalle de contacto, donde se crea/reactiva la
+negociación.
+
+**Skeleton:** `LeadListSkeleton` se rehízo completo — placeholder de **chips + fila de
+contadores + cards** (calza con `SeguimientoPortrait`), y solo se usa en la **primera** carga
+(`SeguimientoCargando`). El cambio de chip / aplicar filtro / refresh ya **no** desmonta la
+pantalla: `SeguimientoCargado.recargandoLista` mantiene chips y contadores montados y solo el
+área de la lista muestra `LeadCardSkeletonList`.
+
+**Contrato `@L_DATA` del task `'LSP'` (12 campos, `fnSplitStringTable15`):**
+`codUser¦moderador¦idEstado(chip)¦curFecha¦curIdContacto¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad¦idEstadoAdv¦idSubestadoAdv`.
+Fechas en ISO 126 (`yyyy-MM-ddTHH:mm:ss`), `''` = no aplica. El 5º campo de la cabecera de la
+1ª página pasó de repetir `total` a ser `activos` (`@LSP_ACT`).
+
 ## Task 'NEG' — datos mínimos para prellenar el wizard de Solicitudes (2026-08-12)
 `CRM.CSV_LEADS_LST_APP`, task nuevo — reemplaza el uso de `GetLeadDetalleUseCase` (task `'DT'`)
 para el caso puntual de "traer una negociación para prellenar/recuperar datos en el wizard de
@@ -835,6 +894,17 @@ ningún origen, edite o cree, venga o no de conversación.
 - **Campaña/Oportunidad** solo son editables al **crear** (`negociacion.idLead == 0`), sin
   importar el origen — al editar una negociación ya existente quedan siempre bloqueadas
   (`campaniaOportunidadBloqueada: !_esNuevo` en `_EditLeadPortraitState.build()`).
+- **Campañas y oportunidades vencidas — filtro movido del SP a la app (2026-09-08).** El SP
+  `CRM.CSV_LISTAS_LST_APP` (tasks `'L'` y `'EN'`) ya no filtra campañas ni oportunidades por
+  vigencia de fecha — trae **todas** las activas + `fcFinal` (y `diasExtension` sólo en
+  oportunidad) para que la app calcule `CampaniaItem.vencida`/`OportunidadItem.vencida` (ver
+  `core/CLAUDE.md`). `_campaniasParaCombo()`/`_oportunidadesDeCampania()` excluyen las vencidas
+  **solo al crear** (`_esNuevo`); al editar/ver (y en el filtro de Conversaciones,
+  `filtro_chat_drawer.dart`, que ahora tiene combo Campaña **y** Oportunidad, ambos con todo el
+  catálogo) se listan todas — así el combo bloqueado de una negociación ya guardada puede
+  mostrar su campaña/oportunidad aunque hayan vencido. El `template_form/` de `chat/` (combo
+  Campaña→Oportunidad de plantillas) también pasa a ver todas — no se tocó, no es un flujo de
+  "crear negociación".
 - **Cantidad** arranca en `1` por defecto al crear (antes quedaba en 0/blanco) — ver
   `initState()._cantidadInicial`.
 - Para **crear** una negociación son obligatorios Estado, Campaña, Oportunidad, Canal, Moneda y

@@ -27,6 +27,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   String _filtroNombre = '';
   String _filtroEmpresa = '';
   String _filtroNumero = '';
+  String _filtroCampaniaId = '';
   String _filtroOportunidadId = '';
 
   ChatListBloc(this._getChats, this._getChatByIdChatCab)
@@ -162,6 +163,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     _filtroNombre = event.nombre;
     _filtroEmpresa = event.empresa;
     _filtroNumero = event.numero;
+    _filtroCampaniaId = event.campaniaId;
     _filtroOportunidadId = event.oportunidadId;
     _emitFiltered(emit);
   }
@@ -173,6 +175,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     _filtroNombre = '';
     _filtroEmpresa = '';
     _filtroNumero = '';
+    _filtroCampaniaId = '';
     _filtroOportunidadId = '';
     _emitFiltered(emit);
   }
@@ -230,6 +233,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
         filtroNombre: _filtroNombre,
         filtroEmpresa: _filtroEmpresa,
         filtroNumero: _filtroNumero,
+        filtroCampaniaId: _filtroCampaniaId,
         filtroOportunidadId: _filtroOportunidadId,
       ),
     );
@@ -317,6 +321,11 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     if (_filtroNumero.isNotEmpty) {
       resultado = resultado
           .where((c) => c.numero.contains(_filtroNumero))
+          .toList();
+    }
+    if (_filtroCampaniaId.isNotEmpty) {
+      resultado = resultado
+          .where((c) => c.idCampania.toString() == _filtroCampaniaId)
           .toList();
     }
     if (_filtroOportunidadId.isNotEmpty) {

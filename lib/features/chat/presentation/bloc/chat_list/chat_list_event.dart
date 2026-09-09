@@ -48,17 +48,25 @@ class ChatListFiltroAvanzadoAplicado extends ChatListEvent {
   final String nombre;
   final String empresa;
   final String numero;
+  final String campaniaId;
   final String oportunidadId;
 
   const ChatListFiltroAvanzadoAplicado({
     this.nombre = '',
     this.empresa = '',
     this.numero = '',
+    this.campaniaId = '',
     this.oportunidadId = '',
   });
 
   @override
-  List<Object?> get props => [nombre, empresa, numero, oportunidadId];
+  List<Object?> get props => [
+    nombre,
+    empresa,
+    numero,
+    campaniaId,
+    oportunidadId,
+  ];
 }
 
 /// Limpia todos los filtros avanzados del panel lateral.

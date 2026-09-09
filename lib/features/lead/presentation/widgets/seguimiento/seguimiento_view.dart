@@ -35,6 +35,35 @@ class SeguimientoView extends StatelessWidget {
       ),
       drawerSide: DrawerSide.left,
       bodyPadding: EdgeInsets.zero,
+      // Botón de filtro avanzado (abre el endDrawer derecho).
+      appBarTrailingButtons: [
+        BlocBuilder<SeguimientoBloc, SeguimientoEstado>(
+          buildWhen: (prev, curr) {
+            final prevHas =
+                prev is SeguimientoCargado && prev.tieneFiltroAvanzado;
+            final currHas =
+                curr is SeguimientoCargado && curr.tieneFiltroAvanzado;
+            return prevHas != currHas;
+          },
+          builder: (context, state) {
+            final tieneAvanzado =
+                state is SeguimientoCargado && state.tieneFiltroAvanzado;
+            return Builder(
+              builder: (ctx) => IconButton(
+                tooltip: 'Filtrar',
+                icon: Icon(
+                  AppIcons.filter,
+                  color: tieneAvanzado
+                      ? AppColors.secondary
+                      : AppColors.textOnDark,
+                ),
+                onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+              ),
+            );
+          },
+        ),
+      ],
+      endDrawerWidget: const SeguimientoFiltroDrawer(),
       body: Column(
         children: [
           const SizedBox(height: AppSpacing.sm),

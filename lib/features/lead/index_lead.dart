@@ -35,6 +35,7 @@ export 'domain/entities/contacto_simple.dart';
 export 'domain/entities/lead_recordatorio.dart';
 export 'domain/entities/datos_prellenado_solicitud.dart';
 export 'domain/entities/seguimiento_pagina.dart';
+export 'domain/entities/seguimiento_filtro_avanzado.dart';
 
 export 'domain/enums/lead_filtro.dart';
 export 'domain/enums/lead_detail_tab_enum.dart';
@@ -87,6 +88,7 @@ export 'presentation/widgets/list/lead_list_stats_row.dart';
 export 'presentation/widgets/seguimiento/seguimiento_view.dart';
 export 'presentation/widgets/seguimiento/seguimiento_portrait.dart';
 export 'presentation/widgets/seguimiento/seguimiento_footer.dart';
+export 'presentation/widgets/seguimiento/seguimiento_filtro_drawer.dart';
 
 // Blocs + cubit movidos de chat → lead (ver CLAUDE.md del feature lead)
 export 'presentation/bloc/edit_lead/edit_lead_bloc.dart';

@@ -17,6 +17,7 @@ class _FiltroChatDrawerState extends State<FiltroChatDrawer> {
   final _nombreCtrl = TextEditingController();
   final _empresaCtrl = TextEditingController();
   final _numeroCtrl = TextEditingController();
+  String _campaniaId = '';
   String _oportunidadId = '';
 
   @override
@@ -27,6 +28,7 @@ class _FiltroChatDrawerState extends State<FiltroChatDrawer> {
       _nombreCtrl.text = state.filtroNombre;
       _empresaCtrl.text = state.filtroEmpresa;
       _numeroCtrl.text = state.filtroNumero;
+      _campaniaId = state.filtroCampaniaId;
       _oportunidadId = state.filtroOportunidadId;
     }
   }
@@ -45,6 +47,7 @@ class _FiltroChatDrawerState extends State<FiltroChatDrawer> {
         nombre: _nombreCtrl.text.trim(),
         empresa: _empresaCtrl.text.trim(),
         numero: _numeroCtrl.text.trim(),
+        campaniaId: _campaniaId,
         oportunidadId: _oportunidadId,
       ),
     );
@@ -122,21 +125,85 @@ class _FiltroChatDrawerState extends State<FiltroChatDrawer> {
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    // Campaña y Oportunidad en cascada (mismo criterio que
+                    // "Editar negociación"): sin campaña, Oportunidad lista
+                    // TODO el catálogo; con campaña elegida, solo las
+                    // oportunidades de esa campaña. Ambos filtros se aplican en
+                    // memoria (AND) sobre Chat.idCampania / Chat.idOportunidad
+                    // (ChatListBloc). El SP trae todo el catálogo — ver
+                    // core/CLAUDE.md.
                     BlocBuilder<CatalogsBloc, CatalogsState>(
                       builder: (context, catState) {
-                        if (catState is! CatalogsLoaded) return const SizedBox.shrink();
-                        final data = catState.oportunidades
-                            .map((o) => '${o.id}${AppConstants.sepCampos}${o.nombre}')
+                        if (catState is! CatalogsLoaded) {
+                          return const SizedBox.shrink();
+                        }
+                        final dataCampanias = catState.campanias
+                            .map(
+                              (c) =>
+                                  '${c.id}${AppConstants.sepCampos}${c.nombre}',
+                            )
                             .toList();
-                        return CustomComboSearchField(
-                          data: data,
-                          label: 'Oportunidad',
-                          hint: 'Buscar oportunidad...',
-                          displayIndex: 1,
-                          initialValue: _oportunidadId,
-                          onChanged: (item) => setState(
-                            () => _oportunidadId = item?.id ?? '',
-                          ),
+                        final oportunidades = _campaniaId.isEmpty
+                            ? catState.oportunidades
+                            : catState.oportunidades
+                                  .where(
+                                    (o) =>
+                                        o.idCampania.toString() == _campaniaId,
+                                  )
+                                  .toList();
+                        final dataOportunidades = oportunidades
+                            .map(
+                              (o) =>
+                                  '${o.id}${AppConstants.sepCampos}${o.nombre}',
+                            )
+                            .toList();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CustomComboSearchField(
+                              data: dataCampanias,
+                              label: 'Campaña',
+                              hint: 'Buscar campaña...',
+                              displayIndex: 1,
+                              initialValue: _campaniaId,
+                              onChanged: (item) {
+                                final nuevoId = item?.id ?? '';
+                                setState(() {
+                                  _campaniaId = nuevoId;
+                                  // Si la oportunidad ya elegida no pertenece a
+                                  // la campaña nueva, se limpia — queda solo el
+                                  // filtro de campaña hasta elegir una
+                                  // oportunidad válida de esa campaña.
+                                  if (_oportunidadId.isNotEmpty) {
+                                    final sigueValida =
+                                        nuevoId.isEmpty ||
+                                        catState.oportunidades.any(
+                                          (o) =>
+                                              o.id.toString() == _oportunidadId &&
+                                              o.idCampania.toString() == nuevoId,
+                                        );
+                                    if (!sigueValida) _oportunidadId = '';
+                                  }
+                                });
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            CustomComboSearchField(
+                              // Se recrea al cambiar de campaña para que el
+                              // texto visible se resetee cuando cambian
+                              // data/initialValue (el Autocomplete interno no
+                              // resincroniza su texto solo).
+                              key: ValueKey('filtro-oportunidad-$_campaniaId'),
+                              data: dataOportunidades,
+                              label: 'Oportunidad',
+                              hint: 'Buscar oportunidad...',
+                              displayIndex: 1,
+                              initialValue: _oportunidadId,
+                              onChanged: (item) => setState(
+                                () => _oportunidadId = item?.id ?? '',
+                              ),
+                            ),
+                          ],
                         );
                       },
                     ),

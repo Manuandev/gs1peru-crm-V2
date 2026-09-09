@@ -243,15 +243,15 @@ class _AccionesSkeleton extends StatelessWidget {
     return const Row(
       children: [
         SkeletonBox(
-          width: AppSizing.miniActionButton,
-          height: AppSizing.miniActionButton,
-          borderRadius: AppSizing.radiusMd,
+          width: AppSizing.miniActionButtonSm,
+          height: AppSizing.miniActionButtonSm,
+          borderRadius: AppSizing.radiusSm,
         ),
         SizedBox(width: AppSpacing.xs),
         SkeletonBox(
           width: AppSizing.skeletonChipWidthSm,
-          height: AppSizing.miniActionButton,
-          borderRadius: AppSizing.radiusMd,
+          height: AppSizing.miniActionButtonSm,
+          borderRadius: AppSizing.radiusSm,
         ),
       ],
     );

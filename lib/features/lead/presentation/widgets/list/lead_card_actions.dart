@@ -5,9 +5,10 @@ import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
-/// Botones de acción de LeadCard: WhatsApp (ícono, chico y verde/gris) y "Ver
-/// detalle" (chico, borde y texto azules), en fila. Los callbacks los
-/// inyecta el padre.
+/// Botones de acción de LeadCard: WhatsApp (ícono, verde/gris) y "Ver detalle"
+/// (borde y texto azules), en fila. Tamaño extra compacto
+/// (`AppSizing.miniActionButtonSm` = 26dp) — pedido de negocio 2026-09-09, más
+/// chicos que la versión anterior (32dp). Los callbacks los inyecta el padre.
 class LeadCardActions extends StatelessWidget {
   final VoidCallback? onWhatsAppTap;
   final VoidCallback? onVerDetalleTap;
@@ -42,16 +43,16 @@ class LeadCardActions extends StatelessWidget {
           GestureDetector(
             onTap: onWhatsAppTap,
             child: Container(
-              width: AppSizing.miniActionButton,
-              height: AppSizing.miniActionButton,
+              width: AppSizing.miniActionButtonSm,
+              height: AppSizing.miniActionButtonSm,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: colorWhatsApp,
-                borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+                borderRadius: BorderRadius.circular(AppSizing.radiusSm),
               ),
               child: FaIcon(
                 AppIcons.whatsapp,
-                size: AppSizing.iconSm,
+                size: AppSizing.iconXs,
                 color: AppColors.textOnDark,
               ),
             ),
@@ -61,11 +62,11 @@ class LeadCardActions extends StatelessWidget {
         GestureDetector(
           onTap: onVerDetalleTap,
           child: Container(
-            height: AppSizing.miniActionButton,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            height: AppSizing.miniActionButtonSm,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+              borderRadius: BorderRadius.circular(AppSizing.radiusSm),
               border: Border.all(color: colorPrimary),
             ),
             child: Text(

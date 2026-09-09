@@ -53,8 +53,14 @@ class ContactoNegociacionesTab extends StatelessWidget {
     final estadoActual = cubit.state;
     final sigueEnBlanco =
         estadoActual is InfoLeadSuccess && estadoActual.negociacion.idLead == 0;
-    if (sigueEnBlanco && idLeadPrevio != 0) {
-      cubit.load(idLeadPrevio);
+    if (sigueEnBlanco) {
+      if (idLeadPrevio != 0) {
+        cubit.load(idLeadPrevio);
+      } else {
+        // Contacto sin negociación: releer la cabecera — trae la recién
+        // creada, o vuelve al estado "sin negociación" si se canceló.
+        cubit.cargarPorIdContacto(idContacto);
+      }
     }
     if (context.mounted) {
       context.read<NegociacionesCubit>().cargarNegociaciones(idContacto);

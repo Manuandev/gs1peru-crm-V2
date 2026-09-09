@@ -1,6 +1,7 @@
 // lib/features/lead/presentation/widgets/contacto_detalle/contacto_acciones_footer.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -14,6 +15,21 @@ class ContactoAccionesFooter extends StatelessWidget {
   // botón de WhatsApp por completo, no solo lo deshabilita. Mismo criterio
   // que LeadCardActions.mostrarWhatsApp en el listado (list/lead_card.dart).
   bool get _mostrarWhatsApp => lead.idChatCab > 0;
+
+  // Sin negociación (contacto cargado sin ninguna activa) → el footer ofrece
+  // crear una. Mismo patrón que ContactoNegociacionesTab._crearNegociacion.
+  bool get _sinNegociacion => lead.idLead == 0;
+
+  Future<void> _crearNegociacion(BuildContext context) async {
+    final cubit = context.read<InfoLeadCubit>();
+    cubit.prepararNuevaNegociacion();
+    await context.goToEditarLead(idLead: 0, cubit: cubit);
+    if (!context.mounted) return;
+    // Re-lee cabecera + lista desde el SP — si creó, ya trae la negociación;
+    // si canceló, vuelve al mismo estado "sin negociación".
+    cubit.cargarPorIdContacto(lead.idContacto);
+    context.read<NegociacionesCubit>().cargarNegociaciones(lead.idContacto);
+  }
 
   // Mismo cálculo que LeadCard._tiempoChatAbiertoVencido() (list/lead_card.dart)
   // y ChatInputBar._tiempoChatAbiertoVencido() (chat/) — ventana de chat
@@ -79,6 +95,16 @@ class ContactoAccionesFooter extends StatelessWidget {
                   : () => LauncherUtils.abrirTelefono(telefono),
             ),
           ),
+          if (_sinNegociacion) ...[
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: CustomPrimaryButton(
+                text: 'Crear negociación',
+                icon: AppIcons.add,
+                onPressed: () => _crearNegociacion(context),
+              ),
+            ),
+          ],
           // Editar contacto — pendiente hasta que exista la pantalla de edición.
           // const SizedBox(width: AppSpacing.sm),
           // Expanded(

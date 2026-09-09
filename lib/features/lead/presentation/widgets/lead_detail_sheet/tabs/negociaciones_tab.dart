@@ -181,7 +181,7 @@ class _ListaNegociacionesState extends State<_ListaNegociaciones> {
   @override
   Widget build(BuildContext context) {
     if (widget.negociaciones.isEmpty) {
-      return const _EstadoVacio();
+      return _EstadoVacio(onCrear: _crearNegociacion);
     }
 
     final visibles = _visibles;
@@ -313,46 +313,61 @@ class _EstadoVacioFiltro extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EstadoVacio extends StatelessWidget {
-  const _EstadoVacio();
+  // Si viene, se muestra el botón "+ Crear negociación" — desde Conversaciones
+  // también se puede crear la primera negociación de un contacto sin ninguna.
+  final VoidCallback? onCrear;
+
+  const _EstadoVacio({this.onCrear});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: AppSizing.iconXxl,
-              height: AppSizing.iconXxl,
-              decoration: BoxDecoration(
-                color: AppColors.grey100,
-                borderRadius: BorderRadius.circular(AppSizing.radiusXl),
-              ),
-              child: const Icon(
-                AppIcons.negociacion,
-                size: AppSizing.iconXl,
-                color: AppColors.grey400,
-              ),
+    // Scroll: el panel de Conversaciones (ChatLeadPanel) da poca altura a la
+    // pestaña — con el botón "+ Crear negociación" agregado, el Column fijo
+    // desbordaba unos px. Con SingleChildScrollView nunca desborda.
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: AppSizing.iconXxl,
+            height: AppSizing.iconXxl,
+            decoration: BoxDecoration(
+              color: AppColors.grey100,
+              borderRadius: BorderRadius.circular(AppSizing.radiusXl),
             ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Sin negociaciones',
-              style: AppTextStyles.titleSmall.copyWith(
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
+            child: const Icon(
+              AppIcons.negociacion,
+              size: AppSizing.iconXl,
+              color: AppColors.grey400,
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Este contacto aún no tiene negociaciones registradas.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Sin negociaciones',
+            style: AppTextStyles.titleSmall.copyWith(
+              fontWeight: AppTextStyles.weightSemiBold,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            'Este contacto aún no tiene negociaciones registradas.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (onCrear != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            CustomOutlinedButton(
+              text: '+ Crear negociación',
+              onPressed: onCrear,
             ),
           ],
-        ),
+        ],
       ),
     );
   }

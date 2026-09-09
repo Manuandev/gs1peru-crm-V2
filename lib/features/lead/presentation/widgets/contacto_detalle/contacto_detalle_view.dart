@@ -29,6 +29,12 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
   // plano. Solo el primer load real (sin datos previos) muestra el skeleton.
   Negociacion? _ultimoLead;
 
+  // true en cuanto llega el primer InfoLeadSuccess real de este contacto
+  // (tenga o no negociación). Distingue "contacto sin negociación recién
+  // cargado" (idLead 0, _cargaHecha false) del placeholder transitorio de
+  // prepararNuevaNegociacion() (idLead 0, _cargaHecha true).
+  bool _cargaHecha = false;
+
   @override
   void initState() {
     super.initState();
@@ -112,12 +118,17 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
       // NegociacionesLoading y hacía parpadear la lista a "Sin negociaciones"
       // un instante antes de navegar a Editar.
       listener: (context, state) {
-        if (state is InfoLeadSuccess && state.negociacion.idLead != 0) {
-          _ultimoLead = state.negociacion;
-          context.read<NegociacionesCubit>().cargarNegociaciones(
-            state.negociacion.idContacto,
-          );
-        }
+        if (state is! InfoLeadSuccess) return;
+        final n = state.negociacion;
+        if (n.idContacto != widget.idContacto) return;
+        // idLead 0 + ya hubo carga real = placeholder de
+        // prepararNuevaNegociacion() (transitorio, al tocar "Crear
+        // negociación"): no pisar _ultimoLead ni recargar la lista. Un
+        // contacto SIN negociación (primera carga real) sí se toma.
+        if (n.idLead == 0 && _cargaHecha) return;
+        _cargaHecha = true;
+        _ultimoLead = n;
+        context.read<NegociacionesCubit>().cargarNegociaciones(n.idContacto);
       },
       builder: (context, state) {
         if (state is InfoLeadFailure) {
@@ -136,11 +147,14 @@ class _ContactoDetalleViewState extends State<ContactoDetalleView> {
             ),
           );
         }
-        // InfoLeadLoading de un refresh (state no es Success), o el
-        // placeholder en blanco de prepararNuevaNegociacion() (idLead == 0):
-        // en ambos casos se sigue mostrando _ultimoLead en vez del skeleton
-        // o de datos en blanco — ver comentario del listener de arriba.
-        final lead = (state is InfoLeadSuccess && state.negociacion.idLead != 0)
+        // InfoLeadLoading de un refresh, o el placeholder de
+        // prepararNuevaNegociacion() (idLead 0 con _cargaHecha): se sigue
+        // mostrando _ultimoLead. Un contacto sin negociación (idLead 0 en la
+        // primera carga) sí se muestra tal cual — el _ContactoScaffold pinta
+        // estado/campaña/oportunidad vacíos y deja crear una.
+        final lead = (state is InfoLeadSuccess &&
+                state.negociacion.idContacto == widget.idContacto &&
+                !(state.negociacion.idLead == 0 && _cargaHecha))
             ? state.negociacion
             : _ultimoLead;
         if (lead == null) {

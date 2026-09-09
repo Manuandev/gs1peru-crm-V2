@@ -83,8 +83,22 @@ contacto B mientras el `idContacto` emitido era el A → la pestaña Negociacion
   `LD.ID_LEAD DESC` en el `WITHIN GROUP (ORDER BY ...)` de `'LN'` (`CSV_LEADS_LST_APP`) para que,
   cuando un contacto tenga >1 lead con la misma fecha, la lista y la pestaña elijan el mismo #1
   (misma clave: estado '04' al final, fecha desc, id desc).
-- `'LU'` (detalle por `idChatCab`) **no** tenía este `#LeadReciente` — resuelve distinto; no se
-  tocó en esta pasada.
+- **`'LU'` — mismo bug corregido igual (2026-09-09).** El subquery del lead (`LEFT JOIN T_LEAD LD
+  ON LD.ID_LEAD = (...)`) caminaba `T_CONTACTO / T_CONTACTO_NUMERO` crudo por `ID_NUMERO`; ahora
+  es `SELECT TOP 1 LD2.ID_LEAD FROM T_LEAD WHERE ID_CONTACTO = NC.ID_CONTACTO ORDER BY (no-cerrado
+  primero, MAX(FC_C,FC_M) DESC, ID_LEAD DESC)` — misma clave que `#LeadReciente` de `'LS'` y que
+  el `WITHIN GROUP` de `'LN'` (`CSV_LEADS_LST_APP`). Los 3 eligen el mismo lead → lista de chats,
+  pestaña Datos y pestaña Negociaciones coherentes.
+
+### "Último lead" = solo negociaciones ACTIVAS (2026-09-09)
+
+Regla de negocio: los resolvers de "cuál es la negociación representativa/última" de un contacto
+solo consideran `T_LEAD.IB_ACTIVO = 1`. La **lista completa** de negociaciones (`'LN'`) sí muestra
+todas (activas e inactivas — emite `LD.IB_ACTIVO` como campo 21 para que la UI las distinga).
+- `#LeadReciente` (`'LS'`) y el subquery de `'LU'` (`CSV_WHATSAPP_LST_APP`): `AND LD2.IB_ACTIVO = 1`.
+- `#LeadActivo` (`'LS'` unificada) y `#LSP_REPR` (`'LSP'` Seguimiento) de `CSV_LEADS_LST_APP`:
+  `AND ...IB_ACTIVO = 1` (además del `ID_ESTADO <> '04'` que ya tenían).
+- `'DN'` (detalle por contacto) ya filtraba `IB_ACTIVO = 1`. `'LN'` **no** filtra, a propósito.
 
 ## Lista de Conversaciones — retoques de UI (2026-09-09)
 

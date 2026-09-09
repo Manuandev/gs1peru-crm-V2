@@ -62,6 +62,30 @@ activo con la misma fecha, `TOP 1` / `ROW_NUMBER()` devolvía uno distinto entre
 `, NC2.ID_CONTACTO_NUMERO DESC` como 2º criterio en ambos (mismo patrón que ya usan
 `CSV_T_CONTACTO_LST` y otros SPs del repo).
 
+### `'LS'` mostraba el estado de un lead de OTRO contacto (2026-09-09)
+
+Bug reportado: en la lista de Conversaciones un contacto sale "En desarrollo", pero al entrar al
+chat → 3 puntos → Negociaciones sale otra negociación con otro estado, o directamente "sin
+negociaciones". Causa: `#LeadReciente` resolvía el lead caminando `T_LEAD → T_CONTACTO →
+T_CONTACTO_NUMERO CN2` **crudo** (sin `IB_ACTIVO`, sin restringir al contacto que la app usa) y
+`PARTITION BY CN2.ID_NUMERO` — así consideraba leads de **cualquier contacto ligado alguna vez al
+número** y se quedaba con el de fecha más reciente. Pero el campo 00 (`NC.ID_CONTACTO`, el que la
+app manda como `idContacto` al abrir Negociaciones) sale de `#NumeroContacto`, que resuelve **un
+solo** contacto (activo, más reciente). Resultado: la lista mostraba el estado de un lead del
+contacto B mientras el `idContacto` emitido era el A → la pestaña Negociaciones (task `'LN'`, por
+`idContacto`) traía los leads de A (otros, o ninguno).
+- **Fix**: `#LeadReciente` ahora hace `FROM #NumeroContacto NC INNER JOIN CRM.T_LEAD LD2 ON
+  LD2.ID_CONTACTO = NC.ID_CONTACTO` (`PARTITION BY NC.ID_NUMERO`). El lead mostrado pertenece
+  siempre al mismo contacto que la app usa. Si ese contacto no tiene leads, `#LeadReciente` no
+  trae fila → estado vacío en la lista (coherente con "sin negociaciones"), en vez de un estado
+  ajeno.
+- Se agregó `LD2.ID_LEAD DESC` como último desempate en `#LeadReciente` y el mismo
+  `LD.ID_LEAD DESC` en el `WITHIN GROUP (ORDER BY ...)` de `'LN'` (`CSV_LEADS_LST_APP`) para que,
+  cuando un contacto tenga >1 lead con la misma fecha, la lista y la pestaña elijan el mismo #1
+  (misma clave: estado '04' al final, fecha desc, id desc).
+- `'LU'` (detalle por `idChatCab`) **no** tenía este `#LeadReciente` — resuelve distinto; no se
+  tocó en esta pasada.
+
 ## Lista de Conversaciones — retoques de UI (2026-09-09)
 
 - **Título** (`chat_list_view.dart`): "Mis conversaciones" → **"Conversaciones"** (igual que el

@@ -233,13 +233,14 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
 
   // ── Parche por edición local ───────────────────────────────────────────────
 
-  void _onLeadActualizado(
+  Future<void> _onLeadActualizado(
     SeguimientoLeadActualizado event,
     Emitter<SeguimientoEstado> emit,
-  ) {
+  ) async {
     final s = state;
     if (s is! SeguimientoCargado) return;
 
+    // 1) Parche instantáneo de la fila ya visible (sin esperar a la red).
     final items = s.items
         .map(
           (c) => c.contacto.idContacto == event.negociacion.idContacto
@@ -248,6 +249,45 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
         )
         .toList();
     emit(s.copyWith(items: items));
+
+    // 2) Recarga silenciosa de la página 1. El parche de arriba no alcanza:
+    //    los contadores (Nuevos/En desarrollo/Propuesta) y el "N negociaciones"
+    //    de cada card (totalLeads = CL.CT_LEADS) vienen del SP y no se pueden
+    //    recalcular en cliente, y una negociación recién creada puede sumar un
+    //    contacto que no estaba en la lista. No se muestra skeleton: la lista
+    //    parcheada se queda hasta que llega la respuesta. Vuelve a la página 1
+    //    (se pierde el scroll más allá de la 1ª página) — es el único modo de
+    //    traer contadores/badge frescos.
+    final epoca = ++_epoca;
+    _cargandoPagina = false;
+    try {
+      final pagina = await _getPagina(
+        filtro: _filtro,
+        cursorFecha: null,
+        cursorIdContacto: null,
+        tamanio: SeguimientoRemoteDatasource.tamanioPrimera,
+        fcDesde: _filtroAvanzado.desdeEfectivo,
+        fcHasta: _filtroAvanzado.hastaEfectivo,
+        idCampania: _filtroAvanzado.idCampania,
+        idOportunidad: _filtroAvanzado.idOportunidad,
+      );
+      if (epoca != _epoca || emit.isDone) return;
+      emit(
+        SeguimientoCargado(
+          items: pagina.items,
+          filtro: _filtro,
+          conteos: pagina.conteos ?? const SeguimientoConteos(),
+          filtroAvanzado: _filtroAvanzado,
+          recargandoLista: false,
+          finLista:
+              pagina.items.length < SeguimientoRemoteDatasource.tamanioPrimera,
+          cursorFecha: pagina.cursorFecha,
+          cursorIdContacto: pagina.cursorIdContacto,
+        ),
+      );
+    } catch (_) {
+      // Recarga silenciosa: si falla, se queda la lista parcheada, sin ruido.
+    }
   }
 
   String _mensajeError(Object e) =>

@@ -1,5 +1,7 @@
 // lib/features/lead/presentation/widgets/lead_detail_sheet/tabs/historial_tab.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -25,10 +27,33 @@ class _HistorialTabState extends State<HistorialTab>
   // null = Todos
   TipoActor? _filtro;
 
+  StreamSubscription<LeadUpdate>? _updateSub;
+
   @override
   void initState() {
     super.initState();
     _cargar();
+
+    // Crear/editar una negociación escribe una fila en T_LEAD_SEGUIMIENTO
+    // ("Negociación creada/editada"). Sin esto, el historial se quedaba con
+    // lo que trajo al abrir la pantalla hasta salir y volver a entrar.
+    // Recarga en silencio (no pierde la lista actual). Vale igual para
+    // ContactoDetalle (Seguimiento) y ChatLeadPanel (Conversaciones).
+    _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
+      final n = update.updatedLead;
+      if (!mounted || n is! Negociacion) return;
+      if (n.idContacto != widget.idContacto) return;
+      context.read<HistorialLeadCubit>().cargarHistorialPorContacto(
+        widget.idContacto,
+        silencioso: true,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _updateSub?.cancel();
+    super.dispose();
   }
 
   void _cargar() {

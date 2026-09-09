@@ -73,6 +73,29 @@ pantalla: `SeguimientoCargado.recargandoLista` mantiene chips y contadores monta
 Fechas en ISO 126 (`yyyy-MM-ddTHH:mm:ss`), `''` = no aplica. El 5º campo de la cabecera de la
 1ª página pasó de repetir `total` a ser `activos` (`@LSP_ACT`).
 
+### Refrescar la lista + el historial tras crear/editar una negociación (2026-09-09)
+
+Pedido de negocio: al volver de crear/editar una negociación, la lista de Seguimiento seguía con
+los contadores y el badge "N negociaciones" viejos, y el Historial no mostraba el evento nuevo.
+
+- **`SeguimientoBloc._onLeadActualizado`** (dispara al llegar un `LeadUpdate`): además del parche
+  en memoria de la fila visible, ahora hace una **recarga silenciosa de la página 1** (sin
+  skeleton — la lista parcheada se queda hasta que llega la respuesta). Los contadores
+  (`Nuevos`/`En desarrollo`/`Propuesta`) y el `totalLeads` (`CL.CT_LEADS`, el "N negociaciones"
+  de cada `LeadCard`) vienen 100% del SP y no se pueden recalcular en cliente; una negociación
+  recién creada además puede sumar un contacto nuevo a la lista. Costo: se vuelve a la página 1
+  (se pierde el scroll más allá de la 1ª). Bumpea `_epoca` (descarta un fetch de página
+  siguiente en vuelo). Si la recarga falla, se queda la lista parcheada, sin ruido.
+- **`HistorialTab`** ahora se suscribe a `LeadUpdateNotifier` en `initState` y recarga el
+  historial **en silencio** (`HistorialLeadCubit.cargarHistorialPorContacto(..., silencioso:
+  true)` — param nuevo: no emite `HistorialLeadLoading` ni `Error` si ya hay `Success`) cuando el
+  `updatedLead` es una `Negociacion` de su mismo `idContacto`. Crear/editar una negociación
+  escribe una fila `"Negociación creada/editada"` en `T_LEAD_SEGUIMIENTO` (ver
+  `CSV_LEADS_CUD_APP`), antes solo aparecía saliendo y volviendo a entrar. Aplica igual a
+  `ChatLeadPanel` (Conversaciones), que reusa el widget. `ContactoDetalleView._refrescar()` NO
+  agrega el historial (lo maneja el propio `HistorialTab`, evita doble fetch en el camino de
+  edición).
+
 ## Task 'NEG' — datos mínimos para prellenar el wizard de Solicitudes (2026-08-12)
 `CRM.CSV_LEADS_LST_APP`, task nuevo — reemplaza el uso de `GetLeadDetalleUseCase` (task `'DT'`)
 para el caso puntual de "traer una negociación para prellenar/recuperar datos en el wizard de

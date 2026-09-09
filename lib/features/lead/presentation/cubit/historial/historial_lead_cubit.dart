@@ -13,15 +13,26 @@ class HistorialLeadCubit extends Cubit<HistorialLeadState> {
   }) : _obtenerHistorialPorContactoUseCase = obtenerHistorialPorContactoUseCase,
        super(const HistorialLeadInitial());
 
-  Future<void> cargarHistorialPorContacto(int idContacto) async {
-    emit(const HistorialLeadLoading());
+  /// [silencioso]: recarga en segundo plano (ej. tras crear/editar una
+  /// negociación, que escribe una fila en T_LEAD_SEGUIMIENTO) — conserva la
+  /// lista ya visible en vez de mostrar el spinner de pantalla completa, y si
+  /// la red falla no rompe la vista con un error.
+  Future<void> cargarHistorialPorContacto(
+    int idContacto, {
+    bool silencioso = false,
+  }) async {
+    if (!silencioso || state is! HistorialLeadSuccess) {
+      emit(const HistorialLeadLoading());
+    }
     try {
       final eventos = await _obtenerHistorialPorContactoUseCase.call(
         idContacto,
       );
       emit(HistorialLeadSuccess(eventos: eventos));
     } catch (e) {
-      emit(HistorialLeadError(mensaje: e.toString()));
+      if (!silencioso || state is! HistorialLeadSuccess) {
+        emit(HistorialLeadError(mensaje: e.toString()));
+      }
     }
   }
 }

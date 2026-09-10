@@ -483,9 +483,18 @@ proyecto).
     `idContacto`. Mismo síntoma raíz que ya se había corregido para leads (`CSV_LEADS_LST_APP`,
     ver "Migración de ancla ID_NUMERO → ID_CONTACTO" más abajo) — acá faltaba aplicar el mismo
     criterio.
-    - **SQL** (`CRM.CSV_CONTACTO_LST_APP.sql`, repo aparte — este archivo es **UTF-8 sin BOM**,
-      a diferencia de `CSV_CONTACTO_CUD_APP.sql` que es UTF-16LE con BOM; cualquier edición
-      futura debe preservar la codificación de cada uno o SSMS los muestra corruptos): task
+    - **⚠️ Este cambio SQL quedó documentado en 2026-08-03 pero NUNCA se aplicó al `.sql` — se
+      aplicó de verdad el 2026-09-09.** Hasta esa fecha el `'DS'` desplegado seguía leyendo
+      `field1` como `@ID_NUMERO` mientras Flutter mandaba el `idContacto` → `WHERE NC.ID_NUMERO =
+      <un idContacto>` no matcheaba nada → `EditContactoSimple` abría SIEMPRE en blanco (bug
+      reportado en vivo). Corregido: `SELECT @ID_CONTACTO = field1`, guard `IF NOT EXISTS(SELECT
+      1 FROM CRM.T_CONTACTO ...)`, y `@ID_NUMERO` resuelto del contacto (`TOP 1 ... WHERE
+      NC.ID_CONTACTO = @ID_CONTACTO AND NC.IB_ACTIVO = 1 ORDER BY FC_USUARIO_C DESC,
+      ID_CONTACTO_NUMERO DESC`). Flutter no cambió (ya mandaba `idContacto`). Pendiente `ALTER
+      PROCEDURE`.
+    - **OJO — `CRM.CSV_CONTACTO_LST_APP.sql` es UTF-16LE CON BOM** (verificado 2026-09-09), no
+      "UTF-8 sin BOM" como decía esta nota. Preservar el BOM en cualquier edición.
+    - **SQL** (repo aparte): task
       `'DS'` ahora recibe `@ID_CONTACTO` directo como `field1` (antes `@ID_NUMERO`) — valida que
       el contacto exista (`IF NOT EXISTS ... SELECT ''; RETURN`, antes `IF (@ID_CONTACTO IS
       NULL)`) y resuelve el "número vinculado activo más reciente" (`@ID_NUMERO`, puede quedar

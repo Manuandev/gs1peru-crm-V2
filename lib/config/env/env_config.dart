@@ -15,9 +15,9 @@ class EnvConfig {
     switch (current) {
       case Environment.dev:
       case Environment.qa:
-        return '1.0.14';
+        return '1.0.15';
       case Environment.prod:
-        return '1.0.0.4';
+        return '1.0.0.5';
     }
   }
 

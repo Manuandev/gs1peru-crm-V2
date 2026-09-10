@@ -63,7 +63,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     required String pasoOrigen,
     required List<TipoParticipanteItem> tiposParticipante,
     int? cantidadEsperada,
-    double precioTotalLead = 0,
+    required TotalesSolicitud totales,
   }) => _remote.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -77,7 +77,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     pasoOrigen: pasoOrigen,
     tiposParticipante: tiposParticipante,
     cantidadEsperada: cantidadEsperada,
-    precioTotalLead: precioTotalLead,
+    totales: totales,
   );
 
   @override

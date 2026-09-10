@@ -11,6 +11,86 @@ import 'package:app_crm/index_dependencies.dart'; // context.read, PlatformFile
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 
+/// Inversión / IGV / Importe total de la solicitud — punto ÚNICO que usan el
+/// footer del paso 2 (`ResumenInversion`), el Resumen del paso 4
+/// (`SeccionResumenComercial`), el aviso a `SolicitudUpdateNotifier` y el
+/// guardado (DC_IMPORTE/DC_IGV/DC_IMPORTE_TOTAL, ver
+/// [guardarSolicitudDesdeWizard]). Antes este mismo cálculo estaba copiado en
+/// esos 4 lugares.
+///
+/// **Solicitud ya guardada → se jalan los montos guardados, no se
+/// recalculan.** Si hay `totalesGuardados` (task 'DT' o último guardado
+/// exitoso) y el dinero de los participantes no cambió — la lista está igual
+/// a la cargada, o cambió algo que no mueve la inversión (un nombre
+/// re-sincronizado desde el paso 1, un Invitado agregado) — se devuelven
+/// esos montos TAL CUAL. Recién cuando la inversión cambia (se edita un
+/// importe, un Pagante pasa a Invitado o viceversa, se agrega/quita un
+/// Pagante) se recalcula. Bug real 2026-09-10: al revisar una solicitud
+/// (web: Inversión 93.22 / IGV 16.78 / Total 110.00) la app mostraba IGV
+/// 616.78 / Total 710.00 — con la solicitud "completa", el total se fijaba en
+/// el precio ACTUAL de la negociación de origen (710, recuperado por
+/// `idLeadOrigen`), que ya no tenía nada que ver con lo guardado, y el IGV
+/// salía de restar. Y cualquier "Siguiente" que guardara esa solicitud
+/// grababa ese 710 en la base.
+///
+/// Al recalcular: Inversión + IGV redondeado sobre el total, y el IGV sale de
+/// restarle la Inversión a ese total (el centavo se absorbe ahí, nunca en la
+/// Inversión). Si la solicitud viene de una negociación y ya tiene todos sus
+/// participantes, el total se cuadra al precio pactado (fix 2026-08-14)
+/// **solo si la diferencia es de redondeo** — hasta 1 centavo por
+/// participante. Pedido del usuario 2026-09-10: negociación 400 para 2 →
+/// 169.49 c/u da 400.00; si el asesor baja uno a 168.49 (1 sol) ya no se
+/// fuerza 400.00 (antes el IGV absorbía todo y quedaba 62.02) — queda
+/// 337.98 / 60.84 / 398.82. Esto también evita forzar el precio pactado
+/// cuando la negociación cambió después de guardar la solicitud, o cuando
+/// hay Invitados (no suman a la Inversión pero sí cuentan para "completa").
+TotalesSolicitud calcularTotalesSolicitud({
+  required SolicitudFormState formState,
+  required ParticipantesState participantesState,
+  required List<TipoParticipanteItem> tiposParticipante,
+  required double igvPorcentaje,
+}) {
+  final inversion = double.parse(
+    participantesState.totalPagantes(tiposParticipante).toStringAsFixed(2),
+  );
+
+  final guardados = formState.totalesGuardados;
+  if (guardados != null &&
+      (!participantesState.huboCambios ||
+          (inversion - guardados.inversion).abs() < 0.005)) {
+    return guardados;
+  }
+
+  final importeNormal = double.parse(
+    (inversion + inversion * igvPorcentaje / 100).toStringAsFixed(2),
+  );
+
+  final cantidadEsperada = formState.cantidadEsperada;
+  final completo =
+      cantidadEsperada != null &&
+      cantidadEsperada > 0 &&
+      participantesState.participantes.length >= cantidadEsperada &&
+      formState.precioTotalLead > 0;
+  // Cada importe sugerido se redondea a 2 decimales, así que la suma puede
+  // desviarse del precio pactado a lo más ~1 centavo por participante — más
+  // que eso ya es un importe editado a mano (u otro precio), no redondeo.
+  // El +0.0001 es solo margen de punto flotante.
+  final toleranciaRedondeo =
+      0.01 * participantesState.participantes.length + 0.0001;
+  final cuadrarAlPactado =
+      completo &&
+      (importeNormal - formState.precioTotalLead).abs() <= toleranciaRedondeo;
+  final importeTotal = cuadrarAlPactado
+      ? double.parse(formState.precioTotalLead.toStringAsFixed(2))
+      : importeNormal;
+  final igv = double.parse((importeTotal - inversion).toStringAsFixed(2));
+  return TotalesSolicitud(
+    inversion: inversion,
+    igv: igv,
+    importeTotal: importeTotal,
+  );
+}
+
 Future<CrudResult> guardarSolicitudDesdeWizard(
   BuildContext context, {
   String idLead = '',
@@ -47,7 +127,8 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         : (esActualizacion ? 'Actualizando solicitud...' : 'Generando solicitud...'),
   );
 
-  final participantes = context.read<ParticipantesCubit>().state.participantes;
+  final participantesState = context.read<ParticipantesCubit>().state;
+  final participantes = participantesState.participantes;
   final catalogState = context.read<CatalogsBloc>().state;
   final igvPorcentaje = catalogState is CatalogsLoaded
       ? catalogState.igvPorcentaje
@@ -58,6 +139,15 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   final tiposParticipante = catalogState is CatalogsLoaded
       ? catalogState.tiposParticipante
       : const <TipoParticipanteItem>[];
+
+  // Mismo cálculo que se muestra en pantalla (footer del paso 2 / Resumen)
+  // — ver calcularTotalesSolicitud() arriba.
+  final totales = calcularTotalesSolicitud(
+    formState: formState,
+    participantesState: participantesState,
+    tiposParticipante: tiposParticipante,
+    igvPorcentaje: igvPorcentaje,
+  );
 
   final result =
       await GuardarSolicitudUseCase(context.read<SolicitudRepository>()).call(
@@ -73,7 +163,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         pasoOrigen: pasoOrigen,
         tiposParticipante: tiposParticipante,
         cantidadEsperada: formState.cantidadEsperada,
-        precioTotalLead: formState.precioTotalLead,
+        totales: totales,
       );
 
   // La primera vez que se crea (numSol venía vacío), el backend genera el
@@ -83,6 +173,12 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   if (result case CrudOk(:final data) when data != null && data.isNotEmpty) {
     formCubit.actualizarNumSol(data);
   }
+
+  // Lo que se acaba de mandar ES lo que quedó guardado — pasa a ser la nueva
+  // línea base de calcularTotalesSolicitud(). Sin esto, tras un guardado que
+  // sí cambió importes (marcarSinCambios() deja la lista "sin cambios"), se
+  // volverían a mostrar los montos viejos que trajo el task 'DT'.
+  if (result is CrudOk) formCubit.actualizarTotalesGuardados(totales);
 
   return result;
 }

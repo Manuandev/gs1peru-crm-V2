@@ -14,54 +14,22 @@ class SeccionResumenComercial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Desde el 2026-07-16 cada importe de participante ya es la BASE sin
-    // IGV (ver _importeFijo en solicitud_participantes_view.dart), así que
-    // la suma de importes ES la inversión directamente — el IGV se SUMA
-    // encima para el importe total (revierte el fix del 2026-07-14, donde
-    // el importe venía con IGV incluido y había que extraerlo). Desde el
-    // 2026-07-17 la suma es solo de participantes Pagantes — un Invitado no
-    // paga, ver ParticipantesState.totalPagantes.
+    // Mismo cálculo que el footer del paso 2 (ResumenInversion) y que el
+    // guardado — ver calcularTotalesSolicitud() (solicitud_guardar_helper.
+    // dart): en una solicitud ya guardada cuyo dinero no cambió muestra los
+    // montos del backend tal cual (bug real 2026-09-10); si no, precio
+    // pactado de la negociación (solicitud completa) o Inversión + IGV.
     final catalogState = context.watch<CatalogsBloc>().state;
-    final tiposParticipante = catalogState is CatalogsLoaded
-        ? catalogState.tiposParticipante
-        : const <TipoParticipanteItem>[];
-    final participantesState = context.watch<ParticipantesCubit>().state;
-    final inversion = participantesState.totalPagantes(tiposParticipante);
-    final igvPorcentaje = catalogState is CatalogsLoaded
-        ? catalogState.igvPorcentaje
-        : 0.0;
-    final formState = context.watch<SolicitudFormCubit>().state;
-    final cantidadEsperada = formState.cantidadEsperada;
-    final completo =
-        cantidadEsperada != null &&
-        cantidadEsperada > 0 &&
-        participantesState.participantes.length >= cantidadEsperada &&
-        formState.precioTotalLead > 0;
-
-    double importeTotal;
-    if (completo) {
-      // Solicitud completa (todos los participantes esperados agregados) y
-      // viniendo de una negociación con precio ya pactado — "Importe total"
-      // se fija DIRECTO en ese precio, no se recalcula con
-      // `inversion × igv%` — mismo fix que ResumenInversion
-      // (solicitud_participantes_resumen.dart, paso 2, 2026-08-14): ese
-      // cálculo puede caer justo en un empate de redondeo (ej. inversión
-      // 5084.75 al 18% cae en 6000.005 exacto) que según el punto flotante
-      // sube a 6000.01 en vez de calzar contra los 6000.00 pactados. El IGV
-      // de abajo sale de restarle la Inversión a este total ya fijo — el
-      // centavo de diferencia se absorbe siempre ahí, nunca en la
-      // Inversión ni en el precio pactado.
-      importeTotal = formState.precioTotalLead;
-    } else {
-      // Todavía no está completa (o no viene de una negociación) — sin un
-      // precio pactado contra el cual fijar el total, se arma con el
-      // cálculo normal: IGV redondeado sobre el total, no por separado.
-      final igvSinRedondear = inversion * igvPorcentaje / 100;
-      importeTotal = double.parse(
-        (inversion + igvSinRedondear).toStringAsFixed(2),
-      );
-    }
-    final igv = double.parse((importeTotal - inversion).toStringAsFixed(2));
+    final totales = calcularTotalesSolicitud(
+      formState: context.watch<SolicitudFormCubit>().state,
+      participantesState: context.watch<ParticipantesCubit>().state,
+      tiposParticipante: catalogState is CatalogsLoaded
+          ? catalogState.tiposParticipante
+          : const <TipoParticipanteItem>[],
+      igvPorcentaje: catalogState is CatalogsLoaded
+          ? catalogState.igvPorcentaje
+          : 0.0,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +54,7 @@ class SeccionResumenComercial extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    NumberFormatUtils.formatMonto(inversion),
+                    NumberFormatUtils.formatMonto(totales.inversion),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: AppTextStyles.weightSemiBold,
@@ -114,7 +82,7 @@ class SeccionResumenComercial extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    NumberFormatUtils.formatMonto(igv),
+                    NumberFormatUtils.formatMonto(totales.igv),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: AppTextStyles.weightSemiBold,
@@ -151,7 +119,7 @@ class SeccionResumenComercial extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      NumberFormatUtils.formatMonto(importeTotal),
+                      NumberFormatUtils.formatMonto(totales.importeTotal),
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: AppTextStyles.weightBold,

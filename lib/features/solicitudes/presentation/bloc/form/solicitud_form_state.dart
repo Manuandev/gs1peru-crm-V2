@@ -198,6 +198,27 @@ class DatosFacturacion extends Equatable {
   ];
 }
 
+/// Inversión / IGV / Importe total de la solicitud — lo que muestran el
+/// footer del paso 2 (`ResumenInversion`) y el Resumen
+/// (`SeccionResumenComercial`), y lo que se guarda como DC_IMPORTE / DC_IGV /
+/// DC_IMPORTE_TOTAL. Siempre se arma con `calcularTotalesSolicitud()`
+/// (`solicitud_guardar_helper.dart`) — un solo cálculo para pantalla y
+/// guardado, así no pueden desincronizarse.
+class TotalesSolicitud extends Equatable {
+  final double inversion;
+  final double igv;
+  final double importeTotal;
+
+  const TotalesSolicitud({
+    required this.inversion,
+    required this.igv,
+    required this.importeTotal,
+  });
+
+  @override
+  List<Object?> get props => [inversion, igv, importeTotal];
+}
+
 class SolicitudFormState {
   /// 'juridica' | 'natural' — compartido por los pasos 1 (solicitante) y 3
   /// (facturación): ambos representan el mismo dato, no dos independientes.
@@ -279,6 +300,14 @@ class SolicitudFormState {
   final String tipoDocIdLead;
   final String numDocLead;
 
+  /// Inversión/IGV/Importe total tal como están GUARDADOS en el backend
+  /// (DC_IMPORTE/DC_IGV/DC_IMPORTE_TOTAL del task 'DT', o lo último que se
+  /// mandó en un guardado exitoso de esta sesión) — `null` en una solicitud
+  /// nueva que todavía no se guardó. Mientras el dinero de los participantes
+  /// no cambie, `calcularTotalesSolicitud()` devuelve esto tal cual en vez de
+  /// recalcular — ver el porqué ahí (bug real 2026-09-10).
+  final TotalesSolicitud? totalesGuardados;
+
   /// Snapshot de `tipoPersona`/`solicitante`/`facturacion`/`archivoVoucher`/
   /// `archivoOC` tal como quedaron la última vez que se cargó (task 'DT') o
   /// se guardó con éxito esta solicitud — `SolicitudFormCubit.marcarSinCambios()`
@@ -320,6 +349,7 @@ class SolicitudFormState {
     this.cargoLead = '',
     this.tipoDocIdLead = '',
     this.numDocLead = '',
+    this.totalesGuardados,
     this.tipoPersonaCargado = 'juridica',
     this.solicitanteCargado,
     this.facturacionCargado,
@@ -368,6 +398,7 @@ class SolicitudFormState {
     String? cargoLead,
     String? tipoDocIdLead,
     String? numDocLead,
+    TotalesSolicitud? totalesGuardados,
     String? tipoPersonaCargado,
     DatosSolicitante? solicitanteCargado,
     DatosFacturacion? facturacionCargado,
@@ -402,6 +433,7 @@ class SolicitudFormState {
     cargoLead: cargoLead ?? this.cargoLead,
     tipoDocIdLead: tipoDocIdLead ?? this.tipoDocIdLead,
     numDocLead: numDocLead ?? this.numDocLead,
+    totalesGuardados: totalesGuardados ?? this.totalesGuardados,
     tipoPersonaCargado: tipoPersonaCargado ?? this.tipoPersonaCargado,
     solicitanteCargado: solicitanteCargado ?? this.solicitanteCargado,
     facturacionCargado: limpiarFacturacionCargado

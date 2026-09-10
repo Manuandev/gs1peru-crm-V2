@@ -517,6 +517,19 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       if (!mounted) return;
       context.read<ParticipantesCubit>().cargarParticipantes(participantes);
 
+      // Montos ya guardados (DC_IMPORTE/DC_IGV/DC_IMPORTE_TOTAL) — al
+      // revisar/editar se muestran y se vuelven a mandar TAL CUAL mientras
+      // el dinero de los participantes no cambie, en vez de recalcularlos
+      // contra el precio actual de la negociación (bug real 2026-09-10, ver
+      // calcularTotalesSolicitud() en solicitud_guardar_helper.dart).
+      context.read<SolicitudFormCubit>().actualizarTotalesGuardados(
+        TotalesSolicitud(
+          inversion: detalle.dcImporte,
+          igv: detalle.dcIgv,
+          importeTotal: detalle.dcImporteTotal,
+        ),
+      );
+
       // Recupera la negociación de origen (si existe) para que "Nuevo
       // participante" pueda seguir sugiriendo el importe correcto aunque se
       // esté editando una solicitud ya guardada — antes esto se perdía

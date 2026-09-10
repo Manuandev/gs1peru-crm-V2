@@ -114,22 +114,14 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
           : 0.0;
       final participantesState = context.read<ParticipantesCubit>().state;
 
-      // Mismo cálculo que SeccionResumenComercial — precio pactado si la
-      // solicitud está completa, si no Inversión + IGV redondeado.
-      final inversion = participantesState.totalPagantes(tiposParticipante);
-      final completo =
-          formState.cantidadEsperada != null &&
-          formState.cantidadEsperada! > 0 &&
-          participantesState.participantes.length >=
-              formState.cantidadEsperada! &&
-          formState.precioTotalLead > 0;
-      final montoTotal = completo
-          ? formState.precioTotalLead
-          : double.parse(
-              (inversion + (inversion * igvPorcentaje / 100)).toStringAsFixed(
-                2,
-              ),
-            );
+      // Mismo cálculo que SeccionResumenComercial y que el guardado — ver
+      // calcularTotalesSolicitud() (solicitud_guardar_helper.dart).
+      final montoTotal = calcularTotalesSolicitud(
+        formState: formState,
+        participantesState: participantesState,
+        tiposParticipante: tiposParticipante,
+        igvPorcentaje: igvPorcentaje,
+      ).importeTotal;
 
       if (formState.solicitante != null) {
         SolicitudUpdateNotifier.instance.notify(

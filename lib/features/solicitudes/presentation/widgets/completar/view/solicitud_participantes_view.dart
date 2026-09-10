@@ -384,12 +384,14 @@ class _SolicitudParticipantesViewState
                     horizontal: AppSpacing.sm,
                   ),
                   child: ResumenInversion(
-                    total: state.totalPagantes(tiposParticipante),
+                    totales: calcularTotalesSolicitud(
+                      formState: formState,
+                      participantesState: state,
+                      tiposParticipante: tiposParticipante,
+                      igvPorcentaje: igvPorcentaje,
+                    ),
                     igvPorcentaje: igvPorcentaje,
                     monedaSimbolo: monedaSimbolo,
-                    precioTotalNegociacion: formState.precioTotalLead,
-                    cantidadEsperada: cantidadEsperada,
-                    cantidadActual: state.participantes.length,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),

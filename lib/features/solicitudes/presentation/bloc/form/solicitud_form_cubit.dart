@@ -32,6 +32,13 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
   /// nueva, con el NUMSOL que generó el backend.
   void actualizarNumSol(String numSol) => emit(state.copyWith(numSol: numSol));
 
+  /// Registra los totales que quedaron guardados en el backend — llamado al
+  /// cargar una solicitud existente (`_cargarDetalle()`, con los DC_* del
+  /// task 'DT') y tras cada guardado exitoso (`guardarSolicitudDesdeWizard()`,
+  /// con lo que se acaba de mandar). Ver `calcularTotalesSolicitud()`.
+  void actualizarTotalesGuardados(TotalesSolicitud totales) =>
+      emit(state.copyWith(totalesGuardados: totales));
+
   /// Bloquea cantidad/importe/moneda del wizard a los valores ya definidos
   /// en la negociación de origen — llamado una sola vez, al crear una
   /// solicitud nueva desde "Generar solicitud" (nunca al editar una ya

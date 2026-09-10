@@ -42,7 +42,7 @@ abstract class SolicitudRepository {
     required String pasoOrigen,
     required List<TipoParticipanteItem> tiposParticipante,
     int? cantidadEsperada,
-    double precioTotalLead = 0,
+    required TotalesSolicitud totales,
   });
 
   Future<bool> guardarArchivo({

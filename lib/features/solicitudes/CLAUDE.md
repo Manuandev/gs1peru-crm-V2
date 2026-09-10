@@ -1,5 +1,103 @@
 # Solicitudes Feature
 
+## El total solo se cuadra al precio pactado si la diferencia es de redondeo (2026-09-10)
+
+Pregunta del usuario: negociación de 400 para 2 participantes — ambos entran con el sugerido
+(169.49), pero si el asesor cambia el importe de uno (1 sol, 10 soles), ¿qué pasa? Con la regla del
+2026-08-14 ("solicitud completa → Importe total = `precioTotalLead`") el total seguía clavado en
+400.00 y el IGV absorbía TODA la diferencia (baja 1 sol → IGV 62.02; baja 10 → IGV 71.02) — IGV
+falso. Mismo defecto de fondo que "la negociación cambió después de guardar" (710 vs 110) y que
+"Invitados en una negociación completa" (no suman a la Inversión pero sí cuentan para "completa" →
+total 354 con inversión 200 → IGV 154).
+
+- **Fix** (`calcularTotalesSolicitud()`, `solicitud_guardar_helper.dart` — punto único, aplica
+  igual en pantalla y en el guardado): siempre se calcula `importeNormal = round(Inversión × (1 +
+  igv%))`; se cuadra al precio pactado solo si la solicitud está completa **y**
+  `|importeNormal − precioTotalLead| ≤ 0.01 × N° de participantes` (el redondeo a 2 decimales de
+  cada importe sugerido desvía a lo más ~1 centavo por participante). Si no, queda `importeNormal`.
+- Ejemplos (IGV 18%), negociación 400 para 2: 169.49 + 169.49 → 338.98 / 61.02 / 400.00 ·
+  168.49 + 169.49 → 337.98 / 60.84 / 398.82 · 159.49 + 169.49 → 328.98 / 59.22 / 388.20 ·
+  170.49 + 169.49 → 339.98 / 61.20 / 401.18. Negociación 425 para 2: 180.08 + 180.08 → normal
+  424.99, se cuadra a 425.00 (IGV 64.84). Un cambio de 1 centavo (169.48 + 169.49 → normal 399.98)
+  todavía cae dentro de la tolerancia y se cuadra a 400.00.
+- No cambió la regla "solicitud ya guardada sin cambios de plata → se jalan los montos guardados"
+  (sección de más abajo) — esto solo aplica cuando se recalcula.
+
+## Bug real — "No se pudo cargar la solicitud: La solicitud no existe." al abrir el wizard (2026-09-10)
+
+Reportado por el usuario (screenshot: paso 1 vacío + snackbar de error). El Detalle (`'DV'`) sí abría
+la solicitud; el wizard no.
+
+- **Causa**: el task `'DT'` de `CRM.CSV_SOLICITUD_LST_APP` (el que rehidrata el wizard) hacía
+  `INNER JOIN EVT.T_TECMSOLINSCRIPCION01_FACTURACION`. Una solicitud sin fila de facturación no
+  devolvía nada → `ApiEmpty` → `AppException('La solicitud no existe.')` en
+  `getSolicitudDetalle()` → catch de `_cargarDetalle()`. `'DV'` ya usaba `LEFT JOIN`, por eso el
+  Detalle sí cargaba.
+- **Cuáles no tienen esa fila**: las creadas **fuera de la app** — el CUD de la app
+  (`CSV_SOLICITUD_CUD_APP`, task `'U'`, rama de creación) siempre la inserta. Empezaron a verse en
+  la lista de la app el 2026-09-09 (fix del `'LSP'`, `INNER`→`LEFT JOIN` a facturación, ver más
+  abajo); antes quedaban ocultas.
+- **Fix aplicado en el `.sql`** (UTF-16LE+BOM preservado, con comentario en la misma línea):
+  `'DT'` pasó a `LEFT JOIN`. Los campos `TC.*` llegan `NULL` → `CONCAT` los vuelve `''` →
+  `SolicitudDetalleModel.sinFacturacion == true` → el paso 3 arranca con sus defaults. Flutter no
+  cambió. ⚠️ Pendiente `ALTER PROCEDURE` en SSMS.
+- ⚠️ **Pendiente, NO aplicado (el usuario pidió solo el INNER→LEFT)**: la rama de edición del CUD
+  (`'U'`, `ELSE`) solo hace `UPDATE EVT.T_TECMSOLINSCRIPCION01_FACTURACION ... WHERE NUMSOL =
+  @NUMSOL` — para estas solicitudes afecta 0 filas, así que la facturación que el asesor complete
+  en el paso 3 **no se guarda** (tampoco el `UPDATE ... MONEDA` de más abajo). Propuesta ya
+  armada: `IF NOT EXISTS (...) INSERT` con los mismos valores que la rama de creación, justo antes
+  de ese `UPDATE`.
+- `'LS'` (header de `SolicitudDetalleBloc`) sigue con `INNER JOIN` a facturación — no bloquea, cae
+  al `Solicitud` de navegación (ver sección del 2026-09-09).
+
+## Bug real — al revisar/editar una solicitud ya guardada, Inversión/IGV/Total salían recalculados contra la negociación (2026-09-10)
+
+Reportado por el usuario con screenshots de la misma solicitud: la web mostraba **Inversión 93.22 /
+IGV 16.78 / Importe total 110.00** (lo guardado); la app (paso 2 de "Revisar solicitud") mostraba
+**Inversión 93.22 / IGV 616.78 / Importe total 710.00**.
+
+- **Causa**: al reabrir una solicitud, `_cargarDetalle()` recupera la negociación de origen
+  (`idLeadOrigen` → task `'NEG'`) y siembra `precioTotalLead` con el precio **actual** de esa
+  negociación (710). Con 1 de 1 participantes la solicitud queda "completa", así que
+  `ResumenInversion`/`SeccionResumenComercial` (fix del 2026-08-14) fijaban el Importe total en
+  ese precio y sacaban el IGV restando (710 − 93.22 = 616.78). Los montos reales que ya trae el
+  task `'DT'` (`DC_IMPORTE`/`DC_IGV`/`DC_IMPORTE_TOTAL` → `SolicitudDetalleModel.dcImporte`/
+  `dcIgv`/`dcImporteTotal`, `campos[32-34]`) se parseaban pero **nadie los usaba**. Peor:
+  `guardarSolicitud()` tenía el mismo cálculo copiado, así que cualquier "Siguiente" que guardara
+  esa solicitud grababa 710/616.78 en la base (y ese IGV también en el último Pagante, vía
+  `igvObjetivoOverride`).
+- **Regla (confirmada con el usuario)**: si la solicitud ya tiene montos guardados, se **jalan
+  tal cual**; recién se recalcula cuando cambia la plata de los participantes.
+- **`calcularTotalesSolicitud()`** (`solicitud_guardar_helper.dart`, nuevo) — punto único del
+  cálculo; reemplaza las 4 copias que había (`ResumenInversion`, `SeccionResumenComercial`,
+  `SolicitudResumenView._onGuardar()` para `SolicitudUpdateNotifier`, y
+  `SolicitudRemoteDatasource.guardarSolicitud()`). Devuelve `TotalesSolicitud` (nuevo, en
+  `solicitud_form_state.dart`: `inversion`/`igv`/`importeTotal`). Si hay
+  `SolicitudFormState.totalesGuardados` y (`!ParticipantesState.huboCambios` **o** la inversión
+  — suma de Pagantes — es igual a la guardada), devuelve los guardados; si no, la regla de
+  siempre (precio pactado si la solicitud está completa, si no Inversión + IGV redondeado;
+  IGV = Total − Inversión).
+  - Por qué "o la inversión es igual" y no solo `huboCambios`: `sincronizarSolicitante()`
+    re-sincroniza el participante-solicitante en cada "Siguiente" del paso 1 — corregir un
+    nombre marca la lista "con cambios" aunque no se toque ningún importe. Agregar un Invitado
+    tampoco mueve la inversión.
+- **`SolicitudFormState.totalesGuardados`** (nuevo, `TotalesSolicitud?`) — se siembra en
+  `_cargarDetalle()` con los `DC_*` del `'DT'` y se actualiza en `guardarSolicitudDesdeWizard()`
+  tras cada `CrudOk` con lo que se acaba de mandar (`SolicitudFormCubit.actualizarTotalesGuardados`)
+  — si no, después de un guardado que sí cambió importes (`marcarSinCambios()` deja la lista "sin
+  cambios") se volverían a mostrar los montos viejos. `null` en una creación nueva hasta el
+  primer guardado.
+- **Cadena de guardado**: `guardarSolicitud()` ya no recibe `precioTotalLead` ni calcula nada —
+  recibe `required TotalesSolicitud totales` y lo manda tal cual como `DC_IMPORTE`/`DC_IGV`/
+  `DC_IMPORTE_TOTAL` (mismo cambio de firma en `SolicitudRepository`/`Impl`/
+  `GuardarSolicitudUseCase`). `cantidadEsperada` se sigue pasando (ajuste de centavos del IGV
+  del último Pagante, ahora contra `totales.igv`).
+- **`ResumenInversion`** perdió `total`/`precioTotalNegociacion`/`cantidadEsperada`/
+  `cantidadActual` — recibe `totales` ya calculados. SP sin cambios.
+- ~~Pendiente: editar un importe volvía a fijar el total en el precio actual de la negociación
+  (710)~~ — resuelto el mismo día, ver "El total solo se cuadra al precio pactado si la
+  diferencia es de redondeo" arriba (con importe 100.00 ahora queda 100.00 / 18.00 / 118.00).
+
 ## El filtro de la lista pasó de Campaña→**Evento** a Campaña→**Oportunidad** (2026-09-10)
 
 Pedido de negocio ("ya no será por evento, será por oportunidad y campaña"). Alinea la app con

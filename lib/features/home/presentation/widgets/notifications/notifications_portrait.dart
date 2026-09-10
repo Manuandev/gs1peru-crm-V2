@@ -1,12 +1,11 @@
 // lib/features/home/presentation/widgets/notifications/notifications_portrait.dart
 
 import 'package:flutter/material.dart';
+import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/config/index_config.dart';
 import 'package:app_crm/features/home/index_home.dart';
-
-enum _Filtro { todas, actividades, derivaciones, mensajes }
 
 class NotificationsPortrait extends StatefulWidget {
   final NotificationsLoaded state;
@@ -17,14 +16,37 @@ class NotificationsPortrait extends StatefulWidget {
 }
 
 class _NotificationsPortraitState extends State<NotificationsPortrait> {
-  _Filtro _filtro = _Filtro.todas;
+  // Con paginación el filtro ya no se aplica en memoria: vive en el bloc y
+  // viaja al SP (ver FiltroNotificacion.codigoSp). La lista del state SIEMPRE
+  // es la del chip activo.
+  final _scroll = ScrollController();
 
-  List<Notificacion> get _notificacionesFiltradas => switch (_filtro) {
-    _Filtro.todas => widget.state.notificaciones,
-    _Filtro.actividades => widget.state.actividades,
-    _Filtro.derivaciones => widget.state.derivaciones,
-    _Filtro.mensajes => widget.state.mensajes,
-  };
+  // Umbral en px desde el final para disparar la página siguiente.
+  static const double _umbralPaginar = 320;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scroll
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scroll.hasClients) return;
+    final falta = _scroll.position.maxScrollExtent - _scroll.position.pixels;
+    if (falta <= _umbralPaginar && widget.state.puedePaginar) {
+      context.read<NotificationsBloc>().add(
+        const NotificationsPaginaSolicitada(),
+      );
+    }
+  }
 
   // Agrupa la lista por etiqueta de fecha ("Hoy", "Ayer", fecha corta)
   // Preserva el orden de inserción (LinkedHashMap implícito en Dart).
@@ -64,82 +86,88 @@ class _NotificationsPortraitState extends State<NotificationsPortrait> {
       children: [
         // ── Filtros — fijos, no scrollean ─────────────────────────────────
         _BarraFiltros(
-          filtro: _filtro,
-          totTodas: state.notificaciones.length,
-          totActividades: state.actividades.length,
-          totDerivaciones: state.derivaciones.length,
-          totMensajes: state.mensajes.length,
-          onCambio: (f) => setState(() => _filtro = f),
+          filtro: state.filtro,
+          // Totales calculados por el SP sobre el universo completo — con
+          // paginación `lista.length` solo vería la página actual.
+          totTodas: state.conteos.todas,
+          totActividades: state.conteos.actividades,
+          totDerivaciones: state.conteos.derivaciones,
+          totMensajes: state.conteos.mensajes,
+          onCambio: (f) => context.read<NotificationsBloc>().add(
+            NotificationsFiltroCambiado(f),
+          ),
         ),
 
         // ── Contenido scrolleable ──────────────────────────────────────────
+        //
+        // CustomScrollView + SliverList.builder: la lista se construye PEREZOSA.
+        // Antes era un SingleChildScrollView con un Column que metía TODOS los
+        // tiles como hijos — con cientos de notificaciones eso construía cientos
+        // de widgets de golpe en el hilo de UI y la app se congelaba (ANR real
+        // con 824 filas). Con slivers solo se construye lo visible.
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final lista = _notificacionesFiltradas;
+          child: CustomScrollView(
+            controller: _scroll,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xs)),
+              SliverToBoxAdapter(child: _TarjetaContadores(state: state)),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
 
-              // Con minHeight = alto del viewport + IntrinsicHeight, el Expanded
-              // interno reparte el espacio sobrante y centra el estado vacío
-              // aunque el contenido esté dentro de un scroll (pull-to-refresh).
-              return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: AppSpacing.xs),
-                        _TarjetaContadores(state: state),
-                        const SizedBox(height: AppSpacing.sm),
-                        if (lista.isEmpty)
-                          const Expanded(
-                            child: Center(child: _EmptyNotifications()),
-                          )
-                        else
-                          _buildLista(lista),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+              if (state.recargandoLista)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: _SpinnerPagina()),
+                )
+              else if (state.notificaciones.isEmpty)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: _EmptyNotifications()),
+                )
+              else ...[
+                _buildSliverLista(state.notificaciones),
+                SliverToBoxAdapter(child: _PieLista(state: state)),
+              ],
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildLista(List<Notificacion> lista) {
-    final grupos = _agruparPorFecha(lista);
-    final widgets = <Widget>[];
+  /// Aplana los grupos por fecha en una sola lista de filas para que el
+  /// SliverList pueda construirlas por índice (encabezado / tile / divisor).
+  Widget _buildSliverLista(List<Notificacion> lista) {
+    final filas = <_Fila>[];
 
-    for (final entry in grupos.entries) {
-      widgets.add(
-        _EncabezadoFecha(fecha: entry.key, count: entry.value.length),
-      );
+    for (final entry in _agruparPorFecha(lista).entries) {
+      filas.add(_Fila.encabezado(entry.key, entry.value.length));
       for (int i = 0; i < entry.value.length; i++) {
-        widgets.add(
-          NotificacionTile(
-            notificacion: entry.value[i],
-            onAccion: () => _onAccion(entry.value[i]),
-          ),
-        );
-        if (i < entry.value.length - 1) {
-          widgets.add(
-            const Divider(
-              height: 1,
-              indent: AppSpacing.md,
-              endIndent: AppSpacing.md,
-            ),
-          );
-        }
+        filas.add(_Fila.tile(entry.value[i]));
+        if (i < entry.value.length - 1) filas.add(const _Fila.divisor());
       }
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
+    return SliverList.builder(
+      itemCount: filas.length,
+      itemBuilder: (context, index) {
+        final f = filas[index];
+        return switch (f.tipo) {
+          _TipoFila.encabezado => _EncabezadoFecha(
+            fecha: f.fecha!,
+            count: f.count!,
+          ),
+          _TipoFila.tile => NotificacionTile(
+            notificacion: f.notificacion!,
+            onAccion: () => _onAccion(f.notificacion!),
+          ),
+          _TipoFila.divisor => const Divider(
+            height: 1,
+            indent: AppSpacing.md,
+            endIndent: AppSpacing.md,
+          ),
+        };
+      },
     );
   }
 
@@ -156,15 +184,50 @@ class _NotificationsPortraitState extends State<NotificationsPortrait> {
   }
 }
 
+// ── Fila aplanada de la lista (encabezado / tile / divisor) ─────────────────
+
+enum _TipoFila { encabezado, tile, divisor }
+
+class _Fila {
+  final _TipoFila tipo;
+  final String? fecha;
+  final int? count;
+  final Notificacion? notificacion;
+
+  const _Fila._(this.tipo, {this.fecha, this.count, this.notificacion});
+
+  const _Fila.encabezado(String fecha, int count)
+    : this._(_TipoFila.encabezado, fecha: fecha, count: count);
+  const _Fila.tile(Notificacion n)
+    : this._(_TipoFila.tile, notificacion: n);
+  const _Fila.divisor() : this._(_TipoFila.divisor);
+}
+
+// ── Spinner de página ───────────────────────────────────────────────────────
+
+class _SpinnerPagina extends StatelessWidget {
+  const _SpinnerPagina();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    width: AppSizing.iconMd,
+    height: AppSizing.iconMd,
+    child: CircularProgressIndicator(
+      strokeWidth: AppSizing.spinnerStrokeSmall,
+      color: AppColors.primary,
+    ),
+  );
+}
+
 // ── Barra de filtros (sticky) ─────────────────────────────────────────────────
 
 class _BarraFiltros extends StatelessWidget {
-  final _Filtro filtro;
+  final FiltroNotificacion filtro;
   final int totTodas;
   final int totActividades;
   final int totDerivaciones;
   final int totMensajes;
-  final ValueChanged<_Filtro> onCambio;
+  final ValueChanged<FiltroNotificacion> onCambio;
 
   const _BarraFiltros({
     required this.filtro,
@@ -188,33 +251,33 @@ class _BarraFiltros extends StatelessWidget {
           _FiltroChip(
             label: 'Todas',
             count: totTodas,
-            seleccionado: filtro == _Filtro.todas,
+            seleccionado: filtro == FiltroNotificacion.todas,
             colorBadge: AppColors.info,
-            onTap: () => onCambio(_Filtro.todas),
+            onTap: () => onCambio(FiltroNotificacion.todas),
           ),
           const SizedBox(width: AppSpacing.sm),
           _FiltroChip(
             label: 'Actividades',
             count: totActividades,
-            seleccionado: filtro == _Filtro.actividades,
+            seleccionado: filtro == FiltroNotificacion.actividades,
             colorBadge: AppColors.secondary,
-            onTap: () => onCambio(_Filtro.actividades),
+            onTap: () => onCambio(FiltroNotificacion.actividades),
           ),
           const SizedBox(width: AppSpacing.sm),
           _FiltroChip(
             label: 'Derivaciones bot',
             count: totDerivaciones,
-            seleccionado: filtro == _Filtro.derivaciones,
+            seleccionado: filtro == FiltroNotificacion.derivaciones,
             colorBadge: AppColors.brandLavenderAccessible,
-            onTap: () => onCambio(_Filtro.derivaciones),
+            onTap: () => onCambio(FiltroNotificacion.derivaciones),
           ),
           const SizedBox(width: AppSpacing.sm),
           _FiltroChip(
             label: 'Mensajes',
             count: totMensajes,
-            seleccionado: filtro == _Filtro.mensajes,
+            seleccionado: filtro == FiltroNotificacion.mensajes,
             colorBadge: AppColors.brandSlateAccessible,
-            onTap: () => onCambio(_Filtro.mensajes),
+            onTap: () => onCambio(FiltroNotificacion.mensajes),
           ),
         ],
       ),
@@ -323,7 +386,7 @@ class _TarjetaContadores extends StatelessWidget {
                 icono: AppIcons.calendar,
                 colorIcono: AppColors.secondary,
                 titulo: 'Pendientes hoy',
-                valor: state.actividades.length,
+                valor: state.conteos.actividades,
               ),
             ),
             Container(width: 1, height: 48, color: AppColors.border),
@@ -332,7 +395,7 @@ class _TarjetaContadores extends StatelessWidget {
                 icono: AppIcons.ia,
                 colorIcono: AppColors.brandLavenderAccessible,
                 titulo: 'Derivaciones',
-                valor: state.derivaciones.length,
+                valor: state.conteos.derivaciones,
               ),
             ),
             Container(width: 1, height: 48, color: AppColors.border),
@@ -341,7 +404,7 @@ class _TarjetaContadores extends StatelessWidget {
                 icono: AppIcons.chatDots,
                 colorIcono: AppColors.brandSlateAccessible,
                 titulo: 'Mensajes sin leer',
-                valor: state.mensajes.length,
+                valor: state.conteos.mensajes,
               ),
             ),
           ],
@@ -451,6 +514,53 @@ class _EncabezadoFecha extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Pie de la lista paginada ─────────────────────────────────────────────────
+
+class _PieLista extends StatelessWidget {
+  final NotificationsLoaded state;
+  const _PieLista({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (state.loadMoreError != null) {
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                state.loadMoreError!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: colorScheme.error,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              CustomTextButton(
+                text: 'Reintentar',
+                onPressed: () => context.read<NotificationsBloc>().add(
+                  const NotificationsReintentarPagina(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (state.cargandoMas) {
+      return const Padding(
+        padding: EdgeInsets.all(AppSpacing.md),
+        child: Center(child: _SpinnerPagina()),
+      );
+    }
+
+    return const SizedBox(height: AppSpacing.md);
   }
 }
 

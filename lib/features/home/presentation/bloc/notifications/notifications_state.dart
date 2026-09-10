@@ -20,35 +20,79 @@ class NotificationsLoading extends NotificationsState {
 }
 
 class NotificationsLoaded extends NotificationsState {
-  final List<Notificacion> notificationes;
+  /// Filas ya descargadas — SOLO las del filtro activo. Con paginación esto
+  /// nunca es el universo completo: los totales de los chips salen de
+  /// [conteos], que los calcula el SP.
+  final List<Notificacion> notificaciones;
+  final FiltroNotificacion filtro;
+  final NotificacionesConteos conteos;
 
-  const NotificationsLoaded({required this.notificationes});
+  /// true mientras se recarga por cambio de chip / refresh con la lista ya
+  /// visible — la cabecera se queda montada y solo la lista muestra skeleton.
+  final bool recargandoLista;
+  final bool cargandoMas;
+  final bool finLista;
+  final String? loadMoreError;
 
-  List<Notificacion> get notificaciones => notificationes;
+  final String? cursorFecha;
+  final int? cursorId;
 
-  // Chip "Actividades" agrupa todo lo que no es derivación (bot) ni mensaje:
-  // recordatorios, leads por contactar, leads reasignados y la actividad
-  // genérica (códigos sin tipo dedicado, ej. GESTION_DE_CODIGO) — pedido de
-  // negocio 2026-08-24, ver home/CLAUDE.md.
-  List<Notificacion> get actividades => notificaciones
-      .where(
-        (n) =>
-            n.tipo == TipoNotificacion.actividad ||
-            n.tipo == TipoNotificacion.recordatorio ||
-            n.tipo == TipoNotificacion.leadPorContactar ||
-            n.tipo == TipoNotificacion.leadReasignado,
-      )
-      .toList();
+  const NotificationsLoaded({
+    required this.notificaciones,
+    required this.filtro,
+    required this.conteos,
+    this.recargandoLista = false,
+    this.cargandoMas = false,
+    this.finLista = false,
+    this.loadMoreError,
+    this.cursorFecha,
+    this.cursorId,
+  });
 
-  List<Notificacion> get derivaciones => notificaciones
-      .where((n) => n.tipo == TipoNotificacion.derivacion)
-      .toList();
+  bool get puedePaginar =>
+      !finLista && !cargandoMas && cursorFecha != null && cursorId != null;
 
-  List<Notificacion> get mensajes =>
-      notificaciones.where((n) => n.tipo == TipoNotificacion.mensaje).toList();
+  NotificationsLoaded copyWith({
+    List<Notificacion>? notificaciones,
+    FiltroNotificacion? filtro,
+    NotificacionesConteos? conteos,
+    bool? recargandoLista,
+    bool? cargandoMas,
+    bool? finLista,
+    String? loadMoreError,
+    bool limpiarLoadMoreError = false,
+    String? cursorFecha,
+    int? cursorId,
+  }) => NotificationsLoaded(
+    notificaciones: notificaciones ?? this.notificaciones,
+    filtro: filtro ?? this.filtro,
+    conteos: conteos ?? this.conteos,
+    recargandoLista: recargandoLista ?? this.recargandoLista,
+    cargandoMas: cargandoMas ?? this.cargandoMas,
+    finLista: finLista ?? this.finLista,
+    loadMoreError: limpiarLoadMoreError
+        ? null
+        : (loadMoreError ?? this.loadMoreError),
+    cursorFecha: cursorFecha ?? this.cursorFecha,
+    cursorId: cursorId ?? this.cursorId,
+  );
 
   @override
-  List<Object?> get props => [notificationes];
+  List<Object?> get props => [
+    notificaciones,
+    filtro,
+    conteos.todas,
+    conteos.actividades,
+    conteos.derivaciones,
+    conteos.mensajes,
+    conteos.noLeidas,
+    recargandoLista,
+    cargandoMas,
+    finLista,
+    loadMoreError,
+    cursorFecha,
+    cursorId,
+  ];
 }
 
 class NotificationsError extends NotificationsState {

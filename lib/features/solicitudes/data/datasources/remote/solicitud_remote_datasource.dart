@@ -33,8 +33,13 @@ class SolicitudRemoteDatasource {
   static const int tamanioPrimera = 50;
   static const int tamanioSiguiente = 50;
 
-  // Task 'LSP' — lista paginada (keyset) con filtro Desde/Hasta/Campaña/Evento.
-  // Body: token ¯ codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idEvento ¯ LSP
+  // Task 'LSP' — lista paginada (keyset) con filtro Desde/Hasta/Campaña/Oportunidad.
+  // Body: token ¯ codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad ¯ LSP
+  //   idCampania/idOportunidad: 2026-09-10 el campo 11 pasó de ID_EVENTO a
+  //   ID_OPORTUNIDAD para quedar igual que la web (su combo dice "Evento" pero
+  //   lo llena con CRMV2_OPORTUNIDAD y manda ID_OPORTUNIDAD —
+  //   ValidarSolicitudRegistro.js). El SP filtra OP.ID_CAMPANIA /
+  //   OP.ID_OPORTUNIDAD de CRM.T_OPORTUNIDAD; EVT.T_EVENTO ya no participa.
   //   chip: '' = todas ; 'SV' = sin validar ; 'VA' = validados
   //   idAsesor: solo con el chip "Asesores" (filtra por ese codUser); si no, ''
   //   fcDesde/fcHasta: ISO 126 (yyyy-MM-ddTHH:mm:ss), '' = no aplica
@@ -47,7 +52,7 @@ class SolicitudRemoteDatasource {
     DateTime? fcDesde,
     DateTime? fcHasta,
     int? idCampania,
-    int? idEvento,
+    int? idOportunidad,
   }) async {
     final camp = AppConstants.sepCampos;
     final sep = AppConstants.sepListas;
@@ -63,7 +68,7 @@ class SolicitudRemoteDatasource {
       _fmtFecha(fcDesde),
       _fmtFecha(fcHasta),
       idCampania ?? '',
-      idEvento ?? '',
+      idOportunidad ?? '',
     ].join(camp);
 
     final result = await _api.postSafe(

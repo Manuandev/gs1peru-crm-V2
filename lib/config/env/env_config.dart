@@ -17,7 +17,7 @@ class EnvConfig {
       case Environment.qa:
         return '1.0.14';
       case Environment.prod:
-        return '1.0.0.3';
+        return '1.0.0.4';
     }
   }
 

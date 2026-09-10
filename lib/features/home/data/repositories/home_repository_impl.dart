@@ -12,7 +12,17 @@ class HomeRepositoryImpl implements HomeRepository {
   Future<Home> getData() => _remote.getData();
 
   @override
-  Future<List<Notificacion>> getNotifications() => _remote.getNotifications();
+  Future<NotificacionesPagina> getNotifications({
+    FiltroNotificacion filtro = FiltroNotificacion.todas,
+    String? cursorFecha,
+    int? cursorId,
+    required int tamanio,
+  }) => _remote.getNotifications(
+    filtro: filtro,
+    cursorFecha: cursorFecha,
+    cursorId: cursorId,
+    tamanio: tamanio,
+  );
 
   @override
   Future<CrudResult> marcarNotificacionesLeidas() =>

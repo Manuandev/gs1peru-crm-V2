@@ -1,5 +1,60 @@
 # Solicitudes Feature
 
+## El filtro de la lista pasó de Campaña→**Evento** a Campaña→**Oportunidad** (2026-09-10)
+
+Pedido de negocio ("ya no será por evento, será por oportunidad y campaña"). Alinea la app con
+lo que la web ya hacía desde el fix de Giussepe del 21/08/2026 — **supersede** la sección
+"Lista paginada (keyset) + panel de filtros Desde/Hasta/Campaña/Evento" de más abajo en todo lo
+que diga "evento".
+
+**Qué hace la web** (`GS1Peru.AppWeb`, `07_Educacion/01_Transaccion/Controllers/ValidarSolicitudRegistro.js`
++ `EVT.CSV_INSCRIPCION_EVENTO_LISTAR_SP_V02`, task `'R'`):
+- El combo se **sigue llamando "Evento"** en pantalla (`CBO_GestionRegistroEvento_Evento`) pero
+  se llena con **`$global.lists.CRMV2_OPORTUNIDAD`** (`ListarComboEventos`, filtrando
+  `column[1] == idCampania`) y manda un **`ID_OPORTUNIDAD`** en `VAR04`. El código viejo que
+  usaba `EVENTO_ACTIVO`/`EVT.T_EVENTO` quedó **comentado** ahí, no borrado — por eso el nombre
+  del combo engaña. La campaña sale de `CRMV2_CAMPANIA`.
+- El SP filtra `INNER JOIN CRM.T_OPORTUNIDAD OP ON OP.ID_OPORTUNIDAD = A.ID_OPORTUNIDAD` +
+  `(@ID_CAMPANIA IS NULL OR OP.ID_CAMPANIA = @ID_CAMPANIA)` +
+  `(@ID_OPORTUNIDAD IS NULL OR OP.ID_OPORTUNIDAD = @ID_OPORTUNIDAD)`. `EVT.T_EVENTO` quedó como
+  `LEFT JOIN` decorativo. **Motivo del fix**: filtrar por `EV.*` escondía las solicitudes cuya
+  oportunidad no tiene fila en `T_EVENTO` (311 de 902).
+
+**Flutter** (`SolicitudFiltroDrawer`): el 2° combo se llama **"Oportunidad"** y se llena con
+`CatalogsBloc.oportunidades` (`OportunidadItem.idCampania` para la cascada) — ya no
+`catState.eventos`/`EventoItem`. `SolicitudFiltroAvanzado.idEvento` → **`idOportunidad`**, mismo
+cambio en `SolicitudListBloc`/usecase/repository/datasource. Sin campaña elegida se muestran
+**todas** las oportunidades (la web ahí muestra la lista vacía hasta elegir campaña — se dejó
+distinto a propósito, es más usable en móvil).
+
+**SP `CRM.CSV_SOLICITUD_LST_APP`, task `'LSP'`:**
+- `#SLP_BASE` filtra `OP.ID_CAMPANIA` / `OP.ID_OPORTUNIDAD` con `INNER JOIN CRM.T_OPORTUNIDAD`
+  — igual que la web. De paso `#SLP_BASE` queda garantizado a **1 fila por NUMSOL** (antes el
+  `OUTER APPLY TOP 1` a `T_EVENTO` era lo que lo evitaba).
+- El **campo 11** de `@L_DATA` conserva la posición pero ahora transporta un `ID_OPORTUNIDAD`
+  (la variable local se renombró `@SLP_EVENTO` → **`@SLP_OPORT`**).
+- **Fila de salida: se eliminaron los campos `24 idEvento` / `25 nombreEvento`** y el
+  `OUTER APPLY` a `EVT.T_EVENTO` que los alimentaba. El campo **`23 idCampania` pasó de
+  `EV.ID_CAMPANIA` a `OP.ID_CAMPANIA`** — es la misma columna por la que filtra `#SLP_BASE`, así
+  que la fila siempre concuerda con el filtro; con `EV.*` las solicitudes sin fila en `T_EVENTO`
+  devolvían campaña `0`. La fila quedó en **24 campos (0..23)**.
+- **Bug encontrado de paso en el task `'LS'`**: tenía un `LEFT JOIN EVT.T_EVENTO EV ON
+  OP.ID_OPORTUNIDAD = EV.ID_OPORTUNIDAD` del que **no seleccionaba ninguna columna** — muerto, y
+  al ser 1:N podía **duplicar** la solicitud en el `STRING_AGG` si la oportunidad tenía más de un
+  evento. Se eliminó. (Queda otro join muerto ahí, el subquery `FC` de archivos — ese sí es
+  `GROUP BY NUMSOL`, 1:1, no duplica; no se tocó.)
+
+**Flutter, limpieza a juego**: `Solicitud.idEvento`/`.nombreEvento` se eliminaron de la entidad
+y de `SolicitudPaginaModel` (nadie los leía, solo se parseaban). `Solicitud.idCampania` se queda,
+ahora documentado como "campaña de la oportunidad".
+
+⚠️ Pendiente `ALTER PROCEDURE` de `CRM.CSV_SOLICITUD_LST_APP` en SSMS.
+
+⚠️ **Discrepancia real con la web, NO corregida** — el rango de fechas por defecto:
+`SolicitudFiltroAvanzado.porDefecto()` usa **del 1 del mes actual a hoy** y su comentario dice
+"igual que la web", pero la web (`cargarDatos()`/`limpiarFiltros()`) usa **hoy − 60 días a hoy**.
+Confirmar con negocio cuál corresponde antes de tocarlo (cambia lo que se ve al entrar).
+
 ## `SolicitudCard` — círculo con "N°" + "N° solicitud:" (2026-09-09)
 
 Pedido de negocio, `solicitud_card.dart`:
@@ -10,6 +65,10 @@ Pedido de negocio, `solicitud_card.dart`:
 - La línea `Num. Solicitud: <id>` → **`N° solicitud: <id>`** (s minúscula).
 
 ## Lista paginada (keyset) + panel de filtros Desde/Hasta/Campaña/Evento (2026-09-09)
+
+> ⚠️ **Todo lo que esta sección dice sobre "evento" quedó obsoleto el 2026-09-10** — ver la
+> sección de arriba ("El filtro de la lista pasó de Campaña→Evento a Campaña→Oportunidad").
+> El resto (paginado keyset, contadores, skeleton, búsqueda en cliente) sigue vigente.
 
 `SolicitudListPage` / `SolicitudListBloc` pasaron a **paginado real** (task `'LSP'` de
 `CRM.CSV_SOLICITUD_LST_APP`, mismo patrón que Seguimiento) — antes `getSolicitudes()` (task

@@ -17,6 +17,7 @@ export 'domain/entities/prospecto_home.dart';
 export 'domain/entities/asesor_home.dart';
 
 export 'domain/entities/notifications/notificacion.dart';
+export 'domain/entities/notifications/notificaciones_pagina.dart';
 export 'domain/entities/notifications/notification.dart';
 
 export 'domain/repositories/home_repository.dart';

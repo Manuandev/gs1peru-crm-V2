@@ -94,17 +94,23 @@ class NotificacionTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  notificacion.descripcion,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: colorScheme.onSurface.withValues(
-                      alpha: AppColors.opacityTextMuted,
+                // La actividad genérica no tiene shape de DATOS definido, así
+                // que llega sin descripción (ver notificacion_model.dart) —
+                // en ese caso se omite la línea y su espaciado en vez de
+                // dejar un hueco vacío entre el título y los chips.
+                if (notificacion.descripcion.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    notificacion.descripcion,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: colorScheme.onSurface.withValues(
+                        alpha: AppColors.opacityTextMuted,
+                      ),
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ],
                 const SizedBox(height: AppSpacing.xxs),
                 Wrap(
                   spacing: AppSpacing.xs,

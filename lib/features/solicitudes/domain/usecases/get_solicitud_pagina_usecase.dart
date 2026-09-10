@@ -16,7 +16,7 @@ class GetSolicitudPaginaUseCase {
     DateTime? fcDesde,
     DateTime? fcHasta,
     int? idCampania,
-    int? idEvento,
+    int? idOportunidad,
   }) => _repository.traerPagina(
     chip: chip,
     idAsesor: idAsesor,
@@ -26,6 +26,6 @@ class GetSolicitudPaginaUseCase {
     fcDesde: fcDesde,
     fcHasta: fcHasta,
     idCampania: idCampania,
-    idEvento: idEvento,
+    idOportunidad: idOportunidad,
   );
 }

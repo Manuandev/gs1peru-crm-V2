@@ -41,15 +41,39 @@ class HomeRemoteDatasource {
     };
   }
 
-  Future<List<Notificacion>> getNotifications() async {
-    final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LS';
+  // Notificaciones paginadas por keyset (task 'LS' de
+  // CRM.CSV_NOTIFICACIONES_LST_APP, reescrito 2026-09-10).
+  //
+  // Body: codUser ¦ moderador ¦ filtro ¦ curFecha(126) ¦ curId ¦ tamanio
+  //   filtro    '' = todas ; 'ACT' | 'AIA' | 'CHAT'
+  //   curFecha/curId  '' = primera página (el SP trata "a medias" como 1ra)
+  //   tamanio   lo acota el SP a 1..100 (fuera de rango → 50)
+  static const int tamanioPrimera = 40;
+  static const int tamanioSiguiente = 30;
 
-    final result = await _api.postSafe(ApiConstants.urlNotificacionesLst, body);
+  Future<NotificacionesPagina> getNotifications({
+    FiltroNotificacion filtro = FiltroNotificacion.todas,
+    String? cursorFecha,
+    int? cursorId,
+    required int tamanio,
+  }) async {
+    final data = [
+      _session.codUser,
+      _session.isModerador ? 1 : 0,
+      filtro.codigoSp,
+      cursorFecha ?? '',
+      cursorId ?? '',
+      tamanio,
+    ].join(camp);
+
+    final result = await _api.postSafe(
+      ApiConstants.urlNotificacionesLst,
+      '$data${sep}LS',
+    );
 
     return switch (result) {
-      ApiSuccess(:final data) => NotificacionModel.parseList(data),
-      ApiEmpty() => const <Notificacion>[],
+      ApiSuccess(:final data) => NotificacionesPaginaModel.parse(data),
+      ApiEmpty() => NotificacionesPagina.vacia,
       ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
       ApiError(:final message) => throw AppException(message),
     };

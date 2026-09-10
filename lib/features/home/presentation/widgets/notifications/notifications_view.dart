@@ -46,9 +46,15 @@ class NotificationsView extends StatelessWidget {
         backgroundColor: AppColors.surface,
         onRefresh: () async {
           final bloc = context.read<NotificationsBloc>();
-          bloc.add(NotificationsRefresh());
+          bloc.add(const NotificationsRefresh());
+          // Ojo: al recargar con la lista ya visible, el bloc emite primero un
+          // NotificationsLoaded con recargandoLista:true (para no tumbar la
+          // pantalla). Hay que esperar al que trae la data, si no el spinner
+          // del RefreshIndicator se cierra de una.
           await bloc.stream.firstWhere(
-            (s) => s is NotificationsLoaded || s is NotificationsError,
+            (s) =>
+                (s is NotificationsLoaded && !s.recargandoLista) ||
+                s is NotificationsError,
           );
         },
         child: BlocBuilder<NotificationsBloc, NotificationsState>(

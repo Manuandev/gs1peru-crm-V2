@@ -5,13 +5,18 @@ import 'package:app_crm/features/home/index_home.dart';
 
 class NotificacionModel extends Notificacion {
   // Solo se llenan en mensaje/derivación — nombreCliente/codUserDestinatario
-  // se usan para reconstruir el texto cuando varios mensajes del mismo chat
-  // se agrupan en _agruparMensajes. oportunidad sí viaja en la entidad base
+  // se usan para armar el texto. oportunidad sí viaja en la entidad base
   // (Notificacion) porque la UI la necesita para el chip.
   final String nombreCliente;
   // CODUSER crudo del destinatario (NT.ID_USUARIO tal cual, sin join a
   // nombre) — vacío si el campo no vino en el CSV.
   final String codUserDestinatario;
+  // Cuántas notificaciones colapsó el SP en esta fila. Solo > 1 en mensajes
+  // (CODIGO 'CHAT', agrupados por ID_REFERENCIA = ID_CONVERSACION_CAB); 1 en
+  // todo lo demás. Antes esto se calculaba en el cliente (_agruparMensajes),
+  // pero con paginación dos mensajes del mismo chat pueden caer en páginas
+  // distintas — la agrupación se movió al SP (2026-09-10).
+  final int cantidad;
 
   const NotificacionModel({
     required super.id,
@@ -26,36 +31,35 @@ class NotificacionModel extends Notificacion {
     super.oportunidad,
     this.nombreCliente = '',
     this.codUserDestinatario = '',
+    this.cantidad = 1,
   });
 
   // Campos del SP CSV_NOTIFICACIONES_LST_APP (separados por ¦):
   // 0: ID_NOTIFICACION
-  // 1: ID_REFERENCIA        — id del lead asociado
+  // 1: ID_REFERENCIA        — id del lead, o ID_CONVERSACION_CAB si es CHAT
   // 2: ID_TIPO_NOTIFICACION — no se usa directo, el tipo sale de CODIGO
   // 3: TITULO
   // 4: DATOS                — armado desde el INSERT, usa ¦ como separador
   //                           interno también, así que puede traer más ¦ de
   //                           los que le tocan (ver reconstrucción abajo)
-  // ...: IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C, ID_USUARIO — últimos 5
-  //      campos fijos. El último (agregado 2026-08-13) es NT.ID_USUARIO tal
-  //      cual (CODUSER del destinatario, sin join a nombre — decisión del
-  //      usuario, ver nota en _parseDatosChat) — se compara contra el
-  //      CODUSER logueado para decidir si el texto usa "te" o nombra al
-  //      destinatario por su código.
+  // ...: IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C, ID_USUARIO, CANTIDAD —
+  //      últimos 6 campos fijos. ⚠️ Eran 5 hasta 2026-09-10; CANTIDAD se
+  //      agregó al final con la paginación, por eso los offsets son n-6..n-1.
+  //      Si se agrega otro campo fijo hay que correr TODOS estos índices.
   factory NotificacionModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
     final n = c.length;
 
     // DATOS (campo 4) usa el mismo separador ¦ como interno, así que no se
     // puede tomar como un campo más — se reconstruye con todo lo que sobra
-    // entre los 4 campos fijos del inicio (0-3) y los 5 fijos del final
-    // (IB_LEIDO, NOMBRE, CODIGO, FC_USUARIO_C, ID_USUARIO).
-    final datosRaw = n > 9
-        ? c.sublist(4, n - 5).join(AppConstants.sepCampos)
+    // entre los 4 campos fijos del inicio (0-3) y los 6 fijos del final.
+    final datosRaw = n > 10
+        ? c.sublist(4, n - 6).join(AppConstants.sepCampos)
         : ParseUtils.str(c, 4);
 
-    final tipo = _parseTipo(ParseUtils.str(c, n - 3));
-    final codUserDestinatario = ParseUtils.str(c, n - 1);
+    final tipo = _parseTipo(ParseUtils.str(c, n - 4));
+    final codUserDestinatario = ParseUtils.str(c, n - 2);
+    final cantidad = ParseUtils.toInt(c, n - 1);
 
     var descripcion = datosRaw;
     int? idChatCab;
@@ -69,23 +73,47 @@ class NotificacionModel extends Notificacion {
         tipo,
         datosRaw,
         codUserDestinatario,
+        cantidad,
       );
       descripcion = desc;
       idChatCab = chatCab;
       nombreCliente = nombre;
       oportunidad = oport;
     } else if (tipo == TipoNotificacion.recordatorio) {
-      final (desc, contacto) = _parseDatosRecordatorio(datosRaw);
+      final (desc, contacto) = _parseDatosRecordatorio(
+        datosRaw,
+        codUserDestinatario,
+      );
       descripcion = desc;
       idContacto = contacto;
     } else if (tipo == TipoNotificacion.leadPorContactar) {
-      final (desc, contacto) = _parseDatosLeadPorContactar(datosRaw);
+      final (desc, contacto, oport) = _parseDatosLeadPorContactar(
+        datosRaw,
+        codUserDestinatario,
+      );
       descripcion = desc;
       idContacto = contacto;
+      oportunidad = oport;
     } else if (tipo == TipoNotificacion.leadReasignado) {
-      final (desc, contacto) = _parseDatosLeadReasignado(datosRaw);
+      final (desc, contacto, oport) = _parseDatosLeadReasignado(
+        datosRaw,
+        codUserDestinatario,
+      );
       descripcion = desc;
       idContacto = contacto;
+      oportunidad = oport;
+    } else if (datosRaw.contains(AppConstants.sepCampos)) {
+      // Actividad genérica (GESTION_DE_CODIGO, GESTION_DE_PAGO,
+      // INSCRIPCION_DE_EMPRESAS y códigos futuros): no hay shape de DATOS
+      // definido para estos tipos, así que no se puede redactar el detalle.
+      // Se cae a un texto neutro en vez de pintar el CSV crudo, que dejaba
+      // la cadena del SP a la vista. El sujeto sí se resuelve igual que en
+      // el resto: codUserDestinatario es un campo fijo de la cola, no vive
+      // dentro de DATOS, así que está disponible para cualquier tipo.
+      // Un DATOS de un solo campo se respeta tal cual: ahí es texto plano.
+      descripcion = _esPropio(codUserDestinatario)
+          ? 'Tienes una nueva actividad pendiente.'
+          : '$codUserDestinatario tiene una nueva actividad pendiente.';
     }
 
     return NotificacionModel(
@@ -94,13 +122,14 @@ class NotificacionModel extends Notificacion {
       tipo: tipo,
       titulo: ParseUtils.str(c, 3),
       descripcion: descripcion,
-      fechaHora: ParseUtils.str(c, n - 2),
-      leido: ParseUtils.toBool(c, n - 5),
+      fechaHora: ParseUtils.str(c, n - 3),
+      leido: ParseUtils.toBool(c, n - 6),
       idChatCab: idChatCab,
       idContacto: idContacto,
       oportunidad: oportunidad,
       nombreCliente: nombreCliente,
       codUserDestinatario: codUserDestinatario,
+      cantidad: cantidad < 1 ? 1 : cantidad,
     );
   }
 
@@ -110,58 +139,38 @@ class NotificacionModel extends Notificacion {
       codUserDestinatario.trim().toUpperCase() ==
       SessionService().codUser.trim().toUpperCase();
 
-  static List<Notificacion> parseList(String rawResponse) {
-    final notificaciones = rawResponse
-        .split(AppConstants.sepRegistros)
-        .where((r) => r.trim().isNotEmpty)
-        .map((r) => NotificacionModel.fromRawString(r))
-        .toList();
-
-    return _agruparMensajes(notificaciones);
+  // Texto de las tarjetas de negociación (leadPorContactar / leadReasignado).
+  //
+  // El sujeto se resuelve con el MISMO criterio que mensajes/derivaciones
+  // (_esPropio sobre el CODUSER crudo): "Tienes una negociación..." cuando la
+  // notificación es del usuario logueado, "GCASTRO tiene una negociación..."
+  // cuando un moderador está viendo la de otro asesor. Se nombra por CODUSER
+  // y no por NOM_ASESOR (que también viaja en DATOS) para no romper la
+  // consistencia con el texto de los mensajes — decisión del usuario.
+  //
+  // La oportunidad NO entra acá: va en el chip inferior de la tarjeta
+  // (Notificacion.etiquetaPrincipal).
+  //
+  // "vía <canal>" es condicional porque DESC_CANAL llega vacío en buena parte
+  // de las filas reales — concatenado a ciegas dejaba el texto en "vía .".
+  static String _textoNegociacion({
+    required String asesor,
+    required String calificador,
+    required String nombreContacto,
+    required String canal,
+  }) {
+    final sujeto = _esPropio(asesor) ? 'Tienes' : '$asesor tiene';
+    final via = canal.isEmpty ? '' : ', vía $canal';
+    return '$sujeto una negociación $calificador con $nombreContacto$via.';
   }
 
-  // Cada mensaje de WhatsApp genera su propia fila en T_NOTIFICACION (ver
-  // CSV_WHATSAPP_CHAT_CUD_SP_V03) — si el cliente manda varios seguidos,
-  // llegan varias notificaciones para el mismo idChatCab. Acá se colapsan en
-  // una sola tarjeta usando los datos del mensaje más reciente + el total
-  // agrupado, para no inundar la lista ni desplazar otras notificaciones.
-  // Solo aplica a tipo mensaje (CODIGO CHAT) — derivación (AIA) y el resto de
-  // tipos se muestran uno por uno, sin agrupar (pedido explícito de negocio).
-  static List<Notificacion> _agruparMensajes(List<NotificacionModel> lista) {
-    final resultado = <Notificacion>[];
-    final chatsProcesados = <int>{};
-
-    for (final n in lista) {
-      if (n.tipo != TipoNotificacion.mensaje || n.idChatCab == null) {
-        resultado.add(n);
-        continue;
-      }
-      // La lista viene ordenada por FC_USUARIO_C DESC desde el SP, así que la
-      // primera notificación de este chat que encontramos es la más reciente.
-      if (!chatsProcesados.add(n.idChatCab!)) continue;
-
-      final cantidad = lista
-          .where(
-            (o) =>
-                o.tipo == TipoNotificacion.mensaje &&
-                o.idChatCab == n.idChatCab,
-          )
-          .length;
-
-      resultado.add(
-        cantidad > 1
-            ? n.copyWith(
-                descripcion: _esPropio(n.codUserDestinatario)
-                    ? '${n.nombreCliente} te ha enviado $cantidad mensajes.'
-                    : '${n.nombreCliente} le ha enviado $cantidad mensajes '
-                          'a ${n.codUserDestinatario}.',
-              )
-            : n,
-      );
-    }
-
-    return resultado;
-  }
+  /// Filas de una página. Ya vienen agrupadas desde el SP — el cliente no
+  /// vuelve a colapsar nada (ver [cantidad]).
+  static List<Notificacion> parseList(String rawResponse) => rawResponse
+      .split(AppConstants.sepRegistros)
+      .where((r) => r.trim().isNotEmpty)
+      .map((r) => NotificacionModel.fromRawString(r))
+      .toList();
 
   // Agrupación real por T_NOTIFICACION_TIPO.CODIGO — todo lo que no matchea
   // ninguno de los códigos conocidos cae en actividad/negociación genérica
@@ -179,22 +188,21 @@ class NotificacionModel extends Notificacion {
   // DATOS para mensaje/derivación (ejemplo real confirmado):
   // "Manuel Antonio Cardenas Valente¦Curso Digital Procurement¦Nuevo mensaje"
   //   0: nombre cliente  1: oportunidad  2: título
-  //   3: idChatCab  4: idNumero — PENDIENTE de confirmar con un ejemplo que los traiga
-  // nombreCliente se devuelve también sin formatear porque _agruparMensajes
-  // lo necesita para reconstruir el texto cuando colapsa varias
-  // notificaciones del mismo idChatCab en una sola. oportunidad viaja en la
-  // entidad base — la muestra el chip inferior, ya no el texto.
+  //   3: idChatCab (= ID_CONVERSACION_CAB)  4: idNumero
   //
-  // codUserDestinatario (2026-08-13) es el CODUSER crudo (sin resolver a
-  // nombre — decisión explícita del usuario: el SP ya no hace join a
-  // SYSMUSER01, manda el ID_USUARIO tal cual) — se compara contra el CODUSER
-  // logueado (_esPropio): si es el propio usuario el texto usa "te" como
-  // siempre; si es de otro asesor (vista de moderador viendo el equipo) el
-  // texto lo nombra por su CODUSER, ya que no hay nombre resuelto disponible.
+  // codUserDestinatario es el CODUSER crudo (sin resolver a nombre — decisión
+  // explícita del usuario: el SP manda ID_USUARIO tal cual) — se compara
+  // contra el CODUSER logueado (_esPropio): si es el propio usuario el texto
+  // usa "te"; si es de otro asesor (moderador viendo el equipo) lo nombra por
+  // su CODUSER, único dato disponible.
+  //
+  // [cantidad] viene del SP: > 1 cuando colapsó varios mensajes del mismo
+  // chat. Solo cambia el texto en tipo mensaje — una derivación nunca agrupa.
   static (String, int?, String, String) _parseDatosChat(
     TipoNotificacion tipo,
     String datosRaw,
     String codUserDestinatario,
+    int cantidad,
   ) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
     final nombreCliente = ParseUtils.str(d, 0);
@@ -202,39 +210,57 @@ class NotificacionModel extends Notificacion {
     final idChatCab = int.tryParse(ParseUtils.str(d, 3));
 
     final esPropio = _esPropio(codUserDestinatario);
-    final descripcion = tipo == TipoNotificacion.mensaje
-        ? (esPropio
-              ? '$nombreCliente te ha enviado un mensaje.'
-              : '$nombreCliente le ha enviado un mensaje a $codUserDestinatario.')
-        : (esPropio
-              ? 'Se te ha derivado $nombreCliente.'
-              : 'Se derivó a $nombreCliente hacia $codUserDestinatario.');
+    final String descripcion;
+
+    if (tipo == TipoNotificacion.mensaje) {
+      final cuantos = cantidad > 1 ? '$cantidad mensajes' : 'un mensaje';
+      descripcion = esPropio
+          ? '$nombreCliente te ha enviado $cuantos.'
+          : '$nombreCliente le ha enviado $cuantos a $codUserDestinatario.';
+    } else {
+      descripcion = esPropio
+          ? 'Se te ha derivado $nombreCliente.'
+          : 'Se derivó a $nombreCliente hacia $codUserDestinatario.';
+    }
 
     return (descripcion, idChatCab, nombreCliente, oportunidad);
   }
 
-  // DATOS para RECORDATORIOS (SP CSV_NOTIFICACIONES_LST_APP, comentario del
-  // SP — el índice de ID_NOTIFICACION al final no se usa acá, ya viene por
-  // fuera como campo 0 del CSV general):
+  // DATOS para RECORDATORIOS:
   //   0: ID_RECORDATORIO      1: ASESOR_ASIGNADO
   //   2: HORA_RECORDATORIO    3: NOM_ACCION
   //   4: NOM_AVISO            5: MODALIDAD
   //   6: FECHA_HORA_AVISO     7: COMENTARIO
   //   8: NOM_CONTACTO         9: TELEFONO
   //   10: ID_CONTACTO
-  // idContacto (índice 10, agregado 2026-08-24) se devuelve además del texto
-  // — lo usa "Ver seguimiento" (_onAccion en notifications_portrait.dart)
-  // para navegar a detalle de contacto, mismo mecanismo que
-  // leadPorContactar/leadReasignado.
-  static (String, int?) _parseDatosRecordatorio(String datosRaw) {
+  // idContacto (índice 10) se devuelve además del texto — lo usa "Ver
+  // seguimiento" (_onAccion en notifications_portrait.dart) para navegar a
+  // detalle de contacto, mismo mecanismo que leadPorContactar/leadReasignado.
+  // Este tipo NO trae oportunidad en su DATOS, por eso su chip cae al label
+  // fijo "Recordatorio" (ver Notificacion.etiquetaPrincipal).
+  static (String, int?) _parseDatosRecordatorio(
+    String datosRaw,
+    String codUserDestinatario,
+  ) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
     final hora = ParseUtils.str(d, 2);
     final accion = ParseUtils.str(d, 3);
     final modalidad = ParseUtils.str(d, 5);
     final idContacto = int.tryParse(ParseUtils.str(d, 10));
 
+    // Mismo sujeto que el resto de tipos: "Tienes..." si la notificación es
+    // del usuario logueado, "<CODUSER> tiene..." si es de otro asesor. El
+    // fallback sale del propio DATOS (campo 1 = ASESOR_ASIGNADO).
+    final asesor = codUserDestinatario.isEmpty
+        ? ParseUtils.str(d, 1)
+        : codUserDestinatario;
+    final sujeto = _esPropio(asesor) ? 'Tienes' : '$asesor tiene';
+    // Modalidad condicional — sin la guarda el texto terminaba en
+    // "Modalidad: " colgando cuando el campo venía vacío.
+    final conModalidad = modalidad.isEmpty ? '' : ' Modalidad: $modalidad.';
+
     final descripcion =
-        'Tienes un recordatorio a las $hora: $accion. Modalidad: $modalidad';
+        '$sujeto un recordatorio a las $hora: $accion.$conModalidad';
     return (descripcion, idContacto);
   }
 
@@ -245,20 +271,29 @@ class NotificacionModel extends Notificacion {
   //   10: DESC_CANAL          11: NOM_EMPRESA
   //   12: TELEFONO            13: NOM_OPORTUNIDAD
   //   14: NOM_ASESOR
-  // idContacto (índice 8) se devuelve además del texto — lo usa "Ver
-  // seguimiento" (_onAccion en notifications_portrait.dart) para navegar a
-  // detalle de contacto (T_LEAD.ID_CONTACTO), pedido de negocio 2026-08-24.
-  static (String, int?) _parseDatosLeadPorContactar(String datosRaw) {
+  static (String, int?, String) _parseDatosLeadPorContactar(
+    String datosRaw,
+    String codUserDestinatario,
+  ) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
     final idContacto = int.tryParse(ParseUtils.str(d, 8));
     final nombreContacto = ParseUtils.str(d, 9);
     final canal = ParseUtils.str(d, 10);
     final oportunidad = ParseUtils.str(d, 13);
 
-    final descripcion =
-        'Tienes una negociación por contactar con $nombreContacto '
-        'sobre $oportunidad, vía $canal.';
-    return (descripcion, idContacto);
+    final descripcion = _textoNegociacion(
+      asesor: codUserDestinatario.isEmpty
+          ? ParseUtils.str(d, 0)
+          : codUserDestinatario,
+      calificador: 'por contactar',
+      nombreContacto: nombreContacto,
+      canal: canal,
+    );
+    // oportunidad se devuelve pero YA NO se nombra en el texto: alimenta solo
+    // el chip inferior (Notificacion.etiquetaPrincipal), que desde 2026-09-10
+    // la muestra en todos los tipos que la traigan. Antes salía en ambos
+    // lados y se leía duplicada en la misma tarjeta.
+    return (descripcion, idContacto, oportunidad);
   }
 
   // DATOS para LEADS REASIGNADOS — mismo shape que "por contactar" pero con
@@ -271,17 +306,74 @@ class NotificacionModel extends Notificacion {
   //   12: TELEFONO            13: NOM_OPORTUNIDAD
   //   14: NOM_ASESOR_NUEVO    15: DESC_CANAL
   //   16: NOM_ASESOR_REASIGNO
-
-  // MVILLEGAS¦Lunes¦24¦Agosto¦2026¦11:05¦¦76755¦46902¦MVILLEGAS¦BILL ALARCON ¦¦953992444¦MIGRACIÓN BITRIX¦Manuel Villegas¦¦Cristell Vinces¦12794
-  static (String, int?) _parseDatosLeadReasignado(String datosRaw) {
+  static (String, int?, String) _parseDatosLeadReasignado(
+    String datosRaw,
+    String codUserDestinatario,
+  ) {
     final d = ParseUtils.campos(datosRaw, AppConstants.sepCampos);
     final idContacto = int.tryParse(ParseUtils.str(d, 8));
     final nombreContacto = ParseUtils.str(d, 10);
     final oportunidad = ParseUtils.str(d, 13);
     final canal = ParseUtils.str(d, 15);
 
-    final descripcion = 'Tienes una negociación reasignada con $nombreContacto '
-        'sobre $oportunidad, vía $canal.';
-    return (descripcion, idContacto);
+    final descripcion = _textoNegociacion(
+      asesor: codUserDestinatario.isEmpty
+          ? ParseUtils.str(d, 0)
+          : codUserDestinatario,
+      calificador: 'reasignada',
+      nombreContacto: nombreContacto,
+      canal: canal,
+    );
+    // oportunidad va SOLO al chip inferior — ver nota en
+    // _parseDatosLeadPorContactar.
+    return (descripcion, idContacto, oportunidad);
+  }
+}
+
+/// Parser de la respuesta paginada del task 'LS' (2026-09-10). Formato:
+///
+///   primera página : "todas¦actividades¦derivaciones¦mensajes¦noLeidas" ¯ filas
+///   siguientes     : filas
+///   sin datos      : ""  (ApiEmpty)
+///
+/// El cursor de la página siguiente sale de la ÚLTIMA fila: su `fechaHora`
+/// (FC_USUARIO_C en formato 126, campo 08) + su `id` (ID_NOTIFICACION, campo 00).
+class NotificacionesPaginaModel {
+  const NotificacionesPaginaModel._();
+
+  static NotificacionesPagina parse(String raw) {
+    if (raw.trim().isEmpty) return NotificacionesPagina.vacia;
+
+    // Bloques ¯: si hay 2+, el primero son los contadores (solo 1ra página).
+    final bloques = raw.split(AppConstants.sepListas);
+    NotificacionesConteos? conteos;
+    String filasRaw;
+    if (bloques.length >= 2) {
+      conteos = _parseConteos(bloques.first);
+      filasRaw = bloques.sublist(1).join(AppConstants.sepListas);
+    } else {
+      filasRaw = raw;
+    }
+
+    final items = NotificacionModel.parseList(filasRaw);
+    final ultima = items.isEmpty ? null : items.last;
+
+    return NotificacionesPagina(
+      items: items,
+      conteos: conteos,
+      cursorFecha: ultima?.fechaHora,
+      cursorId: ultima?.id,
+    );
+  }
+
+  static NotificacionesConteos _parseConteos(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return NotificacionesConteos(
+      todas: ParseUtils.toInt(c, 0),
+      actividades: ParseUtils.toInt(c, 1),
+      derivaciones: ParseUtils.toInt(c, 2),
+      mensajes: ParseUtils.toInt(c, 3),
+      noLeidas: ParseUtils.toInt(c, 4),
+    );
   }
 }

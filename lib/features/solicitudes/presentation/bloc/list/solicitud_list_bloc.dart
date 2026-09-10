@@ -131,7 +131,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
         fcDesde: _filtroAvanzado.desdeEfectivo,
         fcHasta: _filtroAvanzado.hastaEfectivo,
         idCampania: _filtroAvanzado.idCampania,
-        idEvento: _filtroAvanzado.idEvento,
+        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       if (epoca != _epoca || emit.isDone) return;
 
@@ -187,7 +187,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
         fcDesde: _filtroAvanzado.desdeEfectivo,
         fcHasta: _filtroAvanzado.hastaEfectivo,
         idCampania: _filtroAvanzado.idCampania,
-        idEvento: _filtroAvanzado.idEvento,
+        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       if (epoca != _epoca || emit.isDone) return;
 

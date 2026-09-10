@@ -6,7 +6,12 @@ import 'package:app_crm/features/home/index_home.dart';
 abstract class HomeRepository {
   Future<Home> getData();
 
-  Future<List<Notificacion>> getNotifications();
+  Future<NotificacionesPagina> getNotifications({
+    FiltroNotificacion filtro,
+    String? cursorFecha,
+    int? cursorId,
+    required int tamanio,
+  });
 
   Future<CrudResult> marcarNotificacionesLeidas();
 

@@ -2,9 +2,11 @@
 //
 // Filtros del panel lateral de Solicitudes (task 'LSP' de CRM.CSV_SOLICITUD_LST_APP).
 // Cada extremo de fecha tiene su propio checkbox: solo se manda al SP el que
-// esté activo (Desde → 00:00:00, Hasta → 23:59:59). Filtra FC_ULTIMA =
-// ISNULL(FC_USUARIO_M, FC_USUARIO_C) de la solicitud. Campaña → Evento en
-// cascada (evento se recorta a EVT.T_EVENTO.ID_CAMPANIA de la campaña elegida).
+// esté activo (Desde → 00:00:00, Hasta → 23:59:59). Filtra FC_USUARIO_C
+// (creación) de la solicitud, igual que la web. Campaña → Oportunidad en
+// cascada: ambos salen de CRM.T_OPORTUNIDAD (OP.ID_CAMPANIA / OP.ID_OPORTUNIDAD)
+// y la oportunidad se recorta a las de la campaña elegida. Evento
+// (EVT.T_EVENTO) ya no participa — mismo criterio que la web.
 
 import 'package:app_crm/index_dependencies.dart';
 
@@ -14,7 +16,7 @@ class SolicitudFiltroAvanzado extends Equatable {
   final DateTime? hasta;
   final bool hastaActivo;
   final int? idCampania;
-  final int? idEvento;
+  final int? idOportunidad;
 
   const SolicitudFiltroAvanzado({
     this.desde,
@@ -22,7 +24,7 @@ class SolicitudFiltroAvanzado extends Equatable {
     this.hasta,
     this.hastaActivo = false,
     this.idCampania,
-    this.idEvento,
+    this.idOportunidad,
   });
 
   static const SolicitudFiltroAvanzado vacio = SolicitudFiltroAvanzado();
@@ -44,7 +46,7 @@ class SolicitudFiltroAvanzado extends Equatable {
       desdeEfectivo != null ||
       hastaEfectivo != null ||
       idCampania != null ||
-      idEvento != null;
+      idOportunidad != null;
 
   bool get esDistintoDelDefecto => this != SolicitudFiltroAvanzado.porDefecto();
 
@@ -62,9 +64,9 @@ class SolicitudFiltroAvanzado extends Equatable {
     DateTime? hasta,
     bool? hastaActivo,
     int? idCampania,
-    int? idEvento,
+    int? idOportunidad,
     bool limpiarCampania = false,
-    bool limpiarEvento = false,
+    bool limpiarOportunidad = false,
   }) {
     return SolicitudFiltroAvanzado(
       desde: desde ?? this.desde,
@@ -72,7 +74,7 @@ class SolicitudFiltroAvanzado extends Equatable {
       hasta: hasta ?? this.hasta,
       hastaActivo: hastaActivo ?? this.hastaActivo,
       idCampania: limpiarCampania ? null : (idCampania ?? this.idCampania),
-      idEvento: limpiarEvento ? null : (idEvento ?? this.idEvento),
+      idOportunidad: limpiarOportunidad ? null : (idOportunidad ?? this.idOportunidad),
     );
   }
 
@@ -83,6 +85,6 @@ class SolicitudFiltroAvanzado extends Equatable {
     hasta,
     hastaActivo,
     idCampania,
-    idEvento,
+    idOportunidad,
   ];
 }

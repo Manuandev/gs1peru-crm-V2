@@ -21,7 +21,7 @@ abstract class SolicitudRepository {
     DateTime? fcDesde,
     DateTime? fcHasta,
     int? idCampania,
-    int? idEvento,
+    int? idOportunidad,
   });
 
   Future<SolicitudDetalleModel> getSolicitudDetalle(String numSol);

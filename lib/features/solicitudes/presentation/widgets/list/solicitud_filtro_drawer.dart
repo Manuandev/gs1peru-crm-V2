@@ -4,8 +4,9 @@
 // SeguimientoFiltroDrawer. El filtro va al SP (task 'LSP' es paginado).
 //
 // Rango de fechas: cada extremo con su checkbox (Desde → 00:00:00, Hasta →
-// 23:59:59). Por defecto: del 1 del mes actual a hoy, ambos activos (igual que
-// la web). Campaña → Evento en cascada (evento se recorta a los de esa campaña).
+// 23:59:59); el SP los aplica sobre FC_USUARIO_C (creación).
+// Campaña → Oportunidad en cascada (la oportunidad se recorta a las de esa
+// campaña). Evento ya no participa — ver el comentario del combo más abajo.
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/index_dependencies.dart';
@@ -26,7 +27,7 @@ class _SolicitudFiltroDrawerState extends State<SolicitudFiltroDrawer> {
   DateTime? _hasta;
   bool _hastaActivo = false;
   int? _campaniaId;
-  int? _eventoId;
+  int? _oportunidadId;
 
   @override
   void initState() {
@@ -40,7 +41,7 @@ class _SolicitudFiltroDrawerState extends State<SolicitudFiltroDrawer> {
     _hasta = f.hasta;
     _hastaActivo = f.hastaActivo;
     _campaniaId = f.idCampania;
-    _eventoId = f.idEvento;
+    _oportunidadId = f.idOportunidad;
   }
 
   void _aplicar() {
@@ -52,7 +53,7 @@ class _SolicitudFiltroDrawerState extends State<SolicitudFiltroDrawer> {
           hasta: _hasta,
           hastaActivo: _hastaActivo && _hasta != null,
           idCampania: _campaniaId,
-          idEvento: _eventoId,
+          idOportunidad: _oportunidadId,
         ),
       ),
     );
@@ -158,7 +159,14 @@ class _SolicitudFiltroDrawerState extends State<SolicitudFiltroDrawer> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Campaña → Evento en cascada.
+                    // Campaña → Oportunidad en cascada.
+                    //
+                    // 2026-09-10: este combo listaba EVENTOS (catState.eventos).
+                    // Se cambió a OPORTUNIDADES para quedar igual que la web: allá
+                    // el combo se llama "Evento" pero se llena con CRMV2_OPORTUNIDAD
+                    // y manda ID_OPORTUNIDAD (ValidarSolicitudRegistro.js — el código
+                    // que usaba EVENTO_ACTIVO quedó comentado ahí). El SP ahora filtra
+                    // OP.ID_OPORTUNIDAD, así que el combo debe mandar ese id.
                     BlocBuilder<CatalogsBloc, CatalogsState>(
                       builder: (context, catState) {
                         if (catState is! CatalogsLoaded) {
@@ -170,15 +178,15 @@ class _SolicitudFiltroDrawerState extends State<SolicitudFiltroDrawer> {
                                   '${c.id}${AppConstants.sepCampos}${c.nombre}',
                             )
                             .toList();
-                        final eventos = _campaniaId == null
-                            ? catState.eventos
-                            : catState.eventos
-                                  .where((e) => e.idCampania == _campaniaId)
+                        final oportunidades = _campaniaId == null
+                            ? catState.oportunidades
+                            : catState.oportunidades
+                                  .where((o) => o.idCampania == _campaniaId)
                                   .toList();
-                        final dataEventos = eventos
+                        final dataOportunidades = oportunidades
                             .map(
-                              (e) =>
-                                  '${e.id}${AppConstants.sepCampos}${e.nombre}',
+                              (o) =>
+                                  '${o.id}${AppConstants.sepCampos}${o.nombre}',
                             )
                             .toList();
                         return Column(
@@ -194,29 +202,32 @@ class _SolicitudFiltroDrawerState extends State<SolicitudFiltroDrawer> {
                                 final nuevo = int.tryParse(item?.id ?? '');
                                 setState(() {
                                   _campaniaId = nuevo;
-                                  if (_eventoId != null) {
+                                  if (_oportunidadId != null) {
                                     final sigue =
                                         nuevo == null ||
-                                        catState.eventos.any(
-                                          (e) =>
-                                              e.id == _eventoId &&
-                                              e.idCampania == nuevo,
+                                        catState.oportunidades.any(
+                                          (o) =>
+                                              o.id == _oportunidadId &&
+                                              o.idCampania == nuevo,
                                         );
-                                    if (!sigue) _eventoId = null;
+                                    if (!sigue) _oportunidadId = null;
                                   }
                                 });
                               },
                             ),
                             const SizedBox(height: AppSpacing.md),
                             CustomComboSearchField(
-                              key: ValueKey('sol-filtro-evento-$_campaniaId'),
-                              data: dataEventos,
-                              label: 'Evento',
-                              hint: 'Buscar evento...',
+                              key: ValueKey(
+                                'sol-filtro-oportunidad-$_campaniaId',
+                              ),
+                              data: dataOportunidades,
+                              label: 'Oportunidad',
+                              hint: 'Buscar oportunidad...',
                               displayIndex: 1,
-                              initialValue: _eventoId?.toString() ?? '',
+                              initialValue: _oportunidadId?.toString() ?? '',
                               onChanged: (item) => setState(
-                                () => _eventoId = int.tryParse(item?.id ?? ''),
+                                () =>
+                                    _oportunidadId = int.tryParse(item?.id ?? ''),
                               ),
                             ),
                           ],

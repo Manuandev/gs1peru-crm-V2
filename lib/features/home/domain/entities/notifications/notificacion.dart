@@ -11,6 +11,22 @@ enum TipoNotificacion {
   leadReasignado,
 }
 
+/// Chips de la pantalla de Notificaciones. Desde que la lista es paginada
+/// (2026-09-10) el filtro **va al SP**, no se aplica en memoria: con páginas
+/// parciales filtrar en el cliente mostraría solo lo que ya se descargó.
+/// [codigoSp] es el valor que espera el campo `filtro` del task 'LS'.
+enum FiltroNotificacion {
+  todas(''),
+  // 'ACT' agrupa todo lo que no es derivación del bot ni mensaje:
+  // recordatorio, lead por contactar, lead reasignado y la actividad genérica.
+  actividades('ACT'),
+  derivaciones('AIA'),
+  mensajes('CHAT');
+
+  final String codigoSp;
+  const FiltroNotificacion(this.codigoSp);
+}
+
 class Notificacion {
   final int id;
   final int idLead;
@@ -25,8 +41,10 @@ class Notificacion {
   // ver notificacion_model.dart) — null en el resto de tipos. Usado por
   // "Ver seguimiento" para ir a detalle de contacto (T_LEAD.ID_CONTACTO).
   final int? idContacto;
-  // Solo presente en derivación/mensaje — reemplaza a etiquetaPrincipal en el
-  // chip inferior de la tarjeta (ver getter abajo). Vacío en el resto de tipos.
+  // Oportunidad de la negociación asociada — reemplaza a etiquetaPrincipal en
+  // el chip inferior de la tarjeta (ver getter abajo). La traen mensaje,
+  // derivación, leadPorContactar y leadReasignado; vacía en recordatorio y en
+  // la actividad genérica, que no la incluyen en su DATOS.
   final String oportunidad;
 
   const Notificacion({
@@ -66,14 +84,12 @@ class Notificacion {
     oportunidad: oportunidad ?? this.oportunidad,
   );
 
-  // Etiqueta principal del chip según tipo — mensaje/derivación muestran la
-  // oportunidad en vez del tipo (pedido de negocio, 2026-08-13).
+  // Etiqueta principal del chip: SIEMPRE la oportunidad cuando la notificación
+  // trae una, sin importar el tipo (pedido de negocio 2026-09-10; antes solo
+  // aplicaba a mensaje/derivación). El label fijo por tipo queda de fallback
+  // para los que no traen oportunidad en su DATOS (recordatorio, actividad).
   String get etiquetaPrincipal {
-    if ((tipo == TipoNotificacion.mensaje ||
-            tipo == TipoNotificacion.derivacion) &&
-        oportunidad.isNotEmpty) {
-      return oportunidad.aTitulo;
-    }
+    if (oportunidad.isNotEmpty) return oportunidad.aTitulo;
     return switch (tipo) {
       TipoNotificacion.actividad => 'Actividad',
       TipoNotificacion.derivacion => 'Derivación',

@@ -4,11 +4,11 @@
 //
 //   primera página : "sinValidar¦validados" ¯ filas...
 //   siguientes     : filas...
-//   filas          : registro ¬ registro ¬ ...   (26 campos ¦ por registro)
+//   filas          : registro ¬ registro ¬ ...   (24 campos ¦ por registro)
 //   error del SP   : "ERR¦numero¦mensaje"
 //   sin datos      : ""  (ApiEmpty)
 //
-// Layout de campos por fila (0..25) — 0..22 IGUAL a 'LS' + 23..25 nuevos:
+// Layout de campos por fila (0..23) — 0..22 IGUAL a 'LS' + 23 idCampania:
 //   00 NUMSOL *cursor*   01 NOMBRES        02 APE_PATERNO      03 APE_MATERNO
 //   04 NOMEMPRE          05 CARGO          06 CELULAR          07 CORREO
 //   08 tipoPersona       09 idCondPago     10 condPago         11 IMP_TOTAL
@@ -16,7 +16,11 @@
 //   14 ID_OPORTUNIDAD    15 NOMBRE_OPORT   16 ID_CANAL         17 DES_CANAL
 //   18 ID_ESTADO_GES     19 DESC_ESTADO    20 IB_VALIDADO
 //   21 ID_USUARIO_EJEC   22 NOMUSER
-//   23 ID_CAMPANIA       24 ID_EVENTO      25 NOMBRE_EVENTO
+//   23 ID_CAMPANIA (de CRM.T_OPORTUNIDAD, la misma por la que filtra el SP)
+//
+// 2026-09-10: se eliminaron los campos 24 ID_EVENTO / 25 NOMBRE_EVENTO — el
+// filtro de la lista pasó de Campaña→Evento a Campaña→Oportunidad (igual que la
+// web), y EVT.T_EVENTO ya no participa en el task 'LSP'.
 //
 // El CURSOR de la página siguiente = campo 12 (FC_ULTIMA) + campo 00 (NUMSOL).
 
@@ -97,8 +101,6 @@ class SolicitudPaginaModel {
         idOportunidad: ParseUtils.toInt(f, 14),
         oportunidad: ParseUtils.str(f, 15),
         idCampania: ParseUtils.toInt(f, 23),
-        idEvento: ParseUtils.toInt(f, 24),
-        nombreEvento: ParseUtils.str(f, 25),
         idCanal: ParseUtils.toInt(f, 16),
         canal: ParseUtils.str(f, 17),
         idEstado: ParseUtils.toInt(f, 18),

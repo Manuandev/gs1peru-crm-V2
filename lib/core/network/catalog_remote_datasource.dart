@@ -46,11 +46,17 @@ class CatalogsRemoteDatasource {
     };
   }
 
-  // Task 'ASE' — SOLO el universo de asesores (mismo dataset que la parte [5]
-  // del catálogo completo), sin traer el resto. Usado para refrescar el
-  // picker de Asesores (cobranza/solicitudes) sin recargar todo el catálogo.
-  Future<List<AsesorItem>> getAsesores() async {
-    final String body = '${sep}ASE';
+  // Task 'ASE' — SOLO el universo de asesores, sin traer el resto. Usado para
+  // refrescar el picker de Asesores (cobranza/solicitudes) sin recargar todo el
+  // catálogo.
+  //   [ambito] (2026-09-11) acota de qué tabla sale la lista: cada pantalla
+  //   filtra por una columna distinta y la lista tiene que venir de la misma
+  //   tabla. `todos` (el default) devuelve el superconjunto — es lo que trae la
+  //   parte [5] del catálogo completo.
+  Future<List<AsesorItem>> getAsesores({
+    AsesorAmbito ambito = AsesorAmbito.todos,
+  }) async {
+    final String body = '${ambito.codigoSp}${sep}ASE';
 
     final result = await _api.postSafe(ApiConstants.urlListasLst, body);
 

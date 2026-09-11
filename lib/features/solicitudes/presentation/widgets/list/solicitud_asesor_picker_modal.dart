@@ -76,7 +76,12 @@ class _SolicitudAsesorPickerModalState
 
   Future<void> _cargarAsesoresFrescos() async {
     try {
-      final asesores = await context.read<CatalogsRepository>().getAsesores();
+      // Ambito 'inscripciones': la lista sale de la misma tabla por la que
+      // filtra esta pantalla (ID_USUARIO_EJEC). Con el universo de contactos
+      // faltaban ejecutivos que si aparecen en las cards.
+      final asesores = await context.read<CatalogsRepository>().getAsesores(
+        ambito: AsesorAmbito.inscripciones,
+      );
       if (mounted) setState(() => _asesoresFrescos = asesores);
     } catch (_) {
       // Best-effort — si falla, el picker sigue usable con el snapshot de

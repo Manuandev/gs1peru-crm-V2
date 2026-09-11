@@ -225,6 +225,26 @@ class EstadoItem with Comboable {
 }
 
 // SP lstListas parte [5]: codUser ¦ nombre ¦ flgDisponible (0/1)
+/// De qué tabla sale el universo de asesores del task `'ASE'` — cada pantalla
+/// filtra por una columna distinta, así que la lista tiene que venir de la misma
+/// tabla por la que filtra. Si no, hay ejecutivos que salen en las cards y no en
+/// el picker (pasaba en Solicitudes/Cobranza: la lista venía de
+/// `CRM.T_CONTACTO.ASESOR_PRINCIPAL` y el filtro por `ID_USUARIO_EJEC`).
+enum AsesorAmbito {
+  /// Solicitudes y Cobranza — `EVT.T_TECMSOLINSCRIPCION01.ID_USUARIO_EJEC`.
+  inscripciones('SOL'),
+
+  /// Seguimiento y Home — `CRM.T_CONTACTO.ASESOR_PRINCIPAL`.
+  leads('LEA'),
+
+  /// Los dos universos juntos. Es lo que trae el catálogo completo del login,
+  /// cuando todavía no se sabe a qué pantalla va a entrar el usuario.
+  todos('');
+
+  final String codigoSp;
+  const AsesorAmbito(this.codigoSp);
+}
+
 class AsesorItem with Comboable {
   final String codUser;
   final String nombre;

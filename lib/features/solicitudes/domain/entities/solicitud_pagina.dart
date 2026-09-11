@@ -6,6 +6,8 @@
 // - items      : filas de esta página (Solicitud, reusada tal cual).
 // - conteos    : "Sin validar" / "Validados" — SOLO en la primera página / refresh.
 //                null en las siguientes.
+// - conteosPorAsesor : {codUser: {ibValidado: cantidad}} para el picker
+//                "Asesores" — SOLO en la primera página, null en las siguientes.
 // - cursorFecha / cursorNumsol : llave para la página siguiente (FC_ULTIMA +
 //                NUMSOL de la última fila). null si vino vacía.
 
@@ -23,12 +25,17 @@ class SolicitudConteos {
 class SolicitudPagina {
   final List<Solicitud> items;
   final SolicitudConteos? conteos;
+
+  /// {codUser: {ibValidado: cantidad}} — lo calcula el SP sobre TODO el universo
+  /// filtrado, no sobre las páginas cargadas. null en las páginas siguientes.
+  final Map<String, Map<bool, int>>? conteosPorAsesor;
   final String? cursorFecha;
   final String? cursorNumsol;
 
   const SolicitudPagina({
     required this.items,
     this.conteos,
+    this.conteosPorAsesor,
     this.cursorFecha,
     this.cursorNumsol,
   });

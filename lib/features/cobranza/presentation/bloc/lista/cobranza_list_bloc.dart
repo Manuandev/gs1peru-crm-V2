@@ -40,6 +40,12 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   String _busqueda = '';
   int _ticketBusqueda = 0;
 
+  // {codUser: {idEstadoGes: cantidad}} del picker "Asesores". Lo manda el SP en
+  // la primera página sobre TODO el universo filtrado — antes se sumaba acá
+  // sobre los items ya cargados y un asesor con 141 cancelados mostraba las 9
+  // filas que habían entrado en la primera página.
+  Map<String, Map<int, int>> _conteosPorAsesor = const {};
+
   int _epoca = 0;
   bool _cargandoPagina = false;
   StreamSubscription<CobranzaUpdate>? _updateSub;
@@ -197,6 +203,10 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
       if (epoca != _epoca || emit.isDone) return;
 
       final items = pagina.items;
+      // Fallback al cálculo viejo (sobre lo cargado) solo si el SP no trae el
+      // bloque — app nueva contra un SP aún no desplegado.
+      _conteosPorAsesor =
+          pagina.conteosPorAsesor ?? _conteosPorAsesorLocal(items);
       emit(
         CobranzaListCargado(
           items: items,
@@ -206,7 +216,7 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
           conteos: pagina.conteos ?? const CobranzaConteos(),
           filtroAvanzado: _filtroAvanzado,
           busqueda: _busqueda,
-          conteosPorAsesor: _conteosPorAsesor(items),
+          conteosPorAsesor: _conteosPorAsesor,
           recargandoLista: false,
           finLista: items.length < CobranzaRemoteDatasource.tamanioPrimera,
           cursorFecha: pagina.cursorFecha,
@@ -292,7 +302,8 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
       emit(
         s.copyWith(
           items: items,
-          conteosPorAsesor: _conteosPorAsesor(items),
+          // conteosPorAsesor NO se recalcula: ya vino completo del SP en la
+          // primera página, sumar las páginas nuevas lo duplicaría.
           cargandoMas: false,
           finLista: pagina.items.length <
               CobranzaRemoteDatasource.tamanioSiguiente,
@@ -316,25 +327,60 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   ) {
     final s = state;
     if (s is! CobranzaListCargado) return;
+    final i = s.items.indexWhere((c) => c.numSol == event.numSol);
+    if (i < 0) return;
+
+    final anterior = s.items[i];
     final label = cobranzaEstadoLabel(event.idEstado);
-    final items = s.items
-        .map(
-          (c) => c.numSol == event.numSol
-              ? c.copyWith(
-                  idEstado: event.idEstado,
-                  estado: label.isNotEmpty ? label : null,
-                  idCondicion: event.idCondicion,
-                  condicion: event.condicion,
-                )
-              : c,
-        )
-        .toList();
-    emit(s.copyWith(items: items, conteosPorAsesor: _conteosPorAsesor(items)));
+    final items = List<Cobranza>.of(s.items);
+    items[i] = anterior.copyWith(
+      idEstado: event.idEstado,
+      estado: label.isNotEmpty ? label : null,
+      idCondicion: event.idCondicion,
+      condicion: event.condicion,
+    );
+
+    // El mapa del picker viene del SP, así que acá solo se PARCHA la fila que
+    // cambió (recalcularlo sobre `items` lo dejaría otra vez en los conteos de
+    // las páginas cargadas).
+    _conteosPorAsesor = _moverConteo(
+      _conteosPorAsesor,
+      codUser: anterior.asignadoA,
+      estadoAnterior: anterior.idEstado,
+      estadoNuevo: event.idEstado,
+    );
+    emit(s.copyWith(items: items, conteosPorAsesor: _conteosPorAsesor));
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  Map<String, Map<int, int>> _conteosPorAsesor(List<Cobranza> items) {
+  /// Mueve 1 del estado anterior al nuevo dentro del mapa del picker, para no
+  /// tener que volver a pedir la primera página cuando se factura desde el
+  /// detalle.
+  Map<String, Map<int, int>> _moverConteo(
+    Map<String, Map<int, int>> actual, {
+    required String codUser,
+    required int estadoAnterior,
+    required int estadoNuevo,
+  }) {
+    if (codUser.isEmpty || estadoAnterior == estadoNuevo) return actual;
+    final copia = {
+      for (final e in actual.entries) e.key: Map<int, int>.of(e.value),
+    };
+    final porEstado = copia.putIfAbsent(codUser, () => {});
+    final restante = (porEstado[estadoAnterior] ?? 0) - 1;
+    if (restante > 0) {
+      porEstado[estadoAnterior] = restante;
+    } else {
+      porEstado.remove(estadoAnterior);
+    }
+    porEstado[estadoNuevo] = (porEstado[estadoNuevo] ?? 0) + 1;
+    return copia;
+  }
+
+  /// Solo como respaldo cuando el SP no manda el bloque porAsesor: suma sobre
+  /// las filas ya cargadas (el comportamiento viejo, incompleto por diseño).
+  Map<String, Map<int, int>> _conteosPorAsesorLocal(List<Cobranza> items) {
     final conteos = <String, Map<int, int>>{};
     for (final c in items) {
       if (c.asignadoA.isEmpty) continue;

@@ -8,6 +8,8 @@
 // - conteos   : totales por estado (2/0/5/3) + total + pendiente global.
 //               SOLO vienen en la primera página / refresh. null en las
 //               siguientes.
+// - conteosPorAsesor : {codUser: {idEstadoGes: cantidad}} para el picker
+//               "Asesores" — SOLO en la primera página, null en las siguientes.
 // - cursorFecha / cursorNumSol : llave para la página siguiente (FC_USUARIO_C
 //               en ISO 126 + NUMSOL de la última fila). null si vino vacía.
 
@@ -48,12 +50,19 @@ class CobranzaConteos {
 class CobranzaPagina {
   final List<Cobranza> items;
   final CobranzaConteos? conteos;
+
+  /// {codUser: {idEstadoGes: cantidad}} — lo calcula el SP sobre TODO el
+  /// universo filtrado, no sobre las páginas cargadas. Se mueve con el panel,
+  /// el chip y la búsqueda, pero NO con el asesor seleccionado ni con el filtro
+  /// de tarjetas. null en las páginas siguientes.
+  final Map<String, Map<int, int>>? conteosPorAsesor;
   final String? cursorFecha;
   final String? cursorNumSol;
 
   const CobranzaPagina({
     required this.items,
     this.conteos,
+    this.conteosPorAsesor,
     this.cursorFecha,
     this.cursorNumSol,
   });

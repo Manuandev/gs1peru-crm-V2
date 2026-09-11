@@ -22,8 +22,8 @@ cliente (`SolicitudListBloc._emitir`) y solo encontraba dentro de las páginas y
   búsqueda — `SolicitudListPage` solo lo actualiza si `state.busqueda.isEmpty` (mientras se
   busca, el badge se queda con el último valor sin búsqueda).
 - `SolicitudListSuccess.busqueda` (nuevo). `solicitudes` ya no se filtra en cliente (`_emitir`
-  emite `_items` tal cual). `conteosPorAsesor` (picker) sigue best-effort sobre lo cargado — con
-  búsqueda activa refleja solo los resultados.
+  emite `_items` tal cual). `conteosPorAsesor` (picker) viene del SP desde el 2026-09-11 — con
+  búsqueda activa refleja solo los resultados, pero completos, no solo lo cargado.
 - El evento `SolicitudListSearched` conserva el nombre; el debounce vive en el bloc.
 
 ## El total solo se cuadra al precio pactado si la diferencia es de redondeo (2026-09-10)
@@ -220,7 +220,9 @@ página y **aplican fecha+campaña+evento**, no el chip. Fila 0-22 idéntica a `
 
 **Búsqueda de texto** (AppBar): ~~en cliente, sobre las páginas ya cargadas~~ — desde el
 2026-09-10 la aplica el SP (campo 12), ver la primera sección de este archivo.
-**`conteosPorAsesor`** (picker de Asesores) se calcula best-effort sobre las páginas cargadas.
+**`conteosPorAsesor`** (picker de Asesores) lo calcula el SP — bloque `porAsesor` de la 1ª
+página (`codUser¦ibValidado¦cantidad`), sobre TODO el universo filtrado (2026-09-11). Se mueve
+con el panel y la búsqueda; NO con el asesor seleccionado ni con el chip.
 **Skeleton** rehecho (`SolicitudListSkeleton` = indicadores + chips + cards; `SolicitudCardSkeletonList`
 para la recarga parcial al cambiar chip / aplicar filtro, dejando indicadores y chips montados).
 **Al entrar** a `SolicitudListPage` se dispara `CatalogsFiltrosRefreshed` (task `'FIL'`) para

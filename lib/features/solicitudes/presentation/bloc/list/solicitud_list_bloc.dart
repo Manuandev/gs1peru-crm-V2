@@ -29,6 +29,11 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
   SolicitudFiltroAvanzado _filtroAvanzado =
       SolicitudFiltroAvanzado.porDefecto();
   SolicitudConteos _conteos = const SolicitudConteos();
+  // {codUser: {ibValidado: cantidad}} del picker "Asesores". Lo manda el SP en
+  // la primera página sobre TODO el universo filtrado — antes se sumaba acá
+  // sobre `_items` (las páginas ya cargadas) y un asesor con 141 filas mostraba
+  // las 9 que habían entrado en la primera página.
+  Map<String, Map<bool, int>> _conteosPorAsesor = const {};
   int _epoca = 0;
   bool _cargandoPagina = false;
   String? _cursorFecha;
@@ -150,6 +155,10 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
 
       _items = pagina.items;
       _conteos = pagina.conteos ?? const SolicitudConteos();
+      // Fallback al cálculo viejo (sobre lo cargado) solo si el SP no trae el
+      // bloque — app nueva contra un SP aún no desplegado.
+      _conteosPorAsesor =
+          pagina.conteosPorAsesor ?? _conteosPorAsesorLocal(pagina.items);
       _cursorFecha = pagina.cursorFecha;
       _cursorNumsol = pagina.cursorNumsol;
       _finLista =
@@ -238,6 +247,16 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
 
   // ── Emisión ──────────────────────────────────────────────────────────────
 
+  Map<String, Map<bool, int>> _conteosPorAsesorLocal(List<Solicitud> items) {
+    final conteos = <String, Map<bool, int>>{};
+    for (final s in items) {
+      if (s.asesor.isEmpty) continue;
+      final m = conteos.putIfAbsent(s.asesor, () => {});
+      m[s.ibValidado] = (m[s.ibValidado] ?? 0) + 1;
+    }
+    return conteos;
+  }
+
   void _emitir(
     Emitter<SolicitudListState> emit, {
     bool? recargando,
@@ -245,13 +264,6 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     String? loadMoreError,
     bool limpiarLoadMoreError = false,
   }) {
-    final conteosPorAsesor = <String, Map<bool, int>>{};
-    for (final s in _items) {
-      if (s.asesor.isEmpty) continue;
-      final m = conteosPorAsesor.putIfAbsent(s.asesor, () => {});
-      m[s.ibValidado] = (m[s.ibValidado] ?? 0) + 1;
-    }
-
     emit(
       SolicitudListSuccess(
         solicitudes: _items,
@@ -261,7 +273,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
         busqueda: _busqueda,
         cntSinValidar: _conteos.sinValidar,
         cntValidados: _conteos.validados,
-        conteosPorAsesor: conteosPorAsesor,
+        conteosPorAsesor: _conteosPorAsesor,
         recargandoLista: recargando ?? false,
         finLista: _finLista,
         cargandoMas: cargandoMas ?? false,

@@ -75,7 +75,11 @@ se conservan).
   (1 del mes actual / hoy) **ya cargadas** pero con los checkboxes **apagados** (trae todo; si
   el asesor tilda un checkbox, la fecha ya está puesta). Igual que el embudo → Seguimiento.
   Drawer/menú → `.porDefecto()`.
-- `conteosPorAsesor` (picker de Asesores) se calcula best-effort sobre las páginas cargadas.
+- `conteosPorAsesor` (picker de Asesores) lo calcula el SP — bloque `porAsesor` de la 1ª
+  página (`codUser¦idEstadoGes¦cantidad`), sobre TODO el universo filtrado (2026-09-11).
+  Antes se sumaba en cliente sobre las páginas cargadas y un asesor con 141 cancelados
+  mostraba 9. Se mueve con el panel, el chip y la búsqueda; NO con el asesor seleccionado
+  ni con el filtro de tarjetas — el picker tiene que seguir mostrando a todos.
 
 ⚠️ Pendiente `ALTER PROCEDURE` de `CRM.CSV_COBRANZAS_LST_APP` en SSMS.
 

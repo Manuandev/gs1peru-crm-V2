@@ -2,11 +2,16 @@
 //
 // Parser de la respuesta del task 'LSP' (CRM.CSV_SOLICITUD_LST_APP). Formato:
 //
-//   primera página : "sinValidar¦validados" ¯ filas...
+//   primera página : "sinValidar¦validados" ¯ porAsesor ¯ filas...
 //   siguientes     : filas...
+//   porAsesor      : codUser¦ibValidado¦cantidad ¬ ...  (puede venir vacío)
 //   filas          : registro ¬ registro ¬ ...   (24 campos ¦ por registro)
 //   error del SP   : "ERR¦numero¦mensaje"
 //   sin datos      : ""  (ApiEmpty)
+//
+// 2026-09-11: se agregó el bloque porAsesor (conteos del picker "Asesores").
+// Se sigue aceptando la forma vieja de 2 bloques por si la app corre contra un
+// SP aún no desplegado — en ese caso conteosPorAsesor queda null.
 //
 // Layout de campos por fila (0..23) — 0..22 IGUAL a 'LS' + 23 idCampania:
 //   00 NUMSOL *cursor*   01 NOMBRES        02 APE_PATERNO      03 APE_MATERNO
@@ -47,10 +52,16 @@ class SolicitudPaginaModel {
 
     final bloques = raw.split(AppConstants.sepListas);
     SolicitudConteos? conteos;
+    Map<String, Map<bool, int>>? conteosPorAsesor;
     String filasRaw;
-    if (bloques.length >= 2) {
-      conteos = _parseConteos(bloques.first);
-      filasRaw = bloques.sublist(1).join(AppConstants.sepListas);
+    if (bloques.length >= 3) {
+      conteos = _parseConteos(bloques[0]);
+      conteosPorAsesor = _parsePorAsesor(bloques[1]);
+      filasRaw = bloques.sublist(2).join(AppConstants.sepListas);
+    } else if (bloques.length == 2) {
+      // SP sin el bloque porAsesor (versión anterior al 11/09/2026).
+      conteos = _parseConteos(bloques[0]);
+      filasRaw = bloques[1];
     } else {
       filasRaw = raw;
     }
@@ -66,6 +77,7 @@ class SolicitudPaginaModel {
     return SolicitudPagina(
       items: items,
       conteos: conteos,
+      conteosPorAsesor: conteosPorAsesor,
       cursorFecha: ultima?.fechaCreacion,
       cursorNumsol: ultima?.idSolicitud,
     );
@@ -77,6 +89,27 @@ class SolicitudPaginaModel {
       sinValidar: ParseUtils.toInt(f, 0),
       validados: ParseUtils.toInt(f, 1),
     );
+  }
+
+  /// "codUser¦ibValidado¦cantidad ¬ ..." → {codUser: {ibValidado: cantidad}}.
+  /// Bloque vacío = mapa vacío (no null): el SP sí respondió, simplemente no
+  /// hay filas en el universo filtrado.
+  static Map<String, Map<bool, int>> _parsePorAsesor(String raw) {
+    final conteos = <String, Map<bool, int>>{};
+    for (final registro in raw.split(AppConstants.sepRegistros)) {
+      if (registro.trim().isEmpty) continue;
+      final f = registro.split(AppConstants.sepCampos);
+      final codUser = ParseUtils.str(f, 0);
+      if (codUser.isEmpty) continue;
+      conteos
+          .putIfAbsent(codUser, () => {})
+          .update(
+            ParseUtils.toBool(f, 1),
+            (cant) => cant + ParseUtils.toInt(f, 2),
+            ifAbsent: () => ParseUtils.toInt(f, 2),
+          );
+    }
+    return conteos;
   }
 
   static Solicitud? _parseFila(String raw) {

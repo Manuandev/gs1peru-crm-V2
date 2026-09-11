@@ -133,10 +133,24 @@ class _SolicitudListPortraitState extends State<SolicitudListPortrait> {
                       child: SolicitudCard(
                         solicitud: s,
                         onVer: () => context.goToDetalleSolicitud(solicitud: s),
-                        onAccion: () => context.goToDetalleSolicitud(
-                          solicitud: s,
-                          origenValidar: true,
-                        ),
+                        // "Validar" ya no obliga a pasar por el Detalle y
+                        // volver a tocar "Validar" ahí — entra directo al
+                        // paso 1 del wizard, pero deja el Detalle apilado
+                        // debajo (mismo `origenValidar`/`modoEdicion` que ya
+                        // usaba ese flujo) para que "Atrás"/"Cancelar" del
+                        // wizard (un simple pop, ver
+                        // SolicitudWizardView._confirmarSalir) vuelva a esa
+                        // solicitud en vez de a la lista.
+                        onAccion: () {
+                          context.goToDetalleSolicitud(
+                            solicitud: s,
+                            origenValidar: true,
+                          );
+                          context.goToFichaCompletarSolicitud(
+                            solicitud: s,
+                            modoEdicion: true,
+                          );
+                        },
                       ),
                     );
                   },

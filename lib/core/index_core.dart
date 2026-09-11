@@ -131,6 +131,8 @@ export 'presentation/widgets/app_error_view.dart';
 export 'presentation/widgets/app_loading_view.dart';
 export 'presentation/widgets/app_process_overlay.dart';
 export 'presentation/widgets/app_empty_view.dart';
+export 'presentation/widgets/app_seccion_card.dart';
+export 'presentation/widgets/app_historial_item.dart';
 export 'presentation/widgets/app_snackbar.dart';
 
 export 'presentation/widgets/form_section_title.dart';

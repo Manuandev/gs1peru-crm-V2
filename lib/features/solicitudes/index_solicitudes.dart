@@ -48,7 +48,6 @@ export 'presentation/pages/solicitud_carga_masiva_page.dart';
 
 export 'presentation/widgets/detail/solicitud_detalle_view.dart';
 export 'presentation/widgets/detail/solicitud_detalle_pasos_indicador.dart';
-export 'presentation/widgets/detail/solicitud_detalle_widgets_base.dart';
 export 'presentation/widgets/detail/solicitud_detalle_secciones.dart';
 export 'presentation/widgets/detail/solicitud_detalle_historial.dart';
 export 'presentation/widgets/detail/solicitud_detalle_botones.dart';

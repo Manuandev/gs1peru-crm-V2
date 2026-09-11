@@ -173,6 +173,19 @@ class AppSizing {
   /// Ícono extra grande: 48px — ilustraciones de error/éxito en pantalla
   static const double iconXl = 48.0;
 
+  /// Contenedor del ícono de un estado vacío DENTRO de una card: 64px — más
+  /// chico que el de pantalla completa (iconXxl), para no desbalancear la card
+  /// (ej. "Historial" vacío en el Detalle de Solicitud).
+  static const double emptyStateIconContainerSm = 64.0;
+
+  /// Contenedor circular del ícono en el encabezado de AppSeccionCard: 36px
+  /// (secciones de los detalles de Solicitud y Cobranza).
+  static const double seccionCardIconContainer = 36.0;
+
+  /// Ancho fijo de la etiqueta (columna izquierda) en AppFilaInfo: 130px —
+  /// alinea los valores de todas las filas de una misma card.
+  static const double filaInfoEtiquetaWidth = 130.0;
+
   /// Contenedor de ícono de archivo adjunto: 40px — cuadrado de color tipo WhatsApp en _DocumentContent
   static const double iconFileContainer = 40.0;
 

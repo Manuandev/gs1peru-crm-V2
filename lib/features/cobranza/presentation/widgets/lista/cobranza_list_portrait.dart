@@ -122,7 +122,7 @@ class _CobranzaListPortraitState extends State<CobranzaListPortrait> {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: CobranzaCard(
                         cobranza: cobranza,
-                        onVerTap: () => context.goToDetalleCobranza(
+                        onTap: () => context.goToDetalleCobranza(
                           numSol: cobranza.numSol,
                         ),
                       ),

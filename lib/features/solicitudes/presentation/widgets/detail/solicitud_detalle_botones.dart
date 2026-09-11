@@ -41,46 +41,38 @@ class BotonesDetalle extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Botones custom del core: texto en UNA línea, centrado junto al
+          // ícono (antes FilledButton/OutlinedButton nativos con el texto del
+          // tema, que en pantallas angostas partía "Revisar solicitud" en 2
+          // líneas). Padding horizontal reducido para que el texto quepa
+          // completo con los 2 botones lado a lado.
           if (mostrarEditar) ...[
             Expanded(
-              child: OutlinedButton.icon(
+              child: CustomOutlinedButton(
+                text: origenValidar ? 'Validar' : 'Editar ficha',
+                icon: AppIcons.edit,
                 onPressed: () => context.goToFichaCompletarSolicitud(
                   solicitud: solicitud,
                   modoEdicion: true,
                 ),
-                icon: const Icon(AppIcons.edit, size: AppSizing.iconActionSm),
-                label: Text(origenValidar ? 'Validar' : 'Editar ficha'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.border),
-                  minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                  ),
-                ),
+                height: AppSizing.buttonHeight,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                foregroundColor: AppColors.primary,
+                borderColor: AppColors.border,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
           ],
           Expanded(
-            child: FilledButton.icon(
+            child: CustomPrimaryButton(
+              text: 'Revisar solicitud',
+              icon: AppIcons.visibility,
               onPressed: () => context.goToFichaCompletarSolicitud(
                 solicitud: solicitud,
                 modoEdicion: false,
               ),
-              icon: const Icon(
-                AppIcons.visibility,
-                size: AppSizing.iconActionSm,
-              ),
-              label: const Text('Revisar solicitud'),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.textOnDark,
-                minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                ),
-              ),
+              height: AppSizing.buttonHeight,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             ),
           ),
         ],

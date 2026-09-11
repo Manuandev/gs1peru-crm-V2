@@ -91,34 +91,21 @@ class ContenidoPaso1 extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        OutlinedButton.icon(
-          onPressed: descargando ? null : onDescargar,
-          icon: descargando
-              ? const SizedBox(
-                  width: AppSizing.iconActionSm,
-                  height: AppSizing.iconActionSm,
-                  child: CircularProgressIndicator(
-                    strokeWidth: AppSizing.spinnerStrokeSmall,
-                  ),
-                )
-              : const Icon(AppIcons.download, size: AppSizing.iconActionSm),
-          label: Text(
-            descargando ? 'Descargando...' : 'Descargar plantilla Excel',
+        // Mientras descarga: spinner del core (isLoading) en el mismo color.
+        CustomOutlinedButton(
+          text: 'Descargar plantilla Excel',
+          icon: AppIcons.download,
+          onPressed: onDescargar,
+          isLoading: descargando,
+          height: AppSizing.buttonHeight,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.primary),
-            minimumSize: const Size.fromHeight(AppSizing.buttonHeight),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-            ),
-            textStyle: AppTextStyles.labelSmall.copyWith(
-              fontWeight: AppTextStyles.weightSemiBold,
-            ),
+          foregroundColor: AppColors.primary,
+          borderColor: AppColors.primary,
+          textStyle: AppTextStyles.labelSmall.copyWith(
+            fontWeight: AppTextStyles.weightSemiBold,
           ),
         ),
       ],

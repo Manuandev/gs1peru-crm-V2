@@ -251,60 +251,30 @@ class SolicitudCard extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: CustomOutlinedButton(
+                      text: 'Ver',
+                      icon: AppIcons.visibility,
                       onPressed: onVer,
-                      icon: Icon(
-                        AppIcons.visibility,
-                        size: AppSizing.iconSm,
-                        color: AppColors.primary,
-                      ),
-                      label: Text(
-                        'Ver',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: AppTextStyles.weightSemiBold,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.border),
-                        minimumSize: const Size.fromHeight(
-                          AppSizing.buttonHeightCompact,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppSizing.radiusMd,
-                          ),
-                        ),
+                      height: AppSizing.buttonHeightCompact,
+                      iconSize: AppSizing.iconSm,
+                      foregroundColor: AppColors.primary,
+                      borderColor: AppColors.border,
+                      textStyle: AppTextStyles.labelSmall.copyWith(
+                        fontWeight: AppTextStyles.weightSemiBold,
                       ),
                     ),
                   ),
                   if (accion == SolicitudAccionTipo.sinValidar) ...[
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: FilledButton.icon(
+                      child: CustomSecondaryButton(
+                        text: 'Validar',
+                        icon: AppIcons.checkCircle,
                         onPressed: onAccion,
-                        icon: Icon(
-                          AppIcons.checkCircle,
-                          size: AppSizing.iconSm,
-                        ),
-                        label: Text(
-                          'Validar',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: AppTextStyles.weightSemiBold,
-                          ),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.secondary,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(
-                            AppSizing.buttonHeightCompact,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppSizing.radiusMd,
-                            ),
-                          ),
+                        height: AppSizing.buttonHeightCompact,
+                        iconSize: AppSizing.iconSm,
+                        textStyle: AppTextStyles.labelSmall.copyWith(
+                          fontWeight: AppTextStyles.weightSemiBold,
                         ),
                       ),
                     ),

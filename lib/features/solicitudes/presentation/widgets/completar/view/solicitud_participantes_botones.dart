@@ -1,7 +1,8 @@
 // lib/features/solicitudes/presentation/widgets/completar/view/solicitud_participantes_botones.dart
 //
 // Botones pequeños del encabezado de SolicitudParticipantesView: solo-ícono
-// ("Nuevo"/"Eliminar todos") e ícono+texto ("Carga masiva").
+// ("Nuevo"/"Eliminar todos") e ícono+texto ("Carga masiva"). Ambos son
+// CustomOutlinedButton en modo `compacto` (se ajustan a su contenido).
 
 import 'package:flutter/material.dart';
 
@@ -24,22 +25,17 @@ class BotonIconoSmall extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorEfectivo = enabled ? color : AppColors.textDisabled;
-    return OutlinedButton(
-      onPressed: enabled ? onTap : null,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: colorEfectivo,
-        side: BorderSide(color: colorEfectivo),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.sm,
-        ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        ),
-      ),
-      child: Icon(icono, size: 14),
+    return CustomOutlinedButton(
+      text: '',
+      icon: icono,
+      onPressed: onTap,
+      isEnabled: enabled,
+      compacto: true,
+      iconSize: AppSizing.iconXs,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      borderRadius: AppSizing.radiusSm,
+      foregroundColor: colorEfectivo,
+      borderColor: colorEfectivo,
     );
   }
 }
@@ -61,25 +57,19 @@ class BotonSeccionSmall extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = enabled ? AppColors.primary : AppColors.textDisabled;
-    return OutlinedButton.icon(
-      onPressed: enabled ? onTap : null,
-      icon: Icon(icono, size: 14),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.sm,
-        ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        ),
-        textStyle: AppTextStyles.labelSmall.copyWith(
-          fontWeight: AppTextStyles.weightSemiBold,
-        ),
+    return CustomOutlinedButton(
+      text: label,
+      icon: icono,
+      onPressed: onTap,
+      isEnabled: enabled,
+      compacto: true,
+      iconSize: AppSizing.iconXs,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      borderRadius: AppSizing.radiusSm,
+      foregroundColor: color,
+      borderColor: color,
+      textStyle: AppTextStyles.labelSmall.copyWith(
+        fontWeight: AppTextStyles.weightSemiBold,
       ),
     );
   }

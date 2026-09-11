@@ -45,32 +45,25 @@ class BotonAdjuntar extends StatelessWidget {
       );
     }
 
-    // SizedBox + tapTargetSize.shrinkWrap fuerzan el alto exacto — sin esto
-    // el botón queda más alto que buttonHeightCompact (32px) porque Material
-    // reserva un área de toque mínima de 48px aunque `minimumSize` diga otra
-    // cosa, y termina más grande que TarjetaArchivoAdjunto de arriba (mismo
-    // slot, un archivo adjuntado reemplaza al botón, ver build()).
-    return SizedBox(
+    // `compacto` (sin el área de toque de 48px de Material) + alto fijo en
+    // buttonHeightCompact (32px) + ancho completo — así mide exactamente lo
+    // mismo que TarjetaArchivoAdjunto de abajo (mismo slot, un archivo
+    // adjuntado reemplaza al botón, ver build()). Mismo radio (radiusSm).
+    // Colores explícitos solo habilitado: deshabilitado cae al gris del core.
+    return CustomOutlinedButton(
+      text: label,
+      icon: AppIcons.attach,
+      onPressed: onAdjuntar,
+      isEnabled: habilitado,
+      compacto: true,
+      width: double.infinity,
       height: AppSizing.buttonHeightCompact,
-      child: OutlinedButton.icon(
-        onPressed: habilitado ? onAdjuntar : null,
-        icon: const Icon(
-          Icons.attach_file_rounded,
-          size: AppSizing.iconActionSm,
-        ),
-        label: Text(label, overflow: TextOverflow.ellipsis),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-          ),
-          textStyle: AppTextStyles.labelMedium.copyWith(
-            fontWeight: AppTextStyles.weightMedium,
-          ),
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      borderRadius: AppSizing.radiusSm,
+      foregroundColor: habilitado ? AppColors.primary : null,
+      borderColor: habilitado ? AppColors.primary : null,
+      textStyle: AppTextStyles.labelMedium.copyWith(
+        fontWeight: AppTextStyles.weightMedium,
       ),
     );
   }

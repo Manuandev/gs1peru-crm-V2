@@ -492,6 +492,10 @@ class AppColors {
   /// Íconos muy sutiles sobre fondos de card (CardTotalesHome subtítulos): 71%
   static const double opacityIconMuted = 0.71;
 
+  /// Fondo tintado del círculo de ícono en AppSeccionCard/AppSeccionVacia
+  /// (detalles de Solicitud y Cobranza): 12% del color del ícono.
+  static const double opacitySeccionIconBg = 0.12;
+
   // ============================================================
   // DATO ITEM — Colores de ícono por campo en ChatDetailDatosLead
   // Cada campo del lead lleva un tono distinctivo: fg = ícono, bg = fondo del contenedor

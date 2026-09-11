@@ -1,4 +1,4 @@
-﻿// lib/core/presentation/widgets/buttons/custom_secondary_button.dart
+// lib/core/presentation/widgets/buttons/custom_secondary_button.dart
 
 import 'package:flutter/material.dart';
 
@@ -16,6 +16,8 @@ class CustomSecondaryButton extends StatelessWidget {
   final Color? backgroundColor;
   final Color? foregroundColor;
   final TextStyle? textStyle;
+  // Tamaño del ícono. null = AppSizing.iconActionSm.
+  final double? iconSize;
 
   const CustomSecondaryButton({
     super.key,
@@ -30,6 +32,7 @@ class CustomSecondaryButton extends StatelessWidget {
     this.backgroundColor,
     this.foregroundColor,
     this.textStyle,
+    this.iconSize,
   });
 
   @override
@@ -82,7 +85,11 @@ class CustomSecondaryButton extends StatelessWidget {
           ? ElevatedButton.icon(
               onPressed: enabled ? onPressed : null,
               style: buttonStyle,
-              icon: resolveIcon(icon!, AppSizing.iconActionSm, resolvedFg),
+              icon: resolveIcon(
+                icon!,
+                iconSize ?? AppSizing.iconActionSm,
+                resolvedFg,
+              ),
               label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
             )
           : ElevatedButton(

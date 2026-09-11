@@ -100,7 +100,7 @@ class _SolicitudDetalleViewState extends State<SolicitudDetalleView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Detalle de Solicitud'),
+              const Text('Detalle de solicitud'),
               Text(
                 'Revisa la información y continúa con el proceso',
                 style: AppTextStyles.labelSmall.copyWith(

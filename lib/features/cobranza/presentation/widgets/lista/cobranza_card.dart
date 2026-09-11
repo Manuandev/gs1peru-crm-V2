@@ -6,20 +6,21 @@ import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaCard extends StatelessWidget {
   final Cobranza cobranza;
-  final VoidCallback? onVerTap;
+  // Tap en cualquier parte de la card → abre el detalle (reemplaza al botón
+  // "Ver", que era muy chico para tocar — quedó comentado más abajo).
+  final VoidCallback? onTap;
   // final VoidCallback? onWhatsAppTap;
 
   const CobranzaCard({
     super.key,
     required this.cobranza,
-    this.onVerTap,
+    this.onTap,
     // this.onWhatsAppTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizing.radiusSm),
@@ -32,7 +33,30 @@ class CobranzaCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      // Material transparente + InkWell encima del fondo de la card: así se
+      // ve la onda del toque sin tapar el color/sombra del Container.
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: _CobranzaCardContenido(cobranza: cobranza),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CobranzaCardContenido extends StatelessWidget {
+  final Cobranza cobranza;
+  const _CobranzaCardContenido({required this.cobranza});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Fila superior: avatar + nombre + estado + acciones ──
@@ -61,10 +85,9 @@ class CobranzaCard extends StatelessWidget {
 
           const SizedBox(height: AppSpacing.xs),
 
-          // ── Fecha + botón Ver ───────────────────────────────────
-          _CobranzaFechaVer(cobranza: cobranza, onVerTap: onVerTap),
+          // ── Fecha (el botón Ver quedó comentado — ahora se toca la card) ──
+          _CobranzaFechaVer(cobranza: cobranza),
         ],
-      ),
     );
   }
 }
@@ -266,9 +289,9 @@ class _DatoItem extends StatelessWidget {
 
 class _CobranzaFechaVer extends StatelessWidget {
   final Cobranza cobranza;
-  final VoidCallback? onVerTap;
+  // final VoidCallback? onVerTap;
 
-  const _CobranzaFechaVer({required this.cobranza, this.onVerTap});
+  const _CobranzaFechaVer({required this.cobranza});
 
   @override
   Widget build(BuildContext context) {
@@ -281,7 +304,9 @@ class _CobranzaFechaVer extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.xs),
         Expanded(child: _textoFecha()),
-        _BotonVer(onTap: onVerTap),
+        // Botón "Ver" comentado por ahora (2026-09-11): muy chico para tocar,
+        // ahora toda la card abre el detalle (CobranzaCard.onTap).
+        // _BotonVer(onTap: onVerTap),
       ],
     );
   }
@@ -329,31 +354,32 @@ class _CobranzaFechaVer extends StatelessWidget {
   }
 }
 
-class _BotonVer extends StatelessWidget {
-  final VoidCallback? onTap;
-  const _BotonVer({this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xxs,
-        ),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        ),
-        child: Text(
-          'Ver',
-          style: AppTextStyles.labelSmall.copyWith(
-            fontWeight: AppTextStyles.weightSemiBold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// Comentado por ahora (2026-09-11) — ver _CobranzaFechaVer.
+// class _BotonVer extends StatelessWidget {
+//   final VoidCallback? onTap;
+//   const _BotonVer({this.onTap});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Container(
+//         padding: const EdgeInsets.symmetric(
+//           horizontal: AppSpacing.sm,
+//           vertical: AppSpacing.xxs,
+//         ),
+//         decoration: BoxDecoration(
+//           border: Border.all(color: AppColors.border),
+//           borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+//         ),
+//         child: Text(
+//           'Ver',
+//           style: AppTextStyles.labelSmall.copyWith(
+//             fontWeight: AppTextStyles.weightSemiBold,
+//             color: AppColors.textPrimary,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

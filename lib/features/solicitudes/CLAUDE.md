@@ -1,5 +1,24 @@
 # Solicitudes Feature
 
+## "Validar" (lista) entra directo al paso 1 del wizard, con el Detalle apilado debajo (2026-09-11)
+Pedido de negocio — antes tocar "Validar" en `SolicitudCard` (lista) solo abría el Detalle
+(`origenValidar: true`) y el asesor tenía que tocar "Validar" una segunda vez ahí para recién
+entrar al wizard. Ahora un solo toque en la lista entra directo al paso 1, pero el Detalle sigue
+apilado debajo — al presionar "Atrás"/"Cancelar" en el wizard (un `pop()` simple, ver
+`SolicitudWizardView._confirmarSalir()`, que nunca cambió) el asesor cae en el Detalle de esa
+misma solicitud, no en la lista.
+
+- **`SolicitudListPortrait`** (`onAccion` de la card) ahora encadena, sin `await`, las 2
+  navegaciones que antes requerían 2 toques separados: `context.goToDetalleSolicitud(solicitud:
+  s, origenValidar: true)` seguido de `context.goToFichaCompletarSolicitud(solicitud: s,
+  modoEdicion: true)` — mismos parámetros que ya usaba cada paso por separado (el Detalle sigue
+  mostrando "Validar" en vez de "Editar ficha" si el asesor llega a verlo; el wizard abre en modo
+  edición, paso 1). Como ambas son `_push`/`pushNamed` normales, el stack queda `[..., Lista,
+  Detalle, Wizard]` — ningún cambio en `SolicitudDetalleView`/`BotonesDetalle`/
+  `SolicitudWizardView`, todos ya asumían este mismo stack cuando se entraba por "Editar
+  ficha"/"Validar" DESDE el Detalle (ver "Card simplificada + Validar vs Ver..." más abajo).
+- **"Ver"** (`onVer`) no se tocó — sigue siendo un solo push al Detalle, sin wizard detrás.
+
 ## Paso 2 saltaba al 4 con lista vacía + el Detalle pasó a UNA sola llamada `'DV'` (2026-09-11)
 
 **Bug — paso 2 → paso 4 sin pasar por Facturación.** `_onContinuar()`

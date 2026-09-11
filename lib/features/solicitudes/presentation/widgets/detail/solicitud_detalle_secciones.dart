@@ -27,18 +27,18 @@ class SeccionDatosParticipante extends StatelessWidget {
         .where((t) => t.id == detalle.tipoDocumentoId)
         .firstOrNull;
 
-    return SeccionCard(
+    return AppSeccionCard(
       colorIcono: AppColors.primary,
       icono: AppIcons.user,
       titulo: 'Datos del participante',
       children: [
-        FilaInfo(etiqueta: 'Correo', valor: detalle.correo),
-        FilaInfo(etiqueta: 'Celular', valor: detalle.celular),
-        FilaInfo(
+        AppFilaInfo(etiqueta: 'Correo', valor: detalle.correo),
+        AppFilaInfo(etiqueta: 'Celular', valor: detalle.celular),
+        AppFilaInfo(
           etiqueta: 'Documento',
           valor: '${tipoDoc?.abreviatura ?? ''} ${detalle.numDoc}'.trim(),
         ),
-        FilaInfo(
+        AppFilaInfo(
           etiqueta: 'Cargo',
           valor: detalle.cargo,
           mostrarDivisor: false,
@@ -55,12 +55,12 @@ class SeccionDatosFacturacion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SeccionCard(
+    return AppSeccionCard(
       colorIcono: AppColors.purple,
       icono: AppIcons.receipt,
       titulo: 'Datos de facturación',
       children: [
-        FilaInfo(
+        AppFilaInfo(
           etiqueta: 'Tipo de comprobante',
           valor: detalle.facTipoComprobante,
         ),
@@ -68,13 +68,13 @@ class SeccionDatosFacturacion extends StatelessWidget {
         // documento + Nombre — mutuamente excluyentes, mismo criterio que
         // usa el wizard (ver DatosFacturacion.esRuc en CLAUDE.md).
         if (detalle.facTieneRuc) ...[
-          FilaInfo(etiqueta: 'RUC', valor: detalle.facRuc),
-          FilaInfo(etiqueta: 'Razón social', valor: detalle.facRazonSocial),
+          AppFilaInfo(etiqueta: 'RUC', valor: detalle.facRuc),
+          AppFilaInfo(etiqueta: 'Razón social', valor: detalle.facRazonSocial),
         ] else ...[
-          FilaInfo(etiqueta: 'N° documento', valor: detalle.facNumDoc),
-          FilaInfo(etiqueta: 'Nombre', valor: detalle.facNombreCompleto),
+          AppFilaInfo(etiqueta: 'N° documento', valor: detalle.facNumDoc),
+          AppFilaInfo(etiqueta: 'Nombre', valor: detalle.facNombreCompleto),
         ],
-        FilaInfo(
+        AppFilaInfo(
           etiqueta: 'Dirección fiscal',
           valor: detalle.facDireccion,
           mostrarDivisor: false,

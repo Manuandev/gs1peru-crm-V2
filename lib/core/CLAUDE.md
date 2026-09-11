@@ -427,9 +427,12 @@ CustomPrimaryButton(
   isLoading: false,   // muestra spinner al true
   isEnabled: true,
   icon: AppIcons.save, // opcional
-  // width, height, padding opcionales
+  // width, height, padding, backgroundColor, foregroundColor, textStyle,
+  // iconSize (default iconActionSm, agregado 2026-09-11) — opcionales
 )
 ```
+Botón deshabilitado mientras un `AppProcessOverlay` ya muestra la carga: usar `isEnabled: false`,
+no `isLoading: true` (evita un segundo spinner dentro del botón).
 
 ### CustomSecondaryButton
 Botón naranja secundario.
@@ -501,9 +504,21 @@ Botón con borde visible, sin relleno. Para acciones secundarias o de cancelar.
 CustomOutlinedButton(
   text: 'CANCELAR',
   onPressed: () => Navigator.pop(context),
-  // isLoading, isEnabled, icon, width, height, borderColor, textColor — opcionales
+  // isLoading, isEnabled, icon, width, height, borderColor, foregroundColor,
+  // textStyle, padding, borderWidth, borderRadius, iconSize, compacto — opcionales
 )
 ```
+**Variantes agregadas 2026-09-11** (todas opcionales, sin cambiar el comportamiento de los usos
+existentes) — para reemplazar los `OutlinedButton` nativos que armaba cada feature a mano:
+- `borderRadius` (default `radiusMd`) e `iconSize` (default `iconActionSm`).
+- `compacto: true` → se ajusta a su contenido (sin ancho completo salvo `width`, sin alto mínimo
+  salvo `height`) y sin el área de toque extra de 48px de Material (`shrinkWrap`). Para acciones
+  chicas en encabezados de sección ("Editar", "Carga masiva"). Con `width: double.infinity` +
+  `height` sirve para un botón de alto exacto a todo lo ancho (ej. `BotonAdjuntar`, 32px).
+- `text: ''` + `icon` → botón **solo-ícono** (ej. "Nuevo"/"Eliminar todos" de Participantes).
+- Ojo con el estado deshabilitado: si se pasa `foregroundColor`/`borderColor` explícitos, se usan
+  aunque el botón esté deshabilitado — para conservar el gris del core pasarlos solo cuando está
+  habilitado (`habilitado ? AppColors.primary : null`), o pasar el color gris a propósito.
 
 ### CustomGoogleButton
 Botón outlined con logo de Google para autenticación.
@@ -604,6 +619,52 @@ Vista de estado vacío con mensaje customizable.
 ```dart
 AppEmptyView(message: 'No hay registros disponibles')
 ```
+
+### AppSeccionCard / AppFilaInfo / AppSeccionVacia — `presentation/widgets/app_seccion_card.dart`
+Bloques de las pantallas de "Detalle" (agregados 2026-09-11, movidos desde `solicitudes/`
+`SeccionCard`/`FilaInfo` para que el Detalle de Solicitud y el Detalle de cobro se vean igual).
+```dart
+AppSeccionCard(
+  colorIcono: AppColors.purple,       // ícono en círculo + título en negrita
+  icono: AppIcons.receipt,
+  titulo: 'Datos de facturación',
+  children: [
+    AppFilaInfo(etiqueta: 'Tipo de comprobante', valor: 'FACTURA'),
+    AppFilaInfo(etiqueta: 'Correo', valor: correo, onTap: _copiar), // onTap → valor en AppColors.info
+    AppFilaInfo(etiqueta: 'Dirección', valor: dir, mostrarDivisor: false), // última fila
+  ],
+)
+```
+`AppFilaInfo` pinta la **etiqueta arriba y el valor abajo**, cada uno a todo el ancho (2026-09-11)
+— antes iban lado a lado (etiqueta de 130px + valor), y un valor largo (un correo, una dirección,
+"BOLETA DE VENTA") quedaba apretado y partido en varias líneas.
+
+### AppHistorialItem — `presentation/widgets/app_historial_item.dart`
+Fila de una línea de tiempo: ícono en círculo + línea vertical a la izquierda, descripción +
+origen + fecha a la derecha. **Único estilo de historial de la app** (2026-09-11) — lo usan el
+Detalle de cobro y el Detalle de Solicitud, que antes tenían dos diseños distintos. No recibe
+"título": las actividades del backend casi nunca lo traen (`LA.NOMBRE` vacío) y dejaba un
+renglón en blanco sobre la descripción.
+```dart
+AppHistorialItem(
+  icono: AppIcons.fileGeneric,
+  color: AppColors.primary,
+  descripcion: h.descripcion,
+  origen: h.origen,                       // opcional, va a la derecha
+  fechaTexto: '08/09/2026 • 10:57',       // ya formateada por el caller
+  esUltimo: i == historial.length - 1,    // sin línea vertical en el último
+)
+
+// Vacío compacto DENTRO de la card (no usar AppEmptyView ahí — queda suelto/desalineado)
+AppSeccionVacia(
+  icono: AppIcons.historial,
+  color: AppColors.warning,           // mismo color que el ícono de la card
+  titulo: 'Sin movimientos registrados',
+  mensaje: 'Aquí se registrarán...',
+)
+```
+Tokens: `AppSizing.seccionCardIconContainer` (36), `filaInfoEtiquetaWidth` (130),
+`emptyStateIconContainerSm` (64), `AppColors.opacitySeccionIconBg` (0.12).
 
 ### AppErrorView
 Vista de error con botón reintentar.

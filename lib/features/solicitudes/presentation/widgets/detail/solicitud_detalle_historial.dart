@@ -1,6 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/detail/solicitud_detalle_historial.dart
 //
-// Sección "Historial" de SolicitudDetalleView — línea de tiempo de eventos.
+// Sección "Historial" de SolicitudDetalleView — AppSeccionCard +
+// AppHistorialItem (core), mismo estilo que el Historial del Detalle de cobro.
 
 import 'package:flutter/material.dart';
 
@@ -14,133 +15,33 @@ class SeccionHistorial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (historial.isEmpty) {
-      return SeccionCard(
-        colorIcono: AppColors.warning,
-        icono: AppIcons.time,
-        titulo: 'Historial',
-        children: const [
-          FilaInfo(
-            etiqueta: '',
-            valor: 'Todavía no hay movimientos registrados.',
-            mostrarDivisor: false,
-          ),
-        ],
-      );
-    }
-
-    return SeccionCard(
+    return AppSeccionCard(
       colorIcono: AppColors.warning,
       icono: AppIcons.time,
       titulo: 'Historial',
       children: [
-        for (int i = 0; i < historial.length; i++)
-          _EntradaHistorial(
-            fecha: historial[i].fecha.formatDate(AppDateFormat.shortDate),
-            hora: historial[i].fecha.formatDate(AppDateFormat.hourMinute),
-            titulo: historial[i].titulo,
-            descripcion: historial[i].descripcion,
-            activo: i == 0,
-            esUltimo: i == historial.length - 1,
-          ),
-      ],
-    );
-  }
-}
-
-class _EntradaHistorial extends StatelessWidget {
-  final String fecha;
-  final String hora;
-  final String titulo;
-  final String descripcion;
-  final bool activo;
-  final bool esUltimo;
-
-  const _EntradaHistorial({
-    required this.fecha,
-    required this.hora,
-    required this.titulo,
-    required this.descripcion,
-    required this.activo,
-    required this.esUltimo,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Color colorDot = activo ? AppColors.warning : AppColors.border;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Columna: punto + línea vertical
-        SizedBox(
-          width: 16,
-          child: Column(
-            children: [
-              const SizedBox(height: 3),
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: colorDot,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              if (!esUltimo)
-                Container(
-                  width: 2,
-                  height: 52,
-                  margin: const EdgeInsets.only(top: 3),
-                  color: AppColors.border,
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-
-        // Contenido del evento
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: esUltimo ? 0 : AppSpacing.xs),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      fecha,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      hora,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  titulo,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: AppTextStyles.weightSemiBold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  descripcion,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+        if (historial.isEmpty)
+          const AppSeccionVacia(
+            icono: AppIcons.historial,
+            color: AppColors.warning,
+            titulo: 'Sin movimientos registrados',
+            mensaje:
+                'Aquí se registrarán las validaciones, cambios de estado y '
+                'gestiones que se realicen sobre esta solicitud.',
+          )
+        else
+          for (int i = 0; i < historial.length; i++)
+            AppHistorialItem(
+              icono: AppIcons.fileGeneric,
+              color: AppColors.primary,
+              descripcion: historial[i].descripcion,
+              origen: historial[i].origen,
+              fechaTexto:
+                  '${historial[i].fecha.formatDate(AppDateFormat.shortDate)}'
+                  ' • '
+                  '${historial[i].fecha.formatDate(AppDateFormat.hourMinute)}',
+              esUltimo: i == historial.length - 1,
             ),
-          ),
-        ),
       ],
     );
   }

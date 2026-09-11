@@ -24,14 +24,23 @@ class CobranzaDetalleModel extends CobranzaDetalle {
     super.correo,
     super.celular,
     super.idChatCab,
+    super.facNumDoc,
+    super.facNombres,
+    super.facApePaterno,
+    super.facApeMaterno,
+    super.facRuc,
+    super.facRazonSocial,
+    super.facDireccion,
     super.archivos,
     required super.historial,
   });
 
   // Task 'DT' de [CRM].[CSV_COBRANZAS_LST_APP] — 3 secciones separadas por
-  // sepListas: [0] campos principales (sepCampos, 17 posiciones) · [1]
-  // archivos · [2] historial. Versión recortada — solo trae lo que usa
-  // Flutter hoy (sin datos de solicitante/facturación ni participantes).
+  // sepListas: [0] campos principales (sepCampos, 26 posiciones) · [1]
+  // archivos · [2] historial. Los campos 19-25 (datos de facturación) se
+  // agregaron el 2026-09-11 — con el SP viejo llegan vacíos (ParseUtils.str
+  // devuelve '' si el índice no existe), la sección simplemente muestra
+  // menos filas.
   static CobranzaDetalleModel parse(String rawResponse) {
     final partes = rawResponse.split(AppConstants.sepListas);
     final c = partes.isNotEmpty
@@ -68,6 +77,13 @@ class CobranzaDetalleModel extends CobranzaDetalle {
       fechaSolicitud: ParseUtils.str(c, 16),
       idChatCab: ParseUtils.toInt(c, 17),
       monedaId: ParseUtils.str(c, 18),
+      facNumDoc: ParseUtils.str(c, 19),
+      facNombres: ParseUtils.str(c, 20),
+      facApePaterno: ParseUtils.str(c, 21),
+      facApeMaterno: ParseUtils.str(c, 22),
+      facRuc: ParseUtils.str(c, 23),
+      facRazonSocial: ParseUtils.str(c, 24),
+      facDireccion: ParseUtils.str(c, 25),
       archivos: archivos,
       historial: historial,
     );

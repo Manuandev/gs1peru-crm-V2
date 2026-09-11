@@ -115,28 +115,22 @@ class _BottomActionButton extends StatelessWidget {
         color: colorScheme.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
-      child: SizedBox(
-        width: double.infinity,
+      child: CustomPrimaryButton(
+        text: 'Continuar facturación',
+        icon: AppIcons.receipt,
+        iconSize: AppSizing.iconMd,
         height: AppSizing.buttonHeight,
-        child: FilledButton.icon(
-          onPressed: () => context.goToFacturarCobranza(
-            idCobranza: detalle.idCobranza,
-            nombre: detalle.nombreCompleto,
-            oportunidad: detalle.oportunidad,
-            montoTotal: detalle.montoTotal,
-            moneda: detalle.moneda,
-            monedaId: detalle.monedaId,
-            idCondicion: detalle.idCondicion,
-            condicion: detalle.condicion,
-            tipoComprobante: detalle.tipoComprobante,
-          ),
-          icon: Icon(AppIcons.receipt, size: AppSizing.iconMd),
-          label: Text('Continuar facturación', style: AppTextStyles.button),
-          style: FilledButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-            ),
-          ),
+        textStyle: AppTextStyles.button,
+        onPressed: () => context.goToFacturarCobranza(
+          idCobranza: detalle.idCobranza,
+          nombre: detalle.nombreCompleto,
+          oportunidad: detalle.oportunidad,
+          montoTotal: detalle.montoTotal,
+          moneda: detalle.moneda,
+          monedaId: detalle.monedaId,
+          idCondicion: detalle.idCondicion,
+          condicion: detalle.condicion,
+          tipoComprobante: detalle.tipoComprobante,
         ),
       ),
     );

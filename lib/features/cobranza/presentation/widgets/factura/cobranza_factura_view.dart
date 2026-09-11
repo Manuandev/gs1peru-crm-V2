@@ -290,32 +290,24 @@ class _BotonesFactura extends StatelessWidget {
         children: [
           // Cancelar
           Expanded(
-            child: OutlinedButton(
+            child: CustomOutlinedButton(
+              text: 'Cancelar',
               onPressed: () => context.goBack(),
-              style: OutlinedButton.styleFrom(
-                minimumSize: Size(double.infinity, AppSizing.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                ),
-              ),
-              child: const Text('Cancelar'),
+              height: AppSizing.buttonHeight,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
 
-          // Facturar
+          // Facturar — deshabilitado (no isLoading) mientras factura: el
+          // AppProcessOverlay de CobranzaFacturaView ya muestra la carga.
           Expanded(
-            child: FilledButton.icon(
-              onPressed:
-                  state.status == CobranzaFacturaStatus.loading ? null : onFacturar,
-              icon: Icon(AppIcons.fileFactura, size: AppSizing.iconSm),
-              label: const Text('Facturar'),
-              style: FilledButton.styleFrom(
-                minimumSize: Size(double.infinity, AppSizing.buttonHeight),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-                ),
-              ),
+            child: CustomPrimaryButton(
+              text: 'Facturar',
+              icon: AppIcons.fileFactura,
+              iconSize: AppSizing.iconSm,
+              onPressed: onFacturar,
+              isEnabled: state.status != CobranzaFacturaStatus.loading,
+              height: AppSizing.buttonHeight,
             ),
           ),
         ],

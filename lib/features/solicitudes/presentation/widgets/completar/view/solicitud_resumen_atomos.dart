@@ -99,24 +99,21 @@ class BotonEditar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return CustomOutlinedButton(
+      text: 'Editar',
+      icon: AppIcons.edit,
       onPressed: onTap,
-      icon: const Icon(AppIcons.edit, size: 13),
-      label: const Text('Editar'),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.primary,
-        side: const BorderSide(color: AppColors.primary),
-        minimumSize: Size.zero,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xxs,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
-        ),
-        textStyle: AppTextStyles.labelSmall.copyWith(
-          fontWeight: AppTextStyles.weightMedium,
-        ),
+      compacto: true,
+      iconSize: AppSizing.iconXxs,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+      borderRadius: AppSizing.radiusSm,
+      foregroundColor: AppColors.primary,
+      borderColor: AppColors.primary,
+      textStyle: AppTextStyles.labelSmall.copyWith(
+        fontWeight: AppTextStyles.weightMedium,
       ),
     );
   }

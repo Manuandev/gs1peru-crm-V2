@@ -31,13 +31,35 @@ class CobranzaDetalle {
   final String correo;
   final String celular;
   final int idChatCab;
-  final List<ArchivoCobranza> archivos;
-  final List<HistorialCobranza> historial;
+
+  // Datos de facturación (EVT.T_TECMSOLINSCRIPCION01_FACTURACION, campos
+  // 19-25 del task 'DT', agregados 2026-09-11) — mismos que muestra el
+  // Detalle de Solicitud: Factura (con RUC) → RUC + razón social; Boleta
+  // (sin RUC) → N° documento + nombre. Mutuamente excluyentes.
+  final String facNumDoc;
+  final String facNombres;
+  final String facApePaterno;
+  final String facApeMaterno;
+  final String facRuc;
+  final String facRazonSocial;
+  final String facDireccion;
 
   String get nombreCompleto => [nombre, apellido, apellidoMaterno]
       .where((p) => p.isNotEmpty)
       .join(' ')
       .aTitulo;
+
+  // Mismo criterio que SolicitudDetalle.facTieneRuc — ambos grupos de campos
+  // son excluyentes en el guardado, el RUC decide cuál mostrar.
+  bool get facTieneRuc => facRuc.isNotEmpty;
+
+  String get facNombreCompleto => [facNombres, facApePaterno, facApeMaterno]
+      .where((p) => p.isNotEmpty)
+      .join(' ')
+      .aTitulo;
+
+  final List<ArchivoCobranza> archivos;
+  final List<HistorialCobranza> historial;
 
   // true si el join de facturación no trajo ningún dato (registro vacío/sin
   // completar todavía) — usado para mostrar un mensaje en vez de una fila
@@ -46,7 +68,9 @@ class CobranzaDetalle {
       tipoComprobante.isEmpty &&
       moneda.isEmpty &&
       correo.isEmpty &&
-      celular.isEmpty;
+      celular.isEmpty &&
+      facRuc.isEmpty &&
+      facNumDoc.isEmpty;
 
   const CobranzaDetalle({
     required this.idCobranza,
@@ -68,6 +92,13 @@ class CobranzaDetalle {
     this.correo = '',
     this.celular = '',
     this.idChatCab = 0,
+    this.facNumDoc = '',
+    this.facNombres = '',
+    this.facApePaterno = '',
+    this.facApeMaterno = '',
+    this.facRuc = '',
+    this.facRazonSocial = '',
+    this.facDireccion = '',
     this.archivos = const [],
     required this.historial,
   });
@@ -98,6 +129,13 @@ class CobranzaDetalle {
       correo: correo,
       celular: celular,
       idChatCab: idChatCab,
+      facNumDoc: facNumDoc,
+      facNombres: facNombres,
+      facApePaterno: facApePaterno,
+      facApeMaterno: facApeMaterno,
+      facRuc: facRuc,
+      facRazonSocial: facRazonSocial,
+      facDireccion: facDireccion,
       archivos: archivos,
       historial: historial,
     );

@@ -1,5 +1,37 @@
 # Cobranza Feature
 
+## Detalle de cobro — "Datos de facturación" completos + mismo diseño que Solicitudes (2026-09-11)
+
+Pedido del usuario: que el detalle de cobro muestre los datos de facturación igual que el
+Detalle de Solicitud, y que ambos historiales se vean iguales.
+
+- **SP `'DT'` (`CRM.CSV_COBRANZAS_LST_APP`, UTF-16LE+BOM preservado)** — 7 campos nuevos al
+  final del `CONCAT`, todos de `EVT.T_TECMSOLINSCRIPCION01_FACTURACION` (alias **`TF`** en este
+  task; ojo que ahí `TC` es el catálogo de comprobante, no la tabla de facturación):
+  `19 NRO_DOCUMENTO ¦ 20 NOMBRES ¦ 21 APE_PATERNO ¦ 22 APE_MATERNO ¦ 23 RUCEMPRE ¦
+  24 NOMEMPRE ¦ 25 DIRECCION`. Mismo criterio "nunca correr los índices existentes".
+  ⚠️ **Pendiente `ALTER PROCEDURE` en SSMS** — con el SP viejo esos campos llegan vacíos
+  (`ParseUtils.str` → `''`) y la sección simplemente muestra menos filas, no rompe nada.
+- **Flutter** — `CobranzaDetalle` ganó `facNumDoc`/`facNombres`/`facApePaterno`/`facApeMaterno`/
+  `facRuc`/`facRazonSocial`/`facDireccion` (+ getters `facTieneRuc`/`facNombreCompleto`, mismo
+  criterio que `SolicitudDetalle`: con RUC → RUC + razón social; sin RUC → N° documento +
+  nombre). `sinFacturacion` ahora también exige que `facRuc`/`facNumDoc` estén vacíos.
+  `CobranzaDetalleModel.parse` lee los índices 19-25; `copyWith` los arrastra.
+- **`CobranzaDetalleDatosClave`** (el widget se sigue llamando así) pasó de "Documentos de
+  facturación" a **"Datos de facturación"** y usa `AppSeccionCard`/`AppFilaInfo`/
+  `AppSeccionVacia` (core, ver `core/CLAUDE.md`) — las mismas piezas que el Detalle de
+  Solicitud. Filas: Tipo de comprobante · RUC + Razón social **o** N° documento + Nombre ·
+  Dirección fiscal · Moneda · Correo · Celular. Correo/celular siguen copiando al tocarlos,
+  ahora con `AppSnackBar.info` de confirmación. Los archivos adjuntos siguen al pie de la card.
+- **`CobranzaDetalleHistorial`** y `SeccionHistorial` (`solicitudes/`) usan el mismo
+  `AppHistorialItem` (core) — se eliminó el `_EntradaHistorial` propio de cada feature (uno
+  con punto+línea, otro con ícono en círculo). **Ya no se muestra el título** de la actividad
+  (`LA.NOMBRE`/`HistorialCobranza.titulo`): casi siempre viene vacío y dejaba un renglón en
+  blanco sobre la descripción. `titulo` se sigue parseando en ambas entidades, sin consumidor.
+- **La card de la lista abre el detalle al tocarla** (`CobranzaCard.onTap`, antes `onVerTap`) —
+  el botón "Ver" quedó **comentado** (`_BotonVer` + su uso en `_CobranzaFechaVer`), era muy
+  chico para tocar. Mismo patrón que `_BotonWhatsApp`, también comentado en ese archivo.
+
 ## Buscador en la lista — nombre, empresa, celular, N° de solicitud, en el SP (2026-09-10)
 
 Cobranza no tenía buscador. Pedido del usuario: el mismo de Seguimiento/Solicitudes, buscando

@@ -1,4 +1,7 @@
 // lib/features/cobranza/presentation/widgets/detalle/cobranza_detalle_historial.dart
+//
+// Sección "Historial" del detalle de cobro — AppSeccionCard + AppHistorialItem
+// (core), mismo estilo que el Historial del Detalle de Solicitud.
 
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -10,137 +13,33 @@ class CobranzaDetalleHistorial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Historial',
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: AppTextStyles.weightSemiBold,
+    return AppSeccionCard(
+      colorIcono: AppColors.warning,
+      icono: AppIcons.time,
+      titulo: 'Historial',
+      children: [
+        if (historial.isEmpty)
+          const AppSeccionVacia(
+            icono: AppIcons.historial,
+            color: AppColors.warning,
+            titulo: 'Sin movimientos registrados',
+            mensaje: 'Aquí se registrarán los cambios de estado, la '
+                'facturación y las gestiones de cobro de esta solicitud.',
+          )
+        else
+          for (int i = 0; i < historial.length; i++)
+            AppHistorialItem(
+              icono: AppIcons.fileGeneric,
+              color: AppColors.primary,
+              descripcion: historial[i].descripcion,
+              origen: historial[i].origen,
+              fechaTexto:
+                  '${historial[i].fecha.formatDate(AppDateFormat.shortDate)}'
+                  ' • '
+                  '${historial[i].fecha.formatDate(AppDateFormat.hourMinute)}',
+              esUltimo: i == historial.length - 1,
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          if (historial.isEmpty)
-            const AppEmptyView(message: 'No tiene historial registrado')
-          else
-            ...List.generate(historial.length, (i) {
-              final entrada = historial[i];
-              final esUltima = i == historial.length - 1;
-              return _EntradaHistorial(
-                entrada: entrada,
-                esUltima: esUltima,
-              );
-            }),
-        ],
-      ),
-    );
-  }
-}
-
-class _EntradaHistorial extends StatelessWidget {
-  final HistorialCobranza entrada;
-  final bool esUltima;
-
-  const _EntradaHistorial({required this.entrada, required this.esUltima});
-
-  @override
-  Widget build(BuildContext context) {
-    const color = AppColors.primary;
-    const icono = AppIcons.fileGeneric;
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Columna izquierda: ícono + línea vertical ──────
-          Column(
-            children: [
-              Container(
-                width: AppSizing.avatarXs,
-                height: AppSizing.avatarXs,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color.withValues(alpha: 0.15),
-                ),
-                child: Icon(icono, size: AppSizing.iconSm, color: color),
-              ),
-              if (!esUltima)
-                Expanded(
-                  child: Container(
-                    width: AppSizing.borderWidthThin * 2,
-                    color: AppColors.border,
-                    margin: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.xxs,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          const SizedBox(width: AppSpacing.sm),
-
-          // ── Columna derecha: contenido ─────────────────────
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: esUltima ? 0 : AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          entrada.titulo,
-                          style: AppTextStyles.labelSmall.copyWith(
-                            fontWeight: AppTextStyles.weightSemiBold,
-                          ),
-                        ),
-                      ),
-                      if (entrada.origen.isNotEmpty)
-                        Text(
-                          entrada.origen,
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    entrada.descripcion,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    '${entrada.fecha.formatDate(AppDateFormat.shortDate)} • '
-                    '${entrada.fecha.formatDate(AppDateFormat.hourMinute)}',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textDisabled,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

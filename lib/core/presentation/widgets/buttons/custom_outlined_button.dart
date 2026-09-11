@@ -1,10 +1,11 @@
-﻿// lib/core/presentation/widgets/buttons/custom_outlined_button.dart
+// lib/core/presentation/widgets/buttons/custom_outlined_button.dart
 
 import 'package:flutter/material.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
 class CustomOutlinedButton extends StatelessWidget {
+  // Texto del botón. Vacío + `icon` = botón solo-ícono.
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -17,6 +18,15 @@ class CustomOutlinedButton extends StatelessWidget {
   final TextStyle? textStyle;
   final EdgeInsetsGeometry? padding;
   final double? borderWidth;
+  // Radio de las esquinas. null = AppSizing.radiusMd.
+  final double? borderRadius;
+  // Tamaño del ícono. null = AppSizing.iconActionSm.
+  final double? iconSize;
+  // true = botón chico que se ajusta a su contenido: sin ancho completo (salvo
+  // que se pase `width`), sin alto mínimo (salvo `height`) y sin el área de
+  // toque extra de 48px que reserva Material — para acciones en encabezados
+  // de sección ("Editar", "Carga masiva", ícono de eliminar...).
+  final bool compacto;
 
   const CustomOutlinedButton({
     super.key,
@@ -32,6 +42,9 @@ class CustomOutlinedButton extends StatelessWidget {
     this.textStyle,
     this.padding,
     this.borderWidth,
+    this.borderRadius,
+    this.iconSize,
+    this.compacto = false,
   });
 
   @override
@@ -39,6 +52,7 @@ class CustomOutlinedButton extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final bool enabled = isEnabled && !isLoading && onPressed != null;
+    final bool soloIcono = text.isEmpty && icon != null;
 
     final Color resolvedFg = foregroundColor ??
         (enabled ? colorScheme.primary : Theme.of(context).disabledColor);
@@ -50,13 +64,20 @@ class CustomOutlinedButton extends StatelessWidget {
                 .disabledColor
                 .withValues(alpha: AppColors.opacityDisabledBorder));
 
+    final double tamanioIcono = iconSize ?? AppSizing.iconActionSm;
+
     final buttonStyle = OutlinedButton.styleFrom(
       foregroundColor: resolvedFg,
       side: BorderSide(color: resolvedBorder, width: borderWidth ?? 1.0),
-      minimumSize: Size.fromHeight(height ?? AppSizing.buttonHeightSmall),
+      minimumSize: compacto
+          ? Size(0, height ?? 0)
+          : Size.fromHeight(height ?? AppSizing.buttonHeightSmall),
+      tapTargetSize: compacto ? MaterialTapTargetSize.shrinkWrap : null,
       padding: padding,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+        borderRadius: BorderRadius.circular(
+          borderRadius ?? AppSizing.radiusMd,
+        ),
       ),
       textStyle: (textStyle ??
               AppTextStyles.labelMedium.copyWith(
@@ -76,20 +97,31 @@ class CustomOutlinedButton extends StatelessWidget {
           )
         : Text(text, maxLines: 1, overflow: TextOverflow.ellipsis);
 
-    return SizedBox(
-      width: width ?? double.infinity,
-      child: icon != null && !isLoading
-          ? OutlinedButton.icon(
-              onPressed: enabled ? onPressed : null,
-              style: buttonStyle,
-              icon: resolveIcon(icon!, AppSizing.iconActionSm, resolvedFg),
-              label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
-            )
-          : OutlinedButton(
-              onPressed: enabled ? onPressed : null,
-              style: buttonStyle,
-              child: child,
-            ),
-    );
+    final Widget boton;
+    if (icon != null && !isLoading && soloIcono) {
+      boton = OutlinedButton(
+        onPressed: enabled ? onPressed : null,
+        style: buttonStyle,
+        child: resolveIcon(icon!, tamanioIcono, resolvedFg),
+      );
+    } else if (icon != null && !isLoading) {
+      boton = OutlinedButton.icon(
+        onPressed: enabled ? onPressed : null,
+        style: buttonStyle,
+        icon: resolveIcon(icon!, tamanioIcono, resolvedFg),
+        label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
+      );
+    } else {
+      boton = OutlinedButton(
+        onPressed: enabled ? onPressed : null,
+        style: buttonStyle,
+        child: child,
+      );
+    }
+
+    // Compacto sin ancho explícito: se ajusta a su contenido.
+    if (compacto && width == null) return boton;
+
+    return SizedBox(width: width ?? double.infinity, child: boton);
   }
 }

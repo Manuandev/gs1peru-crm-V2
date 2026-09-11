@@ -1,5 +1,41 @@
 # Solicitudes Feature
 
+## Paso 2 saltaba al 4 con lista vacía + el Detalle pasó a UNA sola llamada `'DV'` (2026-09-11)
+
+**Bug — paso 2 → paso 4 sin pasar por Facturación.** `_onContinuar()`
+(`solicitud_participantes_view.dart`) calculaba `soloInvitados` con `participantes.every(...)`,
+y **`every()` sobre una lista vacía devuelve `true`**. En solo-ver ("Revisar solicitud", sin la
+validación de "al menos 1 participante") una solicitud sin participantes saltaba al Resumen como
+si fueran todos invitados — caso común: el "Siguiente" del paso 1 ya guarda el borrador antes de
+que exista algún participante. Fix: `participantes.isNotEmpty && every(...)`. La regla de
+negocio no cambió: con ≥1 participante y **todos** Invitado/Invitado auspicio (`esInvitado`) se
+sigue saltando Facturación a propósito.
+
+**Detalle en una sola llamada.** `SolicitudDetalleBloc` hacía `'DV'` + `'LS'` en paralelo, y
+`'LS'` es la lista COMPLETA (todas las solicitudes, `SUM` de participantes sobre toda la tabla)
+solo para quedarse con la cabecera de una. Lo mismo hacía "Generar solicitud" (Resumen) para la
+pantalla de confirmación.
+- **SP `'DV'`**: nueva sección **[2] = cabecera**, la misma fila que el `'LSP'` (campos 0..23,
+  `LEFT JOIN` a facturación/estado) filtrada por `NUMSOL`. Salida:
+  `{datos}¯{historial}¯{cabecera}`. Una APK vieja solo lee [0] y [1] → sin romper nada.
+- **Flutter**: `SolicitudDetalle.cabecera` (`Solicitud?`, nuevo) ← `SolicitudDetalleRealModel`
+  parsea `secciones[2]` con `SolicitudModel.fromRawString`. `SolicitudDetalleBloc` solo recibe
+  `GetDetalleSolicitudUseCase`; `SolicitudDetalleSuccess.solicitud = detalle.cabecera` (null →
+  la vista cae al `Solicitud` de navegación, igual que antes). El Resumen usa el mismo usecase.
+- **Se eliminó el camino `'LS'` de Flutter** (quedó sin consumidores): `GetSolicitudesUseCase`,
+  `SolicitudRepository.getSolicitudes()`/impl, `SolicitudRemoteDatasource.getSolicitudes()` y
+  `SolicitudModel.parseList`. `SolicitudModel.fromRawString` se queda (parsea la cabecera). El
+  task `'LS'` **sigue en el SP** — lo llaman las APK viejas instaladas.
+- **SP `'DT'` (wizard)**: la cadena `T_LEAD_TECMSOLINSCRIPCION01 → T_LEAD → T_CONTACTO →
+  T_CONTACTO_NUMERO → T_CONVERSACION_CAB` eran `LEFT JOIN` 1:N — un contacto con varios números
+  o conversaciones multiplicaba la fila y re-ejecutaba los `OUTER APPLY` de participantes/
+  archivos. Pasó a un `OUTER APPLY (SELECT TOP 1 ...) LK` (lead más reciente, conversación de
+  mayor id). Campos 40/41 (`idLeadOrigen`, `ID_CONVERSACION_CAB`) en la misma posición. Ojo:
+  `ID_CONVERSACION_CAB` hoy no lo lee nadie en Flutter.
+- ⚠️ Pendiente `ALTER PROCEDURE` de `CRM.CSV_SOLICITUD_LST_APP` en SSMS (UTF-16LE+BOM preservado).
+  Desplegar el SP **antes** que la APK: con un SP viejo el Detalle funciona pero sin cabecera
+  fresca (cae al `Solicitud` de navegación).
+
 ## La búsqueda de la lista pasó al SP — nombre, empresa, celular, N° de solicitud (2026-09-10)
 
 Pedido del usuario: "que se haga como Seguimiento". Antes el buscador del AppBar filtraba en
@@ -197,8 +233,9 @@ Pedido de negocio, `solicitud_card.dart`:
 
 `SolicitudListPage` / `SolicitudListBloc` pasaron a **paginado real** (task `'LSP'` de
 `CRM.CSV_SOLICITUD_LST_APP`, mismo patrón que Seguimiento) — antes `getSolicitudes()` (task
-`'LS'`) traía TODO y filtraba en memoria. `'LS'` + `SolicitudModel` + `GetSolicitudesUseCase`
-**siguen existiendo** (los usa `SolicitudDetalleBloc`).
+`'LS'`) traía TODO y filtraba en memoria. ~~`'LS'` + `GetSolicitudesUseCase` siguen existiendo
+(los usa `SolicitudDetalleBloc`)~~ — eliminados de Flutter el 2026-09-11, el detalle lee la
+cabecera de la sección [2] del `'DV'` (ver la primera sección de este archivo).
 
 **Panel lateral (`SolicitudFiltroDrawer`, `endDrawerWidget` + botón en el AppBar):**
 - **Desde / Hasta**, cada uno con checkbox. Solo se manda al SP el activo (Desde → 00:00:00,

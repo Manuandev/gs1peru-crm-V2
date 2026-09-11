@@ -70,12 +70,4 @@ class SolicitudModel extends Solicitud {
       nombreAsesor: ParseUtils.str(fields, 22),
     );
   }
-
-  static List<SolicitudModel> parseList(String rawResponse) {
-    return rawResponse
-        .split(AppConstants.sepRegistros)
-        .where((r) => r.trim().isNotEmpty)
-        .map((r) => SolicitudModel.fromRawString(r))
-        .toList();
-  }
 }

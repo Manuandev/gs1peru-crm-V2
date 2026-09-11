@@ -8,13 +8,15 @@
 // crudo (ID_TIPO_DOCUMENTO) y se resuelve en la vista contra
 // CatalogsBloc.tiposDocumento, mismo catálogo que ya usa el wizard.
 //
-// Solo trae lo que la vista realmente pinta (nada de participantes,
-// archivos, montos ni estado — eso ya llega en el Solicitud de la lista
-// o no se muestra en el detalle). 2 secciones separadas por sepListas:
-//   [0] datos principales (sepCampos, 9 posiciones, ver mapeo abajo)
+// 3 secciones separadas por sepListas:
+//   [0] datos principales (sepCampos, ver mapeo abajo)
 //   [1] historial (sepRegistros ¦ idLead¦LS.DESCRIPCION¦LA.ORIGEN¦LA.NOMBRE¦
 //       LA.DESCRIPCION¦fecha — mismo formato que la sección [2] de la 'DT'
 //       de Cobranza, HistorialCobranzaModel)
+//   [2] cabecera (2026-09-11) — la MISMA fila que el 'LSP' (campos 0..23),
+//       parseada con SolicitudModel.fromRawString. Reemplaza la segunda
+//       llamada al 'LS' (lista completa) que hacía el detalle. Si el SP
+//       desplegado todavía no la trae, `cabecera` queda null.
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
@@ -36,6 +38,7 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
     super.facApellidoPaterno,
     super.facApellidoMaterno,
     super.historial,
+    super.cabecera,
   });
 
   //  0  NUMSOL
@@ -59,6 +62,7 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
         ? ParseUtils.campos(secciones[0], AppConstants.sepCampos)
         : <String>[];
     final historialRaw = secciones.length > 1 ? secciones[1] : '';
+    final cabeceraRaw = secciones.length > 2 ? secciones[2] : '';
 
     return SolicitudDetalleRealModel(
       numSol: ParseUtils.str(c, 0),
@@ -76,6 +80,9 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
       facApellidoPaterno: ParseUtils.str(c, 12),
       facApellidoMaterno: ParseUtils.str(c, 13),
       historial: _parseHistorial(historialRaw),
+      cabecera: cabeceraRaw.trim().isEmpty
+          ? null
+          : SolicitudModel.fromRawString(cabeceraRaw),
     );
   }
 

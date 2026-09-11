@@ -9,15 +9,12 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 class SolicitudDetalleBloc
     extends Bloc<SolicitudDetalleEvent, SolicitudDetalleState> {
   final GetDetalleSolicitudUseCase _getDetalleSolicitudUseCase;
-  final GetSolicitudesUseCase _getSolicitudesUseCase;
 
   StreamSubscription<SolicitudUpdate>? _updateSub;
   String? _numSol;
 
-  SolicitudDetalleBloc(
-    this._getDetalleSolicitudUseCase,
-    this._getSolicitudesUseCase,
-  ) : super(const SolicitudDetalleInitial()) {
+  SolicitudDetalleBloc(this._getDetalleSolicitudUseCase)
+    : super(const SolicitudDetalleInitial()) {
     on<SolicitudDetalleStarted>(_onStarted);
     on<SolicitudDetalleItemActualizado>(_onItemActualizado);
 
@@ -34,12 +31,12 @@ class SolicitudDetalleBloc
     return super.close();
   }
 
-  // Trae el detalle ('DV': participante/facturación/historial) y la lista
-  // completa ('LS', de donde se saca nombre/estado/monto/asesor/oportunidad)
-  // en paralelo, siempre en red — nunca se reusa lo que llegó por
-  // navegación, así la pantalla muestra lo más actual sin importar de dónde
-  // vino (lista con caché vieja, o un Solicitud "de paso" armado a mano
-  // desde una Negociacion con campos vacíos).
+  // Una sola llamada al task 'DV': participante/facturación/historial y la
+  // cabecera (nombre/estado/monto/asesor/oportunidad, sección [2]) — siempre
+  // en red, nunca se reusa lo que llegó por navegación (lista con caché
+  // vieja, o un Solicitud "de paso" armado a mano desde una Negociacion).
+  // Hasta el 2026-09-11 se pedía además la lista completa 'LS' (TODAS las
+  // solicitudes) solo para quedarse con esta fila.
   Future<void> _onStarted(
     SolicitudDetalleStarted event,
     Emitter<SolicitudDetalleState> emit,
@@ -47,16 +44,8 @@ class SolicitudDetalleBloc
     _numSol = event.numSol;
     emit(const SolicitudDetalleLoading());
     try {
-      final resultados = await Future.wait([
-        _getDetalleSolicitudUseCase(event.numSol),
-        _getSolicitudesUseCase(),
-      ]);
-      final detalle = resultados[0] as SolicitudDetalle;
-      final lista = resultados[1] as List<Solicitud>;
-      final solicitud = lista
-          .where((s) => s.idSolicitud == event.numSol)
-          .firstOrNull;
-      emit(SolicitudDetalleSuccess(detalle, solicitud));
+      final detalle = await _getDetalleSolicitudUseCase(event.numSol);
+      emit(SolicitudDetalleSuccess(detalle, detalle.cabecera));
     } on AppException catch (e) {
       emit(SolicitudDetalleError(e.message));
     } catch (_) {

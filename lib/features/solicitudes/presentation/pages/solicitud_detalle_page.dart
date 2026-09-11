@@ -20,7 +20,6 @@ class SolicitudDetallePage extends StatelessWidget {
     return BlocProvider(
       create: (context) => SolicitudDetalleBloc(
         GetDetalleSolicitudUseCase(context.read<SolicitudRepository>()),
-        GetSolicitudesUseCase(context.read<SolicitudRepository>()),
       )..add(SolicitudDetalleStarted(solicitud.idSolicitud)),
       child: SolicitudDetalleView(
         solicitud: solicitud,

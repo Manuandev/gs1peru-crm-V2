@@ -16,20 +16,6 @@ class SolicitudRemoteDatasource {
   final _session = SessionService();
   final _deviceInfo = DeviceInfoService();
 
-  Future<List<SolicitudModel>> getSolicitudes() async {
-    final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0].join(AppConstants.sepCampos)}${AppConstants.sepListas}LS';
-
-    final result = await _api.postSafe(ApiConstants.urlSolicitudesLst, body);
-
-    return switch (result) {
-      ApiSuccess(:final data) => SolicitudModel.parseList(data),
-      ApiEmpty() => [],
-      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
-      ApiError(:final message) => throw AppException(message),
-    };
-  }
-
   static const int tamanioPrimera = 50;
   static const int tamanioSiguiente = 50;
 

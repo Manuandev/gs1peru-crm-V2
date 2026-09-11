@@ -86,8 +86,8 @@ class _SolicitudDetalleViewState extends State<SolicitudDetalleView> {
         // Nunca se usa el Solicitud de navegación para pintar — puede venir
         // de una lista cacheada hace rato, o de un Solicitud "de paso" casi
         // vacío armado desde una Negociacion (ver NegociacionCard). Solo se
-        // usa como último respaldo si la solicitud ya no aparece en la
-        // lista recién traída (caso raro).
+        // usa como último respaldo si el 'DV' no trajo la cabecera (SP
+        // desplegado sin la sección [2]).
         final solicitudActual = state is SolicitudDetalleSuccess
             ? (state.solicitud ?? widget.solicitud)
             : widget.solicitud;
@@ -140,15 +140,15 @@ class _SolicitudDetalleViewState extends State<SolicitudDetalleView> {
               Column(
                 children: [
                   // ── Indicador de pasos ─────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                      AppSpacing.md,
-                      0,
-                    ),
-                    child: const PasosIndicador(pasoActual: 1),
-                  ),
+                  // Padding(
+                  //   padding: const EdgeInsets.fromLTRB(
+                  //     AppSpacing.md,
+                  //     AppSpacing.sm,
+                  //     AppSpacing.md,
+                  //     0,
+                  //   ),
+                  //   child: const PasosIndicador(pasoActual: 1),
+                  // ),
 
                   // ── Contenido scrollable ───────────────────────────
                   Expanded(

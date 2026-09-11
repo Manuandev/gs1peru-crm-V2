@@ -188,12 +188,19 @@ class _SolicitudParticipantesViewState
         ? catalogState.tiposParticipante
         : const <TipoParticipanteItem>[];
 
-    final soloInvitados = state.participantes.every((p) {
-      final tipo = tiposParticipante
-          .where((t) => t.id == p.tipoParticipante)
-          .firstOrNull;
-      return tipo?.esInvitado ?? false;
-    });
+    // Bug real (2026-09-11): `every()` sobre una lista VACÍA devuelve true —
+    // en solo-ver (no pasa por la validación de "al menos 1 participante" de
+    // arriba) una solicitud sin participantes (ej. borrador que solo llegó a
+    // guardar el paso 1) saltaba del paso 2 al 4 como si fueran todos
+    // invitados. Sin participantes no hay nada que decida saltar Facturación.
+    final soloInvitados =
+        state.participantes.isNotEmpty &&
+        state.participantes.every((p) {
+          final tipo = tiposParticipante
+              .where((t) => t.id == p.tipoParticipante)
+              .firstOrNull;
+          return tipo?.esInvitado ?? false;
+        });
     widget.onContinuar(soloInvitados ? 4 : 3);
   }
 

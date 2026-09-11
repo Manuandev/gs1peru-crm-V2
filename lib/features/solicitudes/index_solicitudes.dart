@@ -20,7 +20,6 @@ export 'domain/constants/solicitud_extensiones.dart';
 
 export 'domain/repositories/solicitud_repository.dart';
 
-export 'domain/usecases/get_solicitudes_usecase.dart';
 export 'domain/usecases/get_solicitud_pagina_usecase.dart';
 export 'domain/usecases/get_solicitud_detalle_usecase.dart';
 export 'domain/usecases/get_detalle_solicitud_usecase.dart';

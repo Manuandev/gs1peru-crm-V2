@@ -1,5 +1,7 @@
 // lib/features/solicitudes/domain/entities/solicitud_detalle.dart
 
+import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
+
 // CRM.T_LEAD_SEGUIMIENTO + CRM.T_LEAD_ACTIVIDAD del lead asociado al NUMSOL —
 // mismo patrón que HistorialCobranza.
 class HistorialSolicitud {
@@ -16,13 +18,14 @@ class HistorialSolicitud {
   });
 }
 
-// Detalle de solo lectura de una solicitud ya guardada — únicamente los
-// campos que pinta SolicitudDetalleView (participante, facturación,
-// historial). El resto (nombre, estado, oportunidad, canal, asesor) ya
-// llega en el Solicitud de la lista ('LS') y no se vuelve a traer acá.
+// Detalle de solo lectura de una solicitud ya guardada — los campos que
+// pinta SolicitudDetalleView (participante, facturación, historial) más la
+// cabecera (nombre, estado, oportunidad, canal, asesor, monto). Todo sale de
+// UNA sola llamada al task 'DV' — hasta el 2026-09-11 la cabecera se sacaba
+// de la lista completa 'LS' en una segunda llamada.
 // A diferencia del wizard (SolicitudDetalleModel, task 'DT', solo ids de
 // catálogo), acá los campos ya vienen resueltos a descripción desde el
-// propio SP (task 'DV').
+// propio SP.
 class SolicitudDetalle {
   final String numSol;
 
@@ -52,6 +55,11 @@ class SolicitudDetalle {
 
   final List<HistorialSolicitud> historial;
 
+  // Cabecera fresca (sección [2] del 'DV', misma fila que el 'LSP'). Null si
+  // el SP desplegado todavía no trae esa sección — la vista cae al Solicitud
+  // de navegación.
+  final Solicitud? cabecera;
+
   const SolicitudDetalle({
     required this.numSol,
     required this.tipoDocumentoId,
@@ -68,6 +76,7 @@ class SolicitudDetalle {
     this.facApellidoPaterno = '',
     this.facApellidoMaterno = '',
     this.historial = const [],
+    this.cabecera,
   });
 
   // true si la facturación es con RUC (Factura, razón social) — false si es
@@ -111,6 +120,7 @@ class SolicitudDetalle {
       facApellidoPaterno: facApellidoPaterno ?? this.facApellidoPaterno,
       facApellidoMaterno: facApellidoMaterno ?? this.facApellidoMaterno,
       historial: historial ?? this.historial,
+      cabecera: cabecera,
     );
   }
 }

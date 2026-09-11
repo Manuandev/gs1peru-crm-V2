@@ -17,12 +17,11 @@ class SolicitudDetalleLoading extends SolicitudDetalleState {
 
 class SolicitudDetalleSuccess extends SolicitudDetalleState {
   final SolicitudDetalle detalle;
-  // Solicitud recién traída de 'LS' (lista completa) al mismo tiempo que el
-  // detalle — reemplaza a la que llega por navegación (que puede venir de
-  // una lista cacheada hace rato, o incluso de un Solicitud "de paso" casi
-  // vacío armado desde una Negociacion). Null solo si esta solicitud ya no
-  // aparece en la lista fresca (caso raro) — ahí la vista cae de vuelta al
-  // Solicitud de navegación.
+  // Cabecera recién traída en la misma llamada 'DV' (sección [2]) —
+  // reemplaza a la que llega por navegación (que puede venir de una lista
+  // cacheada hace rato, o incluso de un Solicitud "de paso" casi vacío armado
+  // desde una Negociacion). Null solo si el SP desplegado todavía no trae esa
+  // sección — ahí la vista cae de vuelta al Solicitud de navegación.
   final Solicitud? solicitud;
   const SolicitudDetalleSuccess(this.detalle, this.solicitud);
 }

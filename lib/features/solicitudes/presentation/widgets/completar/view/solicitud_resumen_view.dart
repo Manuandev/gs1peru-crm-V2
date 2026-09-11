@@ -211,18 +211,19 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
       // wizard (idSolicitud/nombre/empresa/oportunidad/asesor vacíos al
       // crear desde una negociación — ver solicitudes/CLAUDE.md, "Solicitud
       // de navegación") — nunca se actualiza durante el wizard. Se trae la
-      // lista real ('LS') y se busca por NUMSOL para mostrar los datos
-      // frescos (nombre, empresa, oportunidad, estado, ejecutivo) en la
-      // pantalla de confirmación, mismo patrón que SolicitudDetalleBloc.
+      // cabecera fresca de ESTA solicitud (task 'DV', sección [2], una sola
+      // fila) para mostrar nombre, empresa, oportunidad, estado y ejecutivo
+      // en la pantalla de confirmación, mismo patrón que
+      // SolicitudDetalleBloc. Antes se pedía la lista completa 'LS'.
       final numSol = context.read<SolicitudFormCubit>().state.numSol;
       Solicitud solicitudGenerada = widget.solicitud.copyWith(
         idSolicitud: numSol,
       );
       try {
-        final lista = await GetSolicitudesUseCase(
+        final detalle = await GetDetalleSolicitudUseCase(
           context.read<SolicitudRepository>(),
-        ).call();
-        final fresca = lista.where((s) => s.idSolicitud == numSol).firstOrNull;
+        ).call(numSol);
+        final fresca = detalle.cabecera;
         if (fresca != null) solicitudGenerada = fresca;
       } catch (_) {
         // Si falla, se muestra igual con el placeholder — no bloquea la

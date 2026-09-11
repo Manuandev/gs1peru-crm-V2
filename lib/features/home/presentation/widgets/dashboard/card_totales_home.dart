@@ -54,7 +54,12 @@ class CardTotalesHome extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => context.goToSeguimiento(),
+                  // Igual que los 4 totales de abajo: el embudo cuenta sin
+                  // rango de fechas, así que Seguimiento tiene que abrir con
+                  // los checkbox de Desde/Hasta apagados — si no, la lista
+                  // sale recortada al mes actual y no cuadra con el número
+                  // que el usuario acaba de tocar.
+                  onTap: () => context.goToSeguimiento(sinRangoFecha: true),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

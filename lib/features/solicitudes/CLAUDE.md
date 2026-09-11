@@ -1,5 +1,31 @@
 # Solicitudes Feature
 
+## La búsqueda de la lista pasó al SP — nombre, empresa, celular, N° de solicitud (2026-09-10)
+
+Pedido del usuario: "que se haga como Seguimiento". Antes el buscador del AppBar filtraba en
+cliente (`SolicitudListBloc._emitir`) y solo encontraba dentro de las páginas ya cargadas.
+
+- **Mismos campos que ya buscaba en cliente**: nombre completo (`NOMBRES` + `APE_PATERNO` +
+  `APE_MATERNO`), empresa (`NOMEMPRE`), celular (`CELULAR`) y N° de solicitud (`NUMSOL`), todos de
+  `EVT.T_TECMSOLINSCRIPCION01`. Nombre y empresa sin distinguir mayúsculas ni tildes
+  (`COLLATE Latin1_General_CI_AI`); celular y NUMSOL tal cual.
+- **Mismo comportamiento que Seguimiento**: 500 ms de debounce (ticket `_ticketBusqueda`), mínimo
+  3 caracteres, la X limpia al toque, respeta chip + panel (AND), `_pedirPagina` como único
+  punto que arma la consulta, y el vacío dice "Sin resultados para "x" con los filtros
+  actuales." — ver `lead/CLAUDE.md` → "Seguimiento — búsqueda por contacto o empresa".
+- **SP `'LSP'`** (`CRM.CSV_SOLICITUD_LST_APP`, UTF-16LE+BOM preservado): campo **12** de
+  `@L_DATA` (`@SLP_BUSCAR_S` → `@SLP_PATRON`, comodines `[` `%` `_` escapados). El filtro va en
+  **`#SLP_BASE`** (universo), así que **los contadores Sin validar / Validados se mueven con la
+  búsqueda**. `OPTION (RECOMPILE)` en ese `SELECT INTO`. Una app vieja (11 campos) recibe
+  `field12` NULL → sin filtro. ⚠️ Pendiente `ALTER PROCEDURE` en SSMS.
+- **Badge "Solicitudes" del drawer**: sale de `cntSinValidar`, que ahora se mueve con la
+  búsqueda — `SolicitudListPage` solo lo actualiza si `state.busqueda.isEmpty` (mientras se
+  busca, el badge se queda con el último valor sin búsqueda).
+- `SolicitudListSuccess.busqueda` (nuevo). `solicitudes` ya no se filtra en cliente (`_emitir`
+  emite `_items` tal cual). `conteosPorAsesor` (picker) sigue best-effort sobre lo cargado — con
+  búsqueda activa refleja solo los resultados.
+- El evento `SolicitudListSearched` conserva el nombre; el debounce vive en el bloc.
+
 ## El total solo se cuadra al precio pactado si la diferencia es de redondeo (2026-09-10)
 
 Pregunta del usuario: negociación de 400 para 2 participantes — ambos entran con el sugerido
@@ -166,7 +192,8 @@ Pedido de negocio, `solicitud_card.dart`:
 
 > ⚠️ **Todo lo que esta sección dice sobre "evento" quedó obsoleto el 2026-09-10** — ver la
 > sección de arriba ("El filtro de la lista pasó de Campaña→Evento a Campaña→Oportunidad").
-> El resto (paginado keyset, contadores, skeleton, búsqueda en cliente) sigue vigente.
+> El resto (paginado keyset, contadores, skeleton) sigue vigente; la búsqueda en cliente pasó
+> al SP el mismo día (ver la primera sección de este archivo).
 
 `SolicitudListPage` / `SolicitudListBloc` pasaron a **paginado real** (task `'LSP'` de
 `CRM.CSV_SOLICITUD_LST_APP`, mismo patrón que Seguimiento) — antes `getSolicitudes()` (task
@@ -191,7 +218,8 @@ página y **aplican fecha+campaña+evento**, no el chip. Fila 0-22 idéntica a `
 ¦ 24 idEvento ¦ 25 nombreEvento`. La suma pesada (`SUM(DC_IMPORTE)+SUM(DC_IGV)`) pasó a
 `OUTER APPLY` → solo sobre las filas de la página.
 
-**Búsqueda de texto** (AppBar) sigue en cliente, ahora sobre las páginas ya cargadas.
+**Búsqueda de texto** (AppBar): ~~en cliente, sobre las páginas ya cargadas~~ — desde el
+2026-09-10 la aplica el SP (campo 12), ver la primera sección de este archivo.
 **`conteosPorAsesor`** (picker de Asesores) se calcula best-effort sobre las páginas cargadas.
 **Skeleton** rehecho (`SolicitudListSkeleton` = indicadores + chips + cards; `SolicitudCardSkeletonList`
 para la recarga parcial al cambiar chip / aplicar filtro, dejando indicadores y chips montados).

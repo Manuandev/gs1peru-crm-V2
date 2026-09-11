@@ -135,6 +135,11 @@ class _CobranzaListPortraitState extends State<CobranzaListPortrait> {
   }
 
   String _mensajeVacio(CobranzaListCargado e) {
+    // La búsqueda respeta chip + tarjetas + panel: "sin resultados" puede ser
+    // por los filtros, no solo por el texto.
+    if (e.busqueda.isNotEmpty) {
+      return 'Sin resultados para "${e.busqueda}" con los filtros actuales.';
+    }
     if (e.chipFiltro == CobranzaChipFiltro.asesores) {
       return 'Este asesor no tiene cobranzas asignadas.';
     }

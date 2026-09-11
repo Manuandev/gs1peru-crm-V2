@@ -151,6 +151,16 @@ class _VistaVacia extends StatelessWidget {
       );
     }
 
+    // La búsqueda respeta chip + panel (el rango por defecto es el mes
+    // actual), así que "sin resultados" puede ser por los filtros, no solo
+    // por el texto — el mensaje lo dice.
+    if (estado.busqueda.isNotEmpty) {
+      return AppEmptyView(
+        message:
+            'Sin resultados para "${estado.busqueda}" con los filtros actuales.',
+      );
+    }
+
     final msg = switch (estado.filtro) {
       LeadListFiltro.todos => 'No tienes casos en seguimiento.',
       LeadListFiltro.nuevos => 'No tienes casos nuevos.',

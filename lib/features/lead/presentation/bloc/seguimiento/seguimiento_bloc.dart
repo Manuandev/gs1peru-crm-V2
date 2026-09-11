@@ -4,10 +4,13 @@
 // LeadListBloc (que queda intacto, sin caller).
 //
 // Concurrencia SIN el paquete bloc_concurrency (para no tocar pubspec):
-//   - "restartable" (cambio de chip / refresh / filtro del panel): contador
-//     [_epoca]. Cada carga desde cero lo incrementa; la respuesta que vuelve con
-//     una época vieja se descarta antes de emitir.
+//   - "restartable" (cambio de chip / refresh / filtro del panel / búsqueda):
+//     contador [_epoca]. Cada carga desde cero lo incrementa; la respuesta que
+//     vuelve con una época vieja se descarta antes de emitir.
 //   - "droppable" (página siguiente): flag síncrono [_cargandoPagina].
+//   - "debounce" (buscador del AppBar): ticket [_ticketBusqueda], mismo estilo
+//     que [_epoca] — cada tecla saca uno nuevo y tras la espera solo sigue el
+//     último.
 //
 // Cambio de chip / aplicar filtro NO tumban la pantalla: si ya hay
 // SeguimientoCargado, se emite con recargandoLista:true (chips + contadores
@@ -31,6 +34,10 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
   // Excepción: entrando desde el embudo de Home (sinRangoFecha:true) arranca
   // SIN rango de fechas, para que la lista cuadre con los totales de Home.
   SeguimientoFiltroAvanzado _filtroAvanzado;
+  // Texto del buscador ya normalizado ('' = sin búsqueda). Se combina con chip
+  // + panel (AND en el SP) y viaja en TODAS las páginas — ver [_pedirPagina].
+  String _busqueda = '';
+  int _ticketBusqueda = 0;
   int _epoca = 0;
   bool _cargandoPagina = false;
   StreamSubscription<LeadUpdate>? _updateSub;
@@ -49,6 +56,7 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     on<SeguimientoFiltroCambiado>(_onFiltroCambiado);
     on<SeguimientoFiltroAvanzadoAplicado>(_onFiltroAvanzadoAplicado);
     on<SeguimientoFiltroAvanzadoLimpiado>(_onFiltroAvanzadoLimpiado);
+    on<SeguimientoBusquedaCambiada>(_onBusquedaCambiada);
     on<SeguimientoPaginaSolicitada>(_onPaginaSolicitada);
     on<SeguimientoReintentarPagina>(_onReintentarPagina);
     on<SeguimientoLeadActualizado>(_onLeadActualizado);
@@ -112,6 +120,30 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     return _cargarDesdeCero(emit);
   }
 
+  // ── Búsqueda (buscador del AppBar) ─────────────────────────────────────────
+
+  Future<void> _onBusquedaCambiada(
+    SeguimientoBusquedaCambiada event,
+    Emitter<SeguimientoEstado> emit,
+  ) async {
+    final texto = event.texto.trim();
+
+    // Debounce: cada tecla saca un ticket; tras la espera solo sigue la última.
+    // Vacío (la X del buscador) limpia al toque, sin esperar.
+    final ticket = ++_ticketBusqueda;
+    if (texto.isNotEmpty) await Future.delayed(AppConstants.debounceBusqueda);
+    if (ticket != _ticketBusqueda || isClosed || emit.isDone) return;
+
+    // Por debajo del mínimo de caracteres no filtra (con 1-2 letras traería
+    // media base y no aporta).
+    final busqueda = texto.length >= AppConstants.busquedaMinCaracteres
+        ? texto
+        : '';
+    if (busqueda == _busqueda && state is SeguimientoCargado) return;
+    _busqueda = busqueda;
+    await _cargarDesdeCero(emit);
+  }
+
   Future<void> _cargarDesdeCero(Emitter<SeguimientoEstado> emit) async {
     final epoca = ++_epoca;
     _cargandoPagina = false;
@@ -126,15 +158,9 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     }
 
     try {
-      final pagina = await _getPagina(
+      final pagina = await _pedirPagina(
         filtro: _filtro,
-        cursorFecha: null,
-        cursorIdContacto: null,
         tamanio: SeguimientoRemoteDatasource.tamanioPrimera,
-        fcDesde: _filtroAvanzado.desdeEfectivo,
-        fcHasta: _filtroAvanzado.hastaEfectivo,
-        idCampania: _filtroAvanzado.idCampania,
-        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       if (epoca != _epoca || emit.isDone) return;
 
@@ -144,6 +170,7 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
           filtro: _filtro,
           conteos: pagina.conteos ?? const SeguimientoConteos(),
           filtroAvanzado: _filtroAvanzado,
+          busqueda: _busqueda,
           recargandoLista: false,
           finLista:
               pagina.items.length < SeguimientoRemoteDatasource.tamanioPrimera,
@@ -156,6 +183,27 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
       emit(SeguimientoErrorInicial(_mensajeError(e)));
     }
   }
+
+  /// Único punto que arma la consulta al SP: chip + panel + búsqueda viajan
+  /// juntos en TODAS las páginas. Si una página siguiente saliera sin alguno,
+  /// mezclaría filas filtradas con sin filtrar (el cursor keyset solo vale
+  /// para la misma combinación de filtros).
+  Future<SeguimientoPagina> _pedirPagina({
+    required LeadListFiltro filtro,
+    String? cursorFecha,
+    int? cursorIdContacto,
+    required int tamanio,
+  }) => _getPagina(
+    filtro: filtro,
+    cursorFecha: cursorFecha,
+    cursorIdContacto: cursorIdContacto,
+    tamanio: tamanio,
+    fcDesde: _filtroAvanzado.desdeEfectivo,
+    fcHasta: _filtroAvanzado.hastaEfectivo,
+    idCampania: _filtroAvanzado.idCampania,
+    idOportunidad: _filtroAvanzado.idOportunidad,
+    busqueda: _busqueda,
+  );
 
   // ── Página siguiente ───────────────────────────────────────────────────────
 
@@ -190,15 +238,11 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     emit(s.copyWith(cargandoMas: true, limpiarLoadMoreError: true));
 
     try {
-      final pagina = await _getPagina(
+      final pagina = await _pedirPagina(
         filtro: s.filtro,
         cursorFecha: s.cursorFecha,
         cursorIdContacto: s.cursorIdContacto,
         tamanio: SeguimientoRemoteDatasource.tamanioSiguiente,
-        fcDesde: _filtroAvanzado.desdeEfectivo,
-        fcHasta: _filtroAvanzado.hastaEfectivo,
-        idCampania: _filtroAvanzado.idCampania,
-        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       // El chip / filtro cambió mientras cargaba → descartar esta respuesta.
       if (epoca != _epoca || emit.isDone) return;
@@ -261,15 +305,9 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     final epoca = ++_epoca;
     _cargandoPagina = false;
     try {
-      final pagina = await _getPagina(
+      final pagina = await _pedirPagina(
         filtro: _filtro,
-        cursorFecha: null,
-        cursorIdContacto: null,
         tamanio: SeguimientoRemoteDatasource.tamanioPrimera,
-        fcDesde: _filtroAvanzado.desdeEfectivo,
-        fcHasta: _filtroAvanzado.hastaEfectivo,
-        idCampania: _filtroAvanzado.idCampania,
-        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       if (epoca != _epoca || emit.isDone) return;
       emit(
@@ -278,6 +316,7 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
           filtro: _filtro,
           conteos: pagina.conteos ?? const SeguimientoConteos(),
           filtroAvanzado: _filtroAvanzado,
+          busqueda: _busqueda,
           recargandoLista: false,
           finLista:
               pagina.items.length < SeguimientoRemoteDatasource.tamanioPrimera,

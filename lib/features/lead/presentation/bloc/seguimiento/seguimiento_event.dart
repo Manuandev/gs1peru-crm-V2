@@ -44,6 +44,18 @@ class SeguimientoFiltroAvanzadoLimpiado extends SeguimientoEvento {
   const SeguimientoFiltroAvanzadoLimpiado();
 }
 
+/// Texto del buscador del AppBar (llega en cada tecla). El bloc espera
+/// `AppConstants.debounceBusqueda` tras la última tecla y recién ahí recarga
+/// desde la página 1. El filtro lo aplica el SP ('LSP', campo 13) junto con
+/// el chip y el panel (AND). '' (la X del buscador) limpia al toque.
+class SeguimientoBusquedaCambiada extends SeguimientoEvento {
+  final String texto;
+  const SeguimientoBusquedaCambiada(this.texto);
+
+  @override
+  List<Object?> get props => [texto];
+}
+
 /// El scroll llegó al umbral (80%) — pedir la página siguiente. Se ignora si ya
 /// hay una en vuelo, si se llegó al final, o si el pie está mostrando un error
 /// (ahí solo dispara [SeguimientoReintentarPagina]).

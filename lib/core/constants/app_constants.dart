@@ -30,4 +30,10 @@ class AppConstants {
   // se muestran completos, ver chat_tile.dart)
   static const int maxCharsLineaMensaje = 25;
   static const int maxCharsMensajeChat = 50;
+
+  // Búsqueda libre en listas paginadas (el filtro lo aplica el SP): espera
+  // tras la última tecla antes de consultar, y mínimo de caracteres para que
+  // filtre (con 1-2 letras traería media base y no aporta).
+  static const Duration debounceBusqueda = Duration(milliseconds: 500);
+  static const int busquedaMinCaracteres = 3;
 }

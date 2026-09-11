@@ -94,15 +94,19 @@ class _SolicitudListPortraitState extends State<SolicitudListPortrait> {
               ? const SolicitudCardSkeletonList()
               : e.solicitudes.isEmpty
               ? AppEmptyView(
-                  message: switch (e.filtro) {
-                    SolicitudFiltro.todas => 'No hay solicitudes.',
-                    SolicitudFiltro.asesores =>
-                      'No tienes solicitudes asignadas.',
-                    SolicitudFiltro.sinValidar =>
-                      'No hay solicitudes pendientes de validación.',
-                    SolicitudFiltro.enviarACobranza =>
-                      'No hay solicitudes validadas.',
-                  },
+                  // La búsqueda respeta chip + panel: "sin resultados" puede
+                  // ser por los filtros, no solo por el texto.
+                  message: e.busqueda.isNotEmpty
+                      ? 'Sin resultados para "${e.busqueda}" con los filtros actuales.'
+                      : switch (e.filtro) {
+                          SolicitudFiltro.todas => 'No hay solicitudes.',
+                          SolicitudFiltro.asesores =>
+                            'No tienes solicitudes asignadas.',
+                          SolicitudFiltro.sinValidar =>
+                            'No hay solicitudes pendientes de validación.',
+                          SolicitudFiltro.enviarACobranza =>
+                            'No hay solicitudes validadas.',
+                        },
                 )
               : ListView.builder(
                   controller: _scroll,

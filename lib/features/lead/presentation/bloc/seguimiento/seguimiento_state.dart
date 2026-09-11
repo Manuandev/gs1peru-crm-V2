@@ -38,6 +38,10 @@ class SeguimientoCargado extends SeguimientoEstado {
   final SeguimientoConteos conteos;
   final SeguimientoFiltroAvanzado filtroAvanzado;
 
+  /// Texto de búsqueda aplicado ('' = sin búsqueda). Solo lo lee la vista
+  /// (mensaje de "sin resultados"); la fuente de verdad es el bloc.
+  final String busqueda;
+
   /// Recarga desde cero en curso (cambio de chip / aplicar filtro del panel /
   /// refresh) manteniendo chips y contadores montados — solo el área de la
   /// lista muestra el skeleton. Distinto de [SeguimientoCargando] (pantalla
@@ -63,6 +67,7 @@ class SeguimientoCargado extends SeguimientoEstado {
     required this.filtro,
     required this.conteos,
     this.filtroAvanzado = SeguimientoFiltroAvanzado.vacio,
+    this.busqueda = '',
     this.recargandoLista = false,
     this.finLista = false,
     this.cargandoMas = false,
@@ -87,6 +92,7 @@ class SeguimientoCargado extends SeguimientoEstado {
     LeadListFiltro? filtro,
     SeguimientoConteos? conteos,
     SeguimientoFiltroAvanzado? filtroAvanzado,
+    String? busqueda,
     bool? recargandoLista,
     bool? finLista,
     bool? cargandoMas,
@@ -100,6 +106,7 @@ class SeguimientoCargado extends SeguimientoEstado {
       filtro: filtro ?? this.filtro,
       conteos: conteos ?? this.conteos,
       filtroAvanzado: filtroAvanzado ?? this.filtroAvanzado,
+      busqueda: busqueda ?? this.busqueda,
       recargandoLista: recargandoLista ?? this.recargandoLista,
       finLista: finLista ?? this.finLista,
       cargandoMas: cargandoMas ?? this.cargandoMas,
@@ -118,6 +125,7 @@ class SeguimientoCargado extends SeguimientoEstado {
     conteos.comoMapa,
     conteos.activos,
     filtroAvanzado,
+    busqueda,
     recargandoLista,
     finLista,
     cargandoMas,

@@ -17,6 +17,12 @@ class CobranzaListView extends StatelessWidget {
       title: 'Cobranzas',
       drawerSide: DrawerSide.left,
       showBottomNav: true,
+      // Buscador (nombre, empresa, celular, N° de solicitud): llega en cada
+      // tecla, el bloc hace el debounce y el filtro lo aplica el SP (la lista
+      // es paginada).
+      onSearch: (query) => context.read<CobranzaListBloc>().add(
+        CobranzaBusquedaCambiada(query),
+      ),
       // Botón de filtro avanzado (abre el endDrawer derecho) — naranja solo si
       // el asesor cambió el filtro respecto al default (mes actual → hoy).
       appBarTrailingButtons: [

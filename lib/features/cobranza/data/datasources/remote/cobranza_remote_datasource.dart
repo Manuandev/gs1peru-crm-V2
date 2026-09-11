@@ -28,12 +28,15 @@ class CobranzaRemoteDatasource {
 
   // Task 'LSP' — lista paginada (keyset). Body:
   //   codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tam¦fcDesde¦fcHasta¦
-  //   idCampania¦idOportunidad¦estados
+  //   idCampania¦idOportunidad¦estados¦busqueda
   //   chip     '' = todos ; 'C' = contado ; 'CR' = crédito
   //   idAsesor '' = no aplica (solo lo manda el chip "Asesores")
   //   cur*     '' = primera página
   //   fc*      ISO 126 ('yyyy-MM-ddTHH:mm:ss'), '' = no aplica
   //   estados  ID_ESTADO_GES separados por coma (ej. '2,5'), '' = los 4
+  //   busqueda texto del buscador, '' = sin búsqueda. El SP busca en nombre
+  //            completo, empresa, celular y N° de solicitud (LIKE, sin
+  //            distinguir mayúsculas/tildes), AND con lo demás (2026-09-10).
   Future<CobranzaPagina> traerPagina({
     CobranzaChipFiltro chip = CobranzaChipFiltro.todos,
     String? codAsesor,
@@ -45,6 +48,7 @@ class CobranzaRemoteDatasource {
     int? idCampania,
     int? idOportunidad,
     Set<int> estados = const {},
+    String busqueda = '',
   }) async {
     final camp = AppConstants.sepCampos;
     final sep = AppConstants.sepListas;
@@ -62,6 +66,7 @@ class CobranzaRemoteDatasource {
       idCampania ?? '',
       idOportunidad ?? '',
       (estados.toList()..sort()).join(','),
+      busqueda.sinSeparadoresSp.trim(),
     ].join(camp);
 
     final result = await _api.postSafe(

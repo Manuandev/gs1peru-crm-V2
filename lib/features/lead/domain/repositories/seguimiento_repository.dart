@@ -16,5 +16,6 @@ abstract class SeguimientoRepository {
     DateTime? fcHasta,
     int? idCampania,
     int? idOportunidad,
+    String busqueda,
   });
 }

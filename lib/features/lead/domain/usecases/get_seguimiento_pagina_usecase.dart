@@ -15,6 +15,7 @@ class GetSeguimientoPaginaUseCase {
     DateTime? fcHasta,
     int? idCampania,
     int? idOportunidad,
+    String busqueda = '',
   }) => _repository.traerPagina(
     filtro: filtro,
     cursorFecha: cursorFecha,
@@ -24,5 +25,6 @@ class GetSeguimientoPaginaUseCase {
     fcHasta: fcHasta,
     idCampania: idCampania,
     idOportunidad: idOportunidad,
+    busqueda: busqueda,
   );
 }

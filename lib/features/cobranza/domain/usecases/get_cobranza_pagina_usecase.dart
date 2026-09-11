@@ -17,6 +17,7 @@ class GetCobranzaPaginaUseCase {
     int? idCampania,
     int? idOportunidad,
     Set<int> estados = const {},
+    String busqueda = '',
   }) => _repository.traerPagina(
     chip: chip,
     codAsesor: codAsesor,
@@ -28,5 +29,6 @@ class GetCobranzaPaginaUseCase {
     idCampania: idCampania,
     idOportunidad: idOportunidad,
     estados: estados,
+    busqueda: busqueda,
   );
 }

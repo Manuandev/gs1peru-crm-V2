@@ -29,7 +29,10 @@ class SolicitudListFiltered extends SolicitudListEvent {
   List<Object?> get props => [filtro];
 }
 
-/// Búsqueda por texto — se aplica en cliente sobre las páginas ya cargadas.
+/// Texto del buscador del AppBar (llega en cada tecla). El bloc espera
+/// `AppConstants.debounceBusqueda` tras la última tecla y recarga desde la
+/// página 1. El filtro lo aplica el SP ('LSP', campo 12) junto con el chip y
+/// el panel (AND). '' (la X del buscador) limpia al toque.
 class SolicitudListSearched extends SolicitudListEvent {
   final String query;
   const SolicitudListSearched(this.query);

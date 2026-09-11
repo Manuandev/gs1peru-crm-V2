@@ -2,9 +2,13 @@
 //
 // BLoC de Cobranzas PAGINADO (task 'LSP' de CRM.CSV_COBRANZAS_LST_APP). Mismo
 // patrón que SeguimientoBloc / SolicitudListBloc:
-//   - "restartable" (chip / tarjeta de estado / filtro del panel / refresh):
-//     contador [_epoca]; la respuesta que vuelve con una época vieja se descarta.
+//   - "restartable" (chip / tarjeta de estado / filtro del panel / refresh /
+//     búsqueda): contador [_epoca]; la respuesta que vuelve con una época vieja
+//     se descarta.
 //   - "droppable" (página siguiente): flag síncrono [_cargandoPagina].
+//   - "debounce" (buscador del AppBar): ticket [_ticketBusqueda], mismo estilo
+//     que [_epoca] — cada tecla saca uno nuevo y tras la espera solo sigue el
+//     último.
 // Cambio de chip / tarjeta / filtro NO tumban la pantalla: si ya hay
 // CobranzaListCargado se emite con recargandoLista:true (tarjetas + chips
 // montados, solo la lista muestra loading). El skeleton completo
@@ -30,6 +34,12 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   // excepción: desde el embudo de Home (sinRangoFecha:true) arranca SIN fecha.
   CobranzaFiltroAvanzado _filtroAvanzado;
 
+  // Texto del buscador ya normalizado ('' = sin búsqueda). Se combina con chip
+  // + tarjetas + panel (AND en el SP) y viaja en TODAS las páginas — ver
+  // [_pedirPagina].
+  String _busqueda = '';
+  int _ticketBusqueda = 0;
+
   int _epoca = 0;
   bool _cargandoPagina = false;
   StreamSubscription<CobranzaUpdate>? _updateSub;
@@ -46,6 +56,7 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     on<CobranzaEstadoToggled>(_onEstadoToggled);
     on<CobranzaFiltroAvanzadoAplicado>(_onFiltroAvanzadoAplicado);
     on<CobranzaFiltroAvanzadoLimpiado>(_onFiltroAvanzadoLimpiado);
+    on<CobranzaBusquedaCambiada>(_onBusquedaCambiada);
     on<CobranzaPaginaSolicitada>(_onPaginaSolicitada);
     on<CobranzaReintentarPagina>(_onReintentarPagina);
     on<CobranzaListItemActualizado>(_onItemActualizado);
@@ -142,6 +153,30 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     return _cargarDesdeCero(emit);
   }
 
+  // ── Búsqueda (buscador del AppBar) ─────────────────────────────────────────
+
+  Future<void> _onBusquedaCambiada(
+    CobranzaBusquedaCambiada event,
+    Emitter<CobranzaListState> emit,
+  ) async {
+    final texto = event.texto.trim();
+
+    // Debounce: cada tecla saca un ticket; tras la espera solo sigue la última.
+    // Vacío (la X del buscador) limpia al toque, sin esperar.
+    final ticket = ++_ticketBusqueda;
+    if (texto.isNotEmpty) await Future.delayed(AppConstants.debounceBusqueda);
+    if (ticket != _ticketBusqueda || isClosed || emit.isDone) return;
+
+    // Por debajo del mínimo de caracteres no filtra (con 1-2 letras traería
+    // media base y no aporta).
+    final busqueda = texto.length >= AppConstants.busquedaMinCaracteres
+        ? texto
+        : '';
+    if (busqueda == _busqueda && state is CobranzaListCargado) return;
+    _busqueda = busqueda;
+    await _cargarDesdeCero(emit);
+  }
+
   Future<void> _cargarDesdeCero(Emitter<CobranzaListState> emit) async {
     final epoca = ++_epoca;
     _cargandoPagina = false;
@@ -154,17 +189,10 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     }
 
     try {
-      final pagina = await _getPagina(
+      final pagina = await _pedirPagina(
         chip: _chip,
         codAsesor: _asesorSeleccionado,
-        cursorFecha: null,
-        cursorNumSol: null,
         tamanio: CobranzaRemoteDatasource.tamanioPrimera,
-        fcDesde: _filtroAvanzado.desdeEfectivo,
-        fcHasta: _filtroAvanzado.hastaEfectivo,
-        idCampania: _filtroAvanzado.idCampania,
-        idOportunidad: _filtroAvanzado.idOportunidad,
-        estados: _estados,
       );
       if (epoca != _epoca || emit.isDone) return;
 
@@ -177,6 +205,7 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
           estadosSeleccionados: Set.from(_estados),
           conteos: pagina.conteos ?? const CobranzaConteos(),
           filtroAvanzado: _filtroAvanzado,
+          busqueda: _busqueda,
           conteosPorAsesor: _conteosPorAsesor(items),
           recargandoLista: false,
           finLista: items.length < CobranzaRemoteDatasource.tamanioPrimera,
@@ -189,6 +218,30 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
       emit(CobranzaListErrorInicial(_mensajeError(e)));
     }
   }
+
+  /// Único punto que arma la consulta al SP: chip + tarjetas + panel +
+  /// búsqueda viajan juntos en TODAS las páginas. Si una página siguiente
+  /// saliera sin alguno, mezclaría filas filtradas con sin filtrar (el cursor
+  /// keyset solo vale para la misma combinación de filtros).
+  Future<CobranzaPagina> _pedirPagina({
+    required CobranzaChipFiltro chip,
+    String? codAsesor,
+    String? cursorFecha,
+    String? cursorNumSol,
+    required int tamanio,
+  }) => _getPagina(
+    chip: chip,
+    codAsesor: codAsesor,
+    cursorFecha: cursorFecha,
+    cursorNumSol: cursorNumSol,
+    tamanio: tamanio,
+    fcDesde: _filtroAvanzado.desdeEfectivo,
+    fcHasta: _filtroAvanzado.hastaEfectivo,
+    idCampania: _filtroAvanzado.idCampania,
+    idOportunidad: _filtroAvanzado.idOportunidad,
+    estados: _estados,
+    busqueda: _busqueda,
+  );
 
   // ── Página siguiente ───────────────────────────────────────────────────────
 
@@ -222,17 +275,12 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     emit(s.copyWith(cargandoMas: true, limpiarLoadMoreError: true));
 
     try {
-      final pagina = await _getPagina(
+      final pagina = await _pedirPagina(
         chip: s.chipFiltro,
         codAsesor: s.asesorSeleccionado,
         cursorFecha: s.cursorFecha,
         cursorNumSol: s.cursorNumSol,
         tamanio: CobranzaRemoteDatasource.tamanioSiguiente,
-        fcDesde: _filtroAvanzado.desdeEfectivo,
-        fcHasta: _filtroAvanzado.hastaEfectivo,
-        idCampania: _filtroAvanzado.idCampania,
-        idOportunidad: _filtroAvanzado.idOportunidad,
-        estados: _estados,
       );
       if (epoca != _epoca || emit.isDone) return;
 

@@ -1,5 +1,48 @@
 ﻿# Lead Feature
 
+## Seguimiento — búsqueda por contacto o empresa (2026-09-10)
+
+Pedido de negocio: buscar en la lista de Seguimiento por nombre del contacto o por empresa. Como
+la lista es paginada (keyset), la búsqueda **va al SP** — no se filtra en cliente como en
+Solicitudes, que solo encuentra dentro de las páginas ya cargadas.
+
+- **UI**: `BasePage(onSearch:)` en `SeguimientoView` — el mismo buscador del AppBar que usan
+  Solicitudes/Chat (`CustomAppBar` llama `onSearch` en cada tecla; la X manda `''`).
+- **Bloc** (`SeguimientoBusquedaCambiada`): espera `AppConstants.debounceBusqueda` (500 ms)
+  tras la última tecla con un ticket (`_ticketBusqueda`, mismo estilo que `_epoca`, sin
+  `bloc_concurrency`). Menos de `AppConstants.busquedaMinCaracteres` (3) no filtra; `''` limpia
+  al toque. Valores pedidos por el usuario (la primera versión tenía 400 ms / 2 letras). No
+  consulta por cada letra: cada tecla reinicia la espera, así que escribir seguido = 1 consulta. Si el texto normalizado cambió → `_cargarDesdeCero` (página 1, cursor en null;
+  `_epoca` descarta las respuestas que lleguen tarde).
+- **Regla (confirmada con el usuario): la búsqueda respeta TODOS los filtros** — chip + panel
+  (fecha/campaña/oportunidad), AND en el SP. Con el rango por defecto (1 del mes → hoy) un
+  contacto sin actividad este mes no aparece; por eso el vacío dice *"Sin resultados para "x"
+  con los filtros actuales."* (`_VistaVacia` en `seguimiento_portrait.dart`).
+- **`_pedirPagina`** (nuevo, en el bloc): único punto que llama a `GetSeguimientoPaginaUseCase`
+  con chip + panel + búsqueda — lo usan `_cargarDesdeCero`, `_traerSiguiente` y
+  `_onLeadActualizado`. Antes cada uno repetía los 8 argumentos; olvidar la búsqueda en
+  `_traerSiguiente` habría mezclado la página 1 filtrada con la 2 sin filtrar.
+- `SeguimientoCargado.busqueda` (nuevo) — solo para el mensaje de vacío.
+- **Datasource**: campo 13 de `@L_DATA`; `String.sinSeparadoresSp` (core) le quita `¬ ¦ ¯ ¨`
+  (romperían el split del SP) — mismo helper que usan Solicitudes y Cobranza.
+- **SP `'LSP'`** (`CRM.CSV_LEADS_LST_APP`, UTF-16LE+BOM preservado):
+  - `@LSP_BUSCAR_S VARCHAR(100) = NULLIF(LTRIM(RTRIM(field13)), '')` → `@LSP_PATRON` =
+    `'%texto%'` con `[` `%` `_` escapados. Una app vieja que manda 12 campos recibe `field13`
+    `NULL` → sin filtro (compatible hacia atrás).
+  - El filtro va en el `WHERE` del **paso 2 (`#LSP_REPR`)**, no en `#LSP_CB`: `@LSP_ACT`
+    ("activos", badge global del drawer) se calcula sobre `#LSP_CB` y tiene que seguir global.
+    total/nuevos/desarrollo/propuesta sí se mueven con la búsqueda, igual que con el panel.
+  - Match: `CONCAT(NOMBRES, ' ', APELLIDO_P, ' ', APELLIDO_M)` o `EXISTS` sobre **cualquier**
+    empresa activa del contacto (`T_EMPRESA_CONTACTO` + `T_EMPRESA.IB_ACTIVO = 1`), ambos con
+    `COLLATE Latin1_General_CI_AI` ("perez" encuentra "Pérez"). La card muestra solo la empresa
+    más reciente: si un contacto tiene 2 empresas y se busca la vieja, sale con el nombre de la
+    otra.
+  - `OPTION (RECOMPILE)` en ese `SELECT INTO`: sin búsqueda el optimizador descarta el OR/EXISTS.
+    `LIKE '%x%'` no usa índices → recorre el universo del asesor; es barato y además achica
+    `#LSP_REPR` (los pasos 3-5 hacen menos trabajo).
+  - ⚠️ Pendiente `ALTER PROCEDURE` en SSMS. La web no tiene buscador equivalente en su grilla
+    (en `CSV_T_CONTACTO_LST_V02` el único `LIKE` es del task `'RC'`).
+
 ## Seguimiento — panel de filtros avanzado + contactos sin negociación (2026-09-08)
 
 Pantalla `SeguimientoPage` / `SeguimientoBloc` (task `'LSP'` de `CRM.CSV_LEADS_LST_APP`,
@@ -68,8 +111,9 @@ contadores + cards** (calza con `SeguimientoPortrait`), y solo se usa en la **pr
 pantalla: `SeguimientoCargado.recargandoLista` mantiene chips y contadores montados y solo el
 área de la lista muestra `LeadCardSkeletonList`.
 
-**Contrato `@L_DATA` del task `'LSP'` (12 campos, `fnSplitStringTable15`):**
-`codUser¦moderador¦idEstado(chip)¦curFecha¦curIdContacto¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad¦idEstadoAdv¦idSubestadoAdv`.
+**Contrato `@L_DATA` del task `'LSP'` (13 campos, `fnSplitStringTable15`):**
+`codUser¦moderador¦idEstado(chip)¦curFecha¦curIdContacto¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad¦idEstadoAdv¦idSubestadoAdv¦busqueda`
+(campo 13 `busqueda` agregado 2026-09-10, ver la sección de arriba).
 Fechas en ISO 126 (`yyyy-MM-ddTHH:mm:ss`), `''` = no aplica. El 5º campo de la cabecera de la
 1ª página pasó de repetir `total` a ser `activos` (`@LSP_ACT`).
 

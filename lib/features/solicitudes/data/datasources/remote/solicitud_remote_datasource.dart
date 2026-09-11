@@ -34,7 +34,7 @@ class SolicitudRemoteDatasource {
   static const int tamanioSiguiente = 50;
 
   // Task 'LSP' — lista paginada (keyset) con filtro Desde/Hasta/Campaña/Oportunidad.
-  // Body: token ¯ codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad ¯ LSP
+  // Body: token ¯ codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad¦busqueda ¯ LSP
   //   idCampania/idOportunidad: 2026-09-10 el campo 11 pasó de ID_EVENTO a
   //   ID_OPORTUNIDAD para quedar igual que la web (su combo dice "Evento" pero
   //   lo llena con CRMV2_OPORTUNIDAD y manda ID_OPORTUNIDAD —
@@ -43,6 +43,10 @@ class SolicitudRemoteDatasource {
   //   chip: '' = todas ; 'SV' = sin validar ; 'VA' = validados
   //   idAsesor: solo con el chip "Asesores" (filtra por ese codUser); si no, ''
   //   fcDesde/fcHasta: ISO 126 (yyyy-MM-ddTHH:mm:ss), '' = no aplica
+  //   busqueda: texto del buscador, '' = sin búsqueda. El SP busca en nombre
+  //     completo, empresa, celular y N° de solicitud (LIKE, sin distinguir
+  //     mayúsculas/tildes), AND con lo demás (2026-09-10). Antes se filtraba
+  //     en cliente y solo encontraba en las páginas ya cargadas.
   Future<SolicitudPagina> traerPagina({
     String chip = '',
     String? idAsesor,
@@ -53,6 +57,7 @@ class SolicitudRemoteDatasource {
     DateTime? fcHasta,
     int? idCampania,
     int? idOportunidad,
+    String busqueda = '',
   }) async {
     final camp = AppConstants.sepCampos;
     final sep = AppConstants.sepListas;
@@ -69,6 +74,7 @@ class SolicitudRemoteDatasource {
       _fmtFecha(fcHasta),
       idCampania ?? '',
       idOportunidad ?? '',
+      busqueda.sinSeparadoresSp.trim(),
     ].join(camp);
 
     final result = await _api.postSafe(

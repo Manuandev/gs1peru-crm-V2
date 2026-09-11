@@ -41,6 +41,10 @@ class CobranzaListCargado extends CobranzaListState {
   final CobranzaConteos conteos;
   final CobranzaFiltroAvanzado filtroAvanzado;
 
+  /// Texto de búsqueda aplicado ('' = sin búsqueda). Solo lo lee la vista
+  /// (mensaje de "sin resultados"); la fuente de verdad es el bloc.
+  final String busqueda;
+
   /// Conteo de cobranzas por asesor (codUser) desglosado por idEstado, sobre las
   /// páginas ya cargadas (best-effort) — alimenta CobranzaAsesorPickerModal.
   final Map<String, Map<int, int>> conteosPorAsesor;
@@ -59,6 +63,7 @@ class CobranzaListCargado extends CobranzaListState {
     required this.conteos,
     this.asesorSeleccionado,
     this.filtroAvanzado = CobranzaFiltroAvanzado.vacio,
+    this.busqueda = '',
     this.conteosPorAsesor = const {},
     this.recargandoLista = false,
     this.finLista = false,
@@ -68,8 +73,8 @@ class CobranzaListCargado extends CobranzaListState {
     this.cursorNumSol,
   });
 
-  /// Pend. de documento GLOBAL (sin el filtro del panel) — alimenta el badge
-  /// "Cobranza" del drawer.
+  /// Pend. de documento GLOBAL (sin el filtro del panel ni la búsqueda) —
+  /// alimenta el badge "Cobranza" del drawer.
   int get pendientesDocumento => conteos.pendGlobal;
 
   /// El botón de filtro del AppBar se pinta naranja solo si el asesor cambió el
@@ -90,6 +95,7 @@ class CobranzaListCargado extends CobranzaListState {
     Set<int>? estadosSeleccionados,
     CobranzaConteos? conteos,
     CobranzaFiltroAvanzado? filtroAvanzado,
+    String? busqueda,
     Map<String, Map<int, int>>? conteosPorAsesor,
     bool? recargandoLista,
     bool? finLista,
@@ -108,6 +114,7 @@ class CobranzaListCargado extends CobranzaListState {
       estadosSeleccionados: estadosSeleccionados ?? this.estadosSeleccionados,
       conteos: conteos ?? this.conteos,
       filtroAvanzado: filtroAvanzado ?? this.filtroAvanzado,
+      busqueda: busqueda ?? this.busqueda,
       conteosPorAsesor: conteosPorAsesor ?? this.conteosPorAsesor,
       recargandoLista: recargandoLista ?? this.recargandoLista,
       finLista: finLista ?? this.finLista,
@@ -129,6 +136,7 @@ class CobranzaListCargado extends CobranzaListState {
     conteos.porEstado,
     conteos.pendGlobal,
     filtroAvanzado,
+    busqueda,
     recargandoLista,
     finLista,
     cargandoMas,

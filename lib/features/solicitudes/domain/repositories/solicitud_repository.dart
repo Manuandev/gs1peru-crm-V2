@@ -11,7 +11,8 @@ import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/par
 abstract class SolicitudRepository {
   Future<List<Solicitud>> getSolicitudes();
 
-  // Task 'LSP' — lista paginada (keyset) con filtro Desde/Hasta/Campaña/Evento.
+  // Task 'LSP' — lista paginada (keyset) con filtro Desde/Hasta/Campaña/
+  // Oportunidad + búsqueda de texto (la aplica el SP).
   Future<SolicitudPagina> traerPagina({
     String chip,
     String? idAsesor,
@@ -22,6 +23,7 @@ abstract class SolicitudRepository {
     DateTime? fcHasta,
     int? idCampania,
     int? idOportunidad,
+    String busqueda,
   });
 
   Future<SolicitudDetalleModel> getSolicitudDetalle(String numSol);

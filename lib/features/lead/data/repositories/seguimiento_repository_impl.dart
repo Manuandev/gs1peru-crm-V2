@@ -17,6 +17,7 @@ class SeguimientoRepositoryImpl implements SeguimientoRepository {
     DateTime? fcHasta,
     int? idCampania,
     int? idOportunidad,
+    String busqueda = '',
   }) => _remote.traerPagina(
     filtro: filtro,
     cursorFecha: cursorFecha,
@@ -26,5 +27,6 @@ class SeguimientoRepositoryImpl implements SeguimientoRepository {
     fcHasta: fcHasta,
     idCampania: idCampania,
     idOportunidad: idOportunidad,
+    busqueda: busqueda,
   );
 }

@@ -29,14 +29,20 @@ class SolicitudListError extends SolicitudListState {
 }
 
 class SolicitudListSuccess extends SolicitudListState {
-  /// Filas ya filtradas por búsqueda de texto (cliente, sobre las páginas
-  /// cargadas). La lista completa cargada vive en el bloc (`_items`).
+  /// Filas de las páginas ya cargadas. La búsqueda de texto ya la aplicó el
+  /// SP (campo 12 del 'LSP') — no se filtra en cliente.
   final List<Solicitud> solicitudes;
   final SolicitudFiltro filtro;
   final String? asesorSeleccionado;
   final SolicitudFiltroAvanzado filtroAvanzado;
 
-  /// Contadores desde BD (1ª página) — aplican el filtro del panel, no el chip.
+  /// Texto de búsqueda aplicado ('' = sin búsqueda). Lo lee la vista (mensaje
+  /// de "sin resultados") y la page (no toca el badge del drawer mientras se
+  /// busca, porque los contadores se mueven con la búsqueda).
+  final String busqueda;
+
+  /// Contadores desde BD (1ª página) — aplican el filtro del panel y la
+  /// búsqueda, no el chip.
   final int cntSinValidar;
   final int cntValidados;
 
@@ -55,6 +61,7 @@ class SolicitudListSuccess extends SolicitudListState {
     this.filtro = SolicitudFiltro.todas,
     this.asesorSeleccionado,
     this.filtroAvanzado = SolicitudFiltroAvanzado.vacio,
+    this.busqueda = '',
     this.cntSinValidar = 0,
     this.cntValidados = 0,
     this.conteosPorAsesor = const {},
@@ -76,6 +83,7 @@ class SolicitudListSuccess extends SolicitudListState {
     SolicitudFiltro? filtro,
     String? asesorSeleccionado,
     SolicitudFiltroAvanzado? filtroAvanzado,
+    String? busqueda,
     int? cntSinValidar,
     int? cntValidados,
     Map<String, Map<bool, int>>? conteosPorAsesor,
@@ -92,6 +100,7 @@ class SolicitudListSuccess extends SolicitudListState {
       filtro: filtro ?? this.filtro,
       asesorSeleccionado: asesorSeleccionado ?? this.asesorSeleccionado,
       filtroAvanzado: filtroAvanzado ?? this.filtroAvanzado,
+      busqueda: busqueda ?? this.busqueda,
       cntSinValidar: cntSinValidar ?? this.cntSinValidar,
       cntValidados: cntValidados ?? this.cntValidados,
       conteosPorAsesor: conteosPorAsesor ?? this.conteosPorAsesor,
@@ -112,6 +121,7 @@ class SolicitudListSuccess extends SolicitudListState {
     filtro,
     asesorSeleccionado,
     filtroAvanzado,
+    busqueda,
     cntSinValidar,
     cntValidados,
     recargandoLista,

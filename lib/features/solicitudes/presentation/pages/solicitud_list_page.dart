@@ -31,7 +31,11 @@ class _SolicitudListPageState extends State<SolicitudListPage> {
         listener: (context, state) {
           if (state is SolicitudListError) {
             AppSnackBar.error(context, state.message);
-          } else if (state is SolicitudListSuccess) {
+          } else if (state is SolicitudListSuccess &&
+              state.busqueda.isEmpty) {
+            // cntSinValidar se mueve con la búsqueda (el SP la aplica en el
+            // universo); mientras se busca, el badge se queda con el último
+            // valor sin búsqueda.
             context.updateBadge(solicitudes: state.cntSinValidar);
           }
         },

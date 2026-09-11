@@ -23,6 +23,7 @@ class CobranzaRepositoryImpl implements CobranzaRepository {
     int? idCampania,
     int? idOportunidad,
     Set<int> estados = const {},
+    String busqueda = '',
   }) => _remote.traerPagina(
     chip: chip,
     codAsesor: codAsesor,
@@ -34,6 +35,7 @@ class CobranzaRepositoryImpl implements CobranzaRepository {
     idCampania: idCampania,
     idOportunidad: idOportunidad,
     estados: estados,
+    busqueda: busqueda,
   );
 
   @override

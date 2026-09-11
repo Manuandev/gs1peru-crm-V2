@@ -64,6 +64,18 @@ class CobranzaFiltroAvanzadoLimpiado extends CobranzaListEvent {
   const CobranzaFiltroAvanzadoLimpiado();
 }
 
+/// Texto del buscador del AppBar (llega en cada tecla). El bloc espera
+/// `AppConstants.debounceBusqueda` tras la última tecla y recarga desde la
+/// página 1. El filtro lo aplica el SP ('LSP', campo 13) junto con chip +
+/// tarjetas + panel (AND). '' (la X del buscador) limpia al toque.
+class CobranzaBusquedaCambiada extends CobranzaListEvent {
+  final String texto;
+  const CobranzaBusquedaCambiada(this.texto);
+
+  @override
+  List<Object?> get props => [texto];
+}
+
 /// El scroll llegó al umbral — pedir la página siguiente.
 class CobranzaPaginaSolicitada extends CobranzaListEvent {
   const CobranzaPaginaSolicitada();

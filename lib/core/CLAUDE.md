@@ -366,6 +366,11 @@ AppConstants.sepListas    // '¯' — separa secciones en la respuesta
 AppConstants.sepComodin   // '¨' — uso libre
 AppConstants.sepComodin2  // '±' — uso libre
 AppConstants.sepComodin3  // '¶' — uso libre
+
+// Búsqueda libre en listas paginadas (el filtro lo aplica el SP) — 2026-09-10,
+// la usan Seguimiento, Solicitudes y Cobranza (ver el CLAUDE.md de cada feature)
+AppConstants.debounceBusqueda      // Duration 500 ms — espera tras la última tecla
+AppConstants.busquedaMinCaracteres // 3 — por debajo no filtra
 ```
 
 ---
@@ -1582,6 +1587,10 @@ AvatarUtils.color('Juan Pérez')      // Color consistente por nombre
 
 // Nombre de archivo seguro para WhatsApp — solo A-Z a-z 0-9 . _ -
 'PLANTAS-NUTRICIO´N.pdf'.sanitizarNombreArchivo  // 'PLANTAS-NUTRICION.pdf'
+
+// Texto libre que viaja dentro del body de un SP (ej. el buscador de las listas
+// paginadas) — quita los separadores ¬ ¦ ¯ ¨ que romperían el split (2026-09-10)
+'juan¦perez'.sinSeparadoresSp  // 'juanperez'
 
 // Validador de email (para usar en validators de formularios)
 null.emailValidator          // 'El email es requerido'

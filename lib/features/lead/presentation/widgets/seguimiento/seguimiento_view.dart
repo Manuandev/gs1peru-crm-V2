@@ -35,6 +35,11 @@ class SeguimientoView extends StatelessWidget {
       ),
       drawerSide: DrawerSide.left,
       bodyPadding: EdgeInsets.zero,
+      // Buscador por contacto/empresa: llega en cada tecla, el bloc hace el
+      // debounce y el filtro lo aplica el SP (la lista es paginada).
+      onSearch: (query) => context.read<SeguimientoBloc>().add(
+        SeguimientoBusquedaCambiada(query),
+      ),
       // Botón de filtro avanzado (abre el endDrawer derecho).
       appBarTrailingButtons: [
         BlocBuilder<SeguimientoBloc, SeguimientoEstado>(

@@ -1,11 +1,16 @@
 // lib/features/solicitudes/presentation/bloc/list/solicitud_list_bloc.dart
 //
 // BLoC de Solicitudes paginado (task 'LSP'). Mismo patrón que SeguimientoBloc:
-//   - "restartable" (chip / filtro / refresh): contador [_epoca].
+//   - "restartable" (chip / filtro / refresh / búsqueda): contador [_epoca].
 //   - "droppable" (página siguiente): flag síncrono [_cargandoPagina].
+//   - "debounce" (buscador del AppBar): ticket [_ticketBusqueda], mismo estilo
+//     que [_epoca] — cada tecla saca uno nuevo y tras la espera solo sigue el
+//     último.
 //   - recarga parcial: si ya hay SolicitudListSuccess, se emite con
 //     recargandoLista:true (chips + contadores quedan montados).
-// La búsqueda de texto se aplica en cliente sobre las páginas ya cargadas.
+// La búsqueda de texto la aplica el SP (campo 12 del 'LSP'), igual que
+// Seguimiento — antes se filtraba en cliente y solo encontraba en las páginas
+// ya cargadas.
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
@@ -17,7 +22,10 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
   List<Solicitud> _items = [];
   SolicitudFiltro _filtro = SolicitudFiltro.todas;
   String? _asesorSeleccionado;
+  // Texto del buscador ya normalizado ('' = sin búsqueda). Se combina con chip
+  // + panel (AND en el SP) y viaja en TODAS las páginas — ver [_pedirPagina].
   String _busqueda = '';
+  int _ticketBusqueda = 0;
   SolicitudFiltroAvanzado _filtroAvanzado =
       SolicitudFiltroAvanzado.porDefecto();
   SolicitudConteos _conteos = const SolicitudConteos();
@@ -84,10 +92,23 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
   Future<void> _onSearched(
     SolicitudListSearched e,
     Emitter<SolicitudListState> emit,
-  ) {
-    _busqueda = e.query;
-    if (state is SolicitudListSuccess) _emitir(emit);
-    return Future.value();
+  ) async {
+    final texto = e.query.trim();
+
+    // Debounce: cada tecla saca un ticket; tras la espera solo sigue la última.
+    // Vacío (la X del buscador) limpia al toque, sin esperar.
+    final ticket = ++_ticketBusqueda;
+    if (texto.isNotEmpty) await Future.delayed(AppConstants.debounceBusqueda);
+    if (ticket != _ticketBusqueda || isClosed || emit.isDone) return;
+
+    // Por debajo del mínimo de caracteres no filtra (con 1-2 letras traería
+    // media base y no aporta).
+    final busqueda = texto.length >= AppConstants.busquedaMinCaracteres
+        ? texto
+        : '';
+    if (busqueda == _busqueda && state is SolicitudListSuccess) return;
+    _busqueda = busqueda;
+    await _cargarDesdeCero(emit);
   }
 
   Future<void> _onFiltroAvanzadoAplicado(
@@ -122,16 +143,8 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     }
 
     try {
-      final pagina = await _getPagina(
-        chip: _chipCode(_filtro),
-        idAsesor: _asesorParam,
-        cursorFecha: null,
-        cursorNumsol: null,
+      final pagina = await _pedirPagina(
         tamanio: SolicitudRemoteDatasource.tamanioPrimera,
-        fcDesde: _filtroAvanzado.desdeEfectivo,
-        fcHasta: _filtroAvanzado.hastaEfectivo,
-        idCampania: _filtroAvanzado.idCampania,
-        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       if (epoca != _epoca || emit.isDone) return;
 
@@ -147,6 +160,27 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
       emit(SolicitudListError(_msg(e)));
     }
   }
+
+  /// Único punto que arma la consulta al SP: chip + panel + búsqueda viajan
+  /// juntos en TODAS las páginas. Si una página siguiente saliera sin alguno,
+  /// mezclaría filas filtradas con sin filtrar (el cursor keyset solo vale
+  /// para la misma combinación de filtros).
+  Future<SolicitudPagina> _pedirPagina({
+    String? cursorFecha,
+    String? cursorNumsol,
+    required int tamanio,
+  }) => _getPagina(
+    chip: _chipCode(_filtro),
+    idAsesor: _asesorParam,
+    cursorFecha: cursorFecha,
+    cursorNumsol: cursorNumsol,
+    tamanio: tamanio,
+    fcDesde: _filtroAvanzado.desdeEfectivo,
+    fcHasta: _filtroAvanzado.hastaEfectivo,
+    idCampania: _filtroAvanzado.idCampania,
+    idOportunidad: _filtroAvanzado.idOportunidad,
+    busqueda: _busqueda,
+  );
 
   // ── Página siguiente ──────────────────────────────────────────────────────
 
@@ -178,16 +212,10 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     _emitir(emit, cargandoMas: true, limpiarLoadMoreError: true);
 
     try {
-      final pagina = await _getPagina(
-        chip: _chipCode(_filtro),
-        idAsesor: _asesorParam,
+      final pagina = await _pedirPagina(
         cursorFecha: _cursorFecha,
         cursorNumsol: _cursorNumsol,
         tamanio: SolicitudRemoteDatasource.tamanioSiguiente,
-        fcDesde: _filtroAvanzado.desdeEfectivo,
-        fcHasta: _filtroAvanzado.hastaEfectivo,
-        idCampania: _filtroAvanzado.idCampania,
-        idOportunidad: _filtroAvanzado.idOportunidad,
       );
       if (epoca != _epoca || emit.isDone) return;
 
@@ -217,20 +245,6 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     String? loadMoreError,
     bool limpiarLoadMoreError = false,
   }) {
-    final q = _busqueda.toLowerCase().trim();
-    final visibles = q.isEmpty
-        ? _items
-        : _items
-              .where(
-                (s) =>
-                    s.nombre.toLowerCase().contains(q) ||
-                    s.apellidos.toLowerCase().contains(q) ||
-                    s.nombreEmpresa.toLowerCase().contains(q) ||
-                    s.telefono.contains(q) ||
-                    s.idSolicitud.toLowerCase().contains(q),
-              )
-              .toList();
-
     final conteosPorAsesor = <String, Map<bool, int>>{};
     for (final s in _items) {
       if (s.asesor.isEmpty) continue;
@@ -240,10 +254,11 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
 
     emit(
       SolicitudListSuccess(
-        solicitudes: visibles,
+        solicitudes: _items,
         filtro: _filtro,
         asesorSeleccionado: _asesorSeleccionado,
         filtroAvanzado: _filtroAvanzado,
+        busqueda: _busqueda,
         cntSinValidar: _conteos.sinValidar,
         cntValidados: _conteos.validados,
         conteosPorAsesor: conteosPorAsesor,

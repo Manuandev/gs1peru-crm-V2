@@ -1,5 +1,25 @@
 # Cobranza Feature
 
+## Buscador en la lista — nombre, empresa, celular, N° de solicitud, en el SP (2026-09-10)
+
+Cobranza no tenía buscador. Pedido del usuario: el mismo de Seguimiento/Solicitudes, buscando
+por los mismos campos que Solicitudes.
+
+- **UI**: `BasePage(onSearch:)` en `CobranzaListView` → evento nuevo `CobranzaBusquedaCambiada`.
+- **Bloc**: 500 ms de debounce (ticket `_ticketBusqueda`), mínimo 3 caracteres, la X limpia al
+  toque, y `_pedirPagina` (nuevo) como único punto que arma la consulta — chip + tarjetas +
+  panel + búsqueda viajan en TODAS las páginas. Mismo patrón que Seguimiento (`lead/CLAUDE.md`).
+- **Campos**: nombre completo (`NOMBRES` + `APE_PATERNO` + `APE_MATERNO`), empresa (`NOMEMPRE`),
+  celular (`CELULAR`) y N° de solicitud (`NUMSOL`), de `EVT.T_TECMSOLINSCRIPCION01`. Nombre y
+  empresa sin distinguir mayúsculas ni tildes (`CI_AI`); celular y NUMSOL tal cual.
+- **SP `'LSP'`** (`CRM.CSV_COBRANZAS_LST_APP`, UTF-16LE+BOM preservado): campo **13** de
+  `@L_DATA` (`@BUSQUEDA` → `@PATRON_BUSQUEDA`). Filtro en **`#Base`** → las 4 tarjetas y el
+  total se mueven con la búsqueda; `@PEND_GLOBAL` (badge del drawer) **no**, sale de su propia
+  consulta. `OPTION (RECOMPILE)` en el `SELECT INTO #Base`. Una app vieja (12 campos) recibe
+  `field13` NULL → sin filtro. ⚠️ Pendiente `ALTER PROCEDURE` en SSMS.
+- Vacío con búsqueda: "Sin resultados para "x" con los filtros actuales." (`_mensajeVacio`).
+- `CobranzaListCargado.busqueda` (nuevo).
+
 ## Lista paginada (keyset) + panel de filtros Desde/Hasta/Campaña/Oportunidad (2026-09-09)
 
 `CobranzaListPage` / `CobranzaListBloc` pasaron a **paginado real** (task `'LSP'` de
@@ -33,8 +53,8 @@ se conservan).
   fijo en ambos lados (acá y `@CUR_FECHA/@FC_DESDE/@FC_HASTA`) evita el bug de precisión de ms que
   cortaba la lista a ~1 página (ver `solicitudes/CLAUDE.md` → "keyset perdía precisión").
 - **Body `'LSP'`:** `codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tam¦fcDesde¦fcHasta¦idCampania¦
-  idOportunidad¦estados`. `chip` `''`/`C`/`CR`; `estados` = ID_ESTADO_GES separados por coma (ej.
-  `2,5`), `''` = las 4.
+  idOportunidad¦estados¦busqueda`. `chip` `''`/`C`/`CR`; `estados` = ID_ESTADO_GES separados por
+  coma (ej. `2,5`), `''` = las 4; `busqueda` (campo 13, 2026-09-10) ver la primera sección.
 
 **Flutter:**
 - `CobranzaFiltroAvanzado` (entidad, `porDefecto()` = 1 del mes actual → hoy, ambos activos) +

@@ -29,6 +29,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     DateTime? fcHasta,
     int? idCampania,
     int? idOportunidad,
+    String busqueda = '',
   }) => _remote.traerPagina(
     chip: chip,
     idAsesor: idAsesor,
@@ -39,6 +40,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     fcHasta: fcHasta,
     idCampania: idCampania,
     idOportunidad: idOportunidad,
+    busqueda: busqueda,
   );
 
   @override

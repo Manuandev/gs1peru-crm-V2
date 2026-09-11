@@ -1,5 +1,7 @@
 // lib/core/utils/string/string_utils.dart
 
+import 'package:app_crm/core/index_core.dart';
+
 extension StringExtensions on String {
   String get limpiarTelefono {
     final tienePlus = trimLeft().startsWith('+');
@@ -49,6 +51,16 @@ extension StringExtensions on String {
   String get sanitizarNombreArchivo {
     return replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '');
   }
+
+  /// Quita los separadores del protocolo de los SP (¬ ¦ ¯ ¨) — para texto
+  /// libre que viaja dentro del body (ej. el buscador de las listas
+  /// paginadas): si el usuario pega uno, rompería el split del SP.
+  String get sinSeparadoresSp => [
+    AppConstants.sepRegistros,
+    AppConstants.sepCampos,
+    AppConstants.sepListas,
+    AppConstants.sepComodin,
+  ].fold(this, (texto, separador) => texto.replaceAll(separador, ''));
 }
 
 extension NullableStringExtensions on String? {

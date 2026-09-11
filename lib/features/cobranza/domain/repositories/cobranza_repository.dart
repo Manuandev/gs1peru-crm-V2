@@ -17,6 +17,7 @@ abstract class CobranzaRepository {
     int? idCampania,
     int? idOportunidad,
     Set<int> estados,
+    String busqueda,
   });
 
   Future<CobranzaDetalle?> getDetalleCobranza(String numSol);

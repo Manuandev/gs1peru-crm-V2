@@ -4,6 +4,36 @@ Esto documenta por qué el APK sale bien en la PC personal pero falla (con
 "error de paquetes" / conflicto al instalar) en la PC del trabajo, y qué
 revisar en cada máquina antes de compilar.
 
+## Paso a paso para generar el APK release en otra PC (2026-09-11)
+
+El keystore real viaja en la USB, carpeta **`Keystores\gs1peru-crm\`** (en la PC personal es
+`E:\`; en otra PC la letra puede cambiar). Ahí también está `LEEME.txt` con este mismo
+checklist.
+
+1. Traer el código de la rama que se va a compilar (`git pull`).
+2. Copiar de la USB a `android\` del proyecto (al lado de `build.gradle.kts`, **no** a
+   `android\app\`): `upload-keystore.jks` y `key.properties`.
+3. Confirmar que la copia quedó idéntica: `Get-FileHash android\upload-keystore.jks
+   -Algorithm SHA256` → `148FE98227566DDA8125FCD092FEDB719D5DA478EBF227B8B608881CA4AFFB0B`.
+4. Revisar `lib/config/env/env_config.dart`: `EnvConfig.current` quedó en **`qa`** el
+   2026-09-11 (commit `ec343a8`) — preguntar si el APK es para QA o producción.
+   `pubspec.yaml` tiene `version: 1.0.0+1` (versionCode fijo en 1): instalar encima con el
+   mismo versionCode funciona; lo único que bloquea es bajarlo.
+5. `flutter pub get` y `flutter build apk --release`. **No** debe salir el banner
+   "ADVERTENCIA: no se encontro android/key.properties"; si sale, el APK quedó con firma
+   debug.
+6. Verificar la firma **con `apksigner`, no con `keytool`** (keytool dice "no es un archivo jar
+   firmado" aunque esté bien, porque Flutter firma con v2/v3):
+   `<SDK>\build-tools\<versión>\apksigner.bat verify --print-certs build\app\outputs\flutter-apk\app-release.apk`
+   → `CN=GS1 Peru CRM, OU=IT, O=GS1 Peru, L=Lima, ST=Lima, C=PE` y SHA-256
+   `c29cc0d3fa92629ad6f7fa48d567bb3dca5735b19a7b56c69c987e2a1c7d336b`. Si sale
+   `CN=Android Debug`, volver al paso 2.
+7. Si el APK lleva la búsqueda en el SP (Seguimiento/Solicitudes/Cobranza, commit `664de35`),
+   confirmar antes de repartirlo que se hizo el `ALTER PROCEDURE` de `CRM.CSV_LEADS_LST_APP`,
+   `CRM.CSV_SOLICITUD_LST_APP` y `CRM.CSV_COBRANZAS_LST_APP` (commit `c64a3ba` en
+   `NC.SQLChangeLock`).
+8. **Nunca** crear un keystore nuevo: cambiaría la huella y ningún celular podría actualizar.
+
 ## Causa raíz
 
 `android/key.properties` y `android/upload-keystore.jks` **nunca se suben a

@@ -2,6 +2,7 @@
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/data/models/solicitud_detalle_model.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/evento_fecha.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud_detalle.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud_pagina.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
@@ -28,6 +29,13 @@ abstract class SolicitudRepository {
   // Task 'DV' — detalle de solo lectura, ver SolicitudRemoteDatasource.
   Future<SolicitudDetalle> getDetalleSolicitud(String numSol);
 
+  // Task 'EVF' — fechas del evento de una oportunidad+campaña, ver
+  // SolicitudRemoteDatasource.
+  Future<List<EventoFechaItem>> getEventoFechas({
+    required int idOportunidad,
+    required int idCampania,
+  });
+
   Future<CrudResult> guardarSolicitud({
     required String numSol,
     required String idLead,
@@ -42,6 +50,7 @@ abstract class SolicitudRepository {
     required List<TipoParticipanteItem> tiposParticipante,
     int? cantidadEsperada,
     required TotalesSolicitud totales,
+    List<EventoFechaItem> eventoFechas,
   });
 
   Future<bool> guardarArchivo({

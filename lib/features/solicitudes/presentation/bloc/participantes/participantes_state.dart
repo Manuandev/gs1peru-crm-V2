@@ -23,6 +23,14 @@ class ParticipanteLocal extends Equatable {
   /// datos del solicitante (switch "El solicitante será participante").
   final bool esSolicitante;
 
+  /// Ids de EVT.T_EVENTO_FECHA marcados para este participante en "Fechas de
+  /// asistencia" (solo aplica si la oportunidad+campaña de la solicitud
+  /// tiene un evento, ver `SolicitudFormState.eventoFechas`). Mínimo 1 si el
+  /// evento tiene fechas — lo garantiza `ParticipantesCubit` (primer día por
+  /// defecto). Viaja al SP en el 5to bloque del task 'U' y vuelve en el
+  /// campo 13 de cada participante del task 'DT' (ver solicitudes/CLAUDE.md).
+  final List<int> fechasAsistencia;
+
   const ParticipanteLocal({
     required this.id,
     this.tipoDocId = '',
@@ -40,6 +48,7 @@ class ParticipanteLocal extends Equatable {
     required this.tipoParticipante,
     required this.importe,
     this.esSolicitante = false,
+    this.fechasAsistencia = const [],
   });
 
   String get nombreCompleto => [
@@ -67,6 +76,7 @@ class ParticipanteLocal extends Equatable {
     String? tipoParticipante,
     double? importe,
     bool? esSolicitante,
+    List<int>? fechasAsistencia,
   }) {
     return ParticipanteLocal(
       id: id ?? this.id,
@@ -86,6 +96,7 @@ class ParticipanteLocal extends Equatable {
       tipoParticipante: tipoParticipante ?? this.tipoParticipante,
       importe: importe ?? this.importe,
       esSolicitante: esSolicitante ?? this.esSolicitante,
+      fechasAsistencia: fechasAsistencia ?? this.fechasAsistencia,
     );
   }
 
@@ -111,6 +122,7 @@ class ParticipanteLocal extends Equatable {
     tipoParticipante,
     importe,
     esSolicitante,
+    fechasAsistencia,
   ];
 }
 

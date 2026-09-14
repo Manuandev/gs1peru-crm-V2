@@ -6,6 +6,7 @@ export 'data/models/solicitud_model.dart';
 export 'data/models/solicitud_detalle_model.dart';
 export 'data/models/solicitud_detalle_real_model.dart';
 export 'data/models/solicitud_pagina_model.dart';
+export 'data/models/evento_fecha_model.dart';
 
 export 'data/repositories/solicitud_repository_impl.dart';
 
@@ -13,6 +14,7 @@ export 'domain/entities/solicitud.dart';
 export 'domain/entities/solicitud_detalle.dart';
 export 'domain/entities/solicitud_pagina.dart';
 export 'domain/entities/solicitud_filtro_avanzado.dart';
+export 'domain/entities/evento_fecha.dart';
 
 export 'domain/enums/solicitud_filtro.dart';
 export 'domain/enums/solicitud_accion_tipo.dart';

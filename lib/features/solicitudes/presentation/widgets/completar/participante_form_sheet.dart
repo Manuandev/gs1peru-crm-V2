@@ -19,6 +19,12 @@ Future<void> mostrarFormularioParticipante(
   // ruta nueva y hermana sobre el mismo Navigator, no un descendiente del
   // BlocProvider.value de este paso — context.read ahí adentro revienta.
   double? importeFijo,
+  // Fechas del evento de la oportunidad+campaña de la solicitud
+  // (SolicitudFormState.eventoFechas) — vacío = esa oportunidad+campaña no
+  // tiene evento, la sección "Fechas de asistencia" no se muestra. Mismo
+  // motivo que importeFijo para pasarlo por parámetro en vez de leer el
+  // cubit adentro del modal.
+  List<EventoFechaItem> eventoFechas = const [],
 }) {
   return showModalBottomSheet(
     context: context,
@@ -29,6 +35,7 @@ Future<void> mostrarFormularioParticipante(
       participante: participante,
       onGuardar: onGuardar,
       importeFijo: importeFijo,
+      eventoFechas: eventoFechas,
     ),
   );
 }
@@ -39,11 +46,13 @@ class _ParticipanteFormSheet extends StatefulWidget {
   final ParticipanteLocal? participante;
   final void Function(ParticipanteLocal) onGuardar;
   final double? importeFijo;
+  final List<EventoFechaItem> eventoFechas;
 
   const _ParticipanteFormSheet({
     required this.participante,
     required this.onGuardar,
     this.importeFijo,
+    this.eventoFechas = const [],
   });
 
   @override
@@ -62,6 +71,12 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
   String? _nacionalidadInicialId;
   late String _tipoParticipante;
   PaisItem? _paisSeleccionado;
+
+  // Ids de EVT.T_EVENTO_FECHA marcados en "Fechas de asistencia" — un
+  // participante nuevo arranca solo con el PRIMER día marcado (pedido de
+  // negocio, 2026-09-14); al editar, con los días que ya tiene. Nunca puede
+  // quedar en 0: desmarcar el único día marcado no hace nada.
+  late Set<int> _fechasSeleccionadas;
 
   late final FocusNode _numDocFocus;
   String _ultimoDocBuscado = '';
@@ -174,6 +189,11 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                 ? widget.importeFijo!.toStringAsFixed(2)
                 : ''),
     );
+
+    final idPrimeraFecha = widget.eventoFechas.idPrimeraFecha;
+    _fechasSeleccionadas = (p != null && p.fechasAsistencia.isNotEmpty)
+        ? p.fechasAsistencia.toSet()
+        : {?idPrimeraFecha};
   }
 
   @override
@@ -221,6 +241,7 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
       tipoParticipante: _tipoParticipante,
       importe: importe,
       esSolicitante: widget.participante?.esSolicitante ?? false,
+      fechasAsistencia: _fechasSeleccionadas.toList(),
     );
 
     widget.onGuardar(resultado);
@@ -421,6 +442,23 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                               _cargoCtrl.text = item?.descripcion ?? '';
                             }),
                           ),
+                          if (widget.eventoFechas.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            CampoFechasAsistencia(
+                              fechas: widget.eventoFechas,
+                              seleccionadas: _fechasSeleccionadas,
+                              onToggle: (idFecha) => setState(() {
+                                if (_fechasSeleccionadas.contains(idFecha)) {
+                                  // Mínimo 1 día — el único marcado no se
+                                  // puede desmarcar.
+                                  if (_fechasSeleccionadas.length == 1) return;
+                                  _fechasSeleccionadas.remove(idFecha);
+                                } else {
+                                  _fechasSeleccionadas.add(idFecha);
+                                }
+                              }),
+                            ),
+                          ],
                           const SizedBox(height: AppSpacing.sm),
 
                           CampoCelularImporte(

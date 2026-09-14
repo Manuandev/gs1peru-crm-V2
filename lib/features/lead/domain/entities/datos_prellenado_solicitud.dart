@@ -26,6 +26,11 @@ class DatosPrellenadoSolicitud extends Equatable {
   final String cargo;
   final String tipoDocId;
   final String numDoc;
+  // Oportunidad/campaña de la negociación de origen (agregados 2026-09-12) —
+  // usados para saber si tienen un EVT.T_EVENTO vinculado y así mostrar
+  // "Fechas de asistencia" en Nuevo participante (ver solicitudes/CLAUDE.md).
+  final int idOportunidad;
+  final int idCampania;
 
   const DatosPrellenadoSolicitud({
     required this.idLead,
@@ -45,6 +50,8 @@ class DatosPrellenadoSolicitud extends Equatable {
     required this.cargo,
     required this.tipoDocId,
     required this.numDoc,
+    this.idOportunidad = 0,
+    this.idCampania = 0,
   });
 
   @override
@@ -66,5 +73,7 @@ class DatosPrellenadoSolicitud extends Equatable {
     cargo,
     tipoDocId,
     numDoc,
+    idOportunidad,
+    idCampania,
   ];
 }

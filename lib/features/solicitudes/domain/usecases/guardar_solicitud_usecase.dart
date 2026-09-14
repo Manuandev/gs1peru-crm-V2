@@ -1,6 +1,7 @@
 // lib/features/solicitudes/domain/usecases/guardar_solicitud_usecase.dart
 
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/evento_fecha.dart';
 import 'package:app_crm/features/solicitudes/domain/repositories/solicitud_repository.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/participantes/participantes_cubit.dart';
@@ -23,6 +24,7 @@ class GuardarSolicitudUseCase {
     required List<TipoParticipanteItem> tiposParticipante,
     int? cantidadEsperada,
     required TotalesSolicitud totales,
+    List<EventoFechaItem> eventoFechas = const [],
   }) => _repository.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -37,5 +39,6 @@ class GuardarSolicitudUseCase {
     tiposParticipante: tiposParticipante,
     cantidadEsperada: cantidadEsperada,
     totales: totales,
+    eventoFechas: eventoFechas,
   );
 }

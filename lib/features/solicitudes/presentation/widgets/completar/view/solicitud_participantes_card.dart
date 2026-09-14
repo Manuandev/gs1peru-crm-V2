@@ -26,6 +26,11 @@ class ParticipanteCard extends StatelessWidget {
   final bool habilitado;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
+  // Fechas del evento (SolicitudFormState.eventoFechas) — vacío = sin evento,
+  // la fila "ASISTE" no se muestra.
+  final List<EventoFechaItem> eventoFechas;
+  // Marca/desmarca un día directo desde la tarjeta (solo con habilitado).
+  final ValueChanged<int>? onToggleFecha;
 
   const ParticipanteCard({
     super.key,
@@ -35,6 +40,8 @@ class ParticipanteCard extends StatelessWidget {
     required this.habilitado,
     required this.onEditar,
     required this.onEliminar,
+    this.eventoFechas = const [],
+    this.onToggleFecha,
   });
 
   @override
@@ -103,10 +110,101 @@ class ParticipanteCard extends StatelessWidget {
                   icono2: AppIcons.user,
                   valor2: tipoParticipanteLabel,
                 ),
+                if (eventoFechas.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  const Divider(height: 1, color: AppColors.border),
+                  const SizedBox(height: AppSpacing.xs),
+                  _FilaAsiste(
+                    fechas: eventoFechas,
+                    seleccionadas: participante.fechasAsistencia,
+                    onToggle: habilitado ? onToggleFecha : null,
+                  ),
+                ],
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Fila "ASISTE" — un botón por día del evento ───────────────────────────────
+
+class _FilaAsiste extends StatelessWidget {
+  final List<EventoFechaItem> fechas;
+  final List<int> seleccionadas;
+  // null = solo lectura (modo "Revisar solicitud").
+  final ValueChanged<int>? onToggle;
+
+  const _FilaAsiste({
+    required this.fechas,
+    required this.seleccionadas,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          'ASISTE',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: AppTextStyles.weightSemiBold,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        for (var i = 0; i < fechas.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: _BotonDiaAsiste(
+              fecha: fechas[i].fecha,
+              seleccionada: seleccionadas.contains(fechas[i].idFecha),
+              onTap: onToggle == null
+                  ? null
+                  : () => onToggle!(fechas[i].idFecha),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _BotonDiaAsiste extends StatelessWidget {
+  final DateTime fecha;
+  final bool seleccionada;
+  final VoidCallback? onTap;
+
+  const _BotonDiaAsiste({
+    required this.fecha,
+    required this.seleccionada,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final texto =
+        '${fecha.day} ${FormatoFechaAsistencia.mes(fecha).toLowerCase()}';
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: seleccionada ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          border: seleccionada ? null : Border.all(color: AppColors.border),
+        ),
+        child: Text(
+          texto,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: seleccionada ? AppColors.textOnDark : AppColors.textPrimary,
+            fontWeight: AppTextStyles.weightSemiBold,
+          ),
+        ),
       ),
     );
   }

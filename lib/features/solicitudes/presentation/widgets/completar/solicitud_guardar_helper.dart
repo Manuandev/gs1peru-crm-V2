@@ -44,6 +44,21 @@ import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
 /// 337.98 / 60.84 / 398.82. Esto también evita forzar el precio pactado
 /// cuando la negociación cambió después de guardar la solicitud, o cuando
 /// hay Invitados (no suman a la Inversión pero sí cuentan para "completa").
+///
+/// **Montos guardados rotos (2026-09-14)** — solicitudes grabadas antes del
+/// fix del 2026-09-10 pueden tener un IGV que no es Inversión × IGV% (ej.
+/// 100 / 800 / 900: el IGV "rellenaba" hasta el precio de la negociación).
+/// Esos no se respetan: si [totalesGuardadosValidos] da false se recalcula
+/// como si no hubiera montos guardados (y "Siguiente" los vuelve a grabar,
+/// ver [solicitudSinCambiosPendientes]).
+///
+/// **Cuadrar al precio pactado (2026-09-14)** — además de estar completa y
+/// dentro del margen de redondeo, TODOS los Pagantes deben tener exactamente
+/// el importe sugerido por la negociación (precio total sin IGV ÷ cantidad,
+/// a 2 decimales). Si el asesor cambió el importe de alguno — aunque sea 1
+/// centavo — el total es la suma normal. Ej. total 150, máximo 3: con 2
+/// sugeridos 42.37 → 84.74 / 15.25 / 99.99; al agregar el 3º → 127.11 /
+/// 22.89 / 150.00; si uno está en 40.00 → 124.74 / 22.45 / 147.19.
 TotalesSolicitud calcularTotalesSolicitud({
   required SolicitudFormState formState,
   required ParticipantesState participantesState,
@@ -56,6 +71,11 @@ TotalesSolicitud calcularTotalesSolicitud({
 
   final guardados = formState.totalesGuardados;
   if (guardados != null &&
+      totalesGuardadosValidos(
+        guardados,
+        igvPorcentaje: igvPorcentaje,
+        cantidadParticipantes: participantesState.participantes.length,
+      ) &&
       (!participantesState.huboCambios ||
           (inversion - guardados.inversion).abs() < 0.005)) {
     return guardados;
@@ -77,9 +97,34 @@ TotalesSolicitud calcularTotalesSolicitud({
   // El +0.0001 es solo margen de punto flotante.
   final toleranciaRedondeo =
       0.01 * participantesState.participantes.length + 0.0001;
+
+  // Importe sugerido por participante — mismo cálculo que _importeFijo()
+  // (solicitud_participantes_view.dart), redondeado como se guarda.
+  bool todosConImporteSugerido() {
+    final sugerido = double.parse(
+      (formState.precioTotalLead /
+              (1 + igvPorcentaje / 100) /
+              cantidadEsperada!)
+          .toStringAsFixed(2),
+    );
+    final pagantes = participantesState.participantes.where((p) {
+      final tipo = tiposParticipante
+          .where((t) => t.id == p.tipoParticipante)
+          .firstOrNull;
+      return !(tipo?.esInvitado ?? false);
+    });
+    return pagantes.isNotEmpty &&
+        pagantes.every(
+          (p) =>
+              (double.parse(p.importe.toStringAsFixed(2)) - sugerido).abs() <
+              0.005,
+        );
+  }
+
   final cuadrarAlPactado =
       completo &&
-      (importeNormal - formState.precioTotalLead).abs() <= toleranciaRedondeo;
+      (importeNormal - formState.precioTotalLead).abs() <= toleranciaRedondeo &&
+      todosConImporteSugerido();
   final importeTotal = cuadrarAlPactado
       ? double.parse(formState.precioTotalLead.toStringAsFixed(2))
       : importeNormal;
@@ -89,6 +134,27 @@ TotalesSolicitud calcularTotalesSolicitud({
     igv: igv,
     importeTotal: importeTotal,
   );
+}
+
+/// false si los montos guardados no son coherentes entre sí: el Total no es
+/// Inversión + IGV, o el IGV se aleja de Inversión × IGV% más de lo que
+/// explica el redondeo (1 centavo por participante, que es lo máximo que
+/// puede mover el cuadre al precio pactado + 1 centavo de margen). Una
+/// solicitud guardada por la app actual nunca da false.
+bool totalesGuardadosValidos(
+  TotalesSolicitud guardados, {
+  required double igvPorcentaje,
+  required int cantidadParticipantes,
+}) {
+  // Sin IGV del catálogo (aún no carga) no hay contra qué validar — se
+  // respetan los guardados en vez de marcarlos rotos por error.
+  if (igvPorcentaje <= 0) return true;
+  final tolerancia = 0.01 * cantidadParticipantes + 0.01;
+  final igvEsperado = guardados.inversion * igvPorcentaje / 100;
+  final totalCuadra =
+      (guardados.importeTotal - (guardados.inversion + guardados.igv)).abs() <=
+      0.01;
+  return totalCuadra && (guardados.igv - igvEsperado).abs() <= tolerancia;
 }
 
 Future<CrudResult> guardarSolicitudDesdeWizard(
@@ -164,6 +230,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         tiposParticipante: tiposParticipante,
         cantidadEsperada: formState.cantidadEsperada,
         totales: totales,
+        eventoFechas: formState.eventoFechas,
       );
 
   // La primera vez que se crea (numSol venía vacío), el backend genera el
@@ -498,8 +565,27 @@ Future<CrudResult> generarSolicitudCompleta(
 bool solicitudSinCambiosPendientes(BuildContext context) {
   final formState = context.read<SolicitudFormCubit>().state;
   if (formState.numSol.isEmpty) return false;
-  return !formState.huboCambios &&
-      !context.read<ParticipantesCubit>().state.huboCambios;
+  final participantesState = context.read<ParticipantesCubit>().state;
+
+  // Montos guardados rotos (ver calcularTotalesSolicitud) — cuenta como
+  // cambio pendiente para que "Siguiente" grabe los montos ya corregidos.
+  final guardados = formState.totalesGuardados;
+  if (guardados != null) {
+    final catalogState = context.read<CatalogsBloc>().state;
+    final igvPorcentaje = catalogState is CatalogsLoaded
+        ? catalogState.igvPorcentaje
+        : 0.0;
+    if (catalogState is CatalogsLoaded &&
+        !totalesGuardadosValidos(
+          guardados,
+          igvPorcentaje: igvPorcentaje,
+          cantidadParticipantes: participantesState.participantes.length,
+        )) {
+      return false;
+    }
+  }
+
+  return !formState.huboCambios && !participantesState.huboCambios;
 }
 
 /// A diferencia de [solicitudSinCambiosPendientes] (que exige `numSol` ya

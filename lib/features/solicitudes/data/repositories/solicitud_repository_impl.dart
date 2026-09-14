@@ -3,6 +3,7 @@
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/data/datasources/remote/solicitud_remote_datasource.dart';
 import 'package:app_crm/features/solicitudes/data/models/solicitud_detalle_model.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/evento_fecha.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud_detalle.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud_pagina.dart';
 import 'package:app_crm/features/solicitudes/domain/repositories/solicitud_repository.dart';
@@ -48,6 +49,15 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
       _remote.getDetalleSolicitud(numSol);
 
   @override
+  Future<List<EventoFechaItem>> getEventoFechas({
+    required int idOportunidad,
+    required int idCampania,
+  }) => _remote.getEventoFechas(
+    idOportunidad: idOportunidad,
+    idCampania: idCampania,
+  );
+
+  @override
   Future<CrudResult> guardarSolicitud({
     required String numSol,
     required String idLead,
@@ -62,6 +72,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     required List<TipoParticipanteItem> tiposParticipante,
     int? cantidadEsperada,
     required TotalesSolicitud totales,
+    List<EventoFechaItem> eventoFechas = const [],
   }) => _remote.guardarSolicitud(
     numSol: numSol,
     idLead: idLead,
@@ -76,6 +87,7 @@ class SolicitudRepositoryImpl implements SolicitudRepository {
     tiposParticipante: tiposParticipante,
     cantidadEsperada: cantidadEsperada,
     totales: totales,
+    eventoFechas: eventoFechas,
   );
 
   @override

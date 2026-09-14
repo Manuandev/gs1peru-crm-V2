@@ -22,14 +22,18 @@ class DatosPrellenadoSolicitudModel extends DatosPrellenadoSolicitud {
     required super.cargo,
     required super.tipoDocId,
     required super.numDoc,
+    super.idOportunidad,
+    super.idCampania,
   });
 
-  /// Parseo del SP 'NEG' (CRM.CSV_LEADS_LST_APP) — 17 campos posicionales:
+  /// Parseo del SP 'NEG' (CRM.CSV_LEADS_LST_APP) — 19 campos posicionales:
   /// 0 idLead, 1 cantidad (IN_PARTICIPANTES), 2 precioBase, 3 descuento,
   /// 4 precio (total), 5 idMoneda, 6 nombres, 7 apellidoPaterno,
   /// 8 apellidoMaterno, 9 nombreEmpresa, 10 correo, 11 celular (número),
   /// 12 celularCodigoTelefono (prefijo país), 13 ruc, 14 cargo, 15 tipoDocId,
-  /// 16 numDoc.
+  /// 16 numDoc, 17 idOportunidad, 18 idCampania (agregados 2026-09-12, para
+  /// el chequeo de Evento en Nuevo participante — guard defensivo si el SP
+  /// desplegado todavía no los trae).
   factory DatosPrellenadoSolicitudModel.fromRawString(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -51,6 +55,8 @@ class DatosPrellenadoSolicitudModel extends DatosPrellenadoSolicitud {
       cargo: ParseUtils.str(fields, 14),
       tipoDocId: ParseUtils.str(fields, 15),
       numDoc: ParseUtils.str(fields, 16),
+      idOportunidad: ParseUtils.toInt(fields, 17),
+      idCampania: ParseUtils.toInt(fields, 18),
     );
   }
 

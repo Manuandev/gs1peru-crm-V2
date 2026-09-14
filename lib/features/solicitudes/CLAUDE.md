@@ -1,5 +1,163 @@
 # Solicitudes Feature
 
+## Montos: guardados rotos, cuadre exacto al pactado, aviso de precio desactivado (2026-09-14)
+Todo en `solicitud_guardar_helper.dart`, sin cambios de SP.
+
+1. **Montos guardados rotos no se respetan** — `totalesGuardadosValidos()`: false si
+   `Total ≠ Inversión + IGV` (±0.01) o si `|IGV − Inversión × IGV%| > 0.01 × N° participantes +
+   0.01`. Caso real: data grabada antes del fix del 2026-09-10 (100 / 800 / 900, el IGV
+   "rellenaba" hasta el precio de la negociación). `calcularTotalesSolicitud()` los ignora y
+   recalcula; `solicitudSinCambiosPendientes()` devuelve false para que "Siguiente" grabe los
+   corregidos. Montos guardados coherentes se siguen jalando tal cual.
+2. **Cuadrar al precio pactado exige importes sin tocar** — además de "completa" y el margen de
+   redondeo, TODOS los Pagantes deben tener exactamente el importe sugerido
+   (`precioTotalLead / (1+IGV%) / cantidadEsperada`, 2 decimales). Un importe cambiado aunque sea 1
+   centavo → total = suma normal. Ej. total 150, máx. 3: 2 × 42.37 → 99.99; 3 × 42.37 → 150.00
+   (IGV 22.89); uno en 40.00 → 147.19.
+3. **Aviso "precio base × cantidad − descuento no coincide"** — llamada **comentada** en
+   `SolicitudParticipantesView._onContinuar()` (pedido del usuario). `avisoPrecioTotalNoCalza()`
+   sigue existiendo sin uso. La validación de cantidad exacta al "Generar" se mantiene.
+
+## Fechas de asistencia — ya se guardan por participante (2026-09-14)
+**Supersede** el "SOLO VISUAL" de la sección de abajo (2026-09-12). Plan B acordado con el usuario.
+
+- **CUD `'U'`** (`CRM.CSV_SOLICITUD_CUD_APP`): **5to bloque** del body, DESPUÉS de `'U'` (no mueve
+  posiciones): `cabecera¯detalle¯U¯idParticipante¦idFecha¬idParticipante¦idFecha…` →
+  `@DET_ASISTENCIA = field5` (`fnSplitStringTable05` — las funciones de split van de 5 en 5:
+  05/10/15/20…). Tras insertar participantes, un `INSERT` directo por par (`IB_ASISTENCIA = 0`),
+  sin join a `T_EVENTO_FECHA` (decisión del usuario: los ids ya salen de esa tabla). **Se eliminó
+  el `CROSS JOIN` "todas las fechas × todos"** (pedido explícito del usuario) y con él el
+  `SELECT @ID_EVENTO` que solo servía para eso — sin 5to bloque (APK vieja, sin evento o `'EVF'`
+  falló) no se inserta ninguna asistencia. Se borró también el bloque comentado viejo.
+- **LST `'DT'`**: **campo 13** de cada participante = ids de fecha unidos por `¶`
+  (`AppConstants.sepComodin3`), vía `OUTER APPLY` a `T_TECMSOLINSCRIPCION02_ASISTENCIA` (sin filas →
+  `''`, nunca descarta al participante). `SolicitudParticipanteRaw.fechasAsistencia` lo parsea.
+- ⚠️ Pendiente `ALTER PROCEDURE` de ambos SPs en SSMS (UTF-16LE+BOM preservado). Desplegar SPs
+  antes que la APK.
+- **Regla mínimo 1 día** — vive en `ParticipantesCubit` (`_fechasEvento` +
+  `_conFechaMinima`): con fechas de evento, todo participante que entra por `agregar`/`editar`/
+  `sincronizarSolicitante`/`cargarParticipantes` queda solo con días válidos y, si no tiene
+  ninguno, con el **primer día** (`EventoFechasX.idPrimeraFecha`, fecha más temprana). Cubre
+  formulario, carga masiva, solicitante-participante y solicitudes viejas sin asistencia.
+  **Solo al EDITAR**: `configurarFechasEvento(fechas, completarPorDefecto: widget.modoEdicion)` —
+  en solo-ver ("Revisar solicitud") no se completa nada, se ve lo guardado tal cual (data vieja →
+  0 días, "Asiste 0 de 3 días"). Al editar, `participantesCargado` NO se normaliza a propósito:
+  el primer día por defecto no existe en la base, cuenta como cambio y el próximo "Siguiente" lo
+  guarda. Desmarcar el único día marcado no hace
+  nada (formulario y tarjeta) — por eso "Siguiente"/"Generar" no validan días.
+  `guardarSolicitud()` repite la regla como red de seguridad al armar el bloque.
+- **Nuevo participante** arranca solo con el primer día (antes: todos).
+- **Tarjeta del paso 2** (`ParticipanteCard`): fila **"ASISTE"** con un botón por día ("22 set"),
+  marcables directo (`ParticipantesCubit.alternarFechaAsistencia`); en solo-ver no se tocan.
+  Abreviaturas compartidas en `FormatoFechaAsistencia` (`participante_form_campos.dart`).
+- **Resumen** (`SeccionParticipantes`): línea "Asiste X de Y días" bajo cada participante (opción B
+  elegida por el usuario), solo si hay fechas de evento.
+- Sin fechas de evento (sin evento o `'EVF'` falló) la app **no** manda el 5to bloque → la
+  solicitud queda sin asistencia (el `DELETE` previo igual borra la que hubiera).
+- Sin riesgo de pisar `IB_ASISTENCIA` real: una solicitud en cobranza ya no se puede editar
+  (confirmado por el usuario).
+
+## "Fechas de asistencia" en Nuevo/Editar participante — dinámico según el Evento, solo visual por ahora (2026-09-12)
+Pedido de negocio, con 2 capturas de referencia: el formulario "Nuevo participante" debe mostrar
+un selector de fechas (botones "MAR 22 SET" / "MIÉ 23 SET" / "JUE 24 SET", con contador "N de M")
+**solo si** la Oportunidad+Campaña de la solicitud tiene un `EVT.T_EVENTO` vinculado — y la
+cantidad de botones depende de cuántas filas tenga ese evento en `EVT.T_EVENTO_FECHA` (2 fechas →
+2 botones, 3 → 3, etc.), no un número fijo. El usuario pidió explícitamente ir por partes: primero
+solo lo visual (fetch dinámico + selección en el formulario), la persistencia real se hace en una
+sesión aparte.
+
+- **Hallazgo clave, ya resuelto de fondo en el SP de guardado** — `CRM.CSV_SOLICITUD_CUD_APP`
+  (task `'U'`) ya resuelve el evento (`SELECT @ID_EVENTO = ID_EVENTO FROM EVT.T_EVENTO WHERE
+  ID_OPORTUNIDAD = @ID_OPORTUNIDAD AND ID_CAMPANIA = @ID_CAMPANIA`) y **ya siembra
+  automáticamente TODAS sus fechas para TODOS los participantes** en
+  `EVT.T_TECMSOLINSCRIPCION02_ASISTENCIA` (`IB_ASISTENCIA = 0`, un `CROSS JOIN` participante×fecha)
+  — y tiene, comentado sin usar, un bloque `@DET_ASISTENCIA` pensado para que cada participante
+  traiga su propia selección en vez del cross join ciego. **Ese SP NO se tocó en esta sesión** —
+  sigue sembrando todas las fechas para todos, sin importar lo que el asesor marque/desmarque en
+  el formulario nuevo. La web (`ValidarSolicitudRegistroEdit.js`) ya tiene el mismo concepto
+  resuelto del lado de lectura vía la task `'FO'` de `EVT.CSV_T_EVENTO_FECHA_CUD_SP` (dado un
+  `ID_OPORTUNIDAD`, valida `IB_EVENTO=1` y lista las fechas de `EVT.T_EVENTO_FECHA`) — no se llamó
+  a ese SP desde la app (vive fuera de los SPs `_APP` que ya usa el backend de la app,
+  `WebServiceIEC`) — en su lugar se replicó la misma lógica como un task nuevo dentro de
+  `CRM.CSV_SOLICITUD_LST_APP` (el SP que la app ya usa, mismo endpoint `urlSolicitudesLst`).
+- **Task nuevo `'EVF'` en `CRM.CSV_SOLICITUD_LST_APP.sql`** (`D:\Proyectos\NatCodee\Database\
+  NC.SQLChangeLock\DBEAN\StoredProcedures\`, UTF-16LE+BOM preservado con PowerShell/
+  `[System.Text.Encoding]::Unicode` — **ojo, en el primer intento el script dejó el archivo con
+  DOBLE BOM** (decodificar bytes con `Encoding.Unicode.GetString` no descarta el BOM original, y
+  `File.WriteAllText` agrega uno nuevo encima) — detectado y corregido en la misma sesión
+  (`TrimStart([char]0xFEFF)` antes de reescribir); cualquier edición futura a estos `.sql` debe
+  hacer ese trim antes de `WriteAllText`, no solo decodificar y reescribir directo). Body:
+  `idOportunidad¦idCampania`. Busca `EVT.T_EVENTO` por ese mismo par (igual que el `'U'` del CUD)
+  y devuelve las filas de `EVT.T_EVENTO_FECHA` (`idFecha¦fecha`, `dd/MM/yyyy`) — vacío si no hay
+  evento. De paso, la task `'DT'` (rehidrata el wizard al editar) ganó 2 campos nuevos al final,
+  **campos[42]/campos[43]** (`CI.ID_OPORTUNIDAD`/`OP.ID_CAMPANIA`, nuevo `LEFT JOIN
+  CRM.T_OPORTUNIDAD`) — antes `'DT'` no traía la oportunidad/campaña de la solicitud en absoluto,
+  no había forma de saber si una solicitud YA GUARDADA tenía evento sin este campo.
+  ⚠️ **Pendiente `ALTER PROCEDURE` en SSMS** para desplegar (mismo patrón de siempre en este
+  archivo — el `.sql` local ya tiene el cambio, la base real no).
+- **Task `'NEG'` en `CRM.CSV_LEADS_LST_APP.sql`** (mismo repo, usado por `solicitudes/` para
+  prellenar el wizard al **crear** una solicitud nueva desde una negociación — ver
+  `lead/CLAUDE.md` → "Task 'NEG'...") ganó 2 campos más al final, **fields[17]/fields[18]**
+  (`LD.ID_OPORTUNIDAD`/`LD.ID_CAMPANIA`, columnas que ya existían en `CRM.T_LEAD`, sin join nuevo)
+  — necesario porque una solicitud recién creada desde negociación no tiene `NUMSOL` todavía, así
+  que no hay de dónde sacar oportunidad/campaña salvo de la negociación de origen. ⚠️ Pendiente
+  `ALTER PROCEDURE` también.
+- **Flutter — capa de datos nueva**: `EventoFechaItem` (`domain/entities/evento_fecha.dart`,
+  `idFecha`+`fecha` como `DateTime`) + `EventoFechaModel.parseList` (`data/models/
+  evento_fecha_model.dart`, parsea `dd/MM/yyyy` a mano — sin usar `intl`, formato fijo y simple) +
+  `SolicitudRepository.getEventoFechas(idOportunidad, idCampania)`/`Impl` +
+  `SolicitudRemoteDatasource.getEventoFechas` (task `'EVF'`, corta temprano con `[]` si
+  `idOportunidad <= 0`, no hace la llamada). `DatosPrellenadoSolicitud`/`Model` (`lead/`, task
+  `'NEG'`) y `SolicitudDetalleModel` (task `'DT'`) ganaron `idOportunidad`/`idCampania` (`int`,
+  default `0` — guard defensivo si el SP desplegado aún no los trae).
+- **`SolicitudFormState.eventoFechas`** (nuevo, `List<EventoFechaItem>`, default `[]`) —
+  se resuelve una sola vez en `_cargarDetalle()` (`solicitud_completar_view_carga.dart`, método
+  privado `_cargarEventoFechas()`, best-effort/silencioso igual que el resto de fetches de esta
+  pantalla): al **crear** desde negociación, justo después de `sembrarDatosNegociacion` dentro de
+  `_sembrarDatosDeNegociacionOrigen()` (usa `datos.idOportunidad`/`idCampania` del `'NEG'` recién
+  traído); al **editar**, justo después de `actualizarTotalesGuardados` (usa
+  `detalle.idOportunidad`/`idCampania` del `'DT'` directo, sin pasar por la negociación — más
+  simple y no depende de que `idLeadOrigen` se pueda recuperar). `SolicitudFormCubit.
+  actualizarEventoFechas()` es el único setter.
+- **UI — `CampoFechasAsistencia`/`_BotonFechaAsistencia`** (nuevo, `participante_form_campos.
+  dart`) — se renderiza en `participante_form_sheet.dart` **solo si** `eventoFechas.isNotEmpty`,
+  entre Cargo y Celular/Importe (mismo orden que las capturas de referencia). Header "Fechas de
+  asistencia \*" + contador "N de M" a la derecha; un botón por fecha (`Expanded` en `Row`, se
+  reparten el ancho parejo) con día de semana abreviado (LUN..DOM, "MIÉ"/"SÁB" con tilde) + número
+  de día + mes abreviado estilo peruano (ENE..DIC, "SET" para septiembre, no "SEP") — mapas fijos
+  locales en el widget, no hay utilidad compartida para esto todavía. Seleccionado = fondo
+  `AppColors.primary` + texto `textOnDark`; no seleccionado = `AppColors.surface` + borde
+  `AppColors.border`. `mostrarFormularioParticipante(...)` ganó el parámetro `eventoFechas`
+  (default `[]`, mismo patrón que `importeFijo` — se pasa por parámetro en vez de leer
+  `SolicitudFormCubit` dentro del modal, porque el bottom sheet no es descendiente del
+  `BlocProvider.value` del wizard). Los 2 call sites (`_abrirFormularioNuevo`/
+  `_abrirFormularioEditar` en `solicitud_participantes_view.dart`) le pasan
+  `context.read<SolicitudFormCubit>().state.eventoFechas`.
+- **`ParticipanteLocal.fechasAsistencia`** (nuevo, `List<int>` de `ID_FECHA`, default `[]`,
+  incluido en `props`/`Equatable`) — vive en el formulario (`_ParticipanteFormSheetState.
+  _fechasSeleccionadas`, un `Set<int>`) arrancando con **todas** las fechas marcadas (mismo
+  comportamiento que ya siembra el backend hoy) salvo que el participante ya traiga una selección
+  propia de esta sesión (`p.fechasAsistencia.isNotEmpty`). Si la sección está visible y el asesor
+  deja 0 fechas marcadas, `_guardar()` bloquea con `AppSnackBar.error` — no llega a construirse un
+  `ParticipanteLocal` con la lista vacía en ese caso.
+- **⚠️ Alcance explícito de esta sesión — SOLO VISUAL, nada de esto se guarda todavía distinto
+  por participante.** `fechasAsistencia` NO viaja en `SolicitudRemoteDatasource.
+  guardarSolicitud()` — el detalle de cada participante sigue siendo los mismos 14 campos de
+  siempre (ver más abajo, "SPs que consume"). El backend (`CSV_SOLICITUD_CUD_APP`, task `'U'`)
+  sigue sembrando TODAS las fechas del evento para TODOS los participantes vía el `CROSS JOIN`
+  automático — la selección que el asesor hace en este formulario nuevo es, por ahora, decorativa
+  (se preserva solo en memoria durante la sesión del wizard, vía `ParticipanteLocal.
+  fechasAsistencia`, para no perderse si reabre el formulario de ese mismo participante).
+  **Pendiente, para una sesión aparte** (diseño ya evaluado con el usuario, quien pidió ir por
+  partes): activar el bloque `@DET_ASISTENCIA` de `CSV_SOLICITUD_CUD_APP` — agregar un field15 por
+  participante (`fnSplitStringTable20` ya soporta hasta 20, hay margen) con los `ID_FECHA`
+  seleccionados (unidos con `AppConstants.sepComodin3`, `¶` — mismo separador que ya usa el SP
+  para sub-listas dentro de un campo, ver `OPORTUNIDAD_USUARIO` en `CRM.CSV_T_OPORTUNIDAD_CUD`) y
+  reemplazar el `CROSS JOIN` ciego por un `INSERT` que solo tome esas fechas por participante —
+  probablemente con un `CROSS APPLY`/split por fila en vez de un único `dbo.
+  fnSplitStringTable05(@DET_ASISTENCIA,...)` agregado (ese diseño comentado en el SP asume un solo
+  bloque plano, no uno por participante — hay que rediseñarlo, no solo descomentarlo).
+
 ## "Validar" (lista) entra directo al paso 1 del wizard, con el Detalle apilado debajo (2026-09-11)
 Pedido de negocio — antes tocar "Validar" en `SolicitudCard` (lista) solo abría el Detalle
 (`origenValidar: true`) y el asesor tenía que tocar "Validar" una segunda vez ahí para recién

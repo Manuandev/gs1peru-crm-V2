@@ -90,6 +90,12 @@ class SeccionParticipantes extends StatelessWidget {
         .watch<ParticipantesCubit>()
         .state
         .participantes;
+    // Sin evento (lista vacía) no se muestra la línea "Asiste X de Y días".
+    final totalDiasEvento = context
+        .watch<SolicitudFormCubit>()
+        .state
+        .eventoFechas
+        .length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,6 +151,11 @@ class SeccionParticipantes extends StatelessWidget {
               celular: participantes[i].celular,
               esEncabezado: false,
             ),
+            if (totalDiasEvento > 0)
+              _LineaAsistencia(
+                dias: participantes[i].fechasAsistencia.length,
+                totalDias: totalDiasEvento,
+              ),
             if (i < participantes.length - 1)
               const Divider(height: AppSpacing.xs, thickness: 0.3),
           ],
@@ -173,6 +184,38 @@ class SeccionParticipantes extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// "Asiste 2 de 3 días" bajo cada participante — solo si la solicitud tiene
+// evento con fechas. Alineada con la columna de nombre (N° = 20 + separación).
+class _LineaAsistencia extends StatelessWidget {
+  final int dias;
+  final int totalDias;
+
+  const _LineaAsistencia({required this.dias, required this.totalDias});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20 + AppSpacing.xs, top: 2),
+      child: Row(
+        children: [
+          const Icon(
+            AppIcons.calendar,
+            size: 11,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(width: AppSpacing.xxs),
+          Text(
+            'Asiste $dias de $totalDias ${totalDias == 1 ? 'día' : 'días'}',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -277,6 +277,157 @@ class CampoCargoParticipante extends StatelessWidget {
   }
 }
 
+// ── Fechas de asistencia (solo si la oportunidad+campaña tiene un evento
+// vinculado, ver SolicitudFormState.eventoFechas / solicitudes/CLAUDE.md) ────
+
+class CampoFechasAsistencia extends StatelessWidget {
+  final List<EventoFechaItem> fechas;
+  final Set<int> seleccionadas;
+  final ValueChanged<int> onToggle;
+
+  const CampoFechasAsistencia({
+    super.key,
+    required this.fechas,
+    required this.seleccionadas,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(AppSizing.radiusMd),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Fechas de asistencia *',
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: AppTextStyles.weightMedium,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${seleccionadas.length} de ${fechas.length}',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              for (var i = 0; i < fechas.length; i++) ...[
+                if (i > 0) const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _BotonFechaAsistencia(
+                    fecha: fechas[i].fecha,
+                    seleccionada: seleccionadas.contains(fechas[i].idFecha),
+                    onTap: () => onToggle(fechas[i].idFecha),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Abreviaturas peruanas de día/mes ("SET" para septiembre, no "SEP") para
+/// las fechas de asistencia — compartidas por el formulario de participante
+/// (`CampoFechasAsistencia`) y la tarjeta de la lista (`ParticipanteCard`).
+abstract final class FormatoFechaAsistencia {
+  static const diasSemana = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+  static const meses = [
+    'ENE',
+    'FEB',
+    'MAR',
+    'ABR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AGO',
+    'SET',
+    'OCT',
+    'NOV',
+    'DIC',
+  ];
+
+  static String diaSemana(DateTime fecha) => diasSemana[fecha.weekday - 1];
+  static String mes(DateTime fecha) => meses[fecha.month - 1];
+}
+
+class _BotonFechaAsistencia extends StatelessWidget {
+  final DateTime fecha;
+  final bool seleccionada;
+  final VoidCallback onTap;
+
+  const _BotonFechaAsistencia({
+    required this.fecha,
+    required this.seleccionada,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorTexto = seleccionada
+        ? AppColors.textOnDark
+        : AppColors.textPrimary;
+    final colorTextoSecundario = seleccionada
+        ? AppColors.white(0.8)
+        : AppColors.textSecondary;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: seleccionada ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizing.radiusSm),
+          border: seleccionada ? null : Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              FormatoFechaAsistencia.diaSemana(fecha),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: colorTextoSecundario,
+                fontWeight: AppTextStyles.weightMedium,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              fecha.day.toString().padLeft(2, '0'),
+              style: AppTextStyles.titleMedium.copyWith(
+                color: colorTexto,
+                fontWeight: AppTextStyles.weightBold,
+              ),
+            ),
+            Text(
+              FormatoFechaAsistencia.mes(fecha),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: colorTextoSecundario,
+                fontWeight: AppTextStyles.weightMedium,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Celular + Importe ──────────────────────────────────────────────────────────
 
 class CampoCelularImporte extends StatelessWidget {

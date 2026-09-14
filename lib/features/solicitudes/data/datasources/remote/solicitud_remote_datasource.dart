@@ -141,6 +141,31 @@ class SolicitudRemoteDatasource {
     };
   }
 
+  // Task 'EVF' — [CRM].[CSV_SOLICITUD_LST_APP] (misma SP, endpoint
+  // urlSolicitudesLst). Fechas del EVT.T_EVENTO vinculado a una
+  // oportunidad+campania — vacío si esa combinación no tiene ningún evento.
+  // Usado por "Nuevo participante" para saber cuántos botones de fecha
+  // mostrar (por ahora solo visual, ver solicitudes/CLAUDE.md).
+  Future<List<EventoFechaItem>> getEventoFechas({
+    required int idOportunidad,
+    required int idCampania,
+  }) async {
+    if (idOportunidad <= 0) return const [];
+
+    final body = [idOportunidad, idCampania].join(AppConstants.sepCampos);
+    final result = await _api.postSafe(
+      ApiConstants.urlSolicitudesLst,
+      '$body${AppConstants.sepListas}EVF',
+    );
+
+    return switch (result) {
+      ApiSuccess(:final data) => EventoFechaModel.parseList(data),
+      ApiEmpty() => const [],
+      ApiNoInternet() => throw const AppException('Sin conexión a Internet.'),
+      ApiError(:final message) => throw AppException(message),
+    };
+  }
+
   // Task 'U' — [CRM].[CSV_SOLICITUD_CUD_APP]. Crea (numSol vacío) o actualiza
   // (numSol existente) la cabecera + facturación + participantes de una
   // solicitud, en una sola llamada. Los archivos van aparte (task 'AR',
@@ -193,6 +218,10 @@ class SolicitudRemoteDatasource {
     // DC_IMPORTE_TOTAL; en una solicitud ya guardada cuyo dinero no cambió
     // son los mismos montos que trajo el task 'DT' (bug real 2026-09-10).
     required TotalesSolicitud totales,
+    // Fechas del evento de la solicitud (SolicitudFormState.eventoFechas) —
+    // vacío = sin evento o no se pudieron cargar: NO se manda el 5to bloque
+    // y el SP no inserta ninguna asistencia.
+    List<EventoFechaItem> eventoFechas = const [],
   }) async {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
@@ -307,7 +336,27 @@ class SolicitudRemoteDatasource {
         })
         .join(AppConstants.sepRegistros);
 
-    final body = [cabecera, detalle, 'U'].join(AppConstants.sepListas);
+    // 5to bloque — asistencia: un registro idParticipante¦idFecha por cada día
+    // marcado (EVT.T_TECMSOLINSCRIPCION02_ASISTENCIA). Va DESPUÉS de 'U' para
+    // no mover ninguna posición existente. Red de seguridad: solo días que
+    // existen en el evento y, si un participante quedara sin ninguno, el
+    // primer día (mínimo 1 — ver ParticipantesCubit._conFechaMinima).
+    final idPrimeraFecha = eventoFechas.idPrimeraFecha;
+    final bloques = [cabecera, detalle, 'U'];
+    if (idPrimeraFecha != null) {
+      final idsValidos = eventoFechas.map((f) => f.idFecha).toSet();
+      final asistencia = participantes
+          .expand((p) {
+            final dias = p.fechasAsistencia.where(idsValidos.contains).toSet();
+            return (dias.isEmpty ? {idPrimeraFecha} : dias).map(
+              (idFecha) => [p.id, idFecha].join(AppConstants.sepCampos),
+            );
+          })
+          .join(AppConstants.sepRegistros);
+      bloques.add(asistencia);
+    }
+
+    final body = bloques.join(AppConstants.sepListas);
 
     final result = await _api.postSafe(ApiConstants.urlSolicitudesCud, body);
 

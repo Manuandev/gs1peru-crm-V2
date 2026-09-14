@@ -2,6 +2,7 @@
 
 import 'package:app_crm/index_dependencies.dart'; // Cubit, Equatable
 import 'package:app_crm/core/index_core.dart';
+import 'package:app_crm/features/solicitudes/domain/entities/evento_fecha.dart';
 import 'package:app_crm/features/solicitudes/presentation/bloc/form/solicitud_form_cubit.dart';
 
 part 'participantes_state.dart';
@@ -9,7 +10,71 @@ part 'participantes_state.dart';
 class ParticipantesCubit extends Cubit<ParticipantesState> {
   int _nextId = 1;
 
+  // Fechas del evento de la solicitud (task 'EVF') — vacío si no tiene
+  // evento. Con fechas, TODO participante que entra o se modifica acá queda
+  // con al menos 1 día marcado (el primero por defecto, ver
+  // _conFechaMinima): formulario, carga masiva, switch "El solicitante será
+  // participante" y participantes ya guardados sin filas de asistencia.
+  List<EventoFechaItem> _fechasEvento = const [];
+
+  // false en modo solo-ver ("Revisar solicitud"): se muestra lo que hay
+  // guardado tal cual — un participante sin asistencia se ve con 0 días, no
+  // se le completa el primer día (eso solo aplica al editar).
+  bool _completarFechaPorDefecto = true;
+
   ParticipantesCubit() : super(const ParticipantesState(participantes: []));
+
+  /// Se llama cuando llegan las fechas del evento (`_cargarEventoFechas`).
+  /// Al editar ([completarPorDefecto] true) completa el primer día a los
+  /// participantes ya guardados sin asistencia (data anterior a 2026-09-14).
+  /// `participantesCargado` NO se normaliza a propósito: ese día por defecto
+  /// no existe en la base, así que cuenta como cambio y el próximo
+  /// "Siguiente" lo guarda.
+  void configurarFechasEvento(
+    List<EventoFechaItem> fechas, {
+    required bool completarPorDefecto,
+  }) {
+    _fechasEvento = fechas;
+    _completarFechaPorDefecto = completarPorDefecto;
+    if (!completarPorDefecto) return;
+    emit(
+      state.copyWith(
+        participantes: state.participantes.map(_conFechaMinima).toList(),
+      ),
+    );
+  }
+
+  /// Marca/desmarca un día desde la tarjeta del participante (paso 2). Nunca
+  /// deja 0 días: desmarcar el único día marcado no hace nada.
+  void alternarFechaAsistencia(int idParticipante, int idFecha) {
+    final actualizados = state.participantes.map((p) {
+      if (p.id != idParticipante) return p;
+      final fechas = [...p.fechasAsistencia];
+      if (fechas.contains(idFecha)) {
+        if (fechas.length == 1) return p;
+        fechas.remove(idFecha);
+      } else {
+        fechas.add(idFecha);
+      }
+      return p.copyWith(fechasAsistencia: fechas);
+    }).toList();
+    emit(state.copyWith(participantes: actualizados));
+  }
+
+  /// Deja solo días que existen en el evento y, si no queda ninguno, marca el
+  /// primer día. Sin fechas de evento no toca nada.
+  ParticipanteLocal _conFechaMinima(ParticipanteLocal p) {
+    final idPrimera = _fechasEvento.idPrimeraFecha;
+    if (idPrimera == null || !_completarFechaPorDefecto) return p;
+    final idsValidos = _fechasEvento.map((f) => f.idFecha).toSet();
+    final validas = p.fechasAsistencia.where(idsValidos.contains).toList();
+    if (validas.length == p.fechasAsistencia.length && validas.isNotEmpty) {
+      return p;
+    }
+    return p.copyWith(
+      fechasAsistencia: validas.isEmpty ? [idPrimera] : validas,
+    );
+  }
 
   /// Reemplaza la lista completa con participantes traídos del backend
   /// (task 'DT') al entrar al wizard sobre una solicitud existente. Ajusta
@@ -22,17 +87,23 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
   void cargarParticipantes(List<ParticipanteLocal> lista) {
     final maxId = lista.fold(0, (max, p) => p.id > max ? p.id : max);
     _nextId = maxId + 1;
-    emit(state.copyWith(participantes: lista, participantesCargado: lista));
+    emit(
+      state.copyWith(
+        participantes: lista.map(_conFechaMinima).toList(),
+        participantesCargado: lista,
+      ),
+    );
   }
 
   void agregar(ParticipanteLocal participante) {
-    final nuevo = participante.copyWith(id: _nextId++);
+    final nuevo = _conFechaMinima(participante).copyWith(id: _nextId++);
     emit(state.copyWith(participantes: [...state.participantes, nuevo]));
   }
 
   void editar(ParticipanteLocal participante) {
+    final editado = _conFechaMinima(participante);
     final actualizados = state.participantes.map((p) {
-      return p.id == participante.id ? participante : p;
+      return p.id == editado.id ? editado : p;
     }).toList();
     emit(state.copyWith(participantes: actualizados));
   }
@@ -121,7 +192,7 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       return;
     }
 
-    final solicitanteParticipante = ParticipanteLocal(
+    final solicitanteParticipante = _conFechaMinima(ParticipanteLocal(
       id: anterior?.id ?? _nextId++,
       tipoDocId: datos.tipoDocId,
       tipoDoc: datos.tipoDocLabel,
@@ -148,7 +219,10 @@ class ParticipantesCubit extends Cubit<ParticipantesState> {
       // registro por primera vez, tal como ya documentaba este método.
       importe: anterior?.importe ?? importeFijo ?? 0,
       esSolicitante: true,
-    );
+      // Se preservan los días ya marcados (igual que id/importe); la primera
+      // vez queda el primer día por _conFechaMinima.
+      fechasAsistencia: anterior?.fechasAsistencia ?? const [],
+    ));
 
     emit(state.copyWith(participantes: [solicitanteParticipante, ...resto]));
   }

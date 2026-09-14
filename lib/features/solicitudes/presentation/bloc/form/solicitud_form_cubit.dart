@@ -2,6 +2,8 @@
 
 import 'package:app_crm/index_dependencies.dart'; // Cubit, PlatformFile, Equatable
 
+import 'package:app_crm/features/solicitudes/domain/entities/evento_fecha.dart';
+
 part 'solicitud_form_state.dart';
 
 class SolicitudFormCubit extends Cubit<SolicitudFormState> {
@@ -38,6 +40,13 @@ class SolicitudFormCubit extends Cubit<SolicitudFormState> {
   /// con lo que se acaba de mandar). Ver `calcularTotalesSolicitud()`.
   void actualizarTotalesGuardados(TotalesSolicitud totales) =>
       emit(state.copyWith(totalesGuardados: totales));
+
+  /// Fechas del evento de la oportunidad+campaña de esta solicitud (task
+  /// 'EVF') — llamado una sola vez desde `_cargarDetalle()` (paso 1), tanto
+  /// al crear (con la oportunidad/campaña de la negociación de origen) como
+  /// al editar (con las de la solicitud ya guardada). Vacío si no aplica.
+  void actualizarEventoFechas(List<EventoFechaItem> fechas) =>
+      emit(state.copyWith(eventoFechas: fechas));
 
   /// Bloquea cantidad/importe/moneda del wizard a los valores ya definidos
   /// en la negociación de origen — llamado una sola vez, al crear una

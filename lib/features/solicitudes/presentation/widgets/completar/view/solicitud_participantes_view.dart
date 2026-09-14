@@ -91,6 +91,7 @@ class _SolicitudParticipantesViewState
     mostrarFormularioParticipante(
       context,
       importeFijo: _importeFijo(context),
+      eventoFechas: context.read<SolicitudFormCubit>().state.eventoFechas,
       onGuardar: (p) => context.read<ParticipantesCubit>().agregar(p),
     );
   }
@@ -103,6 +104,7 @@ class _SolicitudParticipantesViewState
       context,
       participante: participante,
       importeFijo: _importeFijo(context),
+      eventoFechas: context.read<SolicitudFormCubit>().state.eventoFechas,
       onGuardar: (p) => context.read<ParticipantesCubit>().editar(p),
     );
   }
@@ -175,12 +177,16 @@ class _SolicitudParticipantesViewState
       // 2026-08-14): el usuario pidió que ese botón se limite a guardar/subir
       // archivos, sin validar nada — el momento correcto para avisar esto es
       // al avanzar de Participantes a Facturación, no al final del wizard.
-      final avisoPrecio = avisoPrecioTotalNoCalza(
-        context.read<SolicitudFormCubit>().state,
-      );
-      if (avisoPrecio != null) {
-        AppSnackBar.warning(context, avisoPrecio);
-      }
+      //
+      // Desactivado 2026-09-14 (pedido del usuario): compara solo datos de la
+      // negociación entre sí y al editar hablaba de la negociación de HOY, no
+      // de lo guardado. Se deja comentado por si se vuelve a pedir.
+      // final avisoPrecio = avisoPrecioTotalNoCalza(
+      //   context.read<SolicitudFormCubit>().state,
+      // );
+      // if (avisoPrecio != null) {
+      //   AppSnackBar.warning(context, avisoPrecio);
+      // }
     }
 
     final catalogState = context.read<CatalogsBloc>().state;
@@ -375,6 +381,10 @@ class _SolicitudParticipantesViewState
                               // Pagante, reaparece sin perderse.
                               esInvitado: tipoCatalogo?.esInvitado ?? false,
                               habilitado: widget.modoEdicion,
+                              eventoFechas: formState.eventoFechas,
+                              onToggleFecha: (idFecha) => context
+                                  .read<ParticipantesCubit>()
+                                  .alternarFechaAsistencia(p.id, idFecha),
                               onEditar: () =>
                                   _abrirFormularioEditar(context, p),
                               onEliminar: () => context

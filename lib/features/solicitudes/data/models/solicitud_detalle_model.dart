@@ -21,6 +21,10 @@ class SolicitudParticipanteRaw {
   final String cargo;
   final double importe;
   final String tipoParticipante;
+  // Ids de EVT.T_EVENTO_FECHA guardados para este participante (campo 13,
+  // unidos por AppConstants.sepComodin3, agregado 2026-09-14) — vacío si no
+  // tiene filas de asistencia o el SP desplegado todavía no lo trae.
+  final List<int> fechasAsistencia;
 
   const SolicitudParticipanteRaw({
     required this.id,
@@ -35,6 +39,7 @@ class SolicitudParticipanteRaw {
     required this.cargo,
     required this.importe,
     required this.tipoParticipante,
+    this.fechasAsistencia = const [],
   });
 
   factory SolicitudParticipanteRaw.fromCampos(List<String> c) {
@@ -51,6 +56,13 @@ class SolicitudParticipanteRaw {
       cargo: c[9],
       importe: double.tryParse(c[10]) ?? 0,
       tipoParticipante: c[11],
+      fechasAsistencia: c.length > 12
+          ? c[12]
+                .split(AppConstants.sepComodin3)
+                .map((id) => int.tryParse(id.trim()))
+                .whereType<int>()
+                .toList()
+          : const [],
     );
   }
 }
@@ -142,6 +154,13 @@ class SolicitudDetalleModel {
   // solicitud_completar_view.dart._cargarDetalle() (2 dígitos c/u), mismo
   // criterio que DatosFacturacion.ubigeoCodigo usa para juntarlos al guardar.
   final String facUbigeoCodigo;
+  // Oportunidad/campaña de esta solicitud (campos[42]/[43], CI.ID_OPORTUNIDAD/
+  // OP.ID_CAMPANIA, agregados 2026-09-12) — usados para saber si tienen un
+  // EVT.T_EVENTO vinculado y así mostrar "Fechas de asistencia" en Nuevo
+  // participante (ver solicitudes/CLAUDE.md). 0 si el SP desplegado todavía
+  // no los trae.
+  final int idOportunidad;
+  final int idCampania;
 
   final List<SolicitudParticipanteRaw> participantes;
   final List<SolicitudArchivoRaw> archivos;
@@ -187,6 +206,8 @@ class SolicitudDetalleModel {
     required this.cantParticipantes,
     required this.idLeadOrigen,
     this.facUbigeoCodigo = '',
+    this.idOportunidad = 0,
+    this.idCampania = 0,
     required this.participantes,
     required this.archivos,
   });
@@ -264,6 +285,10 @@ class SolicitudDetalleModel {
       facNacionalidadId: campos.length > 38 ? campos[38] : '',
       idLeadOrigen: campos.length > 39 ? campos[39] : '',
       facUbigeoCodigo: campos.length > 41 ? campos[41] : '',
+      idOportunidad: campos.length > 42
+          ? (int.tryParse(campos[42]) ?? 0)
+          : 0,
+      idCampania: campos.length > 43 ? (int.tryParse(campos[43]) ?? 0) : 0,
       participantes: participantes,
       archivos: archivos,
     );

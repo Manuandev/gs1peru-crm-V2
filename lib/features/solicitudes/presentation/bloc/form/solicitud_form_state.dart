@@ -326,6 +326,14 @@ class SolicitudFormState {
   final PlatformFile? archivoVoucherCargado;
   final PlatformFile? archivoOCCargado;
 
+  /// Fechas del EVT.T_EVENTO vinculado a la oportunidad+campaña de esta
+  /// solicitud (task 'EVF', ver `SolicitudRepository.getEventoFechas`) —
+  /// vacío si esa oportunidad+campaña no tiene ningún evento. Se resuelve una
+  /// sola vez en `_cargarDetalle()` (paso 1) y solo alimenta la sección
+  /// "Fechas de asistencia" de Nuevo participante — por ahora es solo visual,
+  /// no cambia lo que se guarda (ver solicitudes/CLAUDE.md).
+  final List<EventoFechaItem> eventoFechas;
+
   const SolicitudFormState({
     this.tipoPersona = 'juridica',
     this.numSol = '',
@@ -355,6 +363,7 @@ class SolicitudFormState {
     this.facturacionCargado,
     this.archivoVoucherCargado,
     this.archivoOCCargado,
+    this.eventoFechas = const [],
   });
 
   String get tipoPersonaLabel =>
@@ -407,6 +416,7 @@ class SolicitudFormState {
     bool limpiarArchivoVoucherCargado = false,
     PlatformFile? archivoOCCargado,
     bool limpiarArchivoOCCargado = false,
+    List<EventoFechaItem>? eventoFechas,
   }) => SolicitudFormState(
     tipoPersona: tipoPersona ?? this.tipoPersona,
     numSol: numSol ?? this.numSol,
@@ -445,5 +455,6 @@ class SolicitudFormState {
     archivoOCCargado: limpiarArchivoOCCargado
         ? null
         : (archivoOCCargado ?? this.archivoOCCargado),
+    eventoFechas: eventoFechas ?? this.eventoFechas,
   );
 }

@@ -96,6 +96,7 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
         tipoDocId: datos.tipoDocId,
         numDoc: datos.numDoc,
       );
+      await _cargarEventoFechas(datos.idOportunidad, datos.idCampania);
     } catch (_) {
       if (!mounted) return;
       AppSnackBar.error(
@@ -189,6 +190,31 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
             )
             .firstOrNull;
       }
+    }
+  }
+
+  // Fechas del evento de la oportunidad+campaña de esta solicitud (task
+  // 'EVF') — best-effort, silencioso: sin evento (o sin oportunidad todavía,
+  // ej. negociación sin datos) simplemente no se muestra la sección "Fechas
+  // de asistencia" en Nuevo participante. Ver solicitudes/CLAUDE.md.
+  Future<void> _cargarEventoFechas(int idOportunidad, int idCampania) async {
+    if (idOportunidad <= 0) return;
+    try {
+      final fechas = await context.read<SolicitudRepository>().getEventoFechas(
+        idOportunidad: idOportunidad,
+        idCampania: idCampania,
+      );
+      if (!mounted) return;
+      context.read<SolicitudFormCubit>().actualizarEventoFechas(fechas);
+      // Al EDITAR, participantes ya guardados sin días (data anterior) quedan
+      // con el primer día — mínimo 1, ver ParticipantesCubit._conFechaMinima.
+      // Al solo VER se muestran tal cual están en la base (pueden ser 0 días).
+      context.read<ParticipantesCubit>().configurarFechasEvento(
+        fechas,
+        completarPorDefecto: widget.modoEdicion,
+      );
+    } catch (_) {
+      // Sin conexión / SP viejo — la sección simplemente no aparece.
     }
   }
 
@@ -511,6 +537,9 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           tipoParticipante: p.tipoParticipante,
           importe: p.importe,
           esSolicitante: p.id == detalle.idParticipanteSolicitante,
+          // Días guardados (campo 13 del 'DT') — sin esto el formulario
+          // mostraba otra selección y guardar pisaba la real.
+          fechasAsistencia: p.fechasAsistencia,
         );
       }).toList();
 
@@ -529,6 +558,9 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
           importeTotal: detalle.dcImporteTotal,
         ),
       );
+
+      await _cargarEventoFechas(detalle.idOportunidad, detalle.idCampania);
+      if (!mounted) return;
 
       // Recupera la negociación de origen (si existe) para que "Nuevo
       // participante" pueda seguir sugiriendo el importe correcto aunque se

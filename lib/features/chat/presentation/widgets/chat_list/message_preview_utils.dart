@@ -58,6 +58,7 @@ class MessageStatusIcon extends StatelessWidget {
 
     switch (estado) {
       case 'wait':
+      case ChatMessage.estadoProgramado:
         return Icon(
           AppIcons.accessTime,
           size: AppSizing.iconStatusWait,

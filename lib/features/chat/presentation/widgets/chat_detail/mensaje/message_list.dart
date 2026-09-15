@@ -14,6 +14,8 @@ class MessageList extends StatelessWidget {
   final String nombre;
   final ChatMessage? mensajeSeleccionado;
   final void Function(ChatMessage message) onLongPressMessage;
+  // Toque en "Deshacer" de un mensaje aún en su ventana (estadoProgramado)
+  final void Function(ChatMessage message) onDeshacerMensaje;
 
   const MessageList({
     super.key,
@@ -25,10 +27,15 @@ class MessageList extends StatelessWidget {
     required this.nombre,
     required this.mensajeSeleccionado,
     required this.onLongPressMessage,
+    required this.onDeshacerMensaje,
   });
 
   @override
   Widget build(BuildContext context) {
+    final duracionDeshacer = Duration(
+      seconds: ConfiguracionService().segundosDeshacerMensaje,
+    );
+
     return ListView.builder(
       reverse: true,
       controller: scrollController,
@@ -97,6 +104,15 @@ class MessageList extends StatelessWidget {
                 ),
               ),
             ),
+            if (message.enVentanaDeshacer)
+              Align(
+                alignment: Alignment.centerRight,
+                child: MensajeDeshacerBoton(
+                  fechaEnvio: message.fechaHora,
+                  duracion: duracionDeshacer,
+                  onDeshacer: () => onDeshacerMensaje(message),
+                ),
+              ),
           ],
         );
       },

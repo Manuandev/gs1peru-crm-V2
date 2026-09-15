@@ -10,6 +10,8 @@ class ConfiguracionKeys {
   // TDE — Tiempo de espera / chat
   static const String tiempoEspera = 'TDE';
   static const int idTiempoChatAbierto = 1;
+  // Segundos de la ventana "Deshacer" de un mensaje enviado (VALOR_1)
+  static const int idSegundosDeshacerMensaje = 2;
 
   // TLA — Tipo de login en app
   static const String tipoLogin = 'TLA';

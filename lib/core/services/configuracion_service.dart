@@ -15,6 +15,11 @@ class ConfiguracionService {
   // ── GETTERS ─────────────────────────────────────────────
   AppConfiguracion? get config => _config;
   double get tiempoChatAbierto => _config?.tiempoChatAbierto ?? 15.0;
+  // TDE/2 de SIS.T_CONFIG_CRM (VALOR_1, segundos) — si la config no cargó o la
+  // fila no viene, cae al default de AppConstants.
+  int get segundosDeshacerMensaje =>
+      _config?.segundosDeshacerMensaje ??
+      AppConstants.segundosDeshacerMensajeDefecto;
   // Si la config nunca cargó (backend sin respuesta), el login por defecto es
   // solo Google — pedido de negocio (cuenta corporativa como camino principal).
   TipoLoginApp get tipoLogin => _config?.tipoLogin ?? TipoLoginApp.google;

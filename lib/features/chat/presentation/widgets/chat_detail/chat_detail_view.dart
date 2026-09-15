@@ -136,6 +136,43 @@ class _ChatDetailViewState extends State<ChatDetailView>
     );
   }
 
+  // Solo mensajes que salieron del número de la empresa (asesor o bot) y que
+  // ya se enviaron — uno en ventana de "Deshacer" se quita con ese botón.
+  bool _puedeEliminar(ChatMessage mensaje) =>
+      (mensaje.direccionMensaje == 'ASE' || mensaje.direccionMensaje == 'AIA') &&
+      !mensaje.enVentanaDeshacer;
+
+  // La API de WhatsApp no permite borrar un mensaje enviado: se abre WhatsApp
+  // (Business) en el chat de este contacto para que el asesor lo borre ahí.
+  Future<void> _eliminarMensajeSeleccionado() async {
+    _limpiarSeleccion();
+
+    final chat = widget.conversacion;
+    final telefono = '${chat.prefijoPais}${chat.numero}'.replaceAll(
+      RegExp(r'[^0-9]'),
+      '',
+    );
+    if (chat.numero.isEmpty || telefono.isEmpty) {
+      AppSnackBar.error(context, 'Este contacto no tiene número de WhatsApp.');
+      return;
+    }
+
+    final confirmado = await context.showConfirmDialog(
+      title: 'Eliminar mensaje',
+      message:
+          'WhatsApp no permite eliminar mensajes desde el CRM. Se abrirá '
+          'WhatsApp con este contacto para que elimines el mensaje desde ahí.',
+      confirmText: 'Abrir WhatsApp',
+    );
+    if (!confirmado || !mounted) return;
+
+    try {
+      await LauncherUtils.abrirWhatsApp(telefono);
+    } catch (_) {
+      if (mounted) AppSnackBar.error(context, 'No se pudo abrir WhatsApp.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -228,6 +265,13 @@ class _ChatDetailViewState extends State<ChatDetailView>
                 label: 'Copiar',
                 showDividerAfter: false,
               ),
+              if (_puedeEliminar(mensajeSeleccionado))
+                AppBarPopupItem(
+                  value: 'eliminar',
+                  icon: AppIcons.delete,
+                  label: 'Eliminar mensaje',
+                  subtitle: 'Se abre WhatsApp',
+                ),
             ]
           : [
               AppBarPopupItem(
@@ -253,6 +297,7 @@ class _ChatDetailViewState extends State<ChatDetailView>
       onPopupSelected: (value) {
         if (enSeleccion) {
           if (value == 'copiar') _copiarMensajeSeleccionado();
+          if (value == 'eliminar') _eliminarMensajeSeleccionado();
           return;
         }
         if (context.read<InfoLeadCubit>().state is! InfoLeadSuccess) return;
@@ -386,6 +431,15 @@ class _ChatDetailViewState extends State<ChatDetailView>
                       nombre: widget.conversacion.nombreCompleto,
                       mensajeSeleccionado: mensajeSeleccionado,
                       onLongPressMessage: _seleccionarMensaje,
+                      onDeshacerMensaje: (mensaje) {
+                        if (_mensajeSeleccionado?.idTokenMeta ==
+                            mensaje.idTokenMeta) {
+                          _limpiarSeleccion();
+                        }
+                        context.read<ChatDetailBloc>().add(
+                          ChatDetailEnvioDeshecho(mensaje.idTokenMeta),
+                        );
+                      },
                     );
                   },
                 ),

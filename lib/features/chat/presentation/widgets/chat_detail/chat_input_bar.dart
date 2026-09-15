@@ -40,6 +40,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
   // abierto (TDE), para bloquear la barra sin necesidad de reabrir el chat.
   Timer? _tiempoTicker;
 
+  // Texto de un mensaje deshecho ("Deshacer") que vuelve a la caja de escribir
+  StreamSubscription<String>? _textosRestauradosSub;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +54,23 @@ class _ChatInputBarState extends State<ChatInputBar> {
     _tiempoTicker = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
+    _textosRestauradosSub = context
+        .read<ChatDetailBloc>()
+        .textosRestaurados
+        .listen(_restaurarTexto);
+  }
+
+  // Si el asesor ya empezó a escribir otra cosa, el texto deshecho va delante
+  // en vez de pisar lo que tiene tipeado.
+  void _restaurarTexto(String texto) {
+    if (!mounted) return;
+    final actual = _textController.text;
+    final nuevo = actual.trim().isEmpty ? texto : '$texto\n$actual';
+    _textController.value = TextEditingValue(
+      text: nuevo,
+      selection: TextSelection.collapsed(offset: nuevo.length),
+    );
+    if (_mode == InputMode.audio) setState(() => _mode = InputMode.text);
   }
 
   // Ventana desde el primer mensaje del cliente (fcPrimerMensajeCliente)
@@ -94,6 +114,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   void dispose() {
     _tiempoTicker?.cancel();
+    _textosRestauradosSub?.cancel();
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -219,6 +240,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 vertical: AppSpacing.sm,
               ),
               child: AudioRecorderWidget(
+                audioController: widget.audioController,
                 onAudioReady: _onAudioReady,
                 onCancel: () => setState(() => _mode = InputMode.text),
               ),

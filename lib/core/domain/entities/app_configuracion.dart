@@ -32,6 +32,18 @@ class AppConfiguracion extends Equatable {
     return double.tryParse(item?.valor1 ?? '') ?? 15.0;
   }
 
+  // ── TDE/2 — Segundos para deshacer un mensaje enviado ──────
+  // VALOR_1 llega decimal ("3.00") — se trunca a segundos enteros.
+  int get segundosDeshacerMensaje {
+    final item = _opciones(ConfiguracionKeys.tiempoEspera)
+        .where((c) => c.id == ConfiguracionKeys.idSegundosDeshacerMensaje)
+        .firstOrNull;
+    final segundos = double.tryParse(item?.valor1 ?? '')?.toInt();
+    return (segundos != null && segundos > 0)
+        ? segundos
+        : AppConstants.segundosDeshacerMensajeDefecto;
+  }
+
   // ── TLA — Tipo de login habilitado en la app ───────────────
   /// La opción marcada como activa (VALOR_5 == '1'); si el grupo TLA no trae
   /// ninguna opción activa, el default es solo Google (pedido de negocio).

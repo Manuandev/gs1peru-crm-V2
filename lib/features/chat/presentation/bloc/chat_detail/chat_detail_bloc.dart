@@ -1,10 +1,26 @@
 // lib/features/chat/presentation/bloc/chat_detail/chat_detail_bloc.dart
 
 import 'dart:async';
+import 'dart:io';
 import 'package:app_crm/index_dependencies.dart';
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/chat/index_chat.dart';
+
+/// Un envío retenido durante la ventana de "Deshacer": el mensaje ya se ve en
+/// pantalla, pero [enviar] (socket / subida de archivo) recién corre cuando
+/// vence [timer]. Devuelve `false` si el envío falló (para marcarlo 'failed').
+class _EnvioProgramado {
+  final ChatMessage mensaje;
+  final Timer timer;
+  final Future<bool> Function() enviar;
+
+  const _EnvioProgramado({
+    required this.mensaje,
+    required this.timer,
+    required this.enviar,
+  });
+}
 
 class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   final GetChatMessagesUseCase _getChatMessages;
@@ -17,6 +33,15 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   final _session = SessionService();
 
   int? _currentChatCab;
+
+  // Envíos en ventana de "Deshacer", por tempId (idTokenMeta optimista).
+  // Las plantillas NO pasan por acá — se envían directo, como siempre.
+  final Map<String, _EnvioProgramado> _enviosProgramados = {};
+
+  // Texto de un mensaje deshecho — ChatInputBar lo devuelve a la caja de
+  // escribir para que el asesor lo corrija.
+  final _textosRestaurados = StreamController<String>.broadcast();
+  Stream<String> get textosRestaurados => _textosRestaurados.stream;
 
   ChatDetailBloc(
     this._getChatMessages,
@@ -32,6 +57,8 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     on<ChatDetailAudioMessageSent>(_onAudioMessageSent);
     on<ChatDetailFileMessageSent>(_onFileMessageSent);
     on<ChatDetailBatchFileMessageSent>(_onBatchFileMessageSent);
+    on<ChatDetailEnvioDeshecho>(_onEnvioDeshecho);
+    on<ChatDetailEnvioConfirmado>(_onEnvioConfirmado);
     on<ChatDetailIncomingMessageReceived>(_onIncomingMessageReceived);
 
     _messageSubscription = MessageDispatcher.instance.stream.listen((message) {
@@ -42,8 +69,16 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
   }
 
   @override
-  Future<void> close() {
+  Future<void> close() async {
     _messageSubscription?.cancel();
+    // Salir del chat con mensajes aún en la ventana de "Deshacer" → se envían
+    // ya mismo, para que nunca se pierda un mensaje sin que el asesor lo note.
+    for (final envio in _enviosProgramados.values) {
+      envio.timer.cancel();
+      unawaited(envio.enviar());
+    }
+    _enviosProgramados.clear();
+    await _textosRestaurados.close();
     return super.close();
   }
 
@@ -154,38 +189,39 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     if (event.mensaje.trim().isEmpty) return;
 
     final tempId = const Uuid().v4();
+    final texto = event.mensaje.trim();
+    final chatCab = _currentChatCab;
 
-    final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
       idConversacionCab: event.idChatCab,
       idConversacionDet: 0,
       idTokenMeta: tempId,
       fechaHora: DateTime.now().toIso8601String(),
       direccionMensaje: 'ASE',
-      contenido: event.mensaje.trim(),
+      contenido: texto,
       tipo: 'text',
-      estadoEntrega: 'wait',
+      estadoEntrega: ChatMessage.estadoProgramado,
       rutaArchivo: '',
       tipoArchivo: 'text',
       nombreArchivo: '',
     );
 
-    emit(
-      (state as ChatDetailSuccess).copyWith(
-        messages: [...currentMessages, newMessage],
-      ),
-    );
+    _agregarMensajes([newMessage], emit);
 
-    if (_currentChatCab != null) {
-      _sendChatMessage(
-        event.mensaje.trim(),
-        _currentChatCab.toString(),
-        event.numero,
-        event.idChatCab,
-      );
-    }
+    _programarEnvio(newMessage, () async {
+      if (chatCab != null) {
+        _sendChatMessage(
+          texto,
+          chatCab.toString(),
+          event.numero,
+          event.idChatCab,
+        );
+      }
+      return true;
+    });
   }
 
+  // Plantillas: sin ventana de "Deshacer" — se envían al toque, como siempre.
   void _onTemplateMessageSent(
     ChatDetailTemplateMessageSent event,
     Emitter<ChatDetailState> emit,
@@ -235,18 +271,18 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
     }
   }
 
-  Future<void> _onAudioMessageSent(
+  void _onAudioMessageSent(
     ChatDetailAudioMessageSent event,
     Emitter<ChatDetailState> emit,
-  ) async {
+  ) {
     if (state is! ChatDetailSuccess) return;
 
     final tempId = const Uuid().v4();
     final nameWithoutExt = 'audio_${DateTime.now().millisecondsSinceEpoch}';
     const audioExt = '.m4a';
     final fileName = '$nameWithoutExt$audioExt';
+    final chatCab = _currentChatCab;
 
-    final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
       idConversacionCab: event.idChatCab,
       idConversacionDet: 0,
@@ -255,44 +291,36 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       direccionMensaje: 'ASE',
       contenido: event.audioPath,
       tipo: 'audio',
-      estadoEntrega: 'wait',
+      estadoEntrega: ChatMessage.estadoProgramado,
       rutaArchivo: '',
       tipoArchivo: audioExt,
       nombreArchivo: nameWithoutExt,
     );
 
-    emit(
-      (state as ChatDetailSuccess).copyWith(
-        messages: [...currentMessages, newMessage],
-      ),
-    );
+    _agregarMensajes([newMessage], emit);
 
-    if (_currentChatCab != null) {
-      final success = await _sendFileMessage(
+    _programarEnvio(newMessage, () async {
+      if (chatCab == null) return true;
+      return _sendFileMessage(
         filePath: event.audioPath,
         fileName: fileName,
         tipo: 'audio',
-        idNumero: _currentChatCab.toString(),
+        idNumero: chatCab.toString(),
         numero: event.numero,
         chatCab: event.idChatCab,
       );
-
-      if (!success && !isClosed) {
-        // Actualizar UI: mensaje fallido
-        _markMessageAsFailed(tempId, emit);
-      }
-    }
+    });
   }
 
-  Future<void> _onFileMessageSent(
+  void _onFileMessageSent(
     ChatDetailFileMessageSent event,
     Emitter<ChatDetailState> emit,
-  ) async {
+  ) {
     if (state is! ChatDetailSuccess) return;
 
     final tempId = const Uuid().v4();
+    final chatCab = _currentChatCab;
 
-    final currentMessages = (state as ChatDetailSuccess).messages;
     final newMessage = ChatMessage(
       idConversacionCab: event.idChatCab,
       idConversacionDet: 0,
@@ -301,64 +329,51 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       direccionMensaje: 'ASE',
       contenido: event.filePath,
       tipo: event.tipo,
-      estadoEntrega: 'wait',
+      estadoEntrega: ChatMessage.estadoProgramado,
       rutaArchivo: '',
       tipoArchivo: event.fileExt,
       nombreArchivo: event.fileName,
     );
 
-    emit(
-      (state as ChatDetailSuccess).copyWith(
-        messages: [...currentMessages, newMessage],
-      ),
-    );
+    _agregarMensajes([newMessage], emit);
 
-    if (_currentChatCab != null) {
-      final success = await _sendFileMessage(
+    _programarEnvio(newMessage, () async {
+      if (chatCab == null) return true;
+      return _sendFileMessage(
         filePath: event.filePath,
         fileName: '${event.fileName}${event.fileExt}',
         tipo: event.tipo,
-        idNumero: _currentChatCab.toString(),
+        idNumero: chatCab.toString(),
         numero: event.numero,
         chatCab: event.idChatCab,
       );
-
-      if (!success && !isClosed) {
-        // Actualizar UI: mensaje fallido
-        _markMessageAsFailed(tempId, emit);
-      }
-    }
+    });
   }
 
-  // ── Envío batch (múltiples archivos en paralelo) ──────────────────────────
+  // ── Envío batch (múltiples archivos) ──────────────────────────────────────
+  // Cada archivo es un mensaje con su propio "Deshacer"; al vencer, los que
+  // no se deshicieron salen en paralelo (cada timer dispara su propio evento).
 
-  Future<void> _onBatchFileMessageSent(
+  void _onBatchFileMessageSent(
     ChatDetailBatchFileMessageSent event,
     Emitter<ChatDetailState> emit,
-  ) async {
+  ) {
     if (state is! ChatDetailSuccess) return;
 
-    // 1. Crear mensajes optimistas
-    final tempIds = <String>[];
-    final currentMessages = List<ChatMessage>.from(
-      (state as ChatDetailSuccess).messages,
-    );
+    final chatCab = _currentChatCab;
+    final nuevos = <ChatMessage>[];
 
     for (final file in event.files) {
-      final tempId = const Uuid().v4();
-
-      tempIds.add(tempId);
-
-      currentMessages.add(
+      nuevos.add(
         ChatMessage(
           idConversacionCab: event.idChatCab,
           idConversacionDet: 0,
-          idTokenMeta: tempId,
+          idTokenMeta: const Uuid().v4(),
           fechaHora: DateTime.now().toIso8601String(),
           direccionMensaje: 'ASE',
           contenido: file.path,
           tipo: file.tipo,
-          estadoEntrega: 'wait',
+          estadoEntrega: ChatMessage.estadoProgramado,
           rutaArchivo: '',
           tipoArchivo: file.ext,
           nombreArchivo: file.nameWithoutExt,
@@ -366,38 +381,116 @@ class ChatDetailBloc extends Bloc<ChatDetailEvent, ChatDetailState> {
       );
     }
 
-    emit((state as ChatDetailSuccess).copyWith(messages: currentMessages));
+    _agregarMensajes(nuevos, emit);
 
-    // 2. Enviar todos en paralelo
-    if (_currentChatCab == null) return;
-
-    final futures = List.generate(event.files.length, (i) async {
+    for (var i = 0; i < event.files.length; i++) {
       final file = event.files[i];
-      final success = await _sendFileMessage(
-        filePath: file.path,
-        fileName: '${file.nameWithoutExt}${file.ext}',
-        tipo: file.tipo,
-        idNumero: _currentChatCab.toString(),
-        numero: event.numero,
-        chatCab: event.idChatCab,
-      );
-      if (!success && !isClosed) {
-        _markMessageAsFailed(tempIds[i], emit);
-      }
-    });
-
-    await Future.wait(futures);
+      _programarEnvio(nuevos[i], () async {
+        if (chatCab == null) return true;
+        return _sendFileMessage(
+          filePath: file.path,
+          fileName: '${file.nameWithoutExt}${file.ext}',
+          tipo: file.tipo,
+          idNumero: chatCab.toString(),
+          numero: event.numero,
+          chatCab: event.idChatCab,
+        );
+      });
+    }
   }
 
-  void _markMessageAsFailed(String tempId, Emitter<ChatDetailState> emit) {
+  // ── Ventana de "Deshacer" ──────────────────────────────────────────────────
+
+  void _agregarMensajes(List<ChatMessage> nuevos, Emitter<ChatDetailState> emit) {
+    final currentState = state as ChatDetailSuccess;
+    emit(currentState.copyWith(messages: [...currentState.messages, ...nuevos]));
+  }
+
+  void _programarEnvio(ChatMessage mensaje, Future<bool> Function() enviar) {
+    final tempId = mensaje.idTokenMeta;
+    final segundos = ConfiguracionService().segundosDeshacerMensaje;
+    _enviosProgramados[tempId] = _EnvioProgramado(
+      mensaje: mensaje,
+      enviar: enviar,
+      timer: Timer(Duration(seconds: segundos), () {
+        if (!isClosed) add(ChatDetailEnvioConfirmado(tempId));
+      }),
+    );
+  }
+
+  Future<void> _onEnvioConfirmado(
+    ChatDetailEnvioConfirmado event,
+    Emitter<ChatDetailState> emit,
+  ) async {
+    // Si ya no está, se deshizo justo antes de vencer — no se envía
+    final envio = _enviosProgramados.remove(event.tempId);
+    if (envio == null) return;
+
+    // Desde acá ya no hay vuelta atrás: pasa a 'wait' como cualquier envío
+    _actualizarEstadoMensaje(event.tempId, 'wait', emit);
+
+    final exito = await envio.enviar();
+    if (!exito && !isClosed) {
+      _markMessageAsFailed(event.tempId, emit);
+    }
+  }
+
+  void _onEnvioDeshecho(
+    ChatDetailEnvioDeshecho event,
+    Emitter<ChatDetailState> emit,
+  ) {
+    // null = ya venció y se envió — no hay nada que deshacer
+    final envio = _enviosProgramados.remove(event.tempId);
+    if (envio == null) return;
+    envio.timer.cancel();
+
+    if (state is ChatDetailSuccess) {
+      final currentState = state as ChatDetailSuccess;
+      emit(
+        currentState.copyWith(
+          messages: currentState.messages
+              .where((m) => m.idTokenMeta != event.tempId)
+              .toList(),
+        ),
+      );
+    }
+
+    final mensaje = envio.mensaje;
+    if (mensaje.tipo == 'text') {
+      _textosRestaurados.add(mensaje.contenido);
+    } else if (mensaje.tipo == 'audio') {
+      // El audio grabado vive en la carpeta temporal — si no se envía, se borra.
+      // Imágenes/documentos NO: son copias que el picker ya maneja.
+      _borrarArchivo(mensaje.contenido);
+    }
+  }
+
+  void _actualizarEstadoMensaje(
+    String tempId,
+    String estado,
+    Emitter<ChatDetailState> emit,
+  ) {
     if (state is! ChatDetailSuccess) return;
     final currentState = state as ChatDetailSuccess;
     final messages = List<ChatMessage>.from(currentState.messages);
     final idx = messages.indexWhere((m) => m.idTokenMeta == tempId);
     if (idx != -1) {
-      messages[idx] = messages[idx].copyWith(estadoEntrega: 'failed');
+      messages[idx] = messages[idx].copyWith(estadoEntrega: estado);
       emit(currentState.copyWith(messages: messages));
     }
+  }
+
+  static Future<void> _borrarArchivo(String path) async {
+    try {
+      final archivo = File(path);
+      if (await archivo.exists()) await archivo.delete();
+    } catch (_) {
+      // Best-effort: es un temporal, el sistema lo limpia igual
+    }
+  }
+
+  void _markMessageAsFailed(String tempId, Emitter<ChatDetailState> emit) {
+    _actualizarEstadoMensaje(tempId, 'failed', emit);
   }
 
   // ── Router de mensajes entrantes ───────────────────────────────────────────

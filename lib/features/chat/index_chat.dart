@@ -92,9 +92,11 @@ export 'presentation/widgets/chat_detail/info_lead/chat_ia_banner.dart';
 export 'presentation/widgets/chat_detail/audio/audio_player_widget.dart';
 export 'presentation/widgets/chat_detail/audio/audio_recorder_widget.dart';
 export 'presentation/widgets/chat_detail/audio/audio_controller.dart';
+export 'presentation/widgets/chat_detail/audio/aac_m4a_muxer.dart';
 
 export 'presentation/widgets/chat_detail/mensaje/message_bubble.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_list.dart';
+export 'presentation/widgets/chat_detail/mensaje/message_undo_button.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_parser.dart';
 export 'presentation/widgets/chat_detail/mensaje/message_url_helper.dart';
 

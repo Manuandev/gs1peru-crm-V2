@@ -360,6 +360,9 @@ class AppIcons {
   /// Detener — botón stop en grabador de audio
   static const IconData stop = Icons.stop_rounded;
 
+  /// Deshacer — botón "Deshacer" bajo un mensaje recién enviado (MensajeDeshacerBoton)
+  static const IconData undo = Icons.undo_rounded;
+
   /// Foto / imagen — ícono de preview de tipo imagen en chat tile
   static const IconData photo = Icons.photo_rounded;
 

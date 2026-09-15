@@ -3,6 +3,14 @@
 import 'package:app_crm/index_dependencies.dart';
 
 class ChatMessage extends Equatable {
+  // Estado local (nunca viene del backend): el mensaje ya se ve en pantalla
+  // pero todavía no salió por el socket — está en la ventana de "Deshacer".
+  // Distinto de 'wait' a propósito: ERROR_PANTALLA/UPDATE_PANTALLA solo
+  // buscan pendientes en 'wait' y no deben tocar uno que aún no se envió.
+  static const String estadoProgramado = 'programado';
+
+  bool get enVentanaDeshacer => estadoEntrega == estadoProgramado;
+
   // Detalle mensaje
   final int idConversacionCab;
   final int idConversacionDet;

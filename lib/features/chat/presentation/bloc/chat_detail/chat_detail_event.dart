@@ -135,6 +135,24 @@ class ChatDetailFileMessageSent extends ChatDetailEvent {
   ];
 }
 
+// El asesor tocó "Deshacer" dentro de la ventana — el mensaje no sale.
+class ChatDetailEnvioDeshecho extends ChatDetailEvent {
+  final String tempId;
+  const ChatDetailEnvioDeshecho(this.tempId);
+
+  @override
+  List<Object?> get props => [tempId];
+}
+
+// Interno: venció la ventana de "Deshacer" — recién ahora se envía de verdad.
+class ChatDetailEnvioConfirmado extends ChatDetailEvent {
+  final String tempId;
+  const ChatDetailEnvioConfirmado(this.tempId);
+
+  @override
+  List<Object?> get props => [tempId];
+}
+
 class ChatDetailBatchFileMessageSent extends ChatDetailEvent {
   final List<StagedFile> files;
   final String numero;

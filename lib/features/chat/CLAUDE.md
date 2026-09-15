@@ -3,6 +3,44 @@
 Gestiona conversaciones WhatsApp, envío de mensajes, multimedia, templates y edición de leads.
 Es el feature más complejo de la app — leer completo antes de tocar cualquier archivo.
 
+## "Deshacer" envío + grabadora con pausa/escucha + "Eliminar mensaje" (2026-09-15)
+
+La API de WhatsApp **no permite borrar** un mensaje ya enviado. Tres artificios:
+
+**1. Ventana de "Deshacer" (`ChatDetailBloc`)** — texto, audio, archivo y batch (NO plantillas,
+esas salen directo como siempre). El mensaje optimista entra con
+`estadoEntrega = ChatMessage.estadoProgramado` (`'programado'`, local, nunca viene del backend) y
+el envío real (socket / subida por chunks) queda en `_enviosProgramados[tempId]` con un `Timer`.
+- Al vencer → evento interno `ChatDetailEnvioConfirmado` → pasa a `'wait'` y recién llama al
+  use case. Si falla → `'failed'` (igual que antes).
+- "Deshacer" → `ChatDetailEnvioDeshecho` → cancela el timer, quita el mensaje; si era texto lo
+  emite por `ChatDetailBloc.textosRestaurados` (`ChatInputBar` lo devuelve a la caja de
+  escribir); si era audio borra el temporal.
+- **Por qué `'programado'` y no `'wait'`**: `_handleErrorPantalla` y `_findPendingIndex` buscan
+  pendientes en `'wait'` — no deben marcar/confirmar uno que todavía no salió.
+- **Salir del chat durante la ventana** (`close()`) → se envían todos los pendientes al toque.
+- Cada archivo del batch tiene su propio "Deshacer"; los que no se deshacen salen en paralelo.
+- UI: `MensajeDeshacerBoton` (`mensaje/message_undo_button.dart`) bajo la burbuja, a la derecha
+  (anillo que se vacía + "Deshacer"), calcula lo restante desde `fechaHora` del mensaje.
+- **Segundos**: `ConfiguracionService().segundosDeshacerMensaje` → `AppConfiguracion
+  .segundosDeshacerMensaje`, lee `SIS.T_CONFIG_CRM` grupo `TDE`, id `2`, `VALOR_1`
+  (`ConfiguracionKeys.idSegundosDeshacerMensaje`, fila insertada 2026-09-15 con `3.00`). Si la
+  config no carga o el valor es vacío/≤0 → `AppConstants.segundosDeshacerMensajeDefecto` (3).
+
+**2. `AudioRecorderWidget` estilo WhatsApp** — grabar → pausar → escuchar → continuar → borrar o
+enviar. Graba con `startStream(AudioEncoder.aacLc)` (AAC/ADTS, Android e iOS) a un `.aac` en
+`getTemporaryDirectory()`: el `.m4a` de modo archivo no se puede reproducir hasta `stop()` (el
+índice MP4 va al final), por eso no servía para escuchar en pausa. `AacM4aMuxer`
+(`audio/aac_m4a_muxer.dart`) empaqueta el ADTS a `.m4a` sin re-codificar — para la vista previa
+(en cada pausa) y para el envío, así el backend/WhatsApp siguen recibiendo `.m4a` como antes.
+Borrar o salir → `dispose()` elimina `.aac` + previews (+ el `.m4a` si no se envió).
+`audioController` es opcional (el formulario de plantillas no lo pasa).
+
+**3. "Eliminar mensaje"** (`ChatDetailView`, 3 puntos con un mensaje seleccionado) — solo en
+mensajes `ASE`/`AIA` ya enviados (no en ventana de "Deshacer"). Confirma con
+`showConfirmDialog` y abre `LauncherUtils.abrirWhatsApp` (`wa.me/<prefijo+numero>`) en el chat
+del contacto para borrarlo desde WhatsApp Business. No puede abrir un mensaje puntual, solo el chat.
+
 ## `CRM.CSV_WHATSAPP_LST_APP` task `'LS'` — reescrito con tablas temporales + fin de duplicados (2026-09-09)
 
 SP de la lista de chats (`NC.SQLChangeLock`, repo aparte — `.sql` UTF-16LE con BOM, preservar

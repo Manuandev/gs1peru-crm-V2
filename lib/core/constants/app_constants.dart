@@ -44,4 +44,10 @@ class AppConstants {
   // este tiempo tras cambiar de paso — el botón del paso siguiente queda en
   // la misma posición y un doble toque saltaba 2 → 3 → 4 (2026-09-14).
   static const Duration bloqueoDobleToquePaso = Duration(milliseconds: 600);
+
+  // Chat: segundos que un mensaje enviado queda retenido con el botón
+  // "Deshacer" antes de salir de verdad por el socket (la API de WhatsApp no
+  // permite borrar un mensaje ya enviado). Default si la config TDE/2 no carga
+  // — ver ConfiguracionService.segundosDeshacerMensaje.
+  static const int segundosDeshacerMensajeDefecto = 3;
 }

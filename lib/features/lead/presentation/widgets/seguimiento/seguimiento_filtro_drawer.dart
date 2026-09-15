@@ -81,7 +81,7 @@ class _SeguimientoFiltroDrawerState extends State<SeguimientoFiltroDrawer> {
       firstDate: DateTime(ahora.year - 5),
       lastDate: DateTime(ahora.year + 1, 12, 31),
     );
-    if (elegida == null) return;
+    if (elegida == null || !mounted) return;
     setState(() {
       if (esDesde) {
         _desde = elegida;

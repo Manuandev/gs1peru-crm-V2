@@ -1,7 +1,7 @@
 // lib/features/lead/presentation/cubit/historial/historial_lead_state.dart
 
 import 'package:app_crm/index_dependencies.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
+import 'package:app_crm/core/index_core.dart';
 
 sealed class HistorialLeadState extends Equatable {
   const HistorialLeadState();

@@ -1,22 +1,27 @@
-// lib/features/lead/domain/entities/historial_comentario.dart
+// lib/core/models/historial_evento.dart
+//
+// Evento de historial (seguimiento + comentario + recordatorio) — MISMO
+// formato en las 4 pantallas con historial (2026-09-14):
+//   · Conversaciones y Seguimiento → SP CRM.CSV_LEADS_LST_APP task 'LHC'
+//     (todas las negociaciones activas del contacto).
+//   · Detalle de Solicitud → CRM.CSV_SOLICITUD_LST_APP task 'DV', sección [3].
+//   · Detalle de cobro → CRM.CSV_COBRANZAS_LST_APP task 'DT', sección [3].
+//     (estos dos, solo la negociación de esa solicitud).
+// Movido desde lead/ para que los 4 usen la misma entidad y el mismo widget
+// (AppHistorialEventoItem).
 
 import 'package:app_crm/index_dependencies.dart';
 
-/// Quién generó el evento de historial.
-///
-/// Código esperado en el SP (columna TIPO_ACTOR) — mismo criterio que
-/// ChatMessage.direccionMensaje: 'ASE' | 'CLI' | 'AIA' + 'SIS'.
+/// Quién generó el evento (columna TIPO_USUARIO del SP): 'ASE' asesor ·
+/// 'AIA' bot IA ('SIS' sistema hoy se trata como bot IA).
 // enum TipoActor { sistema, botIA, cliente, asesor }
 enum TipoActor { botIA, cliente, asesor }
 
-/// Qué tipo de evento es (columna TIPO_EVENTO del SP, task 'LHC'):
-/// 'SEG' seguimiento (CRM.T_LEAD_SEGUIMIENTO) · 'COM' comentario
-/// (CRM.T_LEAD_COMENTARIO) · 'REC' recordatorio (CRM.T_LEAD_RECORDATORIO).
+/// Qué tipo de evento es (columna TIPO_EVENTO del SP): 'SEG' seguimiento
+/// (CRM.T_LEAD_SEGUIMIENTO) · 'COM' comentario (CRM.T_LEAD_COMENTARIO) ·
+/// 'REC' recordatorio (CRM.T_LEAD_RECORDATORIO).
 enum TipoEventoHistorial { seguimiento, comentario, recordatorio }
 
-/// Evento del historial de un contacto — viene del SP task 'LHC' (todos los
-/// leads activos del mismo contacto: seguimiento + comentario +
-/// recordatorio, unidos y ordenados por fecha).
 class HistorialComentario extends Equatable {
   final int idLead;
   final int idComentario;

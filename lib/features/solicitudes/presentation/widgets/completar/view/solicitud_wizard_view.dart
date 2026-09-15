@@ -44,10 +44,29 @@ class _SolicitudWizardViewState extends State<SolicitudWizardView> {
   // índice) — así es como se preserva lo tipeado al moverse entre pasos.
   final Set<int> _pasosConstruidos = {1};
 
-  void _irAPaso(int paso) => setState(() {
-    _pasoActual = paso;
-    _pasosConstruidos.add(paso);
-  });
+  // Momento del último avance de paso — ver _irAPaso.
+  DateTime? _ultimoAvance;
+
+  void _irAPaso(int paso) {
+    // Bug real (2026-09-14): en "Revisar solicitud" el botón "Continuar" de
+    // cada paso está en la misma posición y avanza al instante, así que un
+    // doble toque en el paso 2 caía en el "Continuar" del paso 3 y terminaba
+    // en el Resumen. Se ignora un segundo AVANCE muy seguido; retroceder o
+    // "Editar" desde el Resumen nunca se bloquea.
+    final ahora = DateTime.now();
+    if (paso > _pasoActual) {
+      final ultimo = _ultimoAvance;
+      if (ultimo != null &&
+          ahora.difference(ultimo) < AppConstants.bloqueoDobleToquePaso) {
+        return;
+      }
+      _ultimoAvance = ahora;
+    }
+    setState(() {
+      _pasoActual = paso;
+      _pasosConstruidos.add(paso);
+    });
+  }
 
   // Mismo comportamiento que tenían las rutas separadas: el ícono de
   // regreso del AppBar (y el back físico/gesto, vía onPop) retrocede un

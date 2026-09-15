@@ -8,15 +8,17 @@
 // crudo (ID_TIPO_DOCUMENTO) y se resuelve en la vista contra
 // CatalogsBloc.tiposDocumento, mismo catálogo que ya usa el wizard.
 //
-// 3 secciones separadas por sepListas:
+// 4 secciones separadas por sepListas:
 //   [0] datos principales (sepCampos, ver mapeo abajo)
-//   [1] historial (sepRegistros ¦ idLead¦LS.DESCRIPCION¦LA.ORIGEN¦LA.NOMBRE¦
-//       LA.DESCRIPCION¦fecha — mismo formato que la sección [2] de la 'DT'
-//       de Cobranza, HistorialCobranzaModel)
+//   [1] historial VIEJO (solo seguimiento) — ya no se lee; se queda en el SP
+//       para las APK instaladas.
 //   [2] cabecera (2026-09-11) — la MISMA fila que el 'LSP' (campos 0..23),
 //       parseada con SolicitudModel.fromRawString. Reemplaza la segunda
 //       llamada al 'LS' (lista completa) que hacía el detalle. Si el SP
 //       desplegado todavía no la trae, `cabecera` queda null.
+//   [3] historial unificado (2026-09-14) — seguimiento + comentario +
+//       recordatorio, MISMO formato que el 'LHC' de leads
+//       (HistorialComentarioModel). Con un SP sin desplegar llega vacío.
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
@@ -61,8 +63,8 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
     final c = secciones.isNotEmpty
         ? ParseUtils.campos(secciones[0], AppConstants.sepCampos)
         : <String>[];
-    final historialRaw = secciones.length > 1 ? secciones[1] : '';
     final cabeceraRaw = secciones.length > 2 ? secciones[2] : '';
+    final historialRaw = secciones.length > 3 ? secciones[3] : '';
 
     return SolicitudDetalleRealModel(
       numSol: ParseUtils.str(c, 0),
@@ -79,30 +81,10 @@ class SolicitudDetalleRealModel extends SolicitudDetalle {
       facNombres: ParseUtils.str(c, 11),
       facApellidoPaterno: ParseUtils.str(c, 12),
       facApellidoMaterno: ParseUtils.str(c, 13),
-      historial: _parseHistorial(historialRaw),
+      historial: HistorialComentarioModel.parseListCompleto(historialRaw),
       cabecera: cabeceraRaw.trim().isEmpty
           ? null
           : SolicitudModel.fromRawString(cabeceraRaw),
     );
-  }
-
-  static List<HistorialSolicitud> _parseHistorial(String raw) {
-    if (raw.trim().isEmpty) return const [];
-    return raw
-        .split(AppConstants.sepRegistros)
-        .where((r) => r.trim().isNotEmpty)
-        .map((r) {
-          final c = ParseUtils.campos(r, AppConstants.sepCampos);
-          final descripcionSeguimiento = ParseUtils.str(c, 1);
-          return HistorialSolicitud(
-            origen: ParseUtils.str(c, 2),
-            titulo: ParseUtils.str(c, 3),
-            descripcion: descripcionSeguimiento.isNotEmpty
-                ? descripcionSeguimiento
-                : ParseUtils.str(c, 4),
-            fecha: ParseUtils.str(c, 5),
-          );
-        })
-        .toList();
   }
 }

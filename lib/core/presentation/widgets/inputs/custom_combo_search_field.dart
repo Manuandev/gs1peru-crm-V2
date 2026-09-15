@@ -2,6 +2,7 @@
 
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:app_crm/core/index_core.dart';
 
@@ -27,6 +28,9 @@ class CustomComboSearchField extends StatefulWidget {
   // tipeado en una sesión anterior. Si el texto matchea un ítem real del
   // catálogo, igual se resuelve como selección normal (conserva el id).
   final String? initialText;
+  // Fuerza MAYÚSCULAS mientras se tipea (mismo criterio que
+  // CustomTextField.isUpperCase) — 2026-09-14, wizard de solicitudes.
+  final bool isUpperCase;
 
   const CustomComboSearchField({
     super.key,
@@ -42,6 +46,7 @@ class CustomComboSearchField extends StatefulWidget {
     this.maxSuggestions = 6,
     this.allowFreeText = false,
     this.initialText,
+    this.isUpperCase = false,
   });
 
   @override
@@ -60,6 +65,9 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
   // fieldViewBuilder se vuelve a llamar en cada build, así que hay que evitar
   // agregar un listener duplicado por cada rebuild.
   TextEditingController? _boundController;
+  // Controller interno de Autocomplete (cualquier modo) — para reflejar un
+  // initialValue que cambia desde afuera, ver didUpdateWidget.
+  TextEditingController? _fieldController;
 
   @override
   void initState() {
@@ -142,6 +150,23 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
           _selected!.id.isNotEmpty &&
           !_allItems.any((e) => e.id == _selected!.id)) {
         _selected = null;
+      }
+    }
+    // Modo estricto (sin allowFreeText): si el padre cambia initialValue por
+    // código (ej. restaurar Facturación, limpiar País), el campo lo refleja —
+    // antes solo se leía en initState y quedaba mostrando el valor viejo.
+    if (!widget.allowFreeText &&
+        old.initialValue != widget.initialValue &&
+        widget.initialValue != _selected?.id) {
+      _selected = widget.initialValue == null
+          ? null
+          : _allItems.where((e) => e.id == widget.initialValue).firstOrNull;
+      final texto = _selected != null ? _display(_selected!) : '';
+      final controller = _fieldController;
+      if (controller != null && controller.text != texto) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) controller.text = texto;
+        });
       }
     }
   }
@@ -263,6 +288,7 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
       },
       fieldViewBuilder: (context, controller, focusNode, _) {
         _fieldFocusNode = focusNode;
+        _fieldController = controller;
         if (widget.allowFreeText && _boundController != controller) {
           _boundController = controller;
           controller.addListener(() => _syncFreeText(controller.text));
@@ -277,6 +303,17 @@ class _CustomComboSearchFieldState extends State<CustomComboSearchField> {
                 : AppColors.textSecondary,
           ),
           decoration: _buildDecoration(context, controller),
+          textCapitalization: widget.isUpperCase
+              ? TextCapitalization.characters
+              : TextCapitalization.none,
+          inputFormatters: widget.isUpperCase
+              ? [
+                  TextInputFormatter.withFunction(
+                    (_, nuevo) =>
+                        nuevo.copyWith(text: nuevo.text.toUpperCase()),
+                  ),
+                ]
+              : null,
           textInputAction: widget.allowFreeText ? TextInputAction.done : null,
           onFieldSubmitted: widget.allowFreeText ? _commitFreeText : null,
           // Con allowFreeText, una selección de texto libre confirmada tiene

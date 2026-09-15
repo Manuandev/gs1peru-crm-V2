@@ -69,7 +69,7 @@ class _CustomComboMultiFieldState extends State<CustomComboMultiField> {
         label: widget.label,
       ),
     );
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() => _selected = result);
       widget.onChanged?.call(_selected);
     }

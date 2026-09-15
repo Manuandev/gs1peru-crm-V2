@@ -72,7 +72,7 @@ class _CustomComboMultiSearchFieldState
         hint: widget.hint ?? 'Buscar...',
       ),
     );
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() => _selected = result);
       widget.onChanged?.call(_selected);
     }

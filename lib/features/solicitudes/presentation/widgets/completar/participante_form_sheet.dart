@@ -253,12 +253,19 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     _buscarDocumento();
   }
 
-  // Autocompleta nombres/apellidos/correo por DNI (8 dígitos) o RUC (11) al
-  // salir del campo N° documento — Clientes/BuscarDocumento (interno →
-  // RENIEC/SUNAT de fallback, ver solicitudes/CLAUDE.md).
+  // Autocompleta nombres/apellidos/correo al salir del campo N° documento —
+  // Clientes/BuscarDocumento. Solo con tipo DNI y el número completo
+  // (DocumentoValidationUtils.puedeBuscar, 2026-09-14).
   Future<void> _buscarDocumento() async {
     final numDoc = _numDocCtrl.text.trim();
-    final esBusqueda = numDoc.length == 8 || numDoc.length == 11;
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return;
+    final esBusqueda = DocumentoValidationUtils.puedeBuscar(
+      _tipoDocId,
+      numDoc,
+      catalogState.tiposDocumento,
+      catalogState.valoresDefecto,
+    );
     if (!esBusqueda || numDoc == _ultimoDocBuscado) return;
     _ultimoDocBuscado = numDoc;
 
@@ -335,10 +342,12 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
     );
     final tecladoDoc = DocumentoValidationUtils.keyboardType(
       _tipoDocId,
+      tiposDocumento,
       valoresDefecto,
     );
     final inputFormattersDoc = DocumentoValidationUtils.inputFormatters(
       _tipoDocId,
+      tiposDocumento,
       valoresDefecto,
     );
 
@@ -406,6 +415,11 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             maxLenDoc: maxLenDoc,
                             tecladoDoc: tecladoDoc,
                             inputFormattersDoc: inputFormattersDoc,
+                            validatorDoc: DocumentoValidationUtils.validador(
+                              _tipoDocId,
+                              tiposDocumento,
+                              requerido: true,
+                            ),
                             onBuscarDocumento: _buscarDocumento,
                           ),
                           const SizedBox(height: AppSpacing.sm),

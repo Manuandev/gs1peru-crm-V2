@@ -391,10 +391,16 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       context.read<SolicitudFormCubit>().guardarSolicitante(datosSolicitante);
 
       if (!detalle.sinFacturacion) {
-        final esRuc = detalle.facTipoDocId == valoresDefecto.idTipoDocRuc;
         final facTipoDoc = tiposDocumento
             .where((t) => t.id == detalle.facTipoDocId)
             .firstOrNull;
+        // Razón social vs Nombres/Apellidos lo decide el tipo de documento
+        // (PARTIDAM esJuridico, 2026-09-14) — con SP viejo cae a "es RUC".
+        final esJuridica = DocumentoValidationUtils.esJuridico(
+          detalle.facTipoDocId,
+          tiposDocumento,
+          valoresDefecto,
+        );
         // Trunca al máximo real del tipo — mismo criterio que numDocSolicitante
         // más arriba (dato ya guardado en el backend puede exceder el límite).
         final facNumDoc = DocumentoValidationUtils.limitarLongitud(
@@ -469,9 +475,9 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
             nacionalidadId: detalle.facNacionalidadId,
             nacionalidad: facNacionalidad?.nombre ?? '',
             numDoc: facNumDoc,
-            nombresRazon: esRuc ? detalle.facNomEmpre : detalle.facNombres,
-            apellidoPaterno: esRuc ? '' : detalle.facApellidoPaterno,
-            apellidoMaterno: esRuc ? '' : detalle.facApellidoMaterno,
+            nombresRazon: esJuridica ? detalle.facNomEmpre : detalle.facNombres,
+            apellidoPaterno: esJuridica ? '' : detalle.facApellidoPaterno,
+            apellidoMaterno: esJuridica ? '' : detalle.facApellidoMaterno,
             celular: detalle.facCelular,
             // El backend tampoco trae este código para facturación (mismo
             // gap que el solicitante, ver comentario de `paisDefectoCelular`

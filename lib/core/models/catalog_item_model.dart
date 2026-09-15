@@ -493,21 +493,39 @@ class TipoDocumentoItemModel extends TipoDocumentoItem {
     required super.abreviatura,
     required super.esNacional,
     required super.canCaracteresMax,
+    super.tieneReglas,
+    super.soloNumeros,
+    super.longitudExacta,
+    super.esJuridico,
+    super.esNatural,
+    super.esFactura,
+    super.esBoleta,
   });
 
   factory TipoDocumentoItemModel.fromRawString(String raw) {
     final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    // [5] PARTIDAM / [6] PARTIDAO — ver TipoDocumentoItem.
+    final m = ParseUtils.campos(ParseUtils.str(c, 5), AppConstants.sepPartida);
+    final o = ParseUtils.campos(ParseUtils.str(c, 6), AppConstants.sepPartida);
+    final tieneReglas = m.length >= 7 && m[0].isNotEmpty;
     return TipoDocumentoItemModel(
       id: ParseUtils.str(c, 0),
       nombre: ParseUtils.str(c, 1),
       abreviatura: ParseUtils.str(c, 2),
-      esNacional: ParseUtils.toBoolNAC(c, 3),
-      // El SP manda este campo como decimal ("8.000", "11.000"...) — 2026-08-12,
-      // encontrado en vivo (límite de N° documento en 0 para todo tipo). Ya no
-      // hace falta un parseo especial acá — `ParseUtils.toInt` ahora resuelve
-      // decimales solo (ver comentario en parse_utils.dart), este era el caso
-      // real que motivó el fix.
-      canCaracteresMax: ParseUtils.toInt(c, 4),
+      esNacional: tieneReglas
+          ? ParseUtils.toBool(m, 4)
+          : ParseUtils.toBoolNAC(c, 3),
+      // valor1 llega como decimal ("8.000") — ParseUtils.toInt ya lo resuelve.
+      canCaracteresMax: tieneReglas
+          ? ParseUtils.toInt(m, 0)
+          : ParseUtils.toInt(c, 4),
+      tieneReglas: tieneReglas,
+      soloNumeros: tieneReglas && ParseUtils.str(m, 1).toUpperCase() == 'N',
+      longitudExacta: tieneReglas && ParseUtils.toBool(m, 3),
+      esJuridico: ParseUtils.toBool(m, 5),
+      esNatural: ParseUtils.toBool(m, 6),
+      esFactura: ParseUtils.toBool(o, 0),
+      esBoleta: ParseUtils.toBool(o, 1),
     );
   }
 

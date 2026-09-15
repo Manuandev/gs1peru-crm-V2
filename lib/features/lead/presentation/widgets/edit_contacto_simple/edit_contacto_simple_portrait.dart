@@ -154,9 +154,17 @@ class _EditContactoSimplePortraitState
   // Autocompleta Nombres/Apellidos/Correo al escribir un documento válido —
   // mismo patrón/servicio que EditContacto (pantalla completa). Nunca pisa
   // un campo que el usuario ya llenó a mano.
+  // Solo con tipo DNI y el número completo (2026-09-14).
   Future<void> _buscarDocumento() async {
     final numDoc = _numeroDocumentoCtrl.text.trim();
-    final esBusqueda = numDoc.length == 8 || numDoc.length == 11;
+    final catalogos = context.read<CatalogsBloc>().state;
+    if (catalogos is! CatalogsLoaded) return;
+    final esBusqueda = DocumentoValidationUtils.puedeBuscar(
+      _tipoDocumento?.id,
+      numDoc,
+      catalogos.tiposDocumento,
+      catalogos.valoresDefecto,
+    );
     if (!esBusqueda || numDoc == _ultimoDocBuscado) return;
     _ultimoDocBuscado = numDoc;
 
@@ -363,6 +371,7 @@ class _EditContactoSimplePortraitState
                             isUpperCase: true,
                             keyboardType: DocumentoValidationUtils.keyboardType(
                               _tipoDocumento?.id ?? '',
+                              tiposDocumento,
                               catalogState.valoresDefecto,
                             ),
                             maxLength: DocumentoValidationUtils.maxLength(
@@ -373,8 +382,15 @@ class _EditContactoSimplePortraitState
                             inputFormatters:
                                 DocumentoValidationUtils.inputFormatters(
                                   _tipoDocumento?.id ?? '',
+                                  tiposDocumento,
                                   catalogState.valoresDefecto,
                                 ),
+                            // Opcional; si se escribe, respeta la longitud
+                            // exacta del tipo.
+                            validator: DocumentoValidationUtils.validador(
+                              _tipoDocumento?.id,
+                              tiposDocumento,
+                            ),
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _buscarDocumento(),
                           ),

@@ -1,6 +1,6 @@
 // lib/features/cobranza/domain/entities/cobranza_detalle.dart
 
-import 'package:app_crm/core/utils/string/string_utils.dart';
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/cobranza/index_cobranza.dart';
 
 class CobranzaDetalle {
@@ -59,7 +59,9 @@ class CobranzaDetalle {
       .aTitulo;
 
   final List<ArchivoCobranza> archivos;
-  final List<HistorialCobranza> historial;
+  // Historial unificado (seguimiento + comentario + recordatorio) de la
+  // negociación de esta solicitud — sección [3] del 'DT' (2026-09-14).
+  final List<HistorialComentario> historial;
 
   // true si el join de facturación no trajo ningún dato (registro vacío/sin
   // completar todavía) — usado para mostrar un mensaje en vez de una fila

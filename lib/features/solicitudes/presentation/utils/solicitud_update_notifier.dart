@@ -18,6 +18,10 @@ class SolicitudUpdate {
   // quien notifica (tiene acceso a CatalogsBloc.valoresDefecto.idTipoDocRuc),
   // el bloc que escucha no depende de ningún catálogo.
   final bool facturacionEsRuc;
+  // true si el tipo de documento de facturación es jurídico (PARTIDAM
+  // esJuridico) — Razón social en vez de Nombres. Un RUC siempre es jurídico,
+  // pero un jurídico no siempre es RUC (ej. TIN).
+  final bool facturacionEsJuridica;
   final String tipoPersona;
   // Importe total ya calculado (Inversión + IGV, mismo criterio que
   // SeccionResumenComercial) — evita que el bloc necesite CatalogsBloc para
@@ -29,6 +33,7 @@ class SolicitudUpdate {
     required this.solicitante,
     required this.facturacion,
     required this.facturacionEsRuc,
+    required this.facturacionEsJuridica,
     required this.tipoPersona,
     required this.montoTotal,
   });

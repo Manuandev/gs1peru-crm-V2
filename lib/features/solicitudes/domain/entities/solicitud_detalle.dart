@@ -1,22 +1,7 @@
 // lib/features/solicitudes/domain/entities/solicitud_detalle.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/domain/entities/solicitud.dart';
-
-// CRM.T_LEAD_SEGUIMIENTO + CRM.T_LEAD_ACTIVIDAD del lead asociado al NUMSOL —
-// mismo patrón que HistorialCobranza.
-class HistorialSolicitud {
-  final String origen;
-  final String titulo;
-  final String descripcion;
-  final String fecha;
-
-  const HistorialSolicitud({
-    required this.origen,
-    required this.titulo,
-    required this.descripcion,
-    required this.fecha,
-  });
-}
 
 // Detalle de solo lectura de una solicitud ya guardada — los campos que
 // pinta SolicitudDetalleView (participante, facturación, historial) más la
@@ -53,7 +38,9 @@ class SolicitudDetalle {
   final String facApellidoPaterno;
   final String facApellidoMaterno;
 
-  final List<HistorialSolicitud> historial;
+  // Historial unificado (seguimiento + comentario + recordatorio) de la
+  // negociación de esta solicitud — sección [3] del 'DV' (2026-09-14).
+  final List<HistorialComentario> historial;
 
   // Cabecera fresca (sección [2] del 'DV', misma fila que el 'LSP'). Null si
   // el SP desplegado todavía no trae esa sección — la vista cae al Solicitud
@@ -102,7 +89,7 @@ class SolicitudDetalle {
     String? facNombres,
     String? facApellidoPaterno,
     String? facApellidoMaterno,
-    List<HistorialSolicitud>? historial,
+    List<HistorialComentario>? historial,
   }) {
     return SolicitudDetalle(
       numSol: numSol,

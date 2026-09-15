@@ -1,5 +1,6 @@
 // lib/features/lead/domain/usecases/get_historial_seguimiento_por_numero.dart
 
+import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
 
 // 2026-08-03 — migrado de idNumero a idContacto, ver comentario en

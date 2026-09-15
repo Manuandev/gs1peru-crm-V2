@@ -263,6 +263,7 @@ class SolicitudCampoCelularBusqueda extends StatelessWidget {
             data: data,
             label: 'País',
             enabled: habilitado,
+            isUpperCase: true,
             initialValue: paisSeleccionado?.codigoTelefono,
             onChanged: (item) {
               if (item == null) return;

@@ -25,6 +25,9 @@ class AppConstants {
   static const String sepComodin = '¨';
   static const String sepComodin2 = '±';
   static const String sepComodin3 = '¶';
+  // Separa los sub-campos de PARTIDAM/PARTIDAO (SYSTABEXTER02) dentro de un
+  // mismo campo — ej. tipo de documento "8|N|0|1|1|0|1" (ver TipoDocumentoItem).
+  static const String sepPartida = '|';
 
   // Límites de caracteres en ChatTile (nombre/número ya no se recortan —
   // se muestran completos, ver chat_tile.dart)
@@ -36,4 +39,9 @@ class AppConstants {
   // filtre (con 1-2 letras traería media base y no aporta).
   static const Duration debounceBusqueda = Duration(milliseconds: 500);
   static const int busquedaMinCaracteres = 3;
+
+  // Wizard de solicitudes: ignora un segundo "Continuar/Siguiente" dentro de
+  // este tiempo tras cambiar de paso — el botón del paso siguiente queda en
+  // la misma posición y un doble toque saltaba 2 → 3 → 4 (2026-09-14).
+  static const Duration bloqueoDobleToquePaso = Duration(milliseconds: 600);
 }

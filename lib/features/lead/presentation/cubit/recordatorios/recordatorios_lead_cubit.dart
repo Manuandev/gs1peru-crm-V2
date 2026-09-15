@@ -2,7 +2,6 @@
 
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
-import 'package:app_crm/features/lead/presentation/cubit/recordatorios/recordatorios_lead_state.dart';
 
 class RecordatoriosLeadCubit extends Cubit<RecordatoriosLeadState> {
   final GetRecordatoriosPorContacto _obtenerRecordatoriosPorContactoUseCase;
@@ -20,8 +19,11 @@ class RecordatoriosLeadCubit extends Cubit<RecordatoriosLeadState> {
       final recordatorios = await _obtenerRecordatoriosPorContactoUseCase.call(
         idContacto,
       );
+      // La pantalla pudo cerrarse mientras llegaba la respuesta.
+      if (isClosed) return;
       emit(RecordatoriosLeadSuccess(recordatorios: recordatorios));
     } catch (e) {
+      if (isClosed) return;
       emit(RecordatoriosLeadError(mensaje: e.toString()));
     }
   }

@@ -1,5 +1,61 @@
 # Solicitudes Feature
 
+## Doble toque 2 → 4 + Nacionalidad/País con búsqueda + mayúsculas (2026-09-14)
+
+- **Bug real**: en "Revisar solicitud" (solo-ver) el "Continuar" de cada paso está en la misma
+  posición y avanza al instante — un doble toque en el paso 2 caía en el "Continuar" del paso 3 y
+  terminaba en el Resumen. `SolicitudWizardView._irAPaso` ignora un segundo **avance** dentro de
+  `AppConstants.bloqueoDobleToquePaso` (600 ms); retroceder/"Editar" no se bloquea. La regla de
+  saltar Facturación (todos invitados) no cambió.
+- **Nacionalidad** (solicitante, participante, facturación) y **País** (facturación) pasaron a
+  `CustomComboSearchField` **estricto** (sin `allowFreeText`): se escribe, filtra y se elige.
+- **Mayúsculas** en todo lo que se tipea del wizard: N° documento (solicitante/facturación),
+  detalle de canal, y los combos con búsqueda (Cargo, Nacionalidad, País, Ubigeo, prefijo de
+  celular) vía `CustomComboSearchField.isUpperCase` (nuevo en core).
+
+## Tipo de documento por PARTIDAM/PARTIDAO + solo activos (2026-09-14)
+
+- **SP `CRM.CSV_LISTAS_LST_APP`**, parte [10]: `SYSTABEXTER02 F01` con `INNER JOIN
+  SYSTABEXTER02_EXT` (`FLG_ACTIVO = 1`). Agrega `[5] PARTIDAM` y `[6] PARTIDAO` al final, sin
+  mover [0]-[4] (APK viejas). F01 salió de `@CatEx`. ⚠️ Pendiente `ALTER PROCEDURE`.
+- **Reglas** (`TipoDocumentoItem`, ver `core/CLAUDE.md`): ya no se usan valor1/valor2/valor3.
+  Validación de N° documento (longitud, exacta, solo dígitos) en las 5 pantallas vía
+  `DocumentoValidationUtils` (`validador`, `keyboardType`, `inputFormatters`).
+- **Búsqueda en base solo con DNI** (`DocumentoValidationUtils.puedeBuscar`): Solicitante,
+  Facturación, Participante, EditContacto y EditContactoSimple. CE con 8 dígitos no busca. El RUC
+  de Facturación **ya no busca**. El RUC de "Información comercial" (paso 1, jurídica) **sí sigue
+  buscando** y llena Razón social (se quitó por error y se restauró el mismo día, pedido del
+  usuario) — es un campo RUC propio, no depende del tipo de documento del solicitante.
+- **Facturación — jerarquía País → Comprobante → Tipo documento**
+  (`filtrarTiposDocumentoFacturacion`, `solicitud_facturacion_helper.dart`):
+  Perú → `esNacional`, extranjero → `!esNacional` (y solo Boleta); Factura → `esFactura`, Boleta →
+  `esBoleta`. Sin documento / Sin RUC nunca. Si el tipo elegido deja de estar permitido se limpia;
+  si queda una sola opción se elige sola. **Se eliminó el toggle Jurídica/Natural** del paso 3.
+- **Razón social vs Nombres/Apellidos** lo decide el tipo de documento
+  (`DocumentoValidationUtils.esJuridico`). RUC y TIN → Razón social; DNI/CE/Pasaporte → Nombres.
+  Guardado: `NOMEMPRE_FAC` si es jurídico, `RUCEMPRE_FAC` solo si es RUC (param nuevo
+  `facturacionEsJuridica` en datasource/repo/usecase). Detalle: jurídico sin RUC → "N° documento
+  + Razón social". `SolicitudUpdate.facturacionEsJuridica` (nuevo).
+- **Solicitante (paso 1)**: solo cambió la regla tipo documento ↔ número (validación + búsqueda).
+- Con SP viejo (sin PARTIDAM) todo cae al criterio anterior (`tieneReglas == false`).
+
+## Historial del Detalle: seguimiento + comentario + recordatorio (2026-09-14)
+
+Mismo historial y mismo ítem que Conversaciones/Seguimiento/Cobranza (ver `core/CLAUDE.md` →
+`AppHistorialEventoItem` y `lead/CLAUDE.md` → "Historial unificado").
+
+- **SP `'DV'`** (`CRM.CSV_SOLICITUD_LST_APP`, UTF-16LE+BOM preservado): sección **[3]** nueva
+  (`@SEC3`), mismo formato de 11 campos que el `'LHC'` de leads, solo del lead de este NUMSOL
+  (`CRM.T_LEAD_TECMSOLINSCRIPCION01`). Seguimiento con `LS.IB_ACTIVO = 1`; comentario y
+  recordatorio siempre (no tienen `IB_ACTIVO`). La sección [1] vieja se queda para las APK
+  instaladas (también filtra `LS.IB_ACTIVO = 1`). Salida: `[0]¯[1]¯[2]¯[3]`.
+- **Flutter**: `SolicitudDetalle.historial` pasó a `List<HistorialComentario>` (core);
+  `SolicitudDetalleRealModel` lee `secciones[3]` con `HistorialComentarioModel.parseListCompleto`.
+  Se eliminó `HistorialSolicitud`. `SeccionHistorial` = `AppHistorialSeccion` (chips + línea de
+  tiempo, sin chip de oportunidad: se muestra el tipo de evento).
+- ⚠️ Pendiente `ALTER PROCEDURE`. Desplegar el SP **antes** que la APK: con el SP viejo el
+  historial sale vacío.
+
 ## Montos: guardados rotos, cuadre exacto al pactado, aviso de precio desactivado (2026-09-14)
 Todo en `solicitud_guardar_helper.dart`, sin cambios de SP.
 

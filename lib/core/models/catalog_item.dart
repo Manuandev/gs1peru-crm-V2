@@ -312,14 +312,29 @@ class PaisItem with Comboable {
   List<dynamic> get fields => [id, nombre, codigoTelefono, esNacional];
 }
 
-// SP lstListas parte [10]: codargu ¦ deslarga — SYSTABEXTER02 CODTABLA='F01'.
-// id es STRING (codargu), no int — no parsear con toInt.
+// SP lstListas parte [10]: codargu ¦ deslarga ¦ descorta ¦ valor2 ¦ valor1 ¦
+// PARTIDAM ¦ PARTIDAO — SYSTABEXTER02 CODTABLA='F01', solo los activos
+// (SYSTABEXTER02_EXT.FLG_ACTIVO = 1). id es STRING (codargu), no int.
+// Desde 2026-09-14 las reglas salen SOLO de PARTIDAM/PARTIDAO:
+//   PARTIDAM = longitud|tipoCaracter(N/A)|tipContribuyente|longitudExacta|esNacional|esJuridico|esNatural
+//   PARTIDAO = esFactura|esBoleta
+// `tieneReglas` es false si el SP desplegado todavía no manda PARTIDAM — en
+// ese caso esNacional/canCaracteresMax caen a valor2/valor1 de antes.
 class TipoDocumentoItem with Comboable {
   final String id;
   final String nombre;
   final String abreviatura;
   final bool esNacional;
   final int canCaracteresMax;
+  final bool tieneReglas;
+  // tipoCaracter 'N' — solo dígitos.
+  final bool soloNumeros;
+  // true: exige exactamente canCaracteresMax; false: es solo el máximo.
+  final bool longitudExacta;
+  final bool esJuridico;
+  final bool esNatural;
+  final bool esFactura;
+  final bool esBoleta;
 
   const TipoDocumentoItem({
     required this.id,
@@ -327,6 +342,13 @@ class TipoDocumentoItem with Comboable {
     required this.abreviatura,
     required this.esNacional,
     required this.canCaracteresMax,
+    this.tieneReglas = false,
+    this.soloNumeros = false,
+    this.longitudExacta = false,
+    this.esJuridico = false,
+    this.esNatural = false,
+    this.esFactura = false,
+    this.esBoleta = false,
   });
 
   @override

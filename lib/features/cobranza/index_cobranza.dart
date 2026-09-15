@@ -5,7 +5,6 @@ export 'data/datasources/remote/cobranza_remote_datasource.dart';
 export 'data/models/cobranza_model.dart';
 export 'data/models/cobranza_pagina_model.dart';
 export 'data/models/detalle_cobranza_model.dart';
-export 'data/models/historial_cobranza_model.dart';
 export 'data/models/archivo_cobranza_model.dart';
 
 export 'data/repositories/cobranza_repository_impl.dart';
@@ -14,7 +13,6 @@ export 'domain/entities/cobranza.dart';
 export 'domain/entities/cobranza_filtro_avanzado.dart';
 export 'domain/entities/cobranza_pagina.dart';
 export 'domain/entities/cobranza_detalle.dart';
-export 'domain/entities/historial_cobranza.dart';
 export 'domain/entities/archivo_cobranza.dart';
 export 'domain/entities/cobranza_plan.dart';
 export 'domain/entities/plan_credito_resultado.dart';

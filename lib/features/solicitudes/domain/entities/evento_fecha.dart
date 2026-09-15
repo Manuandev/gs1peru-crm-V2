@@ -23,6 +23,13 @@ extension EventoFechasX on List<EventoFechaItem> {
   /// solicitante será participante"). null si el evento no tiene fechas.
   int? get idPrimeraFecha {
     if (isEmpty) return null;
-    return reduce((a, b) => a.fecha.isAfter(b.fecha) ? b : a).idFecha;
+    // Recorrido manual en vez de reduce(): la lista real suele ser
+    // List<EventoFechaModel> y reduce() exige que la función sea del tipo
+    // exacto de la lista — con EventoFechaItem revienta en tiempo de ejecución.
+    EventoFechaItem primera = first;
+    for (final f in this) {
+      if (f.fecha.isBefore(primera.fecha)) primera = f;
+    }
+    return primera.idFecha;
   }
 }

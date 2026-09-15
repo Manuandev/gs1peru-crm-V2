@@ -50,18 +50,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
   String _nacionalidadId = '';
   String _nacionalidadLabel = '';
 
-  // Jurídica/Natural — SOLO de vista, exclusivo de este paso (pedido de
-  // negocio, 2026-07-29). No se guarda en DatosFacturacion ni se manda al
-  // backend — decide únicamente si este formulario muestra Razón Social
-  // (jurídica) o Nombres + Apellido paterno/materno (natural), reemplazando
-  // para ese propósito a `_esRuc` (que sigue existiendo, pero solo para la
-  // regla "Factura exige RUC" y el autocompletado por documento). Arranca
-  // sembrado con el tipo de persona del paso 1 (SolicitudFormState.
-  // tipoPersona) la primera vez que se entra a este paso, pero de ahí en
-  // adelante es 100% independiente — el asesor lo puede cambiar acá sin que
-  // afecte al paso 1 ni viceversa.
-  String _tipoPersonaVista = 'natural';
-
   // Ubigeo (Departamento/Provincia/Distrito) — solo aplica cuando el país
   // elegido es Perú (ver _esExtranjero). Provincia depende del Departamento
   // elegido, Distrito depende de Departamento+Provincia — ver
@@ -130,9 +118,52 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   String get _idComprobanteFactura => _valoresDefecto.idTipoFactura;
   String get _idComprobanteBoleta => _valoresDefecto.idTipoBoleta;
-  String get _idTipoDocRuc => _valoresDefecto.idTipoDocRuc;
 
-  bool get _esRuc => _tipoDocId == _idTipoDocRuc;
+  List<TipoDocumentoItem> get _tiposDocumentoTodos {
+    final catalogState = context.read<CatalogsBloc>().state;
+    return catalogState is CatalogsLoaded
+        ? catalogState.tiposDocumento
+        : const <TipoDocumentoItem>[];
+  }
+
+  // Tipo de documento jurídico (PARTIDAM esJuridico) → Razón social en vez
+  // de Nombres/Apellidos. Reemplaza al toggle Jurídica/Natural y a "es RUC"
+  // (2026-09-14): lo único que decide estos campos es el tipo de documento.
+  bool get _esJuridico => DocumentoValidationUtils.esJuridico(
+    _tipoDocId,
+    _tiposDocumentoTodos,
+    _valoresDefecto,
+  );
+
+  // Tipos permitidos según País → Comprobante (ver
+  // filtrarTiposDocumentoFacturacion, solicitud_facturacion_helper.dart).
+  List<TipoDocumentoItem> get _tiposDocumentoPermitidos =>
+      filtrarTiposDocumentoFacturacion(
+        todos: _tiposDocumentoTodos,
+        esExtranjero: _esExtranjero,
+        comprobanteId: _comprobanteId,
+        valoresDefecto: _valoresDefecto,
+      );
+
+  // Tras cambiar País o Comprobante: si el tipo elegido ya no está permitido
+  // se limpia; si solo queda una opción (ej. Perú + Factura → RUC) se elige
+  // sola. Siempre dentro de un setState del caller.
+  void _ajustarTipoDocumento() {
+    final permitidos = _tiposDocumentoPermitidos;
+    if (permitidos.length == 1) {
+      if (_tipoDocId != permitidos.first.id) {
+        _tipoDocId = permitidos.first.id;
+        _tipoDocLabel = permitidos.first.abreviatura;
+        _ctrlNumDoc.clear();
+      }
+      return;
+    }
+    if (!permitidos.any((t) => t.id == _tipoDocId)) {
+      _tipoDocId = '';
+      _tipoDocLabel = '';
+      _ctrlNumDoc.clear();
+    }
+  }
 
   // País distinto de Perú (pedido de negocio, 2026-07-21; 2026-07-29 —
   // cambió de comparar el id contra valoresDefecto.idPais a leer
@@ -170,17 +201,18 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     );
   }
 
-  // Autocompleta Nombres/Apellidos/Correo (o solo Razón Social si el tipo de
-  // documento es RUC) por DNI (8 dígitos) o RUC (11) al salir del campo
-  // Número documento/RUC o presionar el check del teclado — mismo servicio y
-  // mismo patrón que Datos del solicitante y Nuevo participante.
+  // Autocompleta Nombres/Apellidos/Correo al salir del campo Número documento
+  // o presionar el check del teclado — solo con tipo DNI y el número completo
+  // (DocumentoValidationUtils.puedeBuscar). RUC y los documentos extranjeros
+  // ya no buscan (2026-09-14).
   Future<void> _buscarDocumento() async {
-    // País distinto de Perú — no se consulta Clientes/BuscarDocumento
-    // (RENIEC/SUNAT), pedido de negocio 2026-07-29: un documento extranjero
-    // no existe en esas fuentes, el asesor completa los datos a mano.
-    if (_esExtranjero) return;
     final numDoc = _ctrlNumDoc.text.trim();
-    final esBusqueda = numDoc.length == 8 || numDoc.length == 11;
+    final esBusqueda = DocumentoValidationUtils.puedeBuscar(
+      _tipoDocId,
+      numDoc,
+      _tiposDocumentoTodos,
+      _valoresDefecto,
+    );
     if (!esBusqueda || numDoc == _ultimoDocBuscado) return;
     _ultimoDocBuscado = numDoc;
 
@@ -190,28 +222,18 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       if (!mounted) return;
       if (resultado == null || resultado.sinDatos) return;
 
-      if (_esRuc) {
-        if (resultado.nomEmpresa.isNotEmpty) {
-          _ctrlNombresRazon.text = resultado.nomEmpresa;
-        }
-      } else {
-        if (resultado.nombres.isNotEmpty) {
-          _ctrlNombresRazon.text = resultado.nombres;
-        } else if (resultado.nomEmpresa.isNotEmpty) {
-          _ctrlNombresRazon.text = resultado.nomEmpresa;
-        }
-        if (resultado.apePaterno.isNotEmpty) {
-          _ctrlApellidoPaterno.text = resultado.apePaterno;
-        }
-        if (resultado.apeMaterno.isNotEmpty) {
-          _ctrlApellidoMaterno.text = resultado.apeMaterno;
-        }
+      if (resultado.nombres.isNotEmpty) {
+        _ctrlNombresRazon.text = resultado.nombres;
+      }
+      if (resultado.apePaterno.isNotEmpty) {
+        _ctrlApellidoPaterno.text = resultado.apePaterno;
+      }
+      if (resultado.apeMaterno.isNotEmpty) {
+        _ctrlApellidoMaterno.text = resultado.apeMaterno;
       }
       if (resultado.correo.isNotEmpty) {
         _ctrlCorreo.text = resultado.correo;
       }
-      // Solo RUC/SUNAT trae dirección — DNI/RENIEC no, resultado.direccion
-      // llega vacío en ese caso y el if no hace nada.
       if (resultado.direccion.isNotEmpty) {
         _ctrlDireccion.text = resultado.direccion;
       }
@@ -367,9 +389,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
 
   void _restaurarPaso() {
     final formState = context.read<SolicitudFormCubit>().state;
-    // Semilla única del toggle de vista — de ahí en más es independiente
-    // del paso 1 (ver comentario en la declaración del campo).
-    _tipoPersonaVista = formState.tipoPersona;
     final datos = formState.facturacion;
     if (datos != null) {
       // Ya hay facturación en el cubit — venimos de "Atrás", o el paso 1 ya
@@ -639,28 +658,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         )
         .toList();
 
-    // Tipos de documento "del extranjero"/"nacionales" — TipoDocumentoItem.
-    // esNacional (mismo campo real del catálogo que ya usa PaisItem, ver
-    // _esExtranjero arriba), reemplaza el fallback frágil de buscar por
-    // nombre que contuviera "OTRO". Si el catálogo no trae ninguno de un
-    // lado, se deja la lista completa sin restringir (fallback de siempre).
-    final tiposDocumentoExtranjero = tiposDocumentoTodos
-        .where((t) => !t.esNacional)
-        .toList();
-    // "Sin documento" y "Sin RUC" (DOC.TRIB.NO.DOM.SIN.RUC, catálogo nuevo
-    // agregado 2026-08-19) quedan excluidos acá — pedido de negocio,
-    // Facturación siempre debe tener un documento real, nunca un tipo "sin
-    // documento". No se toca en el resto del wizard (paso 1/participante sí
-    // los permiten).
-    final tiposDocumentoNacional = tiposDocumentoTodos
-        .where(
-          (t) =>
-              t.esNacional &&
-              t.id != _valoresDefecto.idTipoDocSnd &&
-              t.id != _valoresDefecto.idTipDocSnr,
-        )
-        .toList();
-
     // Solo Factura/Boleta se muestran en este combo (aunque el catálogo
     // real traiga también N. Crédito/N. Débito). Con un país distinto de
     // Perú, Factura no aplica — solo Boleta.
@@ -673,30 +670,16 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     c.id == _idComprobanteBoleta,
               )
               .toList();
-    // Con país extranjero, Tipo documento se restringe a los tipos con
-    // esNacional == false. Con país Perú, se restringe a los tipos con
-    // esNacional == true (DNI, RUC...) — pedido de negocio 2026-07-30,
-    // "que salgan solamente los tipos de documento que son nacionales".
-    // Factura sigue exigiendo específicamente RUC (subconjunto de los
-    // nacionales), Boleta admite cualquier nacional.
-    final tiposDocumento = _esExtranjero
-        ? (tiposDocumentoExtranjero.isNotEmpty
-              ? tiposDocumentoExtranjero
-              : tiposDocumentoTodos)
-        : (_comprobanteId == _idComprobanteFactura
-              ? tiposDocumentoTodos.where((t) => t.id == _idTipoDocRuc).toList()
-              : (tiposDocumentoNacional.isNotEmpty
-                    ? tiposDocumentoNacional
-                    : tiposDocumentoTodos));
+    // País → Comprobante → Tipo documento (PARTIDAM esNacional + PARTIDAO
+    // esFactura/esBoleta, 2026-09-14).
+    final tiposDocumento = _tiposDocumentoPermitidos;
     final correoLabel = _comprobanteId == _idComprobanteFactura
         ? 'Correo para envío de factura *'
         : 'Correo para envío de boleta *';
 
-    // Longitud máxima real (TipoDocumentoItem.canCaracteresMax) + teclado/
-    // formatters de Número documento/RUC según el tipo elegido — se busca
-    // contra el catálogo completo (tiposDocumentoTodos, no la lista ya
-    // filtrada de arriba) porque el tipo seleccionado puede ser cualquiera
-    // de esos, sin importar el filtro vigente en este render.
+    // Longitud/teclado/formatters/longitud exacta de Número documento según
+    // el tipo elegido (PARTIDAM) — contra el catálogo completo, no la lista
+    // ya filtrada, porque el tipo seleccionado puede ser cualquiera.
     final numDocMaxLength = DocumentoValidationUtils.maxLength(
       _tipoDocId,
       tiposDocumentoTodos,
@@ -704,11 +687,18 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     );
     final numDocKeyboardType = DocumentoValidationUtils.keyboardType(
       _tipoDocId,
+      tiposDocumentoTodos,
       _valoresDefecto,
     );
     final numDocInputFormatters = DocumentoValidationUtils.inputFormatters(
       _tipoDocId,
+      tiposDocumentoTodos,
       _valoresDefecto,
+    );
+    final numDocValidator = DocumentoValidationUtils.validador(
+      _tipoDocId,
+      tiposDocumentoTodos,
+      requerido: true,
     );
 
     final paisCelular =
@@ -759,17 +749,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Encabezado + Toggle ────────────────────────────
-                        // Toggle Jurídica/Natural (SOLO de vista, ver
-                        // comentario en _tipoPersonaVista) vive en la misma
-                        // fila que el ícono/título — pedido de negocio
-                        // 2026-07-30: antes iba en su propia fila debajo,
-                        // dejando un hueco en blanco cuando no aplicaba
-                        // (país Perú, ver más abajo). Solo se muestra con
-                        // país extranjero — con Perú, Razón Social vs
-                        // Nombres/Apellidos se decide como siempre por Tipo
-                        // documento == RUC (_esRuc), el toggle no aplica ahí
-                        // ("jurídica/natural me sirve cuando es extranjero").
+                        // ── Encabezado ─────────────────────────────────────
+                        // Ya no hay toggle Jurídica/Natural (2026-09-14): lo
+                        // decide el tipo de documento (_esJuridico).
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -799,15 +781,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                 ],
                               ),
                             ),
-                            if (_esExtranjero) ...[
-                              const SizedBox(width: AppSpacing.sm),
-                              SolicitudToggleTipoPersona(
-                                valor: _tipoPersonaVista,
-                                habilitado: widget.modoEdicion,
-                                onChanged: (v) =>
-                                    setState(() => _tipoPersonaVista = v),
-                              ),
-                            ],
                           ],
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -815,14 +788,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                         // ── Formulario ─────────────────────────────────────
                         _SeccionDatosFacturacion(
                           habilitado: widget.modoEdicion,
-                          // Con país extranjero, Razón Social vs Nombres/
-                          // Apellidos la decide el toggle de vista de arriba
-                          // (_tipoPersonaVista); con Perú, sigue el criterio
-                          // de siempre (_esRuc, Tipo documento == RUC) — el
-                          // toggle ni se muestra en ese caso.
-                          mostrarRazonSocial: _esExtranjero
-                              ? _tipoPersonaVista == 'juridica'
-                              : _esRuc,
+                          mostrarRazonSocial: _esJuridico,
                           esExtranjero: _esExtranjero,
                           correoLabel: correoLabel,
                           ctrlNumDoc: _ctrlNumDoc,
@@ -836,6 +802,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                           numDocMaxLength: numDocMaxLength,
                           numDocKeyboardType: numDocKeyboardType,
                           numDocInputFormatters: numDocInputFormatters,
+                          numDocValidator: numDocValidator,
                           nacionalidades: nacionalidades,
                           paises: paises,
                           comprobantes: comprobantes,
@@ -895,15 +862,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                             setState(() {
                               _comprobanteId = item?.id ?? '';
                               _comprobanteLabel = item?.nombre ?? '';
-                              if (_comprobanteId == _idComprobanteFactura) {
-                                // Factura exige RUC — se fuerza el tipo documento.
-                                final ruc = tiposDocumentoTodos
-                                    .where((t) => t.id == _idTipoDocRuc)
-                                    .firstOrNull;
-                                _tipoDocId = ruc?.id ?? '';
-                                _tipoDocLabel = ruc?.abreviatura ?? '';
-                                _ctrlNumDoc.clear();
-                              }
+                              // El comprobante filtra el tipo de documento
+                              // (esFactura/esBoleta).
+                              _ajustarTipoDocumento();
                             });
                             _sincronizarCubit();
                           },
@@ -921,21 +882,6 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                   _comprobanteId = boleta.id;
                                   _comprobanteLabel = boleta.nombre;
                                 }
-                                // Tipo documento — ya no se fuerza uno
-                                // específico ("Otros"); el combo ahora
-                                // muestra TODOS los tipos con
-                                // esNacional == false (ver
-                                // tiposDocumentoExtranjero) y el asesor
-                                // elige. Si el tipo ya seleccionado no es
-                                // uno de esos (ej. venía en DNI), se limpia
-                                // para forzar una nueva elección.
-                                if (!tiposDocumentoExtranjero.any(
-                                  (t) => t.id == _tipoDocId,
-                                )) {
-                                  _tipoDocId = '';
-                                  _tipoDocLabel = '';
-                                  _ctrlNumDoc.clear();
-                                }
                                 // Nacionalidad no aplica para un país que no
                                 // es Perú — se manda vacía.
                                 _nacionalidadId = '';
@@ -947,18 +893,10 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                                 _ubigeoProvNombre = '';
                                 _ubigeoDisId = '';
                                 _ubigeoDisNombre = '';
-                              } else if (!tiposDocumentoNacional.any(
-                                (t) => t.id == _tipoDocId,
-                              )) {
-                                // Volvió a un país nacional (Perú) — si el
-                                // tipo documento que tenía elegido era uno
-                                // exclusivo de extranjero, ya no es válido
-                                // acá, se limpia para forzar una nueva
-                                // elección (simétrico al caso de arriba).
-                                _tipoDocId = '';
-                                _tipoDocLabel = '';
-                                _ctrlNumDoc.clear();
                               }
+                              // El país filtra el tipo de documento
+                              // (esNacional) — jerarquía País → Comprobante.
+                              _ajustarTipoDocumento();
                             });
                             _sincronizarCubit();
                           },
@@ -1164,12 +1102,8 @@ class _ItemResumen extends StatelessWidget {
 
 class _SeccionDatosFacturacion extends StatefulWidget {
   final bool habilitado;
-  // Decide si se muestra Razón Social o Nombres + Apellido paterno/materno.
-  // Con país Perú (!esExtranjero) es _esRuc (Tipo documento == RUC, criterio
-  // de siempre); con país extranjero es el toggle Jurídica/Natural de vista
-  // (SolicitudFacturacionView._tipoPersonaVista) — pedido de negocio
-  // 2026-07-30: el toggle "solo sirve cuando es extranjero", con Perú se
-  // sigue decidiendo por RUC como antes de que existiera el toggle.
+  // Decide si se muestra Razón Social o Nombres + Apellido paterno/materno —
+  // tipo de documento jurídico (PARTIDAM esJuridico, 2026-09-14).
   final bool mostrarRazonSocial;
   // País distinto de Perú (paso 3) — oculta Nacionalidad (no aplica, se
   // manda vacía). Comprobante/Tipo documento ya llegan pre-filtrados por el
@@ -1194,6 +1128,8 @@ class _SeccionDatosFacturacion extends StatefulWidget {
   final int? numDocMaxLength;
   final TextInputType numDocKeyboardType;
   final List<TextInputFormatter>? numDocInputFormatters;
+  // Requerido + longitud exacta del tipo (DocumentoValidationUtils.validador).
+  final FormFieldValidator<String>? numDocValidator;
   final List<NacionalidadItem> nacionalidades;
   final List<PaisItem> paises;
   final List<ComprobanteItem> comprobantes;
@@ -1241,6 +1177,7 @@ class _SeccionDatosFacturacion extends StatefulWidget {
     this.numDocMaxLength,
     this.numDocKeyboardType = TextInputType.text,
     this.numDocInputFormatters,
+    this.numDocValidator,
     required this.nacionalidades,
     required this.paises,
     required this.comprobantes,
@@ -1305,12 +1242,20 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
         Row(
           children: [
             Expanded(
-              child: CustomComboField<PaisItem>(
+              // Combo con búsqueda estricto (2026-09-14) — sin texto libre.
+              child: CustomComboSearchField(
+                data: widget.paises
+                    .map((p) => '${p.id}${AppConstants.sepCampos}${p.nombre}')
+                    .toList(),
                 label: 'País *',
-                data: widget.paises,
                 enabled: widget.habilitado,
+                isUpperCase: true,
                 initialValue: widget.paisInicialId,
-                onChanged: widget.onPaisChanged,
+                onChanged: (item) => widget.onPaisChanged?.call(
+                  item == null
+                      ? null
+                      : widget.paises.where((p) => p.id == item.id).firstOrNull,
+                ),
                 validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
               ),
             ),
@@ -1355,14 +1300,16 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
                 label: 'Número documento *',
                 controller: widget.ctrlNumDoc,
                 focusNode: _numDocFocus,
+                isUpperCase: true,
                 maxLength: widget.numDocMaxLength,
                 keyboardType: widget.numDocKeyboardType,
                 inputFormatters: widget.numDocInputFormatters,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => widget.onBuscarDocumento?.call(),
                 enabled: widget.habilitado,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Requerido' : null,
+                validator:
+                    widget.numDocValidator ??
+                    (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
               ),
             ),
           ],
@@ -1372,19 +1319,29 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
         // Fila 3: Nacionalidad (ancho completo, oculta si el país no es
         // Perú — no aplica, se manda vacía)
         if (!widget.esExtranjero) ...[
-          CustomComboField<NacionalidadItem>(
+          // Combo con búsqueda estricto (2026-09-14) — sin texto libre.
+          CustomComboSearchField(
+            data: widget.nacionalidades
+                .map((n) => '${n.id}${AppConstants.sepCampos}${n.nombre}')
+                .toList(),
             label: 'Nacionalidad *',
-            data: widget.nacionalidades,
             enabled: widget.habilitado,
+            isUpperCase: true,
             initialValue: widget.nacionalidadInicialId,
-            onChanged: widget.onNacionalidadChanged,
+            onChanged: (item) => widget.onNacionalidadChanged?.call(
+              item == null
+                  ? null
+                  : widget.nacionalidades
+                        .where((n) => n.id == item.id)
+                        .firstOrNull,
+            ),
             validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
           ),
           const SizedBox(height: AppSpacing.xs),
         ],
 
         // Fila 4: Nombres / Razón social (ancho completo) — ver
-        // mostrarRazonSocial (Perú: _esRuc: extranjero: toggle de vista)
+        // mostrarRazonSocial (tipo de documento jurídico)
         CustomTextField(
           label: widget.mostrarRazonSocial ? 'Razón Social *' : 'Nombres *',
           controller: widget.ctrlNombresRazon,
@@ -1549,6 +1506,7 @@ class _ComboBusquedaUbigeo extends StatelessWidget {
       data: data,
       label: label,
       enabled: enabled,
+      isUpperCase: true,
       initialValue: initialValue,
       validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
       onChanged: (item) {

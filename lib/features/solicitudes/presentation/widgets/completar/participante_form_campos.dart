@@ -75,6 +75,8 @@ class CampoTipoDocNumDoc extends StatelessWidget {
   final int? maxLenDoc;
   final TextInputType? tecladoDoc;
   final List<TextInputFormatter>? inputFormattersDoc;
+  // Requerido + longitud exacta del tipo (DocumentoValidationUtils.validador).
+  final FormFieldValidator<String> validatorDoc;
   final VoidCallback onBuscarDocumento;
 
   const CampoTipoDocNumDoc({
@@ -87,6 +89,7 @@ class CampoTipoDocNumDoc extends StatelessWidget {
     required this.maxLenDoc,
     required this.tecladoDoc,
     required this.inputFormattersDoc,
+    required this.validatorDoc,
     required this.onBuscarDocumento,
   });
 
@@ -117,8 +120,7 @@ class CampoTipoDocNumDoc extends StatelessWidget {
             inputFormatters: inputFormattersDoc,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => onBuscarDocumento(),
-            validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Requerido' : null,
+            validator: validatorDoc,
           ),
         ),
       ],
@@ -152,11 +154,19 @@ class CampoNacionalidadTipoParticipante extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: CustomComboField<NacionalidadItem>(
+          // Combo con búsqueda estricto (2026-09-14) — sin texto libre.
+          child: CustomComboSearchField(
+            data: nacionalidades
+                .map((n) => '${n.id}${AppConstants.sepCampos}${n.nombre}')
+                .toList(),
             label: 'Nacionalidad *',
-            data: nacionalidades,
+            isUpperCase: true,
             initialValue: nacionalidadInicialId,
-            onChanged: onNacionalidadChanged,
+            onChanged: (item) => onNacionalidadChanged(
+              item == null
+                  ? null
+                  : nacionalidades.where((n) => n.id == item.id).firstOrNull,
+            ),
             validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
           ),
         ),
@@ -270,6 +280,7 @@ class CampoCargoParticipante extends StatelessWidget {
           .toList(),
       label: 'Cargo *',
       allowFreeText: true,
+      isUpperCase: true,
       initialText: cargoInicialTexto,
       onChanged: onCargoChanged,
       validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,

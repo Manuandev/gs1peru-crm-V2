@@ -31,6 +31,45 @@ UbigeoItem? resolverUbigeoLimaProvincia(List<UbigeoItem> ubigeo, String dptoId) 
           )
           .firstOrNull;
 
+// Tipos de documento que ofrece el combo de Facturación — jerarquía pedida
+// por negocio (2026-09-14): País → Comprobante → Tipo documento.
+//   1. País: Perú → esNacional; otro país → !esNacional.
+//   2. Comprobante: Factura → esFactura; Boleta → esBoleta.
+// "Sin documento" y "Sin RUC" nunca aplican en Facturación. Si el SP
+// desplegado todavía no manda PARTIDAM/PARTIDAO (`tieneReglas` en false para
+// todo el catálogo), se mantiene el criterio anterior (Factura exige RUC).
+List<TipoDocumentoItem> filtrarTiposDocumentoFacturacion({
+  required List<TipoDocumentoItem> todos,
+  required bool esExtranjero,
+  required String comprobanteId,
+  required ValoresCRMItem valoresDefecto,
+}) {
+  final hayReglas = todos.any((t) => t.tieneReglas);
+  final porPais = todos
+      .where(
+        (t) =>
+            t.id != valoresDefecto.idTipoDocSnd &&
+            t.id != valoresDefecto.idTipDocSnr &&
+            (esExtranjero ? !t.esNacional : t.esNacional),
+      )
+      .toList();
+
+  if (!hayReglas) {
+    if (!esExtranjero && comprobanteId == valoresDefecto.idTipoFactura) {
+      return todos.where((t) => t.id == valoresDefecto.idTipoDocRuc).toList();
+    }
+    return porPais.isNotEmpty ? porPais : todos;
+  }
+
+  if (comprobanteId == valoresDefecto.idTipoFactura) {
+    return porPais.where((t) => t.esFactura).toList();
+  }
+  if (comprobanteId == valoresDefecto.idTipoBoleta) {
+    return porPais.where((t) => t.esBoleta).toList();
+  }
+  return porPais;
+}
+
 DatosFacturacion construirFacturacionDesdeSolicitante({
   required DatosSolicitante solicitante,
   required String tipoPersona,

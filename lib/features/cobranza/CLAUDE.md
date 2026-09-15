@@ -1,5 +1,19 @@
 # Cobranza Feature
 
+## Historial del Detalle de cobro: seguimiento + comentario + recordatorio (2026-09-14)
+
+Mismo historial y mismo ítem que Conversaciones/Seguimiento/Solicitudes (ver `core/CLAUDE.md` →
+`AppHistorialEventoItem` y `lead/CLAUDE.md` → "Historial unificado").
+
+- **SP `'DT'`** (`CRM.CSV_COBRANZAS_LST_APP`, UTF-16LE+BOM preservado): sección **[3]** nueva
+  (`OUTER APPLY HIST2`), mismo formato de 11 campos que el `'LHC'` de leads, solo de `LD.ID_LEAD`.
+  Seguimiento con `LS.IB_ACTIVO = 1`; comentario y recordatorio siempre. La sección [2] vieja
+  (`HIST`) se queda para las APK instaladas (también con `LS.IB_ACTIVO = 1`).
+- **Flutter**: `CobranzaDetalle.historial` pasó a `List<HistorialComentario>` (core);
+  `CobranzaDetalleModel.parse` lee `partes[3]`. Se eliminaron `HistorialCobranza` y
+  `HistorialCobranzaModel`. `CobranzaDetalleHistorial` = `AppHistorialSeccion`.
+- ⚠️ Pendiente `ALTER PROCEDURE`. Desplegar el SP **antes** que la APK.
+
 ## Detalle de cobro — "Datos de facturación" completos + mismo diseño que Solicitudes (2026-09-11)
 
 Pedido del usuario: que el detalle de cobro muestre los datos de facturación igual que el

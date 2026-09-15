@@ -21,10 +21,16 @@ class ContactoSimpleFormCubit extends Cubit<ContactoSimpleFormState> {
       final contacto = await _repository.getContactoSimplePorIdContacto(
         idContacto,
       );
+      // Si el usuario salió de la pantalla mientras cargaba, el cubit ya
+      // se cerró: no se puede emitir (lanza "Cannot emit new states after
+      // calling close").
+      if (isClosed) return;
       emit(ContactoSimpleFormSuccess(contacto));
     } on AppException catch (e) {
+      if (isClosed) return;
       emit(ContactoSimpleFormFailure(e.message));
     } catch (e, stackTrace) {
+      if (isClosed) return;
       addError(e, stackTrace);
       emit(const ContactoSimpleFormFailure('Ocurrió un error inesperado.'));
     }

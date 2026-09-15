@@ -639,21 +639,26 @@ AppSeccionCard(
 — antes iban lado a lado (etiqueta de 130px + valor), y un valor largo (un correo, una dirección,
 "BOLETA DE VENTA") quedaba apretado y partido en varias líneas.
 
-### AppHistorialItem — `presentation/widgets/app_historial_item.dart`
-Fila de una línea de tiempo: ícono en círculo + línea vertical a la izquierda, descripción +
-origen + fecha a la derecha. **Único estilo de historial de la app** (2026-09-11) — lo usan el
-Detalle de cobro y el Detalle de Solicitud, que antes tenían dos diseños distintos. No recibe
-"título": las actividades del backend casi nunca lo traen (`LA.NOMBRE` vacío) y dejaba un
-renglón en blanco sobre la descripción.
+### Historial unificado — `presentation/widgets/app_historial_item.dart` (2026-09-14)
+**Única regla de historial de la app**, la usan las 4 pantallas: Conversaciones, Seguimiento,
+Detalle de Solicitud y Detalle de cobro. Reemplaza al `AppHistorialItem` del 2026-09-11 (ya no
+existe). Datos: `HistorialComentario` / `HistorialComentarioModel` (`core/models/historial_evento*.dart`,
+movidos desde `lead/`) — mismo formato de 11 campos en los 3 SPs (`'LHC'` de leads, sección [3]
+del `'DV'` de solicitudes y del `'DT'` de cobranzas).
+- **Ícono por tipo de evento**: seguimiento `AppIcons.historial` · comentario `AppIcons.chat` ·
+  recordatorio `AppIcons.recordatorio`.
+- **Color por actor**: Bot IA `AppColors.success` · Asesor/Cliente `AppColors.info`.
+- Descripción a todo el ancho; debajo, a la izquierda la oportunidad (chip) o el tipo de evento, y
+  a la derecha `actor · fecha` (`formatConDia()`). Línea vertical entre eventos.
 ```dart
-AppHistorialItem(
-  icono: AppIcons.fileGeneric,
-  color: AppColors.primary,
-  descripcion: h.descripcion,
-  origen: h.origen,                       // opcional, va a la derecha
-  fechaTexto: '08/09/2026 • 10:57',       // ya formateada por el caller
-  esUltimo: i == historial.length - 1,    // sin línea vertical en el último
-)
+// Conversaciones / Seguimiento (varias negociaciones → chip de oportunidad)
+AppHistorialFiltroChips(filtroSeleccionado: _filtro, onFiltroChanged: (f) => setState(() => _filtro = f))
+AppHistorialEventoItem(evento: e, mostrarOportunidad: true, esUltimo: i == lista.length - 1)
+eventos.filtrarPorActor(_filtro)          // extensión: null = Todos; Asesor incluye Cliente
+const AppHistorialSinResultados()         // el filtro dejó la lista vacía
+
+// Detalle de Solicitud / de cobro (una negociación → tipo de evento en vez de oportunidad)
+AppHistorialSeccion(eventos: detalle.historial, mensajeVacio: 'Esta solicitud aún no registra movimientos.')
 
 // Vacío compacto DENTRO de la card (no usar AppEmptyView ahí — queda suelto/desalineado)
 AppSeccionVacia(
@@ -699,6 +704,11 @@ actualizarse desde afuera).
 
 ### CustomComboSearchField
 Combo con búsqueda por texto (Autocomplete). Recibe `List<String>` crudas.
+
+**2026-09-14**: `isUpperCase: true` (opcional, default `false`) fuerza MAYÚSCULAS al tipear. En
+modo estricto (sin `allowFreeText`) el `initialValue` ahora se refleja si el padre lo cambia por
+código (`didUpdateWidget` actualiza `_selected` y el texto del campo) — antes solo se leía en
+`initState`.
 ```dart
 CustomComboSearchField(
   data: crudas,              // ["id¦descripcion", ...]
@@ -1695,6 +1705,17 @@ seguridad adicional si algún tipo puntual llegara sin el dato del catálogo —
 `DocumentoValidationUtils` abajo.
 
 ### DocumentoValidationUtils — `utils/documento_validation_utils.dart`
+
+**Actualizado 2026-09-14 — las reglas salen de PARTIDAM/PARTIDAO** (`TipoDocumentoItem`, parte
+[10] del SP, solo tipos con `SYSTABEXTER02_EXT.FLG_ACTIVO = 1`):
+`PARTIDAM = longitud|tipoCaracter(N/A)|tipContribuyente|longitudExacta|esNacional|esJuridico|esNatural`,
+`PARTIDAO = esFactura|esBoleta`, sub-separador `AppConstants.sepPartida` (`|`).
+`TipoDocumentoItem` ganó `tieneReglas`, `soloNumeros`, `longitudExacta`, `esJuridico`,
+`esNatural`, `esFactura`, `esBoleta`; `esNacional`/`canCaracteresMax` salen de PARTIDAM (con SP
+viejo caen a valor2/valor1). `keyboardType`/`inputFormatters`/`soloDigitos` ahora reciben
+`(tipoDocId, tiposDocumento, [valoresDefecto])`. Nuevos: `validador(tipoDocId, tipos,
+{requerido})` ("Debe tener N dígitos" si es exacta), `validarLongitud`, `esJuridico` y
+`puedeBuscar` (solo DNI con el número completo). Lo de abajo describe la versión anterior.
 
 Regla de longitud/teclado/formatters de un campo de N° documento según el tipo de documento
 elegido — único lugar para esta regla, no reimplementarla por formulario.

@@ -114,10 +114,12 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
     );
     final teclado = DocumentoValidationUtils.keyboardType(
       _tipoDocId,
+      tiposDocumento,
       valoresDefecto,
     );
     final inputFormatters = DocumentoValidationUtils.inputFormatters(
       _tipoDocId,
+      tiposDocumento,
       valoresDefecto,
     );
     return Column(
@@ -175,12 +177,19 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 label: 'Número documento',
                 controller: widget.ctrlNumDoc,
                 focusNode: _numDocFocus,
+                isUpperCase: true,
                 keyboardType: teclado,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => widget.onBuscarDocumento?.call(),
                 enabled: widget.habilitado,
                 maxLength: maxLenDoc,
                 inputFormatters: inputFormatters,
+                // Sigue opcional; si se escribe algo, respeta la longitud
+                // exacta del tipo (PARTIDAM, ej. DNI = 8 dígitos).
+                validator: DocumentoValidationUtils.validador(
+                  _tipoDocId,
+                  tiposDocumento,
+                ),
               ),
             ),
           ],
@@ -191,12 +200,23 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
         Row(
           children: [
             Expanded(
-              child: CustomComboField<NacionalidadItem>(
+              // Combo con búsqueda estricto (2026-09-14): se escribe para
+              // filtrar y se elige una coincidencia — sin texto libre.
+              child: CustomComboSearchField(
+                data: nacionalidades
+                    .map((n) => '${n.id}${AppConstants.sepCampos}${n.nombre}')
+                    .toList(),
                 label: 'Nacionalidad *',
-                data: nacionalidades,
                 enabled: widget.habilitado,
+                isUpperCase: true,
                 initialValue: widget.nacionalidadInicialId,
-                onChanged: (item) => widget.onNacionalidadChanged?.call(item),
+                onChanged: (item) => widget.onNacionalidadChanged?.call(
+                  item == null
+                      ? null
+                      : nacionalidades
+                            .where((n) => n.id == item.id)
+                            .firstOrNull,
+                ),
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Requerido' : null,
               ),
@@ -270,6 +290,7 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
           label: 'Cargo *',
           enabled: widget.habilitado,
           allowFreeText: true,
+          isUpperCase: true,
           initialText: widget.ctrlCargo.text,
           onChanged: (item) {
             widget.ctrlCargo.text = item?.descripcion ?? '';

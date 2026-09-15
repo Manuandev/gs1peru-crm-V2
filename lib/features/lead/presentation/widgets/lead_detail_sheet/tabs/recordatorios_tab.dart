@@ -71,41 +71,21 @@ class _EstadoVacio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: AppSizing.iconXxl,
-              height: AppSizing.iconXxl,
-              decoration: BoxDecoration(
-                color: AppColors.grey100,
-                borderRadius: BorderRadius.circular(AppSizing.radiusXl),
-              ),
-              child: const Icon(
-                AppIcons.recordatorio,
-                size: AppSizing.iconXl,
-                color: AppColors.grey400,
-              ),
+    // Mismo vacío que Historial (AppSeccionVacia), en azul para distinguirlo.
+    // Con scroll para que no se desborde en paneles bajos.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: const Center(
+            child: AppSeccionVacia(
+              icono: AppIcons.recordatorio,
+              color: AppColors.info,
+              titulo: 'Sin recordatorios pendientes',
+              mensaje: 'Este contacto no tiene recordatorios programados.',
             ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Sin recordatorios',
-              style: AppTextStyles.titleSmall.copyWith(
-                fontWeight: AppTextStyles.weightSemiBold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'No hay recordatorios pendientes para este contacto.',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
       ),
     );

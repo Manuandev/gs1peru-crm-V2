@@ -46,6 +46,7 @@ abstract class SolicitudRepository {
     required double igvPorcentaje,
     required bool esBorrador,
     required String idTipoDocRuc,
+    required bool facturacionEsJuridica,
     required String pasoOrigen,
     required List<TipoParticipanteItem> tiposParticipante,
     int? cantidadEsperada,

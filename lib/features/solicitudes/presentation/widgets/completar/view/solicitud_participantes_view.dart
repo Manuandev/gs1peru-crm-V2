@@ -161,7 +161,7 @@ class _SolicitudParticipantesViewState
           progreso: _progreso,
         );
 
-        if (!mounted) return;
+        if (!mounted || !context.mounted) return;
         _progreso.reset();
         setState(() => _guardando = false);
 

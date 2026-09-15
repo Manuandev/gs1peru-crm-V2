@@ -48,6 +48,8 @@ export 'models/catalog_item_model.dart';
 export 'models/configuracion_item.dart';
 export 'models/documento_externo.dart';
 export 'models/update_info.dart';
+export 'models/historial_evento.dart';
+export 'models/historial_evento_model.dart';
 // #endregion models
 
 export 'navigation/app_route_observer.dart';

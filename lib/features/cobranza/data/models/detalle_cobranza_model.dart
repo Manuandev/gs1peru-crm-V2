@@ -35,27 +35,27 @@ class CobranzaDetalleModel extends CobranzaDetalle {
     required super.historial,
   });
 
-  // Task 'DT' de [CRM].[CSV_COBRANZAS_LST_APP] — 3 secciones separadas por
+  // Task 'DT' de [CRM].[CSV_COBRANZAS_LST_APP] — 4 secciones separadas por
   // sepListas: [0] campos principales (sepCampos, 26 posiciones) · [1]
-  // archivos · [2] historial. Los campos 19-25 (datos de facturación) se
-  // agregaron el 2026-09-11 — con el SP viejo llegan vacíos (ParseUtils.str
-  // devuelve '' si el índice no existe), la sección simplemente muestra
-  // menos filas.
+  // archivos · [2] historial VIEJO (solo seguimiento, ya no se lee — se
+  // queda para las APK instaladas) · [3] historial unificado (2026-09-14,
+  // seguimiento + comentario + recordatorio, mismo formato que el 'LHC' de
+  // leads). Los campos 19-25 (datos de facturación) se agregaron el
+  // 2026-09-11 — con el SP viejo llegan vacíos (ParseUtils.str devuelve ''
+  // si el índice no existe), la sección simplemente muestra menos filas.
   static CobranzaDetalleModel parse(String rawResponse) {
     final partes = rawResponse.split(AppConstants.sepListas);
     final c = partes.isNotEmpty
         ? ParseUtils.campos(partes[0], AppConstants.sepCampos)
         : <String>[];
     final archivosRaw = partes.length > 1 ? partes[1] : '';
-    final historialRaw = partes.length > 2 ? partes[2] : '';
+    final historialRaw = partes.length > 3 ? partes[3] : '';
 
     final archivos = archivosRaw.trim().isEmpty
         ? <ArchivoCobranzaModel>[]
         : ArchivoCobranzaModel.parseList(archivosRaw);
 
-    final historial = historialRaw.trim().isEmpty
-        ? <HistorialCobranzaModel>[]
-        : HistorialCobranzaModel.parseList(historialRaw);
+    final historial = HistorialComentarioModel.parseListCompleto(historialRaw);
 
     return CobranzaDetalleModel(
       idCobranza: ParseUtils.str(c, 0),

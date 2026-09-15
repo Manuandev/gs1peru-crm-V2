@@ -1,7 +1,13 @@
-// lib/features/lead/data/models/historial_comentario_model.dart
+// lib/core/models/historial_evento_model.dart
+//
+// Parseo del historial unificado — 11 campos posicionales, igual en los 3
+// SPs ('LHC' de leads, sección [3] del 'DV' de solicitudes y del 'DT' de
+// cobranzas):
+//   0 ID_LEAD · 1 TIPO_EVENTO · 2 ID_EVENTO · 3 DESCRIPCION · 4 ORIGEN ·
+//   5 NOMBRE (actividad) · 6 DESCRIPCION_ACTIVIDAD · 7 FC_EVENTO ·
+//   8 TIPO_USUARIO · 9 ID_OPORTUNIDAD · 10 NOMBRE_OPORTUNIDAD
 
 import 'package:app_crm/core/index_core.dart';
-import 'package:app_crm/features/lead/index_lead.dart';
 
 class HistorialComentarioModel extends HistorialComentario {
   const HistorialComentarioModel({
@@ -20,8 +26,7 @@ class HistorialComentarioModel extends HistorialComentario {
     required super.oportunidad,
   });
 
-  /// Campo 8 (TIPO_USUARIO del SP task 'LHC'): 'ASE' asesor · 'SIS' sistema ·
-  /// 'AIA' bot IA.
+  /// Campo 8 (TIPO_USUARIO): 'ASE' asesor · 'SIS' sistema · 'AIA' bot IA.
   static TipoActor _parseTipoActor(List<String> campos) {
     switch (ParseUtils.str(campos, 8).toUpperCase()) {
       case 'ASE':
@@ -34,8 +39,8 @@ class HistorialComentarioModel extends HistorialComentario {
     }
   }
 
-  /// Campo 1 (TIPO_EVENTO del SP task 'LHC'): 'SEG' seguimiento · 'COM'
-  /// comentario · 'REC' recordatorio.
+  /// Campo 1 (TIPO_EVENTO): 'SEG' seguimiento · 'COM' comentario ·
+  /// 'REC' recordatorio.
   static TipoEventoHistorial _parseTipoEvento(List<String> campos) {
     switch (ParseUtils.str(campos, 1).toUpperCase()) {
       case 'COM':
@@ -48,8 +53,6 @@ class HistorialComentarioModel extends HistorialComentario {
     }
   }
 
-  /// Parseo del SP task 'LHC' — historial unificado (seguimiento + comentario
-  /// + recordatorio) de todos los leads activos del contacto.
   factory HistorialComentarioModel.fromRawStringCompleto(String raw) {
     final fields = raw.split(AppConstants.sepCampos);
 
@@ -73,6 +76,7 @@ class HistorialComentarioModel extends HistorialComentario {
   static List<HistorialComentarioModel> parseListCompleto(
     String rawResponse,
   ) {
+    if (rawResponse.trim().isEmpty) return const [];
     return rawResponse
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)

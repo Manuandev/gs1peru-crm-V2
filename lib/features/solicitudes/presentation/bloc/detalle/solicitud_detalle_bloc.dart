@@ -69,6 +69,7 @@ class SolicitudDetalleBloc
     final s = u.solicitante;
     final f = u.facturacion;
     final esRuc = f != null && u.facturacionEsRuc;
+    final esJuridica = f != null && u.facturacionEsJuridica;
 
     final detalleActualizado = current.detalle.copyWith(
       tipoDocumentoId: s.tipoDocId,
@@ -77,13 +78,13 @@ class SolicitudDetalleBloc
       celular: s.celular,
       correo: s.correo,
       facTipoComprobante: f?.comprobante ?? '',
-      facRazonSocial: esRuc ? f.nombresRazon : '',
+      facRazonSocial: esJuridica ? f.nombresRazon : '',
       facRuc: esRuc ? f.numDoc : '',
       facDireccion: f?.direccion ?? '',
       facNumDoc: (f != null && !esRuc) ? f.numDoc : '',
-      facNombres: (f != null && !esRuc) ? f.nombresRazon : '',
-      facApellidoPaterno: (f != null && !esRuc) ? f.apellidoPaterno : '',
-      facApellidoMaterno: (f != null && !esRuc) ? f.apellidoMaterno : '',
+      facNombres: (f != null && !esJuridica) ? f.nombresRazon : '',
+      facApellidoPaterno: (f != null && !esJuridica) ? f.apellidoPaterno : '',
+      facApellidoMaterno: (f != null && !esJuridica) ? f.apellidoMaterno : '',
     );
 
     final solicitudActualizada = current.solicitud?.copyWith(

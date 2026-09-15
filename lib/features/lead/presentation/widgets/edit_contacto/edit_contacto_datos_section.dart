@@ -129,6 +129,7 @@ class EditContactoDatosSection extends StatelessWidget {
             isUpperCase: true,
             keyboardType: DocumentoValidationUtils.keyboardType(
               tipoDocumento?.id ?? '',
+              tiposDocumento,
               valoresDefecto,
             ),
             maxLength: DocumentoValidationUtils.maxLength(
@@ -138,7 +139,13 @@ class EditContactoDatosSection extends StatelessWidget {
             ),
             inputFormatters: DocumentoValidationUtils.inputFormatters(
               tipoDocumento?.id ?? '',
+              tiposDocumento,
               valoresDefecto,
+            ),
+            // Opcional; si se escribe, respeta la longitud exacta del tipo.
+            validator: DocumentoValidationUtils.validador(
+              tipoDocumento?.id,
+              tiposDocumento,
             ),
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => onBuscarDocumento?.call(),

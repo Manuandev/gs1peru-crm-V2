@@ -17,8 +17,11 @@ class NegociacionesCubit extends Cubit<NegociacionesState> {
     emit(const NegociacionesLoading());
     try {
       final negociaciones = await obtenerNegociacionesUseCase.call(idContacto);
+      // La pantalla pudo cerrarse mientras llegaba la respuesta.
+      if (isClosed) return;
       emit(NegociacionesSuccess(negociaciones: negociaciones));
     } catch (e) {
+      if (isClosed) return;
       emit(NegociacionesError(mensaje: e.toString()));
     }
   }

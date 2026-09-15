@@ -106,10 +106,9 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   final _ctrlRuc = TextEditingController();
   final _ctrlRazonSocial = TextEditingController();
 
-  // Autocompletado por documento (Clientes/BuscarDocumento) — mismo servicio
-  // que participante_form_sheet.dart, usado en dos campos independientes de
-  // este paso: Número documento (Datos del solicitante) y RUC (Información
-  // comercial, solo llena Razón Social).
+  // Autocompletado (Clientes/BuscarDocumento) en dos campos de este paso:
+  // Número documento (solo con tipo DNI) y RUC de Información comercial
+  // (persona jurídica, solo llena Razón Social).
   final _documentoService = DocumentoExternoService();
   bool _buscandoDocSolicitante = false;
   String _ultimoDocSolicitanteBuscado = '';

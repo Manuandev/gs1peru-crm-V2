@@ -205,6 +205,13 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
   final tiposParticipante = catalogState is CatalogsLoaded
       ? catalogState.tiposParticipante
       : const <TipoParticipanteItem>[];
+  final facturacionEsJuridica =
+      catalogState is CatalogsLoaded &&
+      DocumentoValidationUtils.esJuridico(
+        formState.facturacion?.tipoDocId,
+        catalogState.tiposDocumento,
+        catalogState.valoresDefecto,
+      );
 
   // Mismo cálculo que se muestra en pantalla (footer del paso 2 / Resumen)
   // — ver calcularTotalesSolicitud() arriba.
@@ -226,6 +233,7 @@ Future<CrudResult> guardarSolicitudDesdeWizard(
         igvPorcentaje: igvPorcentaje,
         esBorrador: esBorrador,
         idTipoDocRuc: idTipoDocRuc,
+        facturacionEsJuridica: facturacionEsJuridica,
         pasoOrigen: pasoOrigen,
         tiposParticipante: tiposParticipante,
         cantidadEsperada: formState.cantidadEsperada,
@@ -316,6 +324,8 @@ Future<bool> subirArchivosPendientes(
 
   final oc = formState.archivoOC;
   if (oc != null && oc != formState.archivoOCCargado) {
+    // La pantalla pudo cerrarse mientras subía el voucher.
+    if (!context.mounted) return false;
     progreso?.iniciarPaso('Subiendo O.C....');
     final ok = await _subirArchivo(context, numSol, 'oc', oc);
     if (!ok) return false;
@@ -408,13 +418,26 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
 
   if (!soloInvitados) {
     final facturacion = formState.facturacion;
-    final idTipoDocRuc = catalogState is CatalogsLoaded
-        ? catalogState.valoresDefecto.idTipoDocRuc
-        : '';
     final idPais = catalogState is CatalogsLoaded
         ? catalogState.valoresDefecto.idPais
         : '';
-    final esRuc = facturacion?.tipoDocId == idTipoDocRuc;
+    // Tipo jurídico (PARTIDAM esJuridico) → Razón social, sin apellidos.
+    final esJuridica =
+        catalogState is CatalogsLoaded &&
+        DocumentoValidationUtils.esJuridico(
+          facturacion?.tipoDocId,
+          catalogState.tiposDocumento,
+          catalogState.valoresDefecto,
+        );
+    // Longitud exacta del tipo (ej. DNI 8, RUC 11) — mismo validador del Form.
+    final longitudDocOk =
+        catalogState is! CatalogsLoaded ||
+        DocumentoValidationUtils.validarLongitud(
+              facturacion?.tipoDocId,
+              facturacion?.numDoc,
+              catalogState.tiposDocumento,
+            ) ==
+            null;
     // País distinto de Perú — Nacionalidad no aplica en ese caso (se manda
     // vacía, ver _SeccionDatosFacturacion), así que no se exige acá.
     final esExtranjero =
@@ -433,9 +456,10 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
         facturacion.paisId.isNotEmpty &&
         facturacion.tipoDocId.isNotEmpty &&
         facturacion.numDoc.trim().isNotEmpty &&
+        longitudDocOk &&
         (esExtranjero || facturacion.nacionalidadId.isNotEmpty) &&
         facturacion.nombresRazon.trim().isNotEmpty &&
-        (esRuc || facturacion.apellidoPaterno.trim().isNotEmpty) &&
+        (esJuridica || facturacion.apellidoPaterno.trim().isNotEmpty) &&
         // Ubigeo (Departamento/Provincia/Distrito) solo aplica con país
         // Perú — mismo criterio que Nacionalidad arriba (2026-07-22).
         (esExtranjero || facturacion.ubigeoCodigo.isNotEmpty) &&
@@ -518,6 +542,8 @@ Future<CrudResult> generarSolicitudCompleta(
     progreso: progreso,
   );
   if (result is! CrudOk) return result;
+  // La pantalla pudo cerrarse mientras guardaba: sin context no se sigue.
+  if (!context.mounted) return result;
 
   // subirArchivosPendientes() puede lanzar AppException (ej. actualización
   // obligatoria pendiente, ver UpdateRequiredInterceptor) — sin este
@@ -634,6 +660,8 @@ Future<CrudResult> guardarBorradorCompleto(
     progreso: progreso,
   );
   if (result is! CrudOk) return result;
+  // La pantalla pudo cerrarse mientras guardaba: sin context no se sigue.
+  if (!context.mounted) return result;
 
   // Ojo — tiene que subir los archivos ANTES de marcarSinCambios(): esa
   // llamada sincroniza archivoVoucherCargado/archivoOCCargado al valor

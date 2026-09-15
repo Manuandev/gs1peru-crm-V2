@@ -194,6 +194,11 @@ class SolicitudRemoteDatasource {
     // presentación), así que el caller lo resuelve y lo pasa acá. Nunca
     // volver a hardcodear este id.
     required String idTipoDocRuc,
+    // true si el tipo de documento de facturación es jurídico (PARTIDAM
+    // esJuridico, 2026-09-14) — decide si nombresRazon va como Razón social
+    // (NOMEMPRE_FAC) o como Nombres (NOMBRES_FAC). Lo resuelve el caller con
+    // DocumentoValidationUtils.esJuridico.
+    required bool facturacionEsJuridica,
     // Paso del wizard que disparó este guardado ('1' Solicitante, '2'
     // Participantes, '3' Facturación, '4' Resumen/Generar) — el SP lo usa
     // para elegir el texto del seguimiento que registra en
@@ -226,7 +231,10 @@ class SolicitudRemoteDatasource {
     final ip = await _deviceInfo.getLocalIp();
     final coords = await _deviceInfo.getCoordenadasString();
 
+    // RUCEMPRE_FAC solo lleva un RUC real; Razón social (NOMEMPRE_FAC) aplica
+    // a cualquier tipo jurídico (ej. TIN de un extranjero).
     final esRuc = facturacion?.tipoDocId == idTipoDocRuc;
+    final esJuridica = facturacion != null && facturacionEsJuridica;
 
     final idParticipanteSolicitante = participantes
         .where((p) => p.esSolicitante)
@@ -271,16 +279,16 @@ class SolicitudRemoteDatasource {
       facturacion?.tipoDocId ?? '', // 21 ID_TIP_DOC_FAC
       facturacion?.numDoc ?? '', // 22 NUM_DOC_FAC
       esRuc ? (facturacion?.numDoc ?? '') : '', // 23 RUCEMPRE_FAC
-      esRuc ? (facturacion?.nombresRazon ?? '') : '', // 24 NOMEMPRE_FAC
+      esJuridica ? facturacion.nombresRazon : '', // 24 NOMEMPRE_FAC
       // 25 ID_NACION_FAC — comentario viejo decía "el SP reusa esta misma
       // variable para ID_PAIS", ya no es así: confirmado 2026-07-30 leyendo
       // CSV_SOLICITUD_CUD_APP.sql actual, @ID_NACION_FAC (field25) puebla
       // ID_NACIONALIDAD y @ID_PAIS_FAC (field43) puebla ID_PAIS, cada una
       // con su propia variable — ver solicitudes/CLAUDE.md.
       facturacion?.nacionalidadId ?? '',
-      esRuc ? '' : (facturacion?.nombresRazon ?? ''), // 26 NOMBRES_FAC
-      esRuc ? '' : (facturacion?.apellidoPaterno ?? ''), // 27 APELLIDO_P_FAC
-      esRuc ? '' : (facturacion?.apellidoMaterno ?? ''), // 28 APELLIDO_M_FAC
+      esJuridica ? '' : (facturacion?.nombresRazon ?? ''), // 26 NOMBRES_FAC
+      esJuridica ? '' : (facturacion?.apellidoPaterno ?? ''), // 27 APELLIDO_P_FAC
+      esJuridica ? '' : (facturacion?.apellidoMaterno ?? ''), // 28 APELLIDO_M_FAC
       '', // 29 CARGO_FAC — el SP no lo usa en ningún INSERT/UPDATE
       facturacion?.celular ?? '', // 30 CELULAR_FAC
       facturacion?.correo ?? '', // 31 CORREO_FAC

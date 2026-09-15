@@ -247,8 +247,10 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       if (isClosed) return;
       emit(InfoLeadSuccess(negociacion));
     } on AppException catch (e) {
+      if (isClosed) return;
       emit(InfoLeadFailure(e.message));
     } catch (e, stackTrace) {
+      if (isClosed) return;
       addError(e, stackTrace);
       emit(const InfoLeadFailure('Ocurrió un error inesperado.'));
     }
@@ -373,7 +375,7 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
       if (isClosed) return false;
 
       switch (result) {
-        case CrudOk(:final message, :final data):
+        case CrudOk(:final data):
           // Si el lead se acaba de crear (idLead venía en 0), el SP devuelve
           // el ID_LEAD real generado — sin esto el resto de la app (incluida
           // la lista de chats) se queda con idLead 0 para siempre.
@@ -384,7 +386,9 @@ class InfoLeadCubit extends Cubit<InfoLeadState> {
           if (leadFinal.idLead != updated.idLead) {
             emit(InfoLeadSuccess(leadFinal));
           }
-          _successController.add(message);
+          // Sin _successController.add (2026-09-14): crear/editar negociación
+          // ya muestra el check verde de EditLeadPortrait; el snackbar que
+          // ChatDetailView pintaba al escuchar `successes` salía duplicado.
           LeadUpdateNotifier.instance.notify(
             leadFinal.idLead,
             updatedLead: leadFinal,

@@ -301,9 +301,17 @@ class _EditContactoPortraitState extends State<EditContactoPortrait> {
   // patrón que Datos del solicitante/Facturación en solicitudes/ (ver
   // solicitud_facturacion_view.dart._buscarDocumento). Nunca pisa un campo
   // que el usuario ya llenó a mano.
+  // Solo con tipo DNI y el número completo (2026-09-14).
   Future<void> _buscarDocumento() async {
     final numDoc = _numeroDocumentoCtrl.text.trim();
-    final esBusqueda = numDoc.length == 8 || numDoc.length == 11;
+    final catalogos = context.read<CatalogsBloc>().state;
+    if (catalogos is! CatalogsLoaded) return;
+    final esBusqueda = DocumentoValidationUtils.puedeBuscar(
+      _tipoDocumento?.id,
+      numDoc,
+      catalogos.tiposDocumento,
+      catalogos.valoresDefecto,
+    );
     if (!esBusqueda || numDoc == _ultimoDocBuscado) return;
     _ultimoDocBuscado = numDoc;
 

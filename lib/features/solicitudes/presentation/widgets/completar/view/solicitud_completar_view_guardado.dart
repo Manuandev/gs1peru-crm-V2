@@ -13,13 +13,19 @@ part of 'solicitud_completar_view.dart';
 // cambios en los call sites — todo se sigue llamando igual desde build()/
 // initState() del archivo principal.
 extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
-  // Autocompleta nombres/apellidos/correo del solicitante por DNI (8 dígitos)
-  // o RUC (11) al salir del campo N° documento o presionar el check del
-  // teclado — mismo servicio y mismo patrón que
-  // participante_form_sheet.dart._buscarDocumento.
+  // Autocompleta nombres/apellidos/correo del solicitante al salir del campo
+  // N° documento o presionar el check del teclado — solo con tipo DNI y el
+  // número completo (DocumentoValidationUtils.puedeBuscar, 2026-09-14).
   Future<void> _buscarDocumentoSolicitante() async {
     final numDoc = _ctrlNumDoc.text.trim();
-    final esBusqueda = numDoc.length == 8 || numDoc.length == 11;
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return;
+    final esBusqueda = DocumentoValidationUtils.puedeBuscar(
+      _tipoDocId,
+      numDoc,
+      catalogState.tiposDocumento,
+      catalogState.valoresDefecto,
+    );
     if (!esBusqueda || numDoc == _ultimoDocSolicitanteBuscado) return;
     _ultimoDocSolicitanteBuscado = numDoc;
 
@@ -54,11 +60,24 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
     }
   }
 
-  // Autocompleta solo la Razón Social por RUC (Información comercial) al
-  // salir del campo o presionar el check del teclado.
+  // Autocompleta la Razón Social por RUC (Información comercial, persona
+  // jurídica) al salir del campo o presionar el check del teclado. Es un
+  // campo RUC propio, no depende del tipo de documento del solicitante.
   Future<void> _buscarRucComercial() async {
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return;
+    final valoresDefecto = catalogState.valoresDefecto;
     final ruc = _ctrlRuc.text.trim();
-    if (ruc.length != 11 || ruc == _ultimoRucBuscado) return;
+    final longitudRuc =
+        DocumentoValidationUtils.maxLength(
+          valoresDefecto.idTipoDocRuc,
+          catalogState.tiposDocumento,
+          valoresDefecto,
+        ) ??
+        0;
+    if (ruc.isEmpty || ruc.length != longitudRuc || ruc == _ultimoRucBuscado) {
+      return;
+    }
     _ultimoRucBuscado = ruc;
 
     setState(() => _buscandoRuc = true);

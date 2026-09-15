@@ -64,11 +64,14 @@ class SeccionDatosFacturacion extends StatelessWidget {
           etiqueta: 'Tipo de comprobante',
           valor: detalle.facTipoComprobante,
         ),
-        // Factura (con RUC) → RUC + Razón social. Boleta (sin RUC) → N°
-        // documento + Nombre — mutuamente excluyentes, mismo criterio que
-        // usa el wizard (ver DatosFacturacion.esRuc en CLAUDE.md).
+        // Con RUC → RUC + Razón social. Otro documento jurídico (ej. TIN,
+        // 2026-09-14) → N° documento + Razón social. Persona natural → N°
+        // documento + Nombre.
         if (detalle.facTieneRuc) ...[
           AppFilaInfo(etiqueta: 'RUC', valor: detalle.facRuc),
+          AppFilaInfo(etiqueta: 'Razón social', valor: detalle.facRazonSocial),
+        ] else if (detalle.facRazonSocial.isNotEmpty) ...[
+          AppFilaInfo(etiqueta: 'N° documento', valor: detalle.facNumDoc),
           AppFilaInfo(etiqueta: 'Razón social', valor: detalle.facRazonSocial),
         ] else ...[
           AppFilaInfo(etiqueta: 'N° documento', valor: detalle.facNumDoc),

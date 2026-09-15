@@ -24,6 +24,8 @@ class SettingsCubit extends Cubit<SettingsState> {
       results[p] = await p.status;
     }
 
+    // El usuario pudo salir de Ajustes mientras se consultaban los permisos.
+    if (isClosed) return;
     emit(state.copyWith(permissions: results, isLoading: false));
   }
 
@@ -43,6 +45,7 @@ class SettingsCubit extends Cubit<SettingsState> {
 
     // Pedir permiso normalmente
     final result = await permission.request();
+    if (isClosed) return;
     final updated = Map<Permission, PermissionStatus>.from(state.permissions);
     updated[permission] = result;
     emit(state.copyWith(permissions: updated));

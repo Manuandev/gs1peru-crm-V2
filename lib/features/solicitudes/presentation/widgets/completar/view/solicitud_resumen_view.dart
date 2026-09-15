@@ -131,6 +131,13 @@ class _SolicitudResumenViewState extends State<SolicitudResumenView> {
             facturacion: formState.facturacion,
             facturacionEsRuc:
                 formState.facturacion?.tipoDocId == idTipoDocRuc,
+            facturacionEsJuridica:
+                catalogState is CatalogsLoaded &&
+                DocumentoValidationUtils.esJuridico(
+                  formState.facturacion?.tipoDocId,
+                  catalogState.tiposDocumento,
+                  catalogState.valoresDefecto,
+                ),
             tipoPersona: formState.tipoPersona,
             montoTotal: montoTotal,
           ),

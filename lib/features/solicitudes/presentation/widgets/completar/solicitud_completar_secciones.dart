@@ -54,7 +54,8 @@ class SeccionCanalEvento extends StatelessWidget {
             hint: 'Ej: Feria, recomendación, etc.',
             controller: ctrlDetalle,
             enabled: habilitado,
-            textCapitalization: TextCapitalization.sentences,
+            isUpperCase: true,
+            textCapitalization: TextCapitalization.characters,
             validator: (v) =>
                 v == null || v.trim().isEmpty ? 'Requerido' : null,
           ),

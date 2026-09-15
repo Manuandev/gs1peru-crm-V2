@@ -1,5 +1,28 @@
 ﻿# Lead Feature
 
+## N° documento por PARTIDAM + búsqueda solo con DNI (2026-09-14)
+
+`EditContacto` y `EditContactoSimple`: el N° documento valida longitud/exacta/solo dígitos con
+`DocumentoValidationUtils.validador` (sigue opcional) y la búsqueda de documento solo corre con
+tipo DNI y el número completo (`puedeBuscar`). La búsqueda por RUC de Empresa no cambió. Ver
+`core/CLAUDE.md` → DocumentoValidationUtils.
+
+## Historial unificado en las 4 pantallas (2026-09-14)
+
+Pedido del usuario: Conversaciones, Seguimiento, Detalle de Solicitud y Detalle de cobro muestran
+el historial con **la misma regla** (ver `core/CLAUDE.md` → `AppHistorialEventoItem`).
+
+- `HistorialComentario`/`TipoActor`/`TipoEventoHistorial` + `HistorialComentarioModel` **se
+  movieron a `core/models/historial_evento*.dart`** (antes en `lead/domain` y `lead/data`) para que
+  `solicitudes/` y `cobranza/` usen la misma entidad. Mismos nombres; se exportan por `index_core`.
+- `HistorialTab` ya no tiene ítem/chips propios: usa `AppHistorialFiltroChips` +
+  `AppHistorialEventoItem(mostrarOportunidad: true)` con línea de tiempo.
+- **Alcance**: aquí (task `'LHC'`) se muestra el historial de **todas** las negociaciones activas
+  del contacto; en Solicitud/Cobranza, solo la negociación de esa solicitud.
+- **SP `'LHC'`**: la rama de seguimiento ahora filtra `LS.IB_ACTIVO = 1` (además de
+  `LD.IB_ACTIVO = 1`). `T_LEAD_COMENTARIO` y `T_LEAD_RECORDATORIO` **no tienen** `IB_ACTIVO`
+  (confirmado por el usuario), así que se muestran siempre. ⚠️ Pendiente `ALTER PROCEDURE`.
+
 ## Seguimiento — búsqueda por contacto o empresa (2026-09-10)
 
 Pedido de negocio: buscar en la lista de Seguimiento por nombre del contacto o por empresa. Como

@@ -5,7 +5,6 @@ export 'data/datasources/remote/seguimiento_remote_datasource.dart';
 
 export 'data/models/negociacion_model.dart';
 export 'data/models/comentario_lead_model.dart';
-export 'data/models/historial_comentario_model.dart';
 export 'data/models/contacto_model.dart';
 export 'data/models/numero_model.dart';
 export 'data/models/contacto_negociacion_model.dart';
@@ -26,7 +25,6 @@ export 'domain/entities/numero.dart';
 export 'domain/entities/contacto_negociacion.dart';
 export 'domain/entities/comentario_lead.dart';
 export 'domain/entities/negociacion.dart';
-export 'domain/entities/historial_comentario.dart';
 export 'domain/entities/contacto_detalle.dart';
 export 'domain/entities/numero_contacto.dart';
 export 'domain/entities/correo_contacto.dart';

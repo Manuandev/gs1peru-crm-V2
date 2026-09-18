@@ -117,14 +117,14 @@ DatosFacturacion construirFacturacionDesdeSolicitante({
     solicitante.tipoDocId,
     valoresDefecto,
   )) {
-    // Solicitante con tipo RUC (sin Información comercial, 2026-09-18) —
-    // Factura + su RUC + la Razón social que se guardó en `nombres`.
-    final factura = catalogos.comprobantes
-        .where((c) => c.id == valoresDefecto.idTipoFactura)
+    // Solicitante con tipo RUC pero sin Información comercial (Natural,
+    // 2026-09-18) — Boleta + su RUC + la Razón social guardada en `nombres`.
+    final boleta = catalogos.comprobantes
+        .where((c) => c.id == valoresDefecto.idTipoBoleta)
         .firstOrNull;
-    if (factura != null) {
-      comprobanteId = factura.id;
-      comprobanteLabel = factura.nombre;
+    if (boleta != null) {
+      comprobanteId = boleta.id;
+      comprobanteLabel = boleta.nombre;
     }
     tipoDocId = solicitante.tipoDocId;
     tipoDocLabel = solicitante.tipoDocLabel;

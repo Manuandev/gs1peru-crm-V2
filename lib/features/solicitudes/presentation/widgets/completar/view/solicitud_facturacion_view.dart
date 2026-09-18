@@ -145,6 +145,24 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         valoresDefecto: _valoresDefecto,
       );
 
+  // Tipo de documento nacional (PARTIDAM esNacional: DNI, RUC) → la
+  // nacionalidad es la peruana y el combo se oculta; con un tipo no nacional
+  // el combo se muestra y se respeta lo elegido (2026-09-18, igual que el
+  // paso 1). Siempre dentro de un setState del caller.
+  bool get _tipoDocEsNacional =>
+      DocumentoValidationUtils.esNacional(_tipoDocId, _tiposDocumentoTodos);
+
+  void _fijarNacionalidadSiNacional() {
+    if (!_tipoDocEsNacional) return;
+    final catalogState = context.read<CatalogsBloc>().state;
+    if (catalogState is! CatalogsLoaded) return;
+    final peruana = catalogState.nacionalidades
+        .where((n) => n.id == _valoresDefecto.idNacionalidad)
+        .firstOrNull;
+    _nacionalidadId = peruana?.id ?? '';
+    _nacionalidadLabel = peruana?.nombre ?? '';
+  }
+
   // Tras cambiar País o Comprobante: si el tipo elegido ya no está permitido
   // se limpia; si solo queda una opción (ej. Perú + Factura → RUC) se elige
   // sola. Siempre dentro de un setState del caller.
@@ -155,6 +173,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
         _tipoDocId = permitidos.first.id;
         _tipoDocLabel = permitidos.first.abreviatura;
         _ctrlNumDoc.clear();
+        _fijarNacionalidadSiNacional();
       }
       return;
     }
@@ -532,6 +551,9 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
     _monedaLabel = datos.moneda;
     _nacionalidadId = datos.nacionalidadId;
     _nacionalidadLabel = datos.nacionalidad;
+    // Tipo nacional sin nacionalidad (data vieja de país extranjero) → la
+    // peruana, el combo está oculto y no se podría completar.
+    if (_nacionalidadId.isEmpty) _fijarNacionalidadSiNacional();
     _ctrlNumDoc.text = datos.numDoc;
     // Ya viene resuelto (restaurado o recién calculado) — sembrar acá evita
     // que "Siguiente" dispare una búsqueda RENIEC/SUNAT innecesaria sobre un
@@ -790,6 +812,11 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                           habilitado: widget.modoEdicion,
                           mostrarRazonSocial: _esJuridico,
                           esExtranjero: _esExtranjero,
+                          mostrarNacionalidad: !_tipoDocEsNacional,
+                          esRuc: DocumentoValidationUtils.esRuc(
+                            _tipoDocId,
+                            _valoresDefecto,
+                          ),
                           correoLabel: correoLabel,
                           ctrlNumDoc: _ctrlNumDoc,
                           ctrlNombresRazon: _ctrlNombresRazon,
@@ -911,6 +938,7 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
                               _tipoDocId = item?.id ?? '';
                               _tipoDocLabel = item?.abreviatura ?? '';
                               _ctrlNumDoc.clear();
+                              _fijarNacionalidadSiNacional();
                             });
                             _sincronizarCubit();
                           },
@@ -1109,6 +1137,11 @@ class _SeccionDatosFacturacion extends StatefulWidget {
   // manda vacía). Comprobante/Tipo documento ya llegan pre-filtrados por el
   // padre en ese caso (solo Boleta / solo los de esNacional == false).
   final bool esExtranjero;
+  // Nacionalidad solo con tipo de documento NO nacional (2026-09-18) — con
+  // DNI/RUC se fija la peruana y se oculta.
+  final bool mostrarNacionalidad;
+  // Tipo RUC → el campo de número se llama "RUC *".
+  final bool esRuc;
   final String correoLabel;
   final TextEditingController ctrlNumDoc;
   final TextEditingController ctrlNombresRazon;
@@ -1165,6 +1198,8 @@ class _SeccionDatosFacturacion extends StatefulWidget {
     required this.habilitado,
     required this.mostrarRazonSocial,
     required this.esExtranjero,
+    required this.mostrarNacionalidad,
+    required this.esRuc,
     required this.correoLabel,
     required this.ctrlNumDoc,
     required this.ctrlNombresRazon,
@@ -1297,7 +1332,7 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: 'Número documento *',
+                label: widget.esRuc ? 'RUC *' : 'Número documento *',
                 controller: widget.ctrlNumDoc,
                 focusNode: _numDocFocus,
                 isUpperCase: true,
@@ -1316,9 +1351,9 @@ class _SeccionDatosFacturacionState extends State<_SeccionDatosFacturacion> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 3: Nacionalidad (ancho completo, oculta si el país no es
-        // Perú — no aplica, se manda vacía)
-        if (!widget.esExtranjero) ...[
+        // Fila 3: Nacionalidad (ancho completo) — solo con tipo de documento
+        // no nacional (CE, Pasaporte...); con DNI/RUC va la peruana oculta.
+        if (widget.mostrarNacionalidad) ...[
           // Combo con búsqueda estricto (2026-09-14) — sin texto libre.
           CustomComboSearchField(
             data: widget.nacionalidades

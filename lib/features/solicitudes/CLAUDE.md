@@ -14,13 +14,18 @@ Sin cambios de SP (todo viaja en los campos que ya existían).
 - **Tipo RUC** (`DocumentoValidationUtils.esRuc`): el número se llama "RUC *" y en lugar de
   Nombres/Apellidos hay un solo "Razón social *" (mismo `_ctrlNombres`) → se guarda en
   `NOMBRES_SOL`, apellidos vacíos. Entrar/salir de RUC limpia nombres/apellidos. Con RUC completo
-  busca en SUNAT y llena la Razón social. "Facturar al solicitante" sin Info comercial → Factura +
-  ese RUC + razón social.
+  busca en SUNAT y llena la Razón social. "Facturar al solicitante" sin Info comercial (Natural)
+  → **Boleta** + ese RUC + razón social; con Info comercial (Jurídica) → Factura + RUC comercial.
 - **Nacionalidad**: tipo nacional (PARTIDAM `esNacional`: DNI, RUC) → se fija la peruana
   (`valoresDefecto.idNacionalidad`) y el combo se oculta; tipo no nacional → combo visible y se
   respeta lo elegido al cambiar entre tipos no nacionales. **Sexo siempre visible.** Al editar una
   solicitud con tipo nacional y sin nacionalidad guardada, se completa con la peruana.
 - Validación de "Generar" (`validarSolicitudParaGenerar`) replica las mismas reglas.
+- **Paso 3 (Facturación), mismas reglas**: tipo RUC → número "RUC *" (+ Razón social por
+  `esJuridico`, sin cambio). Nacionalidad solo con tipo **no nacional** (`mostrarNacionalidad`);
+  al elegir DNI/RUC (a mano o autoseleccionado por `_ajustarTipoDocumento`) se fija la peruana
+  (`_fijarNacionalidadSiNacional`). Antes se ocultaba por país extranjero — ahora manda el tipo.
+  "Generar" exige nacionalidad salvo tipo nacional. La jerarquía País → Comprobante → Tipo no cambió.
 ## Doble toque 2 → 4 + Nacionalidad/País con búsqueda + mayúsculas (2026-09-14)
 
 - **Bug real**: en "Revisar solicitud" (solo-ver) el "Continuar" de cada paso está en la misma

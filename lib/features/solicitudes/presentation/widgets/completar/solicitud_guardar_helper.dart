@@ -445,8 +445,7 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
               catalogState.tiposDocumento,
             ) ==
             null;
-    // País distinto de Perú — Nacionalidad no aplica en ese caso (se manda
-    // vacía, ver _SeccionDatosFacturacion), así que no se exige acá.
+    // País distinto de Perú — Ubigeo no aplica en ese caso.
     final esExtranjero =
         facturacion != null &&
         facturacion.paisId.isNotEmpty &&
@@ -464,7 +463,14 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
         facturacion.tipoDocId.isNotEmpty &&
         facturacion.numDoc.trim().isNotEmpty &&
         longitudDocOk &&
-        (esExtranjero || facturacion.nacionalidadId.isNotEmpty) &&
+        // Nacionalidad obligatoria salvo tipo nacional (DNI/RUC: va la
+        // peruana, combo oculto — 2026-09-18).
+        ((catalogState is CatalogsLoaded &&
+                DocumentoValidationUtils.esNacional(
+                  facturacion.tipoDocId,
+                  catalogState.tiposDocumento,
+                )) ||
+            facturacion.nacionalidadId.isNotEmpty) &&
         facturacion.nombresRazon.trim().isNotEmpty &&
         (esJuridica || facturacion.apellidoPaterno.trim().isNotEmpty) &&
         // Ubigeo (Departamento/Provincia/Distrito) solo aplica con país

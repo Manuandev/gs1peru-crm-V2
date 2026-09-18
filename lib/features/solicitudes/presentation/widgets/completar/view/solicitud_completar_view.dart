@@ -113,6 +113,10 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
   bool _buscandoDocSolicitante = false;
   String _ultimoDocSolicitanteBuscado = '';
   bool _buscandoRuc = false;
+  // Resultado de SUNAT por RUC (Información comercial o solicitante con tipo
+  // RUC) — guarda dirección/ubigeo para que "Facturar al solicitante" los
+  // use sin volver a pedirlos (2026-09-18).
+  final Map<String, DocumentoExterno> _datosPorRuc = {};
   String _ultimoRucBuscado = '';
 
   void _onCampoTexto() {

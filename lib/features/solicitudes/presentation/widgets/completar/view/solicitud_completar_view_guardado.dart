@@ -82,6 +82,7 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
       if (resultado == null || resultado.sinDatos) return;
 
       if (esRuc) {
+        _datosPorRuc[numDoc] = resultado;
         // Con tipo RUC solo existe "Razón social" (se guarda en NOMBRES).
         if (resultado.nomEmpresa.isNotEmpty) {
           _ctrlNombres.text = resultado.nomEmpresa;
@@ -139,6 +140,7 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
       final resultado = await _documentoService.buscar(ruc);
       if (!mounted) return;
       if (resultado == null || resultado.sinDatos) return;
+      _datosPorRuc[ruc] = resultado;
       if (resultado.nomEmpresa.isNotEmpty) {
         _ctrlRazonSocial.text = resultado.nomEmpresa;
       }
@@ -282,28 +284,78 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
   // completa TODOS los datos del solicitante (Jurídica: Factura+RUC+Razón
   // social; Natural: Boleta+DNI+Nombres), desactivar borra la facturación
   // por completo para que se vuelva a completar de cero.
-  void _onFacturarAlSolicitanteChanged(bool v, PaisItem? paisCelular) {
+  //
+  // Orden importa (bug real 2026-09-18): primero se guarda/limpia la
+  // facturación y RECIÉN después el solicitante con el switch nuevo — el
+  // BlocListener del paso 3 (si ya está vivo) reacciona al cambio del switch
+  // y lee la facturación en ese momento; al revés leía la facturación vieja.
+  // Dirección/ubigeo salen de SUNAT para el RUC que se factura (caché
+  // `_datosPorRuc`; si no se buscó en esta sesión, una sola búsqueda acá).
+  Future<void> _onFacturarAlSolicitanteChanged(
+    bool v,
+    PaisItem? paisCelular,
+  ) async {
     setState(() => _facturarAlSolicitante = v);
-    _sincronizarCubit();
 
     final formCubit = context.read<SolicitudFormCubit>();
     if (!v) {
       formCubit.limpiarFacturacion();
+      _sincronizarCubit();
       return;
     }
 
     final catalogState = context.read<CatalogsBloc>().state;
-    if (catalogState is! CatalogsLoaded) return;
+    if (catalogState is! CatalogsLoaded) {
+      _sincronizarCubit();
+      return;
+    }
+    final solicitante = _construirDatosSolicitante(paisCelular);
+    final esJuridica = solicitante.ruc.trim().isNotEmpty;
+    final rucFacturado = esJuridica
+        ? solicitante.ruc.trim()
+        : (DocumentoValidationUtils.esRuc(
+                solicitante.tipoDocId,
+                catalogState.valoresDefecto,
+              )
+              ? solicitante.numDoc.trim()
+              : '');
+    final sunat = await _datosDeRuc(rucFacturado);
+    if (!mounted || !_facturarAlSolicitante) return;
+
     final formState = formCubit.state;
     formCubit.guardarFacturacion(
       construirFacturacionDesdeSolicitante(
         solicitante: _construirDatosSolicitante(paisCelular),
-        tipoPersona: formState.tipoPersona,
+        tipoPersona: esJuridica ? 'juridica' : 'natural',
         catalogos: catalogState,
         monedaIdActual: formState.facturacion?.monedaId,
         idMonedaBloqueada: formState.idMonedaBloqueada,
+        direccion: sunat?.direccion ?? '',
+        ubigeoCodigo: sunat?.ubigeo ?? '',
       ),
     );
+    _sincronizarCubit();
+  }
+
+  // Datos de SUNAT de un RUC completo — del caché si ya se buscó (Información
+  // comercial o solicitante tipo RUC), si no una búsqueda con el overlay de
+  // siempre. null si no es un RUC completo o no hay datos.
+  Future<DocumentoExterno?> _datosDeRuc(String ruc) async {
+    if (ruc.length != AppConstants.longitudRuc) return null;
+    final cache = _datosPorRuc[ruc];
+    if (cache != null) return cache;
+
+    setState(() => _buscandoRuc = true);
+    try {
+      final resultado = await _documentoService.buscar(ruc);
+      if (resultado == null || resultado.sinDatos) return null;
+      _datosPorRuc[ruc] = resultado;
+      return resultado;
+    } catch (_) {
+      return null;
+    } finally {
+      if (mounted) setState(() => _buscandoRuc = false);
+    }
   }
 
   // null si esta solicitud no viene de una negociación con precio ya

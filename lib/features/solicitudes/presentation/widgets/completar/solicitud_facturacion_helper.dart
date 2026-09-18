@@ -80,6 +80,11 @@ DatosFacturacion construirFacturacionDesdeSolicitante({
   // idMonedaBloqueada), igual que el default "sin datos" de este paso.
   String? monedaIdActual,
   String? idMonedaBloqueada,
+  // Dirección/ubigeo de SUNAT del RUC que se factura (2026-09-18) — ya
+  // traídos por la búsqueda del paso 1 (caché por RUC), sin pedirlos de
+  // nuevo. Vacíos → Dirección vacía y Lima/Lima por defecto.
+  String direccion = '',
+  String ubigeoCodigo = '',
 }) {
   final valoresDefecto = catalogos.valoresDefecto;
   final esJuridica = tipoPersona == 'juridica';
@@ -161,6 +166,9 @@ DatosFacturacion construirFacturacionDesdeSolicitante({
     catalogos.ubigeo,
     ubigeoLimaDpto?.dpto ?? '',
   );
+  // Ubigeo de SUNAT (6 dígitos dpto+prov+dis) resuelto contra el catálogo;
+  // si algún nivel no existe se queda el default Lima/Lima.
+  final ubigeoSunat = resolverUbigeoPorCodigo(catalogos.ubigeo, ubigeoCodigo);
 
   String monedaId = (monedaIdActual ?? '').isNotEmpty ? monedaIdActual! : '';
   String moneda = '';
@@ -196,15 +204,44 @@ DatosFacturacion construirFacturacionDesdeSolicitante({
     celular: solicitante.celular,
     celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',
     correo: solicitante.correo,
-    direccion: '',
+    direccion: direccion,
     actividadEconomica: '',
     nit: '',
     observaciones: '',
-    ubigeoDptoId: ubigeoLimaDpto?.dpto ?? '',
-    ubigeoDptoNombre: ubigeoLimaDpto?.nombre ?? '',
-    ubigeoProvId: ubigeoLimaProv?.prov ?? '',
-    ubigeoProvNombre: ubigeoLimaProv?.nombre ?? '',
-    ubigeoDisId: '',
-    ubigeoDisNombre: '',
+    ubigeoDptoId: ubigeoSunat?.dpto.dpto ?? ubigeoLimaDpto?.dpto ?? '',
+    ubigeoDptoNombre: ubigeoSunat?.dpto.nombre ?? ubigeoLimaDpto?.nombre ?? '',
+    ubigeoProvId: ubigeoSunat?.prov.prov ?? ubigeoLimaProv?.prov ?? '',
+    ubigeoProvNombre:
+        ubigeoSunat?.prov.nombre ?? ubigeoLimaProv?.nombre ?? '',
+    ubigeoDisId: ubigeoSunat?.dis.dis ?? '',
+    ubigeoDisNombre: ubigeoSunat?.dis.nombre ?? '',
   );
+}
+
+// Departamento/Provincia/Distrito de un código de ubigeo de 6 dígitos
+// (SUNAT) — null si el código no es válido o algún nivel no está en el
+// catálogo.
+({UbigeoItem dpto, UbigeoItem prov, UbigeoItem dis})? resolverUbigeoPorCodigo(
+  List<UbigeoItem> ubigeo,
+  String codigo,
+) {
+  final c = codigo.trim();
+  if (c.length != 6) return null;
+  final dpto = c.substring(0, 2);
+  final prov = c.substring(2, 4);
+  final dis = c.substring(4, 6);
+  const nivelVacio = '00';
+  final itemDpto = ubigeo
+      .where(
+        (u) => u.dpto == dpto && u.prov == nivelVacio && u.dis == nivelVacio,
+      )
+      .firstOrNull;
+  final itemProv = ubigeo
+      .where((u) => u.dpto == dpto && u.prov == prov && u.dis == nivelVacio)
+      .firstOrNull;
+  final itemDis = ubigeo
+      .where((u) => u.dpto == dpto && u.prov == prov && u.dis == dis)
+      .firstOrNull;
+  if (itemDpto == null || itemProv == null || itemDis == null) return null;
+  return (dpto: itemDpto, prov: itemProv, dis: itemDis);
 }

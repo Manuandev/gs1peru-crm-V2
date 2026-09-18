@@ -743,13 +743,28 @@ class _SolicitudFacturacionViewState extends State<SolicitudFacturacionView> {
       listener: (context, state) {
         final facturarAlSolicitante =
             state.solicitante?.facturarAlSolicitante ?? false;
-        setState(() {
-          if (facturarAlSolicitante && state.facturacion != null) {
-            _restaurarDesdeFacturacion(state.facturacion!);
-          } else if (!facturarAlSolicitante) {
-            _limpiarCamposFacturacion();
-          }
-        });
+        // Estado más reciente del cubit (no solo el del evento) y sin
+        // re-sincronizar mientras se copian los campos — antes cada
+        // `controller.text = ...` disparaba `_sincronizarCubit()` con la
+        // facturación a medio copiar y pisaba la recién calculada en el paso 1
+        // (bug real 2026-09-18: volver del paso 3 al 1 y activar "Facturar al
+        // solicitante" no traía RUC ni razón social).
+        final facturacion = context
+            .read<SolicitudFormCubit>()
+            .state
+            .facturacion;
+        _restaurando = true;
+        try {
+          setState(() {
+            if (facturarAlSolicitante && facturacion != null) {
+              _restaurarDesdeFacturacion(facturacion);
+            } else if (!facturarAlSolicitante) {
+              _limpiarCamposFacturacion();
+            }
+          });
+        } finally {
+          _restaurando = false;
+        }
       },
       child: Stack(
         children: [

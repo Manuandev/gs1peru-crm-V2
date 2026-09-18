@@ -26,6 +26,19 @@ Sin cambios de SP (todo viaja en los campos que ya existían).
   al elegir DNI/RUC (a mano o autoseleccionado por `_ajustarTipoDocumento`) se fija la peruana
   (`_fijarNacionalidadSiNacional`). Antes se ocultaba por país extranjero — ahora manda el tipo.
   "Generar" exige nacionalidad salvo tipo nacional. La jerarquía País → Comprobante → Tipo no cambió.
+- **Bug real — paso 3 → paso 1 → activar "Facturar al solicitante" no traía RUC/razón social**:
+  el paso 1 emitía primero el solicitante (switch) y después la facturación; el `BlocListener` del
+  paso 3 (vivo en el `IndexedStack`) leía la facturación VIEJA y, al copiarla a los controllers con
+  `_restaurando` en false, `_sincronizarCubit()` la re-guardaba pisando la nueva. Fix: el paso 1
+  guarda/limpia la facturación ANTES de sincronizar el solicitante; el listener lee el estado más
+  reciente del cubit y copia con `_restaurando = true`.
+- **Dirección/ubigeo de SUNAT al facturar al solicitante**: `_datosPorRuc` (paso 1, caché
+  RUC → `DocumentoExterno`) se llena en la búsqueda del RUC de Información comercial y del
+  solicitante tipo RUC. Al activar "Facturar al solicitante" se usa el del RUC que se factura (si
+  no está en caché — ej. solicitud ya guardada — una sola búsqueda en ese momento).
+  `construirFacturacionDesdeSolicitante(direccion:, ubigeoCodigo:)`; el ubigeo de 6 dígitos se
+  resuelve con `resolverUbigeoPorCodigo` (si no calza, queda Lima/Lima). No se guarda nada nuevo
+  en el SP: la dirección va en `DIRECCION_FAC` como siempre.
 ## Doble toque 2 → 4 + Nacionalidad/País con búsqueda + mayúsculas (2026-09-14)
 
 - **Bug real**: en "Revisar solicitud" (solo-ver) el "Continuar" de cada paso está en la misma

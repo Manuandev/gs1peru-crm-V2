@@ -77,6 +77,8 @@ class CampoTipoDocNumDoc extends StatelessWidget {
   final List<TextInputFormatter>? inputFormattersDoc;
   // Requerido + longitud exacta del tipo (DocumentoValidationUtils.validador).
   final FormFieldValidator<String> validatorDoc;
+  // false con "Sin documento" — el label pierde el `*`.
+  final bool numeroRequerido;
   final VoidCallback onBuscarDocumento;
 
   const CampoTipoDocNumDoc({
@@ -91,6 +93,7 @@ class CampoTipoDocNumDoc extends StatelessWidget {
     required this.inputFormattersDoc,
     required this.validatorDoc,
     required this.onBuscarDocumento,
+    this.numeroRequerido = true,
   });
 
   @override
@@ -111,7 +114,7 @@ class CampoTipoDocNumDoc extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: CustomTextField(
-            label: 'N° documento *',
+            label: numeroRequerido ? 'N° documento *' : 'N° documento',
             controller: numDocCtrl,
             focusNode: numDocFocus,
             isUpperCase: true,

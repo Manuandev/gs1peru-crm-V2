@@ -311,12 +311,13 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
         : const ValoresCRMItem();
     // Un participante nunca es una empresa — solo se permite Sin documento,
     // DNI, Carnet de extranjería y Pasaporte (nunca RUC, reservado para
-    // Datos del solicitante/Facturación en los pasos 1 y 3).
+    // Datos del solicitante/Facturación en los pasos 1 y 3). "Sin documento"
+    // es el "0" (`idTipDocSnr`) desde 2026-09-18 — el "S" ya no está activo.
     final tiposDocumento = catalogState is CatalogsLoaded
         ? catalogState.tiposDocumento
               .where(
                 (t) =>
-                    t.id == valoresDefecto.idTipoDocSnd ||
+                    t.id == valoresDefecto.idTipDocSnr ||
                     t.id == valoresDefecto.idTipoDocDni ||
                     t.id == valoresDefecto.idTipoDocCde ||
                     t.id == valoresDefecto.idTipoDocPas,
@@ -415,10 +416,21 @@ class _ParticipanteFormSheetState extends State<_ParticipanteFormSheet> {
                             maxLenDoc: maxLenDoc,
                             tecladoDoc: tecladoDoc,
                             inputFormattersDoc: inputFormattersDoc,
+                            // Opcional solo con "Sin documento" (mismo
+                            // criterio que el solicitante, 2026-09-18).
+                            numeroRequerido:
+                                DocumentoValidationUtils.numeroRequerido(
+                                  _tipoDocId,
+                                  valoresDefecto,
+                                ),
                             validatorDoc: DocumentoValidationUtils.validador(
                               _tipoDocId,
                               tiposDocumento,
-                              requerido: true,
+                              requerido:
+                                  DocumentoValidationUtils.numeroRequerido(
+                                    _tipoDocId,
+                                    valoresDefecto,
+                                  ),
                             ),
                             onBuscarDocumento: _buscarDocumento,
                           ),

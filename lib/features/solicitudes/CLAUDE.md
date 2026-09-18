@@ -39,6 +39,10 @@ Sin cambios de SP (todo viaja en los campos que ya existían).
   `construirFacturacionDesdeSolicitante(direccion:, ubigeoCodigo:)`; el ubigeo de 6 dígitos se
   resuelve con `resolverUbigeoPorCodigo` (si no calza, queda Lima/Lima). No se guarda nada nuevo
   en el SP: la dirección va en `DIRECCION_FAC` como siempre.
+- **Participante — N° documento opcional con "Sin documento"**: mismo `numeroRequerido` que el
+  solicitante (label sin `*`). El combo del participante filtraba por el `"S"` (inactivo) y no
+  mostraba ningún "Sin documento" — ahora usa el `"0"` (`idTipDocSnr`).
+
 ## Doble toque 2 → 4 + Nacionalidad/País con búsqueda + mayúsculas (2026-09-14)
 
 - **Bug real**: en "Revisar solicitud" (solo-ver) el "Continuar" de cada paso está en la misma

@@ -101,6 +101,31 @@ class DocumentoValidationUtils {
         tipoDocId == valoresDefecto.idTipoDocRuc;
   }
 
+  // PARTIDAM "Nacional" (DNI, RUC) — con un tipo nacional la nacionalidad es
+  // siempre la peruana y el combo se oculta (Datos del solicitante,
+  // 2026-09-18). Sin tipo elegido o tipo desconocido → false (se muestra).
+  static bool esNacional(
+    String? tipoDocId,
+    List<TipoDocumentoItem> tiposDocumento,
+  ) => _tipo(tipoDocId, tiposDocumento)?.esNacional ?? false;
+
+  static bool esRuc(String? tipoDocId, ValoresCRMItem valoresDefecto) =>
+      tipoDocId != null &&
+      tipoDocId.isNotEmpty &&
+      tipoDocId == valoresDefecto.idTipoDocRuc;
+
+  // N° documento obligatorio con cualquier tipo salvo "Sin documento" —
+  // pedido de negocio 2026-09-18. El "sin documento" vigente es el "0"
+  // (DOC.TRIB.NO.DOM.SIN.RUC, `idTipDocSnr`); el "S" (`idTipoDocSnd`) ya no
+  // se usa, por eso no se considera.
+  static bool numeroRequerido(
+    String? tipoDocId,
+    ValoresCRMItem valoresDefecto,
+  ) {
+    if (tipoDocId == null || tipoDocId.isEmpty) return false;
+    return tipoDocId != valoresDefecto.idTipDocSnr;
+  }
+
   // "Debe tener N dígitos/caracteres" cuando el tipo exige longitud exacta
   // (PARTIDAM longitudExacta = 1). Vacío no se valida acá — eso lo decide
   // cada formulario (`requerido` en [validador]).

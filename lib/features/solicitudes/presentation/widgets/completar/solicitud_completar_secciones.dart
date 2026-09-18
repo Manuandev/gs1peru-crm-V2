@@ -361,14 +361,14 @@ class _SeccionInfoComercialState extends State<SeccionInfoComercial> {
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // RUC + Razón social — obligatorios: esta sección solo se muestra
-        // con tipo de persona Jurídica (ver solicitud_completar_view.dart),
-        // con Natural no se renderiza y no aplica ninguna validación.
+        // RUC + Razón social — opcionales y siempre visibles (2026-09-18):
+        // con RUC la solicitud queda Jurídica, sin RUC Natural. Si se llena
+        // uno, se exige el otro (y el RUC completo).
         Row(
           children: [
             Expanded(
               child: CustomTextField(
-                label: 'RUC *',
+                label: 'RUC (opcional)',
                 hint: 'Ingrese el RUC',
                 controller: widget.ctrlRuc,
                 focusNode: _rucFocus,
@@ -376,23 +376,33 @@ class _SeccionInfoComercialState extends State<SeccionInfoComercial> {
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => widget.onBuscarRuc?.call(),
                 enabled: widget.habilitado,
-                maxLength: 11,
+                maxLength: AppConstants.longitudRuc,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Requerido'
-                    : null,
+                validator: (v) {
+                  final ruc = (v ?? '').trim();
+                  if (ruc.isEmpty) {
+                    return widget.ctrlRazonSocial.text.trim().isEmpty
+                        ? null
+                        : 'Requerido';
+                  }
+                  return ruc.length == AppConstants.longitudRuc
+                      ? null
+                      : 'Debe tener ${AppConstants.longitudRuc} dígitos';
+                },
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                label: 'Razón social *',
+                label: 'Razón social (opcional)',
                 hint: 'Ingrese la razón social',
                 controller: widget.ctrlRazonSocial,
                 enabled: widget.habilitado,
                 isUpperCase: true,
                 textCapitalization: TextCapitalization.words,
-                validator: (v) => v == null || v.trim().isEmpty
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) &&
+                        widget.ctrlRuc.text.trim().isNotEmpty
                     ? 'Requerido'
                     : null,
               ),

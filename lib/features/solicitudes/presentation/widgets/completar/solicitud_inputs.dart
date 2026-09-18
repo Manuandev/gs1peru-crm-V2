@@ -1,7 +1,7 @@
 // lib/features/solicitudes/presentation/widgets/completar/solicitud_inputs.dart
 //
 // Widgets exclusivos del wizard de solicitud que NO tienen equivalente en
-// lib/core/presentation/widgets — toggle de tipo de persona, badge de paso y
+// lib/core/presentation/widgets — badge de paso y
 // el campo de celular con prefijo de país. Para texto/combos/botones usar
 // siempre los widgets generales del core (CustomTextField, CustomComboField,
 // CustomComboSearchField, CustomPrimaryButton, CustomSecondaryButton,
@@ -11,115 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:app_crm/core/index_core.dart';
-
-// ── SolicitudToggleTipoPersona (pill jurídica/natural) ────────────────────────
-
-class SolicitudToggleTipoPersona extends StatelessWidget {
-  final String valor;
-  final bool habilitado;
-  final ValueChanged<String> onChanged;
-
-  const SolicitudToggleTipoPersona({
-    super.key,
-    required this.valor,
-    required this.habilitado,
-    required this.onChanged,
-  });
-
-  static const _duracion = Duration(milliseconds: 250);
-  static const _curva = Curves.easeInOut;
-  static const double _anchoPorOpcion = 82.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final esJuridica = valor == 'juridica';
-
-    return SizedBox(
-      height: AppSizing.buttonHeightSmall,
-      width: _anchoPorOpcion * 2 + 6,
-      child: Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLightVariant,
-          borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-        ),
-        child: Stack(
-          children: [
-            AnimatedPositioned(
-              duration: _duracion,
-              curve: _curva,
-              left: esJuridica ? 0 : _anchoPorOpcion,
-              top: 0,
-              bottom: 0,
-              width: _anchoPorOpcion,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(AppSizing.radiusCircular),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black(0.14),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                SizedBox(
-                  width: _anchoPorOpcion,
-                  child: GestureDetector(
-                    onTap: habilitado ? () => onChanged('juridica') : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: Center(
-                      child: AnimatedDefaultTextStyle(
-                        duration: _duracion,
-                        curve: _curva,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: esJuridica
-                              ? AppColors.textOnDark
-                              : AppColors.textSecondary,
-                          fontWeight: esJuridica
-                              ? AppTextStyles.weightSemiBold
-                              : AppTextStyles.weightRegular,
-                        ),
-                        child: const Text('Jurídica'),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: _anchoPorOpcion,
-                  child: GestureDetector(
-                    onTap: habilitado ? () => onChanged('natural') : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: Center(
-                      child: AnimatedDefaultTextStyle(
-                        duration: _duracion,
-                        curve: _curva,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: !esJuridica
-                              ? AppColors.textOnDark
-                              : AppColors.textSecondary,
-                          fontWeight: !esJuridica
-                              ? AppTextStyles.weightSemiBold
-                              : AppTextStyles.weightRegular,
-                        ),
-                        child: const Text('Natural'),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── SolicitudCampoCelular (código telefónico por país, vía catálogo + input) ──
 //

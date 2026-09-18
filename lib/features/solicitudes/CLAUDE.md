@@ -1,5 +1,26 @@
 # Solicitudes Feature
 
+## Paso 1 — sin toggle Jurídica/Natural + reglas por tipo de documento (2026-09-18)
+Sin cambios de SP (todo viaja en los campos que ya existían).
+
+- **Se eliminó `SolicitudToggleTipoPersona`** (y `SolicitudFormCubit.cambiarTipoPersona`).
+  `tipoPersona` lo calcula `guardarSolicitante()`: RUC de "Información comercial" lleno →
+  `'juridica'` (`COD_TIP_REGISTRO = 'J'`), vacío → `'natural'`. El `'DT'` ya no lo siembra.
+- **Información comercial** siempre visible y opcional; si se llena RUC se exige Razón social y
+  viceversa (RUC de `AppConstants.longitudRuc` dígitos). Sigue en `RUCEMPRE_SOL`/`NOMEMPRE_SOL`.
+- **N° documento** obligatorio salvo "Sin documento" = tipo `"0"` (`idTipDocSnr`; el `"S"`
+  `idTipoDocSnd` ya no se usa, confirmado por el usuario) —
+  `DocumentoValidationUtils.numeroRequerido`. Revierte el "opcional siempre" del 2026-08-19.
+- **Tipo RUC** (`DocumentoValidationUtils.esRuc`): el número se llama "RUC *" y en lugar de
+  Nombres/Apellidos hay un solo "Razón social *" (mismo `_ctrlNombres`) → se guarda en
+  `NOMBRES_SOL`, apellidos vacíos. Entrar/salir de RUC limpia nombres/apellidos. Con RUC completo
+  busca en SUNAT y llena la Razón social. "Facturar al solicitante" sin Info comercial → Factura +
+  ese RUC + razón social.
+- **Nacionalidad**: tipo nacional (PARTIDAM `esNacional`: DNI, RUC) → se fija la peruana
+  (`valoresDefecto.idNacionalidad`) y el combo se oculta; tipo no nacional → combo visible y se
+  respeta lo elegido al cambiar entre tipos no nacionales. **Sexo siempre visible.** Al editar una
+  solicitud con tipo nacional y sin nacionalidad guardada, se completa con la peruana.
+- Validación de "Generar" (`validarSolicitudParaGenerar`) replica las mismas reglas.
 ## Doble toque 2 → 4 + Nacionalidad/País con búsqueda + mayúsculas (2026-09-14)
 
 - **Bug real**: en "Revisar solicitud" (solo-ver) el "Continuar" de cada paso está en la misma

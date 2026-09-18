@@ -344,6 +344,20 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       _tipoDocLabel = tipoDoc?.abreviatura ?? '';
       _nacionalidadId = detalle.nacionalidadId;
       _nacionalidadLabel = nacionalidad?.nombre ?? '';
+      // Con tipo nacional (DNI/RUC) el combo está oculto — si la solicitud
+      // vieja no trae nacionalidad, se completa con la peruana para que no
+      // quede un obligatorio vacío que el asesor no puede ver (2026-09-18).
+      if (_nacionalidadId.isEmpty &&
+          DocumentoValidationUtils.esNacional(
+            detalle.tipoDocId,
+            tiposDocumento,
+          )) {
+        final peruana = nacionalidades
+            .where((n) => n.id == valoresDefecto.idNacionalidad)
+            .firstOrNull;
+        _nacionalidadId = peruana?.id ?? '';
+        _nacionalidadLabel = peruana?.nombre ?? '';
+      }
       _sexoId = detalle.sexoId;
       _canalSeleccionado = canal;
       _ctrlCanalDetalle.text = canal?.esDetallado == true
@@ -385,9 +399,8 @@ extension _SolicitudCompletarCargaExt on _SolicitudCompletarViewState {
       final datosSolicitante = _construirDatosSolicitante(_paisCelular);
 
       if (!mounted) return;
-      context.read<SolicitudFormCubit>().cambiarTipoPersona(
-        detalle.tipoPersona,
-      );
+      // Tipo de persona ya no se lee del 'DT': guardarSolicitante lo
+      // recalcula según el RUC de Información comercial (2026-09-18).
       context.read<SolicitudFormCubit>().guardarSolicitante(datosSolicitante);
 
       if (!detalle.sinFacturacion) {

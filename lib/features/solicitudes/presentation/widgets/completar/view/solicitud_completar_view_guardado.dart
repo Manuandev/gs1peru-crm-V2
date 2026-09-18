@@ -13,6 +13,39 @@ part of 'solicitud_completar_view.dart';
 // cambios en los call sites — todo se sigue llamando igual desde build()/
 // initState() del archivo principal.
 extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
+  // Tipo documento del solicitante (2026-09-18):
+  // - Tipo nacional (DNI/RUC) → nacionalidad peruana y el combo se oculta.
+  //   Entre tipos NO nacionales se respeta la nacionalidad ya elegida.
+  // - Entrar o salir de RUC limpia Nombres/Apellidos: con RUC el mismo
+  //   `_ctrlNombres` pasa a ser "Razón social".
+  void _onTipoDocChanged(TipoDocumentoItem? item) {
+    final catalogState = context.read<CatalogsBloc>().state;
+    final valoresDefecto = catalogState is CatalogsLoaded
+        ? catalogState.valoresDefecto
+        : const ValoresCRMItem();
+    final eraRuc = DocumentoValidationUtils.esRuc(_tipoDocId, valoresDefecto);
+    final esRuc = DocumentoValidationUtils.esRuc(item?.id, valoresDefecto);
+
+    setState(() {
+      _tipoDocId = item?.id ?? '';
+      _tipoDocLabel = item?.abreviatura ?? '';
+      if (item != null && item.esNacional && catalogState is CatalogsLoaded) {
+        final peruana = catalogState.nacionalidades
+            .where((n) => n.id == valoresDefecto.idNacionalidad)
+            .firstOrNull;
+        _nacionalidadId = peruana?.id ?? '';
+        _nacionalidadLabel = peruana?.nombre ?? '';
+      }
+      if (eraRuc != esRuc) {
+        _ctrlNombres.clear();
+        _ctrlApellidoPaterno.clear();
+        _ctrlApellidoMaterno.clear();
+      }
+    });
+    _ultimoDocSolicitanteBuscado = '';
+    _sincronizarCubit();
+  }
+
   // Autocompleta nombres/apellidos/correo del solicitante al salir del campo
   // N° documento o presionar el check del teclado — solo con tipo DNI y el
   // número completo (DocumentoValidationUtils.puedeBuscar, 2026-09-14).
@@ -20,12 +53,25 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
     final numDoc = _ctrlNumDoc.text.trim();
     final catalogState = context.read<CatalogsBloc>().state;
     if (catalogState is! CatalogsLoaded) return;
-    final esBusqueda = DocumentoValidationUtils.puedeBuscar(
+    // DNI (RENIEC) o, con tipo RUC, SUNAT para llenar la Razón social.
+    final esRuc = DocumentoValidationUtils.esRuc(
       _tipoDocId,
-      numDoc,
-      catalogState.tiposDocumento,
       catalogState.valoresDefecto,
     );
+    final esBusqueda =
+        DocumentoValidationUtils.puedeBuscar(
+          _tipoDocId,
+          numDoc,
+          catalogState.tiposDocumento,
+          catalogState.valoresDefecto,
+        ) ||
+        (esRuc &&
+            numDoc.length ==
+                DocumentoValidationUtils.maxLength(
+                  _tipoDocId,
+                  catalogState.tiposDocumento,
+                  catalogState.valoresDefecto,
+                ));
     if (!esBusqueda || numDoc == _ultimoDocSolicitanteBuscado) return;
     _ultimoDocSolicitanteBuscado = numDoc;
 
@@ -35,6 +81,14 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
       if (!mounted) return;
       if (resultado == null || resultado.sinDatos) return;
 
+      if (esRuc) {
+        // Con tipo RUC solo existe "Razón social" (se guarda en NOMBRES).
+        if (resultado.nomEmpresa.isNotEmpty) {
+          _ctrlNombres.text = resultado.nomEmpresa;
+        }
+        if (resultado.correo.isNotEmpty) _ctrlCorreo.text = resultado.correo;
+        return;
+      }
       if (resultado.nombres.isNotEmpty) {
         _ctrlNombres.text = resultado.nombres;
       } else if (resultado.nomEmpresa.isNotEmpty) {
@@ -108,6 +162,14 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
 
   DatosSolicitante _construirDatosSolicitante(PaisItem? paisCelular) {
     final archivos = context.read<SolicitudFormCubit>().state;
+    final catalogState = context.read<CatalogsBloc>().state;
+    // Con tipo RUC la Razón social va en NOMBRES y sin apellidos (2026-09-18).
+    final esRuc =
+        catalogState is CatalogsLoaded &&
+        DocumentoValidationUtils.esRuc(
+          _tipoDocId,
+          catalogState.valoresDefecto,
+        );
     return DatosSolicitante(
       tipoDocId: _tipoDocId,
       tipoDocLabel: _tipoDocLabel,
@@ -119,8 +181,8 @@ extension _SolicitudCompletarGuardadoExt on _SolicitudCompletarViewState {
       nacionalidad: _nacionalidadLabel,
       sexoId: _sexoId,
       nombres: _mayus(_ctrlNombres.text),
-      apellidoPaterno: _mayus(_ctrlApellidoPaterno.text),
-      apellidoMaterno: _mayus(_ctrlApellidoMaterno.text),
+      apellidoPaterno: esRuc ? '' : _mayus(_ctrlApellidoPaterno.text),
+      apellidoMaterno: esRuc ? '' : _mayus(_ctrlApellidoMaterno.text),
       cargo: _mayus(_ctrlCargo.text),
       celular: _ctrlCelular.text,
       celularCodigoTelefono: paisCelular?.codigoTelefono ?? '',

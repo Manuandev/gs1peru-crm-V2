@@ -113,6 +113,23 @@ DatosFacturacion construirFacturacionDesdeSolicitante({
     }
     numDoc = solicitante.ruc;
     nombresRazon = solicitante.razonSocial;
+  } else if (DocumentoValidationUtils.esRuc(
+    solicitante.tipoDocId,
+    valoresDefecto,
+  )) {
+    // Solicitante con tipo RUC (sin Información comercial, 2026-09-18) —
+    // Factura + su RUC + la Razón social que se guardó en `nombres`.
+    final factura = catalogos.comprobantes
+        .where((c) => c.id == valoresDefecto.idTipoFactura)
+        .firstOrNull;
+    if (factura != null) {
+      comprobanteId = factura.id;
+      comprobanteLabel = factura.nombre;
+    }
+    tipoDocId = solicitante.tipoDocId;
+    tipoDocLabel = solicitante.tipoDocLabel;
+    numDoc = solicitante.numDoc;
+    nombresRazon = solicitante.nombres;
   } else {
     final boleta = catalogos.comprobantes
         .where((c) => c.id == valoresDefecto.idTipoBoleta)

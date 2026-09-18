@@ -225,7 +225,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
     }
 
     final formState = context.watch<SolicitudFormCubit>().state;
-    final tipoPersona = formState.tipoPersona;
     final catalogState = context.watch<CatalogsBloc>().state;
     // Solo se muestran los 2 primeros canales del catálogo — pedido del
     // usuario, el resto no se ofrece como opción en "¿Cómo se enteró del
@@ -285,19 +284,6 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Toggle tipo persona ─────────────────────────────
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: SolicitudToggleTipoPersona(
-                            valor: tipoPersona,
-                            habilitado: widget.modoEdicion,
-                            onChanged: (v) => context
-                                .read<SolicitudFormCubit>()
-                                .cambiarTipoPersona(v),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-
                         // ── ¿Cómo se enteró del evento? ────────────────────
                         SeccionCanalEvento(
                           canales: canales,
@@ -373,13 +359,7 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                               ? _nacionalidadId
                               : null,
                           sexoInicialId: _sexoId.isNotEmpty ? _sexoId : null,
-                          onTipoDocChanged: (item) {
-                            setState(() {
-                              _tipoDocId = item?.id ?? '';
-                              _tipoDocLabel = item?.abreviatura ?? '';
-                            });
-                            _sincronizarCubit();
-                          },
+                          onTipoDocChanged: _onTipoDocChanged,
                           onNacionalidadChanged: (item) {
                             setState(() {
                               _nacionalidadId = item?.id ?? '';
@@ -394,17 +374,17 @@ class _SolicitudCompletarViewState extends State<SolicitudCompletarView> {
                           onCargoChanged: _sincronizarCubit,
                           onBuscarDocumento: _buscarDocumentoSolicitante,
                         ),
-                        if (tipoPersona == 'juridica') ...[
-                          const SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.sm),
 
-                          // ── Información comercial (solo jurídica) ──────────
-                          SeccionInfoComercial(
-                            habilitado: widget.modoEdicion,
-                            ctrlRuc: _ctrlRuc,
-                            ctrlRazonSocial: _ctrlRazonSocial,
-                            onBuscarRuc: _buscarRucComercial,
-                          ),
-                        ],
+                        // ── Información comercial (siempre, opcional) ────────
+                        // Con RUC la solicitud es Jurídica, sin RUC Natural
+                        // (ver SolicitudFormCubit.guardarSolicitante).
+                        SeccionInfoComercial(
+                          habilitado: widget.modoEdicion,
+                          ctrlRuc: _ctrlRuc,
+                          ctrlRazonSocial: _ctrlRazonSocial,
+                          onBuscarRuc: _buscarRucComercial,
+                        ),
                         const SizedBox(height: AppSpacing.sm),
 
                         // ── Switches ───────────────────────────────────────

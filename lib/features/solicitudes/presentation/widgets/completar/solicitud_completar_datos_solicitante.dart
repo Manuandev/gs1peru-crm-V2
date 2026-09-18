@@ -122,6 +122,28 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
       tiposDocumento,
       valoresDefecto,
     );
+    // Reglas por tipo de documento (2026-09-18):
+    // - RUC → el número se llama "RUC" y en vez de Nombres/Apellidos hay un
+    //   solo campo "Razón social" (mismo ctrlNombres, se guarda en NOMBRES).
+    // - N° documento obligatorio salvo con "Sin documento".
+    // - Tipo nacional (DNI/RUC) → nacionalidad peruana fija y oculta.
+    final esRuc = DocumentoValidationUtils.esRuc(_tipoDocId, valoresDefecto);
+    final numeroRequerido = DocumentoValidationUtils.numeroRequerido(
+      _tipoDocId,
+      valoresDefecto,
+    );
+    final mostrarNacionalidad = !DocumentoValidationUtils.esNacional(
+      _tipoDocId,
+      tiposDocumento,
+    );
+    final campoSexo = CustomComboField<SexoItem>(
+      label: 'Sexo *',
+      data: sexos,
+      enabled: widget.habilitado,
+      initialValue: widget.sexoInicialId,
+      onChanged: widget.onSexoChanged,
+      validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,12 +191,13 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: CustomTextField(
-                // Opcional siempre, sin importar el Tipo documento elegido
-                // (pedido de negocio 2026-08-19, revierte la regla anterior
-                // de esta misma sesión que solo lo dejaba opcional con "Sin
-                // documento" — ahora aplica con cualquier tipo). El resto de
-                // datos del solicitante sigue obligatorio, sin cambios.
-                label: 'Número documento',
+                // Opcional solo con "Sin documento"; con cualquier otro tipo
+                // es obligatorio (2026-09-18, revierte la regla 2026-08-19).
+                label: esRuc
+                    ? 'RUC *'
+                    : (numeroRequerido
+                          ? 'Número documento *'
+                          : 'Número documento'),
                 controller: widget.ctrlNumDoc,
                 focusNode: _numDocFocus,
                 isUpperCase: true,
@@ -184,11 +207,12 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
                 enabled: widget.habilitado,
                 maxLength: maxLenDoc,
                 inputFormatters: inputFormatters,
-                // Sigue opcional; si se escribe algo, respeta la longitud
-                // exacta del tipo (PARTIDAM, ej. DNI = 8 dígitos).
+                // Respeta además la longitud exacta del tipo (PARTIDAM, ej.
+                // DNI = 8 dígitos).
                 validator: DocumentoValidationUtils.validador(
                   _tipoDocId,
                   tiposDocumento,
+                  requerido: numeroRequerido,
                 ),
               ),
             ),
@@ -196,87 +220,97 @@ class _SeccionDatosSolicitanteState extends State<SeccionDatosSolicitante> {
         ),
         const SizedBox(height: AppSpacing.xs),
 
-        // Fila 2: Nacionalidad + Sexo
-        Row(
-          children: [
-            Expanded(
-              // Combo con búsqueda estricto (2026-09-14): se escribe para
-              // filtrar y se elige una coincidencia — sin texto libre.
-              child: CustomComboSearchField(
-                data: nacionalidades
-                    .map((n) => '${n.id}${AppConstants.sepCampos}${n.nombre}')
-                    .toList(),
-                label: 'Nacionalidad *',
-                enabled: widget.habilitado,
-                isUpperCase: true,
-                initialValue: widget.nacionalidadInicialId,
-                onChanged: (item) => widget.onNacionalidadChanged?.call(
-                  item == null
-                      ? null
-                      : nacionalidades
-                            .where((n) => n.id == item.id)
-                            .firstOrNull,
+        // Fila 2: Nacionalidad (solo con tipo NO nacional) + Sexo (siempre)
+        if (mostrarNacionalidad)
+          Row(
+            children: [
+              Expanded(
+                // Combo con búsqueda estricto (2026-09-14): se escribe para
+                // filtrar y se elige una coincidencia — sin texto libre.
+                child: CustomComboSearchField(
+                  data: nacionalidades
+                      .map(
+                        (n) => '${n.id}${AppConstants.sepCampos}${n.nombre}',
+                      )
+                      .toList(),
+                  label: 'Nacionalidad *',
+                  enabled: widget.habilitado,
+                  isUpperCase: true,
+                  initialValue: widget.nacionalidadInicialId,
+                  onChanged: (item) => widget.onNacionalidadChanged?.call(
+                    item == null
+                        ? null
+                        : nacionalidades
+                              .where((n) => n.id == item.id)
+                              .firstOrNull,
+                  ),
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Requerido' : null,
                 ),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Requerido' : null,
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: CustomComboField<SexoItem>(
-                label: 'Sexo *',
-                data: sexos,
-                enabled: widget.habilitado,
-                initialValue: widget.sexoInicialId,
-                onChanged: widget.onSexoChanged,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Requerido' : null,
-              ),
-            ),
-          ],
-        ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(child: campoSexo),
+            ],
+          )
+        else
+          campoSexo,
         const SizedBox(height: AppSpacing.xs),
 
-        // Nombres
-        CustomTextField(
-          label: 'Nombres *',
-          controller: widget.ctrlNombres,
-          enabled: widget.habilitado,
-          isUpperCase: true,
-          textCapitalization: TextCapitalization.words,
-          validator: (v) =>
-              v == null || v.trim().isEmpty ? 'Requerido' : null,
-        ),
-        const SizedBox(height: AppSpacing.xs),
+        if (esRuc) ...[
+          // Razón social — con tipo RUC reemplaza a Nombres/Apellidos y se
+          // guarda en NOMBRES (como un cliente con solo nombre).
+          CustomTextField(
+            label: 'Razón social *',
+            controller: widget.ctrlNombres,
+            enabled: widget.habilitado,
+            isUpperCase: true,
+            textCapitalization: TextCapitalization.words,
+            validator: (v) =>
+                v == null || v.trim().isEmpty ? 'Requerido' : null,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ] else ...[
+          // Nombres
+          CustomTextField(
+            label: 'Nombres *',
+            controller: widget.ctrlNombres,
+            enabled: widget.habilitado,
+            isUpperCase: true,
+            textCapitalization: TextCapitalization.words,
+            validator: (v) =>
+                v == null || v.trim().isEmpty ? 'Requerido' : null,
+          ),
+          const SizedBox(height: AppSpacing.xs),
 
-        // Fila 3: Apellido paterno + Apellido materno
-        Row(
-          children: [
-            Expanded(
-              child: CustomTextField(
-                label: 'Apellido paterno *',
-                controller: widget.ctrlApellidoPaterno,
-                enabled: widget.habilitado,
-                isUpperCase: true,
-                textCapitalization: TextCapitalization.words,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Requerido'
-                    : null,
+          // Fila 3: Apellido paterno + Apellido materno
+          Row(
+            children: [
+              Expanded(
+                child: CustomTextField(
+                  label: 'Apellido paterno *',
+                  controller: widget.ctrlApellidoPaterno,
+                  enabled: widget.habilitado,
+                  isUpperCase: true,
+                  textCapitalization: TextCapitalization.words,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? 'Requerido'
+                      : null,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: CustomTextField(
-                label: 'Apellido materno',
-                controller: widget.ctrlApellidoMaterno,
-                enabled: widget.habilitado,
-                isUpperCase: true,
-                textCapitalization: TextCapitalization.words,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: CustomTextField(
+                  label: 'Apellido materno',
+                  controller: widget.ctrlApellidoMaterno,
+                  enabled: widget.habilitado,
+                  isUpperCase: true,
+                  textCapitalization: TextCapitalization.words,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
 
         // Cargo — combo con búsqueda (CargoItem, DBO.SYSMCARGO01), solo como
         // sugerencia — se guarda siempre como texto libre (nunca el id de

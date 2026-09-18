@@ -45,6 +45,10 @@ class AppConstants {
   // la misma posición y un doble toque saltaba 2 → 3 → 4 (2026-09-14).
   static const Duration bloqueoDobleToquePaso = Duration(milliseconds: 600);
 
+  // Longitud del RUC peruano — campo RUC propio de "Información comercial"
+  // (solicitud, paso 1), que no depende del catálogo de tipos de documento.
+  static const int longitudRuc = 11;
+
   // Chat: segundos que un mensaje enviado queda retenido con el botón
   // "Deshacer" antes de salir de verdad por el socket (la API de WhatsApp no
   // permite borrar un mensaje ya enviado). Default si la config TDE/2 no carga

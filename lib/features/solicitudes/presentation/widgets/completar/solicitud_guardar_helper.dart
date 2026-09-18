@@ -357,24 +357,32 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
   final solicitante = formState.solicitante;
 
   // Mismos campos obligatorios (*) que exige el Form del paso 1 (ver
-  // SeccionDatosSolicitante/SeccionInfoComercial en solicitudes/CLAUDE.md) —
-  // RUC/razón social solo son obligatorios con tipo de persona Jurídica, con
-  // Natural no aplican.
+  // SeccionDatosSolicitante/SeccionInfoComercial en solicitudes/CLAUDE.md).
+  // Reglas 2026-09-18: N° documento obligatorio salvo "Sin documento"; con
+  // tipo RUC solo Razón social (en `nombres`), sin apellidos; Información
+  // comercial opcional, pero RUC y Razón social van juntos.
+  final catalogState = context.read<CatalogsBloc>().state;
+  final valoresDefecto = catalogState is CatalogsLoaded
+      ? catalogState.valoresDefecto
+      : const ValoresCRMItem();
   final solicitanteCompleto =
       solicitante != null &&
       solicitante.tipoDocLabel.isNotEmpty &&
-      // N° documento del solicitante es opcional siempre, sin importar el
-      // Tipo documento elegido (2026-08-19).
+      (!DocumentoValidationUtils.numeroRequerido(
+            solicitante.tipoDocId,
+            valoresDefecto,
+          ) ||
+          solicitante.numDoc.trim().isNotEmpty) &&
       solicitante.nacionalidadId.isNotEmpty &&
       solicitante.sexoId.isNotEmpty &&
       solicitante.nombres.trim().isNotEmpty &&
-      solicitante.apellidoPaterno.trim().isNotEmpty &&
+      (DocumentoValidationUtils.esRuc(solicitante.tipoDocId, valoresDefecto) ||
+          solicitante.apellidoPaterno.trim().isNotEmpty) &&
       solicitante.cargo.trim().isNotEmpty &&
       solicitante.celular.trim().isNotEmpty &&
       solicitante.correo.emailValidator == null &&
-      (formState.tipoPersona != 'juridica' ||
-          (solicitante.ruc.trim().isNotEmpty &&
-              solicitante.razonSocial.trim().isNotEmpty));
+      solicitante.ruc.trim().isEmpty ==
+          solicitante.razonSocial.trim().isEmpty;
   if (!solicitanteCompleto) {
     return const SolicitudValidacion(
       1,
@@ -405,7 +413,6 @@ SolicitudValidacion? validarSolicitudParaGenerar(BuildContext context) {
 
   // Facturación solo es obligatoria si algún participante no es invitado —
   // mismo criterio que "saltar Facturación" en solicitud_participantes_view.dart.
-  final catalogState = context.read<CatalogsBloc>().state;
   final tiposParticipante = catalogState is CatalogsLoaded
       ? catalogState.tiposParticipante
       : const <TipoParticipanteItem>[];

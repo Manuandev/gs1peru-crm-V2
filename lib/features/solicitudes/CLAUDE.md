@@ -1,5 +1,23 @@
 # Solicitudes Feature
 
+## Voucher adjunto = no sale el correo de confirmación (2026-09-21)
+Pedido del usuario. Solo SP, sin cambios en Flutter ni lógica de la API. En
+`CRM.CSV_SOLICITUD_CUD_APP` (task `'U'`), antes del `SELECT` final se calcula
+`@IB_ENVIAR_CORREO` = 1 solo si es guardado final (`IB_BORRADOR = 0`) **y** no existe fila en
+`EVT.T_TECMSOLINSCRIPCION01_ARCHIVOS` con `TIPO = 'voucher'` para ese `NUMSOL`. Si es 0, los
+segmentos 4-6 (datos del correo, participantes, cuentas bancarias) salen vacíos y
+`SolicitudController.EnviarCorreoSolicitudSiCorresponde` (`WebServiceIEC`) no envía nada — el
+controller ya cortaba con el segmento 4 vacío, solo se actualizó su comentario.
+- Motivo: el correo trae el importe y las cuentas para transferir; con voucher ya se pagó.
+- `'voucher'` es el mismo `TIPO` que usan la app, la web y los LST (`CSV_SOLICITUD_LST_APP`,
+  `CSV_INSCRIPCION_EVENTO_LISTAR_SP_V02`).
+- Límite conocido: `generarSolicitudCompleta()` corre el `'U'` **antes** de
+  `subirArchivosPendientes()`. En la práctica el voucher ya está subido desde el "Siguiente" del
+  paso 1 (único lugar donde se adjunta), así que el `'U'` final lo ve. Si algún día el voucher
+  se subiera recién dentro del mismo "Generar", el correo saldría igual — habría que subir los
+  archivos antes del `'U'` en ese helper.
+- ⚠️ Pendiente `ALTER PROCEDURE` en SSMS (UTF-16LE+BOM preservado).
+
 ## Facturación con RUC → empresa del contacto en `CRM.T_EMPRESA`/`T_EMPRESA_CONTACTO` (2026-09-21)
 Pedido del jefe del usuario. Solo SP, sin cambios en Flutter (`RUCEMPRE_FAC`, `NOMEMPRE_FAC` y
 `CARGO_SOL` ya viajaban). En `CRM.CSV_SOLICITUD_CUD_APP` (task `'U'`), después del upsert de
@@ -71,9 +89,25 @@ usuario, `CRM.CSV_COBRANZAS_CUD_APP` no se tocó.
   `SolicitudRemoteDatasource.guardarSolicitud()`. Antes el prefijo del celular de facturación
   nunca llegaba al SP (`CELULAR_FAC` es solo el número). Con una APK vieja (44 campos) llega
   `NULL`: al actualizar se conserva el `FAX` que ya tenía la fila y al crear queda `''`.
-- **Efecto en cobranzas (avisado, no resuelto)**: `CSV_COBRANZAS_CUD_APP` solo inserta en
-  `CTAMEXTER01` + `CTAMEXTER01_EXT` cuando el documento no existe. Como ahora la solicitud lo crea
-  antes, para esos documentos cobranzas ya no crea la fila de `CTAMEXTER01_EXT`.
+- **`CTAMEXTER01_EXT` también se crea/actualiza (mismo día, pedido del usuario)** — antes, como la
+  solicitud creaba `CTAMEXTER01` primero, `CSV_COBRANZAS_CUD_APP` (que solo inserta ambas si el
+  documento no existe) ya no creaba la fila `_EXT` para esos documentos. Ahora el mismo bloque:
+  toma `@ID_EXTER` (`SELECT ID ... WHERE RTRIM(RUC)` o `SCOPE_IDENTITY()` tras el `INSERT`; el
+  `UPDATE` de `CTAMEXTER01` pasó a `WHERE ID = @ID_EXTER`) y hace el upsert de `_EXT` por `ID`
+  (1:1). Mismo mapeo que la web (`EVT.CSV_SOLINSCRIPCION_EVENTO_CUD_SP_V02`, bloque de Erick
+  13/09/2026, `_claude/context/storeProcedures/` en GS1Peru-Intranet): `ID_TIP_DOC` =
+  `LEFT(ID_TIP_DOC_FAC,1)` · `NRO_DOCUMENTO` = N° documento · nombres/apellidos de facturación ·
+  `ID_NACIONALIDAD` = `ID_NACION_FAC` · `TIPO` = `'J'` si hay razón social (RUC o TIN), si no `'N'`
+  (la web solo mira tipo `'6'`) · `CORREO_FACTURACION` · `ID_PAIS` = `ID_PAIS_FAC`. Solo al crear:
+  `CODCARGO` = `NULL`, `FLG_DEFAULT_DIRECCION` = `'1'`, `FCH/IP/ID_USUARIO_CREACION`; al actualizar:
+  `FCH/IP/ID_USUARIO_MOD`. Va dentro del mismo `TRY/CATCH` (misma transacción).
+- **Índices reales de `CTAMEXTER01`** (confirmados por el usuario con `sp_helpindex`/
+  `sys.key_constraints`): `PK_CTAMEXTER01_1` (PK, `ID` identity), `IX_CTAMEXTER01` (constraint
+  UNIQUE, `RAZON`), `NonClusteredIndex-20210314-213230` (índice único, no constraint, `RUC`).
+- **Diferencia con la web, no tocada**: la web llena `GGENERAL`/`NOMREPRE` = razón,
+  `ARUC` = documento, `AGERET` = `'S'` y `TELF` = `FAX` = celular; este SP deja los 4 primeros en
+  `''` y usa `TELF` = celular / `FAX` = `prefijo-celular`. Y ante choque de `RAZON` la web salta la
+  sincronización en silencio; este SP devuelve error (decisión del usuario).
 - ⚠️ Pendiente `ALTER PROCEDURE` en SSMS (UTF-16LE+BOM preservado). Desplegar el SP **antes** que
   la APK. La función `Fnsplitstringtable45` no está versionada en el repo: si el `ALTER` falla
   con "Invalid column name field45", cambiar a `Fnsplitstringtable50`.

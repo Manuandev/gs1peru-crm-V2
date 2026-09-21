@@ -2,6 +2,14 @@
 
 Dashboard principal con totales, prioridades y prospectos recientes.
 
+## Tarjetas Seguimiento/Cobranza abren sin rango de fechas (2026-09-21)
+
+`HomeMenuCards._abrirModulo` (`widgets/dashboard/home_menu_cards.dart`): las tarjetas
+Seguimiento y Cobranza navegan con `goToSeguimiento(sinRangoFecha: true)` /
+`goToCobranza(sinRangoFecha: true)` — igual que el embudo (`CardTotalesHome`), checkboxes de
+fecha apagados. Conversaciones y cualquier otro ítem siguen con `clearAndPush(ruta)`. La barra
+inferior (`AppBottomNavWidget`) y el drawer no cambiaron: abren con el rango por defecto.
+
 ## Archivos clave
 
 | Archivo | Qué hace |

@@ -35,6 +35,7 @@ class SeguimientoView extends StatelessWidget {
       ),
       drawerSide: DrawerSide.left,
       bodyPadding: EdgeInsets.zero,
+      showBottomNav: true,
       // Buscador por contacto/empresa: llega en cada tecla, el bloc hace el
       // debounce y el filtro lo aplica el SP (la lista es paginada).
       onSearch: (query) => context.read<SeguimientoBloc>().add(

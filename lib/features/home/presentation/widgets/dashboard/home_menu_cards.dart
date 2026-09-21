@@ -74,10 +74,7 @@ class _FlexCards extends StatelessWidget {
                     descripcion: rows[r][c].descripcion,
                     badge: rows[r][c].badge,
                     color: rows[r][c].color,
-                    onTap: () {
-                      final route = rows[r][c].route;
-                      if (route != null) context.clearAndPush(route);
-                    },
+                    onTap: () => _abrirModulo(context, rows[r][c].route),
                   ),
                 ),
               ],
@@ -86,5 +83,19 @@ class _FlexCards extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  /// Seguimiento y Cobranza abren con el rango de fechas apagado, igual que
+  /// el embudo de gestión (CardTotalesHome).
+  void _abrirModulo(BuildContext context, String? ruta) {
+    if (ruta == null) return;
+    switch (ruta) {
+      case AppRoutes.seguimiento:
+        context.goToSeguimiento(sinRangoFecha: true);
+      case AppRoutes.cobranza:
+        context.goToCobranza(sinRangoFecha: true);
+      default:
+        context.clearAndPush(ruta);
+    }
   }
 }

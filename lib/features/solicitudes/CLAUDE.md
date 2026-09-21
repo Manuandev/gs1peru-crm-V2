@@ -1,5 +1,39 @@
 # Solicitudes Feature
 
+## Facturación con RUC → empresa del contacto en `CRM.T_EMPRESA`/`T_EMPRESA_CONTACTO` (2026-09-21)
+Pedido del jefe del usuario. Solo SP, sin cambios en Flutter (`RUCEMPRE_FAC`, `NOMEMPRE_FAC` y
+`CARGO_SOL` ya viajaban). En `CRM.CSV_SOLICITUD_CUD_APP` (task `'U'`), después del upsert de
+`CTAMEXTER01`:
+
+- **Cuándo**: `@RUCEMPRE_FAC <> ''` (tipo documento de facturación = RUC) y razón social no vacía,
+  sin importar si la solicitud es jurídica. Corre en **cualquier** guardado (todos los pasos,
+  borrador o final) — sin RUC de facturación, ej. paso 1 de una solicitud nueva, no hace nada. Con
+  "Facturar al solicitante" + RUC comercial ya corre desde el paso 1 (ahí se elige el cargo).
+- **Contacto**: `CRM.T_LEAD_TECMSOLINSCRIPCION01` (por `NUMSOL`) → `CRM.T_LEAD.ID_CONTACTO`. No se
+  usa `@ID_LEAD`: la app lo manda vacío al editar una solicitud abierta desde la lista
+  (`Solicitud.idLead` solo existe al crear). Sin contacto, no hace nada. Reusa `@ID_CONTACTO`
+  (estaba declarado sin uso).
+- **Empresa**: busca por `RUC` (`TOP 1`, activa primero). Si existe, solo toma su `ID_EMPRESA` —
+  **nunca se modifica** (fila compartida). Si no, la crea con `MAX+1` (los ids no son identity),
+  `RUC`, `NOMBRE` = razón social, `ID_PAIS`/`DIRECCION`/`UBIGEO` = `NULL`, `ASESOR_DEFAULT` = usuario.
+- **Enlace** (`T_EMPRESA_CONTACTO`, del contacto con esa empresa): si no existe se crea con
+  `MAX+1` y `NOM_CARGO` = `CARGO_SOL` (texto, no id). Si existe se actualiza en sitio: cargo nuevo
+  (uno vacío no borra el anterior), `IB_ACTIVO = 1` y `FC_USUARIO_M` — así queda como la empresa
+  más reciente del contacto.
+- **`CSV_LEADS_LST_APP`**: las 5 consultas que eligen "la empresa del contacto" (`#EmpresaActiva`
+  + 4 `OUTER APPLY`) ordenaban por la fecha de la **empresa** (`EM2.FC_USUARIO_M/C`); ahora por la
+  del **enlace** (`CE2`), igual que `CSV_WHATSAPP_LST_APP` — muestra la empresa enlazada o
+  actualizada más recientemente. Ver `lead/CLAUDE.md`.
+- Revisado con el usuario antes de implementar: `T_EMPRESA`/`T_EMPRESA_CONTACTO` solo tienen PK
+  por id (sin índices únicos por RUC/nombre), sin triggers, única FK enlace → empresa.
+- Si la empresa existente está inactiva (`IB_ACTIVO = 0`) igual se enlaza, pero Seguimiento no la
+  muestra (filtra `EM2.IB_ACTIVO = 1`). `CSV_CONTACTO_LST_APP` (EditContactoSimple) sigue eligiendo
+  por `ID_EMPRESA_CONTACTO DESC`, no se tocó.
+- ⚠️ Pendiente `ALTER PROCEDURE` de ambos SPs en SSMS (UTF-16LE+BOM preservado).
+- Hallazgo aparte, sin tocar: al editar desde la lista `@ID_LEAD` llega vacío (0), así que el
+  seguimiento que inserta la rama de edición del task `'U'` queda con `ID_LEAD = 0` y el
+  `UPDATE CRM.T_LEAD ... ID_ESTADO = '04'` no afecta nada.
+
 ## Upsert de facturación en `dbo.CTAMEXTER01` + campo 45 (2026-09-21)
 Pedido del usuario: al guardar la facturación, `CRM.CSV_SOLICITUD_CUD_APP` (task `'U'`) crea o
 actualiza el cliente externo en `dbo.CTAMEXTER01`. La llave es el **N° de documento de
@@ -18,6 +52,20 @@ usuario, `CRM.CSV_COBRANZAS_CUD_APP` no se tocó.
   `@RUC_EXTER`/`@RAZON_EXTER`, variables que ya estaban declaradas y sin uso.
 - **Al actualizar** no se tocan `GGENERAL`/`NOMREPRE`/`ARUC`/`AGERET`, para no pisar lo que haya
   cargado otro sistema. Solo se ponen vacíos al crear.
+- **`RAZON` es única en la tabla** (restricción `IX_CTAMEXTER01`, la creó el jefe del usuario —
+  **no se toca la tabla**). Bug real en la primera prueba: un DNI mal tipeado creó una fila con el
+  nombre del cliente; al corregirlo, el `UPDATE` de la fila del DNI real chocaba contra ese nombre
+  (error 2627), el `CATCH` general relanzaba el error y la app mostraba "Respuesta inesperada del
+  servidor" (el backend devuelve `""`). **Decisión final del usuario**: el upsert sigue siendo
+  solo por RUC, sin ninguna lógica por nombre — solo se controla el error. El upsert va en un
+  `TRY/CATCH` propio: si sale 2627/2601, devuelve `ERROR¯Ya existe un cliente registrado con el
+  nombre X (documento Y). Verifica el número de documento de facturación.` + `ROLLBACK` (la
+  solicitud no se guarda y la app lo muestra con `CrudError`); cualquier otro error se relanza con
+  `THROW` al `CATCH` general. Sin comillas dobles en el mensaje: el backend las borra
+  (`Replace("\"", "")`). Un intento anterior del mismo día (conservar la `RAZON` / saltar el
+  `INSERT`) se descartó. `CSV_COBRANZAS_CUD_APP` tampoco controla este índice (no se tocó).
+- Ojo: como corre desde el paso 3 (no solo al generar), un documento mal tipeado en un borrador
+  deja una fila en `CTAMEXTER01`.
 - **Campo 45 nuevo** (`@PREFIJO_CEL_FAC VARCHAR(5)` = `field45` de `Fnsplitstringtable45`):
   `DatosFacturacion.celularCodigoTelefono` (código de marcado sin `+`, ej. `'51'`), enviado desde
   `SolicitudRemoteDatasource.guardarSolicitud()`. Antes el prefijo del celular de facturación

@@ -1,5 +1,19 @@
 ﻿# Lead Feature
 
+## Seguimiento con barra inferior (2026-09-21)
+
+`SeguimientoView` pasa `showBottomNav: true` a `BasePage` — misma barra (Inicio · Chats ·
+Seguimiento · Cobranza) que Home, Chats y Cobranza.
+
+## Empresa del contacto = la del enlace más reciente (2026-09-21)
+
+`CRM.CSV_LEADS_LST_APP`: las 5 consultas que eligen la empresa + cargo del contacto
+(`#EmpresaActiva` y 4 `OUTER APPLY ... ECX/EA`) ordenaban por `EM2.FC_USUARIO_M/C` (fecha de la
+empresa); ahora por `CE2.FC_USUARIO_M/C` (fecha del enlace `T_EMPRESA_CONTACTO`), igual que
+`CSV_WHATSAPP_LST_APP`. Motivo: una solicitud facturada con RUC enlaza al contacto con esa empresa
+(ver `solicitudes/CLAUDE.md`) y debe verse como su empresa actual aunque la empresa sea antigua.
+Sin cambios en Flutter. ⚠️ Pendiente `ALTER PROCEDURE`.
+
 ## N° documento por PARTIDAM + búsqueda solo con DNI (2026-09-14)
 
 `EditContacto` y `EditContactoSimple`: el N° documento valida longitud/exacta/solo dígitos con

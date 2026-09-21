@@ -230,6 +230,105 @@ class ResponsiveHelper {
     final h = imageHeight(w, aspectRatio: aspectRatio);
     return Size(w, h);
   }
+
+  // ============================================================
+  // ESCALA DE LIENZO (ilustraciones diseñadas a tamaño fijo)
+  // ============================================================
+
+  /// Factor para escalar un diseño de tamaño fijo ([tamanoDiseno]) de modo que
+  /// entre completo en [disponible] sin deformarse (mismo factor en ancho y alto).
+  ///
+  /// - Retorna `0` si no hay espacio real (ej. el primer frame en celulares
+  ///   antiguos llega con pantalla 0×0) — el caller no debe dibujar nada.
+  /// - Una dimensión infinita (ej. dentro de un scroll) no limita la escala.
+  /// - Nunca pasa de [escalaMaxima] (evita ilustraciones gigantes en tablet).
+  static double escalaLienzo(
+    Size disponible,
+    Size tamanoDiseno, {
+    double escalaMaxima = 1.0,
+  }) {
+    final escalaAncho = disponible.width.isFinite
+        ? disponible.width / tamanoDiseno.width
+        : escalaMaxima;
+    final escalaAlto = disponible.height.isFinite
+        ? disponible.height / tamanoDiseno.height
+        : escalaMaxima;
+    final escala = escalaAncho < escalaAlto ? escalaAncho : escalaAlto;
+    if (escala <= 0) return 0;
+    return escala > escalaMaxima ? escalaMaxima : escala;
+  }
+}
+
+// ============================================================
+
+/// Lienzo de tamaño fijo que se escala entero al espacio disponible.
+///
+/// PROPÓSITO:
+/// - Ilustraciones/mockups armados con medidas fijas (posiciones absolutas,
+///   tarjetas de alto fijo) que deben verse IGUAL en cualquier celular, solo
+///   más grandes o más chicas — sin desbordes ni recortes.
+/// - [child] siempre se arma con exactamente [tamanoDiseno] (sus cálculos
+///   internos nunca ven una pantalla chica ni 0×0) y el resultado se escala
+///   con un solo factor (ver [ResponsiveHelper.escalaLienzo]).
+/// - Dentro del lienzo se ignora la escala de texto del sistema: con la fuente
+///   agrandada (común en celulares antiguos) el texto crecería y rompería el
+///   diseño fijo. El lienzo ya se escala entero, no hace falta agrandarlo aparte.
+///   Usarlo solo para contenido decorativo/ilustrativo, nunca para texto que el
+///   usuario necesite leer con su tamaño de fuente.
+///
+/// USO:
+/// LienzoEscalado(
+///   tamanoDiseno: const Size(390, 430),
+///   escalaMaxima: 1.4,
+///   child: MiIlustracion(),
+/// )
+class LienzoEscalado extends StatelessWidget {
+  const LienzoEscalado({
+    super.key,
+    required this.tamanoDiseno,
+    required this.child,
+    this.escalaMaxima = 1.0,
+    this.alineacion = Alignment.topCenter,
+  });
+
+  /// Tamaño en el que se diseñó [child] (px lógicos a escala 1).
+  final Size tamanoDiseno;
+  final Widget child;
+
+  /// Tope de crecimiento en pantallas grandes (1.0 = nunca agranda).
+  final double escalaMaxima;
+
+  /// Dónde se ubica el lienzo escalado dentro del espacio disponible.
+  final Alignment alineacion;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final escala = ResponsiveHelper.escalaLienzo(
+          constraints.biggest,
+          tamanoDiseno,
+          escalaMaxima: escalaMaxima,
+        );
+        if (escala <= 0) return const SizedBox.shrink();
+
+        return Align(
+          alignment: alineacion,
+          child: SizedBox(
+            width: tamanoDiseno.width * escala,
+            height: tamanoDiseno.height * escala,
+            child: FittedBox(
+              fit: BoxFit.fill,
+              child: SizedBox.fromSize(
+                size: tamanoDiseno,
+                child: MediaQuery.withNoTextScaling(child: child),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ============================================================

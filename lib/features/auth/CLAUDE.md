@@ -616,6 +616,37 @@ responde, ese usuario no tiene forma de entrar hasta que la config cargue bien.
 
 ---
 
+## Onboarding responsive (2026-09-21)
+
+**Bug real** — en un celular antiguo, al depurar: `BoxConstraints has a negative minimum
+height` en `onboarding_slide1.dart`. El primer frame llega con pantalla 0×0 (log
+`FlutterRenderer: Width is zero`) y el slide calculaba `alto * 0.22 - 24 - 54` = -78. Además,
+los 6 slides usaban medidas fijas en px: en celulares chicos se desbordaban (slide 1, subtítulos)
+y las tarjetas se cortaban abajo. Solo se veía en debug (la aserción no existe en release), pero
+el desborde/recorte sí era real.
+
+- **Slides 2–6 (`OnboardingSlideBase`)**: `Column` = zona azul con el texto (logo + título +
+  subtítulo a tamaño normal; `FittedBox.scaleDown` con tope `_fraccionMaxTexto` = 40 % del alto,
+  para pantallas chicas o fuente del sistema agrandada) + `Expanded` con la ilustración sobre un
+  lienzo fijo de `anchoEscena × _altoEscena` (390 × 430), escalado con `LienzoEscalado` (core).
+  La zona azul y la ola se dibujan con la misma escala, así el borde azul cae siempre a la misma
+  altura del card. **API sin cambios**: cada slide pasa `mockup` + `elementosFlotantes(cardTop)`;
+  `cardTop` ahora está en coordenadas del lienzo (`margenSuperiorEscena` = 24) y los flotantes
+  se posicionan contra los bordes del lienzo, no de la pantalla.
+- **Slide 1**: logo arriba + `Expanded(LienzoEscalado)` con el card 3D y los flotantes
+  (`_EscenaSlide1`, lienzo 390 × 340) + texto abajo (`FittedBox`, máx. 30 % del alto).
+- **Alto mínimo**: por debajo de `OnboardingSlideBase.altoMinimoContenido` (160) los slides no
+  dibujan contenido (frames transitorios).
+- **Slide 5**: los íconos de documento/persona subían a `cardTop - 52`/`- 44` y en celulares
+  chicos pisaban el subtítulo — ahora `cardTop - 22`, igual que los demás slides.
+- **Test de regresión**: `test/features/auth/onboarding_responsive_test.dart` — cada slide en
+  0×0, alturas mínimas, 320×400, 360×460, 393×670, 800×1120 y con fuente al 130 %; falla ante
+  cualquier error de layout (con el código viejo fallaban 22 casos, incluido slide 1 en 0×0).
+  Carga Roboto/Material Icons desde `FLUTTER_ROOT` y envuelve en `Material` (como el carrusel):
+  sin eso el texto sale en la fuente de test/monospace y los mockups "desbordan" en falso.
+- Si se agrega un slide o un mockup más alto que el del slide 6 (~390 px a 390 de ancho),
+  subir `_altoEscena` o se saldrá del lienzo.
+
 ## Páginas
 
 | Página | Ruta | Transición |

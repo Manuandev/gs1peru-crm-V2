@@ -948,7 +948,26 @@ ResponsiveBuilder(
 // Imagen responsive (respeta aspect ratio nativo 1900x1200)
 ResponsiveImage.asset('assets/banner.png')
 ResponsiveImage.network('https://...', maxWidthFraction: 0.8)
+
+// Ilustración diseñada a tamaño fijo → se escala ENTERA al espacio disponible
+ResponsiveHelper.escalaLienzo(disponible, tamanoDiseno, escalaMaxima: 1.4) // 0 si no hay espacio
+LienzoEscalado(
+  tamanoDiseno: const Size(390, 430),
+  escalaMaxima: 1.4,
+  alineacion: Alignment.topCenter, // default
+  child: MiIlustracion(),
+)
 ```
+
+**`LienzoEscalado` (2026-09-21)** — para mockups/ilustraciones armados con medidas fijas
+(posiciones absolutas, tarjetas de alto fijo). El `child` siempre se arma con exactamente
+`tamanoDiseno` (nunca ve una pantalla chica ni 0×0, así ningún cálculo interno da negativo) y
+se escala con un solo factor = el lado que más limita, con tope `escalaMaxima`. Sin espacio
+real (`escalaLienzo == 0`, ej. el primer frame con pantalla 0×0 en celulares antiguos) no dibuja
+nada. **Ignora la escala de texto del sistema adentro** (`MediaQuery.withNoTextScaling`): con
+fuente agrandada el texto rompería el diseño fijo. Usarlo solo para contenido decorativo,
+nunca para texto que el usuario necesite leer a su tamaño de fuente. Lo usa el onboarding
+(`auth/`, ver su CLAUDE.md).
 
 ### LocalDatabase — SQLite
 

@@ -55,8 +55,11 @@ class OnboardingSlide5 extends StatelessWidget {
           ),
 
           // ── Ícono superior izquierdo: documento blanco ──────────
+          // Misma altura que los flotantes del resto de slides (antes -52):
+          // con la ilustración escalada en celulares chicos, más arriba pisaba
+          // el subtítulo.
           Positioned(
-            top: cardTop - 52,
+            top: cardTop - 22,
             left: 6,
             child: _IconFlotante(
               icono: AppIcons.file,
@@ -68,7 +71,7 @@ class OnboardingSlide5 extends StatelessWidget {
 
           // ── Ícono superior derecho: persona verde ───────────────
           Positioned(
-            top: cardTop - 44,
+            top: cardTop - 22,
             right: 6,
             child: _IconFlotante(
               icono: AppIcons.userFilled,

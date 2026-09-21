@@ -3,110 +3,158 @@
 import 'package:flutter/material.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
+import 'package:app_crm/features/auth/presentation/widgets/splash/onboarding_slide_base.dart';
 
-/// Slide 1: fondo 100 % azul con card 3D central.
-/// El logo GS1 vive aquí arriba del card (no hay header separado).
-/// LayoutBuilder calcula cardTop para ubicar los íconos flotantes al lado.
+/// Slide 1: fondo 100 % azul con card 3D central — responsive (2026-09-21).
+/// El logo GS1 vive arriba (no hay header separado). El card 3D y los íconos
+/// flotantes se arman sobre un lienzo de tamaño fijo ([_tamanoEscena]) que
+/// [LienzoEscalado] escala entero al espacio entre el logo y el texto — se ve
+/// igual en cualquier celular, sin desbordes (mismo criterio que
+/// [OnboardingSlideBase] para los slides 2–6).
 class OnboardingSlide1 extends StatelessWidget {
   const OnboardingSlide1({super.key});
 
   static const double _anchoCard = 220.0;
   static const double _altoCard = 290.0;
   static const double _altoPedestal = 14.0;
+  // Lienzo de diseño: mismo ancho que los slides 2–6; alto = margen superior
+  // de los flotantes + card + pedestal + aire para la sombra.
+  static const Size _tamanoEscena = Size(OnboardingSlideBase.anchoEscena, 340);
+  // El texto inferior ocupa como máximo esta fracción del alto; si no entra
+  // (pantalla chica o fuente del sistema agrandada) se achica en vez de desbordar.
+  static const double _fraccionMaxTexto = 0.3;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, constraints) {
-        final alto = constraints.maxHeight;
-        // El card empieza a ~22 % del alto del área de contenido
-        final cardTop = alto * 0.22;
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.primary, Color(0xFF001A4D)],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (_, constraints) {
+          // Frame transitorio sin espacio real (ej. pantalla 0×0 en el primer
+          // frame de celulares antiguos): no se dibuja contenido.
+          if (constraints.maxHeight < OnboardingSlideBase.altoMinimoContenido ||
+              constraints.maxWidth <= 0) {
+            return const SizedBox.shrink();
+          }
 
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.primary, Color(0xFF001A4D)],
-            ),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
+          return Column(
             children: [
-              // ── Contenido vertical principal ──────────────────────
-              Column(
-                children: [
-                  const SizedBox(height: AppSpacing.lg),
-                  // Logo GS1 + "CRM Perú"
-                  _LogoRow(),
-                  // Espacio flexible hasta el card
-                  SizedBox(height: cardTop - AppSpacing.lg - _kLogoAltura),
-                  // Card 3D
-                  _IlustracionCentral(
-                    ancho: _anchoCard,
-                    alto: _altoCard,
-                    altoPedestal: _altoPedestal,
+              const SizedBox(height: AppSpacing.lg),
+              // Logo GS1 + "CRM Perú"
+              _LogoRow(),
+              // Card 3D + flotantes, escalados al espacio disponible
+              const Expanded(
+                child: LienzoEscalado(
+                  tamanoDiseno: _tamanoEscena,
+                  escalaMaxima: OnboardingSlideBase.escalaMaxima,
+                  alineacion: Alignment.center,
+                  child: _EscenaSlide1(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              // Texto inferior
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: constraints.maxHeight * _fraccionMaxTexto,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    child: _TextoSlide1(),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  // Texto inferior
-                  _TextoSlide1(),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-              ),
-
-              // ── Íconos flotantes al lado del card ─────────────────
-              Positioned(
-                top: cardTop - 22,
-                left: 12,
-                child: _BurbujaChat(color: AppColors.primary),
-              ),
-              Positioned(
-                top: cardTop - 22,
-                right: 12,
-                child: _BurbujaChat(
-                  color: AppColors.grey100,
-                  puntosColor: AppColors.grey400,
                 ),
               ),
-              Positioned(
-                top: cardTop + _altoCard * 0.28,
-                left: 8,
-                child: _CirculoFlotante(
-                  color: AppColors.onboardingPurple,
-                  icono: AppIcons.leadNuevo,
-                ),
-              ),
-              Positioned(
-                top: cardTop + _altoCard * 0.28,
-                right: 8,
-                child: _CirculoFlotante(
-                  color: AppColors.success,
-                  icono: AppIcons.userFilled,
-                ),
-              ),
-              Positioned(
-                top: cardTop + _altoCard * 0.62,
-                left: 12,
-                child: _CardFlotanteDoc(),
-              ),
-              Positioned(
-                top: cardTop + _altoCard * 0.62,
-                right: 12,
-                child: _CirculoFlotante(
-                  color: const Color(0xFF5B4FCF),
-                  icono: AppIcons.moneda,
-                ),
-              ),
+              const SizedBox(height: AppSpacing.lg),
             ],
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
 
-// Altura aproximada del logo row (SVG 34 + márgenes internos)
-const double _kLogoAltura = 54.0;
+// ── Escena: card 3D + flotantes (coordenadas del lienzo de diseño) ─────────────
+
+class _EscenaSlide1 extends StatelessWidget {
+  const _EscenaSlide1();
+
+  // Borde superior del card dentro del lienzo (deja lugar a los flotantes
+  // que asoman por arriba, `cardTop - 22`).
+  static const double _cardTop = OnboardingSlideBase.margenSuperiorEscena;
+  static const double _altoCard = OnboardingSlide1._altoCard;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Positioned(
+          top: _cardTop,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: _IlustracionCentral(
+              ancho: OnboardingSlide1._anchoCard,
+              alto: _altoCard,
+              altoPedestal: OnboardingSlide1._altoPedestal,
+            ),
+          ),
+        ),
+
+        // ── Íconos flotantes al lado del card ─────────────────
+        const Positioned(
+          top: _cardTop - 22,
+          left: 12,
+          child: _BurbujaChat(color: AppColors.primary),
+        ),
+        const Positioned(
+          top: _cardTop - 22,
+          right: 12,
+          child: _BurbujaChat(
+            color: AppColors.grey100,
+            puntosColor: AppColors.grey400,
+          ),
+        ),
+        const Positioned(
+          top: _cardTop + _altoCard * 0.28,
+          left: 8,
+          child: _CirculoFlotante(
+            color: AppColors.onboardingPurple,
+            icono: AppIcons.leadNuevo,
+          ),
+        ),
+        const Positioned(
+          top: _cardTop + _altoCard * 0.28,
+          right: 8,
+          child: _CirculoFlotante(
+            color: AppColors.success,
+            icono: AppIcons.userFilled,
+          ),
+        ),
+        Positioned(
+          top: _cardTop + _altoCard * 0.62,
+          left: 12,
+          child: _CardFlotanteDoc(),
+        ),
+        const Positioned(
+          top: _cardTop + _altoCard * 0.62,
+          right: 12,
+          child: _CirculoFlotante(
+            color: Color(0xFF5B4FCF),
+            icono: AppIcons.moneda,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 // ── Logo row ───────────────────────────────────────────────────────────────────
 

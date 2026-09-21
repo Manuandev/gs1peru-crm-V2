@@ -1,5 +1,35 @@
 # Solicitudes Feature
 
+## Upsert de facturación en `dbo.CTAMEXTER01` + campo 45 (2026-09-21)
+Pedido del usuario: al guardar la facturación, `CRM.CSV_SOLICITUD_CUD_APP` (task `'U'`) crea o
+actualiza el cliente externo en `dbo.CTAMEXTER01`. La llave es el **N° de documento de
+facturación** (`@NUM_DOC_FAC`, sea RUC, DNI, CE o pasaporte): si ya existe una fila con ese
+`RUC` (`RTRIM`), se actualiza; si no, se crea. Esto va **solo en este SP** — confirmado por el
+usuario, `CRM.CSV_COBRANZAS_CUD_APP` no se tocó.
+
+- **Cuándo corre**: `@NUM_DOC_FAC <> ''` y (`@PASO_ORIGEN = '3'` o `IB_BORRADOR = 0`). Es decir,
+  al guardar el paso 3 o en el guardado final. El bloque va después del INSERT/UPDATE de
+  `T_TECMSOLINSCRIPCION01_FACTURACION` y del relleno desde SUNAT (una jurídica con RUC ya llega
+  con razón social, dirección y ubigeo de SUNAT si el asesor los dejó vacíos).
+- **Mapeo**: `RUC` = N° documento · `RAZON` = `NOMEMPRE_FAC` o, si viene vacío, nombres +
+  apellidos · `DIRECCION` · `ZPODIR` = ubigeo (o `''`) · `TELF` = celular sin prefijo · `FAX` =
+  `prefijo-celular` (ej. `51-987654321`, mismo formato que ya tenían los datos de la tabla) ·
+  `EMAIL` = correo · `GGENERAL`/`NOMREPRE`/`ARUC`/`AGERET` = `''`. `ID` es identity. Reusa
+  `@RUC_EXTER`/`@RAZON_EXTER`, variables que ya estaban declaradas y sin uso.
+- **Al actualizar** no se tocan `GGENERAL`/`NOMREPRE`/`ARUC`/`AGERET`, para no pisar lo que haya
+  cargado otro sistema. Solo se ponen vacíos al crear.
+- **Campo 45 nuevo** (`@PREFIJO_CEL_FAC VARCHAR(5)` = `field45` de `Fnsplitstringtable45`):
+  `DatosFacturacion.celularCodigoTelefono` (código de marcado sin `+`, ej. `'51'`), enviado desde
+  `SolicitudRemoteDatasource.guardarSolicitud()`. Antes el prefijo del celular de facturación
+  nunca llegaba al SP (`CELULAR_FAC` es solo el número). Con una APK vieja (44 campos) llega
+  `NULL`: al actualizar se conserva el `FAX` que ya tenía la fila y al crear queda `''`.
+- **Efecto en cobranzas (avisado, no resuelto)**: `CSV_COBRANZAS_CUD_APP` solo inserta en
+  `CTAMEXTER01` + `CTAMEXTER01_EXT` cuando el documento no existe. Como ahora la solicitud lo crea
+  antes, para esos documentos cobranzas ya no crea la fila de `CTAMEXTER01_EXT`.
+- ⚠️ Pendiente `ALTER PROCEDURE` en SSMS (UTF-16LE+BOM preservado). Desplegar el SP **antes** que
+  la APK. La función `Fnsplitstringtable45` no está versionada en el repo: si el `ALTER` falla
+  con "Invalid column name field45", cambiar a `Fnsplitstringtable50`.
+
 ## Paso 1 — sin toggle Jurídica/Natural + reglas por tipo de documento (2026-09-18)
 Sin cambios de SP (todo viaja en los campos que ya existían).
 
@@ -3979,10 +4009,12 @@ necesario para poder validarlos, ya que antes su valor no se propagaba a ningún
 - `[CRM].[CSV_SOLICITUD_CUD_APP]` (task `'U'`, body `cabecera¦...¯detalle¦...¬detalle¦...¯U`)
   → `SolicitudRemoteDatasource.guardarSolicitud()`. Crea (si `numSol` viene vacío) o
   actualiza (si ya existe) cabecera + facturación + participantes de una solicitud, todo en
-  una transacción — ver el mapeo posicional completo comentado en el método (43 campos de
+  una transacción — ver el mapeo posicional completo comentado en el método (45 campos de
   cabecera, `ID_LEAD` es field1 — el SP ya no recibe `ID_CONTACTO`; 14 por participante).
   `field42`/`field43` (comprobanteId/nacionalidadId de facturación) se agregaron el 2026-07-16,
-  ver "Bugs reales — Comprobante y Nacionalidad de facturación" arriba.
+  ver "Bugs reales — Comprobante y Nacionalidad de facturación" arriba. `field44`
+  (pasoOrigen) el 2026-07-17 y `field45` (prefijo del celular de facturación, upsert de
+  `dbo.CTAMEXTER01`) el 2026-09-21 — ver la primera sección de este archivo.
   Devuelve `OK¯mensaje¯NUMSOL` (el `NUMSOL` es obligatorio
   leerlo de la respuesta en el flujo de creación — hace falta para la llamada de archivos
   después). Llamado desde los 5 botones "Guardar"/"Generar solicitud" vía

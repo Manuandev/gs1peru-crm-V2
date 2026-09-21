@@ -171,14 +171,15 @@ class SolicitudRemoteDatasource {
   // solicitud, en una sola llamada. Los archivos van aparte (task 'AR',
   // pendiente — necesita el NUMSOL que devuelve esta llamada).
   //
-  // Cabecera: 44 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
+  // Cabecera: 45 campos, ID_LEAD es field1 (el SP ya no recibe ID_CONTACTO).
   // field42 (comprobanteId) y field43 (nacionalidadId de facturación) se
   // agregaron el 2026-07-16 — antes el datasource solo mandaba 41 campos y
   // el SP nunca recibía @ID_TIPO_COMPROBANTE_FAC/@ID_NACIONALIDAD_FAC (bug
   // real: comprobante y nacionalidad de facturación no sobrevivían a
   // reabrir la solicitud). field44 (pasoOrigen) se agregó el 2026-07-17
   // para que el SP registre un seguimiento distinto por paso del wizard.
-  // Ver CLAUDE.md del feature.
+  // field45 (prefijo del celular de facturación) se agregó el 2026-09-21
+  // para el upsert de dbo.CTAMEXTER01. Ver CLAUDE.md del feature.
   Future<CrudResult> guardarSolicitud({
     required String numSol,
     required String
@@ -305,6 +306,9 @@ class SolicitudRemoteDatasource {
       facturacion?.comprobanteId ?? '', // 42 ID_TIPO_COMPROBANTE_FAC
       facturacion?.paisId ?? '', // 43 ID_PAIS_FAC
       pasoOrigen, // 44 PASO_ORIGEN
+      // 45 PREFIJO_CEL_FAC — código de marcado sin '+' (ej. '51'); el SP lo
+      // usa para el FAX de dbo.CTAMEXTER01 ('51-987654321').
+      facturacion?.celularCodigoTelefono ?? '',
     ].join(AppConstants.sepCampos);
 
     // El IGV de cada participante ya no es siempre `importe × igv%` —

@@ -39,6 +39,13 @@ class SeguimientoFiltroAvanzadoAplicado extends SeguimientoEvento {
   List<Object?> get props => [filtro];
 }
 
+/// Interno — cambió la unidad de negocio activa (UnidadCubit). Quita campaña y
+/// oportunidad del filtro (no existen en la otra unidad) y recarga desde la
+/// página 1. Chip, fechas y búsqueda se mantienen.
+class SeguimientoUnidadCambiada extends SeguimientoEvento {
+  const SeguimientoUnidadCambiada();
+}
+
 /// "Limpiar" del panel lateral: quita todos los filtros avanzados y recarga.
 class SeguimientoFiltroAvanzadoLimpiado extends SeguimientoEvento {
   const SeguimientoFiltroAvanzadoLimpiado();

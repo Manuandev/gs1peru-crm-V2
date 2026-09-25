@@ -18,6 +18,23 @@ class MessageDispatcher {
   void dispatch(WebSocketMessage message) {
     final String? route = AppRouteObserver.instance.currentRoute;
 
+    // ── Filtro por unidad de negocio ────────────────────────────
+    // El broadcast de SignalR le llega a TODOS los conectados. Si la trama es
+    // de una unidad que el asesor no tiene, se ignora; si es de otra unidad
+    // suya (no la activa), no se pinta en listas/contadores pero sí se
+    // notifica — con el nombre de la unidad, y al tocarla la app cambia sola
+    // de unidad (NotificationNavigator). Ver UnidadTrama.
+    switch (UnidadTrama.alcance(message)) {
+      case AlcanceUnidad.ajena:
+        return;
+      case AlcanceUnidad.otraPropia:
+        // Sin supresión por ruta: la pantalla abierta no la está mostrando.
+        NotificationHandler.instance.show(message);
+        return;
+      case AlcanceUnidad.activa:
+        break;
+    }
+
     switch (message.process) {
       case 'MENSAJE_WHATSAPP':
         _dispatchWhatsApp(message, route);

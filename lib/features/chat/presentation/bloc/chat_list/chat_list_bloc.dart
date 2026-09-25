@@ -13,6 +13,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
   List<Chat> _allChats = [];
   StreamSubscription<WebSocketMessage>? _messageSubscription;
   StreamSubscription<LeadUpdate>? _leadUpdateSubscription;
+  StreamSubscription<int?>? _unidadSubscription;
 
   String _lastSearchQuery = '';
   ChatListFiltro _filtroActivo = ChatListFiltro.todos;
@@ -53,12 +54,23 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       final lead = update.updatedLead as Negociacion?;
       if (!isClosed && lead != null) add(ChatListLeadUpdated(lead));
     });
+
+    // Cambio de unidad de negocio (drawer o tap en notificación de otra
+    // unidad) → limpia chip/búsqueda/filtros (la campaña elegida no existe en
+    // la otra unidad) y recarga con la nueva unidad.
+    _unidadSubscription = UnidadCubit.instance.stream
+        .map((u) => u.idUnidadActiva)
+        .distinct()
+        .listen((_) {
+          if (!isClosed) add(const ChatListReset());
+        });
   }
 
   @override
   Future<void> close() {
     _messageSubscription?.cancel();
     _leadUpdateSubscription?.cancel();
+    _unidadSubscription?.cancel();
     return super.close();
   }
 

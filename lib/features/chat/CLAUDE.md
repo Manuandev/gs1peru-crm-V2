@@ -3,6 +3,26 @@
 Gestiona conversaciones WhatsApp, envío de mensajes, multimedia, templates y edición de leads.
 Es el feature más complejo de la app — leer completo antes de tocar cualquier archivo.
 
+## Unidad de negocio (2026-09-25)
+
+Una conversación pertenece a la unidad de la **última negociación del contacto**
+(creada o modificada más reciente; empate → id mayor). Un asesor solo la ve si esa
+unidad es su unidad activa, aunque tenga la unidad de negociaciones anteriores.
+
+| SP / task | Body |
+|---|---|
+| `CSV_WHATSAPP_LST_APP` `'LS'` | `codUser ¦ moderador ¦ idUnidad` |
+| `CSV_WHATSAPP_LST_APP` `'LU'` | `idChatCab ¦ codUser ¦ idUnidad` — vacío si el chat no es de la unidad |
+| `CRM.CSV_LEADS_LST_APP` `'DT'` (info lead) | `idLead ¦ idUnidad ¦ codUser` |
+
+- Sin unidades: `getChats` → `[]`, `getChatByIdChatCab` → `null`, sin llamar al SP.
+- `ChatListBloc` (global) escucha `UnidadCubit` y dispara `ChatListReset` (limpia
+  chip, búsqueda y filtros del panel, recarga).
+- Tiempo real: las tramas de otra unidad no llegan al stream (`MessageDispatcher`),
+  así que la lista nunca pinta una conversación ajena; 'LU' es la segunda capa.
+- Combos de campaña/oportunidad del filtro y de "Editar negociación" salen de
+  `CatalogsLoaded`, ya filtrados por la unidad activa.
+
 ## "Deshacer" envío + grabadora con pausa/escucha + "Eliminar mensaje" (2026-09-15)
 
 La API de WhatsApp **no permite borrar** un mensaje ya enviado. Tres artificios:

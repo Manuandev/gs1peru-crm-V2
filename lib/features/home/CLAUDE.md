@@ -10,6 +10,34 @@ Seguimiento y Cobranza navegan con `goToSeguimiento(sinRangoFecha: true)` /
 fecha apagados. Conversaciones y cualquier otro ítem siguen con `clearAndPush(ruta)`. La barra
 inferior (`AppBottomNavWidget`) y el drawer no cambiaron: abren con el rango por defecto.
 
+## Unidad de negocio (2026-09-25)
+
+Todo el Home va por la **unidad activa** (ver core/CLAUDE.md → "Unidad de negocio"):
+
+| SP / task | Body |
+|---|---|
+| `CRM.CSV_HOME_LST_APP` `'L'` | `codUser ¦ esEquipo ¦ idUnidad` — contadores, prioridades, prospectos, asesores (y los badges del drawer, que salen de acá) |
+| `CRM.CSV_NOTIFICACIONES_LST_APP` `'LS'` | `… ¦ tamanio ¦ idUnidad` — la campanita solo lista las de esa unidad |
+| `CSV_NOTIFICACIONES_CUD_APP` `'LE'` | `codUser ¦ ip ¦ coords ¦ idUnidad` — marca como leídas solo las de esa unidad |
+
+- Sin unidades asignadas los 3 métodos no llaman al SP (Home en 0, lista vacía).
+- `HomeBloc` escucha `UnidadCubit` y hace `HomeRefresh` (con loading) al
+  cambiar de unidad — desde el drawer o al tocar una notificación de otra unidad.
+- Tiempo real: `MessageDispatcher` ya no manda al stream las tramas de otra
+  unidad, así que la recarga silenciosa de "Prioridad ahora" solo corre con
+  mensajes de la unidad activa.
+- **Sin unidades** (`UnidadCubit.state.tieneUnidades == false`): `HomeView` muestra
+  `HomeSinUnidadView` (aviso "No tienes una unidad de negocio asignada" sobre la
+  ola azul) en vez de `HomePortrait` con todo en 0. La ola es `HomeOlaFondo`
+  (`home_portrait.dart`), compartida por las dos vistas.
+- **PROPUESTA pendiente de aprobación — `HomeUnidadChip`** (`widgets/dashboard/`):
+  chip con la unidad activa en el título del AppBar, en lugar del subtítulo
+  "Gestiona tus leads y conversaciones". Tocable si hay más de una unidad (abre
+  `UnidadSelectorSheet`, el mismo del drawer). Implementado pero COMENTADO en
+  `home_view.dart`: para activarlo, comentar el `Text` del subtítulo y descomentar
+  `// const HomeUnidadChip(),` justo debajo. Diseño en el lienzo "CRM · Unidad de
+  negocio" (artboards Home · unidad activa / Home · sin unidad).
+
 ## Archivos clave
 
 | Archivo | Qué hace |

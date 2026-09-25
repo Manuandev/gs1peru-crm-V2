@@ -13,6 +13,9 @@ class NotificationHandler {
   }
 
   void handle(WebSocketMessage message) {
+    // FCM en foreground: misma regla de unidad que MessageDispatcher — una
+    // unidad que el asesor no tiene nunca se notifica.
+    if (UnidadTrama.alcance(message) == AlcanceUnidad.ajena) return;
     final notif = parse(message);
     if (notif == null) return;
     if (_isSuppressed(message)) return;
@@ -69,6 +72,7 @@ class NotificationHandler {
       idChatCab: p.idChatCab,
       numero: p.telefono,
       mensaje: _bodyPorTipo(p.tipoMensaje, p.mensaje),
+      unidad: UnidadTrama.deMensaje(message),
     );
 
     return null;

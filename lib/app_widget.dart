@@ -106,6 +106,9 @@ class AppWidget extends StatelessWidget {
           ), // ✅ DrawerBloc va aquí
           BlocProvider<DrawerBloc>(create: (context) => DrawerBloc()),
           BlocProvider<FiltroCubit>.value(value: FiltroCubit.instance),
+          // Unidad de negocio activa — singleton, la fija AuthBloc al
+          // autenticar y la cambia el selector del drawer.
+          BlocProvider<UnidadCubit>.value(value: UnidadCubit.instance),
           BlocProvider<CatalogsBloc>(
             create: (context) => CatalogsBloc(
               getData: GetCatalogsUseCase(context.read<CatalogsRepository>()),

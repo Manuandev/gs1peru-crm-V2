@@ -24,6 +24,7 @@
 //
 // DEPENDENCIAS:
 // - LogoutUsecase → limpia la sesión al hacer logout
+// - UnidadCubit   → fija la unidad de negocio activa antes de autenticar
 // ============================================================
 
 import 'package:app_crm/index_dependencies.dart';
@@ -50,6 +51,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSessionRestored event,
     Emitter<AuthState> emit,
   ) async {
+    // Unidad de negocio ANTES de autenticar: la primera carga de Home ya
+    // tiene que salir filtrada. Restaurar → respeta la última elegida.
+    await UnidadCubit.instance.inicializar(restaurar: true);
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
     // reset() antes de connect(): un logout previo en la misma sesión de la
     // app deja SignalRService en manuallyClosed, estado que connect() nunca
@@ -75,6 +79,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLoginSuccess event,
     Emitter<AuthState> emit,
   ) async {
+    // Unidad de negocio ANTES de autenticar — login manual → la asignación
+    // más reciente (la primera que devuelve el login).
+    await UnidadCubit.instance.inicializar(restaurar: false);
     emit(AuthAuthenticated(userId: event.userId, username: event.username));
     // reset() antes de connect(): un logout previo en la misma sesión de la
     // app deja SignalRService en manuallyClosed, estado que connect() nunca
@@ -102,6 +109,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // si se tocan después del logout, no debe llevar a un chat/lead sin token.
     await LocalNotificationService.instance.cancelAll();
     await _logoutUsecase();
+    // Limpia la unidad activa guardada — el próximo login arranca en la
+    // asignación más reciente.
+    await UnidadCubit.instance.limpiar();
 
     emit(const AuthUnauthenticated());
   }

@@ -21,7 +21,7 @@ class HomePortrait extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Card embudo sobre fondo con ola azul ──────────────
-          _HomeWaveCard(state: state),
+          HomeOlaFondo(child: CardTotalesHome(state: state)),
 
           // ── Contenido con padding estándar ────────────────────
           Padding(
@@ -126,13 +126,14 @@ class HomePortrait extends StatelessWidget {
   }
 }
 
-// ── Fondo con ola + CardTotalesHome encima ────────────────────────────────────
+// ── Fondo con ola + card encima ───────────────────────────────────────────────
 // La ola azul se pinta de arriba hasta la mitad del widget.
 // El card es el child y tapa la ola excepto en los márgenes laterales.
-class _HomeWaveCard extends StatelessWidget {
-  final HomeLoaded state;
+// Público: también lo usa HomeSinUnidadView (asesor sin unidad de negocio).
+class HomeOlaFondo extends StatelessWidget {
+  final Widget child;
 
-  const _HomeWaveCard({required this.state});
+  const HomeOlaFondo({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +147,7 @@ class _HomeWaveCard extends StatelessWidget {
           top: AppSpacing.md,
           bottom: AppSpacing.xs,
         ),
-        child: CardTotalesHome(state: state),
+        child: child,
       ),
     );
   }

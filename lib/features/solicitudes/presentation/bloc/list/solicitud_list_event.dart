@@ -51,6 +51,13 @@ class SolicitudListAsesorSeleccionado extends SolicitudListEvent {
   List<Object?> get props => [codAsesor];
 }
 
+/// Interno — cambió la unidad de negocio activa (UnidadCubit). Quita el
+/// asesor elegido (puede no ser de la nueva unidad) y campaña/oportunidad del
+/// panel, y recarga desde la página 1.
+class SolicitudListUnidadCambiada extends SolicitudListEvent {
+  const SolicitudListUnidadCambiada();
+}
+
 /// "Buscar" del panel lateral: aplica Desde/Hasta/Campaña/Evento y recarga.
 class SolicitudFiltroAvanzadoAplicado extends SolicitudListEvent {
   final SolicitudFiltroAvanzado filtro;

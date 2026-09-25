@@ -27,6 +27,7 @@ class ListasGenericasModel extends ListasGenericas {
     super.prefijosContacto,
     super.tipoCambio,
     super.eventos,
+    super.unidades,
   });
 
   static ListasGenericasModel parse(String rawResponse) {
@@ -54,6 +55,7 @@ class ListasGenericasModel extends ListasGenericas {
     final prefijosContactoRaw = partes.length > 20 ? partes[20] : '';
     final tipoCambioRaw = partes.length > 21 ? partes[21] : '';
     final eventosRaw = partes.length > 22 ? partes[22] : '';
+    final unidadesRaw = partes.length > 23 ? partes[23] : '';
 
     final campanias = campaniasRaw.trim().isEmpty
         ? <CampaniaItemModel>[]
@@ -145,6 +147,10 @@ class ListasGenericasModel extends ListasGenericas {
         ? <EventoItemModel>[]
         : EventoItemModel.parseList(eventosRaw);
 
+    final unidades = unidadesRaw.trim().isEmpty
+        ? <UnidadNegocioItemModel>[]
+        : UnidadNegocioItemModel.parseList(unidadesRaw);
+
     return ListasGenericasModel(
       campanias: campanias,
       oportunidades: oportunidades,
@@ -169,6 +175,7 @@ class ListasGenericasModel extends ListasGenericas {
       prefijosContacto: prefijosContacto,
       tipoCambio: tipoCambio,
       eventos: eventos,
+      unidades: unidades,
     );
   }
 
@@ -249,6 +256,7 @@ class CampaniaItemModel extends CampaniaItem {
     required super.id,
     required super.nombre,
     super.fcFinal,
+    super.idUnidad,
   });
 
   factory CampaniaItemModel.fromRawString(String raw) {
@@ -261,6 +269,9 @@ class CampaniaItemModel extends CampaniaItem {
       // Si el SP desplegado aún no lo manda → '' → nunca vencida → se listan
       // todas.
       fcFinal: ParseUtils.str(c, 3),
+      // Campo 4 = idUnidad (unidad de negocio de la campaña), mismo formato
+      // en 'L', 'FIL' y 'EN'.
+      idUnidad: ParseUtils.toInt(c, 4),
     );
   }
 
@@ -388,6 +399,7 @@ class AsesorItemModel extends AsesorItem {
     required super.codUser,
     required super.nombre,
     required super.disponible,
+    super.unidades,
   });
 
   factory AsesorItemModel.fromRawString(String raw) {
@@ -396,6 +408,12 @@ class AsesorItemModel extends AsesorItem {
       codUser: ParseUtils.str(c, 0),
       nombre: ParseUtils.str(c, 1),
       disponible: ParseUtils.toBool(c, 2),
+      // Campo 3 = unidades del asesor separadas por sepComodin.
+      unidades: ParseUtils.str(c, 3)
+          .split(AppConstants.sepComodin)
+          .map((id) => int.tryParse(id.trim()))
+          .whereType<int>()
+          .toList(),
     );
   }
 
@@ -806,6 +824,31 @@ class EventoItemModel extends EventoItem {
         .split(AppConstants.sepRegistros)
         .where((r) => r.trim().isNotEmpty)
         .map((r) => EventoItemModel.fromRawString(r))
+        .toList();
+  }
+}
+
+class UnidadNegocioItemModel extends UnidadNegocioItem {
+  const UnidadNegocioItemModel({
+    required super.id,
+    super.codigo,
+    required super.nombre,
+  });
+
+  factory UnidadNegocioItemModel.fromRawString(String raw) {
+    final c = ParseUtils.campos(raw, AppConstants.sepCampos);
+    return UnidadNegocioItemModel(
+      id: ParseUtils.toInt(c, 0),
+      codigo: ParseUtils.str(c, 1),
+      nombre: ParseUtils.str(c, 2),
+    );
+  }
+
+  static List<UnidadNegocioItemModel> parseList(String rawResponse) {
+    return rawResponse
+        .split(AppConstants.sepRegistros)
+        .where((r) => r.trim().isNotEmpty)
+        .map((r) => UnidadNegocioItemModel.fromRawString(r))
         .toList();
   }
 }

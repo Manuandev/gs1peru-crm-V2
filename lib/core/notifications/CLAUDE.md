@@ -40,6 +40,43 @@ sigue siendo el dueño real del filtrado cuando la app está cerrada.
 
 ---
 
+## Unidad de negocio en las tramas (2026-09-25)
+
+Cada asesor solo ve lo de su **unidad activa** (ver core/CLAUDE.md → "Unidad de
+negocio"). Las tramas que pintan listas o contadores traen la unidad **después
+de sus campos actuales** (no se corre ningún índice):
+
+| Proceso | Campos nuevos |
+|---|---|
+| `MENSAJE_WHATSAPP` | `[11] idUnidad ¦ [12] nombreUnidad` |
+| `NUEVO_LEAD_BOT` | `[7] idUnidad ¦ [8] nombreUnidad` |
+| `NUEVO_LEAD` | `[12] idUnidad ¦ [13] nombreUnidad` |
+| `UPDATE_*_WHATSAPP` | sin cambio (solo tocan chats ya pintados) |
+
+Las posiciones viven en un solo lugar: `UnidadTrama._indiceIdUnidad`
+(`network/websocket/payloads/unidad_trama.dart`).
+
+**Regla (`UnidadTrama.alcance`, app viva)** — aplicada en `MessageDispatcher.dispatch`
+(SignalR) y `NotificationHandler.handle` (FCM en foreground):
+
+| Unidad de la trama | Qué pasa |
+|---|---|
+| No es de ninguna unidad del asesor | Se ignora por completo |
+| Otra unidad del asesor (no la activa) | **No** va al stream (no se pinta ni suma contadores) — **sí** se notifica, sin supresión por ruta |
+| La unidad activa, o la trama no trae unidad | Comportamiento de siempre |
+
+- **Nombre de la unidad**: `subText` de la notificación Android (cabecera
+  "App • Unidad"), en los 3 tipos. Sale de la trama, así funciona también en el
+  isolate de FCM con la app cerrada (sin catálogos en memoria).
+- **Tap**: el payload lleva `idUnidad`; `NotificationNavigator._asegurarUnidad`
+  cambia a esa unidad (`UnidadCubit.cambiarUnidad`) antes de navegar — también
+  en cold start.
+- **App cerrada (FCM)**: la app no filtra; el backend manda el push solo a quien
+  tiene esa unidad. `FcmService.EnviarAsync` → `CRM.CSV_SYSMUSER01_FCM_LST` debe
+  recibir la unidad y devolver solo supervisores con esa unidad asignada.
+
+---
+
 ## Flujo 2 — Background/Killed via FCM
 
 ```

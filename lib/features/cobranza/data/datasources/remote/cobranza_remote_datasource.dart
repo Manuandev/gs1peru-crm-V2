@@ -28,7 +28,7 @@ class CobranzaRemoteDatasource {
 
   // Task 'LSP' — lista paginada (keyset). Body:
   //   codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tam¦fcDesde¦fcHasta¦
-  //   idCampania¦idOportunidad¦estados¦busqueda
+  //   idCampania¦idOportunidad¦estados¦busqueda¦idUnidad
   //   chip     '' = todos ; 'C' = contado ; 'CR' = crédito
   //   idAsesor '' = no aplica (solo lo manda el chip "Asesores")
   //   cur*     '' = primera página
@@ -37,6 +37,9 @@ class CobranzaRemoteDatasource {
   //   busqueda texto del buscador, '' = sin búsqueda. El SP busca en nombre
   //            completo, empresa, celular y N° de solicitud (LIKE, sin
   //            distinguir mayúsculas/tildes), AND con lo demás (2026-09-10).
+  //   idUnidad unidad de negocio activa (2026-09-25) — solo cobranzas cuya
+  //            negociación es de una campaña de esa unidad. Sin unidades
+  //            asignadas no se llama al SP.
   Future<CobranzaPagina> traerPagina({
     CobranzaChipFiltro chip = CobranzaChipFiltro.todos,
     String? codAsesor,
@@ -50,6 +53,8 @@ class CobranzaRemoteDatasource {
     Set<int> estados = const {},
     String busqueda = '',
   }) async {
+    if (!_session.tieneUnidades) return CobranzaPagina.vacia;
+
     final camp = AppConstants.sepCampos;
     final sep = AppConstants.sepListas;
 
@@ -67,6 +72,7 @@ class CobranzaRemoteDatasource {
       idOportunidad ?? '',
       (estados.toList()..sort()).join(','),
       busqueda.sinSeparadoresSp.trim(),
+      _session.idUnidadBody,
     ].join(camp);
 
     final result = await _api.postSafe(
@@ -91,10 +97,13 @@ class CobranzaRemoteDatasource {
     CobranzaChipFiltro.todos || CobranzaChipFiltro.asesores => '',
   };
 
-  // Task 'DT' — mismo endpoint urlCobranzasLst, body numSol¯DT (mismo patrón
-  // que SolicitudRemoteDatasource.getSolicitudDetalle()).
+  // Task 'DT' — mismo endpoint urlCobranzasLst, body numSol ¦ idUnidad ¦ codUser ¯ DT
+  // (mismo patrón que SolicitudRemoteDatasource.getSolicitudDetalle(); el SP
+  // valida la unidad, 2026-09-25).
   Future<CobranzaDetalle?> getDetalleCobranza(String numSol) async {
-    final body = '$numSol${AppConstants.sepListas}DT';
+    final body =
+        '${[numSol, _session.idUnidadBody, _session.codUser].join(AppConstants.sepCampos)}'
+        '${AppConstants.sepListas}DT';
 
     final result = await _api.postSafe(ApiConstants.urlCobranzasLst, body);
 

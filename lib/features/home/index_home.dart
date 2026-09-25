@@ -50,6 +50,8 @@ export 'presentation/widgets/notifications/tiles/notificacion_tile.dart';
 export 'presentation/widgets/dashboard/dashboard_home.dart';
 export 'presentation/widgets/dashboard/home_menu_cards.dart';
 export 'presentation/widgets/dashboard/card_totales_home.dart';
+export 'presentation/widgets/dashboard/home_unidad_chip.dart';
+export 'presentation/widgets/dashboard/home_sin_unidad_view.dart';
 
 export 'presentation/widgets/dashboard/tiles/prioridad_tile_home.dart';
 export 'presentation/widgets/dashboard/sections/prioridad_section_home.dart';

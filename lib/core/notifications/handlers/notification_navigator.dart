@@ -13,9 +13,10 @@ class NotificationNavigator {
   // app) reprocesaría el mismo cold-start launch y navegaría de nuevo.
   bool _launchProcesado = false;
 
-  void navigate(AppNotification notif) {
+  Future<void> navigate(AppNotification notif) async {
     final route = notif.route;
     if (route == null) return;
+    await _asegurarUnidad(notif);
 
     if (route.startsWith(AppRoutes.chats)) return _goChat(notif);
     if (route.startsWith(AppRoutes.seguimiento)) return _goLead(notif);
@@ -25,7 +26,13 @@ class NotificationNavigator {
 
   /// Navega según el botón de acción que tocó el usuario.
   /// Llamado desde onDidReceiveNotificationResponse con response.actionId.
-  void navigateWithAction(AppNotification notif, {String? actionId}) {
+  Future<void> navigateWithAction(
+    AppNotification notif, {
+    String? actionId,
+  }) async {
+    // Notificación de otra unidad del asesor → primero cambia a esa unidad,
+    // así la lista de destino (y Home debajo) cargan con la unidad correcta.
+    await _asegurarUnidad(notif);
     switch (actionId) {
       case 'ver_lead':
         _goLead(notif);
@@ -61,7 +68,17 @@ class NotificationNavigator {
     final response = details!.notificationResponse;
     if (response?.payload == null || response!.payload!.isEmpty) return;
     final notif = AppNotification.fromPayloadString(response.payload!);
-    navigateWithAction(notif, actionId: response.actionId);
+    await navigateWithAction(notif, actionId: response.actionId);
+  }
+
+  /// Si la notificación trae `idUnidad` de otra unidad asignada al asesor,
+  /// la activa antes de navegar (pedido de negocio: cambio automático, sin
+  /// preguntar). Sin sesión o sin unidad en el payload, no hace nada.
+  Future<void> _asegurarUnidad(AppNotification notif) async {
+    if (!SessionService().hasSession) return;
+    final idUnidad = int.tryParse(notif.payload?['idUnidad'] ?? '');
+    if (idUnidad == null) return;
+    await UnidadCubit.instance.cambiarUnidad(idUnidad);
   }
 
   void _goChat(AppNotification notif) {

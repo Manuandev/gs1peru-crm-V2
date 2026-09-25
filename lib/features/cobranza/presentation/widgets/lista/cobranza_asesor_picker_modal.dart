@@ -192,8 +192,14 @@ class _CobranzaAsesorPickerModalState
                   );
                 }
 
-                final asesores =
-                    _asesoresFrescos ?? (state as CatalogsLoaded).asesores;
+                // Solo asesores de la unidad de negocio activa (2026-09-25),
+                // tanto del catálogo como del refresco 'ASE'.
+                final catalogos = state as CatalogsLoaded;
+                final asesores = _asesoresFrescos == null
+                    ? catalogos.asesoresUnidad
+                    : _asesoresFrescos!
+                          .where((a) => a.unidades.contains(catalogos.idUnidad))
+                          .toList();
                 final filtrados = _filtrar(asesores);
 
                 if (asesores.isEmpty) {

@@ -41,6 +41,7 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
   int _epoca = 0;
   bool _cargandoPagina = false;
   StreamSubscription<LeadUpdate>? _updateSub;
+  StreamSubscription<int?>? _unidadSub;
 
   SeguimientoBloc(
     this._getPagina, {
@@ -60,6 +61,7 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
     on<SeguimientoPaginaSolicitada>(_onPaginaSolicitada);
     on<SeguimientoReintentarPagina>(_onReintentarPagina);
     on<SeguimientoLeadActualizado>(_onLeadActualizado);
+    on<SeguimientoUnidadCambiada>(_onUnidadCambiada);
 
     _updateSub = LeadUpdateNotifier.instance.stream.listen((update) {
       final negociacion = update.updatedLead;
@@ -67,12 +69,32 @@ class SeguimientoBloc extends Bloc<SeguimientoEvento, SeguimientoEstado> {
         add(SeguimientoLeadActualizado(negociacion));
       }
     });
+
+    // Cambio de unidad de negocio (drawer o notificación de otra unidad).
+    _unidadSub = UnidadCubit.instance.stream
+        .map((u) => u.idUnidadActiva)
+        .distinct()
+        .listen((_) {
+          if (!isClosed) add(const SeguimientoUnidadCambiada());
+        });
   }
 
   @override
   Future<void> close() {
     _updateSub?.cancel();
+    _unidadSub?.cancel();
     return super.close();
+  }
+
+  Future<void> _onUnidadCambiada(
+    SeguimientoUnidadCambiada event,
+    Emitter<SeguimientoEstado> emit,
+  ) {
+    _filtroAvanzado = _filtroAvanzado.copyWith(
+      limpiarCampania: true,
+      limpiarOportunidad: true,
+    );
+    return _cargarDesdeCero(emit);
   }
 
   // ── Carga desde cero (primera vez / refresh / cambio de chip / filtro) ──────

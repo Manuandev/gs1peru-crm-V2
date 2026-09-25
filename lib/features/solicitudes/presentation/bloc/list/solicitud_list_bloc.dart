@@ -12,6 +12,8 @@
 // Seguimiento — antes se filtraba en cliente y solo encontraba en las páginas
 // ya cargadas.
 
+import 'dart:async';
+
 import 'package:app_crm/index_dependencies.dart';
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/solicitudes/index_solicitudes.dart';
@@ -39,6 +41,7 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
   String? _cursorFecha;
   String? _cursorNumsol;
   bool _finLista = false;
+  StreamSubscription<int?>? _unidadSub;
 
   SolicitudListBloc(this._getPagina) : super(const SolicitudListInitial()) {
     on<SolicitudListStarted>(_onStarted);
@@ -50,6 +53,34 @@ class SolicitudListBloc extends Bloc<SolicitudListEvent, SolicitudListState> {
     on<SolicitudFiltroAvanzadoLimpiado>(_onFiltroAvanzadoLimpiado);
     on<SolicitudPaginaSolicitada>(_onPaginaSolicitada);
     on<SolicitudReintentarPagina>(_onReintentarPagina);
+    on<SolicitudListUnidadCambiada>(_onUnidadCambiada);
+
+    // Cambio de unidad de negocio (drawer o notificación de otra unidad).
+    _unidadSub = UnidadCubit.instance.stream
+        .map((u) => u.idUnidadActiva)
+        .distinct()
+        .listen((_) {
+          if (!isClosed) add(const SolicitudListUnidadCambiada());
+        });
+  }
+
+  @override
+  Future<void> close() {
+    _unidadSub?.cancel();
+    return super.close();
+  }
+
+  Future<void> _onUnidadCambiada(
+    SolicitudListUnidadCambiada e,
+    Emitter<SolicitudListState> emit,
+  ) {
+    if (_filtro == SolicitudFiltro.asesores) _filtro = SolicitudFiltro.todas;
+    _asesorSeleccionado = null;
+    _filtroAvanzado = _filtroAvanzado.copyWith(
+      limpiarCampania: true,
+      limpiarOportunidad: true,
+    );
+    return _cargarDesdeCero(emit);
   }
 
   String _chipCode(SolicitudFiltro f) => switch (f) {

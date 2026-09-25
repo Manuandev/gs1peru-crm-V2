@@ -79,6 +79,7 @@ export 'network/websocket/payloads/update_pantalla_whatsapp_payload.dart';
 export 'network/websocket/payloads/update_mensaje_whatsapp_payload.dart';
 export 'network/websocket/payloads/error_pantalla_whatsapp_payload.dart';
 export 'network/websocket/payloads/nuevo_lead_bot_payload.dart';
+export 'network/websocket/payloads/unidad_trama.dart';
 // #endregion network
 
 // #region notificaciones
@@ -104,6 +105,8 @@ export 'presentation/bloc/catalog/catalog_state.dart';
 
 export 'presentation/bloc/filtro/filtro_cubit.dart';
 export 'presentation/bloc/filtro/filtro_state.dart';
+export 'presentation/bloc/unidad/unidad_cubit.dart';
+export 'presentation/bloc/unidad/unidad_state.dart';
 
 export 'presentation/pages/base_page.dart';
 export 'presentation/pages/under_construction_page.dart';
@@ -127,6 +130,8 @@ export 'presentation/widgets/inputs/custom_combo_multi_search_field.dart';
 export 'presentation/widgets/navigation/app_drawer_widget.dart';
 export 'presentation/widgets/navigation/custom_app_bar.dart';
 export 'presentation/widgets/navigation/drawer_item_model.dart';
+export 'presentation/widgets/navigation/drawer_unidad_selector.dart';
+export 'presentation/widgets/navigation/unidad_selector_sheet.dart';
 export 'presentation/widgets/navigation/exit_on_back_wrapper.dart';
 
 export 'presentation/widgets/app_error_view.dart';

@@ -17,6 +17,12 @@ class UserModel {
   final String telefono;
   final String celular;
   final bool isModerador;
+  // Campo 6 del login (normal y Google): ids de las unidades de negocio
+  // asignadas, separados por AppConstants.sepComodin y ordenados por
+  // FC_CREACION DESC, ID_USUARIO_UNIDAD DESC — la primera es la asignación
+  // más reciente (unidad activa por defecto, ver UnidadCubit). Vacía si el
+  // asesor no tiene unidades → la app no carga listas ni contadores.
+  final List<int> unidades;
 
   const UserModel({
     required this.userId,
@@ -27,6 +33,7 @@ class UserModel {
     required this.telefono,
     required this.celular,
     required this.isModerador,
+    this.unidades = const [],
   });
 
   factory UserModel.fromRawString(String raw) {
@@ -74,6 +81,11 @@ class UserModel {
       telefono: f(3),
       celular: f(4),
       isModerador: f(5) == '1' ? true : false,
+      unidades: f(6)
+          .split(AppConstants.sepComodin)
+          .map((id) => int.tryParse(id.trim()))
+          .whereType<int>()
+          .toList(),
     );
   }
 

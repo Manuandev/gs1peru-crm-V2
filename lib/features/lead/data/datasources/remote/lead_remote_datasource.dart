@@ -71,8 +71,12 @@ class LeadRemoteDatasource {
     };
   }
 
+  // Task 'DT' — body: idLead ¦ idUnidad ¦ codUser (el SP valida la unidad de la
+  // campaña de la negociación, 2026-09-25). Mismo task que
+  // ChatRemoteDatasource.getInfoNegociacion().
   Future<NegociacionModel> getLeadDetalle(int idLead) async {
-    final String body = '$idLead${sep}DT';
+    final String body =
+        '${[idLead, _session.idUnidadBody, _session.codUser].join(camp)}${sep}DT';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -93,7 +97,11 @@ class LeadRemoteDatasource {
   Future<DatosPrellenadoSolicitudModel> getDatosPrellenadoSolicitud(
     int idLead,
   ) async {
-    final String body = '$idLead${sep}NEG';
+    // Body: idLead ¦ idUnidad ¦ codUser — el SP filtra por la unidad activa y
+    // valida que siga asignada al usuario
+    // (2026-09-25).
+    final String body =
+        '${[idLead, _session.idUnidadBody, _session.codUser].join(camp)}${sep}NEG';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -115,7 +123,11 @@ class LeadRemoteDatasource {
   // siempre tiene contacto (T_LEAD.ID_CONTACTO), el número puede
   // cambiar/duplicarse.
   Future<NegociacionModel> getLeadDetallePorContacto(int idContacto) async {
-    final String body = '$idContacto${sep}DN';
+    // Body: idContacto ¦ idUnidad ¦ codUser — el SP filtra por la unidad activa
+    // y valida que siga asignada al usuario
+    // (2026-09-25).
+    final String body =
+        '${[idContacto, _session.idUnidadBody, _session.codUser].join(camp)}${sep}DN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -133,7 +145,11 @@ class LeadRemoteDatasource {
   // migrado de idNumero a idContacto (mismo motivo que
   // getLeadDetallePorContacto arriba).
   Future<List<NegociacionModel>> obtenerNegociaciones(int idContacto) async {
-    final String body = '$idContacto${sep}LN';
+    // Body: idContacto ¦ idUnidad ¦ codUser — el SP filtra por la unidad activa
+    // y valida que siga asignada al usuario
+    // (2026-09-25).
+    final String body =
+        '${[idContacto, _session.idUnidadBody, _session.codUser].join(camp)}${sep}LN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -154,7 +170,11 @@ class LeadRemoteDatasource {
   Future<List<HistorialComentarioModel>> obtenerHistorialSeguimientoPorContacto(
     int idContacto,
   ) async {
-    final String body = '$idContacto${sep}LHC';
+    // Body: idContacto ¦ idUnidad ¦ codUser — el SP filtra por la unidad activa
+    // y valida que siga asignada al usuario
+    // (2026-09-25).
+    final String body =
+        '${[idContacto, _session.idUnidadBody, _session.codUser].join(camp)}${sep}LHC';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -174,7 +194,11 @@ class LeadRemoteDatasource {
   Future<List<LeadRecordatorioModel>> obtenerRecordatoriosPorContacto(
     int idContacto,
   ) async {
-    final String body = '$idContacto${sep}LRN';
+    // Body: idContacto ¦ idUnidad ¦ codUser — el SP filtra por la unidad activa
+    // y valida que siga asignada al usuario
+    // (2026-09-25).
+    final String body =
+        '${[idContacto, _session.idUnidadBody, _session.codUser].join(camp)}${sep}LRN';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 

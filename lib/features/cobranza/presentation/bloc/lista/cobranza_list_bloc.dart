@@ -49,6 +49,7 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   int _epoca = 0;
   bool _cargandoPagina = false;
   StreamSubscription<CobranzaUpdate>? _updateSub;
+  StreamSubscription<int?>? _unidadSub;
 
   CobranzaListBloc(this._getPagina, {bool sinRangoFecha = false})
     : _filtroAvanzado = sinRangoFecha
@@ -66,6 +67,15 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
     on<CobranzaPaginaSolicitada>(_onPaginaSolicitada);
     on<CobranzaReintentarPagina>(_onReintentarPagina);
     on<CobranzaListItemActualizado>(_onItemActualizado);
+    on<CobranzaListUnidadCambiada>(_onUnidadCambiada);
+
+    // Cambio de unidad de negocio (drawer o notificación de otra unidad).
+    _unidadSub = UnidadCubit.instance.stream
+        .map((u) => u.idUnidadActiva)
+        .distinct()
+        .listen((_) {
+          if (!isClosed) add(const CobranzaListUnidadCambiada());
+        });
 
     _updateSub = CobranzaUpdateNotifier.instance.stream.listen((update) {
       if (!isClosed) {
@@ -84,7 +94,21 @@ class CobranzaListBloc extends Bloc<CobranzaListEvent, CobranzaListState> {
   @override
   Future<void> close() {
     _updateSub?.cancel();
+    _unidadSub?.cancel();
     return super.close();
+  }
+
+  Future<void> _onUnidadCambiada(
+    CobranzaListUnidadCambiada event,
+    Emitter<CobranzaListState> emit,
+  ) {
+    if (_chip == CobranzaChipFiltro.asesores) _chip = CobranzaChipFiltro.todos;
+    _asesorSeleccionado = null;
+    _filtroAvanzado = _filtroAvanzado.copyWith(
+      limpiarCampania: true,
+      limpiarOportunidad: true,
+    );
+    return _cargarDesdeCero(emit);
   }
 
   // ── Carga desde cero ───────────────────────────────────────────────────────

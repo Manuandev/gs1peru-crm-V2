@@ -20,7 +20,7 @@ class SolicitudRemoteDatasource {
   static const int tamanioSiguiente = 50;
 
   // Task 'LSP' — lista paginada (keyset) con filtro Desde/Hasta/Campaña/Oportunidad.
-  // Body: token ¯ codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad¦busqueda ¯ LSP
+  // Body: token ¯ codUser¦mod¦chip¦idAsesor¦curFecha¦curNumsol¦tamanio¦fcDesde¦fcHasta¦idCampania¦idOportunidad¦busqueda¦idUnidad ¯ LSP
   //   idCampania/idOportunidad: 2026-09-10 el campo 11 pasó de ID_EVENTO a
   //   ID_OPORTUNIDAD para quedar igual que la web (su combo dice "Evento" pero
   //   lo llena con CRMV2_OPORTUNIDAD y manda ID_OPORTUNIDAD —
@@ -29,6 +29,9 @@ class SolicitudRemoteDatasource {
   //   chip: '' = todas ; 'SV' = sin validar ; 'VA' = validados
   //   idAsesor: solo con el chip "Asesores" (filtra por ese codUser); si no, ''
   //   fcDesde/fcHasta: ISO 126 (yyyy-MM-ddTHH:mm:ss), '' = no aplica
+  //   idUnidad (campo 13, 2026-09-25): unidad de negocio activa — solo
+  //     solicitudes cuya negociación es de una campaña de esa unidad. Sin
+  //     unidades asignadas no se llama al SP.
   //   busqueda: texto del buscador, '' = sin búsqueda. El SP busca en nombre
   //     completo, empresa, celular y N° de solicitud (LIKE, sin distinguir
   //     mayúsculas/tildes), AND con lo demás (2026-09-10). Antes se filtraba
@@ -45,6 +48,8 @@ class SolicitudRemoteDatasource {
     int? idOportunidad,
     String busqueda = '',
   }) async {
+    if (!_session.tieneUnidades) return SolicitudPagina.vacia;
+
     final camp = AppConstants.sepCampos;
     final sep = AppConstants.sepListas;
 
@@ -61,6 +66,7 @@ class SolicitudRemoteDatasource {
       idCampania ?? '',
       idOportunidad ?? '',
       busqueda.sinSeparadoresSp.trim(),
+      _session.idUnidadBody,
     ].join(camp);
 
     final result = await _api.postSafe(
@@ -110,8 +116,11 @@ class SolicitudRemoteDatasource {
   // urlSolicitudesLst). Trae solicitante + facturación + participantes +
   // archivos de una solicitud ya guardada, dado su NUMSOL — usado para
   // rehidratar el wizard al entrar por "Editar ficha"/"Continuar".
+  // Body: numSol ¦ idUnidad ¦ codUser (el SP valida la unidad, 2026-09-25).
   Future<SolicitudDetalleModel> getSolicitudDetalle(String numSol) async {
-    final body = '$numSol${AppConstants.sepListas}DT';
+    final body =
+        '${[numSol, _session.idUnidadBody, _session.codUser].join(AppConstants.sepCampos)}'
+        '${AppConstants.sepListas}DT';
 
     final result = await _api.postSafe(ApiConstants.urlSolicitudesLst, body);
 
@@ -128,8 +137,11 @@ class SolicitudRemoteDatasource {
   // catálogo, pensada para rehidratar el wizard), 'DV' resuelve las
   // descripciones en el propio SP y trae también participantes/historial —
   // pensada para SolicitudDetalleView (solo lectura), no para el formulario.
+  // Body: numSol ¦ idUnidad ¦ codUser (el SP valida la unidad, 2026-09-25).
   Future<SolicitudDetalle> getDetalleSolicitud(String numSol) async {
-    final body = '$numSol${AppConstants.sepListas}DV';
+    final body =
+        '${[numSol, _session.idUnidadBody, _session.codUser].join(AppConstants.sepCampos)}'
+        '${AppConstants.sepListas}DV';
 
     final result = await _api.postSafe(ApiConstants.urlSolicitudesLst, body);
 
@@ -152,7 +164,13 @@ class SolicitudRemoteDatasource {
   }) async {
     if (idOportunidad <= 0) return const [];
 
-    final body = [idOportunidad, idCampania].join(AppConstants.sepCampos);
+    // Body: idOportunidad ¦ idCampania ¦ idUnidad ¦ codUser (2026-09-25).
+    final body = [
+      idOportunidad,
+      idCampania,
+      _session.idUnidadBody,
+      _session.codUser,
+    ].join(AppConstants.sepCampos);
     final result = await _api.postSafe(
       ApiConstants.urlSolicitudesLst,
       '$body${AppConstants.sepListas}EVF',

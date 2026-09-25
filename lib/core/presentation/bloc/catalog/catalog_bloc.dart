@@ -1,5 +1,7 @@
 // lib/core/presentation/bloc/catalog/catalog_bloc.dart
 
+import 'dart:async';
+
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/index_dependencies.dart';
 
@@ -7,6 +9,10 @@ class CatalogsBloc extends Bloc<CatalogsEvent, CatalogsState> {
   final GetCatalogsUseCase _getData;
   final GetCatalogosEditarNegociacionUseCase _getEditarNegociacion;
   final GetCatalogosFiltrosUseCase _getFiltros;
+
+  // Los combos se filtran por la unidad activa — al cambiarla en el drawer se
+  // re-emite el estado con la nueva unidad (sin llamar al backend).
+  late final StreamSubscription<UnidadState> _unidadSub;
 
   CatalogsBloc({
     required GetCatalogsUseCase getData,
@@ -19,6 +25,28 @@ class CatalogsBloc extends Bloc<CatalogsEvent, CatalogsState> {
     on<CatalogsLoadRequested>(_onLoad);
     on<CatalogsNegociacionRefreshed>(_onNegociacionRefresh);
     on<CatalogsFiltrosRefreshed>(_onFiltrosRefresh);
+    on<CatalogsUnidadCambiada>(_onUnidadCambiada);
+
+    _unidadSub = UnidadCubit.instance.stream.listen(
+      (unidad) => add(CatalogsUnidadCambiada(unidad.idUnidadActiva)),
+    );
+  }
+
+  int? get _idUnidadActiva => UnidadCubit.instance.state.idUnidadActiva;
+
+  @override
+  Future<void> close() {
+    _unidadSub.cancel();
+    return super.close();
+  }
+
+  void _onUnidadCambiada(
+    CatalogsUnidadCambiada event,
+    Emitter<CatalogsState> emit,
+  ) {
+    final current = state;
+    if (current is! CatalogsLoaded) return;
+    emit(CatalogsLoaded(listas: current.listas, idUnidad: event.idUnidad));
   }
 
   Future<void> _onLoad(
@@ -28,7 +56,7 @@ class CatalogsBloc extends Bloc<CatalogsEvent, CatalogsState> {
     try {
       final listas = await _getData.call();
 
-      emit(CatalogsLoaded(listas: listas));
+      emit(CatalogsLoaded(listas: listas, idUnidad: _idUnidadActiva));
     } on AppException catch (e) {
       emit(CatalogsError(e.message));
     } catch (e, stackTrace) {
@@ -59,6 +87,7 @@ class CatalogsBloc extends Bloc<CatalogsEvent, CatalogsState> {
             intereses: datos.intereses,
             monedas: datos.monedas,
           ),
+          idUnidad: current.idUnidad,
         ),
       );
     } catch (_) {}
@@ -83,6 +112,7 @@ class CatalogsBloc extends Bloc<CatalogsEvent, CatalogsState> {
             oportunidades: datos.oportunidades,
             eventos: datos.eventos,
           ),
+          idUnidad: current.idUnidad,
         ),
       );
     } catch (_) {}

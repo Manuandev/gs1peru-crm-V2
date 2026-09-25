@@ -103,3 +103,10 @@ class CobranzaListItemActualizado extends CobranzaListEvent {
   @override
   List<Object?> get props => [numSol, idEstado, idCondicion, condicion];
 }
+
+/// Interno — cambió la unidad de negocio activa (UnidadCubit). Quita el
+/// asesor elegido (puede no ser de la nueva unidad) y campaña/oportunidad del
+/// panel, y recarga desde la página 1.
+class CobranzaListUnidadCambiada extends CobranzaListEvent {
+  const CobranzaListUnidadCambiada();
+}

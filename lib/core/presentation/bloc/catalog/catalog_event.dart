@@ -28,3 +28,14 @@ class CatalogsNegociacionRefreshed extends CatalogsEvent {
 class CatalogsFiltrosRefreshed extends CatalogsEvent {
   const CatalogsFiltrosRefreshed();
 }
+
+// Interno — lo dispara el propio CatalogsBloc al escuchar UnidadCubit. No
+// recarga nada del backend: los combos de campañas/oportunidades/eventos/
+// asesores se filtran en memoria por la nueva unidad activa.
+class CatalogsUnidadCambiada extends CatalogsEvent {
+  final int? idUnidad;
+  const CatalogsUnidadCambiada(this.idUnidad);
+
+  @override
+  List<Object> get props => [idUnidad ?? 0];
+}

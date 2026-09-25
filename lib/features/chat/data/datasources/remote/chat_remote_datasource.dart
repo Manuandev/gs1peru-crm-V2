@@ -22,8 +22,11 @@ class ChatRemoteDatasource {
     return negociaciones.first;
   }
 
+  // Task 'DT' de CRM.CSV_LEADS_LST_APP — body: idLead ¦ idUnidad ¦ codUser. El SP
+  // valida que la campaña de la negociación sea de la unidad activa
+  // (2026-09-25, "todo llamado relacionado a campaña valida la unidad").
   Future<Negociacion> getInfoNegociacion(int idLead) async {
-    final String body = '${[idLead].join(camp)}${sep}DT';
+    final String body = '${[idLead, _session.idUnidadBody, _session.codUser].join(camp)}${sep}DT';
 
     final result = await _api.postSafe(ApiConstants.urlLeadsLst, body);
 
@@ -37,9 +40,15 @@ class ChatRemoteDatasource {
     };
   }
 
+  // Task 'LS' de CSV_WHATSAPP_LST_APP — body: codUser ¦ moderador ¦ idUnidad.
+  // Solo conversaciones cuya ÚLTIMA negociación del contacto (creada o
+  // modificada más reciente, empate → id mayor) es de la unidad activa
+  // (2026-09-25). Sin unidades asignadas no se llama al SP.
   Future<List<ChatModel>> getChats() async {
+    if (!_session.tieneUnidades) return [];
+
     final String body =
-        '${[_session.codUser, _session.isModerador ? 1 : 0].join(camp)}${sep}LS';
+        '${[_session.codUser, _session.isModerador ? 1 : 0, _session.idUnidadBody].join(camp)}${sep}LS';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 
@@ -53,8 +62,15 @@ class ChatRemoteDatasource {
 
   /// Trae un único chat por su ID_CONVERSACION_CAB — usado cuando llega un
   /// mensaje por WebSocket de una conversación que aún no está en memoria.
+  ///
+  /// Body: idChatCab ¦ codUser ¦ idUnidad — el SP devuelve vacío si el chat no
+  /// es de la unidad activa (segunda capa detrás del filtro de
+  /// MessageDispatcher, 2026-09-25).
   Future<Chat?> getChatByIdChatCab(int idChatCab) async {
-    final String body = '$idChatCab${sep}LU';
+    if (!_session.tieneUnidades) return null;
+
+    final String body =
+        '${[idChatCab, _session.codUser, _session.idUnidadBody].join(camp)}${sep}LU';
 
     final result = await _api.postSafe(ApiConstants.urlChatsLst, body);
 

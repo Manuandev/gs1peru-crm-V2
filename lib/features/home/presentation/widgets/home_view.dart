@@ -29,6 +29,10 @@ class HomeView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xxs),
+              // ── Subtítulo (vigente) ──────────────────────────────
+              // PROPUESTA 2026-09-25, pendiente de aprobación: reemplazarlo
+              // por el chip de la unidad de negocio activa (HomeUnidadChip).
+              // Para activarla: comentar este Text y descomentar el chip.
               Text(
                 'Gestiona tus leads y conversaciones',
                 style: AppTextStyles.bodySmall.copyWith(
@@ -37,6 +41,7 @@ class HomeView extends StatelessWidget {
                   ),
                 ),
               ),
+              // const HomeUnidadChip(),
             ],
           );
         },
@@ -121,6 +126,11 @@ class HomeView extends StatelessWidget {
             }
 
             if (state is HomeLoaded) {
+              // Sin unidades de negocio: aviso en vez del embudo y las
+              // listas en 0 (2026-09-25).
+              if (!context.read<UnidadCubit>().state.tieneUnidades) {
+                return const HomeSinUnidadView();
+              }
               return HomePortrait(state: state);
             }
 

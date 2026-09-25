@@ -858,6 +858,11 @@ CustomAppBar(
 
 ### AppDrawerWidget
 Drawer con header de usuario, ítems navegables, badges y logout. Consume `DrawerBloc`.
+Debajo del header va `DrawerUnidadSelector` (unidad de negocio activa; si el
+asesor tiene más de una abre `UnidadSelectorSheet.elegir(context)` para cambiarla
+— ver "Unidad de negocio" en Servicios core). `UnidadSelectorSheet` es el bottom
+sheet compartido (drawer y chip del Home): devuelve la unidad elegida o `null`,
+y el llamador hace `UnidadCubit.cambiarUnidad()`.
 ```dart
 AppDrawerWidget(
   items: AppMenuItems.withBadges(conversacionesBadge: 3),
@@ -1091,6 +1096,9 @@ Datos del usuario autenticado. Vive **solo en memoria** (no se persiste en SQLit
 ```dart
 user.userId / token / codUser / userApe / correoUser
 user.telefono / celular / isModerador
+user.unidades   // List<int> — campo 6 del login, ids de unidad de negocio
+                // separados por sepComodin, orden FC_CREACION DESC,
+                // ID_USUARIO_UNIDAD DESC (la primera = asignación más reciente)
 user.fullName   // alias de userApe para mostrar en UI
 
 // Parser (llamado internamente por el feature de auth)
@@ -1238,7 +1246,48 @@ session.codUser      // código del usuario
 session.userApe      // nombre/apellido
 session.isModerador  // bool
 session.hasSession   // bool
+
+// Unidad de negocio (2026-09-25) — la fija UnidadCubit, no se setea a mano
+session.unidades        // List<int> — las del login
+session.idUnidadActiva  // int? — null si no tiene unidades
+session.idUnidadBody    // String — listo para el body del SP ('' sin unidad)
 ```
+
+### Unidad de negocio — `presentation/bloc/unidad/unidad_cubit.dart` (2026-09-25)
+
+Toda la data de la app (listas, contadores, combos, llamados relacionados a
+campaña) se filtra por la **unidad de negocio activa**. Cadena:
+negociación → campaña (`CampaniaItem.idUnidad`) → unidad.
+
+`UnidadCubit.instance` — singleton global (mismo patrón que `FiltroCubit`),
+provisto en `app_widget.dart`:
+
+| Momento | Unidad activa |
+|---|---|
+| Login manual (normal/Google) — `AuthLoginSuccess` | La primera del login (asignación más reciente) |
+| Restaurar sesión (Splash) — `AuthSessionRestored` | La última elegida en el drawer si sigue asignada; si no, la primera |
+| Drawer (`DrawerUnidadSelector`) | `cambiarUnidad(id)` — solo si tiene más de una |
+| Logout | `limpiar()` — borra la guardada |
+
+`AuthBloc` llama `inicializar(restaurar:)` **antes** de emitir
+`AuthAuthenticated`, así la primera carga de Home ya sale filtrada. La unidad
+elegida se guarda en `settings` (`'unidad_activa'` = `codUser¦idUnidad`) y se
+copia a `SessionService` para los datasources.
+
+- **Sin unidades** → `idUnidadActiva == null`: listas vacías, contadores en 0,
+  combos vacíos, el drawer muestra "Sin unidad asignada".
+- **Combos**: `CatalogsLoaded.campanias`/`oportunidades`/`eventos` ya vienen
+  filtrados por la unidad activa (cascada por `idCampania`).
+  `asesoresUnidad` = asesores de la unidad (pickers); `asesores` sigue sin
+  filtrar para resolver nombres de cualquier codUser. `nombreUnidad(id)` sale
+  de la parte [23] de lstListas (`idUnidad ¦ codigo ¦ nombre`, de
+  `CRM.T_UNIDAD`; el código se trae pero hoy no se muestra). `CatalogsBloc` escucha `UnidadCubit` y
+  re-emite sin llamar al backend.
+- **Pantallas**: cada lista principal escucha `UnidadCubit` y, si cambió, limpia
+  sus filtros y recarga desde la primera página.
+- **Pendiente a futuro (no implementado)**: `CRM.T_USUARIO_UNIDAD.IB_SOLO_PROPIOS`
+  — en la web, si está en 1, el usuario ve solo sus propios registros dentro de la
+  unidad. La app por ahora muestra toda la unidad (decisión 2026-09-25).
 
 ### DeviceInfoService — `services/device_info_service.dart`
 Recoge información del dispositivo, SO y GPS. Usar siempre el caché estático.

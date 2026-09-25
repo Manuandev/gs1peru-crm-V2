@@ -1,5 +1,28 @@
 # Solicitudes Feature
 
+## Unidad de negocio (2026-09-25)
+
+Solicitudes lista solo las de negociaciones cuya campaña es de la unidad activa.
+`CRM.CSV_SOLICITUD_LST_APP` recibe la unidad al final:
+
+| Task | Body |
+|---|---|
+| `'LSP'` | `… ¦ busqueda ¦ idUnidad` (campo 13) |
+| `'DT'` / `'DV'` | `numSol ¦ idUnidad ¦ codUser` |
+| `'EVF'` | `idOportunidad ¦ idCampania ¦ idUnidad ¦ codUser` |
+
+La unidad de una solicitud es la de su campaña propia (`EVT.T_TECMSOLINSCRIPCION01.ID_CAMPANIA`),
+mismo ancla que la web.
+
+- Sin unidades: `'LSP'` no se llama (lista vacía).
+- `SolicitudListBloc` escucha `UnidadCubit` → `SolicitudListUnidadCambiada`: saca
+  el chip "Asesores" (vuelve a "Todas"), quita campaña/oportunidad del panel y
+  recarga desde la página 1.
+- Picker de asesores: solo `CatalogsLoaded.asesoresUnidad` (y el refresco 'ASE'
+  filtrado por la unidad activa). Combos del panel y del wizard vienen de
+  `CatalogsLoaded`, ya filtrados.
+- CUD (`CSV_SOLICITUD_CUD_APP`) sin cambios.
+
 ## Voucher adjunto = no sale el correo de confirmación (2026-09-21)
 Pedido del usuario. Solo SP, sin cambios en Flutter ni lógica de la API. En
 `CRM.CSV_SOLICITUD_CUD_APP` (task `'U'`), antes del `SELECT` final se calcula

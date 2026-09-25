@@ -50,6 +50,8 @@ class _DrawerContent extends StatelessWidget {
               children: [
                 _DrawerHeader(state: state),
                 const SizedBox(height: AppSpacing.xs),
+                // Unidad de negocio activa — selector si tiene más de una.
+                const DrawerUnidadSelector(),
 
                 // ── Ítems principales (scrollables) ───────────────
                 Expanded(

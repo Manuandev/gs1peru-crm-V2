@@ -127,6 +127,7 @@ class LocalNotificationService {
     required String numero,
     required String mensaje,
     String? nombreCliente,
+    UnidadTrama? unidad,
   }) async {
     final mensajes = await _agregarMensajePersistido(
       idNumero: idNumero,
@@ -159,13 +160,17 @@ class LocalNotificationService {
             mensajesVisibles,
             summaryText: '$total mensajes',
           ),
+          subText: _subTextoUnidad(unidad),
         ),
       ),
       payload: AppNotification(
         title: contacto,
         body: mensajes.last,
         route: AppRoutes.detalleChat,
-        payload: {'idChatCab': idChatCab.toString()},
+        payload: {
+          'idChatCab': idChatCab.toString(),
+          ..._payloadUnidad(unidad),
+        },
       ).toPayloadString(),
     );
   }
@@ -238,6 +243,8 @@ class LocalNotificationService {
     final empresa = get(2);
     final canal = f.length > 11 ? get(11) : '';
 
+    final unidad = UnidadTrama.deMensaje(parsed);
+
     final detalles = [
       if (empresa.isNotEmpty) 'Empresa: $empresa',
       if (canal.isNotEmpty) 'Canal: $canal',
@@ -260,6 +267,7 @@ class LocalNotificationService {
             contentTitle: 'Nuevo lead: $nombre',
             summaryText: canal.isNotEmpty ? canal : null,
           ),
+          subText: _subTextoUnidad(unidad),
           actions: const [
             AndroidNotificationAction(
               'ver_lead',
@@ -278,7 +286,11 @@ class LocalNotificationService {
         title: 'Nuevo lead',
         body: nombre,
         route: AppRoutes.seguimiento,
-        payload: {'idLead': leadId.toString(), 'nombre': nombre},
+        payload: {
+          'idLead': leadId.toString(),
+          'nombre': nombre,
+          ..._payloadUnidad(unidad),
+        },
       ).toPayloadString(),
     );
   }
@@ -294,6 +306,7 @@ class LocalNotificationService {
   Future<void> showLeadNuevoBotNotification(WebSocketMessage parsed) async {
     final payload = NuevoLeadBotPayload.fromMessage(parsed);
     if (payload == null) return;
+    final unidad = UnidadTrama.deMensaje(parsed);
 
     final codUserPropio = await _codUserPropio();
     final esDestinatario =
@@ -325,6 +338,7 @@ class LocalNotificationService {
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
+          subText: _subTextoUnidad(unidad),
           actions: const [
             // 'Ver negociación' → AppRoutes.detalleSeguimiento con idLead
             // (mismo destino que 'ver_lead' — ver notification_navigator.dart,
@@ -362,6 +376,7 @@ class LocalNotificationService {
           'idChatCab': payload.idChatCab.toString(),
           'idNumero': payload.idNumero.toString(),
           'idContacto': payload.idContacto.toString(),
+          ..._payloadUnidad(unidad),
         },
       ).toPayloadString(),
     );
@@ -391,8 +406,22 @@ class LocalNotificationService {
       idChatCab: p.idChatCab,
       numero: p.telefono,
       mensaje: _textoMensaje(p.tipoMensaje, p.mensaje),
+      unidad: UnidadTrama.deMensaje(parsed),
     );
   }
+
+  /// Nombre de la unidad de negocio en la cabecera de la notificación
+  /// (Android: "App • Unidad") — así el asesor sabe de qué unidad viene
+  /// aunque no sea la que tiene activa. `null` si la trama no la trae.
+  String? _subTextoUnidad(UnidadTrama? unidad) {
+    if (unidad == null || unidad.nombreUnidad.isEmpty) return null;
+    return unidad.nombreUnidad;
+  }
+
+  /// `idUnidad` en el payload del tap — NotificationNavigator cambia a esa
+  /// unidad antes de navegar si no es la activa.
+  Map<String, String> _payloadUnidad(UnidadTrama? unidad) =>
+      unidad == null ? const {} : {'idUnidad': unidad.idUnidad.toString()};
 
   Future<void> clearLead(int idNumero) async {
     await LocalDatabase().deleteSetting('$_settingsKeyPrefix$idNumero');

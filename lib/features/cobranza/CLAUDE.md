@@ -1,5 +1,22 @@
 # Cobranza Feature
 
+## Unidad de negocio (2026-09-25)
+
+Cobranza lista solo las de negociaciones cuya campaña es de la unidad activa.
+`CRM.CSV_COBRANZAS_LST_APP` recibe la unidad al final:
+
+| Task | Body |
+|---|---|
+| `'LSP'` | `… ¦ estados ¦ busqueda ¦ idUnidad` |
+| `'DT'` | `numSol ¦ idUnidad ¦ codUser` |
+
+- Sin unidades: `'LSP'` no se llama (lista vacía). `'LS'` (`getCobranzas`, sin
+  caller) no se tocó.
+- `CobranzaListBloc` escucha `UnidadCubit` → `CobranzaListUnidadCambiada`: saca el
+  chip "Asesores", quita campaña/oportunidad del panel y recarga desde la página 1.
+- Picker de asesores y combos del panel: filtrados por la unidad activa (ver
+  core/CLAUDE.md → "Unidad de negocio"). CUD sin cambios.
+
 ## Historial del Detalle de cobro: seguimiento + comentario + recordatorio (2026-09-14)
 
 Mismo historial y mismo ítem que Conversaciones/Seguimiento/Solicitudes (ver `core/CLAUDE.md` →

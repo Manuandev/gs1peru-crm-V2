@@ -6,7 +6,7 @@
 //
 // Body:  token ¯ codUser¦moderador¦idEstado¦curFecha¦curIdContacto¦tamanio
 //                ¦fcDesde¦fcHasta¦idCampania¦idOportunidad¦idEstadoAdv¦idSubestadoAdv
-//                ¦busqueda ¯ LSP
+//                ¦busqueda¦idUnidad ¯ LSP
 //   idEstado       '' = todos ; '00'/'01'/'02' = chip
 //   curFecha/curId '' = primera página (o "a medias" → el SP lo trata como 1ra)
 //   tamanio        lo acota el SP a 1..100 (fuera de rango → 50)
@@ -18,6 +18,9 @@
 //   busqueda       texto del buscador del AppBar, '' = sin búsqueda. El SP
 //                  filtra por nombre completo del contacto o empresa activa
 //                  (LIKE, sin distinguir mayúsculas/tildes), AND con lo demás.
+//   idUnidad       unidad de negocio activa (2026-09-25) — solo contactos cuya
+//                  ÚLTIMA negociación (creada o modificada más reciente, empate
+//                  → id mayor) es de esa unidad. Sin unidades → no se llama.
 
 import 'package:app_crm/core/index_core.dart';
 import 'package:app_crm/features/lead/index_lead.dart';
@@ -40,6 +43,8 @@ class SeguimientoRemoteDatasource {
     int? idOportunidad,
     String busqueda = '',
   }) async {
+    if (!_session.tieneUnidades) return SeguimientoPagina.vacia;
+
     final camp = AppConstants.sepCampos;
     final sep = AppConstants.sepListas;
 
@@ -57,6 +62,7 @@ class SeguimientoRemoteDatasource {
       '', // idEstadoAdv — reservado
       '', // idSubestadoAdv — reservado
       busqueda.sinSeparadoresSp.trim(),
+      _session.idUnidadBody,
     ].join(camp);
 
     final result = await _api.postSafe(

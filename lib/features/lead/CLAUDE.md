@@ -1,5 +1,31 @@
 ﻿# Lead Feature
 
+## Unidad de negocio (2026-09-25)
+
+Seguimiento lista un contacto solo si su **última negociación** (creada o modificada
+más reciente; empate → id mayor) es de la unidad activa y no está cerrada. Todo
+llamado de `CRM.CSV_LEADS_LST_APP` relacionado a campaña manda la unidad al final:
+
+| Task | Body |
+|---|---|
+| `'LSP'` (Seguimiento) | `… ¦ busqueda ¦ idUnidad` |
+| `'DT'` | `idLead ¦ idUnidad ¦ codUser` (también lo usa chat/ → info lead) |
+| `'DN'` / `'LN'` / `'LHC'` / `'LRN'` | `idContacto ¦ idUnidad ¦ codUser` — detalle, negociaciones, historial y recordatorios solo de esa unidad |
+| `'NEG'` | `idLead ¦ idUnidad ¦ codUser` |
+
+El `codUser` de los detalles sirve para que el SP valide que la unidad siga asignada al
+usuario (`CRM.T_USUARIO_UNIDAD`); si no, devuelve vacío. `'LSP'` representa al contacto por
+su negociación más reciente no cerrada y exige que ESA sea de la unidad; `'DN'` elige la
+representativa solo entre las negociaciones de la unidad.
+
+- `'LS'` (`getLeads`, sin caller) no se tocó.
+- Sin unidades: `'LSP'` no se llama (lista vacía).
+- `SeguimientoBloc` escucha `UnidadCubit` → `SeguimientoUnidadCambiada`: quita
+  campaña/oportunidad del filtro avanzado y recarga desde la página 1 (chip,
+  fechas y búsqueda se mantienen).
+- Combos de campaña/oportunidad (panel de filtro, "Editar negociación") vienen de
+  `CatalogsLoaded`, ya filtrados por unidad.
+
 ## Seguimiento con barra inferior (2026-09-21)
 
 `SeguimientoView` pasa `showBottomNav: true` a `BasePage` — misma barra (Inicio · Chats ·

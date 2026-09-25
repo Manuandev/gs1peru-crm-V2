@@ -51,6 +51,10 @@ class ListasGenericas {
   // la devuelve (campañas + oportunidades + eventos) para refrescar los combos
   // de filtro al entrar a cada pantalla.
   final List<EventoItem> eventos;
+  // Parte [23] del SP lstListas — catálogo de unidades de negocio activas
+  // (idUnidad ¦ codigo ¦ nombre). Solo da el NOMBRE de las unidades: cuáles tiene
+  // asignadas el asesor lo dice el login (UserModel.unidades), no esta lista.
+  final List<UnidadNegocioItem> unidades;
 
   const ListasGenericas({
     required this.campanias,
@@ -76,6 +80,7 @@ class ListasGenericas {
     this.prefijosContacto = const [],
     this.tipoCambio = const TipoCambioItem(),
     this.eventos = const [],
+    this.unidades = const [],
   });
 
   // Usado por el refresh parcial de "Editar negociación" (task 'EN') — solo
@@ -114,6 +119,7 @@ class ListasGenericas {
       prefijosContacto: prefijosContacto,
       tipoCambio: tipoCambio,
       eventos: eventos ?? this.eventos,
+      unidades: unidades,
     );
   }
 }
@@ -126,10 +132,16 @@ class CampaniaItem with Comboable {
   final int id;
   final String nombre;
   final String fcFinal;
+  // Campo 4 (lstListas 'L', 'FIL' y 'EN') — unidad de negocio de la campaña.
+  // Los combos solo muestran las campañas de la unidad activa (ver
+  // CatalogsLoaded.campanias); las oportunidades y eventos caen en cascada
+  // por su idCampania. 0 si el SP todavía no lo manda.
+  final int idUnidad;
   const CampaniaItem({
     required this.id,
     required this.nombre,
     this.fcFinal = '',
+    this.idUnidad = 0,
   });
 
   /// `true` si la campaña ya pasó su fecha final. Sin fecha (`fcFinal` vacío o
@@ -249,11 +261,17 @@ class AsesorItem with Comboable {
   final String codUser;
   final String nombre;
   final bool disponible;
+  // Campo 3 (lstListas 'L' parte [5] y task 'ASE') — unidades de negocio
+  // asignadas al asesor, separadas por AppConstants.sepComodin. Los pickers
+  // de asesores solo muestran los de la unidad activa (ver
+  // CatalogsLoaded.asesoresUnidad).
+  final List<int> unidades;
 
   const AsesorItem({
     required this.codUser,
     required this.nombre,
     required this.disponible,
+    this.unidades = const [],
   });
 
   @override
@@ -580,4 +598,25 @@ class EventoItem with Comboable {
 
   @override
   List<dynamic> get fields => [id, idCampania, nombre];
+}
+
+// SP lstListas parte [23]: idUnidad ¦ codigo ¦ nombre — CRM.T_UNIDAD
+// (ID_UNIDAD, CODIGO, DESCRIPCION). Resuelve el nombre de la unidad (selector
+// del drawer, notificaciones con la app abierta). Cada campaña pertenece a una
+// unidad (CampaniaItem.idUnidad).
+class UnidadNegocioItem with Comboable {
+  final int id;
+  // Código corto (ej. 'FMG', 'AA') — hoy no se muestra, se trae por si se
+  // decide mostrarlo junto al nombre.
+  final String codigo;
+  final String nombre;
+
+  const UnidadNegocioItem({
+    required this.id,
+    this.codigo = '',
+    required this.nombre,
+  });
+
+  @override
+  List<dynamic> get fields => [id, nombre];
 }

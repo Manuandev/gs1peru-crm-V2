@@ -21,10 +21,44 @@ class CatalogsLoading extends CatalogsState {
 class CatalogsLoaded extends CatalogsState {
   final ListasGenericas listas;
 
-  const CatalogsLoaded({required this.listas});
+  /// Unidad de negocio activa (UnidadCubit) — `null` si el asesor no tiene
+  /// unidades: en ese caso los combos por unidad salen vacíos.
+  final int? idUnidad;
 
-  List<CampaniaItem> get campanias => listas.campanias;
-  List<OportunidadItem> get oportunidades => listas.oportunidades;
+  const CatalogsLoaded({required this.listas, this.idUnidad});
+
+  // ── Combos filtrados por la unidad activa ───────────────────
+  // Campañas de la unidad; oportunidades y eventos en cascada por idCampania.
+  List<CampaniaItem> get campanias => idUnidad == null
+      ? const []
+      : listas.campanias.where((c) => c.idUnidad == idUnidad).toList();
+  Set<int> get _idsCampaniasUnidad => campanias.map((c) => c.id).toSet();
+  List<OportunidadItem> get oportunidades {
+    final ids = _idsCampaniasUnidad;
+    return listas.oportunidades
+        .where((o) => ids.contains(o.idCampania))
+        .toList();
+  }
+
+  List<EventoItem> get eventos {
+    final ids = _idsCampaniasUnidad;
+    return listas.eventos.where((e) => ids.contains(e.idCampania)).toList();
+  }
+
+  /// Asesores de la unidad activa — para los pickers/combos de asesores.
+  /// [asesores] (sin filtrar) se mantiene para resolver el NOMBRE de un
+  /// codUser cualquiera (ej. quién creó un recordatorio).
+  List<AsesorItem> get asesoresUnidad => idUnidad == null
+      ? const []
+      : listas.asesores.where((a) => a.unidades.contains(idUnidad)).toList();
+
+  /// Catálogo completo de unidades (para resolver nombres).
+  List<UnidadNegocioItem> get unidades => listas.unidades;
+
+  /// Nombre de la unidad [id], o `null` si el catálogo no la trae.
+  String? nombreUnidad(int? id) =>
+      listas.unidades.where((u) => u.id == id).firstOrNull?.nombre;
+
   List<CanalItem> get canales => listas.canales;
   List<InteresItem> get intereses => listas.intereses;
   List<EstadoItem> get estados => listas.estados;
@@ -45,7 +79,6 @@ class CatalogsLoaded extends CatalogsState {
   List<CargoItem> get cargos => listas.cargos;
   List<PrefijoContactoItem> get prefijosContacto => listas.prefijosContacto;
   TipoCambioItem get tipoCambio => listas.tipoCambio;
-  List<EventoItem> get eventos => listas.eventos;
 
   @override
   List<Object?> get props => [
@@ -72,6 +105,8 @@ class CatalogsLoaded extends CatalogsState {
     prefijosContacto,
     tipoCambio,
     eventos,
+    unidades,
+    idUnidad,
   ];
 }
 
